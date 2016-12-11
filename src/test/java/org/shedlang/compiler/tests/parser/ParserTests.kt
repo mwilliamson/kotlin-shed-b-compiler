@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.parser
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.*
 
@@ -14,7 +15,21 @@ class ParserTests {
 
         val node = parse(source)
 
-        assertEquals(ModuleNode("abc"), node)
+        assertEquals(ModuleNode("abc", listOf()), node)
+    }
+
+    @Test
+    fun moduleCanHaveStatements() {
+        val source = """
+            module abc;
+
+            fun f() {
+            }
+        """.trimIndent()
+
+        val node = parse(source)
+
+        assertEquals(ModuleNode("abc", listOf(FunctionNode(name = "f"))), node)
     }
 
     @Test

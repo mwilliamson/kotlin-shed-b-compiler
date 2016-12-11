@@ -2,6 +2,7 @@ package org.shedlang.compiler.parser;
 
 private val keywords = setOf(
     "else",
+    "fun",
     "if",
     "module"
 )
@@ -10,7 +11,11 @@ private val symbols = setOf(
     ".",
     ",",
     ":",
-    ";"
+    ";",
+    "(",
+    ")",
+    "{",
+    "}"
 )
 
 private fun literalChoice(choices: Iterable<String>): String {
