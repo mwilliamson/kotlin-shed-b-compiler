@@ -9,7 +9,8 @@ private val keywords = setOf(
 private val symbols = setOf(
     ".",
     ",",
-    ":"
+    ":",
+    ";"
 )
 
 private fun literalChoice(choices: Iterable<String>): String {
@@ -32,5 +33,6 @@ internal enum class TokenType {
     KEYWORD,
     IDENTIFIER,
     SYMBOL,
-    WHITESPACE
+    WHITESPACE,
+    END
 }

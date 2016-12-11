@@ -2,15 +2,20 @@ package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.ModuleNode
 
-internal fun parseModule(input: String): ModuleNode {
+internal fun parse(input: String): ModuleNode {
     val tokens = tokenise(input)
         .filter { token -> token.tokenType != TokenType.WHITESPACE }
-    return parseModule(TokenIterator(tokens))
+        .plus(Token(input.length, TokenType.END, ""))
+    val tokenIterator = TokenIterator(tokens)
+    val module = parseModule(tokenIterator)
+    tokenIterator.skip(TokenType.END)
+    return module
 }
 
 internal fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
     tokens.skip(TokenType.KEYWORD, "module")
     val moduleName = parseModuleName(tokens)
+    tokens.skip(TokenType.SYMBOL, ";")
     return ModuleNode(moduleName)
 }
 

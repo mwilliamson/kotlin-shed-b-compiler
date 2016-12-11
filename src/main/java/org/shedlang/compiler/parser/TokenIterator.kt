@@ -17,6 +17,15 @@ internal class TokenIterator<T>(private val tokens: List<Token<T>>) {
         }
     }
 
+    fun skip(tokenType: T) {
+        val token = peek()
+        if (token.tokenType == tokenType) {
+            index++
+        } else {
+            throw RuntimeException("TODO")
+        }
+    }
+
     fun skip(tokenType: T, value: String) {
         val token = peek()
         if (token.tokenType == tokenType && token.value == value) {

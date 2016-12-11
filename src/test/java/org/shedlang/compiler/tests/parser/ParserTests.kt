@@ -12,7 +12,7 @@ class ParserTests {
             module abc;
         """.trimIndent()
 
-        val node = parseModule(source)
+        val node = parse(source)
 
         assertEquals(ModuleNode("abc"), node)
     }
