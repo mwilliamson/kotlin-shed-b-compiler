@@ -2,24 +2,30 @@ package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.ast.ModuleNode
+import org.shedlang.compiler.ast.SourceLocation
 
-internal fun parse(input: String): ModuleNode {
+internal fun parse(filename: String, input: String): ModuleNode {
     val tokens = tokenise(input)
         .filter { token -> token.tokenType != TokenType.WHITESPACE }
         .plus(Token(input.length, TokenType.END, ""))
-    val tokenIterator = TokenIterator(tokens)
-    val module = parseModule(tokenIterator)
+    val tokenIterator = TokenIterator(filename, tokens)
+    val module = ::parseModule.parse(tokenIterator)
     tokenIterator.skip(TokenType.END)
     return module
 }
 
-internal fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
+internal fun <T> ((SourceLocation, TokenIterator<TokenType>) -> T).parse(tokens: TokenIterator<TokenType>): T {
+    val location = tokens.location()
+    return this(location, tokens)
+}
+
+internal fun parseModule(location: SourceLocation, tokens: TokenIterator<TokenType>): ModuleNode {
     val moduleName = parseModuleNameDeclaration(tokens)
-    val body = parseMany(
+    val body = parseManyNodes(
         ::tryParseFunction,
         tokens
     )
-    return ModuleNode(moduleName, body)
+    return ModuleNode(moduleName, body, location)
 }
 
 private fun parseModuleNameDeclaration(tokens: TokenIterator<TokenType>): String {
@@ -37,7 +43,7 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
     ).joinToString(".")
 }
 
-internal fun tryParseFunction(tokens: TokenIterator<TokenType>): FunctionNode? {
+internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<TokenType>): FunctionNode? {
     if (!tokens.trySkip(TokenType.KEYWORD, "fun")) {
         return null
     }
@@ -49,7 +55,17 @@ internal fun tryParseFunction(tokens: TokenIterator<TokenType>): FunctionNode? {
     tokens.skip(TokenType.SYMBOL, "{")
     tokens.skip(TokenType.SYMBOL, "}")
 
-    return FunctionNode(name)
+    return FunctionNode(name, location)
+}
+
+private fun <T> parseManyNodes(
+    parseElement: (SourceLocation, TokenIterator<TokenType>) -> T?,
+    tokens: TokenIterator<TokenType>
+) : List<T> {
+    return parseMany(
+        { tokens -> parseElement.parse(tokens) },
+        tokens
+    )
 }
 
 private fun <T> parseMany(

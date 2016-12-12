@@ -1,9 +1,14 @@
 package org.shedlang.compiler.parser
 
+import org.shedlang.compiler.ast.SourceLocation
 import org.shedlang.compiler.orElseThrow
 
-internal class TokenIterator<T>(private val tokens: List<Token<T>>) {
+internal class TokenIterator<T>(private val filename: String, private val tokens: List<Token<T>>) {
     var index = 0
+
+    fun location(): SourceLocation {
+        return SourceLocation(filename, index)
+    }
 
     fun trySkip(tokenType: T, value: String): Boolean {
         val token = tryPeek()
