@@ -30,10 +30,10 @@ class ParseModuleTests {
         val source = """
             module abc;
 
-            fun f() {
+            fun f() : Unit {
             }
 
-            fun g() {
+            fun g() : Unit {
             }
         """.trimIndent()
 

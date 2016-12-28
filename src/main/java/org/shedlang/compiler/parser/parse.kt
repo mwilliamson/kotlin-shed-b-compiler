@@ -1,8 +1,6 @@
 package org.shedlang.compiler.parser
 
-import org.shedlang.compiler.ast.FunctionNode
-import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.ast.SourceLocation
+import org.shedlang.compiler.ast.*
 
 internal fun parse(filename: String, input: String): ModuleNode {
     val tokens = tokenise(input)
@@ -52,10 +50,17 @@ internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<To
 
     tokens.skip(TokenType.SYMBOL, "(")
     tokens.skip(TokenType.SYMBOL, ")")
+    tokens.skip(TokenType.SYMBOL, ":")
+    val returnType = ::parseType.parse(tokens)
     tokens.skip(TokenType.SYMBOL, "{")
     tokens.skip(TokenType.SYMBOL, "}")
 
-    return FunctionNode(name, location)
+    return FunctionNode(name, returnType, location)
+}
+
+internal fun parseType(location: SourceLocation, tokens: TokenIterator<TokenType>) : TypeNode {
+    val name = tokens.nextValue(TokenType.IDENTIFIER)
+    return TypeReferenceNode(name, location)
 }
 
 private fun <T> parseManyNodes(
