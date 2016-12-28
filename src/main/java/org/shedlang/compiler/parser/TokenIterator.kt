@@ -36,7 +36,7 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
             throw UnexpectedTokenException(
                 location = location(),
                 expected = "token of type " + tokenType,
-                actual = "${token.tokenType}: ${token.value}"
+                actual = describeToken(token.tokenType, token.value)
             )
         }
     }
@@ -46,7 +46,11 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
         if (token.tokenType == tokenType && token.value == value) {
             index++
         } else {
-            throw RuntimeException("TODO")
+            throw UnexpectedTokenException(
+                location = location(),
+                expected = describeToken(tokenType, value),
+                actual = describeToken(token.tokenType, token.value)
+            )
         }
     }
 
@@ -71,4 +75,6 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
     private fun peek(): Token<T> {
         return tryPeek().orElseThrow(RuntimeException("TODO"))
     }
+
+    private fun describeToken(tokenType: T, value: String) = "${tokenType}: ${value}"
 }

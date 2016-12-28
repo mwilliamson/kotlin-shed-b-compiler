@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Assertions.assertThrows
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.SourceLocation
 import org.shedlang.compiler.parser.Token
@@ -17,29 +18,77 @@ class TokenIteratorTests {
         SYMBOL
     }
 
-    @Test
-    fun skipMovesToNextTokenWhenTokenTypeMatches() {
-        val tokens = TokenIterator("<string>", listOf(
-            Token(0, TokenType.IDENTIFIER, "a"),
-            Token(1, TokenType.IDENTIFIER, "b")
-        ))
-        tokens.skip(TokenType.IDENTIFIER)
-        assertThat(tokens.location(), has(SourceLocation::characterIndex, equalTo(1)))
+    @Nested
+    inner class SkipByTokenType {
+        @Test
+        fun movesToNextTokenWhenTokenTypeMatches() {
+            val tokens = TokenIterator("<string>", listOf(
+                Token(0, TokenType.IDENTIFIER, "a"),
+                Token(1, TokenType.IDENTIFIER, "b")
+            ))
+            tokens.skip(TokenType.IDENTIFIER)
+            assertThat(tokens.location(), has(SourceLocation::characterIndex, equalTo(1)))
+        }
+
+        @Test
+        fun throwsExceptionWhenNextTokenHasUnexpectedType() {
+            val tokens = TokenIterator("<string>", listOf(
+                Token(0, TokenType.IDENTIFIER, "a")
+            ))
+            val exception = assertThrows<UnexpectedTokenException>(
+                UnexpectedTokenException::class.java,
+                { tokens.skip(TokenType.SYMBOL) }
+            )
+            assertThat(exception, allOf(
+                has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
+                has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
+                has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
+            ))
+        }
     }
 
-    @Test
-    fun skipThrowsExceptionWhenNextTokenHasUnexpectedType() {
-        val tokens = TokenIterator("<string>", listOf(
-            Token(0, TokenType.IDENTIFIER, "a")
-        ))
-        val exception = assertThrows<UnexpectedTokenException>(
-            UnexpectedTokenException::class.java,
-            { tokens.skip(TokenType.SYMBOL) }
-        )
-        assertThat(exception, allOf(
-            has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
-            has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
-            has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
-        ))
+    @Nested
+    inner class SkipByTokenTypeAndValue {
+        @Test
+        fun movesToNextTokenWhenTokenTypeAndValueMatch() {
+            val tokens = TokenIterator("<string>", listOf(
+                Token(0, TokenType.IDENTIFIER, "a"),
+                Token(1, TokenType.IDENTIFIER, "b")
+            ))
+            tokens.skip(TokenType.IDENTIFIER, "a")
+            assertThat(tokens.location(), has(SourceLocation::characterIndex, equalTo(1)))
+        }
+
+        @Test
+        fun throwsExceptionWhenNextTokenHasUnexpectedType() {
+            val tokens = TokenIterator("<string>", listOf(
+                Token(0, TokenType.IDENTIFIER, "a")
+            ))
+            val exception = assertThrows<UnexpectedTokenException>(
+                UnexpectedTokenException::class.java,
+                { tokens.skip(TokenType.SYMBOL, "a") }
+            )
+            assertThat(exception, allOf(
+                has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
+                has(UnexpectedTokenException::expected, equalTo("SYMBOL: a")),
+                has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
+            ))
+        }
+
+        @Test
+        fun throwsExceptionWhenNextTokenHasUnexpectedValue() {
+            val tokens = TokenIterator("<string>", listOf(
+                Token(0, TokenType.IDENTIFIER, "a")
+            ))
+            val exception = assertThrows<UnexpectedTokenException>(
+                UnexpectedTokenException::class.java,
+                { tokens.skip(TokenType.IDENTIFIER, "b") }
+            )
+            assertThat(exception, allOf(
+                has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
+                has(UnexpectedTokenException::expected, equalTo("IDENTIFIER: b")),
+                has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
+            ))
+        }
     }
 }
