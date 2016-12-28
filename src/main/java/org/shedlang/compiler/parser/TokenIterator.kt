@@ -55,13 +55,8 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
     }
 
     fun nextValue(tokenType: T): String {
-        val token = peek()
-        if (token.tokenType == tokenType) {
-            index++
-            return token.value
-        } else {
-            throw RuntimeException("TODO")
-        }
+        skip(tokenType)
+        return tokens[index - 1].value
     }
 
     private fun tryPeek(): Token<T>? {
