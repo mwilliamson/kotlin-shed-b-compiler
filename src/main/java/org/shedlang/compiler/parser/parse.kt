@@ -96,6 +96,10 @@ internal fun tryParseReturn(location: SourceLocation, tokens: TokenIterator<Toke
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
+    return parsePrimaryExpression(tokens)
+}
+
+internal fun parsePrimaryExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
     return ::parseIntegerLiteral.parse(tokens)
 }
 
