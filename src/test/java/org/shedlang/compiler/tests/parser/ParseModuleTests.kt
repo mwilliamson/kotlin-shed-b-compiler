@@ -20,8 +20,8 @@ class ParseModuleTests {
         val node = parse("<string>", source)
 
         assertThat(node, allOf(
-                has(ModuleNode::name, equalTo("abc")),
-                has(ModuleNode::body, equalTo(listOf()))
+            has(ModuleNode::name, equalTo("abc")),
+            has(ModuleNode::body, equalTo(listOf()))
         ))
     }
 
@@ -40,10 +40,10 @@ class ParseModuleTests {
         val node = parse("<string>", source)
 
         assertThat(node, allOf(
-                has(ModuleNode::body, isSequence(
-                        has(FunctionNode::name, equalTo("f")),
-                        has(FunctionNode::name, equalTo("g"))
-                ))
+            has(ModuleNode::body, isSequence(
+                has(FunctionNode::name, equalTo("f")),
+                has(FunctionNode::name, equalTo("g"))
+            ))
         ))
     }
 }

@@ -3,8 +3,14 @@ package org.shedlang.compiler.parser
 import org.shedlang.compiler.ast.SourceLocation
 import org.shedlang.compiler.orElseThrow
 
+internal class UnexpectedTokenException(
+    val location: SourceLocation,
+    val expected: String,
+    val actual: String
+) : Exception()
+
 internal class TokenIterator<T>(private val filename: String, private val tokens: List<Token<T>>) {
-    var index = 0
+    private var index = 0
 
     fun location(): SourceLocation {
         return SourceLocation(filename, index)
@@ -27,7 +33,11 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
         if (token.tokenType == tokenType) {
             index++
         } else {
-            throw RuntimeException("TODO")
+            throw UnexpectedTokenException(
+                location = location(),
+                expected = "token of type " + tokenType,
+                actual = "${token.tokenType}: ${token.value}"
+            )
         }
     }
 
