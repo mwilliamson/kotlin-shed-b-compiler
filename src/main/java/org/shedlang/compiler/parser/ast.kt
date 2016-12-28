@@ -45,3 +45,8 @@ data class IntegerLiteralNode(
     val value: Int,
     override val location: SourceLocation
 ) : ExpressionNode
+
+data class VariableReferenceNode(
+    val name: String,
+    override val location: SourceLocation
+) : ExpressionNode

@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.IntegerLiteralNode
+import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.parser.parsePrimaryExpression
 
 class ParsePrimaryExpressionTests {
@@ -14,5 +15,12 @@ class ParsePrimaryExpressionTests {
         val source = "1"
         val node = parseString(::parsePrimaryExpression, source)
         assertThat(node, cast(has(IntegerLiteralNode::value, equalTo(1))))
+    }
+
+    @Test
+    fun identifierCanBeParsedAsVariableReference() {
+        val source = "x"
+        val node = parseString(::parsePrimaryExpression, source)
+        assertThat(node, cast(has(VariableReferenceNode::name, equalTo("x"))))
     }
 }

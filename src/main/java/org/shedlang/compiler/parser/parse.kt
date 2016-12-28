@@ -100,12 +100,25 @@ internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode 
 }
 
 internal fun parsePrimaryExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
-    return ::parseIntegerLiteral.parse(tokens)
+    return when (tokens.peekType()) {
+        TokenType.INTEGER -> ::parseIntegerLiteral.parse(tokens)
+        TokenType.IDENTIFIER -> ::parseVariableReference.parse(tokens)
+        else -> throw UnexpectedTokenException(
+            location = tokens.location(),
+            expected = "primary expression",
+            actual = tokens.peek().describe()
+        )
+    }
 }
 
 internal fun parseIntegerLiteral(location: SourceLocation, tokens: TokenIterator<TokenType>) : IntegerLiteralNode {
     val value = tokens.nextValue(TokenType.INTEGER)
     return IntegerLiteralNode(value.toInt(), location)
+}
+
+internal fun parseVariableReference(location: SourceLocation, tokens: TokenIterator<TokenType>) : VariableReferenceNode {
+    val value = tokens.nextValue(TokenType.IDENTIFIER)
+    return VariableReferenceNode(value, location)
 }
 
 internal fun parseType(location: SourceLocation, tokens: TokenIterator<TokenType>) : TypeNode {
