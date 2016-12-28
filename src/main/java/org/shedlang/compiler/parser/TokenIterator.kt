@@ -17,15 +17,11 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
     }
 
     fun trySkip(tokenType: T, value: String): Boolean {
-        val token = tryPeek()
-        if (token == null) {
-            return false
-        } else if (token.tokenType == tokenType && token.value == value) {
-            index++
-            return true
-        } else {
-            return false
+        val isNext = isNext(tokenType, value);
+        if (isNext) {
+            index++;
         }
+        return isNext;
     }
 
     fun skip(tokenType: T) {
@@ -57,6 +53,15 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
     fun nextValue(tokenType: T): String {
         skip(tokenType)
         return tokens[index - 1].value
+    }
+
+    fun isNext(tokenType: T, value: String): Boolean {
+        val token = tryPeek()
+        if (token == null) {
+            return false
+        } else {
+            return token.tokenType == tokenType && token.value == value
+        }
     }
 
     private fun tryPeek(): Token<T>? {

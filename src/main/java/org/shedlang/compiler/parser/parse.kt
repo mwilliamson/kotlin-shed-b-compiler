@@ -34,7 +34,7 @@ private fun parseModuleNameDeclaration(tokens: TokenIterator<TokenType>): String
 }
 
 internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
-    return parseWithSeparator(
+    return parseOneOrMoreWithSeparator(
         { tokens -> tokens.nextValue(TokenType.IDENTIFIER) },
         { tokens -> tokens.trySkip(TokenType.SYMBOL, ".") },
         tokens
@@ -49,13 +49,26 @@ internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<To
     val name = tokens.nextValue(TokenType.IDENTIFIER)
 
     tokens.skip(TokenType.SYMBOL, "(")
+    val arguments = parseZeroOrMoreNodes(
+        parseElement = ::parseFormalArgument,
+        parseSeparator = {tokens -> tokens.skip(TokenType.SYMBOL, ",")},
+        isEnd = { tokens.isNext(TokenType.SYMBOL, ")") },
+        tokens = tokens
+    )
     tokens.skip(TokenType.SYMBOL, ")")
     tokens.skip(TokenType.SYMBOL, ":")
     val returnType = ::parseType.parse(tokens)
     tokens.skip(TokenType.SYMBOL, "{")
     tokens.skip(TokenType.SYMBOL, "}")
 
-    return FunctionNode(name, listOf(), returnType, location)
+    return FunctionNode(name, arguments, returnType, location)
+}
+
+private fun parseFormalArgument(location: SourceLocation, tokens: TokenIterator<TokenType>) : ArgumentNode {
+    val name = tokens.nextValue(TokenType.IDENTIFIER)
+    tokens.skip(TokenType.SYMBOL, ":")
+    val type = ::parseType.parse(tokens)
+    return ArgumentNode(name, type, location)
 }
 
 internal fun parseType(location: SourceLocation, tokens: TokenIterator<TokenType>) : TypeNode {
@@ -88,7 +101,19 @@ private fun <T> parseMany(
     }
 }
 
-private fun <T> parseWithSeparator(
+private fun <T> parseOneOrMoreNodesWithSeparator(
+    parseElement: (SourceLocation, TokenIterator<TokenType>) -> T,
+    parseSeparator: (TokenIterator<TokenType>) -> Boolean,
+    tokens: TokenIterator<TokenType>
+) : List<T> {
+    return parseOneOrMoreWithSeparator(
+        {tokens -> parseElement.parse(tokens)},
+        parseSeparator,
+        tokens
+    )
+}
+
+private fun <T> parseOneOrMoreWithSeparator(
     parseElement: (TokenIterator<TokenType>) -> T,
     parseSeparator: (TokenIterator<TokenType>) -> Boolean,
     tokens: TokenIterator<TokenType>
@@ -97,5 +122,37 @@ private fun <T> parseWithSeparator(
     while (parseSeparator(tokens)) {
         elements.add(parseElement(tokens))
     }
+    return elements
+}
+
+private fun <T> parseZeroOrMoreNodes(
+    parseElement: (SourceLocation, TokenIterator<TokenType>) -> T,
+    parseSeparator: (TokenIterator<TokenType>) -> Unit,
+    isEnd: (TokenIterator<TokenType>) -> Boolean,
+    tokens: TokenIterator<TokenType>
+) : List<T> {
+    return parseZeroOrMore(
+        { tokens -> parseElement.parse(tokens) },
+        parseSeparator,
+        isEnd,
+        tokens
+    )
+}
+
+private fun <T> parseZeroOrMore(
+    parseElement: (TokenIterator<TokenType>) -> T,
+    parseSeparator: (TokenIterator<TokenType>) -> Unit,
+    isEnd: (TokenIterator<TokenType>) -> Boolean,
+    tokens: TokenIterator<TokenType>
+) : List<T> {
+    val elements = mutableListOf<T>()
+
+    while (!isEnd(tokens)) {
+        if (elements.isNotEmpty()) {
+            parseSeparator(tokens)
+        }
+        elements.add(parseElement(tokens))
+    }
+
     return elements
 }
