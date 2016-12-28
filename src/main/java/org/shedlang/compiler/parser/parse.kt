@@ -59,9 +59,19 @@ internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<To
     tokens.skip(TokenType.SYMBOL, ":")
     val returnType = ::parseType.parse(tokens)
     tokens.skip(TokenType.SYMBOL, "{")
+    val body = parseMany(
+        ::tryParseFunctionStatement,
+        tokens
+    )
     tokens.skip(TokenType.SYMBOL, "}")
 
-    return FunctionNode(name, arguments, returnType, location)
+    return FunctionNode(
+        name = name,
+        arguments = arguments,
+        returnType = returnType,
+        body = body,
+        location = location
+    )
 }
 
 private fun parseFormalArgument(location: SourceLocation, tokens: TokenIterator<TokenType>) : ArgumentNode {
@@ -69,6 +79,29 @@ private fun parseFormalArgument(location: SourceLocation, tokens: TokenIterator<
     tokens.skip(TokenType.SYMBOL, ":")
     val type = ::parseType.parse(tokens)
     return ArgumentNode(name, type, location)
+}
+
+private fun tryParseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode? {
+    return ::tryParseReturn.parse(tokens)
+}
+
+internal fun tryParseReturn(location: SourceLocation, tokens: TokenIterator<TokenType>) : ReturnNode? {
+    if (tokens.trySkip(TokenType.KEYWORD, "return")) {
+        val expression = parseExpression(tokens)
+        tokens.skip(TokenType.SYMBOL, ";")
+        return ReturnNode(expression, location)
+    } else {
+        return null
+    }
+}
+
+internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
+    return ::parseIntegerLiteral.parse(tokens)
+}
+
+internal fun parseIntegerLiteral(location: SourceLocation, tokens: TokenIterator<TokenType>) : IntegerLiteralNode {
+    val value = tokens.nextValue(TokenType.INTEGER)
+    return IntegerLiteralNode(value.toInt(), location)
 }
 
 internal fun parseType(location: SourceLocation, tokens: TokenIterator<TokenType>) : TypeNode {

@@ -22,6 +22,7 @@ data class FunctionNode(
     val name: String,
     val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
+    val body: List<StatementNode>,
     override val location: SourceLocation
 ) : Node
 
@@ -30,3 +31,17 @@ data class ArgumentNode(
     val type: TypeNode,
     override val location: SourceLocation
 ) : Node
+
+interface StatementNode : Node
+
+data class ReturnNode(
+    val expression: ExpressionNode,
+    override val location: SourceLocation
+) : StatementNode
+
+interface ExpressionNode : Node
+
+data class IntegerLiteralNode(
+    val value: Int,
+    override val location: SourceLocation
+) : ExpressionNode

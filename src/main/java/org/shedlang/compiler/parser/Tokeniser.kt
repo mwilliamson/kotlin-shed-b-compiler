@@ -4,7 +4,8 @@ private val keywords = setOf(
     "else",
     "fun",
     "if",
-    "module"
+    "module",
+    "return"
 )
 
 private val symbols = setOf(
