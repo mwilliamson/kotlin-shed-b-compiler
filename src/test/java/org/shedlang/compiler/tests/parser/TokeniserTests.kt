@@ -44,6 +44,18 @@ class TokeniserTests {
         }
     }
 
+    @TestFactory
+    fun integersAreTokenised(): List<DynamicTest> {
+        return listOf("0", "1", "-1", "42").map { symbol ->
+            DynamicTest.dynamicTest(symbol, {
+                assertEquals(
+                    listOf(Token(0, TokenType.INTEGER, symbol)),
+                    tokenise(symbol)
+                )
+            })
+        }
+    }
+
     data class WhitespaceTestCase(val input: String, val description: String)
 
     @TestFactory
