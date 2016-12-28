@@ -20,6 +20,13 @@ data class ModuleNode(
 
 data class FunctionNode(
     val name: String,
+    val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
+    override val location: SourceLocation
+) : Node
+
+data class ArgumentNode(
+    val name: String,
+    val type: TypeNode,
     override val location: SourceLocation
 ) : Node

@@ -55,7 +55,7 @@ internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<To
     tokens.skip(TokenType.SYMBOL, "{")
     tokens.skip(TokenType.SYMBOL, "}")
 
-    return FunctionNode(name, returnType, location)
+    return FunctionNode(name, listOf(), returnType, location)
 }
 
 internal fun parseType(location: SourceLocation, tokens: TokenIterator<TokenType>) : TypeNode {
