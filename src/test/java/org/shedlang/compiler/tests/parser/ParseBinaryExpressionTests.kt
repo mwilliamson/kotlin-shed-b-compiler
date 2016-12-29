@@ -67,6 +67,26 @@ class ParseBinaryExpressionTests {
     }
 
     @Test
+    fun canParseFunctionCallWithOneArgument() {
+        val source = "x(y)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isFunctionCall(
+            isVariableReference("x"),
+            isSequence(isVariableReference("y"))
+        ))
+    }
+
+    @Test
+    fun canParseFunctionCallWithManyArguments() {
+        val source = "x(y, z)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isFunctionCall(
+            isVariableReference("x"),
+            isSequence(isVariableReference("y"), isVariableReference("z"))
+        ))
+    }
+
+    @Test
     fun canParseLeftAssociativeOperationsWithThreeOperands() {
         val source = "x + y + z"
         val node = parseString(::parseExpression, source)

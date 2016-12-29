@@ -155,10 +155,16 @@ private class InfixOperationParser(
 
 private object FunctionCallParser : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val arguments = parseZeroOrMore(
+            parseElement = ::parseExpression,
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL, ",") },
+            isEnd = { tokens.isNext(TokenType.SYMBOL, ")") },
+            tokens = tokens
+        )
         tokens.skip(TokenType.SYMBOL, ")")
         return FunctionCallNode(
             left = left,
-            arguments = listOf(),
+            arguments = arguments,
             location = left.location
         )
     }
