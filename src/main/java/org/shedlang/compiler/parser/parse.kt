@@ -105,23 +105,49 @@ private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) :
     while (true) {
         val next = tokens.peek()
         if (next.tokenType == TokenType.SYMBOL) {
-            val operator = when (next.value) {
-                "==" -> Operator.EQUALS
-                "+" -> Operator.ADD
-                "-" -> Operator.SUBTRACT
-                "*" -> Operator.MULTIPLY
-                else -> null
-            }
-            if (operator == null || operator.precedence < precedence) {
+            val operationParser = lookupOperator(next.value)
+            if (operationParser == null || operationParser.precedence < precedence) {
                 return left
             } else {
                 tokens.skip()
-                val right = parseExpression(tokens, operator.precedence + 1)
-                left = BinaryOperationNode(operator, left, right, left.location)
+                left = operationParser.parse(left, tokens)
             }
         } else {
             return left
         }
+    }
+}
+
+private fun lookupOperator(operator: String) : OperationParser? {
+    return when (operator) {
+        "==" -> OperationParser.EQUALS
+        "+" -> OperationParser.ADD
+        "-" -> OperationParser.SUBTRACT
+        "*" -> OperationParser.MULTIPLY
+        else -> null
+    }
+}
+
+private interface OperationParser {
+    val precedence: Int
+
+    fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode
+
+    companion object {
+        val EQUALS = InfixOperationParser(Operator.EQUALS, 8)
+        val ADD = InfixOperationParser(Operator.ADD, 11)
+        val SUBTRACT = InfixOperationParser(Operator.SUBTRACT, 11)
+        val MULTIPLY = InfixOperationParser(Operator.MULTIPLY, 12)
+    }
+}
+
+private class InfixOperationParser(
+    private val operator: Operator,
+    override val precedence: Int
+) : OperationParser {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val right = parseExpression(tokens, precedence + 1)
+        return BinaryOperationNode(operator, left, right, left.location)
     }
 }
 
