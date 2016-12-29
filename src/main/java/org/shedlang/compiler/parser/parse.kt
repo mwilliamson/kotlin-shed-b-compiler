@@ -176,15 +176,22 @@ private object FunctionCallParser : OperationParser {
 
 internal fun parsePrimaryExpression(location: SourceLocation, tokens: TokenIterator<TokenType>) : ExpressionNode {
     val token = tokens.next();
-    return when (token.tokenType) {
-        TokenType.INTEGER -> IntegerLiteralNode(token.value.toInt(), location)
-        TokenType.IDENTIFIER -> VariableReferenceNode(token.value, location)
-        else -> throw UnexpectedTokenException(
-            location = tokens.location(),
-            expected = "primary expression",
-            actual = tokens.peek().describe()
-        )
+    when (token.tokenType) {
+        TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), location)
+        TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, location)
+        TokenType.SYMBOL -> when (token.value) {
+            "(" -> {
+                val expression = parseExpression(tokens)
+                tokens.skip(TokenType.SYMBOL, ")")
+                return expression
+            }
+        }
     }
+    throw UnexpectedTokenException(
+        location = tokens.location(),
+        expected = "primary expression",
+        actual = tokens.peek().describe()
+    )
 }
 
 internal fun parseType(location: SourceLocation, tokens: TokenIterator<TokenType>) : TypeNode {

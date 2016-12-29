@@ -136,6 +136,21 @@ class ParseBinaryExpressionTests {
         ))
     }
 
+    @Test
+    fun canUseParensToGroupExpressions() {
+        val source = "(x + y) * z"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isBinaryOperation(
+            Operator.MULTIPLY,
+            isBinaryOperation(
+                Operator.ADD,
+                isVariableReference("x"),
+                isVariableReference("y")
+            ),
+            isVariableReference("z")
+        ))
+    }
+
     private fun isBinaryOperation(
         operator: Operator,
         left: Matcher<ExpressionNode>,
