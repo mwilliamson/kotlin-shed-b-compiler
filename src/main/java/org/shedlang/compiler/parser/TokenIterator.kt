@@ -79,4 +79,12 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
     fun peek(): Token<T> {
         return tryPeek().orElseThrow(RuntimeException("TODO"))
     }
+
+    fun next(): Token<T> {
+        if (index < tokens.size) {
+            return tokens[index++]
+        } else {
+            throw RuntimeException("TODO")
+        }
+    }
 }
