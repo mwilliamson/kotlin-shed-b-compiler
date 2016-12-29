@@ -39,6 +39,13 @@ data class ReturnNode(
     override val location: SourceLocation
 ) : StatementNode
 
+data class IfStatementNode(
+    val condition: ExpressionNode,
+    val trueBranch: List<StatementNode>,
+    val falseBranch: List<StatementNode>,
+    override val location: SourceLocation
+) : StatementNode
+
 interface ExpressionNode : Node
 
 data class IntegerLiteralNode(

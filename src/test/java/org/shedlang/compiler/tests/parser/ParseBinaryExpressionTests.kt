@@ -150,28 +150,4 @@ class ParseBinaryExpressionTests {
             isVariableReference("z")
         ))
     }
-
-    private fun isBinaryOperation(
-        operator: Operator,
-        left: Matcher<ExpressionNode>,
-        right: Matcher<ExpressionNode>
-    ) : Matcher<ExpressionNode> {
-        return cast(allOf(
-            has(BinaryOperationNode::operator, equalTo(operator)),
-            has(BinaryOperationNode::left, left),
-            has(BinaryOperationNode::right, right)
-        ))
-    }
-
-    private fun isFunctionCall(
-        left: Matcher<ExpressionNode>,
-        arguments: Matcher<List<ExpressionNode>>
-    ) : Matcher<ExpressionNode> {
-        return cast(allOf(
-            has(FunctionCallNode::left, left),
-            has(FunctionCallNode::arguments, arguments)
-        ))
-    }
-
-    private fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
 }

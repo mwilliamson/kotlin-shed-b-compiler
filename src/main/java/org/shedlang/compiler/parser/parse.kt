@@ -58,12 +58,7 @@ internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<To
     tokens.skip(TokenType.SYMBOL, ")")
     tokens.skip(TokenType.SYMBOL, ":")
     val returnType = ::parseType.parse(tokens)
-    tokens.skip(TokenType.SYMBOL, "{")
-    val body = parseMany(
-        ::tryParseFunctionStatement,
-        tokens
-    )
-    tokens.skip(TokenType.SYMBOL, "}")
+    val body = parseFunctionStatements(tokens)
 
     return FunctionNode(
         name = name,
@@ -74,6 +69,18 @@ internal fun tryParseFunction(location: SourceLocation, tokens: TokenIterator<To
     )
 }
 
+private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
+    tokens.skip(TokenType.SYMBOL, "{")
+    val body = parseZeroOrMore(
+        parseElement = ::parseFunctionStatement,
+        parseSeparator = { tokens -> },
+        isEnd = { tokens.isNext(TokenType.SYMBOL, "}") },
+        tokens = tokens
+    )
+    tokens.skip(TokenType.SYMBOL, "}")
+    return body
+}
+
 private fun parseFormalArgument(location: SourceLocation, tokens: TokenIterator<TokenType>) : ArgumentNode {
     val name = tokens.nextValue(TokenType.IDENTIFIER)
     tokens.skip(TokenType.SYMBOL, ":")
@@ -81,18 +88,48 @@ private fun parseFormalArgument(location: SourceLocation, tokens: TokenIterator<
     return ArgumentNode(name, type, location)
 }
 
-private fun tryParseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode? {
-    return ::tryParseReturn.parse(tokens)
+internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
+    val token = tokens.peek()
+    if (token.tokenType == TokenType.KEYWORD) {
+        val parseStatement : ((SourceLocation, TokenIterator<TokenType>) -> StatementNode)? = when (token.value) {
+            "return" -> ::parseReturn
+            "if" -> ::parseIfStatement
+            else -> null
+        }
+        if (parseStatement != null) {
+            tokens.skip()
+            return parseStatement.parse(tokens)
+        }
+    }
+    throw UnexpectedTokenException(
+        location = tokens.location(),
+        expected = "function statement",
+        actual = token.describe()
+    )
 }
 
-internal fun tryParseReturn(location: SourceLocation, tokens: TokenIterator<TokenType>) : ReturnNode? {
-    if (tokens.trySkip(TokenType.KEYWORD, "return")) {
-        val expression = parseExpression(tokens)
-        tokens.skip(TokenType.SYMBOL, ";")
-        return ReturnNode(expression, location)
-    } else {
-        return null
-    }
+private fun parseReturn(location: SourceLocation, tokens: TokenIterator<TokenType>) : ReturnNode {
+    val expression = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL, ";")
+    return ReturnNode(expression, location)
+}
+
+private fun parseIfStatement(location: SourceLocation, tokens: TokenIterator<TokenType>) : IfStatementNode {
+    tokens.skip(TokenType.SYMBOL, "(")
+    val condition = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL, ")")
+
+    val trueBranch = parseFunctionStatements(tokens)
+
+    tokens.skip(TokenType.KEYWORD, "else")
+    val falseBranch = parseFunctionStatements(tokens)
+
+    return IfStatementNode(
+        condition = condition,
+        trueBranch = trueBranch,
+        falseBranch = falseBranch,
+        location = location
+    )
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
@@ -190,7 +227,7 @@ internal fun parsePrimaryExpression(location: SourceLocation, tokens: TokenItera
     throw UnexpectedTokenException(
         location = tokens.location(),
         expected = "primary expression",
-        actual = tokens.peek().describe()
+        actual = token.describe()
     )
 }
 
