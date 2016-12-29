@@ -15,5 +15,7 @@ internal fun <T> parseString(parser: (TokenIterator<TokenType>) -> T, input: Str
 }
 
 private fun tokeniseWithoutWhitespace(input: String): List<Token<TokenType>> {
-    return tokenise(input).filter({ token -> token.tokenType != TokenType.WHITESPACE })
+    return tokenise(input)
+        .filter({ token -> token.tokenType != TokenType.WHITESPACE })
+        .plus(Token(input.length, TokenType.END, ""))
 }

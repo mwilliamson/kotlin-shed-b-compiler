@@ -96,26 +96,28 @@ internal fun tryParseReturn(location: SourceLocation, tokens: TokenIterator<Toke
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
-    val expression = ::parsePrimaryExpression.parse(tokens)
+    var left = ::parsePrimaryExpression.parse(tokens)
 
-    val next = tokens.peek()
-    if (next.tokenType == TokenType.SYMBOL) {
-        val operator = when (next.value) {
-            "==" -> Operator.EQUALS
-            "+" -> Operator.ADD
-            "-" -> Operator.SUBTRACT
-            "*" -> Operator.MULTIPLY
-            else -> null
-        }
-        if (operator == null) {
-            return expression
+    while (true) {
+        val next = tokens.peek()
+        if (next.tokenType == TokenType.SYMBOL) {
+            val operator = when (next.value) {
+                "==" -> Operator.EQUALS
+                "+" -> Operator.ADD
+                "-" -> Operator.SUBTRACT
+                "*" -> Operator.MULTIPLY
+                else -> null
+            }
+            if (operator == null) {
+                return left
+            } else {
+                tokens.skip()
+                val right = ::parsePrimaryExpression.parse(tokens)
+                left = BinaryOperationNode(operator, left, right, left.location)
+            }
         } else {
-            tokens.skip()
-            val right = ::parsePrimaryExpression.parse(tokens)
-            return BinaryOperationNode(operator, expression, right, expression.location)
+            return left
         }
-    } else {
-        return expression
     }
 }
 

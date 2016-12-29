@@ -56,5 +56,38 @@ class ParseBinaryExpressionTests {
         )))
     }
 
+    @Test
+    fun canParseLeftAssociativeOperationsWithThreeOperands() {
+        val source = "x + y + z"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, cast(allOf(
+            has(BinaryOperationNode::operator, equalTo(Operator.ADD)),
+            has(BinaryOperationNode::left, cast(allOf(
+                has(BinaryOperationNode::operator, equalTo(Operator.ADD)),
+                has(BinaryOperationNode::left, isVariableReference("x")),
+                has(BinaryOperationNode::right, isVariableReference("y"))
+            ))),
+            has(BinaryOperationNode::right, isVariableReference("z"))
+        )))
+    }
+
+    @Test
+    fun canParseLeftAssociativeOperationsWithFourOperands() {
+        val source = "a + b + c + d"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, cast(allOf(
+            has(BinaryOperationNode::operator, equalTo(Operator.ADD)),
+            has(BinaryOperationNode::left, cast(allOf(
+                has(BinaryOperationNode::left, cast(allOf(
+                    has(BinaryOperationNode::operator, equalTo(Operator.ADD)),
+                    has(BinaryOperationNode::left, isVariableReference("a")),
+                    has(BinaryOperationNode::right, isVariableReference("b"))
+                ))),
+                has(BinaryOperationNode::right, isVariableReference("c"))
+            ))),
+            has(BinaryOperationNode::right, isVariableReference("d"))
+        )))
+    }
+
     private fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
 }
