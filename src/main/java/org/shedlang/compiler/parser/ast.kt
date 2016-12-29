@@ -59,5 +59,6 @@ data class BinaryOperationNode(
 ) : ExpressionNode
 
 enum class Operator {
-    EQUALS
+    EQUALS,
+    ADD
 }

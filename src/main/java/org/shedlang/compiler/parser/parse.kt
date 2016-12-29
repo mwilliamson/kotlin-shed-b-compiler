@@ -99,10 +99,19 @@ internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode 
     val expression = ::parsePrimaryExpression.parse(tokens)
 
     val next = tokens.peek()
-    if (next.tokenType == TokenType.SYMBOL && next.value == "==") {
-        tokens.skip()
-        val right = ::parsePrimaryExpression.parse(tokens)
-        return BinaryOperationNode(Operator.EQUALS, expression, right, expression.location)
+    if (next.tokenType == TokenType.SYMBOL) {
+        val operator = when (next.value) {
+            "==" -> Operator.EQUALS
+            "+" -> Operator.ADD
+            else -> null
+        }
+        if (operator == null) {
+            return expression
+        } else {
+            tokens.skip()
+            val right = ::parsePrimaryExpression.parse(tokens)
+            return BinaryOperationNode(operator, expression, right, expression.location)
+        }
     } else {
         return expression
     }
