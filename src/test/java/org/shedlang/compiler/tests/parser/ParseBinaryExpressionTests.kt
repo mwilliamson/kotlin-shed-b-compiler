@@ -45,5 +45,16 @@ class ParseBinaryExpressionTests {
         )))
     }
 
+    @Test
+    fun canParseMultiplication() {
+        val source = "x * y"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, cast(allOf(
+            has(BinaryOperationNode::operator, equalTo(Operator.MULTIPLY)),
+            has(BinaryOperationNode::left, isVariableReference("x")),
+            has(BinaryOperationNode::right, isVariableReference("y"))
+        )))
+    }
+
     private fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
 }

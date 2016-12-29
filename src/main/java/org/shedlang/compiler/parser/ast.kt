@@ -61,5 +61,6 @@ data class BinaryOperationNode(
 enum class Operator {
     EQUALS,
     ADD,
-    SUBTRACT
+    SUBTRACT,
+    MULTIPLY
 }

@@ -104,6 +104,7 @@ internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode 
             "==" -> Operator.EQUALS
             "+" -> Operator.ADD
             "-" -> Operator.SUBTRACT
+            "*" -> Operator.MULTIPLY
             else -> null
         }
         if (operator == null) {
