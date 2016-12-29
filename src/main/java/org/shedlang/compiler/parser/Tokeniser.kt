@@ -29,9 +29,9 @@ private fun literalChoice(choices: Iterable<String>): String {
 
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     RegexTokeniser.rule(TokenType.KEYWORD, literalChoice(keywords)),
+    RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
     RegexTokeniser.rule(TokenType.SYMBOL, literalChoice(symbols)),
     RegexTokeniser.rule(TokenType.IDENTIFIER, "[A-Za-z][A-Za-z0-9]*"),
-    RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
     RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+")
 ))
 
