@@ -103,6 +103,7 @@ internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode 
         val operator = when (next.value) {
             "==" -> Operator.EQUALS
             "+" -> Operator.ADD
+            "-" -> Operator.SUBTRACT
             else -> null
         }
         if (operator == null) {
