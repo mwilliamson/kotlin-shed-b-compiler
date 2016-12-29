@@ -58,6 +58,12 @@ data class BinaryOperationNode(
     override val location: SourceLocation
 ) : ExpressionNode
 
+data class FunctionCallNode(
+    val left: ExpressionNode,
+    val arguments: List<ExpressionNode>,
+    override val location: SourceLocation
+) : ExpressionNode
+
 enum class Operator {
     EQUALS,
     ADD,

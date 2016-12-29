@@ -6,12 +6,10 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.BinaryOperationNode
-import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.ast.VariableReferenceNode
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.isSequence
 
 class ParseBinaryExpressionTests {
     @Test
@@ -55,6 +53,16 @@ class ParseBinaryExpressionTests {
             Operator.MULTIPLY,
             isVariableReference("x"),
             isVariableReference("y")
+        ))
+    }
+
+    @Test
+    fun canParseFunctionCallWithNoArguments() {
+        val source = "x()"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isFunctionCall(
+            isVariableReference("x"),
+            isSequence()
         ))
     }
 
@@ -117,6 +125,16 @@ class ParseBinaryExpressionTests {
             has(BinaryOperationNode::operator, equalTo(operator)),
             has(BinaryOperationNode::left, left),
             has(BinaryOperationNode::right, right)
+        ))
+    }
+
+    private fun isFunctionCall(
+        left: Matcher<ExpressionNode>,
+        arguments: Matcher<List<ExpressionNode>>
+    ) : Matcher<ExpressionNode> {
+        return cast(allOf(
+            has(FunctionCallNode::left, left),
+            has(FunctionCallNode::arguments, arguments)
         ))
     }
 

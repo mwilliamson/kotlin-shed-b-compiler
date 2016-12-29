@@ -124,6 +124,7 @@ private fun lookupOperator(operator: String) : OperationParser? {
         "+" -> OperationParser.ADD
         "-" -> OperationParser.SUBTRACT
         "*" -> OperationParser.MULTIPLY
+        "(" -> OperationParser.CALL
         else -> null
     }
 }
@@ -138,6 +139,7 @@ private interface OperationParser {
         val ADD = InfixOperationParser(Operator.ADD, 11)
         val SUBTRACT = InfixOperationParser(Operator.SUBTRACT, 11)
         val MULTIPLY = InfixOperationParser(Operator.MULTIPLY, 12)
+        val CALL = FunctionCallParser
     }
 }
 
@@ -149,6 +151,21 @@ private class InfixOperationParser(
         val right = parseExpression(tokens, precedence + 1)
         return BinaryOperationNode(operator, left, right, left.location)
     }
+}
+
+private object FunctionCallParser : OperationParser {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        tokens.skip(TokenType.SYMBOL, ")")
+        return FunctionCallNode(
+            left = left,
+            arguments = listOf(),
+            location = left.location
+        )
+    }
+
+    override val precedence: Int
+        get() = 14
+
 }
 
 internal fun parsePrimaryExpression(location: SourceLocation, tokens: TokenIterator<TokenType>) : ExpressionNode {
