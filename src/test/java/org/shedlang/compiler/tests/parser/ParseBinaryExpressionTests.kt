@@ -92,18 +92,6 @@ class ParseBinaryExpressionTests {
         ))
     }
 
-    private fun isBinaryOperation(
-        operator: Operator,
-        left: Matcher<ExpressionNode>,
-        right: Matcher<ExpressionNode>
-    ) : Matcher<ExpressionNode> {
-        return cast(allOf(
-            has(BinaryOperationNode::operator, equalTo(operator)),
-            has(BinaryOperationNode::left, left),
-            has(BinaryOperationNode::right, right)
-        ))
-    }
-
     @Test
     fun higherPrecedenceOperatorsBindMoreTightlyThanLowerPrecedenceOperators() {
         val source = "x + y * z"
@@ -117,6 +105,18 @@ class ParseBinaryExpressionTests {
                 isVariableReference("z")
             )
 
+        ))
+    }
+
+    private fun isBinaryOperation(
+        operator: Operator,
+        left: Matcher<ExpressionNode>,
+        right: Matcher<ExpressionNode>
+    ) : Matcher<ExpressionNode> {
+        return cast(allOf(
+            has(BinaryOperationNode::operator, equalTo(operator)),
+            has(BinaryOperationNode::left, left),
+            has(BinaryOperationNode::right, right)
         ))
     }
 
