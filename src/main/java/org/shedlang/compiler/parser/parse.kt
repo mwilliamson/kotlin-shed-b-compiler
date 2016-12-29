@@ -96,7 +96,16 @@ internal fun tryParseReturn(location: SourceLocation, tokens: TokenIterator<Toke
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
-    return ::parsePrimaryExpression.parse(tokens)
+    val expression = ::parsePrimaryExpression.parse(tokens)
+
+    val next = tokens.peek()
+    if (next.tokenType == TokenType.SYMBOL && next.value == "==") {
+        tokens.skip()
+        val right = ::parsePrimaryExpression.parse(tokens)
+        return BinaryOperationNode(Operator.EQUALS, expression, right, expression.location)
+    } else {
+        return expression
+    }
 }
 
 internal fun parsePrimaryExpression(location: SourceLocation, tokens: TokenIterator<TokenType>) : ExpressionNode {

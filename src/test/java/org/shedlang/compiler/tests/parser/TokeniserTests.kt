@@ -34,7 +34,7 @@ class TokeniserTests {
 
     @TestFactory
     fun symbolsAreTokenised(): List<DynamicTest> {
-        return listOf(".", ",", ":").map { symbol ->
+        return listOf(".", ",", ":", "==").map { symbol ->
             DynamicTest.dynamicTest(symbol, {
                 assertEquals(
                     listOf(Token(0, TokenType.SYMBOL, symbol)),

@@ -16,7 +16,8 @@ private val symbols = setOf(
     "(",
     ")",
     "{",
-    "}"
+    "}",
+    "=="
 )
 
 private fun literalChoice(choices: Iterable<String>): String {

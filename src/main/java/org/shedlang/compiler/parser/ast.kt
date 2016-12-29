@@ -50,3 +50,14 @@ data class VariableReferenceNode(
     val name: String,
     override val location: SourceLocation
 ) : ExpressionNode
+
+data class BinaryOperationNode(
+    val operator: Operator,
+    val left: ExpressionNode,
+    val right: ExpressionNode,
+    override val location: SourceLocation
+) : ExpressionNode
+
+enum class Operator {
+    EQUALS
+}

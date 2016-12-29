@@ -24,6 +24,11 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
         return isNext;
     }
 
+    fun skip() {
+        peek()
+        index++
+    }
+
     fun skip(tokenType: T) {
         val token = peek()
         if (token.tokenType == tokenType) {
