@@ -58,9 +58,9 @@ data class BinaryOperationNode(
     override val location: SourceLocation
 ) : ExpressionNode
 
-enum class Operator {
-    EQUALS,
-    ADD,
-    SUBTRACT,
-    MULTIPLY
+enum class Operator(val precedence: Int) {
+    EQUALS(8),
+    ADD(11),
+    SUBTRACT(11),
+    MULTIPLY(12)
 }

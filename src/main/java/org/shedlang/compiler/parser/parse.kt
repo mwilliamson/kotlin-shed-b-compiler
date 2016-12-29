@@ -96,6 +96,10 @@ internal fun tryParseReturn(location: SourceLocation, tokens: TokenIterator<Toke
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
+    return parseExpression(tokens, precedence = Int.MIN_VALUE)
+}
+
+private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) : ExpressionNode {
     var left = ::parsePrimaryExpression.parse(tokens)
 
     while (true) {
@@ -108,11 +112,11 @@ internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode 
                 "*" -> Operator.MULTIPLY
                 else -> null
             }
-            if (operator == null) {
+            if (operator == null || operator.precedence < precedence) {
                 return left
             } else {
                 tokens.skip()
-                val right = ::parsePrimaryExpression.parse(tokens)
+                val right = parseExpression(tokens, operator.precedence + 1)
                 left = BinaryOperationNode(operator, left, right, left.location)
             }
         } else {

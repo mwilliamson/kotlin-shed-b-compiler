@@ -104,5 +104,21 @@ class ParseBinaryExpressionTests {
         ))
     }
 
+    @Test
+    fun higherPrecedenceOperatorsBindMoreTightlyThanLowerPrecedenceOperators() {
+        val source = "x + y * z"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isBinaryOperation(
+            Operator.ADD,
+            isVariableReference("x"),
+            isBinaryOperation(
+                Operator.MULTIPLY,
+                isVariableReference("y"),
+                isVariableReference("z")
+            )
+
+        ))
+    }
+
     private fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
 }
