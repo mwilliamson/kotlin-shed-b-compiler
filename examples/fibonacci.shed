@@ -1,0 +1,26 @@
+module example;
+
+fun fibonacci(n: Int) : Int {
+    return fibonacci2(n).second;
+}
+
+shape FibnacciPair {
+    first: Int,
+    second: Int,
+}
+
+fun fibonacci2(n: Int) : FibnacciPair {
+    if (n == 0) {
+        return FibnacciPair {
+            first = 1,
+            second = 0
+        };
+    } else {
+        val previous = fibonacci2(n - 1);
+        return FibnacciPair {
+            first = previous.second,
+            second = previous.first + previous.second
+        };
+    }
+}
+
