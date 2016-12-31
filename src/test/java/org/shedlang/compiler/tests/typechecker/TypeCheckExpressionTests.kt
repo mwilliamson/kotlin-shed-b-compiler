@@ -72,6 +72,13 @@ class TypeCheckExpressionTests {
         )
     }
 
+    @Test
+    fun equalityOperationReturnsBoolean() {
+        val node = BinaryOperationNode(Operator.EQUALS, literalInt(1), literalInt(2), anySourceLocation())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(equalTo(BoolType)))
+    }
+
     fun emptyTypeContext(): TypeContext {
         return TypeContext(mutableMapOf())
     }

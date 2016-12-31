@@ -41,7 +41,10 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
         override fun visit(node: BinaryOperationNode): Type {
             verifyType(node.left, context, expected = IntType)
             verifyType(node.right, context, expected = IntType)
-            return IntType
+            return when (node.operator) {
+                Operator.EQUALS -> BoolType
+                Operator.ADD, Operator.SUBTRACT, Operator.MULTIPLY -> IntType
+            }
         }
 
         override fun visit(node: FunctionCallNode): Type {
