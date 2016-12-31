@@ -16,6 +16,8 @@ class TypeContext(private val variables: MutableMap<String, Type>) {
 open class TypeCheckError(message: String?, val location: SourceLocation) : Exception(message)
 class UnboundLocalError(val name: String, location: SourceLocation)
     : TypeCheckError("Local variable is not bound: " + name, location)
+class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
+    : TypeCheckError("Expected type $expected but was $actual", location)
 
 fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
     return expression.visit(object : ExpressionNodeVisitor<Type> {
@@ -37,11 +39,20 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
         }
 
         override fun visit(node: BinaryOperationNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            verifyType(node.left, context, expected = IntType)
+            verifyType(node.right, context, expected = IntType)
+            return IntType
         }
 
         override fun visit(node: FunctionCallNode): Type {
             throw UnsupportedOperationException("not implemented")
         }
     })
+}
+
+private fun verifyType(expression: ExpressionNode, context: TypeContext, expected: Type) {
+    val type = inferType(expression, context)
+    if (type != expected) {
+        throw UnexpectedTypeError(expected = expected, actual = type, location = expression.location)
+    }
 }
