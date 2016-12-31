@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BooleanLiteralNode
 import org.shedlang.compiler.ast.IntegerLiteralNode
 import org.shedlang.compiler.ast.SourceLocation
+import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.typechecker.BoolType
 import org.shedlang.compiler.typechecker.IntType
 import org.shedlang.compiler.typechecker.TypeContext
@@ -27,8 +28,15 @@ class TypeCheckExpressionTests {
         assertThat(type, cast(equalTo(IntType)))
     }
 
+    @Test
+    fun variableReferenceTypeIsRetrievedFromContext() {
+        val node = VariableReferenceNode("x", anySourceLocation())
+        val type = inferType(node, TypeContext(mutableMapOf(Pair("x", IntType))))
+        assertThat(type, cast(equalTo(IntType)))
+    }
+
     fun emptyTypeContext(): TypeContext {
-        return TypeContext()
+        return TypeContext(mutableMapOf())
     }
 
     fun anySourceLocation(): SourceLocation {

@@ -7,8 +7,10 @@ interface Type
 object BoolType : Type
 object IntType : Type
 
-class TypeContext() {
-
+class TypeContext(private val variables: MutableMap<String, Type>) {
+    fun typeOf(variable: VariableReferenceNode): Type? {
+        return variables[variable.name]
+    }
 }
 
 fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
@@ -22,7 +24,8 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
         }
 
         override fun visit(node: VariableReferenceNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            // TODO: implement proper exception if variable not found
+            return context.typeOf(node)!!
         }
 
         override fun visit(node: BinaryOperationNode): Type {
