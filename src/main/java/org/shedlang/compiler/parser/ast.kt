@@ -48,6 +48,11 @@ data class IfStatementNode(
 
 interface ExpressionNode : Node
 
+data class BooleanLiteralNode(
+    val value: Boolean,
+    override val location: SourceLocation
+): ExpressionNode
+
 data class IntegerLiteralNode(
     val value: Int,
     override val location: SourceLocation

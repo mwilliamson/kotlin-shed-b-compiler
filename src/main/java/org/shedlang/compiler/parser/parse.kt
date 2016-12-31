@@ -216,6 +216,10 @@ internal fun parsePrimaryExpression(location: SourceLocation, tokens: TokenItera
     when (token.tokenType) {
         TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), location)
         TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, location)
+        TokenType.KEYWORD -> when (token.value) {
+            "true" -> return BooleanLiteralNode(true, location)
+            "false" -> return BooleanLiteralNode(false, location)
+        }
         TokenType.SYMBOL -> when (token.value) {
             "(" -> {
                 val expression = parseExpression(tokens)

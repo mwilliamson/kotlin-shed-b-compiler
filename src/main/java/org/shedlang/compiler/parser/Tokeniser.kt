@@ -2,10 +2,12 @@ package org.shedlang.compiler.parser;
 
 private val keywords = setOf(
     "else",
+    "false",
     "fun",
     "if",
     "module",
-    "return"
+    "return",
+    "true"
 )
 
 private val symbols = setOf(
