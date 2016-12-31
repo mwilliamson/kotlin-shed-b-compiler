@@ -46,35 +46,65 @@ data class IfStatementNode(
     override val location: SourceLocation
 ) : StatementNode
 
-interface ExpressionNode : Node
+interface ExpressionNodeVisitor<T> {
+    fun visit(node: BooleanLiteralNode): T
+    fun visit(node: IntegerLiteralNode): T
+    fun visit(node: VariableReferenceNode): T
+    fun visit(node: BinaryOperationNode): T
+    fun visit(node: FunctionCallNode): T
+}
+
+interface ExpressionNode : Node {
+    fun <T> visit(visitor: ExpressionNodeVisitor<T>): T
+}
 
 data class BooleanLiteralNode(
     val value: Boolean,
     override val location: SourceLocation
-): ExpressionNode
+): ExpressionNode {
+    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class IntegerLiteralNode(
     val value: Int,
     override val location: SourceLocation
-) : ExpressionNode
+) : ExpressionNode {
+    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class VariableReferenceNode(
     val name: String,
     override val location: SourceLocation
-) : ExpressionNode
+) : ExpressionNode {
+    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class BinaryOperationNode(
     val operator: Operator,
     val left: ExpressionNode,
     val right: ExpressionNode,
     override val location: SourceLocation
-) : ExpressionNode
+) : ExpressionNode {
+    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class FunctionCallNode(
     val left: ExpressionNode,
     val arguments: List<ExpressionNode>,
     override val location: SourceLocation
-) : ExpressionNode
+) : ExpressionNode {
+    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 enum class Operator {
     EQUALS,
