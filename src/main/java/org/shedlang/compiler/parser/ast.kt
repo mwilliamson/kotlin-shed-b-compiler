@@ -32,19 +32,34 @@ data class ArgumentNode(
     override val location: SourceLocation
 ) : Node
 
-interface StatementNode : Node
+interface StatementNodeVisitor<T> {
+    fun visit(node: ReturnNode): T
+    fun visit(node: IfStatementNode): T
+}
+
+interface StatementNode : Node {
+    fun <T> accept(visitor: StatementNodeVisitor<T>): T
+}
 
 data class ReturnNode(
     val expression: ExpressionNode,
     override val location: SourceLocation
-) : StatementNode
+) : StatementNode {
+    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class IfStatementNode(
     val condition: ExpressionNode,
     val trueBranch: List<StatementNode>,
     val falseBranch: List<StatementNode>,
     override val location: SourceLocation
-) : StatementNode
+) : StatementNode {
+    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 interface ExpressionNodeVisitor<T> {
     fun visit(node: BooleanLiteralNode): T
@@ -55,14 +70,14 @@ interface ExpressionNodeVisitor<T> {
 }
 
 interface ExpressionNode : Node {
-    fun <T> visit(visitor: ExpressionNodeVisitor<T>): T
+    fun <T> accept(visitor: ExpressionNodeVisitor<T>): T
 }
 
 data class BooleanLiteralNode(
     val value: Boolean,
     override val location: SourceLocation
 ): ExpressionNode {
-    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -71,7 +86,7 @@ data class IntegerLiteralNode(
     val value: Int,
     override val location: SourceLocation
 ) : ExpressionNode {
-    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -80,7 +95,7 @@ data class VariableReferenceNode(
     val name: String,
     override val location: SourceLocation
 ) : ExpressionNode {
-    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -91,7 +106,7 @@ data class BinaryOperationNode(
     val right: ExpressionNode,
     override val location: SourceLocation
 ) : ExpressionNode {
-    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -101,7 +116,7 @@ data class FunctionCallNode(
     val arguments: List<ExpressionNode>,
     override val location: SourceLocation
 ) : ExpressionNode {
-    override fun <T> visit(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
     }
 }

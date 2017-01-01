@@ -19,8 +19,20 @@ class UnboundLocalError(val name: String, location: SourceLocation)
 class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
     : TypeCheckError("Expected type $expected but was $actual", location)
 
+fun typeCheck(statement: StatementNode) {
+    statement.accept(object : StatementNodeVisitor<Unit> {
+        override fun visit(node: IfStatementNode) {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: ReturnNode): Unit {
+            throw UnsupportedOperationException("not implemented")
+        }
+    })
+}
+
 fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
-    return expression.visit(object : ExpressionNodeVisitor<Type> {
+    return expression.accept(object : ExpressionNodeVisitor<Type> {
         override fun visit(node: BooleanLiteralNode): Type {
             return BoolType
         }
