@@ -24,7 +24,9 @@ class ReturnOutsideOfFunctionError(location: SourceLocation)
 fun typeCheck(statement: StatementNode, context: TypeContext) {
     statement.accept(object : StatementNodeVisitor<Unit> {
         override fun visit(node: IfStatementNode) {
-            throw UnsupportedOperationException("not implemented")
+            verifyType(node.condition, context, expected = BoolType)
+            typeCheck(node.trueBranch, context)
+            typeCheck(node.falseBranch, context)
         }
 
         override fun visit(node: ReturnNode): Unit {
@@ -35,6 +37,12 @@ fun typeCheck(statement: StatementNode, context: TypeContext) {
             }
         }
     })
+}
+
+fun typeCheck(statements: List<StatementNode>, context: TypeContext) {
+    for (statement in statements) {
+        typeCheck(statement, context)
+    }
 }
 
 fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
