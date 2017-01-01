@@ -6,7 +6,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.ast.BinaryOperationNode
+import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.typechecker.*
 
@@ -28,7 +30,7 @@ class TypeCheckExpressionTests {
     @Test
     fun variableReferenceTypeIsRetrievedFromContext() {
         val node = VariableReferenceNode("x", anySourceLocation())
-        val type = inferType(node, TypeContext(mutableMapOf(Pair("x", IntType))))
+        val type = inferType(node, typeContext(variables = mutableMapOf(Pair("x", IntType))))
         assertThat(type, cast(equalTo(IntType)))
     }
 
@@ -78,15 +80,4 @@ class TypeCheckExpressionTests {
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(BoolType)))
     }
-
-    fun emptyTypeContext(): TypeContext {
-        return TypeContext(mutableMapOf())
-    }
-
-    fun anySourceLocation(): SourceLocation {
-        return SourceLocation("<string>", 0)
-    }
-
-    private fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySourceLocation())
-    private fun literalInt(value: Int) = IntegerLiteralNode(value, anySourceLocation())
 }

@@ -7,7 +7,7 @@ interface Type
 object BoolType : Type
 object IntType : Type
 
-class TypeContext(private val variables: MutableMap<String, Type>) {
+class TypeContext(val returnType: Type?, private val variables: MutableMap<String, Type>) {
     fun typeOf(variable: VariableReferenceNode): Type? {
         return variables[variable.name]
     }
@@ -18,15 +18,21 @@ class UnboundLocalError(val name: String, location: SourceLocation)
     : TypeCheckError("Local variable is not bound: " + name, location)
 class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
     : TypeCheckError("Expected type $expected but was $actual", location)
+class ReturnOutsideOfFunctionError(location: SourceLocation)
+    : TypeCheckError("Cannot return outside of a function", location)
 
-fun typeCheck(statement: StatementNode) {
+fun typeCheck(statement: StatementNode, context: TypeContext) {
     statement.accept(object : StatementNodeVisitor<Unit> {
         override fun visit(node: IfStatementNode) {
             throw UnsupportedOperationException("not implemented")
         }
 
         override fun visit(node: ReturnNode): Unit {
-            throw UnsupportedOperationException("not implemented")
+            if (context.returnType == null) {
+                throw ReturnOutsideOfFunctionError(node.location)
+            } else {
+                verifyType(node.expression, context, expected = context.returnType)
+            }
         }
     })
 }
@@ -67,7 +73,11 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
 
 private fun verifyType(expression: ExpressionNode, context: TypeContext, expected: Type) {
     val type = inferType(expression, context)
-    if (type != expected) {
-        throw UnexpectedTypeError(expected = expected, actual = type, location = expression.location)
+    verifyType(expected = expected, actual = type, location = expression.location)
+}
+
+private fun verifyType(expected: Type, actual: Type, location: SourceLocation) {
+    if (actual != expected) {
+        throw UnexpectedTypeError(expected = expected, actual = actual, location = location)
     }
 }
