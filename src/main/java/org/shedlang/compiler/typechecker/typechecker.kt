@@ -6,6 +6,9 @@ interface Type
 
 object BoolType : Type
 object IntType : Type
+object AnyType : Type
+
+data class FunctionType(val arguments: List<Type>, val returns: Type): Type
 
 class TypeContext(val returnType: Type?, private val variables: MutableMap<String, Type>) {
     fun typeOf(variable: VariableReferenceNode): Type? {
@@ -18,6 +21,8 @@ class UnboundLocalError(val name: String, location: SourceLocation)
     : TypeCheckError("Local variable is not bound: " + name, location)
 class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
     : TypeCheckError("Expected type $expected but was $actual", location)
+class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, location: SourceLocation)
+    : TypeCheckError("Expected $expected arguments, but got $actual", location)
 class ReturnOutsideOfFunctionError(location: SourceLocation)
     : TypeCheckError("Cannot return outside of a function", location)
 
@@ -74,7 +79,28 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
         }
 
         override fun visit(node: FunctionCallNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            val functionType = inferType(node.function, context)
+            return when (functionType) {
+                is FunctionType -> {
+                    node.arguments.zip(functionType.arguments, { arg, argType -> verifyType(arg, context, expected = argType) })
+                    if (functionType.arguments.size != node.arguments.size) {
+                        throw WrongNumberOfArgumentsError(
+                            expected = functionType.arguments.size,
+                            actual = node.arguments.size,
+                            location = node.location
+                        )
+                    }
+                    functionType.returns
+                }
+                else -> {
+                    val argumentTypes = node.arguments.map { argument -> inferType(argument, context) }
+                    throw UnexpectedTypeError(
+                        expected = FunctionType(argumentTypes, AnyType),
+                        actual = functionType,
+                        location = node.function.location
+                    )
+                }
+            }
         }
     })
 }

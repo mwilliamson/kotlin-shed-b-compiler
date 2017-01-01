@@ -5,14 +5,15 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.typechecker.*
+import java.util.*
 
 
 fun emptyTypeContext(): TypeContext {
     return TypeContext(null, mutableMapOf())
 }
 
-fun typeContext(returnType: Type? = null, variables: MutableMap<String, Type> = mutableMapOf()): TypeContext {
-    return TypeContext(returnType, variables)
+fun typeContext(returnType: Type? = null, variables: Map<String, Type> = mapOf()): TypeContext {
+    return TypeContext(returnType, HashMap(variables))
 }
 
 fun anySourceLocation(): SourceLocation {
@@ -39,7 +40,17 @@ fun assertStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
 
 fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySourceLocation())
 fun literalInt(value: Int) = IntegerLiteralNode(value, anySourceLocation())
+fun variableReference(name: String) = VariableReferenceNode(name, anySourceLocation())
 fun returns(expression: ExpressionNode) = ReturnNode(expression, anySourceLocation())
+
+fun functionCall(
+    function: ExpressionNode,
+    arguments: List<ExpressionNode> = listOf()
+) = FunctionCallNode(
+    function = function,
+    arguments = arguments,
+    location = anySourceLocation()
+)
 
 fun throwsUnexpectedType(expected: Type, actual: Type): Matcher<() -> Unit> {
     return throws(allOf(

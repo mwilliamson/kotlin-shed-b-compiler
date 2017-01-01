@@ -30,7 +30,7 @@ internal fun isFunctionCall(
     arguments: Matcher<List<ExpressionNode>>
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
-        has(FunctionCallNode::left, left),
+        has(FunctionCallNode::function, left),
         has(FunctionCallNode::arguments, arguments)
     ))
 }

@@ -112,7 +112,7 @@ data class BinaryOperationNode(
 }
 
 data class FunctionCallNode(
-    val left: ExpressionNode,
+    val function: ExpressionNode,
     val arguments: List<ExpressionNode>,
     override val location: SourceLocation
 ) : ExpressionNode {

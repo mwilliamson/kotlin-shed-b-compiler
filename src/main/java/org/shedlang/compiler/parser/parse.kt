@@ -200,7 +200,7 @@ private object FunctionCallParser : OperationParser {
         )
         tokens.skip(TokenType.SYMBOL, ")")
         return FunctionCallNode(
-            left = left,
+            function = left,
             arguments = arguments,
             location = left.location
         )
