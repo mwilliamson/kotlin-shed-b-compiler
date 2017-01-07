@@ -39,7 +39,7 @@ class TypeCheckExpressionTests {
         val node = VariableReferenceNode("x", anySourceLocation())
         assertThat(
             { inferType(node, emptyTypeContext()) },
-            throws(has(UnboundLocalError::name, equalTo("x")))
+            throws(has(UnresolvedReferenceError::name, equalTo("x")))
         )
     }
 

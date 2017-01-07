@@ -36,7 +36,7 @@ fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementN
 fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     assertThat(
         { typeCheck(badStatement) },
-        throws(has(UnboundLocalError::location, equalTo(badLocation)))
+        throws(has(UnresolvedReferenceError::location, equalTo(badLocation)))
     )
 }
 

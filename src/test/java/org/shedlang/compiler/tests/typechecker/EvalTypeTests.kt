@@ -15,7 +15,7 @@ class EvalTypeTests {
     fun whenTypeReferenceIsForUnboundVariableThenErrorIsThrown() {
         assertThat(
             { evalType(TypeReferenceNode("Int", anySourceLocation()), emptyTypeContext()) },
-            throws(has(UnboundLocalError::name, equalTo("Int")))
+            throws(has(UnresolvedReferenceError::name, equalTo("Int")))
         )
     }
 

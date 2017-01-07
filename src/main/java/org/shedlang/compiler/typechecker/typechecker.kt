@@ -23,7 +23,7 @@ class TypeContext(val returnType: Type?, private val variables: MutableMap<Strin
 }
 
 open class TypeCheckError(message: String?, val location: SourceLocation) : Exception(message)
-class UnboundLocalError(val name: String, location: SourceLocation)
+class UnresolvedReferenceError(val name: String, location: SourceLocation)
     : TypeCheckError("Local variable is not bound: " + name, location)
 class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
     : TypeCheckError("Expected type $expected but was $actual", location)
@@ -41,7 +41,7 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
         override fun visit(node: TypeReferenceNode): Type {
             val metaType = context.typeOf(node.name)
             return when (metaType) {
-                null -> throw UnboundLocalError(node.name, node.location)
+                null -> throw UnresolvedReferenceError(node.name, node.location)
                 is MetaType -> metaType.type
                 else -> throw UnexpectedTypeError(
                     expected = MetaType(AnyType),
@@ -98,7 +98,7 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
         override fun visit(node: VariableReferenceNode): Type {
             val type = context.typeOf(node)
             if (type == null) {
-                throw UnboundLocalError(node.name, node.location)
+                throw UnresolvedReferenceError(node.name, node.location)
             } else {
                 return type
             }
