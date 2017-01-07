@@ -7,8 +7,8 @@ import org.shedlang.compiler.ast.ReferenceNode
 
 class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>) {
     // TODO: raise a more specific exception
-    operator fun get(node: Node): Int = nodes[node.nodeId]!!
-    operator fun set(node: Node, value: Int): Unit {
+    operator fun get(node: ReferenceNode): Int = nodes[node.nodeId]!!
+    operator fun set(node: ReferenceNode, value: Int): Unit {
         nodes[node.nodeId] = value
     }
 
