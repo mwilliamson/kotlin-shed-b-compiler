@@ -31,9 +31,15 @@ fun ifStatement(
 // TODO: change to a statement that is bad in all situations once we have expression statements
 private val badLocation = SourceLocation("<bad location>", 0)
 private val badStatement = ReturnNode(literalInt(1), badLocation)
-fun assertStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
+fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
     assertThat(
         { typeCheck(build(badStatement), emptyTypeContext()) },
+        throws(has(ReturnOutsideOfFunctionError::location, equalTo(badLocation)))
+    )
+}
+fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
+    assertThat(
+        { typeCheck(badStatement) },
         throws(has(ReturnOutsideOfFunctionError::location, equalTo(badLocation)))
     )
 }
@@ -51,6 +57,19 @@ fun functionCall(
     arguments = arguments,
     location = anySourceLocation()
 )
+
+fun function(
+    returnType: TypeNode = typeReference("Unit"),
+    body: List<StatementNode> = listOf()
+) = FunctionNode(
+    name = "f",
+    arguments = listOf(),
+    returnType = returnType,
+    body = body,
+    location = anySourceLocation()
+)
+
+fun typeReference(name: String) = TypeReferenceNode(name, anySourceLocation())
 
 fun throwsUnexpectedType(expected: Type, actual: Type): Matcher<() -> Unit> {
     return throws(allOf(

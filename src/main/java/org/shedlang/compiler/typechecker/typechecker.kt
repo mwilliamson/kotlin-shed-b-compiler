@@ -1,18 +1,24 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import java.util.*
 
 interface Type
 
+object UnitType: Type
 object BoolType : Type
 object IntType : Type
 object AnyType : Type
+class MetaType(val type: Type): Type
 
 data class FunctionType(val arguments: List<Type>, val returns: Type): Type
 
 class TypeContext(val returnType: Type?, private val variables: MutableMap<String, Type>) {
-    fun typeOf(variable: VariableReferenceNode): Type? {
-        return variables[variable.name]
+    fun typeOf(variable: VariableReferenceNode): Type? = typeOf(variable.name)
+    fun typeOf(name: String): Type? = variables[name]
+
+    fun enterFunction(returnType: Type): TypeContext {
+        return TypeContext(returnType = returnType, variables = HashMap(variables))
     }
 }
 
@@ -25,6 +31,24 @@ class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, location: 
     : TypeCheckError("Expected $expected arguments, but got $actual", location)
 class ReturnOutsideOfFunctionError(location: SourceLocation)
     : TypeCheckError("Cannot return outside of a function", location)
+
+fun typeCheck(function: FunctionNode, context: TypeContext) {
+    typeCheck(function.body, context.enterFunction(returnType = evalType(function.returnType, context)))
+}
+
+fun evalType(type: TypeNode, context: TypeContext): Type {
+    return type.accept(object : TypeNode.Visitor<Type> {
+        override fun visit(node: TypeReferenceNode): Type {
+            // TODO: handle unbound
+            val metaType = context.typeOf(node.name)!!
+            return when (metaType) {
+                is MetaType -> metaType.type
+                // TODO: handle not a type
+                else -> throw Exception()
+            }
+        }
+    })
+}
 
 fun typeCheck(statement: StatementNode, context: TypeContext) {
     statement.accept(object : StatementNodeVisitor<Unit> {
@@ -44,7 +68,7 @@ fun typeCheck(statement: StatementNode, context: TypeContext) {
     })
 }
 
-fun typeCheck(statements: List<StatementNode>, context: TypeContext) {
+private fun typeCheck(statements: List<StatementNode>, context: TypeContext) {
     for (statement in statements) {
         typeCheck(statement, context)
     }

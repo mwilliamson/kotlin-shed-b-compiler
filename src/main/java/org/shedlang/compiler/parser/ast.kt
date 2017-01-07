@@ -6,11 +6,21 @@ interface Node {
 
 data class SourceLocation(val filename: String, val characterIndex: Int)
 
-interface TypeNode : Node
+interface TypeNode : Node {
+    interface Visitor<T> {
+        fun visit(node: TypeReferenceNode): T
+    }
+
+    fun <T> accept(visitor: Visitor<T>): T
+}
 data class TypeReferenceNode(
     val name: String,
     override val location: SourceLocation
-) : TypeNode
+) : TypeNode {
+    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class ModuleNode(
     val name: String,

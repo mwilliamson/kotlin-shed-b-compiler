@@ -18,11 +18,11 @@ class TypeCheckIfStatementTests {
 
     @Test
     fun trueBranchIsTypeChecked() {
-        assertStatementIsTypeChecked { badStatement -> ifStatement(trueBranch = listOf(badStatement)) }
+        assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(trueBranch = listOf(badStatement)) }
     }
 
     @Test
     fun falseBranchIsTypeChecked() {
-        assertStatementIsTypeChecked { badStatement -> ifStatement(falseBranch = listOf(badStatement)) }
+        assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(falseBranch = listOf(badStatement)) }
     }
 }
