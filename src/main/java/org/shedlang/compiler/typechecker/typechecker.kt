@@ -24,7 +24,7 @@ class TypeContext(val returnType: Type?, private val variables: MutableMap<Strin
 
 open class TypeCheckError(message: String?, val location: SourceLocation) : Exception(message)
 class UnresolvedReferenceError(val name: String, location: SourceLocation)
-    : TypeCheckError("Local variable is not bound: " + name, location)
+    : TypeCheckError("Unresolved reference: " + name, location)
 class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
     : TypeCheckError("Expected type $expected but was $actual", location)
 class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, location: SourceLocation)
