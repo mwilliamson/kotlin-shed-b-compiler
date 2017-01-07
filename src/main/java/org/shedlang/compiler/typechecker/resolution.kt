@@ -1,9 +1,6 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.ast.ArgumentNode
-import org.shedlang.compiler.ast.FunctionNode
-import org.shedlang.compiler.ast.Node
-import org.shedlang.compiler.ast.ReferenceNode
+import org.shedlang.compiler.ast.*
 
 class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>) {
     // TODO: raise a more specific exception
@@ -34,6 +31,14 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             val bodyContext = context.enterScope(bindings)
             for (statement in node.body) {
                 resolve(statement, bodyContext)
+            }
+        }
+
+        is ModuleNode -> {
+            val bindings = node.body.associateBy(FunctionNode::name, Node::nodeId)
+            val bodyContext = context.enterScope(bindings)
+            for (function in node.body) {
+                resolve(function, bodyContext)
             }
         }
 

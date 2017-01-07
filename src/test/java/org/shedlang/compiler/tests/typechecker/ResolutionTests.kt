@@ -96,6 +96,28 @@ class ResolutionTests {
         assertThat(context[reference], equalTo(argument.nodeId))
     }
 
+    @Test
+    fun functionsCanCallEachOtherRecursively() {
+        val referenceToSecond = variableReference("g")
+        val definitionOfFirst = function(name = "f", body = listOf(
+            expressionStatement(functionCall(referenceToSecond, listOf()))
+        ))
+        val referenceToFirst = variableReference("f")
+        val definitionOfSecond = function(name = "g", body = listOf(
+            expressionStatement(functionCall(referenceToFirst, listOf()))
+        ))
+        val node = module(body = listOf(
+            definitionOfFirst,
+            definitionOfSecond
+        ))
+
+        val context = resolutionContext(mapOf("Unit" to -1))
+        resolve(node, context)
+
+        assertThat(context[referenceToFirst], equalTo(definitionOfFirst.nodeId))
+        assertThat(context[referenceToSecond], equalTo(definitionOfSecond.nodeId))
+    }
+
     private fun resolutionContext(variables: Map<String, Int>)
         = ResolutionContext(bindings = variables, nodes = mutableMapOf())
 }
