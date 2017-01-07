@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.tests.isFunctionType
 import org.shedlang.compiler.typechecker.*
 
 class TypeCheckFunctionTests {
@@ -49,5 +51,28 @@ class TypeCheckFunctionTests {
                 "x" to BoolType
             ))
         )
+    }
+
+    @Test
+    fun signatureOfFunctionIsDeterminedFromArgumentsAndReturnType() {
+        val node = function(
+            arguments = listOf(
+                argument(name = "x", type = typeReference("Int")),
+                argument(name = "y", type = typeReference("Bool"))
+            ),
+            returnType = typeReference("Int"),
+            body = listOf(returns(variableReference("x")))
+        )
+        val signature = typeCheck(
+            node,
+            typeContext(variables = mapOf(
+                "Int" to MetaType(IntType),
+                "Bool" to MetaType(BoolType)
+            ))
+        )
+        assertThat(signature, isFunctionType(
+            arguments = equalTo(listOf(IntType, BoolType)),
+            returnType = equalTo(IntType)
+        ))
     }
 }

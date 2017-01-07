@@ -1,8 +1,8 @@
 package org.shedlang.compiler.tests
 
-import com.natpryce.hamkrest.MatchResult
-import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.and
+import com.natpryce.hamkrest.*
+import org.shedlang.compiler.typechecker.FunctionType
+import org.shedlang.compiler.typechecker.Type
 
 
 internal fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
@@ -33,3 +33,11 @@ internal fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> 
 
     }
 }
+
+internal fun isFunctionType(
+    arguments: Matcher<List<Type>>,
+    returnType: Matcher<Type>
+): Matcher<Type> = cast(allOf(
+    has(FunctionType::arguments, arguments),
+    has(FunctionType::returns, returnType)
+))

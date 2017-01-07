@@ -31,7 +31,7 @@ class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, location: 
 class ReturnOutsideOfFunctionError(location: SourceLocation)
     : TypeCheckError("Cannot return outside of a function", location)
 
-fun typeCheck(function: FunctionNode, context: TypeContext) {
+fun typeCheck(function: FunctionNode, context: TypeContext): FunctionType {
     val argumentTypes = function.arguments.associateBy(
         ArgumentNode::name,
         { argument -> evalType(argument.type, context) }
@@ -39,6 +39,7 @@ fun typeCheck(function: FunctionNode, context: TypeContext) {
     val returnType = evalType(function.returnType, context)
     val bodyContext = context.enterFunction(variables = argumentTypes, returnType = returnType)
     typeCheck(function.body, bodyContext)
+    return FunctionType(argumentTypes.values.toList(), returnType)
 }
 
 fun evalType(type: TypeNode, context: TypeContext): Type {
