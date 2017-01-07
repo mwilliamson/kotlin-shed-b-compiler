@@ -3,7 +3,7 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.ArgumentNode
 import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.ast.Node
-import org.shedlang.compiler.ast.VariableReferenceNode
+import org.shedlang.compiler.ast.ReferenceNode
 
 class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>) {
     // TODO: raise a more specific exception
@@ -19,7 +19,7 @@ class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<In
 
 internal fun resolve(node: Node, context: ResolutionContext) {
     when (node) {
-        is VariableReferenceNode -> {
+        is ReferenceNode -> {
             val referentId = context.bindings[node.name]
             when (referentId) {
                 null ->  throw UnresolvedReferenceError(node.name, node.location)

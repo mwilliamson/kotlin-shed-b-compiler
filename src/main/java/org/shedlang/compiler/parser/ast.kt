@@ -10,6 +10,10 @@ interface VariableBindingNode: Node {
     val name: String
 }
 
+interface ReferenceNode: Node {
+    val name: String
+}
+
 data class SourceLocation(val filename: String, val characterIndex: Int)
 
 private var nextId = 0
@@ -25,10 +29,10 @@ interface TypeNode : Node {
 }
 
 data class TypeReferenceNode(
-    val name: String,
+    override val name: String,
     override val location: SourceLocation,
     override val nodeId: Int = nextId()
-) : TypeNode {
+) : ReferenceNode, TypeNode {
     override val children: List<Node>
         get() = listOf()
 
@@ -159,10 +163,10 @@ data class IntegerLiteralNode(
 }
 
 data class VariableReferenceNode(
-    val name: String,
+    override val name: String,
     override val location: SourceLocation,
     override val nodeId: Int = nextId()
-) : ExpressionNode {
+) : ReferenceNode, ExpressionNode {
     override val children: List<Node>
         get() = listOf()
 
