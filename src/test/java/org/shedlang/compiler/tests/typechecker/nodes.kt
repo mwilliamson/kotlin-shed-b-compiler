@@ -68,8 +68,12 @@ fun function(
 fun typeReference(name: String) = TypeReferenceNode(name, anySourceLocation())
 
 fun throwsUnexpectedType(expected: Type, actual: Type): Matcher<() -> Unit> {
+    return throwsUnexpectedType(equalTo(expected), actual)
+}
+
+fun throwsUnexpectedType(expected: Matcher<Type>, actual: Type): Matcher<() -> Unit> {
     return throws(allOf(
-        has(UnexpectedTypeError::expected, cast(equalTo(expected))),
+        has(UnexpectedTypeError::expected, expected),
         has(UnexpectedTypeError::actual, cast(equalTo(actual)))
     ))
 }

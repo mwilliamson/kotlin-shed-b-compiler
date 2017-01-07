@@ -39,12 +39,15 @@ fun typeCheck(function: FunctionNode, context: TypeContext) {
 fun evalType(type: TypeNode, context: TypeContext): Type {
     return type.accept(object : TypeNode.Visitor<Type> {
         override fun visit(node: TypeReferenceNode): Type {
-            // TODO: handle unbound
-            val metaType = context.typeOf(node.name)!!
+            val metaType = context.typeOf(node.name)
             return when (metaType) {
+                null -> throw UnboundLocalError(node.name, node.location)
                 is MetaType -> metaType.type
-                // TODO: handle not a type
-                else -> throw Exception()
+                else -> throw UnexpectedTypeError(
+                    expected = MetaType(AnyType),
+                    actual = metaType,
+                    location = node.location
+                )
             }
         }
     })
