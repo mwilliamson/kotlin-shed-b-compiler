@@ -45,6 +45,7 @@ data class ArgumentNode(
 interface StatementNodeVisitor<T> {
     fun visit(node: ReturnNode): T
     fun visit(node: IfStatementNode): T
+    fun visit(node: ExpressionStatementNode): T
 }
 
 interface StatementNode : Node {
@@ -66,6 +67,15 @@ data class IfStatementNode(
     val falseBranch: List<StatementNode>,
     override val location: SourceLocation
 ) : StatementNode {
+    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class ExpressionStatementNode(
+    val expression: ExpressionNode,
+    override val location: SourceLocation
+): StatementNode {
     override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
         return visitor.visit(this)
     }

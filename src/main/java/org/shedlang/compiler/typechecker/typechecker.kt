@@ -65,6 +65,10 @@ fun typeCheck(statement: StatementNode, context: TypeContext) {
                 verifyType(node.expression, context, expected = context.returnType)
             }
         }
+
+        override fun visit(node: ExpressionStatementNode) {
+            typeCheck(node.expression, context)
+        }
     })
 }
 
@@ -72,6 +76,10 @@ private fun typeCheck(statements: List<StatementNode>, context: TypeContext) {
     for (statement in statements) {
         typeCheck(statement, context)
     }
+}
+
+private fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
+    inferType(expression, context)
 }
 
 fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
