@@ -28,19 +28,15 @@ fun ifStatement(
     return IfStatementNode(condition, trueBranch, falseBranch, anySourceLocation())
 }
 
-// TODO: change to a statement that is bad in all situations once we have expression statements
 private val badLocation = SourceLocation("<bad location>", 0)
-private val badStatement = ReturnNode(literalInt(1), badLocation)
+private val badStatement = ExpressionStatementNode(VariableReferenceNode("bad_variable_reference", badLocation), badLocation)
 fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
-    assertThat(
-        { typeCheck(build(badStatement), emptyTypeContext()) },
-        throws(has(ReturnOutsideOfFunctionError::location, equalTo(badLocation)))
-    )
+    assertStatementIsTypeChecked({ badStatement -> typeCheck(build(badStatement), emptyTypeContext()) })
 }
 fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     assertThat(
         { typeCheck(badStatement) },
-        throws(has(ReturnOutsideOfFunctionError::location, equalTo(badLocation)))
+        throws(has(UnboundLocalError::location, equalTo(badLocation)))
     )
 }
 
