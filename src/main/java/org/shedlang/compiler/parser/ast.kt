@@ -2,9 +2,14 @@ package org.shedlang.compiler.ast
 
 interface Node {
     val location: SourceLocation
+    val nodeId: Int
 }
 
 data class SourceLocation(val filename: String, val characterIndex: Int)
+
+private var nextId = 0
+
+private fun nextId() = nextId++
 
 interface TypeNode : Node {
     interface Visitor<T> {
@@ -15,7 +20,8 @@ interface TypeNode : Node {
 }
 data class TypeReferenceNode(
     val name: String,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : TypeNode {
     override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -25,7 +31,8 @@ data class TypeReferenceNode(
 data class ModuleNode(
     val name: String,
     val body: List<FunctionNode>,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : Node
 
 data class FunctionNode(
@@ -33,13 +40,15 @@ data class FunctionNode(
     val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
     val body: List<StatementNode>,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : Node
 
 data class ArgumentNode(
     val name: String,
     val type: TypeNode,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : Node
 
 interface StatementNodeVisitor<T> {
@@ -54,7 +63,8 @@ interface StatementNode : Node {
 
 data class ReturnNode(
     val expression: ExpressionNode,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : StatementNode {
     override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -65,7 +75,8 @@ data class IfStatementNode(
     val condition: ExpressionNode,
     val trueBranch: List<StatementNode>,
     val falseBranch: List<StatementNode>,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : StatementNode {
     override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -74,7 +85,8 @@ data class IfStatementNode(
 
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ): StatementNode {
     override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -95,7 +107,8 @@ interface ExpressionNode : Node {
 
 data class BooleanLiteralNode(
     val value: Boolean,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ): ExpressionNode {
     override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -104,7 +117,8 @@ data class BooleanLiteralNode(
 
 data class IntegerLiteralNode(
     val value: Int,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -113,7 +127,8 @@ data class IntegerLiteralNode(
 
 data class VariableReferenceNode(
     val name: String,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -124,7 +139,8 @@ data class BinaryOperationNode(
     val operator: Operator,
     val left: ExpressionNode,
     val right: ExpressionNode,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
@@ -134,7 +150,8 @@ data class BinaryOperationNode(
 data class FunctionCallNode(
     val function: ExpressionNode,
     val arguments: List<ExpressionNode>,
-    override val location: SourceLocation
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
         return visitor.visit(this)
