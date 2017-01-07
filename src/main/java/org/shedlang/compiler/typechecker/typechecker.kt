@@ -1,7 +1,6 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
-import java.util.*
 
 interface Type
 
@@ -13,12 +12,12 @@ class MetaType(val type: Type): Type
 
 data class FunctionType(val arguments: List<Type>, val returns: Type): Type
 
-class TypeContext(val returnType: Type?, private val variables: MutableMap<String, Type>) {
+class TypeContext(val returnType: Type?, private val variables: Map<String, Type>) {
     fun typeOf(variable: VariableReferenceNode): Type? = typeOf(variable.name)
     fun typeOf(name: String): Type? = variables[name]
 
-    fun enterFunction(returnType: Type): TypeContext {
-        return TypeContext(returnType = returnType, variables = HashMap(variables))
+    fun enterFunction(variables: Map<String, Type>, returnType: Type): TypeContext {
+        return TypeContext(returnType = returnType, variables = this.variables + variables)
     }
 }
 
@@ -33,7 +32,13 @@ class ReturnOutsideOfFunctionError(location: SourceLocation)
     : TypeCheckError("Cannot return outside of a function", location)
 
 fun typeCheck(function: FunctionNode, context: TypeContext) {
-    typeCheck(function.body, context.enterFunction(returnType = evalType(function.returnType, context)))
+    val argumentTypes = function.arguments.associateBy(
+        ArgumentNode::name,
+        { argument -> evalType(argument.type, context) }
+    )
+    val returnType = evalType(function.returnType, context)
+    val bodyContext = context.enterFunction(variables = argumentTypes, returnType = returnType)
+    typeCheck(function.body, bodyContext)
 }
 
 fun evalType(type: TypeNode, context: TypeContext): Type {

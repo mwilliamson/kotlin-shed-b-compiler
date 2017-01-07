@@ -55,13 +55,23 @@ fun functionCall(
 )
 
 fun function(
+    arguments: List<ArgumentNode> = listOf(),
     returnType: TypeNode = typeReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionNode(
     name = "f",
-    arguments = listOf(),
+    arguments = arguments,
     returnType = returnType,
     body = body,
+    location = anySourceLocation()
+)
+
+fun argument(
+    name: String,
+    type: TypeNode
+) = ArgumentNode(
+    name = name,
+    type = type,
     location = anySourceLocation()
 )
 

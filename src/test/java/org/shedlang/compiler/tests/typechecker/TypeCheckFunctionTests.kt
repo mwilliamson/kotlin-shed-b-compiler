@@ -24,4 +24,30 @@ class TypeCheckFunctionTests {
             ), typeContext(variables = mapOf(Pair("Int", MetaType(IntType)))))
         }, throwsUnexpectedType(expected = IntType, actual = BoolType))
     }
+
+    @Test
+    fun functionArgumentsAreAddedToScope() {
+        val node = function(
+            arguments = listOf(argument(name = "x", type = typeReference("Int"))),
+            returnType = typeReference("Int"),
+            body = listOf(returns(variableReference("x")))
+        )
+        typeCheck(node, typeContext(variables = mapOf(Pair("Int", MetaType(IntType)))))
+    }
+
+    @Test
+    fun functionArgumentsCanShadowExistingVariables() {
+        val node = function(
+            arguments = listOf(argument(name = "x", type = typeReference("Int"))),
+            returnType = typeReference("Int"),
+            body = listOf(returns(variableReference("x")))
+        )
+        typeCheck(
+            node,
+            typeContext(variables = mapOf(
+                "Int" to MetaType(IntType),
+                "x" to BoolType
+            ))
+        )
+    }
 }
