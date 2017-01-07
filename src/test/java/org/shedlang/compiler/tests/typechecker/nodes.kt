@@ -28,6 +28,8 @@ fun ifStatement(
     return IfStatementNode(condition, trueBranch, falseBranch, anySourceLocation())
 }
 
+fun expressionStatement(expression: ExpressionNode) = ExpressionStatementNode(expression, anySourceLocation())
+
 private val badLocation = SourceLocation("<bad location>", 0)
 private val badStatement = ExpressionStatementNode(VariableReferenceNode("bad_variable_reference", badLocation), badLocation)
 fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
@@ -55,11 +57,12 @@ fun functionCall(
 )
 
 fun function(
+    name: String = "f",
     arguments: List<ArgumentNode> = listOf(),
     returnType: TypeNode = typeReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionNode(
-    name = "f",
+    name = name,
     arguments = arguments,
     returnType = returnType,
     body = body,
@@ -72,6 +75,14 @@ fun argument(
 ) = ArgumentNode(
     name = name,
     type = type,
+    location = anySourceLocation()
+)
+
+fun module(
+    body: List<FunctionNode>
+) = ModuleNode(
+    name = "",
+    body = body,
     location = anySourceLocation()
 )
 

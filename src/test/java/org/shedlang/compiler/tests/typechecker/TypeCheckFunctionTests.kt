@@ -63,7 +63,7 @@ class TypeCheckFunctionTests {
             returnType = typeReference("Int"),
             body = listOf(returns(variableReference("x")))
         )
-        val signature = typeCheck(
+        val signature = inferType(
             node,
             typeContext(variables = mapOf(
                 "Int" to MetaType(IntType),

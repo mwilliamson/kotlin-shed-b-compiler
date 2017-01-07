@@ -19,6 +19,10 @@ class TypeContext(val returnType: Type?, private val variables: Map<String, Type
     fun enterFunction(variables: Map<String, Type>, returnType: Type): TypeContext {
         return TypeContext(returnType = returnType, variables = this.variables + variables)
     }
+
+    fun enterScope(variables: Map<String, Type>): TypeContext {
+        return TypeContext(returnType = returnType, variables = this.variables + variables)
+    }
 }
 
 open class TypeCheckError(message: String?, val location: SourceLocation) : Exception(message)
@@ -31,7 +35,28 @@ class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, location: 
 class ReturnOutsideOfFunctionError(location: SourceLocation)
     : TypeCheckError("Cannot return outside of a function", location)
 
-fun typeCheck(function: FunctionNode, context: TypeContext): FunctionType {
+fun typeCheck(module: ModuleNode, context: TypeContext) {
+    val functionTypes = module.body.associateBy(
+        FunctionNode::name,
+        { function -> inferType(function, context) }
+    )
+
+    val moduleContext = context.enterScope(variables = functionTypes)
+
+    for (statement in module.body) {
+        typeCheck(statement, moduleContext)
+    }
+}
+
+fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
+    val argumentTypes = function.arguments.map(
+        { argument -> evalType(argument.type, context) }
+    )
+    val returnType = evalType(function.returnType, context)
+    return FunctionType(argumentTypes, returnType)
+}
+
+fun typeCheck(function: FunctionNode, context: TypeContext) {
     val argumentTypes = function.arguments.associateBy(
         ArgumentNode::name,
         { argument -> evalType(argument.type, context) }
@@ -39,7 +64,6 @@ fun typeCheck(function: FunctionNode, context: TypeContext): FunctionType {
     val returnType = evalType(function.returnType, context)
     val bodyContext = context.enterFunction(variables = argumentTypes, returnType = returnType)
     typeCheck(function.body, bodyContext)
-    return FunctionType(argumentTypes.values.toList(), returnType)
 }
 
 fun evalType(type: TypeNode, context: TypeContext): Type {
