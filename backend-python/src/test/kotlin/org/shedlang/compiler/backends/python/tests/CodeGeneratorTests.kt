@@ -37,6 +37,18 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun returnStatementGeneratesReturnStatement() {
+        val shed = returns(literalInt(42))
+
+        val node = generateCode(shed)
+
+        assertThat(node, cast(has(
+            PythonReturnNode::expression,
+            cast(has(PythonIntegerLiteralNode::value, equalTo(42)))
+        )))
+    }
+
+    @Test
     fun booleanLiteralGeneratesBooleanLiteral() {
         val shed = literalBool(true)
 

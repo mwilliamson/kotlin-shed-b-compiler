@@ -18,6 +18,11 @@ data class PythonExpressionStatementNode(
     override val source: Source
 ) : PythonStatementNode
 
+data class PythonReturnNode(
+    val expression: PythonExpressionNode,
+    override val source: Source
+) : PythonStatementNode
+
 interface PythonExpressionNode : PythonNode
 
 data class PythonBooleanLiteralNode(

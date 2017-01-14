@@ -14,7 +14,7 @@ fun generateCode(node: StatementNode): PythonStatementNode {
         }
 
         override fun visit(node: ReturnNode): PythonStatementNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonReturnNode(generateCode(node.expression), NodeSource(node))
         }
 
         override fun visit(node: IfStatementNode): PythonStatementNode {
