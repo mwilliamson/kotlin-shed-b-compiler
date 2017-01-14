@@ -2,9 +2,13 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 
-class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>) {
+interface VariableReferences {
+    operator fun get(node: ReferenceNode): Int
+}
+
+class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>): VariableReferences {
     // TODO: raise a more specific exception
-    operator fun get(node: ReferenceNode): Int = nodes[node.nodeId]!!
+    override operator fun get(node: ReferenceNode): Int = nodes[node.nodeId]!!
     operator fun set(node: ReferenceNode, value: Int): Unit {
         nodes[node.nodeId] = value
     }

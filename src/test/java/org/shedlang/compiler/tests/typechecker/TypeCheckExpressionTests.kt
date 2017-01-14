@@ -8,9 +8,11 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BinaryOperationNode
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.BoolType
+import org.shedlang.compiler.typechecker.IntType
+import org.shedlang.compiler.typechecker.UnexpectedTypeError
+import org.shedlang.compiler.typechecker.inferType
 
 class TypeCheckExpressionTests {
     @Test
@@ -29,18 +31,9 @@ class TypeCheckExpressionTests {
 
     @Test
     fun variableReferenceTypeIsRetrievedFromContext() {
-        val node = VariableReferenceNode("x", anySourceLocation())
-        val type = inferType(node, typeContext(variables = mutableMapOf(Pair("x", IntType))))
+        val node = variableReference("x")
+        val type = inferType(node, typeContext(referenceTypes = mutableMapOf(node to IntType)))
         assertThat(type, cast(equalTo(IntType)))
-    }
-
-    @Test
-    fun exceptionWhenVariableNotInScope() {
-        val node = VariableReferenceNode("x", anySourceLocation())
-        assertThat(
-            { inferType(node, emptyTypeContext()) },
-            throws(has(UnresolvedReferenceError::name, equalTo("x")))
-        )
     }
 
     @Test

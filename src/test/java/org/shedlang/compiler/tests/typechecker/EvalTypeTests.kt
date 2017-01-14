@@ -1,26 +1,22 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.*
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.TypeReferenceNode
 import org.shedlang.compiler.typechecker.*
 
 class EvalTypeTests {
     @Test
-    fun whenTypeReferenceIsForUnboundVariableThenErrorIsThrown() {
-        assertThat(
-            { evalType(TypeReferenceNode("Int", anySourceLocation()), emptyTypeContext()) },
-            throws(has(UnresolvedReferenceError::name, equalTo("Int")))
-        )
-    }
-
-    @Test
     fun whenReferencedVariableIsNotATypeThenErrorIsThrown() {
+        val reference = typeReference("x")
+
         assertThat(
             { evalType(
-                TypeReferenceNode("x", anySourceLocation()),
-                typeContext(variables = mapOf(Pair("x", IntType)))
+                reference,
+                typeContext(referenceTypes = mapOf(reference to IntType))
             ) },
             // TODO: should be more like MetaType(Hole)
             throwsUnexpectedType(

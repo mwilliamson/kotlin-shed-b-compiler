@@ -9,11 +9,27 @@ import java.util.*
 
 
 fun emptyTypeContext(): TypeContext {
-    return TypeContext(null, mutableMapOf())
+    return typeContext()
 }
 
-fun typeContext(returnType: Type? = null, variables: Map<String, Type> = mapOf()): TypeContext {
-    return TypeContext(returnType, HashMap(variables))
+fun typeContext(
+    returnType: Type? = null,
+    referenceTypes: Map<ReferenceNode, Type> = mapOf(),
+    references: Map<ReferenceNode, VariableBindingNode> = mapOf()
+): TypeContext {
+    val finalReferences = (
+        referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> nextId()}) +
+        references.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value.nodeId })
+    )
+    val types = referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!! }, { entry -> entry.value })
+
+    return TypeContext(returnType, HashMap(types), VariableReferencesMap(finalReferences))
+}
+
+class VariableReferencesMap(private val references: Map<Int, Int>) : VariableReferences {
+    override fun get(node: ReferenceNode): Int {
+        return references[node.nodeId]!!
+    }
 }
 
 fun anySourceLocation(): SourceLocation {
@@ -31,19 +47,19 @@ fun ifStatement(
 fun expressionStatement(expression: ExpressionNode) = ExpressionStatementNode(expression, anySourceLocation())
 
 private val badLocation = SourceLocation("<bad location>", 0)
-private val badStatement = ExpressionStatementNode(VariableReferenceNode("bad_variable_reference", badLocation), badLocation)
+private val badStatement = BadStatementNode(location = badLocation)
 fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
     assertStatementIsTypeChecked({ badStatement -> typeCheck(build(badStatement), emptyTypeContext()) })
 }
 fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     assertThat(
         { typeCheck(badStatement) },
-        throws(has(UnresolvedReferenceError::location, equalTo(badLocation)))
+        throws(has(BadStatementError::location, equalTo(badLocation)))
     )
 }
 
 fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySourceLocation())
-fun literalInt(value: Int) = IntegerLiteralNode(value, anySourceLocation())
+fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySourceLocation())
 fun variableReference(name: String) = VariableReferenceNode(name, anySourceLocation())
 fun returns(expression: ExpressionNode) = ReturnNode(expression, anySourceLocation())
 

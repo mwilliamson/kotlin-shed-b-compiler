@@ -12,45 +12,56 @@ import org.shedlang.compiler.typechecker.*
 class TypeCheckFunctionCallTests {
     @Test
     fun functionCallTypeIsReturnTypeOfFunction() {
-        val node = functionCall(function = variableReference("f"))
-        val type = inferType(node, typeContext(variables = mapOf(Pair("f", FunctionType(listOf(), IntType)))))
+        val functionReference = variableReference("f")
+        val node = functionCall(function = functionReference)
+
+        val typeContext = typeContext(referenceTypes = mapOf(functionReference to FunctionType(listOf(), IntType)))
+        val type = inferType(node, typeContext)
+
         assertThat(type, cast(equalTo(IntType)))
     }
 
     @Test
     fun whenFunctionExpressionIsNotFunctionTypeThenCallDoesNotTypeCheck() {
+        val functionReference = variableReference("f")
         val node = functionCall(
-            function = variableReference("f"),
+            function = functionReference,
             arguments = listOf(literalInt(1), literalBool(true))
         )
         assertThat(
-            { inferType(node, typeContext(variables = mapOf(Pair("f", IntType)))) },
+            { inferType(node, typeContext(referenceTypes = mapOf(functionReference to IntType))) },
             throwsUnexpectedType(expected = FunctionType(listOf(IntType, BoolType), AnyType), actual = IntType)
         )
     }
 
     @Test
     fun errorWhenArgumentTypesDoNotMatch() {
+        val functionReference = variableReference("f")
         val node = functionCall(
-            function = variableReference("f"),
+            function = functionReference,
             arguments = listOf(literalInt(1))
         )
-        val variables = mapOf(Pair("f", FunctionType(listOf(BoolType), IntType)))
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to FunctionType(listOf(BoolType), IntType)
+        ))
         assertThat(
-            { inferType(node, typeContext(variables = variables)) },
+            { inferType(node, typeContext) },
             throwsUnexpectedType(expected = BoolType, actual = IntType)
         )
     }
 
     @Test
     fun errorWhenExtraArgumentIsPassed() {
+        val functionReference = variableReference("f")
         val node = functionCall(
-            function = variableReference("f"),
+            function = functionReference,
             arguments = listOf(literalInt(1))
         )
-        val variables = mapOf(Pair("f", FunctionType(listOf(), IntType)))
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to FunctionType(listOf(), IntType)
+        ))
         assertThat(
-            { inferType(node, typeContext(variables = variables)) },
+            { inferType(node, typeContext) },
             throws(allOf(
                 has(WrongNumberOfArgumentsError::expected, equalTo(0)),
                 has(WrongNumberOfArgumentsError::actual, equalTo(1))
@@ -60,13 +71,16 @@ class TypeCheckFunctionCallTests {
 
     @Test
     fun errorWhenArgumentIsMissing() {
+        val functionReference = variableReference("f")
         val node = functionCall(
-            function = variableReference("f"),
+            function = functionReference,
             arguments = listOf()
         )
-        val variables = mapOf(Pair("f", FunctionType(listOf(IntType), IntType)))
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to FunctionType(listOf(IntType), IntType)
+        ))
         assertThat(
-            { inferType(node, typeContext(variables = variables)) },
+            { inferType(node, typeContext) },
             throws(allOf(
                 has(WrongNumberOfArgumentsError::expected, equalTo(1)),
                 has(WrongNumberOfArgumentsError::actual, equalTo(0))

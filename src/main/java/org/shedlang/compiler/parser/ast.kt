@@ -18,7 +18,7 @@ data class SourceLocation(val filename: String, val characterIndex: Int)
 
 private var nextId = 0
 
-private fun nextId() = nextId++
+internal fun nextId() = nextId++
 
 interface TypeNode : Node {
     interface Visitor<T> {
@@ -52,13 +52,13 @@ data class ModuleNode(
 }
 
 data class FunctionNode(
-    val name: String,
+    override val name: String,
     val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
     val body: List<StatementNode>,
     override val location: SourceLocation,
     override val nodeId: Int = nextId()
-) : Node {
+) : VariableBindingNode {
     override val children: List<Node>
         get() = arguments + returnType + body
 }
@@ -74,6 +74,7 @@ data class ArgumentNode(
 }
 
 interface StatementNodeVisitor<T> {
+    fun visit(node: BadStatementNode): T
     fun visit(node: ReturnNode): T
     fun visit(node: IfStatementNode): T
     fun visit(node: ExpressionStatementNode): T
@@ -81,6 +82,18 @@ interface StatementNodeVisitor<T> {
 
 interface StatementNode : Node {
     fun <T> accept(visitor: StatementNodeVisitor<T>): T
+}
+
+data class BadStatementNode(
+    override val location: SourceLocation,
+    override val nodeId: Int = nextId()
+) : StatementNode {
+    override val children: List<Node>
+        get() = listOf()
+
+    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class ReturnNode(

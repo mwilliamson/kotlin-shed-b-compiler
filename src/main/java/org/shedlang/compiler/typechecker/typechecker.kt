@@ -12,20 +12,29 @@ class MetaType(val type: Type): Type
 
 data class FunctionType(val arguments: List<Type>, val returns: Type): Type
 
-class TypeContext(val returnType: Type?, private val variables: Map<String, Type>) {
-    fun typeOf(variable: VariableReferenceNode): Type? = typeOf(variable.name)
-    fun typeOf(name: String): Type? = variables[name]
+class TypeContext(
+    val returnType: Type?,
+    private val variables: MutableMap<Int, Type>,
+    private val resolutionContext: VariableReferences
+) {
+    fun typeOf(reference: ReferenceNode): Type? = variables[resolutionContext[reference]]
 
-    fun enterFunction(variables: Map<String, Type>, returnType: Type): TypeContext {
-        return TypeContext(returnType = returnType, variables = this.variables + variables)
+    fun addTypes(types: Map<Int, Type>) {
+        variables += types
     }
 
-    fun enterScope(variables: Map<String, Type>): TypeContext {
-        return TypeContext(returnType = returnType, variables = this.variables + variables)
+    fun enterFunction(returnType: Type): TypeContext {
+        return TypeContext(
+            returnType = returnType,
+            variables = variables,
+            resolutionContext = resolutionContext
+        )
     }
 }
 
 open class TypeCheckError(message: String?, val location: SourceLocation) : Exception(message)
+internal class BadStatementError(location: SourceLocation)
+    : TypeCheckError("Bad statement", location)
 class UnresolvedReferenceError(val name: String, location: SourceLocation)
     : TypeCheckError("Unresolved reference: " + name, location)
 class UnexpectedTypeError(val expected: Type, val actual: Type, location: SourceLocation)
@@ -37,14 +46,14 @@ class ReturnOutsideOfFunctionError(location: SourceLocation)
 
 fun typeCheck(module: ModuleNode, context: TypeContext) {
     val functionTypes = module.body.associateBy(
-        FunctionNode::name,
+        FunctionNode::nodeId,
         { function -> inferType(function, context) }
     )
 
-    val moduleContext = context.enterScope(variables = functionTypes)
+    context.addTypes(functionTypes)
 
     for (statement in module.body) {
-        typeCheck(statement, moduleContext)
+        typeCheck(statement, context)
     }
 }
 
@@ -58,18 +67,19 @@ fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
 
 fun typeCheck(function: FunctionNode, context: TypeContext) {
     val argumentTypes = function.arguments.associateBy(
-        ArgumentNode::name,
+        ArgumentNode::nodeId,
         { argument -> evalType(argument.type, context) }
     )
     val returnType = evalType(function.returnType, context)
-    val bodyContext = context.enterFunction(variables = argumentTypes, returnType = returnType)
+    context.addTypes(argumentTypes)
+    val bodyContext = context.enterFunction(returnType = returnType)
     typeCheck(function.body, bodyContext)
 }
 
 fun evalType(type: TypeNode, context: TypeContext): Type {
     return type.accept(object : TypeNode.Visitor<Type> {
         override fun visit(node: TypeReferenceNode): Type {
-            val metaType = context.typeOf(node.name)
+            val metaType = context.typeOf(node)
             return when (metaType) {
                 null -> throw UnresolvedReferenceError(node.name, node.location)
                 is MetaType -> metaType.type
@@ -85,6 +95,10 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
 
 fun typeCheck(statement: StatementNode, context: TypeContext) {
     statement.accept(object : StatementNodeVisitor<Unit> {
+        override fun visit(node: BadStatementNode) {
+            throw BadStatementError(node.location)
+        }
+
         override fun visit(node: IfStatementNode) {
             verifyType(node.condition, context, expected = BoolType)
             typeCheck(node.trueBranch, context)

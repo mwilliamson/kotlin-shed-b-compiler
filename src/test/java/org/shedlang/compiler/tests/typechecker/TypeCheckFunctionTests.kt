@@ -9,65 +9,59 @@ import org.shedlang.compiler.typechecker.*
 class TypeCheckFunctionTests {
     @Test
     fun bodyOfFunctionIsTypeChecked() {
+        val unit = typeReference("Unit")
         assertStatementIsTypeChecked({ badStatement ->
             typeCheck(function(
-                returnType = typeReference("Unit"),
+                returnType = unit,
                 body = listOf(badStatement)
-            ), typeContext(variables = mapOf(Pair("Unit", MetaType(UnitType)))))
+            ), typeContext(referenceTypes = mapOf(unit to MetaType(UnitType))))
         })
     }
 
     @Test
     fun returnStatementsInBodyMustReturnCorrectType() {
+        val intType = typeReference("Int")
         assertThat({
             typeCheck(function(
-                returnType = typeReference("Int"),
+                returnType = intType,
                 body = listOf(returns(literalBool(true)))
-            ), typeContext(variables = mapOf(Pair("Int", MetaType(IntType)))))
+            ), typeContext(referenceTypes = mapOf(intType to MetaType(IntType))))
         }, throwsUnexpectedType(expected = IntType, actual = BoolType))
     }
 
     @Test
-    fun functionArgumentsAreAddedToScope() {
+    fun functionArgumentsAreTyped() {
+        val intType = typeReference("Int")
+        val argument = argument(name = "x", type = intType)
+        val argumentReference = variableReference("x")
         val node = function(
-            arguments = listOf(argument(name = "x", type = typeReference("Int"))),
-            returnType = typeReference("Int"),
-            body = listOf(returns(variableReference("x")))
+            arguments = listOf(argument),
+            returnType = intType,
+            body = listOf(returns(argumentReference))
         )
-        typeCheck(node, typeContext(variables = mapOf(Pair("Int", MetaType(IntType)))))
-    }
-
-    @Test
-    fun functionArgumentsCanShadowExistingVariables() {
-        val node = function(
-            arguments = listOf(argument(name = "x", type = typeReference("Int"))),
-            returnType = typeReference("Int"),
-            body = listOf(returns(variableReference("x")))
-        )
-        typeCheck(
-            node,
-            typeContext(variables = mapOf(
-                "Int" to MetaType(IntType),
-                "x" to BoolType
-            ))
-        )
+        typeCheck(node, typeContext(
+            referenceTypes = mapOf(intType to MetaType(IntType)),
+            references = mapOf(argumentReference to argument)
+        ))
     }
 
     @Test
     fun signatureOfFunctionIsDeterminedFromArgumentsAndReturnType() {
+        val intType = typeReference("Int")
+        val boolType = typeReference("Bool")
         val node = function(
             arguments = listOf(
-                argument(name = "x", type = typeReference("Int")),
-                argument(name = "y", type = typeReference("Bool"))
+                argument(name = "x", type = intType),
+                argument(name = "y", type = boolType)
             ),
-            returnType = typeReference("Int"),
-            body = listOf(returns(variableReference("x")))
+            returnType = intType,
+            body = listOf(returns(literalInt()))
         )
         val signature = inferType(
             node,
-            typeContext(variables = mapOf(
-                "Int" to MetaType(IntType),
-                "Bool" to MetaType(BoolType)
+            typeContext(referenceTypes = mapOf(
+                intType to MetaType(IntType),
+                boolType to MetaType(BoolType)
             ))
         )
         assertThat(signature, isFunctionType(
