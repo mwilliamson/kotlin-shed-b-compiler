@@ -43,7 +43,12 @@ fun generateCode(node: ExpressionNode): PythonExpressionNode {
         }
 
         override fun visit(node: BinaryOperationNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonBinaryOperationNode(
+                operator = generateCode(node.operator),
+                left = generateCode(node.left),
+                right = generateCode(node.right),
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: FunctionCallNode): PythonExpressionNode {
@@ -54,4 +59,14 @@ fun generateCode(node: ExpressionNode): PythonExpressionNode {
             )
         }
     })
+}
+
+private fun generateCode(operator: Operator): PythonOperator {
+    return when (operator) {
+        Operator.EQUALS -> PythonOperator.EQUALS
+        Operator.ADD -> PythonOperator.ADD
+        Operator.SUBTRACT -> PythonOperator.SUBTRACT
+        Operator.MULTIPLY -> PythonOperator.MULTIPLY
+
+    }
 }

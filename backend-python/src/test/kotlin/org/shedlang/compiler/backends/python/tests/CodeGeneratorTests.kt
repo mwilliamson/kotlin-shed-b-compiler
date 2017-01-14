@@ -5,8 +5,11 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.ModuleNode
+import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
 import org.shedlang.compiler.tests.allOf
@@ -98,6 +101,32 @@ class CodeGeneratorTests {
         assertThat(node, isPythonVariableReference("x"))
     }
 
+    @TestFactory
+    fun binaryOperationGeneratesBinaryOperation(): List<DynamicTest> {
+        return listOf(
+            Operator.ADD to PythonOperator.ADD,
+            Operator.SUBTRACT to PythonOperator.SUBTRACT,
+            Operator.MULTIPLY to PythonOperator.MULTIPLY,
+            Operator.EQUALS to PythonOperator.EQUALS
+        ).map({ operator ->  DynamicTest.dynamicTest(
+            operator.first.toString(), {
+                val shed = binaryOperation(
+                    operator = operator.first,
+                    left = literalInt(0),
+                    right = literalInt(1)
+                )
+
+                val node = generateCode(shed)
+
+                assertThat(node, isPythonBinaryOperation(
+                    operator = equalTo(operator.second),
+                    left = isPythonIntegerLiteral(0),
+                    right = isPythonIntegerLiteral(1)
+                ))
+            })
+        })
+    }
+
     @Test
     fun functionCallGeneratesFunctionCall() {
         val shed = functionCall(variableReference("f"), listOf(literalInt(42)))
@@ -125,6 +154,17 @@ class CodeGeneratorTests {
     private fun isPythonVariableReference(name: String)
         : Matcher<PythonExpressionNode>
         = cast(has(PythonVariableReferenceNode::name, equalTo(name)))
+
+    private fun isPythonBinaryOperation(
+        operator: Matcher<PythonOperator>,
+        left: Matcher<PythonExpressionNode>,
+        right: Matcher<PythonExpressionNode>
+    ) : Matcher<PythonExpressionNode>
+    = cast(allOf(
+        has(PythonBinaryOperationNode::operator, operator),
+        has(PythonBinaryOperationNode::left, left),
+        has(PythonBinaryOperationNode::right, right)
+    ))
 
     private fun isPythonFunctionCall(
         function: Matcher<PythonExpressionNode>,

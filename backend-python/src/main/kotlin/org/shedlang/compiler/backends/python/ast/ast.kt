@@ -47,6 +47,20 @@ data class PythonVariableReferenceNode(
     override val source: Source
 ): PythonExpressionNode
 
+data class PythonBinaryOperationNode(
+    val operator: PythonOperator,
+    val left: PythonExpressionNode,
+    val right: PythonExpressionNode,
+    override val source: Source
+): PythonExpressionNode
+
+enum class PythonOperator {
+    EQUALS,
+    ADD,
+    SUBTRACT,
+    MULTIPLY
+}
+
 data class PythonFunctionCallNode(
     val function: PythonExpressionNode,
     val arguments: List<PythonExpressionNode>,

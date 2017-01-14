@@ -63,6 +63,17 @@ fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySourceLocation())
 fun variableReference(name: String) = VariableReferenceNode(name, anySourceLocation())
 fun returns(expression: ExpressionNode) = ReturnNode(expression, anySourceLocation())
 
+fun binaryOperation(
+    operator: Operator,
+    left: ExpressionNode,
+    right: ExpressionNode
+) = BinaryOperationNode(
+    operator = operator,
+    left = left,
+    right = right,
+    source = anySourceLocation()
+)
+
 fun functionCall(
     function: ExpressionNode,
     arguments: List<ExpressionNode> = listOf()
