@@ -13,6 +13,13 @@ data class PythonModuleNode(
 
 interface PythonStatementNode : PythonNode
 
+data class PythonFunctionNode(
+    val name: String,
+    val arguments: List<String>,
+    val body: List<PythonStatementNode>,
+    override val source: Source
+): PythonStatementNode
+
 data class PythonExpressionStatementNode(
     val expression: PythonExpressionNode,
     override val source: Source

@@ -31,6 +31,23 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun functionGeneratesFunction() {
+        val shed = function(
+            name = "f",
+            arguments = listOf(argument("x"), argument("y")),
+            body = listOf(returns(literalInt(42)))
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonFunction(
+            name = equalTo("f"),
+            arguments = isSequence(equalTo("x"), equalTo("y")),
+            body = isSequence(isPythonReturn(isPythonIntegerLiteral(42)))
+        ))
+    }
+
+    @Test
     fun expressionStatementGeneratesExpressionStatement() {
         val shed = expressionStatement(literalInt(42))
 
@@ -138,6 +155,17 @@ class CodeGeneratorTests {
             isSequence(isPythonIntegerLiteral(42))
         ))
     }
+
+    private fun isPythonFunction(
+        name: Matcher<String>,
+        arguments: Matcher<List<String>>,
+        body: Matcher<List<PythonStatementNode>>
+    ) : Matcher<PythonStatementNode>
+        = cast(allOf(
+            has(PythonFunctionNode::name, name),
+            has(PythonFunctionNode::arguments, arguments),
+            has(PythonFunctionNode::body, body)
+        ))
 
     private fun isPythonReturn(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>

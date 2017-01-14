@@ -7,6 +7,15 @@ fun generateCode(node: ModuleNode): PythonNode {
     return PythonModuleNode(listOf(), source = NodeSource(node))
 }
 
+fun generateCode(node: FunctionNode): PythonFunctionNode {
+    return PythonFunctionNode(
+        name = node.name,
+        arguments = node.arguments.map(ArgumentNode::name),
+        body = node.body.map(::generateCode),
+        source = NodeSource(node)
+    )
+}
+
 fun generateCode(node: StatementNode): PythonStatementNode {
     return node.accept(object : StatementNodeVisitor<PythonStatementNode> {
         override fun visit(node: ReturnNode): PythonStatementNode {

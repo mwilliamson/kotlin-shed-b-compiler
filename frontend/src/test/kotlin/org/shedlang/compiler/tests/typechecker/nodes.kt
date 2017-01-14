@@ -98,7 +98,7 @@ fun function(
 
 fun argument(
     name: String,
-    type: TypeNode
+    type: TypeNode = typeReference("Int")
 ) = ArgumentNode(
     name = name,
     type = type,
