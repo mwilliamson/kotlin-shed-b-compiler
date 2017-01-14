@@ -24,3 +24,8 @@ data class PythonIntegerLiteralNode(
     val value: Int,
     override val source: Source
 ): PythonExpressionNode
+
+data class PythonVariableReferenceNode(
+    val name: String,
+    override val source: Source
+): PythonExpressionNode

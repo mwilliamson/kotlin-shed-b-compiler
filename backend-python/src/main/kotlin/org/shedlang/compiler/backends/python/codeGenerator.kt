@@ -18,7 +18,7 @@ fun generateCode(node: ExpressionNode): PythonExpressionNode {
         }
 
         override fun visit(node: VariableReferenceNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonVariableReferenceNode(node.name, NodeSource(node))
         }
 
         override fun visit(node: BinaryOperationNode): PythonExpressionNode {
