@@ -1,10 +1,7 @@
 package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.python.ast.PythonExpressionNode
-import org.shedlang.compiler.backends.python.ast.PythonIntegerLiteralNode
-import org.shedlang.compiler.backends.python.ast.PythonModuleNode
-import org.shedlang.compiler.backends.python.ast.PythonNode
+import org.shedlang.compiler.backends.python.ast.*
 
 fun generateCode(node: ModuleNode): PythonNode {
     return PythonModuleNode(listOf(), source = NodeSource(node))
@@ -13,7 +10,7 @@ fun generateCode(node: ModuleNode): PythonNode {
 fun generateCode(node: ExpressionNode): PythonExpressionNode {
     return node.accept(object : ExpressionNodeVisitor<PythonExpressionNode> {
         override fun visit(node: BooleanLiteralNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonBooleanLiteralNode(node.value, NodeSource(node))
         }
 
         override fun visit(node: IntegerLiteralNode): PythonExpressionNode {

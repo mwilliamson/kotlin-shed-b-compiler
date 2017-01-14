@@ -15,6 +15,11 @@ interface PythonStatementNode : PythonNode
 
 interface PythonExpressionNode : PythonNode
 
+data class PythonBooleanLiteralNode(
+    val value: Boolean,
+    override val source: Source
+): PythonExpressionNode
+
 data class PythonIntegerLiteralNode(
     val value: Int,
     override val source: Source
