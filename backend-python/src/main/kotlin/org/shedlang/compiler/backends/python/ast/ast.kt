@@ -46,3 +46,9 @@ data class PythonVariableReferenceNode(
     val name: String,
     override val source: Source
 ): PythonExpressionNode
+
+data class PythonFunctionCallNode(
+    val function: PythonExpressionNode,
+    val arguments: List<PythonExpressionNode>,
+    override val source: Source
+): PythonExpressionNode

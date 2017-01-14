@@ -47,7 +47,11 @@ fun generateCode(node: ExpressionNode): PythonExpressionNode {
         }
 
         override fun visit(node: FunctionCallNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonFunctionCallNode(
+                generateCode(node.function),
+                node.arguments.map(::generateCode),
+                source = NodeSource(node)
+            )
         }
     })
 }

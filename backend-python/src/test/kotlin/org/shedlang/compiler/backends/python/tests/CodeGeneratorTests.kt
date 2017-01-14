@@ -98,6 +98,18 @@ class CodeGeneratorTests {
         assertThat(node, isPythonVariableReference("x"))
     }
 
+    @Test
+    fun functionCallGeneratesFunctionCall() {
+        val shed = functionCall(variableReference("f"), listOf(literalInt(42)))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonFunctionCall(
+            isPythonVariableReference("f"),
+            isSequence(isPythonIntegerLiteral(42))
+        ))
+    }
+
     private fun isPythonReturn(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>
         = cast(has(PythonReturnNode::expression, expression))
@@ -113,4 +125,13 @@ class CodeGeneratorTests {
     private fun isPythonVariableReference(name: String)
         : Matcher<PythonExpressionNode>
         = cast(has(PythonVariableReferenceNode::name, equalTo(name)))
+
+    private fun isPythonFunctionCall(
+        function: Matcher<PythonExpressionNode>,
+        arguments: Matcher<List<PythonExpressionNode>>
+    ) : Matcher<PythonExpressionNode>
+    = cast(allOf(
+        has(PythonFunctionCallNode::function, function),
+        has(PythonFunctionCallNode::arguments, arguments)
+    ))
 }
