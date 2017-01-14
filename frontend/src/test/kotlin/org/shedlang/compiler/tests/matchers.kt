@@ -5,11 +5,11 @@ import org.shedlang.compiler.typechecker.FunctionType
 import org.shedlang.compiler.typechecker.Type
 
 
-internal fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
+fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
     return matchers.reduce { first, second -> first and second }
 }
 
-internal fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
+fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
     return object : Matcher.Primitive<Iterable<T>>() {
         override fun invoke(actual: Iterable<T>): MatchResult {
             val actualValues = actual.toList()

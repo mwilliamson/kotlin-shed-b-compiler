@@ -23,6 +23,13 @@ data class PythonReturnNode(
     override val source: Source
 ) : PythonStatementNode
 
+data class PythonIfStatementNode(
+    val condition: PythonExpressionNode,
+    val trueBranch: List<PythonStatementNode>,
+    val falseBranch: List<PythonStatementNode>,
+    override val source: Source
+) : PythonStatementNode
+
 interface PythonExpressionNode : PythonNode
 
 data class PythonBooleanLiteralNode(

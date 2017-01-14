@@ -14,13 +14,17 @@ fun generateCode(node: StatementNode): PythonStatementNode {
         }
 
         override fun visit(node: IfStatementNode): PythonStatementNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonIfStatementNode(
+                condition = generateCode(node.condition),
+                trueBranch = node.trueBranch.map(::generateCode),
+                falseBranch = node.falseBranch.map(::generateCode),
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: ExpressionStatementNode): PythonStatementNode {
             return PythonExpressionStatementNode(generateCode(node.expression), NodeSource(node))
         }
-
     })
 }
 
