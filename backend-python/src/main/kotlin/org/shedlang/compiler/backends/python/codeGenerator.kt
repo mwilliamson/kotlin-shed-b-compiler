@@ -9,10 +9,6 @@ fun generateCode(node: ModuleNode): PythonNode {
 
 fun generateCode(node: StatementNode): PythonStatementNode {
     return node.accept(object : StatementNodeVisitor<PythonStatementNode> {
-        override fun visit(node: BadStatementNode): PythonStatementNode {
-            throw UnsupportedOperationException("not implemented")
-        }
-
         override fun visit(node: ReturnNode): PythonStatementNode {
             return PythonReturnNode(generateCode(node.expression), NodeSource(node))
         }

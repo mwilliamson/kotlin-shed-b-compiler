@@ -77,7 +77,9 @@ data class ArgumentNode(
 }
 
 interface StatementNodeVisitor<T> {
-    fun visit(node: BadStatementNode): T
+    fun visit(node: BadStatementNode): T {
+        throw UnsupportedOperationException("not implemented")
+    }
     fun visit(node: ReturnNode): T
     fun visit(node: IfStatementNode): T
     fun visit(node: ExpressionStatementNode): T
