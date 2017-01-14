@@ -7,7 +7,7 @@ interface PythonNode {
 }
 
 data class PythonModuleNode(
-    val statements: List<PythonStatementNode>,
+    val body: List<PythonStatementNode>,
     override val source: Source
 ) : PythonNode
 

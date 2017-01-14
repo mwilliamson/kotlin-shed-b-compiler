@@ -1,10 +1,7 @@
 package org.shedlang.compiler.backends.python.tests
 
-import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -27,7 +24,18 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, cast(has(PythonModuleNode::statements, equalTo(listOf()))))
+        assertThat(node, isPythonModule(equalTo(listOf())))
+    }
+
+    @Test
+    fun moduleGeneratesModule() {
+        val shed = module(listOf(function(name = "f")))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonModule(
+            body = isSequence(isPythonFunction(name = equalTo("f")))
+        ))
     }
 
     @Test
@@ -156,10 +164,13 @@ class CodeGeneratorTests {
         ))
     }
 
+    private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)
+        = cast(has(PythonModuleNode::body, body))
+
     private fun isPythonFunction(
         name: Matcher<String>,
-        arguments: Matcher<List<String>>,
-        body: Matcher<List<PythonStatementNode>>
+        arguments: Matcher<List<String>> = anything,
+        body: Matcher<List<PythonStatementNode>> = anything
     ) : Matcher<PythonStatementNode>
         = cast(allOf(
             has(PythonFunctionNode::name, name),

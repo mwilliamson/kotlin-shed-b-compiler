@@ -4,7 +4,10 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
 
 fun generateCode(node: ModuleNode): PythonNode {
-    return PythonModuleNode(listOf(), source = NodeSource(node))
+    return PythonModuleNode(
+        node.body.map(::generateCode),
+        source = NodeSource(node)
+    )
 }
 
 fun generateCode(node: FunctionNode): PythonFunctionNode {
