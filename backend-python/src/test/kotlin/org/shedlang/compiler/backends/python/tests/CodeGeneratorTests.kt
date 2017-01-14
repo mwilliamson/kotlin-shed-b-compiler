@@ -16,7 +16,7 @@ class CodeGeneratorTests {
         val shed = ModuleNode(
             name = "example",
             body = listOf(),
-            location = anySourceLocation()
+            source = anySourceLocation()
         )
 
         val node = generateCode(shed)

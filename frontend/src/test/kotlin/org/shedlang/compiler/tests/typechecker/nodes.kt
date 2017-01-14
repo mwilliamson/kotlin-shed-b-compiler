@@ -32,8 +32,8 @@ class VariableReferencesMap(private val references: Map<Int, Int>) : VariableRef
     }
 }
 
-fun anySourceLocation(): SourceLocation {
-    return SourceLocation("<string>", 0)
+fun anySourceLocation(): Source {
+    return StringSource("<string>", 0)
 }
 
 fun ifStatement(
@@ -46,15 +46,15 @@ fun ifStatement(
 
 fun expressionStatement(expression: ExpressionNode) = ExpressionStatementNode(expression, anySourceLocation())
 
-private val badLocation = SourceLocation("<bad location>", 0)
-private val badStatement = BadStatementNode(location = badLocation)
+private val badSource = StringSource("<bad source>", 0)
+private val badStatement = BadStatementNode(source = badSource)
 fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
     assertStatementIsTypeChecked({ badStatement -> typeCheck(build(badStatement), emptyTypeContext()) })
 }
 fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     assertThat(
         { typeCheck(badStatement) },
-        throws(has(BadStatementError::location, equalTo(badLocation)))
+        throws(has(BadStatementError::location, cast(equalTo(badSource))))
     )
 }
 
@@ -69,7 +69,7 @@ fun functionCall(
 ) = FunctionCallNode(
     function = function,
     arguments = arguments,
-    location = anySourceLocation()
+    source = anySourceLocation()
 )
 
 fun function(
@@ -82,7 +82,7 @@ fun function(
     arguments = arguments,
     returnType = returnType,
     body = body,
-    location = anySourceLocation()
+    source = anySourceLocation()
 )
 
 fun argument(
@@ -91,7 +91,7 @@ fun argument(
 ) = ArgumentNode(
     name = name,
     type = type,
-    location = anySourceLocation()
+    source = anySourceLocation()
 )
 
 fun module(
@@ -99,7 +99,7 @@ fun module(
 ) = ModuleNode(
     name = "",
     body = body,
-    location = anySourceLocation()
+    source = anySourceLocation()
 )
 
 fun typeReference(name: String) = TypeReferenceNode(name, anySourceLocation())

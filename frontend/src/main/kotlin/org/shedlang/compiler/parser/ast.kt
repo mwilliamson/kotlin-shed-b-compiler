@@ -1,7 +1,7 @@
 package org.shedlang.compiler.ast
 
 interface Node {
-    val location: SourceLocation
+    val source: Source
     val nodeId: Int
     val children: List<Node>
 }
@@ -14,7 +14,9 @@ interface ReferenceNode: Node {
     val name: String
 }
 
-data class SourceLocation(val filename: String, val characterIndex: Int)
+interface Source
+
+data class StringSource(val filename: String, val characterIndex: Int) : Source
 
 private var nextId = 0
 
@@ -30,7 +32,7 @@ interface TypeNode : Node {
 
 data class TypeReferenceNode(
     override val name: String,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : ReferenceNode, TypeNode {
     override val children: List<Node>
@@ -44,7 +46,7 @@ data class TypeReferenceNode(
 data class ModuleNode(
     val name: String,
     val body: List<FunctionNode>,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : Node {
     override val children: List<Node>
@@ -56,7 +58,7 @@ data class FunctionNode(
     val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
     val body: List<StatementNode>,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : VariableBindingNode {
     override val children: List<Node>
@@ -66,7 +68,7 @@ data class FunctionNode(
 data class ArgumentNode(
     override val name: String,
     val type: TypeNode,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : VariableBindingNode, Node {
     override val children: List<Node>
@@ -85,7 +87,7 @@ interface StatementNode : Node {
 }
 
 data class BadStatementNode(
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : StatementNode {
     override val children: List<Node>
@@ -98,7 +100,7 @@ data class BadStatementNode(
 
 data class ReturnNode(
     val expression: ExpressionNode,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : StatementNode {
     override val children: List<Node>
@@ -113,7 +115,7 @@ data class IfStatementNode(
     val condition: ExpressionNode,
     val trueBranch: List<StatementNode>,
     val falseBranch: List<StatementNode>,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : StatementNode {
     override val children: List<Node>
@@ -126,7 +128,7 @@ data class IfStatementNode(
 
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ): StatementNode {
     override val children: List<Node>
@@ -151,7 +153,7 @@ interface ExpressionNode : Node {
 
 data class BooleanLiteralNode(
     val value: Boolean,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ): ExpressionNode {
     override val children: List<Node>
@@ -164,7 +166,7 @@ data class BooleanLiteralNode(
 
 data class IntegerLiteralNode(
     val value: Int,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override val children: List<Node>
@@ -177,7 +179,7 @@ data class IntegerLiteralNode(
 
 data class VariableReferenceNode(
     override val name: String,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : ReferenceNode, ExpressionNode {
     override val children: List<Node>
@@ -192,7 +194,7 @@ data class BinaryOperationNode(
     val operator: Operator,
     val left: ExpressionNode,
     val right: ExpressionNode,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override val children: List<Node>
@@ -206,7 +208,7 @@ data class BinaryOperationNode(
 data class FunctionCallNode(
     val function: ExpressionNode,
     val arguments: List<ExpressionNode>,
-    override val location: SourceLocation,
+    override val source: Source,
     override val nodeId: Int = nextId()
 ) : ExpressionNode {
     override val children: List<Node>

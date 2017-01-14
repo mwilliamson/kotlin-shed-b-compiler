@@ -23,7 +23,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is ReferenceNode -> {
             val referentId = context.bindings[node.name]
             when (referentId) {
-                null ->  throw UnresolvedReferenceError(node.name, node.location)
+                null ->  throw UnresolvedReferenceError(node.name, node.source)
                 else -> context[node] = referentId
             }
         }

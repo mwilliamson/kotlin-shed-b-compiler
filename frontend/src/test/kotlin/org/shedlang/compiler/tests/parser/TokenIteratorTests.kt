@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.SourceLocation
+import org.shedlang.compiler.ast.StringSource
 import org.shedlang.compiler.parser.Token
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.UnexpectedTokenException
@@ -27,7 +27,7 @@ class TokenIteratorTests {
                 Token(1, TokenType.IDENTIFIER, "b")
             ))
             tokens.skip(TokenType.IDENTIFIER)
-            assertThat(tokens.location(), has(SourceLocation::characterIndex, equalTo(1)))
+            assertThat(tokens.location(), has(StringSource::characterIndex, equalTo(1)))
         }
 
         @Test
@@ -40,7 +40,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.SYMBOL) }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
+                has(UnexpectedTokenException::location, equalTo(StringSource("<string>", 0))),
                 has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
@@ -56,7 +56,7 @@ class TokenIteratorTests {
                 Token(1, TokenType.IDENTIFIER, "b")
             ))
             tokens.skip(TokenType.IDENTIFIER, "a")
-            assertThat(tokens.location(), has(SourceLocation::characterIndex, equalTo(1)))
+            assertThat(tokens.location(), has(StringSource::characterIndex, equalTo(1)))
         }
 
         @Test
@@ -69,7 +69,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.SYMBOL, "a") }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
+                has(UnexpectedTokenException::location, equalTo(StringSource("<string>", 0))),
                 has(UnexpectedTokenException::expected, equalTo("SYMBOL: a")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
@@ -85,7 +85,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.IDENTIFIER, "b") }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(SourceLocation("<string>", 0))),
+                has(UnexpectedTokenException::location, equalTo(StringSource("<string>", 0))),
                 has(UnexpectedTokenException::expected, equalTo("IDENTIFIER: b")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))

@@ -1,10 +1,10 @@
 package org.shedlang.compiler.parser
 
-import org.shedlang.compiler.ast.SourceLocation
+import org.shedlang.compiler.ast.StringSource
 import org.shedlang.compiler.orElseThrow
 
 internal class UnexpectedTokenException(
-    val location: SourceLocation,
+    val location: StringSource,
     val expected: String,
     val actual: String
 ) : Exception("Error at $location\nExpected: $expected\nBut got: $actual")
@@ -12,8 +12,8 @@ internal class UnexpectedTokenException(
 internal class TokenIterator<T>(private val filename: String, private val tokens: List<Token<T>>) {
     private var index = 0
 
-    fun location(): SourceLocation {
-        return SourceLocation(filename, index)
+    fun location(): StringSource {
+        return StringSource(filename, index)
     }
 
     fun trySkip(tokenType: T, value: String): Boolean {
