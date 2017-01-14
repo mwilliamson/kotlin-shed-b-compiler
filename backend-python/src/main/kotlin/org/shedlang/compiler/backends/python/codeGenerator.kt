@@ -7,6 +7,27 @@ fun generateCode(node: ModuleNode): PythonNode {
     return PythonModuleNode(listOf(), source = NodeSource(node))
 }
 
+fun generateCode(node: StatementNode): PythonStatementNode {
+    return node.accept(object : StatementNodeVisitor<PythonStatementNode> {
+        override fun visit(node: BadStatementNode): PythonStatementNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: ReturnNode): PythonStatementNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: IfStatementNode): PythonStatementNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: ExpressionStatementNode): PythonStatementNode {
+            return PythonExpressionStatementNode(generateCode(node.expression), NodeSource(node))
+        }
+
+    })
+}
+
 fun generateCode(node: ExpressionNode): PythonExpressionNode {
     return node.accept(object : ExpressionNodeVisitor<PythonExpressionNode> {
         override fun visit(node: BooleanLiteralNode): PythonExpressionNode {

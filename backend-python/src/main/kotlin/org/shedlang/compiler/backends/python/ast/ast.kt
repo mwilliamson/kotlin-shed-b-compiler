@@ -13,6 +13,11 @@ data class PythonModuleNode(
 
 interface PythonStatementNode : PythonNode
 
+data class PythonExpressionStatementNode(
+    val expression: PythonExpressionNode,
+    override val source: Source
+) : PythonStatementNode
+
 interface PythonExpressionNode : PythonNode
 
 data class PythonBooleanLiteralNode(

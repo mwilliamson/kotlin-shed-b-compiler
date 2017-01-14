@@ -6,15 +6,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.backends.python.ast.PythonBooleanLiteralNode
-import org.shedlang.compiler.backends.python.ast.PythonIntegerLiteralNode
-import org.shedlang.compiler.backends.python.ast.PythonModuleNode
-import org.shedlang.compiler.backends.python.ast.PythonVariableReferenceNode
+import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
-import org.shedlang.compiler.tests.typechecker.anySourceLocation
-import org.shedlang.compiler.tests.typechecker.literalBool
-import org.shedlang.compiler.tests.typechecker.literalInt
-import org.shedlang.compiler.tests.typechecker.variableReference
+import org.shedlang.compiler.tests.typechecker.*
 
 class CodeGeneratorTests {
     @Test
@@ -28,6 +22,18 @@ class CodeGeneratorTests {
         val node = generateCode(shed)
 
         assertThat(node, cast(has(PythonModuleNode::statements, equalTo(listOf()))))
+    }
+
+    @Test
+    fun expressionStatementGeneratesExpressionStatement() {
+        val shed = expressionStatement(literalInt(42))
+
+        val node = generateCode(shed)
+
+        assertThat(node, cast(has(
+            PythonExpressionStatementNode::expression,
+            cast(has(PythonIntegerLiteralNode::value, equalTo(42)))
+        )))
     }
 
     @Test
