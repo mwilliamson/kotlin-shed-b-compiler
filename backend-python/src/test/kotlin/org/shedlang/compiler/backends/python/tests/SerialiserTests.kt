@@ -24,4 +24,11 @@ class SerialiserTests {
         val output = serialise(node)
         assertThat(output, equalTo("42"))
     }
+
+    @Test
+    fun variableReferenceSerialisation() {
+        val node = pythonVariableReference("x")
+        val output = serialise(node)
+        assertThat(output, equalTo("x"))
+    }
 }

@@ -13,7 +13,7 @@ fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonVariableReferenceNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return node.name
         }
 
         override fun visit(node: PythonBinaryOperationNode): String {
