@@ -2,10 +2,10 @@ package org.shedlang.compiler.backends.python.tests
 
 import org.shedlang.compiler.backends.python.ast.PythonBooleanLiteralNode
 import org.shedlang.compiler.backends.python.ast.PythonIntegerLiteralNode
-import org.shedlang.compiler.tests.typechecker.anySourceLocation
+import org.shedlang.compiler.tests.typechecker.anySource
 
 fun pythonLiteralBoolean(value: Boolean)
-    = PythonBooleanLiteralNode(value, source = anySourceLocation())
+    = PythonBooleanLiteralNode(value, source = anySource())
 
 fun pythonLiteralInt(value: Int)
-    = PythonIntegerLiteralNode(value, source = anySourceLocation())
+    = PythonIntegerLiteralNode(value, source = anySource())

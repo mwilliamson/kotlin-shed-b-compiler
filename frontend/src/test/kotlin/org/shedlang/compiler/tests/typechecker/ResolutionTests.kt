@@ -14,7 +14,7 @@ import org.shedlang.compiler.typechecker.resolve
 class ResolutionTests {
     @Test
     fun variableReferencesAreResolved() {
-        val node = VariableReferenceNode("x", anySourceLocation())
+        val node = VariableReferenceNode("x", anySource())
         val context = resolutionContext(mapOf("x" to 42))
 
         resolve(node, context)
@@ -24,7 +24,7 @@ class ResolutionTests {
 
     @Test
     fun exceptionWhenVariableNotInScope() {
-        val node = VariableReferenceNode("x", anySourceLocation())
+        val node = VariableReferenceNode("x", anySource())
         val context = resolutionContext(mapOf())
 
         assertThat(
@@ -35,7 +35,7 @@ class ResolutionTests {
 
     @Test
     fun typeReferencesAreResolved() {
-        val node = TypeReferenceNode("X", anySourceLocation())
+        val node = TypeReferenceNode("X", anySource())
         val context = resolutionContext(mapOf("X" to 42))
 
         resolve(node, context)
@@ -45,7 +45,7 @@ class ResolutionTests {
 
     @Test
     fun exceptionWhenTypeVariableNotInScope() {
-        val node = TypeReferenceNode("X", anySourceLocation())
+        val node = TypeReferenceNode("X", anySource())
         val context = resolutionContext(mapOf())
 
         assertThat(
@@ -56,7 +56,7 @@ class ResolutionTests {
 
     @Test
     fun childrenAreResolved() {
-        val node = VariableReferenceNode("x", anySourceLocation())
+        val node = VariableReferenceNode("x", anySource())
         val context = resolutionContext(mapOf("x" to 42))
 
         resolve(expressionStatement(node), context)

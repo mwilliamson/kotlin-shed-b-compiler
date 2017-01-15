@@ -15,7 +15,7 @@ class TypeCheckExpressionStatementTests {
     @Test
     fun expressionIsTypeChecked() {
         val functionReference = variableReference("f")
-        val node = ExpressionStatementNode(functionCall(functionReference), anySourceLocation())
+        val node = ExpressionStatementNode(functionCall(functionReference), anySource())
         assertThat(
             { typeCheck(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))

@@ -38,14 +38,14 @@ class TypeCheckExpressionTests {
 
     @Test
     fun addingTwoIntegersReturnsInteger() {
-        val node = BinaryOperationNode(Operator.ADD, literalInt(1), literalInt(2), anySourceLocation())
+        val node = BinaryOperationNode(Operator.ADD, literalInt(1), literalInt(2), anySource())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(IntType)))
     }
 
     @Test
     fun addWithLeftBooleanOperandThrowsTypeError() {
-        val node = BinaryOperationNode(Operator.ADD, literalBool(true), literalInt(2), anySourceLocation())
+        val node = BinaryOperationNode(Operator.ADD, literalBool(true), literalInt(2), anySource())
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
@@ -57,7 +57,7 @@ class TypeCheckExpressionTests {
 
     @Test
     fun addWithRightBooleanOperandThrowsTypeError() {
-        val node = BinaryOperationNode(Operator.ADD, literalInt(2), literalBool(true), anySourceLocation())
+        val node = BinaryOperationNode(Operator.ADD, literalInt(2), literalBool(true), anySource())
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
@@ -69,7 +69,7 @@ class TypeCheckExpressionTests {
 
     @Test
     fun equalityOperationReturnsBoolean() {
-        val node = BinaryOperationNode(Operator.EQUALS, literalInt(1), literalInt(2), anySourceLocation())
+        val node = BinaryOperationNode(Operator.EQUALS, literalInt(1), literalInt(2), anySource())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(BoolType)))
     }

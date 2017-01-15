@@ -32,7 +32,7 @@ class VariableReferencesMap(private val references: Map<Int, Int>) : VariableRef
     }
 }
 
-fun anySourceLocation(): Source {
+fun anySource(): Source {
     return StringSource("<string>", 0)
 }
 
@@ -41,10 +41,10 @@ fun ifStatement(
     trueBranch: List<StatementNode> = listOf(),
     falseBranch: List<StatementNode> = listOf()
 ): IfStatementNode {
-    return IfStatementNode(condition, trueBranch, falseBranch, anySourceLocation())
+    return IfStatementNode(condition, trueBranch, falseBranch, anySource())
 }
 
-fun expressionStatement(expression: ExpressionNode) = ExpressionStatementNode(expression, anySourceLocation())
+fun expressionStatement(expression: ExpressionNode) = ExpressionStatementNode(expression, anySource())
 
 private val badSource = StringSource("<bad source>", 0)
 private val badStatement = BadStatementNode(source = badSource)
@@ -58,10 +58,10 @@ fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     )
 }
 
-fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySourceLocation())
-fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySourceLocation())
-fun variableReference(name: String) = VariableReferenceNode(name, anySourceLocation())
-fun returns(expression: ExpressionNode) = ReturnNode(expression, anySourceLocation())
+fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySource())
+fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
+fun variableReference(name: String) = VariableReferenceNode(name, anySource())
+fun returns(expression: ExpressionNode) = ReturnNode(expression, anySource())
 
 fun binaryOperation(
     operator: Operator,
@@ -71,7 +71,7 @@ fun binaryOperation(
     operator = operator,
     left = left,
     right = right,
-    source = anySourceLocation()
+    source = anySource()
 )
 
 fun functionCall(
@@ -80,7 +80,7 @@ fun functionCall(
 ) = FunctionCallNode(
     function = function,
     arguments = arguments,
-    source = anySourceLocation()
+    source = anySource()
 )
 
 fun function(
@@ -93,7 +93,7 @@ fun function(
     arguments = arguments,
     returnType = returnType,
     body = body,
-    source = anySourceLocation()
+    source = anySource()
 )
 
 fun argument(
@@ -102,7 +102,7 @@ fun argument(
 ) = ArgumentNode(
     name = name,
     type = type,
-    source = anySourceLocation()
+    source = anySource()
 )
 
 fun module(
@@ -110,10 +110,10 @@ fun module(
 ) = ModuleNode(
     name = "",
     body = body,
-    source = anySourceLocation()
+    source = anySource()
 )
 
-fun typeReference(name: String) = TypeReferenceNode(name, anySourceLocation())
+fun typeReference(name: String) = TypeReferenceNode(name, anySource())
 
 fun throwsUnexpectedType(expected: Type, actual: Type): Matcher<() -> Unit> {
     return throwsUnexpectedType(equalTo(expected), actual)
