@@ -37,7 +37,6 @@ class SerialiserTests {
 
     @TestFactory
     fun binaryOperationSerialisation(): List<DynamicTest> {
-        // TODO: bracketing/precedence
         return listOf(
             Pair(PythonOperator.EQUALS, "x == y"),
             Pair(PythonOperator.ADD, "x + y"),
@@ -52,5 +51,65 @@ class SerialiserTests {
             val output = serialise(node)
             assertThat(output, equalTo(operator.second))
         })})
+    }
+
+    @Test
+    fun leftSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
+        val node = pythonBinaryOperation(
+            operator = PythonOperator.MULTIPLY,
+            left = pythonBinaryOperation(
+                PythonOperator.ADD,
+                pythonVariableReference("x"),
+                pythonVariableReference("y")
+            ),
+            right = pythonVariableReference("z")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("(x + y) * z"))
+    }
+
+    @Test
+    fun rightSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
+        val node = pythonBinaryOperation(
+            operator = PythonOperator.MULTIPLY,
+            left = pythonVariableReference("x"),
+            right = pythonBinaryOperation(
+                PythonOperator.ADD,
+                pythonVariableReference("y"),
+                pythonVariableReference("z")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x * (y + z)"))
+    }
+
+    @Test
+    fun leftSubExpressionIsNotBracketedForLeftAssociativeOperators() {
+        val node = pythonBinaryOperation(
+            operator = PythonOperator.ADD,
+            left = pythonBinaryOperation(
+                PythonOperator.ADD,
+                pythonVariableReference("x"),
+                pythonVariableReference("y")
+            ),
+            right = pythonVariableReference("z")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x + y + z"))
+    }
+
+    @Test
+    fun rightSubExpressionIsBracketedForLeftAssociativeOperators() {
+        val node = pythonBinaryOperation(
+            operator = PythonOperator.ADD,
+            left = pythonVariableReference("x"),
+            right = pythonBinaryOperation(
+                PythonOperator.ADD,
+                pythonVariableReference("y"),
+                pythonVariableReference("z")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x + (y + z)"))
     }
 }
