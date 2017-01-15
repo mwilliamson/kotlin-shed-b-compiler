@@ -112,4 +112,44 @@ class SerialiserTests {
         val output = serialise(node)
         assertThat(output, equalTo("x + (y + z)"))
     }
+
+    @Test
+    fun functionCallSerialisation() {
+        val node = pythonFunctionCall(
+            function = pythonVariableReference("f"),
+            arguments = listOf(
+                pythonVariableReference("x"),
+                pythonVariableReference("y")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("f(x, y)"))
+    }
+
+    @Test
+    fun functionInFunctionCallIsNotBracketedWhenOfSamePrecedence() {
+        val node = pythonFunctionCall(
+            function = pythonFunctionCall(
+                pythonVariableReference("f"),
+                arguments = listOf()
+            ),
+            arguments = listOf()
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("f()()"))
+    }
+
+    @Test
+    fun functionInFunctionCallIsBracketedWhenOfLowerPrecedence() {
+        val node = pythonFunctionCall(
+            function = pythonBinaryOperation(
+                PythonOperator.ADD,
+                pythonVariableReference("f"),
+                pythonVariableReference("g")
+            ),
+            arguments = listOf()
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("(f + g)()"))
+    }
 }

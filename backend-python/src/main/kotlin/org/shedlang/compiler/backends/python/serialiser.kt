@@ -17,24 +17,31 @@ fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonBinaryOperationNode): String {
-            val precedence = precedence(node)
-            return serialise(node.left, precedence, associative = true) +
+            return serialiseSubExpression(node, node.left, associative = true) +
                 " " +
                 serialise(node.operator) +
                 " " +
-                serialise(node.right, precedence, associative = false)
+                serialiseSubExpression(node, node.right, associative = false)
         }
 
         override fun visit(node: PythonFunctionCallNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return serialiseSubExpression(node, node.function, associative = true) +
+                "(" +
+                node.arguments.map(::serialise).joinToString(", ") +
+                ")"
         }
     })
 }
 
-fun serialise(node: PythonExpressionNode, precedence: Int, associative: Boolean): String {
+private fun serialiseSubExpression(
+    parentNode: PythonExpressionNode,
+    node: PythonExpressionNode,
+    associative: Boolean
+): String {
+    val parentPrecedence = precedence(parentNode)
     val serialised = serialise(node)
     val subPrecedence = precedence(node)
-    if (precedence > subPrecedence || precedence == subPrecedence && !associative) {
+    if (parentPrecedence > subPrecedence || parentPrecedence == subPrecedence && !associative) {
         return "(" + serialised + ")"
     } else {
         return serialised

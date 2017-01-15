@@ -22,3 +22,12 @@ fun pythonBinaryOperation(
     right = right,
     source = anySource()
 )
+
+fun pythonFunctionCall(
+    function: PythonExpressionNode,
+    arguments: List<PythonExpressionNode>
+) = PythonFunctionCallNode(
+    function = function,
+    arguments = arguments,
+    source = anySource()
+)
