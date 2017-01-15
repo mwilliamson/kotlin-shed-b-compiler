@@ -1,8 +1,6 @@
 package org.shedlang.compiler.backends.python.tests
 
-import org.shedlang.compiler.backends.python.ast.PythonBooleanLiteralNode
-import org.shedlang.compiler.backends.python.ast.PythonIntegerLiteralNode
-import org.shedlang.compiler.backends.python.ast.PythonVariableReferenceNode
+import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.tests.typechecker.anySource
 
 fun pythonLiteralBoolean(value: Boolean)
@@ -13,3 +11,14 @@ fun pythonLiteralInt(value: Int)
 
 fun pythonVariableReference(name: String)
     = PythonVariableReferenceNode(name, source = anySource())
+
+fun pythonBinaryOperation(
+    operator: PythonOperator,
+    left: PythonExpressionNode,
+    right: PythonExpressionNode
+) = PythonBinaryOperationNode(
+    operator = operator,
+    left = left,
+    right = right,
+    source = anySource()
+)

@@ -17,12 +17,22 @@ fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonBinaryOperationNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return serialise(node.left) +
+                " " +
+                serialise(node.operator) +
+                " " +
+                serialise(node.right)
         }
 
         override fun visit(node: PythonFunctionCallNode): String {
             throw UnsupportedOperationException("not implemented")
         }
-
     })
+}
+
+private fun serialise(operator: PythonOperator) = when(operator) {
+    PythonOperator.EQUALS -> "=="
+    PythonOperator.ADD -> "+"
+    PythonOperator.SUBTRACT -> "-"
+    PythonOperator.MULTIPLY -> "*"
 }
