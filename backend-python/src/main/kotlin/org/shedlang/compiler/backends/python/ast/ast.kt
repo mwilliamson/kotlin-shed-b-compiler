@@ -37,29 +37,55 @@ data class PythonIfStatementNode(
     override val source: Source
 ) : PythonStatementNode
 
-interface PythonExpressionNode : PythonNode
+interface PythonExpressionNode : PythonNode {
+    interface Visitor<T> {
+        fun visit(node: PythonBooleanLiteralNode): T
+        fun visit(node: PythonIntegerLiteralNode): T
+        fun visit(node: PythonVariableReferenceNode): T
+        fun visit(node: PythonBinaryOperationNode): T
+        fun visit(node: PythonFunctionCallNode): T
+    }
+
+    fun <T> accept(visitor: Visitor<T>): T
+}
 
 data class PythonBooleanLiteralNode(
     val value: Boolean,
     override val source: Source
-): PythonExpressionNode
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class PythonIntegerLiteralNode(
     val value: Int,
     override val source: Source
-): PythonExpressionNode
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class PythonVariableReferenceNode(
     val name: String,
     override val source: Source
-): PythonExpressionNode
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class PythonBinaryOperationNode(
     val operator: PythonOperator,
     val left: PythonExpressionNode,
     val right: PythonExpressionNode,
     override val source: Source
-): PythonExpressionNode
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 enum class PythonOperator {
     EQUALS,
@@ -72,4 +98,8 @@ data class PythonFunctionCallNode(
     val function: PythonExpressionNode,
     val arguments: List<PythonExpressionNode>,
     override val source: Source
-): PythonExpressionNode
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
