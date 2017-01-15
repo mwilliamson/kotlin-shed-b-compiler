@@ -7,6 +7,18 @@ import org.shedlang.compiler.backends.python.serialise
 
 class SerialiserTests {
     @Test
+    fun booleanSerialisation() {
+        assertThat(
+            serialise(pythonLiteralBoolean(true)),
+            equalTo("True")
+        )
+        assertThat(
+            serialise(pythonLiteralBoolean(false)),
+            equalTo("False")
+        )
+    }
+
+    @Test
     fun integerSerialisation() {
         val node = pythonLiteralInt(42)
         val output = serialise(node)

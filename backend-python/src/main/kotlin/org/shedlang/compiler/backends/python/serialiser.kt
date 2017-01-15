@@ -5,7 +5,7 @@ import org.shedlang.compiler.backends.python.ast.*
 fun serialise(node: PythonExpressionNode): String {
     return node.accept(object : PythonExpressionNode.Visitor<String>{
         override fun visit(node: PythonBooleanLiteralNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return if (node.value) "True" else "False"
         }
 
         override fun visit(node: PythonIntegerLiteralNode): String {
