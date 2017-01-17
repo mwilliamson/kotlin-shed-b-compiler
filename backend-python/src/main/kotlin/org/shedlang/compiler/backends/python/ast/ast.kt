@@ -17,6 +17,7 @@ interface PythonStatementNode : PythonNode {
         fun visit(node: PythonExpressionStatementNode): T
         fun visit(node: PythonReturnNode): T
         fun visit(node: PythonIfStatementNode): T
+        fun visit(node: PythonPassNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -55,6 +56,14 @@ data class PythonIfStatementNode(
     val condition: PythonExpressionNode,
     val trueBranch: List<PythonStatementNode>,
     val falseBranch: List<PythonStatementNode>,
+    override val source: Source
+) : PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PythonPassNode(
     override val source: Source
 ) : PythonStatementNode {
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {

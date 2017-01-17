@@ -59,6 +59,21 @@ class SerialiserTests {
     }
 
     @Test
+    fun trueBranchIsSerialisedAsPassWhenTrueBranchHasNoStatements() {
+        assertThat(
+            serialise(pythonIf(
+                pythonLiteralBoolean(true),
+                listOf()
+            )),
+            equalTo(listOf(
+                "if True:",
+                "    pass",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun booleanSerialisation() {
         assertThat(
             serialise(pythonLiteralBoolean(true)),

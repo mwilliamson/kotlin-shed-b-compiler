@@ -20,13 +20,17 @@ fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
 
         override fun visit(node: PythonIfStatementNode): String {
             val condition = "if " + serialise(node.condition) + ":\n"
-            val trueBranch = serialiseBlock(node.trueBranch, indentation)
+            val trueBranch = serialiseBlock(node, node.trueBranch, indentation)
             val falseBranch = if (node.falseBranch.isEmpty()) {
                 ""
             } else {
-                "else:\n" + serialiseBlock(node.falseBranch, indentation)
+                "else:\n" + serialiseBlock(node, node.falseBranch, indentation)
             }
             return condition + trueBranch + falseBranch
+        }
+
+        override fun visit(node: PythonPassNode): String {
+            return "pass"
         }
     })
 
@@ -42,8 +46,17 @@ private fun ensureEndsWith(value: String, suffix: String): String {
     }
 }
 
-private fun serialiseBlock(statements: List<PythonStatementNode>, indentation: Int)
-    = statements.map({ statement -> serialise(statement, indentation + 1) }).joinToString("")
+private fun serialiseBlock(
+    parent: PythonNode,
+    statements: List<PythonStatementNode>,
+    indentation: Int
+): String {
+    return if (statements.isEmpty()) {
+        listOf(PythonPassNode(source = parent.source))
+    } else {
+        statements
+    }.map({ statement -> serialise(statement, indentation + 1) }).joinToString("")
+}
 
 fun serialise(node: PythonExpressionNode): String {
     return node.accept(object : PythonExpressionNode.Visitor<String>{
