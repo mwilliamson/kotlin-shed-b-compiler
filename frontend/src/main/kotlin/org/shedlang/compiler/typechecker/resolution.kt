@@ -6,7 +6,7 @@ interface VariableReferences {
     operator fun get(node: ReferenceNode): Int
 }
 
-class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>): VariableReferences {
+internal class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>): VariableReferences {
     // TODO: raise a more specific exception
     override operator fun get(node: ReferenceNode): Int = nodes[node.nodeId]!!
     operator fun set(node: ReferenceNode, value: Int): Unit {
@@ -16,6 +16,12 @@ class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<In
     fun enterScope(bindings: Map<String, Int>): ResolutionContext {
         return ResolutionContext(this.bindings + bindings, nodes)
     }
+}
+
+internal fun resolve(node: Node, globals: Map<String, Int>): VariableReferences {
+    val context = ResolutionContext(globals, mutableMapOf())
+    resolve(node, context)
+    return context
 }
 
 internal fun resolve(node: Node, context: ResolutionContext) {

@@ -30,7 +30,8 @@ fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
             val falseBranch = if (node.falseBranch.isEmpty()) {
                 ""
             } else {
-                "else:\n" + serialiseBlock(node, node.falseBranch, indentation)
+                // TODO: test indentation
+                " ".repeat(indentation * INDENTATION_WIDTH) + "else:\n" + serialiseBlock(node, node.falseBranch, indentation)
             }
             return condition + trueBranch + falseBranch
         }

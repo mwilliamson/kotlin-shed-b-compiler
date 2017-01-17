@@ -3,7 +3,7 @@ package org.shedlang.compiler.backends.python
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
 
-fun generateCode(node: ModuleNode): PythonNode {
+fun generateCode(node: ModuleNode): PythonModuleNode {
     return PythonModuleNode(
         node.body.map(::generateCode),
         source = NodeSource(node)
