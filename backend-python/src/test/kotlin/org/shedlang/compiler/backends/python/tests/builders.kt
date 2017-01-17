@@ -3,6 +3,9 @@ package org.shedlang.compiler.backends.python.tests
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.tests.typechecker.anySource
 
+fun pythonModule(body: List<PythonStatementNode>)
+    = PythonModuleNode(body = body, source = anySource())
+
 fun pythonFunction(
     name: String,
     arguments: List<String> = listOf(),

@@ -4,6 +4,10 @@ import org.shedlang.compiler.backends.python.ast.*
 
 private val INDENTATION_WIDTH = 4
 
+fun serialise(node: PythonModuleNode) : String {
+    return node.body.map({ statement -> serialise(statement) }).joinToString("")
+}
+
 fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
     val statement = node.accept(object : PythonStatementNode.Visitor<String> {
         override fun visit(node: PythonFunctionNode): String {

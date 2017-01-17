@@ -10,6 +10,21 @@ import org.shedlang.compiler.backends.python.serialise
 
 class SerialiserTests {
     @Test
+    fun moduleSerialisation() {
+        assertThat(
+            serialise(pythonModule(listOf(
+                pythonExpressionStatement(pythonLiteralBoolean(true)),
+                pythonExpressionStatement(pythonLiteralBoolean(false))
+            ))),
+            equalTo(listOf(
+                "True",
+                "False",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun emptyFunctionSerialisation() {
         assertThat(
             serialise(pythonFunction(name = "f")),
