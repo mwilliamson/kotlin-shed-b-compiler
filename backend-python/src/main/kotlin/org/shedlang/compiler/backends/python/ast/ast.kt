@@ -11,31 +11,56 @@ data class PythonModuleNode(
     override val source: Source
 ) : PythonNode
 
-interface PythonStatementNode : PythonNode
+interface PythonStatementNode : PythonNode {
+    interface Visitor<T> {
+        fun visit(node: PythonFunctionNode): T
+        fun visit(node: PythonExpressionStatementNode): T
+        fun visit(node: PythonReturnNode): T
+        fun visit(node: PythonIfStatementNode): T
+    }
+
+    fun <T> accept(visitor: Visitor<T>): T
+}
 
 data class PythonFunctionNode(
     val name: String,
     val arguments: List<String>,
     val body: List<PythonStatementNode>,
     override val source: Source
-): PythonStatementNode
+): PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class PythonExpressionStatementNode(
     val expression: PythonExpressionNode,
     override val source: Source
-) : PythonStatementNode
+) : PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class PythonReturnNode(
     val expression: PythonExpressionNode,
     override val source: Source
-) : PythonStatementNode
+) : PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 data class PythonIfStatementNode(
     val condition: PythonExpressionNode,
     val trueBranch: List<PythonStatementNode>,
     val falseBranch: List<PythonStatementNode>,
     override val source: Source
-) : PythonStatementNode
+) : PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
 
 interface PythonExpressionNode : PythonNode {
     interface Visitor<T> {

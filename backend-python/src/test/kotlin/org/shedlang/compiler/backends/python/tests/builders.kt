@@ -3,6 +3,9 @@ package org.shedlang.compiler.backends.python.tests
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.tests.typechecker.anySource
 
+fun pythonReturn(expression: PythonExpressionNode)
+    = PythonReturnNode(expression, source = anySource())
+
 fun pythonLiteralBoolean(value: Boolean)
     = PythonBooleanLiteralNode(value, source = anySource())
 

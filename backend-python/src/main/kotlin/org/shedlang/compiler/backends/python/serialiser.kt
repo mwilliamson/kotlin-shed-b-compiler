@@ -2,6 +2,27 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.backends.python.ast.*
 
+fun serialise(node: PythonStatementNode): String {
+    return node.accept(object : PythonStatementNode.Visitor<String> {
+        override fun visit(node: PythonFunctionNode): String {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: PythonExpressionStatementNode): String {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: PythonReturnNode): String {
+            return "return " + serialise(node.expression)
+        }
+
+        override fun visit(node: PythonIfStatementNode): String {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+    })
+}
+
 fun serialise(node: PythonExpressionNode): String {
     return node.accept(object : PythonExpressionNode.Visitor<String>{
         override fun visit(node: PythonBooleanLiteralNode): String {
