@@ -79,7 +79,7 @@ fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonBinaryOperationNode): String {
-            return serialiseSubExpression(node, node.left, associative = true) +
+            return serialiseSubExpression(node, node.left, associative = isLeftAssociative(node.operator)) +
                 " " +
                 serialise(node.operator) +
                 " " +
@@ -115,6 +115,13 @@ private fun serialise(operator: PythonOperator) = when(operator) {
     PythonOperator.ADD -> "+"
     PythonOperator.SUBTRACT -> "-"
     PythonOperator.MULTIPLY -> "*"
+}
+
+private fun isLeftAssociative(operator: PythonOperator) = when(operator) {
+    PythonOperator.EQUALS -> false
+    PythonOperator.ADD -> true
+    PythonOperator.SUBTRACT -> true
+    PythonOperator.MULTIPLY -> true
 }
 
 private fun precedence(node: PythonExpressionNode): Int {

@@ -231,6 +231,36 @@ class SerialiserTests {
     }
 
     @Test
+    fun leftSubExpressionIsBracketedForChainedOperators() {
+        val node = pythonBinaryOperation(
+            operator = PythonOperator.EQUALS,
+            left = pythonBinaryOperation(
+                PythonOperator.EQUALS,
+                pythonVariableReference("x"),
+                pythonVariableReference("y")
+            ),
+            right = pythonVariableReference("z")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("(x == y) == z"))
+    }
+
+    @Test
+    fun rightSubExpressionIsBracketedForChainedOperators() {
+        val node = pythonBinaryOperation(
+            operator = PythonOperator.EQUALS,
+            left = pythonVariableReference("x"),
+            right = pythonBinaryOperation(
+                PythonOperator.EQUALS,
+                pythonVariableReference("y"),
+                pythonVariableReference("z")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x == (y == z)"))
+    }
+
+    @Test
     fun functionCallSerialisation() {
         val node = pythonFunctionCall(
             function = pythonVariableReference("f"),
