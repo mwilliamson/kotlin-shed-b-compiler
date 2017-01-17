@@ -10,6 +10,14 @@ import org.shedlang.compiler.backends.python.serialise
 
 class SerialiserTests {
     @Test
+    fun expressionStatementSerialisation() {
+        assertThat(
+            serialise(pythonExpressionStatement(pythonLiteralBoolean(true))),
+            equalTo("True")
+        )
+    }
+
+    @Test
     fun returnSerialisation() {
         assertThat(
             serialise(pythonReturn(pythonLiteralBoolean(true))),

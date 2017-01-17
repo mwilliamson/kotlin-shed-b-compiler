@@ -9,7 +9,7 @@ fun serialise(node: PythonStatementNode): String {
         }
 
         override fun visit(node: PythonExpressionStatementNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return serialise(node.expression)
         }
 
         override fun visit(node: PythonReturnNode): String {
