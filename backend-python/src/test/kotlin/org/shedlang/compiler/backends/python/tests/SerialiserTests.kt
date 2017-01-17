@@ -10,6 +10,44 @@ import org.shedlang.compiler.backends.python.serialise
 
 class SerialiserTests {
     @Test
+    fun emptyFunctionSerialisation() {
+        assertThat(
+            serialise(pythonFunction(name = "f")),
+            equalTo(listOf(
+                "def f():",
+                "    pass",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun functionBodyIsSerialised() {
+        assertThat(
+            serialise(pythonFunction(name = "f", body = listOf(
+                pythonReturn(pythonLiteralInt(42))
+            ))),
+            equalTo(listOf(
+                "def f():",
+                "    return 42",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun formalFunctionArgumentsAreSeparatedByCommas() {
+        assertThat(
+            serialise(pythonFunction(name = "f", arguments = listOf("x", "y"))),
+            equalTo(listOf(
+                "def f(x, y):",
+                "    pass",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun expressionStatementSerialisation() {
         assertThat(
             serialise(pythonExpressionStatement(pythonLiteralBoolean(true))),

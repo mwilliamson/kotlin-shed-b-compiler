@@ -3,6 +3,17 @@ package org.shedlang.compiler.backends.python.tests
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.tests.typechecker.anySource
 
+fun pythonFunction(
+    name: String,
+    arguments: List<String> = listOf(),
+    body: List<PythonStatementNode> = listOf()
+) = PythonFunctionNode(
+    name = name,
+    arguments = arguments,
+    body = body,
+    source = anySource()
+)
+
 fun pythonReturn(expression: PythonExpressionNode)
     = PythonReturnNode(expression, source = anySource())
 

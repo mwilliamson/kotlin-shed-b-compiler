@@ -7,7 +7,9 @@ private val INDENTATION_WIDTH = 4
 fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
     val statement = node.accept(object : PythonStatementNode.Visitor<String> {
         override fun visit(node: PythonFunctionNode): String {
-            throw UnsupportedOperationException("not implemented")
+            val signature = "def " + node.name + "(" + node.arguments.joinToString(", ") + "):\n"
+            val body = serialiseBlock(node, node.body, indentation)
+            return signature + body
         }
 
         override fun visit(node: PythonExpressionStatementNode): String {
