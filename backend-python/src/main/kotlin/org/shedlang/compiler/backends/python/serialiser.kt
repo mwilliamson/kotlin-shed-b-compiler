@@ -2,8 +2,10 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.backends.python.ast.*
 
-fun serialise(node: PythonStatementNode): String {
-    return node.accept(object : PythonStatementNode.Visitor<String> {
+private val INDENTATION_WIDTH = 4
+
+fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
+    val statement = node.accept(object : PythonStatementNode.Visitor<String> {
         override fun visit(node: PythonFunctionNode): String {
             throw UnsupportedOperationException("not implemented")
         }
@@ -17,11 +19,27 @@ fun serialise(node: PythonStatementNode): String {
         }
 
         override fun visit(node: PythonIfStatementNode): String {
-            throw UnsupportedOperationException("not implemented")
+            val condition = "if " + serialise(node.condition) + ":\n"
+            val trueBranch = serialiseBlock(node.trueBranch, indentation)
+            val falseBranch = serialiseBlock(node.falseBranch, indentation)
+            return condition + trueBranch + "else:\n" + falseBranch
         }
-
     })
+
+    val indentedStatement = " ".repeat(indentation * INDENTATION_WIDTH) + statement
+    return ensureEndsWith(indentedStatement, "\n")
 }
+
+private fun ensureEndsWith(value: String, suffix: String): String {
+    if (value.endsWith(suffix)) {
+        return value
+    } else {
+        return value + suffix
+    }
+}
+
+private fun serialiseBlock(statements: List<PythonStatementNode>, indentation: Int)
+    = statements.map({ statement -> serialise(statement, indentation + 1) }).joinToString("")
 
 fun serialise(node: PythonExpressionNode): String {
     return node.accept(object : PythonExpressionNode.Visitor<String>{

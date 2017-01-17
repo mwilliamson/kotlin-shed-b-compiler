@@ -9,6 +9,17 @@ fun pythonReturn(expression: PythonExpressionNode)
 fun pythonExpressionStatement(expression: PythonExpressionNode)
     = PythonExpressionStatementNode(expression, source = anySource())
 
+fun pythonIf(
+    condition: PythonExpressionNode,
+    trueBranch: List<PythonStatementNode>,
+    falseBranch: List<PythonStatementNode>
+) = PythonIfStatementNode(
+    condition = condition,
+    trueBranch = trueBranch,
+    falseBranch = falseBranch,
+    source = anySource()
+)
+
 fun pythonLiteralBoolean(value: Boolean)
     = PythonBooleanLiteralNode(value, source = anySource())
 

@@ -13,7 +13,7 @@ class SerialiserTests {
     fun expressionStatementSerialisation() {
         assertThat(
             serialise(pythonExpressionStatement(pythonLiteralBoolean(true))),
-            equalTo("True")
+            equalTo("True\n")
         )
     }
 
@@ -21,7 +21,25 @@ class SerialiserTests {
     fun returnSerialisation() {
         assertThat(
             serialise(pythonReturn(pythonLiteralBoolean(true))),
-            equalTo("return True")
+            equalTo("return True\n")
+        )
+    }
+
+    @Test
+    fun serialisingIfStatementWithBothBranches() {
+        assertThat(
+            serialise(pythonIf(
+                pythonLiteralBoolean(true),
+                listOf(pythonReturn(pythonLiteralInt(0))),
+                listOf(pythonReturn(pythonLiteralInt(1)))
+            )),
+            equalTo(listOf(
+                "if True:",
+                "    return 0",
+                "else:",
+                "    return 1",
+                ""
+            ).joinToString("\n"))
         )
     }
 
