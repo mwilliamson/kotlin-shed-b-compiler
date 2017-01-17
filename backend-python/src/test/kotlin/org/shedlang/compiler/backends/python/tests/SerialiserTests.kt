@@ -44,6 +44,21 @@ class SerialiserTests {
     }
 
     @Test
+    fun elseBranchIsMissingIfItHasNoStatements() {
+        assertThat(
+            serialise(pythonIf(
+                pythonLiteralBoolean(true),
+                listOf(pythonReturn(pythonLiteralInt(0)))
+            )),
+            equalTo(listOf(
+                "if True:",
+                "    return 0",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun booleanSerialisation() {
         assertThat(
             serialise(pythonLiteralBoolean(true)),

@@ -21,8 +21,12 @@ fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
         override fun visit(node: PythonIfStatementNode): String {
             val condition = "if " + serialise(node.condition) + ":\n"
             val trueBranch = serialiseBlock(node.trueBranch, indentation)
-            val falseBranch = serialiseBlock(node.falseBranch, indentation)
-            return condition + trueBranch + "else:\n" + falseBranch
+            val falseBranch = if (node.falseBranch.isEmpty()) {
+                ""
+            } else {
+                "else:\n" + serialiseBlock(node.falseBranch, indentation)
+            }
+            return condition + trueBranch + falseBranch
         }
     })
 

@@ -12,7 +12,7 @@ fun pythonExpressionStatement(expression: PythonExpressionNode)
 fun pythonIf(
     condition: PythonExpressionNode,
     trueBranch: List<PythonStatementNode>,
-    falseBranch: List<PythonStatementNode>
+    falseBranch: List<PythonStatementNode> = listOf()
 ) = PythonIfStatementNode(
     condition = condition,
     trueBranch = trueBranch,
