@@ -17,7 +17,7 @@ fun read(filename: String, input: String): ModuleNode {
         variables = mutableMapOf(
             intTypeNodeId to MetaType(IntType)
         ),
-        resolutionContext = variableReferences
+        variableReferences = variableReferences
     ))
     return module
 }

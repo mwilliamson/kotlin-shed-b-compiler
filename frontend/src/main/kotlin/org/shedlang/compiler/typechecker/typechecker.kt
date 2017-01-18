@@ -15,9 +15,9 @@ data class FunctionType(val arguments: List<Type>, val returns: Type): Type
 class TypeContext(
     val returnType: Type?,
     private val variables: MutableMap<Int, Type>,
-    private val resolutionContext: VariableReferences
+    private val variableReferences: VariableReferences
 ) {
-    fun typeOf(reference: ReferenceNode): Type? = variables[resolutionContext[reference]]
+    fun typeOf(reference: ReferenceNode): Type? = variables[variableReferences[reference]]
 
     fun addTypes(types: Map<Int, Type>) {
         variables += types
@@ -27,7 +27,7 @@ class TypeContext(
         return TypeContext(
             returnType = returnType,
             variables = variables,
-            resolutionContext = resolutionContext
+            variableReferences = variableReferences
         )
     }
 }
