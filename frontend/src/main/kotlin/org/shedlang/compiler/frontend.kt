@@ -7,7 +7,7 @@ import org.shedlang.compiler.typechecker.*
 
 
 fun read(filename: String, input: String): ModuleNode {
-    val module = parse(filename = "<string>", input = input)
+    val module = parse(filename = filename, input = input)
     val intTypeNodeId = nextId()
     val variableReferences = resolve(module, mapOf(
         "Int" to intTypeNodeId
