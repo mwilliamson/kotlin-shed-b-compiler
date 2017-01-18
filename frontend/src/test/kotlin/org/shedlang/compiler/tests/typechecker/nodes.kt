@@ -54,7 +54,7 @@ fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementN
 fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     assertThat(
         { typeCheck(badStatement) },
-        throws(has(BadStatementError::location, cast(equalTo(badSource))))
+        throws(has(BadStatementError::source, cast(equalTo(badSource))))
     )
 }
 

@@ -22,7 +22,7 @@ class TypeContext(
         if (targetNodeId == null) {
             throw CompilerError(
                 "reference ${reference.name} is unresolved",
-                location = reference.source
+                source = reference.source
             )
         } else {
             return variables[targetNodeId]
@@ -45,19 +45,19 @@ class TypeContext(
 /**
  * This indicates a bug in the compiler or its calling code
  */
-class CompilerError(message: String, val location: Source) : Exception(message)
+class CompilerError(message: String, val source: Source) : Exception(message)
 
-open class TypeCheckError(message: String?, val location: Source) : Exception(message)
-internal class BadStatementError(location: Source)
-    : TypeCheckError("Bad statement", location)
-class UnresolvedReferenceError(val name: String, location: Source)
-    : TypeCheckError("Unresolved reference: " + name, location)
-class UnexpectedTypeError(val expected: Type, val actual: Type, location: Source)
-    : TypeCheckError("Expected type $expected but was $actual", location)
-class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, location: Source)
-    : TypeCheckError("Expected $expected arguments, but got $actual", location)
-class ReturnOutsideOfFunctionError(location: Source)
-    : TypeCheckError("Cannot return outside of a function", location)
+open class TypeCheckError(message: String?, val source: Source) : Exception(message)
+internal class BadStatementError(source: Source)
+    : TypeCheckError("Bad statement", source)
+class UnresolvedReferenceError(val name: String, source: Source)
+    : TypeCheckError("Unresolved reference: " + name, source)
+class UnexpectedTypeError(val expected: Type, val actual: Type, source: Source)
+    : TypeCheckError("Expected type $expected but was $actual", source)
+class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: Source)
+    : TypeCheckError("Expected $expected arguments, but got $actual", source)
+class ReturnOutsideOfFunctionError(source: Source)
+    : TypeCheckError("Cannot return outside of a function", source)
 
 fun typeCheck(module: ModuleNode, context: TypeContext) {
     val functionTypes = module.body.associateBy(
@@ -101,7 +101,7 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
                 else -> throw UnexpectedTypeError(
                     expected = MetaType(AnyType),
                     actual = metaType,
-                    location = node.source
+                    source = node.source
                 )
             }
         }
@@ -181,7 +181,7 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
                         throw WrongNumberOfArgumentsError(
                             expected = functionType.arguments.size,
                             actual = node.arguments.size,
-                            location = node.source
+                            source = node.source
                         )
                     }
                     functionType.returns
@@ -191,7 +191,7 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
                     throw UnexpectedTypeError(
                         expected = FunctionType(argumentTypes, AnyType),
                         actual = functionType,
-                        location = node.function.source
+                        source = node.function.source
                     )
                 }
             }
@@ -201,11 +201,11 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
 
 private fun verifyType(expression: ExpressionNode, context: TypeContext, expected: Type) {
     val type = inferType(expression, context)
-    verifyType(expected = expected, actual = type, location = expression.source)
+    verifyType(expected = expected, actual = type, source = expression.source)
 }
 
-private fun verifyType(expected: Type, actual: Type, location: Source) {
+private fun verifyType(expected: Type, actual: Type, source: Source) {
     if (actual != expected) {
-        throw UnexpectedTypeError(expected = expected, actual = actual, location = location)
+        throw UnexpectedTypeError(expected = expected, actual = actual, source = source)
     }
 }

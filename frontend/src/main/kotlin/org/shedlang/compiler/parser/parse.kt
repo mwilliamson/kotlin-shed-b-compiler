@@ -13,17 +13,17 @@ internal fun parse(filename: String, input: String): ModuleNode {
 }
 
 internal fun <T> ((Source, TokenIterator<TokenType>) -> T).parse(tokens: TokenIterator<TokenType>): T {
-    val location = tokens.location()
-    return this(location, tokens)
+    val source = tokens.location()
+    return this(source, tokens)
 }
 
-internal fun parseModule(location: Source, tokens: TokenIterator<TokenType>): ModuleNode {
+internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): ModuleNode {
     val moduleName = parseModuleNameDeclaration(tokens)
     val body = parseManyNodes(
         ::tryParseFunction,
         tokens
     )
-    return ModuleNode(moduleName, body, location)
+    return ModuleNode(moduleName, body, source)
 }
 
 private fun parseModuleNameDeclaration(tokens: TokenIterator<TokenType>): String {
@@ -41,7 +41,7 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
     ).joinToString(".")
 }
 
-internal fun tryParseFunction(location: Source, tokens: TokenIterator<TokenType>): FunctionNode? {
+internal fun tryParseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode? {
     if (!tokens.trySkip(TokenType.KEYWORD, "fun")) {
         return null
     }
@@ -65,7 +65,7 @@ internal fun tryParseFunction(location: Source, tokens: TokenIterator<TokenType>
         arguments = arguments,
         returnType = returnType,
         body = body,
-        source = location
+        source = source
     )
 }
 
@@ -81,11 +81,11 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
     return body
 }
 
-private fun parseFormalArgument(location: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {
+private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {
     val name = tokens.nextValue(TokenType.IDENTIFIER)
     tokens.skip(TokenType.SYMBOL, ":")
     val type = ::parseType.parse(tokens)
-    return ArgumentNode(name, type, location)
+    return ArgumentNode(name, type, source)
 }
 
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
@@ -108,13 +108,13 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
     )
 }
 
-private fun parseReturn(location: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
+private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
     val expression = parseExpression(tokens)
     tokens.skip(TokenType.SYMBOL, ";")
-    return ReturnNode(expression, location)
+    return ReturnNode(expression, source)
 }
 
-private fun parseIfStatement(location: Source, tokens: TokenIterator<TokenType>) : IfStatementNode {
+private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfStatementNode {
     tokens.skip(TokenType.SYMBOL, "(")
     val condition = parseExpression(tokens)
     tokens.skip(TokenType.SYMBOL, ")")
@@ -128,7 +128,7 @@ private fun parseIfStatement(location: Source, tokens: TokenIterator<TokenType>)
         condition = condition,
         trueBranch = trueBranch,
         falseBranch = falseBranch,
-        source = location
+        source = source
     )
 }
 
@@ -211,14 +211,14 @@ private object FunctionCallParser : OperationParser {
 
 }
 
-internal fun parsePrimaryExpression(location: Source, tokens: TokenIterator<TokenType>) : ExpressionNode {
+internal fun parsePrimaryExpression(source: Source, tokens: TokenIterator<TokenType>) : ExpressionNode {
     val token = tokens.next();
     when (token.tokenType) {
-        TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), location)
-        TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, location)
+        TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), source)
+        TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, source)
         TokenType.KEYWORD -> when (token.value) {
-            "true" -> return BooleanLiteralNode(true, location)
-            "false" -> return BooleanLiteralNode(false, location)
+            "true" -> return BooleanLiteralNode(true, source)
+            "false" -> return BooleanLiteralNode(false, source)
         }
         TokenType.SYMBOL -> when (token.value) {
             "(" -> {
@@ -235,9 +235,9 @@ internal fun parsePrimaryExpression(location: Source, tokens: TokenIterator<Toke
     )
 }
 
-internal fun parseType(location: Source, tokens: TokenIterator<TokenType>) : TypeNode {
+internal fun parseType(source: Source, tokens: TokenIterator<TokenType>) : TypeNode {
     val name = tokens.nextValue(TokenType.IDENTIFIER)
-    return TypeReferenceNode(name, location)
+    return TypeReferenceNode(name, source)
 }
 
 private fun <T> parseManyNodes(
