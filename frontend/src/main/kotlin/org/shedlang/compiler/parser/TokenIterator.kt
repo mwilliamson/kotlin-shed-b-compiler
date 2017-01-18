@@ -77,10 +77,6 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
         }
     }
 
-    fun peekType() : T {
-        return tryPeek()?.tokenType.orElseThrow(RuntimeException("TODO"))
-    }
-
     fun peek(): Token<T> {
         return tryPeek().orElseThrow(RuntimeException("TODO"))
     }
