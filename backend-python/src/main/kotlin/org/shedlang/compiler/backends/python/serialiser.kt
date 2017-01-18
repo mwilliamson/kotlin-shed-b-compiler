@@ -8,49 +8,40 @@ fun serialise(node: PythonModuleNode) : String {
     return node.body.map({ statement -> serialise(statement) }).joinToString("")
 }
 
-fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
-    val statement = node.accept(object : PythonStatementNode.Visitor<String> {
+internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String {
+    fun line(text: String) = " ".repeat(indentation * INDENTATION_WIDTH) + text + "\n"
+
+    return node.accept(object : PythonStatementNode.Visitor<String> {
         override fun visit(node: PythonFunctionNode): String {
-            val signature = "def " + node.name + "(" + node.arguments.joinToString(", ") + "):\n"
+            val signature = line("def " + node.name + "(" + node.arguments.joinToString(", ") + "):")
             val body = serialiseBlock(node, node.body, indentation)
             return signature + body
         }
 
         override fun visit(node: PythonExpressionStatementNode): String {
-            return serialise(node.expression)
+            return line(serialise(node.expression))
         }
 
         override fun visit(node: PythonReturnNode): String {
-            return "return " + serialise(node.expression)
+            return line("return " + serialise(node.expression))
         }
 
         override fun visit(node: PythonIfStatementNode): String {
-            val condition = "if " + serialise(node.condition) + ":\n"
+            val condition = line("if " + serialise(node.condition) + ":")
             val trueBranch = serialiseBlock(node, node.trueBranch, indentation)
             val falseBranch = if (node.falseBranch.isEmpty()) {
                 ""
             } else {
                 // TODO: test indentation
-                " ".repeat(indentation * INDENTATION_WIDTH) + "else:\n" + serialiseBlock(node, node.falseBranch, indentation)
+                line("else:") + serialiseBlock(node, node.falseBranch, indentation)
             }
             return condition + trueBranch + falseBranch
         }
 
         override fun visit(node: PythonPassNode): String {
-            return "pass"
+            return line("pass")
         }
     })
-
-    val indentedStatement = " ".repeat(indentation * INDENTATION_WIDTH) + statement
-    return ensureEndsWith(indentedStatement, "\n")
-}
-
-private fun ensureEndsWith(value: String, suffix: String): String {
-    if (value.endsWith(suffix)) {
-        return value
-    } else {
-        return value + suffix
-    }
 }
 
 private fun serialiseBlock(
