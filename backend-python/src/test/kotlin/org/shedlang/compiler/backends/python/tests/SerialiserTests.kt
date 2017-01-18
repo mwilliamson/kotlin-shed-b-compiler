@@ -5,7 +5,9 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.backends.python.ast.PythonFunctionNode
 import org.shedlang.compiler.backends.python.ast.PythonOperator
+import org.shedlang.compiler.backends.python.ast.PythonStatementNode
 import org.shedlang.compiler.backends.python.serialise
 
 class SerialiserTests {
@@ -27,10 +29,10 @@ class SerialiserTests {
     @Test
     fun emptyFunctionSerialisation() {
         assertThat(
-            serialise(pythonFunction(name = "f")),
+            indentedSerialise(pythonFunction(name = "f")),
             equalTo(listOf(
-                "def f():",
-                "    pass",
+                "    def f():",
+                "        pass",
                 ""
             ).joinToString("\n"))
         )
@@ -39,12 +41,12 @@ class SerialiserTests {
     @Test
     fun functionBodyIsSerialised() {
         assertThat(
-            serialise(pythonFunction(name = "f", body = listOf(
+            indentedSerialise(pythonFunction(name = "f", body = listOf(
                 pythonReturn(pythonLiteralInt(42))
             ))),
             equalTo(listOf(
-                "def f():",
-                "    return 42",
+                "    def f():",
+                "        return 42",
                 ""
             ).joinToString("\n"))
         )
@@ -53,10 +55,12 @@ class SerialiserTests {
     @Test
     fun formalFunctionArgumentsAreSeparatedByCommas() {
         assertThat(
-            serialise(pythonFunction(name = "f", arguments = listOf("x", "y"))),
+            indentedSerialise(
+                pythonFunction(name = "f", arguments = listOf("x", "y"))
+            ),
             equalTo(listOf(
-                "def f(x, y):",
-                "    pass",
+                "    def f(x, y):",
+                "        pass",
                 ""
             ).joinToString("\n"))
         )
@@ -65,32 +69,38 @@ class SerialiserTests {
     @Test
     fun expressionStatementSerialisation() {
         assertThat(
-            serialise(pythonExpressionStatement(pythonLiteralBoolean(true))),
-            equalTo("True\n")
+            indentedSerialise(
+                pythonExpressionStatement(pythonLiteralBoolean(true))
+            ),
+            equalTo("    True\n")
         )
     }
 
     @Test
     fun returnSerialisation() {
         assertThat(
-            serialise(pythonReturn(pythonLiteralBoolean(true))),
-            equalTo("return True\n")
+            indentedSerialise(
+                pythonReturn(pythonLiteralBoolean(true))
+            ),
+            equalTo("    return True\n")
         )
     }
 
     @Test
     fun serialisingIfStatementWithBothBranches() {
         assertThat(
-            serialise(pythonIf(
-                pythonLiteralBoolean(true),
-                listOf(pythonReturn(pythonLiteralInt(0))),
-                listOf(pythonReturn(pythonLiteralInt(1)))
-            )),
+            indentedSerialise(
+                pythonIf(
+                    pythonLiteralBoolean(true),
+                    listOf(pythonReturn(pythonLiteralInt(0))),
+                    listOf(pythonReturn(pythonLiteralInt(1)))
+                )
+            ),
             equalTo(listOf(
-                "if True:",
-                "    return 0",
-                "else:",
-                "    return 1",
+                "    if True:",
+                "        return 0",
+                "    else:",
+                "        return 1",
                 ""
             ).joinToString("\n"))
         )
@@ -99,13 +109,15 @@ class SerialiserTests {
     @Test
     fun elseBranchIsMissingIfItHasNoStatements() {
         assertThat(
-            serialise(pythonIf(
-                pythonLiteralBoolean(true),
-                listOf(pythonReturn(pythonLiteralInt(0)))
-            )),
+            indentedSerialise(
+                pythonIf(
+                    pythonLiteralBoolean(true),
+                    listOf(pythonReturn(pythonLiteralInt(0)))
+                )
+            ),
             equalTo(listOf(
-                "if True:",
-                "    return 0",
+                "    if True:",
+                "        return 0",
                 ""
             ).joinToString("\n"))
         )
@@ -114,13 +126,15 @@ class SerialiserTests {
     @Test
     fun trueBranchIsSerialisedAsPassWhenTrueBranchHasNoStatements() {
         assertThat(
-            serialise(pythonIf(
-                pythonLiteralBoolean(true),
-                listOf()
-            )),
+            indentedSerialise(
+                pythonIf(
+                    pythonLiteralBoolean(true),
+                    listOf()
+                )
+            ),
             equalTo(listOf(
-                "if True:",
-                "    pass",
+                "    if True:",
+                "        pass",
                 ""
             ).joinToString("\n"))
         )
@@ -298,5 +312,13 @@ class SerialiserTests {
         )
         val output = serialise(node)
         assertThat(output, equalTo("(f + g)()"))
+    }
+
+    private fun indentedSerialise(node: PythonFunctionNode): String {
+        return serialise(node, indentation = 1)
+    }
+
+    private fun indentedSerialise(node: PythonStatementNode): String {
+        return serialise(node, indentation = 1)
     }
 }

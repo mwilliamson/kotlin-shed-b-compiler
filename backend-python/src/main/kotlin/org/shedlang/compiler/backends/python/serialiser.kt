@@ -32,7 +32,6 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
             val falseBranch = if (node.falseBranch.isEmpty()) {
                 ""
             } else {
-                // TODO: test indentation
                 line("else:") + serialiseBlock(node, node.falseBranch, indentation)
             }
             return condition + trueBranch + falseBranch
@@ -56,7 +55,7 @@ private fun serialiseBlock(
     }.map({ statement -> serialise(statement, indentation + 1) }).joinToString("")
 }
 
-fun serialise(node: PythonExpressionNode): String {
+internal fun serialise(node: PythonExpressionNode): String {
     return node.accept(object : PythonExpressionNode.Visitor<String>{
         override fun visit(node: PythonBooleanLiteralNode): String {
             return if (node.value) "True" else "False"
