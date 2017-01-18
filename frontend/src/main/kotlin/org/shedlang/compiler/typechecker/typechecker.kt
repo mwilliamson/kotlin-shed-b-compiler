@@ -17,7 +17,17 @@ class TypeContext(
     private val variables: MutableMap<Int, Type>,
     private val variableReferences: VariableReferences
 ) {
-    fun typeOf(reference: ReferenceNode): Type? = variables[variableReferences[reference]]
+    fun typeOf(reference: ReferenceNode): Type? {
+        val targetNodeId = variableReferences[reference]
+        if (targetNodeId == null) {
+            throw CompilerError(
+                "reference ${reference.name} is unresolved",
+                location = reference.source
+            )
+        } else {
+            return variables[targetNodeId]
+        }
+    }
 
     fun addTypes(types: Map<Int, Type>) {
         variables += types
@@ -31,6 +41,11 @@ class TypeContext(
         )
     }
 }
+
+/**
+ * This indicates a bug in the compiler or its calling code
+ */
+class CompilerError(message: String, val location: Source) : Exception(message)
 
 open class TypeCheckError(message: String?, val location: Source) : Exception(message)
 internal class BadStatementError(location: Source)

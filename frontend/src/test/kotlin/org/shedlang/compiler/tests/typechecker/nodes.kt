@@ -27,8 +27,8 @@ fun typeContext(
 }
 
 class VariableReferencesMap(private val references: Map<Int, Int>) : VariableReferences {
-    override fun get(node: ReferenceNode): Int {
-        return references[node.nodeId]!!
+    override fun get(node: ReferenceNode): Int? {
+        return references[node.nodeId]
     }
 }
 
@@ -124,4 +124,10 @@ fun throwsUnexpectedType(expected: Matcher<Type>, actual: Type): Matcher<() -> U
         has(UnexpectedTypeError::expected, expected),
         has(UnexpectedTypeError::actual, cast(equalTo(actual)))
     ))
+}
+
+fun throwsCompilerError(message: String): Matcher<() -> Unit> {
+    return throws(
+        has(CompilerError::message, equalTo(message))
+    )
 }
