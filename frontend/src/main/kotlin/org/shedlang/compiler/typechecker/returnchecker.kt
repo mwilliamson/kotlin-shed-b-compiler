@@ -2,6 +2,18 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 
+open class ReturnCheckError(message: String?, val source: Source) : Exception(message)
+
+internal fun checkReturns(node: ModuleNode) {
+    node.body.forEach(::checkReturns)
+}
+
+private fun checkReturns(node: FunctionNode) {
+    if (!alwaysReturns(node.body)) {
+        throw ReturnCheckError("function ${node.name} is missing return statement", node.source)
+    }
+}
+
 internal fun alwaysReturns(node: StatementNode): Boolean {
     return node.accept(object : StatementNodeVisitor<Boolean> {
         override fun visit(node: ReturnNode): Boolean {
