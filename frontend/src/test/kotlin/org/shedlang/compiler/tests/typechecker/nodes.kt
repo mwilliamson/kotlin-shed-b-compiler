@@ -44,7 +44,8 @@ fun ifStatement(
     return IfStatementNode(condition, trueBranch, falseBranch, anySource())
 }
 
-fun expressionStatement(expression: ExpressionNode) = ExpressionStatementNode(expression, anySource())
+fun expressionStatement(expression: ExpressionNode = expression())
+    = ExpressionStatementNode(expression, anySource())
 
 private val badSource = StringSource("<bad source>", 0)
 private val badStatement = BadStatementNode(source = badSource)
@@ -58,11 +59,13 @@ fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
     )
 }
 
+fun expression() = literalString("<expression>")
 fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySource())
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
 fun literalString(value: String) = StringLiteralNode(value, anySource())
 fun variableReference(name: String) = VariableReferenceNode(name, anySource())
-fun returns(expression: ExpressionNode) = ReturnNode(expression, anySource())
+fun returns(expression: ExpressionNode = expression())
+    = ReturnNode(expression, anySource())
 
 fun binaryOperation(
     operator: Operator,
