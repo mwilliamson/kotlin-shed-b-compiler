@@ -19,5 +19,6 @@ fun read(filename: String, input: String): ModuleNode {
         ),
         variableReferences = variableReferences
     ))
+    checkReturns(module)
     return module
 }
