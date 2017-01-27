@@ -106,7 +106,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonBooleanLiteral())
+        assertThat(node, isPythonBooleanLiteral(true))
     }
 
     @Test
@@ -190,9 +190,9 @@ class CodeGeneratorTests {
         : Matcher<PythonStatementNode>
         = cast(has(PythonReturnNode::expression, expression))
 
-    private fun isPythonBooleanLiteral()
+    private fun isPythonBooleanLiteral(value: Boolean)
         : Matcher<PythonExpressionNode>
-        = cast(has(PythonBooleanLiteralNode::value, equalTo(true)))
+        = cast(has(PythonBooleanLiteralNode::value, equalTo(value)))
 
     private fun isPythonIntegerLiteral(value: Int)
         : Matcher<PythonExpressionNode>
