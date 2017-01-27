@@ -60,6 +60,7 @@ fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
 
 fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySource())
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
+fun literalString(value: String) = StringLiteralNode(value, anySource())
 fun variableReference(name: String) = VariableReferenceNode(name, anySource())
 fun returns(expression: ExpressionNode) = ReturnNode(expression, anySource())
 

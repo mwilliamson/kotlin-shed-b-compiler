@@ -9,10 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BinaryOperationNode
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.typechecker.BoolType
-import org.shedlang.compiler.typechecker.IntType
-import org.shedlang.compiler.typechecker.UnexpectedTypeError
-import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.typechecker.*
 
 class TypeCheckExpressionTests {
     @Test
@@ -27,6 +24,13 @@ class TypeCheckExpressionTests {
         val node = literalInt(42)
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(IntType)))
+    }
+
+    @Test
+    fun stringLiteralIsTypedAsString() {
+        val node = literalString("<string>")
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(equalTo(StringType)))
     }
 
     @Test

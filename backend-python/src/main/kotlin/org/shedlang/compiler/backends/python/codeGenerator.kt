@@ -50,6 +50,10 @@ fun generateCode(node: ExpressionNode): PythonExpressionNode {
             return PythonIntegerLiteralNode(node.value, NodeSource(node))
         }
 
+        override fun visit(node: StringLiteralNode): PythonExpressionNode {
+            return PythonStringLiteralNode(node.value, NodeSource(node))
+        }
+
         override fun visit(node: VariableReferenceNode): PythonExpressionNode {
             return PythonVariableReferenceNode(node.name, NodeSource(node))
         }

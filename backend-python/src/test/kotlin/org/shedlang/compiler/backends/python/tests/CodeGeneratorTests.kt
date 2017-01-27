@@ -108,6 +108,7 @@ class CodeGeneratorTests {
 
         assertThat(node, isPythonBooleanLiteral())
     }
+
     @Test
     fun integerLiteralGeneratesIntegerLiteral() {
         val shed = literalInt(42)
@@ -115,6 +116,13 @@ class CodeGeneratorTests {
         val node = generateCode(shed)
 
         assertThat(node, isPythonIntegerLiteral(42))
+    }
+
+    @Test
+    fun stringLiteralGeneratesStringLiteral() {
+        val shed = literalString("<string>")
+        val node = generateCode(shed)
+        assertThat(node, isPythonStringLiteral("<string>"))
     }
 
     @Test
@@ -189,6 +197,10 @@ class CodeGeneratorTests {
     private fun isPythonIntegerLiteral(value: Int)
         : Matcher<PythonExpressionNode>
         = cast(has(PythonIntegerLiteralNode::value, equalTo(value)))
+
+    private fun isPythonStringLiteral(value: String)
+        : Matcher<PythonExpressionNode>
+        = cast(has(PythonStringLiteralNode::value, equalTo(value)))
 
     private fun isPythonVariableReference(name: String)
         : Matcher<PythonExpressionNode>

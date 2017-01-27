@@ -145,6 +145,7 @@ data class ExpressionStatementNode(
 interface ExpressionNodeVisitor<T> {
     fun visit(node: BooleanLiteralNode): T
     fun visit(node: IntegerLiteralNode): T
+    fun visit(node: StringLiteralNode): T
     fun visit(node: VariableReferenceNode): T
     fun visit(node: BinaryOperationNode): T
     fun visit(node: FunctionCallNode): T
@@ -169,6 +170,19 @@ data class BooleanLiteralNode(
 
 data class IntegerLiteralNode(
     val value: Int,
+    override val source: Source,
+    override val nodeId: Int = nextId()
+) : ExpressionNode {
+    override val children: List<Node>
+        get() = listOf()
+
+    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class StringLiteralNode(
+    val value: String,
     override val source: Source,
     override val nodeId: Int = nextId()
 ) : ExpressionNode {

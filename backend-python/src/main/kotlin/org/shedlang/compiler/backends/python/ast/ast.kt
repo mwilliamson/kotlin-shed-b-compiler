@@ -75,6 +75,7 @@ interface PythonExpressionNode : PythonNode {
     interface Visitor<T> {
         fun visit(node: PythonBooleanLiteralNode): T
         fun visit(node: PythonIntegerLiteralNode): T
+        fun visit(node: PythonStringLiteralNode): T
         fun visit(node: PythonVariableReferenceNode): T
         fun visit(node: PythonBinaryOperationNode): T
         fun visit(node: PythonFunctionCallNode): T
@@ -94,6 +95,15 @@ data class PythonBooleanLiteralNode(
 
 data class PythonIntegerLiteralNode(
     val value: Int,
+    override val source: Source
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PythonStringLiteralNode(
+    val value: String,
     override val source: Source
 ): PythonExpressionNode {
     override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {

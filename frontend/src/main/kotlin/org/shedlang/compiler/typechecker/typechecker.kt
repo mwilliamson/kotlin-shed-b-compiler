@@ -7,6 +7,7 @@ interface Type
 object UnitType: Type
 object BoolType : Type
 object IntType : Type
+object StringType : Type
 object AnyType : Type
 class MetaType(val type: Type): Type
 
@@ -152,6 +153,10 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
 
         override fun visit(node: IntegerLiteralNode): Type {
             return IntType
+        }
+
+        override fun visit(node: StringLiteralNode): Type {
+            return StringType
         }
 
         override fun visit(node: VariableReferenceNode): Type {

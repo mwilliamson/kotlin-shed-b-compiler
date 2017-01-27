@@ -65,6 +65,10 @@ internal fun serialise(node: PythonExpressionNode): String {
             return node.value.toString()
         }
 
+        override fun visit(node: PythonStringLiteralNode): String {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: PythonVariableReferenceNode): String {
             return node.name
         }
@@ -122,6 +126,10 @@ private fun precedence(node: PythonExpressionNode): Int {
         }
 
         override fun visit(node: PythonIntegerLiteralNode): Int {
+            return 18
+        }
+
+        override fun visit(node: PythonStringLiteralNode): Int {
             return 18
         }
 
