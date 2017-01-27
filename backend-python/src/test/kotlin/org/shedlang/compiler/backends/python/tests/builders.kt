@@ -40,6 +40,9 @@ fun pythonLiteralBoolean(value: Boolean)
 fun pythonLiteralInt(value: Int)
     = PythonIntegerLiteralNode(value, source = anySource())
 
+fun pythonLiteralString(value: String)
+    = PythonStringLiteralNode(value, source = anySource())
+
 fun pythonVariableReference(name: String)
     = PythonVariableReferenceNode(name, source = anySource())
 

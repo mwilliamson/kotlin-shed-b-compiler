@@ -159,6 +159,25 @@ class SerialiserTests {
         assertThat(output, equalTo("42"))
     }
 
+    data class StringTestCase(val name: String, val value: String, val expectedOutput: String)
+
+    @TestFactory
+    fun stringSerialisation(): List<DynamicTest> {
+        return listOf(
+            StringTestCase("empty string", "", "\"\""),
+            StringTestCase("string with no special characters", "abc123", "\"abc123\""),
+            StringTestCase("newline", "\n", "\"\\n\""),
+            StringTestCase("carriage return", "\r", "\"\\r\""),
+            StringTestCase("tab", "\t", "\"\\t\""),
+            StringTestCase("double quote", "\"", "\"\\\"\""),
+            StringTestCase("backslash", "\\", "\"\\\\\"")
+        ).map({ case -> DynamicTest.dynamicTest(case.name, {
+            val node = pythonLiteralString(case.value)
+            val output = serialise(node)
+            assertThat(output, equalTo(case.expectedOutput))
+        }) })
+    }
+
     @Test
     fun variableReferenceSerialisation() {
         val node = pythonVariableReference("x")

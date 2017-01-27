@@ -66,7 +66,14 @@ internal fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonStringLiteralNode): String {
-            throw UnsupportedOperationException("not implemented")
+            val escapedValue = node.value
+                .replace("\\", "\\\\")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t")
+                .replace("\"", "\\\"")
+
+            return "\"" + escapedValue + "\""
         }
 
         override fun visit(node: PythonVariableReferenceNode): String {
