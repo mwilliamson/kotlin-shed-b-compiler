@@ -11,7 +11,7 @@ import org.shedlang.compiler.tests.isSequence
 
 class ParseIfTests {
     @Test
-    fun expressionIsReadForReturnStatements() {
+    fun conditionAndBranchesAreReadForIfStatement() {
         val source = "if (x) { return y; } else { return z; }"
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, cast(allOf(
