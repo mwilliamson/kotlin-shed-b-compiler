@@ -23,10 +23,14 @@ class ExecutionTests {
                     return n * fact(n - 1);
                 }
             }
+
+            fun main() : Unit {
+                print(fact(5));
+            }
         """.trimIndent()
         val module = read(filename = "<string>", input = source)
         val generateCode = generateCode(module)
-        val contents = serialise(generateCode) + "\nprint(fact(5))\n"
+        val contents = serialise(generateCode) + "\nmain()\n"
         val result = run(listOf("python", "-c", contents))
         result.assertSuccess()
         assertThat(result.stdout, equalTo("120"))
