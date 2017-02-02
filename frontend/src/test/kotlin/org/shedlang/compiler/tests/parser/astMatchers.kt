@@ -13,6 +13,12 @@ inline internal fun <reified T: ExpressionNode> isReturn(
     return cast(has(ReturnNode::expression, cast(expression)))
 }
 
+inline internal fun <reified T: ExpressionNode> isExpressionStatement(
+    expression: Matcher<T>
+): Matcher<StatementNode> {
+    return cast(has(ExpressionStatementNode::expression, cast(expression)))
+}
+
 internal fun isBinaryOperation(
     operator: Operator,
     left: Matcher<ExpressionNode>,

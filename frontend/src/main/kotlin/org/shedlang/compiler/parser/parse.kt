@@ -101,11 +101,19 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
             return parseStatement.parse(tokens)
         }
     }
+    return ::parseExpressionStatement.parse(tokens)
+    // TODO: change so that we throw the right exception when we don't find an expression
     throw UnexpectedTokenException(
         location = tokens.location(),
         expected = "function statement",
         actual = token.describe()
     )
+}
+
+private fun parseExpressionStatement(source: Source, tokens: TokenIterator<TokenType>) : ExpressionStatementNode {
+    val expression = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL, ";")
+    return ExpressionStatementNode(expression, source)
 }
 
 private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
