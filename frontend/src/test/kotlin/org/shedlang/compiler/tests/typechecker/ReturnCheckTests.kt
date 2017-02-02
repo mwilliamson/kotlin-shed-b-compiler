@@ -6,18 +6,27 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.typechecker.ReturnCheckError
-import org.shedlang.compiler.typechecker.alwaysReturns
-import org.shedlang.compiler.typechecker.checkReturns
+import org.shedlang.compiler.typechecker.*
 
 class ReturnCheckTests {
     @Test
     fun checkingReturnsInModuleChecksBodiesOfFunctions() {
-        val node = module(listOf(function(name = "f", body = listOf())))
+        val function = function(name = "f", body = listOf())
+        val node = module(listOf(function))
+        val functionType = FunctionType(arguments = listOf(), returns = IntType)
         assertThat(
-            { checkReturns(node) },
-            throws(cast(has(ReturnCheckError::message, equalTo("function f is missing return statement"))))
+            { checkReturns(node, mapOf(function.nodeId to functionType)) },
+            throws(cast(has(
+                ReturnCheckError::message,
+                equalTo("function f is missing return statement")
+            )))
         )
+    }
+
+    @Test
+    fun functionThatHasUnitReturnTypeDoesntNeedReturnStatement() {
+        val node = module(listOf(function(name = "f", body = listOf())))
+        checkReturns(node, mapOf())
     }
 
     @Test
