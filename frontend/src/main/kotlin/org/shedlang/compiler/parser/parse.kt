@@ -101,19 +101,26 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
             return parseStatement.parse(tokens)
         }
     }
-    return ::parseExpressionStatement.parse(tokens)
-    // TODO: change so that we throw the right exception when we don't find an expression
-    throw UnexpectedTokenException(
-        location = tokens.location(),
-        expected = "function statement",
-        actual = token.describe()
-    )
+    val expressionStatement = ::tryParseExpressionStatement.parse(tokens)
+    if (expressionStatement == null) {
+        throw UnexpectedTokenException(
+            location = tokens.location(),
+            expected = "function statement",
+            actual = token.describe()
+        )
+    } else {
+        return expressionStatement
+    }
 }
 
-private fun parseExpressionStatement(source: Source, tokens: TokenIterator<TokenType>) : ExpressionStatementNode {
-    val expression = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL, ";")
-    return ExpressionStatementNode(expression, source)
+private fun tryParseExpressionStatement(source: Source, tokens: TokenIterator<TokenType>) : ExpressionStatementNode? {
+    val expression = tryParseExpression(tokens)
+    if (expression == null) {
+        return null
+    } else {
+        tokens.skip(TokenType.SYMBOL, ";")
+        return ExpressionStatementNode(expression, source)
+    }
 }
 
 private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
@@ -144,9 +151,30 @@ internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode 
     return parseExpression(tokens, precedence = Int.MIN_VALUE)
 }
 
-private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) : ExpressionNode {
-    var left = ::parsePrimaryExpression.parse(tokens)
+private fun tryParseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode? {
+    return tryParseExpression(tokens, precedence = Int.MIN_VALUE)
+}
 
+private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) : ExpressionNode {
+    val expression = tryParseExpression(tokens, precedence = precedence)
+    if (expression == null) {
+        throw UnexpectedTokenException(
+            expected = "expected",
+            actual = tokens.peek().describe(),
+            location = tokens.location()
+        )
+    } else {
+        return expression
+    }
+}
+
+private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int) : ExpressionNode? {
+    val primaryExpression = ::tryParsePrimaryExpression.parse(tokens)
+    if (primaryExpression == null) {
+        return null
+    }
+
+    var left: ExpressionNode = primaryExpression
     while (true) {
         val next = tokens.peek()
         if (next.tokenType == TokenType.SYMBOL) {
@@ -219,7 +247,7 @@ private object FunctionCallParser : OperationParser {
 
 }
 
-internal fun parsePrimaryExpression(source: Source, tokens: TokenIterator<TokenType>) : ExpressionNode {
+internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<TokenType>) : ExpressionNode? {
     val token = tokens.next();
     when (token.tokenType) {
         TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), source)
@@ -236,11 +264,7 @@ internal fun parsePrimaryExpression(source: Source, tokens: TokenIterator<TokenT
             }
         }
     }
-    throw UnexpectedTokenException(
-        location = tokens.location(),
-        expected = "primary expression",
-        actual = token.describe()
-    )
+    return null
 }
 
 internal fun parseType(source: Source, tokens: TokenIterator<TokenType>) : TypeNode {
