@@ -11,7 +11,7 @@ internal fun serialise(node: StatementNode, indentation: Int): String {
 
     fun simpleStatement(text: String) = line(text + ";")
 
-    return node.accept(object : StatementNodeVisitor<String> {
+    return node.accept(object : StatementNode.Visitor<String> {
         override fun visit(node: ReturnNode): String {
             return simpleStatement("return " + serialise(node.expression))
         }
@@ -41,7 +41,7 @@ private fun serialiseBlock(
 }
 
 internal fun serialise(node: ExpressionNode) : String {
-    return node.accept(object : ExpressionNodeVisitor<String> {
+    return node.accept(object : ExpressionNode.Visitor<String> {
         override fun visit(node: BooleanLiteralNode): String {
             return if (node.value) "true" else "false"
         }
@@ -101,7 +101,7 @@ private fun serialise(operator: Operator) = when(operator) {
 }
 
 private fun precedence(node: ExpressionNode): Int {
-    return node.accept(object : ExpressionNodeVisitor<Int> {
+    return node.accept(object : ExpressionNode.Visitor<Int> {
         override fun visit(node: BooleanLiteralNode): Int {
             return 21
         }

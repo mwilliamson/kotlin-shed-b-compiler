@@ -18,7 +18,7 @@ private fun checkReturns(node: FunctionNode, types: Map<Int, Type>) {
 }
 
 internal fun alwaysReturns(node: StatementNode): Boolean {
-    return node.accept(object : StatementNodeVisitor<Boolean> {
+    return node.accept(object : StatementNode.Visitor<Boolean> {
         override fun visit(node: ReturnNode): Boolean {
             return true
         }

@@ -20,7 +20,7 @@ fun generateCode(node: FunctionNode): PythonFunctionNode {
 }
 
 fun generateCode(node: StatementNode): PythonStatementNode {
-    return node.accept(object : StatementNodeVisitor<PythonStatementNode> {
+    return node.accept(object : StatementNode.Visitor<PythonStatementNode> {
         override fun visit(node: ReturnNode): PythonStatementNode {
             return PythonReturnNode(generateCode(node.expression), NodeSource(node))
         }
@@ -41,7 +41,7 @@ fun generateCode(node: StatementNode): PythonStatementNode {
 }
 
 fun generateCode(node: ExpressionNode): PythonExpressionNode {
-    return node.accept(object : ExpressionNodeVisitor<PythonExpressionNode> {
+    return node.accept(object : ExpressionNode.Visitor<PythonExpressionNode> {
         override fun visit(node: BooleanLiteralNode): PythonExpressionNode {
             return PythonBooleanLiteralNode(node.value, NodeSource(node))
         }

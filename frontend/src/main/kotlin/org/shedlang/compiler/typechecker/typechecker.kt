@@ -110,7 +110,7 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
 }
 
 fun typeCheck(statement: StatementNode, context: TypeContext) {
-    statement.accept(object : StatementNodeVisitor<Unit> {
+    statement.accept(object : StatementNode.Visitor<Unit> {
         override fun visit(node: BadStatementNode) {
             throw BadStatementError(node.source)
         }
@@ -146,7 +146,7 @@ private fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
 }
 
 fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
-    return expression.accept(object : ExpressionNodeVisitor<Type> {
+    return expression.accept(object : ExpressionNode.Visitor<Type> {
         override fun visit(node: BooleanLiteralNode): Type {
             return BoolType
         }

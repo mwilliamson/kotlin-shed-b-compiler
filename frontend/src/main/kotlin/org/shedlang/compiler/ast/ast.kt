@@ -76,17 +76,17 @@ data class ArgumentNode(
         get() = listOf(type)
 }
 
-interface StatementNodeVisitor<T> {
-    fun visit(node: BadStatementNode): T {
-        throw UnsupportedOperationException("not implemented")
-    }
-    fun visit(node: ReturnNode): T
-    fun visit(node: IfStatementNode): T
-    fun visit(node: ExpressionStatementNode): T
-}
-
 interface StatementNode : Node {
-    fun <T> accept(visitor: StatementNodeVisitor<T>): T
+    interface Visitor<T> {
+        fun visit(node: BadStatementNode): T {
+            throw UnsupportedOperationException("not implemented")
+        }
+        fun visit(node: ReturnNode): T
+        fun visit(node: IfStatementNode): T
+        fun visit(node: ExpressionStatementNode): T
+    }
+
+    fun <T> accept(visitor: StatementNode.Visitor<T>): T
 }
 
 data class BadStatementNode(
@@ -96,7 +96,7 @@ data class BadStatementNode(
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -109,7 +109,7 @@ data class ReturnNode(
     override val children: List<Node>
         get() = listOf(expression)
 
-    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -124,7 +124,7 @@ data class IfStatementNode(
     override val children: List<Node>
         get() = listOf(condition) + trueBranch + falseBranch
 
-    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -137,22 +137,22 @@ data class ExpressionStatementNode(
     override val children: List<Node>
         get() = listOf(expression)
 
-    override fun <T> accept(visitor: StatementNodeVisitor<T>): T {
+    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-interface ExpressionNodeVisitor<T> {
-    fun visit(node: BooleanLiteralNode): T
-    fun visit(node: IntegerLiteralNode): T
-    fun visit(node: StringLiteralNode): T
-    fun visit(node: VariableReferenceNode): T
-    fun visit(node: BinaryOperationNode): T
-    fun visit(node: FunctionCallNode): T
-}
-
 interface ExpressionNode : Node {
-    fun <T> accept(visitor: ExpressionNodeVisitor<T>): T
+    interface Visitor<T> {
+        fun visit(node: BooleanLiteralNode): T
+        fun visit(node: IntegerLiteralNode): T
+        fun visit(node: StringLiteralNode): T
+        fun visit(node: VariableReferenceNode): T
+        fun visit(node: BinaryOperationNode): T
+        fun visit(node: FunctionCallNode): T
+    }
+
+    fun <T> accept(visitor: ExpressionNode.Visitor<T>): T
 }
 
 data class BooleanLiteralNode(
@@ -163,7 +163,7 @@ data class BooleanLiteralNode(
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -176,7 +176,7 @@ data class IntegerLiteralNode(
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -189,7 +189,7 @@ data class StringLiteralNode(
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -202,7 +202,7 @@ data class VariableReferenceNode(
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -217,7 +217,7 @@ data class BinaryOperationNode(
     override val children: List<Node>
         get() = listOf(left, right)
 
-    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -231,7 +231,7 @@ data class FunctionCallNode(
     override val children: List<Node>
         get() = listOf(function) + arguments
 
-    override fun <T> accept(visitor: ExpressionNodeVisitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
