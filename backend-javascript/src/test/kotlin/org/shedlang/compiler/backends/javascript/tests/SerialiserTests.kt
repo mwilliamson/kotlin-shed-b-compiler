@@ -261,46 +261,46 @@ class SerialiserTests {
         val output = serialise(node)
         assertThat(output, equalTo("x + (y + z)"))
     }
-//
-//    @Test
-//    fun functionCallSerialisation() {
-//        val node = pythonFunctionCall(
-//            function = variableReference("f"),
-//            arguments = listOf(
-//                variableReference("x"),
-//                variableReference("y")
-//            )
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("f(x, y)"))
-//    }
-//
-//    @Test
-//    fun functionInFunctionCallIsNotBracketedWhenOfSamePrecedence() {
-//        val node = pythonFunctionCall(
-//            function = pythonFunctionCall(
-//                variableReference("f"),
-//                arguments = listOf()
-//            ),
-//            arguments = listOf()
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("f()()"))
-//    }
-//
-//    @Test
-//    fun functionInFunctionCallIsBracketedWhenOfLowerPrecedence() {
-//        val node = pythonFunctionCall(
-//            function = binaryOperation(
-//                Operator.ADD,
-//                variableReference("f"),
-//                variableReference("g")
-//            ),
-//            arguments = listOf()
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("(f + g)()"))
-//    }
+
+    @Test
+    fun functionCallSerialisation() {
+        val node = functionCall(
+            function = variableReference("f"),
+            arguments = listOf(
+                variableReference("x"),
+                variableReference("y")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("f(x, y)"))
+    }
+
+    @Test
+    fun functionInFunctionCallIsNotBracketedWhenOfSamePrecedence() {
+        val node = functionCall(
+            function = functionCall(
+                variableReference("f"),
+                arguments = listOf()
+            ),
+            arguments = listOf()
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("f()()"))
+    }
+
+    @Test
+    fun functionInFunctionCallIsBracketedWhenOfLowerPrecedence() {
+        val node = functionCall(
+            function = binaryOperation(
+                Operator.ADD,
+                variableReference("f"),
+                variableReference("g")
+            ),
+            arguments = listOf()
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("(f + g)()"))
+    }
 //
 //    private fun indentedSerialise(node: FunctionNode): String {
 //        return serialise(node, indentation = 1)

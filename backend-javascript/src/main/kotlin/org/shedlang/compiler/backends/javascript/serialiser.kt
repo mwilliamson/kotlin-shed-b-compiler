@@ -31,7 +31,10 @@ internal fun serialise(node: ExpressionNode) : String {
         }
 
         override fun visit(node: FunctionCallNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return serialiseSubExpression(node, node.function, associative = true) +
+                "(" +
+                node.arguments.map(::serialise).joinToString(", ") +
+                ")"
         }
 
     })
