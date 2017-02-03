@@ -6,9 +6,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.BinaryOperationNode
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 
 class TypeCheckExpressionTests {
@@ -42,14 +41,14 @@ class TypeCheckExpressionTests {
 
     @Test
     fun addingTwoIntegersReturnsInteger() {
-        val node = BinaryOperationNode(Operator.ADD, literalInt(1), literalInt(2), anySource())
+        val node = binaryOperation(Operator.ADD, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(IntType)))
     }
 
     @Test
     fun addWithLeftBooleanOperandThrowsTypeError() {
-        val node = BinaryOperationNode(Operator.ADD, literalBool(true), literalInt(2), anySource())
+        val node = binaryOperation(Operator.ADD, literalBool(true), literalInt(2))
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
@@ -61,7 +60,7 @@ class TypeCheckExpressionTests {
 
     @Test
     fun addWithRightBooleanOperandThrowsTypeError() {
-        val node = BinaryOperationNode(Operator.ADD, literalInt(2), literalBool(true), anySource())
+        val node = binaryOperation(Operator.ADD, literalInt(2), literalBool(true))
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
@@ -73,7 +72,7 @@ class TypeCheckExpressionTests {
 
     @Test
     fun equalityOperationReturnsBoolean() {
-        val node = BinaryOperationNode(Operator.EQUALS, literalInt(1), literalInt(2), anySource())
+        val node = binaryOperation(Operator.EQUALS, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(BoolType)))
     }

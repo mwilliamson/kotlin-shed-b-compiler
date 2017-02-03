@@ -5,22 +5,15 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
-import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.typechecker.*
+import org.shedlang.compiler.tests.*
 
 class CodeGeneratorTests {
     @Test
     fun emptyModuleGeneratesEmptyModule() {
-        val shed = ModuleNode(
-            name = "example",
-            body = listOf(),
-            source = anySource()
-        )
+        val shed = module(body = listOf())
 
         val node = generateCode(shed)
 
@@ -29,7 +22,7 @@ class CodeGeneratorTests {
 
     @Test
     fun moduleGeneratesModule() {
-        val shed = module(listOf(function(name = "f")))
+        val shed = module(body = listOf(function(name = "f")))
 
         val node = generateCode(shed)
 

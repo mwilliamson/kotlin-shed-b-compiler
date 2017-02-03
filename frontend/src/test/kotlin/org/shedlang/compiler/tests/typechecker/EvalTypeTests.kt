@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.tests.typeReference
 import org.shedlang.compiler.typechecker.*
 
 class EvalTypeTests {

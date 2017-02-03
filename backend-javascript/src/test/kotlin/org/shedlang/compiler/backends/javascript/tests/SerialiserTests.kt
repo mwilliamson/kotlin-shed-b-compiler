@@ -8,7 +8,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.backends.javascript.serialise
-import org.shedlang.compiler.tests.typechecker.*
+import org.shedlang.compiler.tests.*
 
 class SerialiserTests {
 //    @Test

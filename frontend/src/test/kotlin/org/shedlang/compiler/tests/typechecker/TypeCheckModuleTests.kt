@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.StatementNode
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.MetaType
 import org.shedlang.compiler.typechecker.UnitType
 import org.shedlang.compiler.typechecker.typeCheck

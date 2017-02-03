@@ -1,7 +1,7 @@
 package org.shedlang.compiler.backends.python.tests
 
 import org.shedlang.compiler.backends.python.ast.*
-import org.shedlang.compiler.tests.typechecker.anySource
+import org.shedlang.compiler.tests.anySource
 
 fun pythonModule(body: List<PythonStatementNode>)
     = PythonModuleNode(body = body, source = anySource())

@@ -5,8 +5,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.TypeReferenceNode
 import org.shedlang.compiler.ast.VariableReferenceNode
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolutionContext
 import org.shedlang.compiler.typechecker.UnresolvedReferenceError
 import org.shedlang.compiler.typechecker.resolve
@@ -14,7 +14,7 @@ import org.shedlang.compiler.typechecker.resolve
 class ResolutionTests {
     @Test
     fun variableReferencesAreResolved() {
-        val node = VariableReferenceNode("x", anySource())
+        val node = variableReference("x")
         val context = resolutionContext(mapOf("x" to 42))
 
         resolve(node, context)
@@ -24,7 +24,7 @@ class ResolutionTests {
 
     @Test
     fun exceptionWhenVariableNotInScope() {
-        val node = VariableReferenceNode("x", anySource())
+        val node = variableReference("x")
         val context = resolutionContext(mapOf())
 
         assertThat(
@@ -35,7 +35,7 @@ class ResolutionTests {
 
     @Test
     fun typeReferencesAreResolved() {
-        val node = TypeReferenceNode("X", anySource())
+        val node = typeReference("X")
         val context = resolutionContext(mapOf("X" to 42))
 
         resolve(node, context)
@@ -45,7 +45,7 @@ class ResolutionTests {
 
     @Test
     fun exceptionWhenTypeVariableNotInScope() {
-        val node = TypeReferenceNode("X", anySource())
+        val node = typeReference("X")
         val context = resolutionContext(mapOf())
 
         assertThat(
