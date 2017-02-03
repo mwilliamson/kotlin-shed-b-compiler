@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.backends.javascript.serialise
 import org.shedlang.compiler.tests.typechecker.*
 
@@ -64,22 +65,22 @@ class SerialiserTests {
 //            ).joinToString("\n"))
 //        )
 //    }
-//
-//    @Test
-//    fun expressionStatementSerialisation() {
-//        assertThat(
-//            indentedSerialise(
-//                pythonExpressionStatement(pythonLiteralBoolean(true))
-//            ),
-//            equalTo("    True\n")
-//        )
-//    }
+
+    @Test
+    fun expressionStatementSerialisation() {
+        assertThat(
+            indentedSerialise(
+                expressionStatement(literalBool(true))
+            ),
+            equalTo("    true;\n")
+        )
+    }
 //
 //    @Test
 //    fun returnSerialisation() {
 //        assertThat(
 //            indentedSerialise(
-//                pythonReturn(pythonLiteralBoolean(true))
+//                returns(literalBoolean(true))
 //            ),
 //            equalTo("    return True\n")
 //        )
@@ -90,9 +91,9 @@ class SerialiserTests {
 //        assertThat(
 //            indentedSerialise(
 //                pythonIf(
-//                    pythonLiteralBoolean(true),
-//                    listOf(pythonReturn(pythonLiteralInt(0))),
-//                    listOf(pythonReturn(pythonLiteralInt(1)))
+//                    literalBoolean(true),
+//                    listOf(returns(literalInt(0))),
+//                    listOf(returns(literalInt(1)))
 //                )
 //            ),
 //            equalTo(listOf(
@@ -110,8 +111,8 @@ class SerialiserTests {
 //        assertThat(
 //            indentedSerialise(
 //                pythonIf(
-//                    pythonLiteralBoolean(true),
-//                    listOf(pythonReturn(pythonLiteralInt(0)))
+//                    literalBoolean(true),
+//                    listOf(returns(literalInt(0)))
 //                )
 //            ),
 //            equalTo(listOf(
@@ -127,7 +128,7 @@ class SerialiserTests {
 //        assertThat(
 //            indentedSerialise(
 //                pythonIf(
-//                    pythonLiteralBoolean(true),
+//                    literalBoolean(true),
 //                    listOf()
 //                )
 //            ),
@@ -306,7 +307,7 @@ class SerialiserTests {
 //        return serialise(node, indentation = 1)
 //    }
 //
-//    private fun indentedSerialise(node: StatementNode): String {
-//        return serialise(node, indentation = 1)
-//    }
+    private fun indentedSerialise(node: StatementNode): String {
+        return serialise(node, indentation = 1)
+    }
 }

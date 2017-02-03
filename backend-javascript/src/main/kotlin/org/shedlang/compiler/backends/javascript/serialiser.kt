@@ -4,6 +4,28 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.SubExpressionSerialiser
 import org.shedlang.compiler.backends.serialiseCStringLiteral
 
+private val INDENTATION_WIDTH = 4
+
+internal fun serialise(node: StatementNode, indentation: Int): String {
+    fun line(text: String) = " ".repeat(indentation * INDENTATION_WIDTH) + text + "\n"
+
+    fun simpleStatement(text: String) = line(text + ";")
+
+    return node.accept(object : StatementNodeVisitor<String> {
+        override fun visit(node: ReturnNode): String {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: IfStatementNode): String {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: ExpressionStatementNode): String {
+            return simpleStatement(serialise(node.expression))
+        }
+    })
+}
+
 internal fun serialise(node: ExpressionNode) : String {
     return node.accept(object : ExpressionNodeVisitor<String> {
         override fun visit(node: BooleanLiteralNode): String {
