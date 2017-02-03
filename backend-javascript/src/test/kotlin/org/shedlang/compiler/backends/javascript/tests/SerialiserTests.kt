@@ -24,46 +24,47 @@ class SerialiserTests {
             ).joinToString("\n"))
         )
     }
-//
-//    @Test
-//    fun emptyFunctionSerialisation() {
-//        assertThat(
-//            indentedSerialise(function(name = "f")),
-//            equalTo(listOf(
-//                "    def f():",
-//                "        pass",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
-//
-//    @Test
-//    fun functionBodyIsSerialised() {
-//        assertThat(
-//            indentedSerialise(function(name = "f", body = listOf(
-//                jsReturn(jsLiteralInt(42))
-//            ))),
-//            equalTo(listOf(
-//                "    def f():",
-//                "        return 42",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
-//
-//    @Test
-//    fun formalFunctionArgumentsAreSeparatedByCommas() {
-//        assertThat(
-//            indentedSerialise(
-//                function(name = "f", arguments = listOf("x", "y"))
-//            ),
-//            equalTo(listOf(
-//                "    def f(x, y):",
-//                "        pass",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
+
+    @Test
+    fun emptyFunctionSerialisation() {
+        assertThat(
+            indentedSerialise(jsFunction(name = "f")),
+            equalTo(listOf(
+                "    function f() {",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun functionBodyIsSerialised() {
+        assertThat(
+            indentedSerialise(jsFunction(name = "f", body = listOf(
+                jsReturn(jsLiteralInt(42))
+            ))),
+            equalTo(listOf(
+                "    function f() {",
+                "        return 42;",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun formalFunctionArgumentsAreSeparatedByCommas() {
+        assertThat(
+            indentedSerialise(
+                jsFunction(name = "f", arguments = listOf("x", "y"))
+            ),
+            equalTo(listOf(
+                "    function f(x, y) {",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
 
     @Test
     fun expressionStatementSerialisation() {
@@ -303,11 +304,7 @@ class SerialiserTests {
         val output = serialise(node)
         assertThat(output, equalTo("(f + g)()"))
     }
-//
-//    private fun indentedSerialise(node: FunctionNode): String {
-//        return serialise(node, indentation = 1)
-//    }
-//
+
     private fun indentedSerialise(node: JavascriptStatementNode): String {
         return serialise(node, indentation = 1)
     }

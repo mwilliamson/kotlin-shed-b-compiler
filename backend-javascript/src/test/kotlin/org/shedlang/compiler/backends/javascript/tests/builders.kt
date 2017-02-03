@@ -64,6 +64,17 @@ fun jsFunctionCall(
     source = anySource()
 )
 
+fun jsFunction(
+    name: String,
+    arguments: List<String> = listOf(),
+    body: List<JavascriptStatementNode> = listOf()
+) = JavascriptFunctionNode(
+    name = name,
+    arguments = arguments,
+    body = body,
+    source = anySource()
+)
+
 fun jsModule(
     body: List<JavascriptStatementNode>
 ) = JavascriptModuleNode(

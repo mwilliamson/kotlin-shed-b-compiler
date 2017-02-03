@@ -36,6 +36,16 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         override fun visit(node: JavascriptExpressionStatementNode): String {
             return simpleStatement(serialise(node.expression))
         }
+
+        override fun visit(node: JavascriptFunctionNode): String {
+            val signature = line(
+                "function " +
+                    node.name +
+                    "(" + node.arguments.joinToString(", ") + ") {"
+            )
+            val body = serialiseBlock(node.body, indentation = indentation)
+            return signature + body + line("}")
+        }
     })
 }
 
