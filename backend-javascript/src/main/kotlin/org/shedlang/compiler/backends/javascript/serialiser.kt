@@ -6,6 +6,12 @@ import org.shedlang.compiler.backends.serialiseCStringLiteral
 
 private val INDENTATION_WIDTH = 4
 
+internal fun serialise(node: JavascriptModuleNode): String {
+    return node.body
+        .map({ statement -> serialise(statement, indentation = 0) })
+        .joinToString("")
+}
+
 internal fun serialise(node: JavascriptStatementNode, indentation: Int): String {
     fun line(text: String) = " ".repeat(indentation * INDENTATION_WIDTH) + text + "\n"
 

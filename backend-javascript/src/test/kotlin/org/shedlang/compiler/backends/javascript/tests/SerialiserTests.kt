@@ -10,20 +10,20 @@ import org.shedlang.compiler.backends.javascript.ast.JavascriptStatementNode
 import org.shedlang.compiler.backends.javascript.serialise
 
 class SerialiserTests {
-//    @Test
-//    fun moduleSerialisation() {
-//        assertThat(
-//            serialise(module(listOf(
-//                expressionStatement(jsLiteralBool(true)),
-//                expressionStatement(jsLiteralBool(false))
-//            ))),
-//            equalTo(listOf(
-//                "True",
-//                "False",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
+    @Test
+    fun moduleSerialisation() {
+        assertThat(
+            serialise(jsModule(listOf(
+                jsExpressionStatement(jsLiteralBool(true)),
+                jsExpressionStatement(jsLiteralBool(false))
+            ))),
+            equalTo(listOf(
+                "true;",
+                "false;",
+                ""
+            ).joinToString("\n"))
+        )
+    }
 //
 //    @Test
 //    fun emptyFunctionSerialisation() {

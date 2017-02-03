@@ -6,6 +6,11 @@ interface JavascriptNode {
     val source: Source
 }
 
+data class JavascriptModuleNode(
+    val body: List<JavascriptStatementNode>,
+    override val source: Source
+) : JavascriptNode
+
 interface JavascriptStatementNode : JavascriptNode {
     interface Visitor<T> {
         fun visit(node: JavascriptReturnNode): T
