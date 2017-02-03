@@ -17,13 +17,27 @@ internal fun serialise(node: StatementNode, indentation: Int): String {
         }
 
         override fun visit(node: IfStatementNode): String {
-            throw UnsupportedOperationException("not implemented")
+            val condition = line("if (" + serialise(node.condition) + ") {")
+            val trueBranch = serialiseBlock(node.trueBranch, indentation)
+            val falseBranch = if (node.falseBranch.isEmpty()) {
+                line("}")
+            } else {
+                line("} else {") + serialiseBlock(node.falseBranch, indentation) + line("}")
+            }
+            return condition + trueBranch + falseBranch
         }
 
         override fun visit(node: ExpressionStatementNode): String {
             return simpleStatement(serialise(node.expression))
         }
     })
+}
+
+private fun serialiseBlock(
+    statements: List<StatementNode>,
+    indentation: Int
+): String {
+    return statements.map({ statement -> serialise(statement, indentation + 1) }).joinToString("")
 }
 
 internal fun serialise(node: ExpressionNode) : String {

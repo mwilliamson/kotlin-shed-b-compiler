@@ -85,60 +85,62 @@ class SerialiserTests {
             equalTo("    return true;\n")
         )
     }
-//
-//    @Test
-//    fun serialisingIfStatementWithBothBranches() {
-//        assertThat(
-//            indentedSerialise(
-//                pythonIf(
-//                    literalBoolean(true),
-//                    listOf(returns(literalInt(0))),
-//                    listOf(returns(literalInt(1)))
-//                )
-//            ),
-//            equalTo(listOf(
-//                "    if True:",
-//                "        return 0",
-//                "    else:",
-//                "        return 1",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
-//
-//    @Test
-//    fun elseBranchIsMissingIfItHasNoStatements() {
-//        assertThat(
-//            indentedSerialise(
-//                pythonIf(
-//                    literalBoolean(true),
-//                    listOf(returns(literalInt(0)))
-//                )
-//            ),
-//            equalTo(listOf(
-//                "    if True:",
-//                "        return 0",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
-//
-//    @Test
-//    fun trueBranchIsSerialisedAsPassWhenTrueBranchHasNoStatements() {
-//        assertThat(
-//            indentedSerialise(
-//                pythonIf(
-//                    literalBoolean(true),
-//                    listOf()
-//                )
-//            ),
-//            equalTo(listOf(
-//                "    if True:",
-//                "        pass",
-//                ""
-//            ).joinToString("\n"))
-//        )
-//    }
+
+    @Test
+    fun serialisingIfStatementWithBothBranches() {
+        assertThat(
+            indentedSerialise(
+                ifStatement(
+                    literalBool(true),
+                    listOf(returns(literalInt(0))),
+                    listOf(returns(literalInt(1)))
+                )
+            ),
+            equalTo(listOf(
+                "    if (true) {",
+                "        return 0;",
+                "    } else {",
+                "        return 1;",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun elseBranchIsMissingIfItHasNoStatements() {
+        assertThat(
+            indentedSerialise(
+                ifStatement(
+                    literalBool(true),
+                    listOf(returns(literalInt(0)))
+                )
+            ),
+            equalTo(listOf(
+                "    if (true) {",
+                "        return 0;",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun trueBranchIsSerialisedAsEmptyWhenTrueBranchHasNoStatements() {
+        assertThat(
+            indentedSerialise(
+                ifStatement(
+                    literalBool(true),
+                    listOf()
+                )
+            ),
+            equalTo(listOf(
+                "    if (true) {",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
 
     @Test
     fun booleanSerialisation() {
