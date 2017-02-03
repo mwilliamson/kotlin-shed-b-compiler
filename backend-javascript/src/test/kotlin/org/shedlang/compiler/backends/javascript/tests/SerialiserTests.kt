@@ -75,16 +75,16 @@ class SerialiserTests {
             equalTo("    true;\n")
         )
     }
-//
-//    @Test
-//    fun returnSerialisation() {
-//        assertThat(
-//            indentedSerialise(
-//                returns(literalBoolean(true))
-//            ),
-//            equalTo("    return True\n")
-//        )
-//    }
+
+    @Test
+    fun returnSerialisation() {
+        assertThat(
+            indentedSerialise(
+                returns(literalBool(true))
+            ),
+            equalTo("    return true;\n")
+        )
+    }
 //
 //    @Test
 //    fun serialisingIfStatementWithBothBranches() {

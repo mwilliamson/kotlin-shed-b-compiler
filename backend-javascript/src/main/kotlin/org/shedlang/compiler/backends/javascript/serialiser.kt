@@ -13,7 +13,7 @@ internal fun serialise(node: StatementNode, indentation: Int): String {
 
     return node.accept(object : StatementNodeVisitor<String> {
         override fun visit(node: ReturnNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return simpleStatement("return " + serialise(node.expression))
         }
 
         override fun visit(node: IfStatementNode): String {
