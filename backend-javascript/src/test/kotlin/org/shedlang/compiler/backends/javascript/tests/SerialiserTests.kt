@@ -5,11 +5,9 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.backends.javascript.serialise
-import org.shedlang.compiler.tests.typechecker.literalBool
-import org.shedlang.compiler.tests.typechecker.literalInt
-import org.shedlang.compiler.tests.typechecker.literalString
-import org.shedlang.compiler.tests.typechecker.variableReference
+import org.shedlang.compiler.tests.typechecker.*
 
 class SerialiserTests {
 //    @Test
@@ -185,122 +183,92 @@ class SerialiserTests {
         val output = serialise(node)
         assertThat(output, equalTo("x"))
     }
-//
-//    @TestFactory
-//    fun binaryOperationSerialisation(): List<DynamicTest> {
-//        return listOf(
-//            Pair(PythonOperator.EQUALS, "x == y"),
-//            Pair(PythonOperator.ADD, "x + y"),
-//            Pair(PythonOperator.SUBTRACT, "x - y"),
-//            Pair(PythonOperator.MULTIPLY, "x * y")
-//        ).map({ operator -> DynamicTest.dynamicTest(operator.second, {
-//            val node = pythonBinaryOperation(
-//                operator = operator.first,
-//                left = pythonVariableReference("x"),
-//                right = pythonVariableReference("y")
-//            )
-//            val output = serialise(node)
-//            assertThat(output, equalTo(operator.second))
-//        })})
-//    }
-//
-//    @Test
-//    fun leftSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
-//        val node = pythonBinaryOperation(
-//            operator = PythonOperator.MULTIPLY,
-//            left = pythonBinaryOperation(
-//                PythonOperator.ADD,
-//                pythonVariableReference("x"),
-//                pythonVariableReference("y")
-//            ),
-//            right = pythonVariableReference("z")
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("(x + y) * z"))
-//    }
-//
-//    @Test
-//    fun rightSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
-//        val node = pythonBinaryOperation(
-//            operator = PythonOperator.MULTIPLY,
-//            left = pythonVariableReference("x"),
-//            right = pythonBinaryOperation(
-//                PythonOperator.ADD,
-//                pythonVariableReference("y"),
-//                pythonVariableReference("z")
-//            )
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("x * (y + z)"))
-//    }
-//
-//    @Test
-//    fun leftSubExpressionIsNotBracketedForLeftAssociativeOperators() {
-//        val node = pythonBinaryOperation(
-//            operator = PythonOperator.ADD,
-//            left = pythonBinaryOperation(
-//                PythonOperator.ADD,
-//                pythonVariableReference("x"),
-//                pythonVariableReference("y")
-//            ),
-//            right = pythonVariableReference("z")
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("x + y + z"))
-//    }
-//
-//    @Test
-//    fun rightSubExpressionIsBracketedForLeftAssociativeOperators() {
-//        val node = pythonBinaryOperation(
-//            operator = PythonOperator.ADD,
-//            left = pythonVariableReference("x"),
-//            right = pythonBinaryOperation(
-//                PythonOperator.ADD,
-//                pythonVariableReference("y"),
-//                pythonVariableReference("z")
-//            )
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("x + (y + z)"))
-//    }
-//
-//    @Test
-//    fun leftSubExpressionIsBracketedForChainedOperators() {
-//        val node = pythonBinaryOperation(
-//            operator = PythonOperator.EQUALS,
-//            left = pythonBinaryOperation(
-//                PythonOperator.EQUALS,
-//                pythonVariableReference("x"),
-//                pythonVariableReference("y")
-//            ),
-//            right = pythonVariableReference("z")
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("(x == y) == z"))
-//    }
-//
-//    @Test
-//    fun rightSubExpressionIsBracketedForChainedOperators() {
-//        val node = pythonBinaryOperation(
-//            operator = PythonOperator.EQUALS,
-//            left = pythonVariableReference("x"),
-//            right = pythonBinaryOperation(
-//                PythonOperator.EQUALS,
-//                pythonVariableReference("y"),
-//                pythonVariableReference("z")
-//            )
-//        )
-//        val output = serialise(node)
-//        assertThat(output, equalTo("x == (y == z)"))
-//    }
+
+    @TestFactory
+    fun binaryOperationSerialisation(): List<DynamicTest> {
+        return listOf(
+            Pair(Operator.EQUALS, "x === y"),
+            Pair(Operator.ADD, "x + y"),
+            Pair(Operator.SUBTRACT, "x - y"),
+            Pair(Operator.MULTIPLY, "x * y")
+        ).map({ operator -> DynamicTest.dynamicTest(operator.second, {
+            val node = binaryOperation(
+                operator = operator.first,
+                left = variableReference("x"),
+                right = variableReference("y")
+            )
+            val output = serialise(node)
+            assertThat(output, equalTo(operator.second))
+        })})
+    }
+
+    @Test
+    fun leftSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
+        val node = binaryOperation(
+            operator = Operator.MULTIPLY,
+            left = binaryOperation(
+                Operator.ADD,
+                variableReference("x"),
+                variableReference("y")
+            ),
+            right = variableReference("z")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("(x + y) * z"))
+    }
+
+    @Test
+    fun rightSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
+        val node = binaryOperation(
+            operator = Operator.MULTIPLY,
+            left = variableReference("x"),
+            right = binaryOperation(
+                Operator.ADD,
+                variableReference("y"),
+                variableReference("z")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x * (y + z)"))
+    }
+
+    @Test
+    fun leftSubExpressionIsNotBracketedForLeftAssociativeOperators() {
+        val node = binaryOperation(
+            operator = Operator.ADD,
+            left = binaryOperation(
+                Operator.ADD,
+                variableReference("x"),
+                variableReference("y")
+            ),
+            right = variableReference("z")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x + y + z"))
+    }
+
+    @Test
+    fun rightSubExpressionIsBracketedForLeftAssociativeOperators() {
+        val node = binaryOperation(
+            operator = Operator.ADD,
+            left = variableReference("x"),
+            right = binaryOperation(
+                Operator.ADD,
+                variableReference("y"),
+                variableReference("z")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x + (y + z)"))
+    }
 //
 //    @Test
 //    fun functionCallSerialisation() {
 //        val node = pythonFunctionCall(
-//            function = pythonVariableReference("f"),
+//            function = variableReference("f"),
 //            arguments = listOf(
-//                pythonVariableReference("x"),
-//                pythonVariableReference("y")
+//                variableReference("x"),
+//                variableReference("y")
 //            )
 //        )
 //        val output = serialise(node)
@@ -311,7 +279,7 @@ class SerialiserTests {
 //    fun functionInFunctionCallIsNotBracketedWhenOfSamePrecedence() {
 //        val node = pythonFunctionCall(
 //            function = pythonFunctionCall(
-//                pythonVariableReference("f"),
+//                variableReference("f"),
 //                arguments = listOf()
 //            ),
 //            arguments = listOf()
@@ -323,10 +291,10 @@ class SerialiserTests {
 //    @Test
 //    fun functionInFunctionCallIsBracketedWhenOfLowerPrecedence() {
 //        val node = pythonFunctionCall(
-//            function = pythonBinaryOperation(
-//                PythonOperator.ADD,
-//                pythonVariableReference("f"),
-//                pythonVariableReference("g")
+//            function = binaryOperation(
+//                Operator.ADD,
+//                variableReference("f"),
+//                variableReference("g")
 //            ),
 //            arguments = listOf()
 //        )

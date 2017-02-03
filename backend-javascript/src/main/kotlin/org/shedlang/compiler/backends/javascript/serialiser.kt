@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.javascript
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.SubExpressionSerialiser
 import org.shedlang.compiler.backends.serialiseCStringLiteral
 
 internal fun serialise(node: ExpressionNode) : String {
@@ -22,12 +23,73 @@ internal fun serialise(node: ExpressionNode) : String {
         }
 
         override fun visit(node: BinaryOperationNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return serialiseSubExpression(node, node.left, associative = true) +
+                " " +
+                serialise(node.operator) +
+                " " +
+                serialiseSubExpression(node, node.right, associative = false)
         }
 
         override fun visit(node: FunctionCallNode): String {
             throw UnsupportedOperationException("not implemented")
         }
 
+    })
+}
+
+val subExpressionSerialiser = SubExpressionSerialiser<ExpressionNode>(
+    serialise = ::serialise,
+    precedence = ::precedence
+)
+
+private fun serialiseSubExpression(
+    parentNode: ExpressionNode,
+    node: ExpressionNode,
+    associative: Boolean
+): String {
+    return subExpressionSerialiser.serialiseSubExpression(
+        parentNode = parentNode,
+        node = node,
+        associative = associative
+    )
+}
+
+private fun serialise(operator: Operator) = when(operator) {
+    Operator.EQUALS -> "==="
+    Operator.ADD -> "+"
+    Operator.SUBTRACT -> "-"
+    Operator.MULTIPLY -> "*"
+}
+
+private fun precedence(node: ExpressionNode): Int {
+    return node.accept(object : ExpressionNodeVisitor<Int> {
+        override fun visit(node: BooleanLiteralNode): Int {
+            return 21
+        }
+
+        override fun visit(node: IntegerLiteralNode): Int {
+            return 21
+        }
+
+        override fun visit(node: StringLiteralNode): Int {
+            return 21
+        }
+
+        override fun visit(node: VariableReferenceNode): Int {
+            return 21
+        }
+
+        override fun visit(node: BinaryOperationNode): Int {
+            return when(node.operator) {
+                Operator.EQUALS -> 10
+                Operator.ADD -> 13
+                Operator.SUBTRACT -> 13
+                Operator.MULTIPLY -> 14
+            }
+        }
+
+        override fun visit(node: FunctionCallNode): Int {
+            return 18
+        }
     })
 }

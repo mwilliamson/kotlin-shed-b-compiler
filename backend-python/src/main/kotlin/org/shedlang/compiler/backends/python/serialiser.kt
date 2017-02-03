@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.python
 
+import org.shedlang.compiler.backends.SubExpressionSerialiser
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.serialiseCStringLiteral
 
@@ -91,19 +92,21 @@ internal fun serialise(node: PythonExpressionNode): String {
     })
 }
 
+val subExpressionSerialiser = SubExpressionSerialiser<PythonExpressionNode>(
+    serialise = ::serialise,
+    precedence = ::precedence
+)
+
 private fun serialiseSubExpression(
     parentNode: PythonExpressionNode,
     node: PythonExpressionNode,
     associative: Boolean
 ): String {
-    val parentPrecedence = precedence(parentNode)
-    val serialised = serialise(node)
-    val subPrecedence = precedence(node)
-    if (parentPrecedence > subPrecedence || parentPrecedence == subPrecedence && !associative) {
-        return "(" + serialised + ")"
-    } else {
-        return serialised
-    }
+    return subExpressionSerialiser.serialiseSubExpression(
+        parentNode = parentNode,
+        node = node,
+        associative = associative
+    )
 }
 
 private fun serialise(operator: PythonOperator) = when(operator) {
