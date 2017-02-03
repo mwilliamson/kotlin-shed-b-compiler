@@ -5,18 +5,17 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.ast.StatementNode
+import org.shedlang.compiler.backends.javascript.ast.JavascriptOperator
+import org.shedlang.compiler.backends.javascript.ast.JavascriptStatementNode
 import org.shedlang.compiler.backends.javascript.serialise
-import org.shedlang.compiler.tests.*
 
 class SerialiserTests {
 //    @Test
 //    fun moduleSerialisation() {
 //        assertThat(
 //            serialise(module(listOf(
-//                expressionStatement(literalBool(true)),
-//                expressionStatement(literalBool(false))
+//                expressionStatement(jsLiteralBool(true)),
+//                expressionStatement(jsLiteralBool(false))
 //            ))),
 //            equalTo(listOf(
 //                "True",
@@ -42,7 +41,7 @@ class SerialiserTests {
 //    fun functionBodyIsSerialised() {
 //        assertThat(
 //            indentedSerialise(function(name = "f", body = listOf(
-//                returns(literalInt(42))
+//                jsReturn(jsLiteralInt(42))
 //            ))),
 //            equalTo(listOf(
 //                "    def f():",
@@ -70,7 +69,7 @@ class SerialiserTests {
     fun expressionStatementSerialisation() {
         assertThat(
             indentedSerialise(
-                expressionStatement(literalBool(true))
+                jsExpressionStatement(jsLiteralBool(true))
             ),
             equalTo("    true;\n")
         )
@@ -80,7 +79,7 @@ class SerialiserTests {
     fun returnSerialisation() {
         assertThat(
             indentedSerialise(
-                returns(literalBool(true))
+                jsReturn(jsLiteralBool(true))
             ),
             equalTo("    return true;\n")
         )
@@ -90,10 +89,10 @@ class SerialiserTests {
     fun serialisingIfStatementWithBothBranches() {
         assertThat(
             indentedSerialise(
-                ifStatement(
-                    literalBool(true),
-                    listOf(returns(literalInt(0))),
-                    listOf(returns(literalInt(1)))
+                jsIfStatement(
+                    jsLiteralBool(true),
+                    listOf(jsReturn(jsLiteralInt(0))),
+                    listOf(jsReturn(jsLiteralInt(1)))
                 )
             ),
             equalTo(listOf(
@@ -111,9 +110,9 @@ class SerialiserTests {
     fun elseBranchIsMissingIfItHasNoStatements() {
         assertThat(
             indentedSerialise(
-                ifStatement(
-                    literalBool(true),
-                    listOf(returns(literalInt(0)))
+                jsIfStatement(
+                    jsLiteralBool(true),
+                    listOf(jsReturn(jsLiteralInt(0)))
                 )
             ),
             equalTo(listOf(
@@ -129,8 +128,8 @@ class SerialiserTests {
     fun trueBranchIsSerialisedAsEmptyWhenTrueBranchHasNoStatements() {
         assertThat(
             indentedSerialise(
-                ifStatement(
-                    literalBool(true),
+                jsIfStatement(
+                    jsLiteralBool(true),
                     listOf()
                 )
             ),
@@ -145,18 +144,18 @@ class SerialiserTests {
     @Test
     fun booleanSerialisation() {
         assertThat(
-            serialise(literalBool(true)),
+            serialise(jsLiteralBool(true)),
             equalTo("true")
         )
         assertThat(
-            serialise(literalBool(false)),
+            serialise(jsLiteralBool(false)),
             equalTo("false")
         )
     }
 
     @Test
     fun integerSerialisation() {
-        val node = literalInt(42)
+        val node = jsLiteralInt(42)
         val output = serialise(node)
         assertThat(output, equalTo("42"))
     }
@@ -174,7 +173,7 @@ class SerialiserTests {
             StringTestCase("double quote", "\"", "\"\\\"\""),
             StringTestCase("backslash", "\\", "\"\\\\\"")
         ).map({ case -> DynamicTest.dynamicTest(case.name, {
-            val node = literalString(case.value)
+            val node = jsLiteralString(case.value)
             val output = serialise(node)
             assertThat(output, equalTo(case.expectedOutput))
         }) })
@@ -182,7 +181,7 @@ class SerialiserTests {
 
     @Test
     fun variableReferenceSerialisation() {
-        val node = variableReference("x")
+        val node = jsVariableReference("x")
         val output = serialise(node)
         assertThat(output, equalTo("x"))
     }
@@ -190,15 +189,15 @@ class SerialiserTests {
     @TestFactory
     fun binaryOperationSerialisation(): List<DynamicTest> {
         return listOf(
-            Pair(Operator.EQUALS, "x === y"),
-            Pair(Operator.ADD, "x + y"),
-            Pair(Operator.SUBTRACT, "x - y"),
-            Pair(Operator.MULTIPLY, "x * y")
+            Pair(JavascriptOperator.EQUALS, "x === y"),
+            Pair(JavascriptOperator.ADD, "x + y"),
+            Pair(JavascriptOperator.SUBTRACT, "x - y"),
+            Pair(JavascriptOperator.MULTIPLY, "x * y")
         ).map({ operator -> DynamicTest.dynamicTest(operator.second, {
-            val node = binaryOperation(
+            val node = jsBinaryOperation(
                 operator = operator.first,
-                left = variableReference("x"),
-                right = variableReference("y")
+                left = jsVariableReference("x"),
+                right = jsVariableReference("y")
             )
             val output = serialise(node)
             assertThat(output, equalTo(operator.second))
@@ -207,14 +206,14 @@ class SerialiserTests {
 
     @Test
     fun leftSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
-        val node = binaryOperation(
-            operator = Operator.MULTIPLY,
-            left = binaryOperation(
-                Operator.ADD,
-                variableReference("x"),
-                variableReference("y")
+        val node = jsBinaryOperation(
+            operator = JavascriptOperator.MULTIPLY,
+            left = jsBinaryOperation(
+                JavascriptOperator.ADD,
+                jsVariableReference("x"),
+                jsVariableReference("y")
             ),
-            right = variableReference("z")
+            right = jsVariableReference("z")
         )
         val output = serialise(node)
         assertThat(output, equalTo("(x + y) * z"))
@@ -222,13 +221,13 @@ class SerialiserTests {
 
     @Test
     fun rightSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
-        val node = binaryOperation(
-            operator = Operator.MULTIPLY,
-            left = variableReference("x"),
-            right = binaryOperation(
-                Operator.ADD,
-                variableReference("y"),
-                variableReference("z")
+        val node = jsBinaryOperation(
+            operator = JavascriptOperator.MULTIPLY,
+            left = jsVariableReference("x"),
+            right = jsBinaryOperation(
+                JavascriptOperator.ADD,
+                jsVariableReference("y"),
+                jsVariableReference("z")
             )
         )
         val output = serialise(node)
@@ -237,14 +236,14 @@ class SerialiserTests {
 
     @Test
     fun leftSubExpressionIsNotBracketedForLeftAssociativeOperators() {
-        val node = binaryOperation(
-            operator = Operator.ADD,
-            left = binaryOperation(
-                Operator.ADD,
-                variableReference("x"),
-                variableReference("y")
+        val node = jsBinaryOperation(
+            operator = JavascriptOperator.ADD,
+            left = jsBinaryOperation(
+                JavascriptOperator.ADD,
+                jsVariableReference("x"),
+                jsVariableReference("y")
             ),
-            right = variableReference("z")
+            right = jsVariableReference("z")
         )
         val output = serialise(node)
         assertThat(output, equalTo("x + y + z"))
@@ -252,13 +251,13 @@ class SerialiserTests {
 
     @Test
     fun rightSubExpressionIsBracketedForLeftAssociativeOperators() {
-        val node = binaryOperation(
-            operator = Operator.ADD,
-            left = variableReference("x"),
-            right = binaryOperation(
-                Operator.ADD,
-                variableReference("y"),
-                variableReference("z")
+        val node = jsBinaryOperation(
+            operator = JavascriptOperator.ADD,
+            left = jsVariableReference("x"),
+            right = jsBinaryOperation(
+                JavascriptOperator.ADD,
+                jsVariableReference("y"),
+                jsVariableReference("z")
             )
         )
         val output = serialise(node)
@@ -267,11 +266,11 @@ class SerialiserTests {
 
     @Test
     fun functionCallSerialisation() {
-        val node = functionCall(
-            function = variableReference("f"),
+        val node = jsFunctionCall(
+            function = jsVariableReference("f"),
             arguments = listOf(
-                variableReference("x"),
-                variableReference("y")
+                jsVariableReference("x"),
+                jsVariableReference("y")
             )
         )
         val output = serialise(node)
@@ -280,9 +279,9 @@ class SerialiserTests {
 
     @Test
     fun functionInFunctionCallIsNotBracketedWhenOfSamePrecedence() {
-        val node = functionCall(
-            function = functionCall(
-                variableReference("f"),
+        val node = jsFunctionCall(
+            function = jsFunctionCall(
+                jsVariableReference("f"),
                 arguments = listOf()
             ),
             arguments = listOf()
@@ -293,11 +292,11 @@ class SerialiserTests {
 
     @Test
     fun functionInFunctionCallIsBracketedWhenOfLowerPrecedence() {
-        val node = functionCall(
-            function = binaryOperation(
-                Operator.ADD,
-                variableReference("f"),
-                variableReference("g")
+        val node = jsFunctionCall(
+            function = jsBinaryOperation(
+                JavascriptOperator.ADD,
+                jsVariableReference("f"),
+                jsVariableReference("g")
             ),
             arguments = listOf()
         )
@@ -309,7 +308,7 @@ class SerialiserTests {
 //        return serialise(node, indentation = 1)
 //    }
 //
-    private fun indentedSerialise(node: StatementNode): String {
+    private fun indentedSerialise(node: JavascriptStatementNode): String {
         return serialise(node, indentation = 1)
     }
 }
