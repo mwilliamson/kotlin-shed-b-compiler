@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.backends.python.ast.*
+import org.shedlang.compiler.backends.serialiseCStringLiteral
 
 private val INDENTATION_WIDTH = 4
 
@@ -66,14 +67,7 @@ internal fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonStringLiteralNode): String {
-            val escapedValue = node.value
-                .replace("\\", "\\\\")
-                .replace("\n", "\\n")
-                .replace("\r", "\\r")
-                .replace("\t", "\\t")
-                .replace("\"", "\\\"")
-
-            return "\"" + escapedValue + "\""
+            return serialiseCStringLiteral(node.value);
         }
 
         override fun visit(node: PythonVariableReferenceNode): String {

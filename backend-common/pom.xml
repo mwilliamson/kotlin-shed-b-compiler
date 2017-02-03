@@ -9,16 +9,11 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>shed-compiler-backend-python</artifactId>
+    <artifactId>shed-compiler-backend-common</artifactId>
     <packaging>jar</packaging>
 
-    <name>org.shedlang shed-compiler-backend-python</name>
+    <name>org.shedlang shed-compiler-backend-common</name>
     <dependencies>
-        <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-backend-common</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
             <artifactId>shed-compiler-frontend</artifactId>

@@ -9,10 +9,10 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>shed-compiler-backend-python</artifactId>
+    <artifactId>shed-compiler-backend-javascript</artifactId>
     <packaging>jar</packaging>
 
-    <name>org.shedlang shed-compiler-backend-python</name>
+    <name>org.shedlang shed-compiler-backend-javascript</name>
     <dependencies>
         <dependency>
             <groupId>org.shedlang</groupId>
