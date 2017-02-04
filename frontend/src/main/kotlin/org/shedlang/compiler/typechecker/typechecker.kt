@@ -143,7 +143,8 @@ fun typeCheck(statement: StatementNode, context: TypeContext) {
         }
 
         override fun visit(node: ValNode) {
-            typeCheck(node.expression, context)
+            val type = inferType(node.expression, context)
+            context.addTypes(mapOf(node.nodeId to type))
         }
     })
 }
