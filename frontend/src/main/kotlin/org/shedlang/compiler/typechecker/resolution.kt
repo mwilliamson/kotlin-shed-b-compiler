@@ -38,7 +38,8 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is FunctionNode -> {
             resolve(node.returnType, context)
             node.arguments.forEach { argument -> resolve(argument, context) }
-            val bindings = node.arguments.associateBy(ArgumentNode::name, Node::nodeId)
+            val binders = node.arguments + node.body.filterIsInstance<VariableBindingNode>()
+            val bindings = binders.associateBy(VariableBindingNode::name, Node::nodeId)
             val bodyContext = context.enterScope(bindings)
             for (statement in node.body) {
                 resolve(statement, bodyContext)

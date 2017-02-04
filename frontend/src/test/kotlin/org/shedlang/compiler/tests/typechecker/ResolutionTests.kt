@@ -97,6 +97,25 @@ class ResolutionTests {
     }
 
     @Test
+    fun valIntroducesVariableToFunctionScope() {
+        val reference = variableReference("x")
+        val valStatement = valStatement(name = "x", expression = literalInt())
+        val node = function(
+            arguments = listOf(),
+            returnType = typeReference("Int"),
+            body = listOf(
+                valStatement,
+                returns(reference)
+            )
+        )
+
+        val context = resolutionContext(mapOf("Int" to -1))
+        resolve(node, context)
+
+        assertThat(context[reference], equalTo(valStatement.nodeId))
+    }
+
+    @Test
     fun functionsCanCallEachOtherRecursively() {
         val referenceToSecond = variableReference("g")
         val definitionOfFirst = function(name = "f", body = listOf(
