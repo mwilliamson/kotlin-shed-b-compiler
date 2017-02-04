@@ -31,6 +31,10 @@ internal fun alwaysReturns(node: StatementNode): Boolean {
         override fun visit(node: ExpressionStatementNode): Boolean {
             return false
         }
+
+        override fun visit(node: ValNode): Boolean {
+            return false
+        }
     })
 }
 

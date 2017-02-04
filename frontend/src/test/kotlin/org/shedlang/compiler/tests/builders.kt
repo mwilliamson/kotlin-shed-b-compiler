@@ -17,6 +17,15 @@ fun ifStatement(
 fun expressionStatement(expression: ExpressionNode = expression())
     = ExpressionStatementNode(expression, anySource())
 
+fun valStatement(
+    name: String = "<val name>",
+    expression: ExpressionNode = expression()
+) = ValNode(
+    name = name,
+    expression = expression,
+    source = anySource()
+)
+
 fun expression() = literalString("<expression>")
 fun literalBool(value: Boolean) = BooleanLiteralNode(value, anySource())
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())

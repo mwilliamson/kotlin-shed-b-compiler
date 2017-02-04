@@ -71,4 +71,10 @@ class ReturnCheckTests {
         val node = expressionStatement()
         assertThat(alwaysReturns(node), equalTo(false))
     }
+
+    @Test
+    fun valStatementNeverReturns() {
+        val node = valStatement()
+        assertThat(alwaysReturns(node), equalTo(false))
+    }
 }

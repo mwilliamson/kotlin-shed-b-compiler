@@ -139,6 +139,10 @@ fun typeCheck(statement: StatementNode, context: TypeContext) {
         override fun visit(node: ExpressionStatementNode) {
             typeCheck(node.expression, context)
         }
+
+        override fun visit(node: ValNode) {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

@@ -84,6 +84,7 @@ interface StatementNode : Node {
         fun visit(node: ReturnNode): T
         fun visit(node: IfStatementNode): T
         fun visit(node: ExpressionStatementNode): T
+        fun visit(node: ValNode): T
     }
 
     fun <T> accept(visitor: StatementNode.Visitor<T>): T
@@ -134,6 +135,20 @@ data class ExpressionStatementNode(
     override val source: Source,
     override val nodeId: Int = nextId()
 ): StatementNode {
+    override val children: List<Node>
+        get() = listOf(expression)
+
+    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class ValNode(
+    override val name: String,
+    val expression: ExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = nextId()
+): VariableBindingNode, StatementNode {
     override val children: List<Node>
         get() = listOf(expression)
 

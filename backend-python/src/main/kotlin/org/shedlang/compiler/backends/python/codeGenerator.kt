@@ -37,6 +37,10 @@ fun generateCode(node: StatementNode): PythonStatementNode {
         override fun visit(node: ExpressionStatementNode): PythonStatementNode {
             return PythonExpressionStatementNode(generateCode(node.expression), NodeSource(node))
         }
+
+        override fun visit(node: ValNode): PythonStatementNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 
