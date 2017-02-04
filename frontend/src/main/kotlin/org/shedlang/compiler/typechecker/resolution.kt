@@ -39,16 +39,14 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             resolve(node.returnType, context)
             node.arguments.forEach { argument -> resolve(argument, context) }
             val binders = node.arguments + node.body.filterIsInstance<VariableBindingNode>()
-            val bindings = binders.associateBy(VariableBindingNode::name, Node::nodeId)
-            val bodyContext = context.enterScope(bindings)
+            val bodyContext = enterScope(binders, context)
             for (statement in node.body) {
                 resolve(statement, bodyContext)
             }
         }
 
         is ModuleNode -> {
-            val bindings = node.body.associateBy(FunctionNode::name, Node::nodeId)
-            val bodyContext = context.enterScope(bindings)
+            val bodyContext = enterScope(node.body, context)
             for (function in node.body) {
                 resolve(function, bodyContext)
             }
@@ -60,4 +58,9 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             }
         }
     }
+}
+
+private fun enterScope(binders: List<VariableBindingNode>, context: ResolutionContext): ResolutionContext {
+    val bindings = binders.associateBy(VariableBindingNode::name, Node::nodeId)
+    return context.enterScope(bindings)
 }
