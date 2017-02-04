@@ -97,7 +97,10 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
         override fun visit(node: TypeReferenceNode): Type {
             val metaType = context.typeOf(node)
             return when (metaType) {
-                null -> throw UnresolvedReferenceError(node.name, node.source)
+                null -> throw CompilerError(
+                    "type of ${node.name} is unknown",
+                    source = node.source
+                )
                 is MetaType -> metaType.type
                 else -> throw UnexpectedTypeError(
                     expected = MetaType(AnyType),

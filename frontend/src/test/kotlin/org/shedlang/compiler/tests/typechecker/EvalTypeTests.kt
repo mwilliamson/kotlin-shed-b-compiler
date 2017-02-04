@@ -6,12 +6,11 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.nextId
 import org.shedlang.compiler.tests.typeReference
 import org.shedlang.compiler.typechecker.*
 
 class EvalTypeTests {
-    // TODO: test when referenced variable has no type
-
     @Test
     fun whenReferencedVariableIsNotATypeThenErrorIsThrown() {
         val reference = typeReference("x")
@@ -26,6 +25,23 @@ class EvalTypeTests {
                 expected = isMetaType(AnyType),
                 actual = IntType
             )
+        )
+    }
+
+    @Test
+    fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
+        val reference = typeReference("x")
+
+        assertThat(
+            { evalType(
+                reference,
+                TypeContext(
+                    returnType = null,
+                    variables = mutableMapOf(),
+                    variableReferences = VariableReferencesMap(mapOf(reference.nodeId to nextId()))
+                )
+            ) },
+            throwsCompilerError("type of x is unknown")
         )
     }
 
