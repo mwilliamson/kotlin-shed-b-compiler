@@ -7,7 +7,8 @@ private val keywords = setOf(
     "if",
     "module",
     "return",
-    "true"
+    "true",
+    "val"
 )
 
 private val symbols = setOf(
@@ -20,6 +21,7 @@ private val symbols = setOf(
     "{",
     "}",
     "==",
+    "=",
     "+",
     "-",
     "*"

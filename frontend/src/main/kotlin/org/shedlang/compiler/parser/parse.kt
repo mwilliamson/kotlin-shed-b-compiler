@@ -97,6 +97,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
         val parseStatement : ((Source, TokenIterator<TokenType>) -> StatementNode)? = when (token.value) {
             "return" -> ::parseReturn
             "if" -> ::parseIfStatement
+            "val" -> ::parseVal
             else -> null
         }
         if (parseStatement != null) {
@@ -146,6 +147,19 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
         condition = condition,
         trueBranch = trueBranch,
         falseBranch = falseBranch,
+        source = source
+    )
+}
+
+private fun parseVal(source: Source, tokens: TokenIterator<TokenType>): ValNode {
+    val name = tokens.nextValue(TokenType.IDENTIFIER)
+    tokens.skip(TokenType.SYMBOL, "=")
+    val expression = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL, ";")
+
+    return ValNode(
+        name = name,
+        expression = expression,
         source = source
     )
 }

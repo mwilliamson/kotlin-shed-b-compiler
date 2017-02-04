@@ -19,6 +19,16 @@ inline internal fun <reified T: ExpressionNode> isExpressionStatement(
     return cast(has(ExpressionStatementNode::expression, cast(expression)))
 }
 
+inline internal fun <reified T: ExpressionNode> isVal(
+    name: Matcher<String>,
+    expression: Matcher<T>
+): Matcher<StatementNode> {
+    return cast(allOf(
+        has(ValNode::name, name),
+        has(ValNode::expression, cast(expression))
+    ))
+}
+
 internal fun isBinaryOperation(
     operator: Operator,
     left: Matcher<ExpressionNode>,
