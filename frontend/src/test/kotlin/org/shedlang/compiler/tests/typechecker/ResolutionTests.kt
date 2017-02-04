@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.RedeclarationError
 import org.shedlang.compiler.typechecker.ResolutionContext
 import org.shedlang.compiler.typechecker.UnresolvedReferenceError
 import org.shedlang.compiler.typechecker.resolve
@@ -172,6 +173,22 @@ class ResolutionTests {
 
         assertThat(context[trueReference], equalTo(trueVal.nodeId))
         assertThat(context[falseReference], equalTo(falseVal.nodeId))
+    }
+
+    @Test
+    fun whenSameNameIsIntroducedTwiceInSameScopeThenErrorIsThrown() {
+        val node = module(body = listOf(
+            function(name = "f", body = listOf(
+                valStatement(name = "x"),
+                valStatement(name = "x")
+            ))
+        ))
+
+        val context = resolutionContext(mapOf("Unit" to -1))
+        assertThat(
+            { resolve(node, context) },
+            throws(has(RedeclarationError::name, equalTo("x")))
+        )
     }
 
     private fun resolutionContext(variables: Map<String, Int>)

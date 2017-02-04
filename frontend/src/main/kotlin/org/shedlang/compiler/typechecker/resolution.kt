@@ -2,8 +2,6 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 
-// TODO: throw error if name is declared more than once in same scope
-
 interface VariableReferences {
     operator fun get(node: ReferenceNode): Int?
 }
@@ -78,6 +76,14 @@ private fun <T: Node> resolveScope(
 }
 
 private fun enterScope(binders: List<VariableBindingNode>, context: ResolutionContext): ResolutionContext {
-    val bindings = binders.associateBy(VariableBindingNode::name, Node::nodeId)
+    val bindings = binders.groupBy(VariableBindingNode::name)
+        .mapValues(fun(entry): Int {
+            if (entry.value.size > 1) {
+                throw RedeclarationError(entry.key, entry.value[1].source)
+            } else {
+                return entry.value[0].nodeId
+            }
+        })
+
     return context.enterScope(bindings)
 }
