@@ -1,4 +1,4 @@
-package org.shedlang.compiler.backends.python.tests
+package org.shedlang.compiler.backends.javascript.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
