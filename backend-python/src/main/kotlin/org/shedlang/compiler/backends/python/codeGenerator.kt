@@ -39,7 +39,11 @@ fun generateCode(node: StatementNode): PythonStatementNode {
         }
 
         override fun visit(node: ValNode): PythonStatementNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonAssignmentNode(
+                name = node.name,
+                expression = generateCode(node.expression),
+                source = NodeSource(node)
+            )
         }
     })
 }

@@ -94,6 +94,18 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun valGeneratesAssignment() {
+        val shed = valStatement(name = "x", expression = literalInt(42))
+
+        val node = generateCode(shed)
+
+        assertThat(node, cast(allOf(
+            has(PythonAssignmentNode::name, equalTo("x")),
+            has(PythonAssignmentNode::expression, isPythonIntegerLiteral(42))
+        )))
+    }
+
+    @Test
     fun booleanLiteralGeneratesBooleanLiteral() {
         val shed = literalBool(true)
 
