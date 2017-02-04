@@ -8,19 +8,23 @@ import org.shedlang.compiler.typechecker.*
 
 fun read(filename: String, input: String): ModuleNode {
     val module = parse(filename = filename, input = input)
+
     val intTypeNodeId = nextId()
     val unitTypeNodeId = nextId()
     val printNodeId = nextId()
+    val intToStringNodeId = nextId()
+
     val variableReferences = resolve(module, mapOf(
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
-        "print" to printNodeId
+        "print" to printNodeId,
+        "intToString" to intToStringNodeId
     ))
     val variables = mutableMapOf(
         unitTypeNodeId to MetaType(UnitType),
         intTypeNodeId to MetaType(IntType),
-        // TODO: should be String -> Unit
-        printNodeId to FunctionType(listOf(IntType), UnitType)
+        printNodeId to FunctionType(listOf(StringType), UnitType),
+        intToStringNodeId to FunctionType(listOf(IntType), StringType)
     )
     val typeContext = TypeContext(
         returnType = null,

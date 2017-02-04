@@ -25,7 +25,7 @@ val testPrograms = listOf(
             }
 
             fun main() : Unit {
-                print(fact(5));
+                print(intToString(fact(5)));
             }
         """.trimIndent(),
         expectedResult = ExecutionResult(stdout = "120"))

@@ -17,6 +17,10 @@ class ExecutionTests {
             val module = read(filename = "<string>", input = testProgram.source)
             val generateCode = generateCode(module)
             val stdlib = """
+                function intToString(value) {
+                    return value.toString();
+                }
+
                 function print(value) {
                     console.log(value);
                 }
