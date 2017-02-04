@@ -143,6 +143,16 @@ class SerialiserTests {
     }
 
     @Test
+    fun letSerialisation() {
+        assertThat(
+            indentedSerialise(
+                jsLet("x", jsLiteralBool(true))
+            ),
+            equalTo("    let x = true;\n")
+        )
+    }
+
+    @Test
     fun booleanSerialisation() {
         assertThat(
             serialise(jsLiteralBool(true)),

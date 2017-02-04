@@ -17,6 +17,7 @@ interface JavascriptStatementNode : JavascriptNode {
         fun visit(node: JavascriptIfStatementNode): T
         fun visit(node: JavascriptExpressionStatementNode): T
         fun visit(node: JavascriptFunctionNode): T
+        fun visit(node: JavascriptLetNode): T
     }
 
     fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T
@@ -55,6 +56,16 @@ data class JavascriptFunctionNode(
     val name: String,
     val arguments: List<String>,
     val body: List<JavascriptStatementNode>,
+    override val source: Source
+) : JavascriptStatementNode {
+    override fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class JavascriptLetNode(
+    val name: String,
+    val expression: JavascriptExpressionNode,
     override val source: Source
 ) : JavascriptStatementNode {
     override fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T {

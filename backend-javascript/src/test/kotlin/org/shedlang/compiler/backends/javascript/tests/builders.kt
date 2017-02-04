@@ -75,6 +75,15 @@ fun jsFunction(
     source = anySource()
 )
 
+fun jsLet(
+    name: String,
+    expression: JavascriptExpressionNode
+) = JavascriptLetNode(
+    name = name,
+    expression = expression,
+    source = anySource()
+)
+
 fun jsModule(
     body: List<JavascriptStatementNode>
 ) = JavascriptModuleNode(
