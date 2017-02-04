@@ -1,7 +1,6 @@
 package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.StringSource
-import org.shedlang.compiler.orElseThrow
 
 internal class UnexpectedTokenException(
     val location: StringSource,
@@ -9,7 +8,11 @@ internal class UnexpectedTokenException(
     val actual: String
 ) : Exception("Error at $location\nExpected: $expected\nBut got: $actual")
 
-internal class TokenIterator<T>(private val filename: String, private val tokens: List<Token<T>>) {
+internal class TokenIterator<T>(
+    private val filename: String,
+    private val tokens: List<Token<T>>,
+    private val end: Token<T>
+) {
     private var index = 0
 
     fun location(): StringSource {
@@ -61,31 +64,23 @@ internal class TokenIterator<T>(private val filename: String, private val tokens
     }
 
     fun isNext(tokenType: T, value: String): Boolean {
-        val token = tryPeek()
-        if (token == null) {
-            return false
-        } else {
-            return token.tokenType == tokenType && token.value == value
-        }
-    }
-
-    private fun tryPeek(): Token<T>? {
-        if (index < tokens.size) {
-            return tokens[index]
-        } else {
-            return null
-        }
+        val token = peek()
+        return token.tokenType == tokenType && token.value == value
     }
 
     fun peek(): Token<T> {
-        return tryPeek().orElseThrow(RuntimeException("TODO"))
+        return getToken(index)
     }
 
     fun next(): Token<T> {
+        return getToken(index++)
+    }
+
+    private fun getToken(index: Int): Token<T> {
         if (index < tokens.size) {
-            return tokens[index++]
+            return tokens[index]
         } else {
-            throw RuntimeException("TODO")
+            return end
         }
     }
 }

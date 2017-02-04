@@ -15,14 +15,15 @@ import org.shedlang.compiler.tests.allOf
 class TokenIteratorTests {
     enum class TokenType {
         IDENTIFIER,
-        SYMBOL
+        SYMBOL,
+        END
     }
 
     @Nested
     inner class SkipByTokenType {
         @Test
         fun movesToNextTokenWhenTokenTypeMatches() {
-            val tokens = TokenIterator("<string>", listOf(
+            val tokens = tokenIterator(listOf(
                 Token(0, TokenType.IDENTIFIER, "a"),
                 Token(1, TokenType.IDENTIFIER, "b")
             ))
@@ -32,7 +33,7 @@ class TokenIteratorTests {
 
         @Test
         fun throwsExceptionWhenNextTokenHasUnexpectedType() {
-            val tokens = TokenIterator("<string>", listOf(
+            val tokens = tokenIterator(listOf(
                 Token(0, TokenType.IDENTIFIER, "a")
             ))
             val exception = assertThrows<UnexpectedTokenException>(
@@ -51,7 +52,7 @@ class TokenIteratorTests {
     inner class SkipByTokenTypeAndValue {
         @Test
         fun movesToNextTokenWhenTokenTypeAndValueMatch() {
-            val tokens = TokenIterator("<string>", listOf(
+            val tokens = tokenIterator(listOf(
                 Token(0, TokenType.IDENTIFIER, "a"),
                 Token(1, TokenType.IDENTIFIER, "b")
             ))
@@ -61,7 +62,7 @@ class TokenIteratorTests {
 
         @Test
         fun throwsExceptionWhenNextTokenHasUnexpectedType() {
-            val tokens = TokenIterator("<string>", listOf(
+            val tokens = tokenIterator(listOf(
                 Token(0, TokenType.IDENTIFIER, "a")
             ))
             val exception = assertThrows<UnexpectedTokenException>(
@@ -77,7 +78,7 @@ class TokenIteratorTests {
 
         @Test
         fun throwsExceptionWhenNextTokenHasUnexpectedValue() {
-            val tokens = TokenIterator("<string>", listOf(
+            val tokens = tokenIterator(listOf(
                 Token(0, TokenType.IDENTIFIER, "a")
             ))
             val exception = assertThrows<UnexpectedTokenException>(
@@ -90,5 +91,17 @@ class TokenIteratorTests {
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
         }
+    }
+
+    @Test
+    fun whenThereAreNoMoreTokensThenPeekReturnsEndToken() {
+        val tokens = tokenIterator(listOf())
+        assertThat(tokens.peek(), equalTo(END_TOKEN))
+    }
+
+    private val END_TOKEN = Token(-1, TokenType.END, "")
+
+    private fun tokenIterator(tokens: List<Token<TokenType>>): TokenIterator<TokenType> {
+        return TokenIterator("<string>", tokens, end = END_TOKEN)
     }
 }

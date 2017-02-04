@@ -5,8 +5,11 @@ import org.shedlang.compiler.ast.*
 internal fun parse(filename: String, input: String): ModuleNode {
     val tokens = tokenise(input)
         .filter { token -> token.tokenType != TokenType.WHITESPACE }
-        .plus(Token(input.length, TokenType.END, ""))
-    val tokenIterator = TokenIterator(filename, tokens)
+    val tokenIterator = TokenIterator(
+        filename,
+        tokens,
+        end = Token(input.length, TokenType.END, "")
+    )
     val module = ::parseModule.parse(tokenIterator)
     tokenIterator.skip(TokenType.END)
     return module
