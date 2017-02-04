@@ -11,7 +11,6 @@ import org.shedlang.compiler.typechecker.*
 
 class EvalTypeTests {
     // TODO: test when referenced variable has no type
-    // TODO: test for unresolved variable (i.e. compiler error)
 
     @Test
     fun whenReferencedVariableIsNotATypeThenErrorIsThrown() {
