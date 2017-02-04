@@ -2,6 +2,8 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 
+// TODO: throw error if name is declared more than once in same scope
+
 interface VariableReferences {
     operator fun get(node: ReferenceNode): Int?
 }
