@@ -94,6 +94,18 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun valGeneratesLet() {
+        val shed = valStatement(name = "x", expression = literalBool(true))
+
+        val node = generateCode(shed)
+
+        assertThat(node, cast(allOf(
+            has(JavascriptLetNode::name, equalTo("x")),
+            has(JavascriptLetNode::expression, isJavascriptBooleanLiteral(true))
+        )))
+    }
+
+    @Test
     fun booleanLiteralGeneratesBooleanLiteral() {
         val shed = literalBool(true)
 

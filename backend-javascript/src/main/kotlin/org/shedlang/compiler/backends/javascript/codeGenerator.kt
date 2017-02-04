@@ -39,7 +39,11 @@ fun generateCode(node: StatementNode): JavascriptStatementNode {
         }
 
         override fun visit(node: ValNode): JavascriptStatementNode {
-            throw UnsupportedOperationException("not implemented")
+            return JavascriptLetNode(
+                name = node.name,
+                expression = generateCode(node.expression),
+                source = NodeSource(node)
+            )
         }
     })
 }
