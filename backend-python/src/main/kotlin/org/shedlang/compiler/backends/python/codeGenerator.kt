@@ -39,6 +39,12 @@ fun generateCode(node: StatementNode): PythonStatementNode {
         }
 
         override fun visit(node: ValNode): PythonStatementNode {
+            // TODO: handle scoping e.g.
+            // val x = "1";
+            // if (true) {
+            //    val x = "2";
+            // }
+            // print(x) // Should print 1
             return PythonAssignmentNode(
                 name = node.name,
                 expression = generateCode(node.expression),
