@@ -143,7 +143,7 @@ fun typeCheck(statement: StatementNode, context: TypeContext) {
         }
 
         override fun visit(node: ValNode) {
-            throw UnsupportedOperationException("not implemented")
+            typeCheck(node.expression, context)
         }
     })
 }
