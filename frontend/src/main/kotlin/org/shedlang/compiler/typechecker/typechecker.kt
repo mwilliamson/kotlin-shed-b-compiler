@@ -18,7 +18,7 @@ class TypeContext(
     private val variables: MutableMap<Int, Type>,
     private val variableReferences: VariableReferences
 ) {
-    fun typeOf(reference: ReferenceNode): Type? {
+    fun typeOf(reference: ReferenceNode): Type {
         val targetNodeId = variableReferences[reference]
         if (targetNodeId == null) {
             throw CompilerError(
@@ -26,7 +26,15 @@ class TypeContext(
                 source = reference.source
             )
         } else {
-            return variables[targetNodeId]
+            val type = variables[targetNodeId]
+            if (type == null) {
+                throw CompilerError(
+                    "type of ${reference.name} is unknown",
+                    source = reference.source
+                )
+            } else {
+                return type
+            }
         }
     }
 
@@ -97,10 +105,6 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
         override fun visit(node: TypeReferenceNode): Type {
             val metaType = context.typeOf(node)
             return when (metaType) {
-                null -> throw CompilerError(
-                    "type of ${node.name} is unknown",
-                    source = node.source
-                )
                 is MetaType -> metaType.type
                 else -> throw UnexpectedTypeError(
                     expected = MetaType(AnyType),
@@ -163,12 +167,7 @@ fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
         }
 
         override fun visit(node: VariableReferenceNode): Type {
-            val type = context.typeOf(node)
-            if (type == null) {
-                throw UnresolvedReferenceError(node.name, node.source)
-            } else {
-                return type
-            }
+            return context.typeOf(node)
         }
 
         override fun visit(node: BinaryOperationNode): Type {

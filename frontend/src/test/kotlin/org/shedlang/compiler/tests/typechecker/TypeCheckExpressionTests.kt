@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.nextId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 
@@ -37,6 +38,23 @@ class TypeCheckExpressionTests {
         val node = variableReference("x")
         val type = inferType(node, typeContext(referenceTypes = mutableMapOf(node to IntType)))
         assertThat(type, cast(equalTo(IntType)))
+    }
+
+    @Test
+    fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
+        val reference = variableReference("x")
+
+        assertThat(
+            { inferType(
+                reference,
+                TypeContext(
+                    returnType = null,
+                    variables = mutableMapOf(),
+                    variableReferences = VariableReferencesMap(mapOf(reference.nodeId to nextId()))
+                )
+            ) },
+            throwsCompilerError("type of x is unknown")
+        )
     }
 
     @Test
