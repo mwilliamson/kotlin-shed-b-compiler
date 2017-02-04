@@ -28,7 +28,6 @@ internal class TokenIterator<T>(
     }
 
     fun skip() {
-        peek()
         index++
     }
 
