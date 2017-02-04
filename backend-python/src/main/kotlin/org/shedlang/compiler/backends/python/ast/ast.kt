@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.python.ast
 
+import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Source
 
 interface PythonNode {
@@ -18,6 +19,7 @@ interface PythonStatementNode : PythonNode {
         fun visit(node: PythonReturnNode): T
         fun visit(node: PythonIfStatementNode): T
         fun visit(node: PythonPassNode): T
+        fun visit(node: PythonAssignmentNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -66,6 +68,16 @@ data class PythonIfStatementNode(
 data class PythonPassNode(
     override val source: Source
 ) : PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PythonAssignmentNode(
+    val name: String,
+    val expression: PythonExpressionNode,
+    override val source: Source
+): PythonStatementNode {
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
