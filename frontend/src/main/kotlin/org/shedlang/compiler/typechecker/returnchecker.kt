@@ -5,8 +5,9 @@ import org.shedlang.compiler.ast.*
 open class ReturnCheckError(message: String?, val source: Source) : Exception(message)
 
 internal fun checkReturns(node: ModuleNode, types: Map<Int, Type>) {
-    // TODO: if/when we have nested functions, we should just find all function nodes recursively
-    node.body.forEach({ statement -> checkReturns(statement, types) })
+    descendantsAndSelf(node).forEach({descendant -> when(descendant) {
+        is FunctionNode -> checkReturns(descendant, types)
+    }})
 }
 
 private fun checkReturns(node: FunctionNode, types: Map<Int, Type>) {
