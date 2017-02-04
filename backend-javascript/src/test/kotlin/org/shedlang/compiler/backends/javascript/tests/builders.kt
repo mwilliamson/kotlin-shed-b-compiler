@@ -75,10 +75,10 @@ fun jsFunction(
     source = anySource()
 )
 
-fun jsLet(
+fun jsConst(
     name: String,
     expression: JavascriptExpressionNode
-) = JavascriptLetNode(
+) = JavascriptConstNode(
     name = name,
     expression = expression,
     source = anySource()

@@ -39,7 +39,7 @@ fun generateCode(node: StatementNode): JavascriptStatementNode {
         }
 
         override fun visit(node: ValNode): JavascriptStatementNode {
-            return JavascriptLetNode(
+            return JavascriptConstNode(
                 name = node.name,
                 expression = generateCode(node.expression),
                 source = NodeSource(node)

@@ -17,7 +17,7 @@ interface JavascriptStatementNode : JavascriptNode {
         fun visit(node: JavascriptIfStatementNode): T
         fun visit(node: JavascriptExpressionStatementNode): T
         fun visit(node: JavascriptFunctionNode): T
-        fun visit(node: JavascriptLetNode): T
+        fun visit(node: JavascriptConstNode): T
     }
 
     fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T
@@ -63,7 +63,7 @@ data class JavascriptFunctionNode(
     }
 }
 
-data class JavascriptLetNode(
+data class JavascriptConstNode(
     val name: String,
     val expression: JavascriptExpressionNode,
     override val source: Source

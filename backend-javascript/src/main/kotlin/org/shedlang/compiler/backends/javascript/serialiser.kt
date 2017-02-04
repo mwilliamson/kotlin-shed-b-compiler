@@ -47,8 +47,8 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
             return signature + body + line("}")
         }
 
-        override fun visit(node: JavascriptLetNode): String {
-            return simpleStatement("let ${node.name} = ${serialise(node.expression)}")
+        override fun visit(node: JavascriptConstNode): String {
+            return simpleStatement("const ${node.name} = ${serialise(node.expression)}")
         }
     })
 }
