@@ -38,18 +38,21 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is FunctionNode -> {
             resolve(node.returnType, context)
             node.arguments.forEach { argument -> resolve(argument, context) }
-            val binders = node.arguments + node.body.filterIsInstance<VariableBindingNode>()
-            val bodyContext = enterScope(binders, context)
-            for (statement in node.body) {
-                resolve(statement, bodyContext)
-            }
+            resolveScope(
+                body = node.body,
+                binders = node.arguments,
+                context = context
+            )
         }
 
         is ModuleNode -> {
-            val bodyContext = enterScope(node.body, context)
-            for (function in node.body) {
-                resolve(function, bodyContext)
-            }
+            resolveScope(body = node.body, context = context)
+        }
+
+        is IfStatementNode -> {
+            resolve(node.condition, context)
+            resolveScope(body = node.trueBranch, context = context)
+            resolveScope(body = node.falseBranch, context = context)
         }
 
         else -> {
@@ -57,6 +60,20 @@ internal fun resolve(node: Node, context: ResolutionContext) {
                 resolve(child, context)
             }
         }
+    }
+}
+
+private fun <T: Node> resolveScope(
+    body: List<T>,
+    binders: List<VariableBindingNode> = listOf(),
+    context: ResolutionContext
+) {
+    val bodyContext = enterScope(
+        binders + body.filterIsInstance<VariableBindingNode>(),
+        context
+    )
+    for (child in body) {
+        resolve(child, bodyContext)
     }
 }
 

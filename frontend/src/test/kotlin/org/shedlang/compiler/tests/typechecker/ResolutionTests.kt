@@ -137,6 +137,43 @@ class ResolutionTests {
         assertThat(context[referenceToSecond], equalTo(definitionOfSecond.nodeId))
     }
 
+    @Test
+    fun conditionOfIfStatementIsResolved() {
+        val reference = variableReference("x")
+        val node = ifStatement(condition = reference)
+        val context = resolutionContext(mapOf("x" to 42))
+
+        resolve(node, context)
+
+        assertThat(context[reference], equalTo(42))
+    }
+
+    @Test
+    fun ifStatementIntroducesScopes() {
+        val trueVal = valStatement(name = "x", expression = literalInt())
+        val trueReference = variableReference("x")
+        val falseVal = valStatement(name = "x", expression = literalInt())
+        val falseReference = variableReference("x")
+
+        val node = ifStatement(
+            condition = literalBool(true),
+            trueBranch = listOf(
+                trueVal,
+                expressionStatement(trueReference)
+            ),
+            falseBranch = listOf(
+                falseVal,
+                expressionStatement(falseReference)
+            )
+        )
+
+        val context = resolutionContext(mapOf())
+        resolve(node, context)
+
+        assertThat(context[trueReference], equalTo(trueVal.nodeId))
+        assertThat(context[falseReference], equalTo(falseVal.nodeId))
+    }
+
     private fun resolutionContext(variables: Map<String, Int>)
         = ResolutionContext(bindings = variables, nodes = mutableMapOf())
 }
