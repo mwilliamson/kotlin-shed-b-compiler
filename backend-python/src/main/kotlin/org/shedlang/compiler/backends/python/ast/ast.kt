@@ -1,6 +1,5 @@
 package org.shedlang.compiler.backends.python.ast
 
-import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Source
 
 interface PythonNode {

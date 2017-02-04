@@ -44,7 +44,7 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         }
 
         override fun visit(node: PythonAssignmentNode): String {
-            throw UnsupportedOperationException("not implemented")
+            return line("${node.name} = ${serialise(node.expression)}")
         }
     })
 }

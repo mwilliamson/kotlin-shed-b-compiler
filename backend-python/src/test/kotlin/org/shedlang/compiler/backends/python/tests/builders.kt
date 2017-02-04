@@ -34,6 +34,9 @@ fun pythonIf(
     source = anySource()
 )
 
+fun pythonAssignment(name: String, expression: PythonExpressionNode)
+    = PythonAssignmentNode(name = name, expression = expression, source = anySource())
+
 fun pythonLiteralBoolean(value: Boolean)
     = PythonBooleanLiteralNode(value, source = anySource())
 

@@ -141,6 +141,19 @@ class SerialiserTests {
     }
 
     @Test
+    fun assignmentSerialisation() {
+        assertThat(
+            indentedSerialise(
+                pythonAssignment(
+                    name = "x",
+                    expression = pythonLiteralBoolean(true)
+                )
+            ),
+            equalTo("    x = True\n")
+        )
+    }
+
+    @Test
     fun booleanSerialisation() {
         assertThat(
             serialise(pythonLiteralBoolean(true)),
