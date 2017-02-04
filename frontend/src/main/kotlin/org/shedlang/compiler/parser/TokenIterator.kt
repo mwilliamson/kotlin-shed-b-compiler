@@ -20,11 +20,11 @@ internal class TokenIterator<T>(
     }
 
     fun trySkip(tokenType: T, value: String): Boolean {
-        val isNext = isNext(tokenType, value);
+        val isNext = isNext(tokenType, value)
         if (isNext) {
-            index++;
+            index++
         }
-        return isNext;
+        return isNext
     }
 
     fun skip() {
