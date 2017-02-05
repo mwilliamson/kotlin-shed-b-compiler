@@ -18,8 +18,7 @@ internal class CodeGenerationContext(
     }
 
     fun name(node: ReferenceNode): String {
-        // TODO: throw a CompilerError (push into VariableReferences?)
-        val variableNodeId = references[node]!!
+        val variableNodeId = references[node]
         return name(variableNodeId, node.name)
     }
 

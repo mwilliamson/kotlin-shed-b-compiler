@@ -4,7 +4,22 @@ import org.shedlang.compiler.ast.*
 import java.util.*
 
 interface VariableReferences {
-    operator fun get(node: ReferenceNode): Int?
+    operator fun get(node: ReferenceNode): Int
+}
+
+class VariableReferencesMap(private val references: Map<Int, Int>) : VariableReferences {
+    override fun get(node: ReferenceNode): Int {
+        val targetNodeId = references[node.nodeId]
+        if (targetNodeId == null) {
+            throw CompilerError(
+                "reference ${node.name} is unresolved",
+                source = node.source
+            )
+        } else {
+            return targetNodeId
+        }
+
+    }
 }
 
 internal class ResolutionContext(
@@ -12,8 +27,7 @@ internal class ResolutionContext(
     val nodes: MutableMap<Int, Int>,
     val isInitialised: MutableSet<Int>,
     val deferred: MutableMap<Int, () -> Unit>
-): VariableReferences {
-    override operator fun get(node: ReferenceNode): Int? = nodes[node.nodeId]
+) {
     operator fun set(node: ReferenceNode, value: Int): Unit {
         nodes[node.nodeId] = value
     }
@@ -67,7 +81,7 @@ internal fun resolve(node: Node, globals: Map<String, Int>): VariableReferences 
     )
     resolve(node, context)
     context.undefer()
-    return context
+    return VariableReferencesMap(context.nodes)
 }
 
 internal fun resolve(node: Node, context: ResolutionContext) {

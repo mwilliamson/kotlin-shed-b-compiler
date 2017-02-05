@@ -26,12 +26,6 @@ fun typeContext(
     return TypeContext(returnType, HashMap(types), VariableReferencesMap(finalReferences))
 }
 
-class VariableReferencesMap(private val references: Map<Int, Int>) : VariableReferences {
-    override fun get(node: ReferenceNode): Int? {
-        return references[node.nodeId]
-    }
-}
-
 private val badSource = StringSource("<bad source>", 0)
 private val badStatement = BadStatementNode(source = badSource)
 fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {

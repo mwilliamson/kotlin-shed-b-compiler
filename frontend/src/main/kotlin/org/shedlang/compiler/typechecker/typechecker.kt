@@ -20,21 +20,14 @@ class TypeContext(
 ) {
     fun typeOf(reference: ReferenceNode): Type {
         val targetNodeId = variableReferences[reference]
-        if (targetNodeId == null) {
+        val type = variables[targetNodeId]
+        if (type == null) {
             throw CompilerError(
-                "reference ${reference.name} is unresolved",
+                "type of ${reference.name} is unknown",
                 source = reference.source
             )
         } else {
-            val type = variables[targetNodeId]
-            if (type == null) {
-                throw CompilerError(
-                    "type of ${reference.name} is unknown",
-                    source = reference.source
-                )
-            } else {
-                return type
-            }
+            return type
         }
     }
 

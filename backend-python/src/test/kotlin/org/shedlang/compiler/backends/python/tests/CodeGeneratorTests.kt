@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.python.CodeGenerationContext
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.tests.typechecker.VariableReferencesMap
+import org.shedlang.compiler.typechecker.VariableReferencesMap
 
 class CodeGeneratorTests {
     @Test
