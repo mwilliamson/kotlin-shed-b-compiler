@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.allOf
@@ -41,8 +40,8 @@ class ParseModuleTests {
 
         assertThat(node, allOf(
             has(ModuleNode::body, isSequence(
-                has(FunctionNode::name, equalTo("f")),
-                has(FunctionNode::name, equalTo("g"))
+                isFunction(name = equalTo("f")),
+                isFunction(name = equalTo("g"))
             ))
         ))
     }

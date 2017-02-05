@@ -46,12 +46,34 @@ data class TypeReferenceNode(
 
 data class ModuleNode(
     val name: String,
-    val body: List<FunctionNode>,
+    val body: List<ModuleStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
     override val children: List<Node>
         get() = body
+}
+
+interface ModuleStatementNode: Node {
+    interface Visitor<T> {
+        fun visit(node: ShapeNode): T
+        fun visit(node: FunctionNode): T
+    }
+
+    fun <T> accept(visitor: Visitor<T>): T
+}
+
+data class ShapeNode(
+    override val name: String,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): VariableBindingNode, ModuleStatementNode {
+    override val children: List<Node>
+        get() = listOf()
+
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class FunctionNode(
@@ -61,9 +83,13 @@ data class FunctionNode(
     val body: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : VariableBindingNode {
+) : VariableBindingNode, ModuleStatementNode {
     override val children: List<Node>
         get() = arguments + returnType + body
+
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class ArgumentNode(

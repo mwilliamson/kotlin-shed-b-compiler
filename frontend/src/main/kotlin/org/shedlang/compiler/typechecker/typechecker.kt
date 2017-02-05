@@ -69,20 +69,40 @@ class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: So
 class ReturnOutsideOfFunctionError(source: Source)
     : TypeCheckError("Cannot return outside of a function", source)
 
-fun typeCheck(module: ModuleNode, context: TypeContext) {
-    val functionTypes = module.body.associateBy(
-        FunctionNode::nodeId,
-        { function -> inferType(function, context) }
+internal fun typeCheck(module: ModuleNode, context: TypeContext) {
+    val declaredTypes = module.body.associateBy(
+        ModuleStatementNode::nodeId,
+        { statement -> inferType(statement, context) }
     )
 
-    context.addTypes(functionTypes)
+    context.addTypes(declaredTypes)
 
     for (statement in module.body) {
         typeCheck(statement, context)
     }
 }
 
-fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
+internal fun inferType(statement: ModuleStatementNode, context: TypeContext): Type {
+    return statement.accept(object : ModuleStatementNode.Visitor<Type> {
+        override fun visit(node: ShapeNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: FunctionNode): Type = inferType(node, context)
+    })
+}
+
+internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
+    return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
+        override fun visit(node: ShapeNode) {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: FunctionNode): Unit = typeCheck(node, context)
+    })
+}
+
+private fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
@@ -90,7 +110,7 @@ fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
     return FunctionType(argumentTypes, returnType)
 }
 
-fun typeCheck(function: FunctionNode, context: TypeContext) {
+private fun typeCheck(function: FunctionNode, context: TypeContext) {
     val argumentTypes = function.arguments.associateBy(
         ArgumentNode::nodeId,
         { argument -> evalType(argument.type, context) }
@@ -101,7 +121,7 @@ fun typeCheck(function: FunctionNode, context: TypeContext) {
     typeCheck(function.body, bodyContext)
 }
 
-fun evalType(type: TypeNode, context: TypeContext): Type {
+internal fun evalType(type: TypeNode, context: TypeContext): Type {
     return type.accept(object : TypeNode.Visitor<Type> {
         override fun visit(node: TypeReferenceNode): Type {
             val metaType = context.typeOf(node)
@@ -117,7 +137,7 @@ fun evalType(type: TypeNode, context: TypeContext): Type {
     })
 }
 
-fun typeCheck(statement: StatementNode, context: TypeContext) {
+internal fun typeCheck(statement: StatementNode, context: TypeContext) {
     statement.accept(object : StatementNode.Visitor<Unit> {
         override fun visit(node: BadStatementNode) {
             throw BadStatementError(node.source)
@@ -158,7 +178,7 @@ private fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
     inferType(expression, context)
 }
 
-fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
+internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
     return expression.accept(object : ExpressionNode.Visitor<Type> {
         override fun visit(node: BooleanLiteralNode): Type {
             return BoolType

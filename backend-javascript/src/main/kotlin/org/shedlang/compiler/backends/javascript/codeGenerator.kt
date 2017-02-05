@@ -3,14 +3,24 @@ package org.shedlang.compiler.backends.javascript
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
 
-fun generateCode(node: ModuleNode): JavascriptModuleNode {
+internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
     return JavascriptModuleNode(
         node.body.map(::generateCode),
         source = NodeSource(node)
     )
 }
 
-fun generateCode(node: FunctionNode): JavascriptFunctionNode {
+internal fun generateCode(node: ModuleStatementNode): JavascriptStatementNode {
+    return node.accept(object : ModuleStatementNode.Visitor<JavascriptStatementNode> {
+        override fun visit(node: ShapeNode): JavascriptStatementNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: FunctionNode): JavascriptStatementNode = generateCode(node)
+    })
+}
+
+private fun generateCode(node: FunctionNode): JavascriptFunctionNode {
     return JavascriptFunctionNode(
         name = node.name,
         arguments = node.arguments.map(ArgumentNode::name),
@@ -19,7 +29,7 @@ fun generateCode(node: FunctionNode): JavascriptFunctionNode {
     )
 }
 
-fun generateCode(node: StatementNode): JavascriptStatementNode {
+internal fun generateCode(node: StatementNode): JavascriptStatementNode {
     return node.accept(object : StatementNode.Visitor<JavascriptStatementNode> {
         override fun visit(node: ReturnNode): JavascriptStatementNode {
             return JavascriptReturnNode(generateCode(node.expression), NodeSource(node))
@@ -48,7 +58,7 @@ fun generateCode(node: StatementNode): JavascriptStatementNode {
     })
 }
 
-fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
+internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
     return node.accept(object : ExpressionNode.Visitor<JavascriptExpressionNode> {
         override fun visit(node: BooleanLiteralNode): JavascriptExpressionNode {
             return JavascriptBooleanLiteralNode(node.value, NodeSource(node))

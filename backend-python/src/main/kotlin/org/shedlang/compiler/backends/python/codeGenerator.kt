@@ -49,6 +49,16 @@ internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): Pyt
     )
 }
 
+internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): PythonStatementNode {
+    return node.accept(object : ModuleStatementNode.Visitor<PythonStatementNode> {
+        override fun visit(node: ShapeNode): PythonStatementNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: FunctionNode): PythonStatementNode = generateCode(node, context)
+    })
+}
+
 internal fun generateCode(node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
     return PythonFunctionNode(
         // TODO: test renaming
