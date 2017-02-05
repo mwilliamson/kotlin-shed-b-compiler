@@ -86,10 +86,7 @@ class ReturnCheckTests {
         val node = module(listOf(function))
         assertThat(
             { checkReturns(node, mapOf()) },
-            throws(cast(has(
-                CompilerError::message,
-                equalTo("type of f is unknown")
-            )))
+            throws(has(UnknownTypeError::name, equalTo("f")))
         )
     }
 
