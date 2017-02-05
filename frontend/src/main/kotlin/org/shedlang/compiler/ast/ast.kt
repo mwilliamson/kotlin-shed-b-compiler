@@ -143,7 +143,6 @@ data class ExpressionStatementNode(
     }
 }
 
-// TODO: check variable is initialised before use
 data class ValNode(
     override val name: String,
     val expression: ExpressionNode,
