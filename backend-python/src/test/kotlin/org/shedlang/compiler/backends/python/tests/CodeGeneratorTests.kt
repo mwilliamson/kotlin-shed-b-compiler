@@ -231,7 +231,6 @@ class CodeGeneratorTests {
 
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: FunctionNode) = generateCode(node, context())
-    private fun generateCode(node: List<StatementNode>) = generateCode(node, context())
     private fun generateCode(node: StatementNode) = generateCode(node, context())
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
