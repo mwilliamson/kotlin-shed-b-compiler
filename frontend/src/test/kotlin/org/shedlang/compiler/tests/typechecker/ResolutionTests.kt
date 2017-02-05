@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.VariableReferenceNode
-import org.shedlang.compiler.ast.nextId
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import java.util.*
@@ -92,7 +92,7 @@ class ResolutionTests {
         )
 
         val references = resolve(node, globals = mapOf(
-            reference.name to nextId(),
+            reference.name to freshNodeId(),
             "Int" to -1
         ))
 

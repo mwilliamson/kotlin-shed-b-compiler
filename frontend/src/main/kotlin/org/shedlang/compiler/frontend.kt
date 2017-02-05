@@ -1,7 +1,7 @@
 package org.shedlang.compiler
 
 import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.ast.nextId
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.*
 
@@ -9,10 +9,10 @@ import org.shedlang.compiler.typechecker.*
 fun read(filename: String, input: String): ModuleNode {
     val module = parse(filename = filename, input = input)
 
-    val intTypeNodeId = nextId()
-    val unitTypeNodeId = nextId()
-    val printNodeId = nextId()
-    val intToStringNodeId = nextId()
+    val intTypeNodeId = freshNodeId()
+    val unitTypeNodeId = freshNodeId()
+    val printNodeId = freshNodeId()
+    val intToStringNodeId = freshNodeId()
 
     val variableReferences = resolve(module, mapOf(
         "Unit" to unitTypeNodeId,

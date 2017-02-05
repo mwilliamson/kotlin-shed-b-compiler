@@ -21,7 +21,7 @@ data class NodeSource(val node: Node): Source
 
 private var nextId = 0
 
-internal fun nextId() = nextId++
+internal fun freshNodeId() = nextId++
 
 interface TypeNode : Node {
     interface Visitor<T> {
@@ -34,7 +34,7 @@ interface TypeNode : Node {
 data class TypeReferenceNode(
     override val name: String,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : ReferenceNode, TypeNode {
     override val children: List<Node>
         get() = listOf()
@@ -48,7 +48,7 @@ data class ModuleNode(
     val name: String,
     val body: List<FunctionNode>,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : Node {
     override val children: List<Node>
         get() = body
@@ -60,7 +60,7 @@ data class FunctionNode(
     val returnType: TypeNode,
     val body: List<StatementNode>,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode {
     override val children: List<Node>
         get() = arguments + returnType + body
@@ -70,7 +70,7 @@ data class ArgumentNode(
     override val name: String,
     val type: TypeNode,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode, Node {
     override val children: List<Node>
         get() = listOf(type)
@@ -92,7 +92,7 @@ interface StatementNode : Node {
 
 data class BadStatementNode(
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : StatementNode {
     override val children: List<Node>
         get() = listOf()
@@ -105,7 +105,7 @@ data class BadStatementNode(
 data class ReturnNode(
     val expression: ExpressionNode,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : StatementNode {
     override val children: List<Node>
         get() = listOf(expression)
@@ -120,7 +120,7 @@ data class IfStatementNode(
     val trueBranch: List<StatementNode>,
     val falseBranch: List<StatementNode>,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : StatementNode {
     override val children: List<Node>
         get() = listOf(condition) + trueBranch + falseBranch
@@ -133,7 +133,7 @@ data class IfStatementNode(
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ): StatementNode {
     override val children: List<Node>
         get() = listOf(expression)
@@ -147,7 +147,7 @@ data class ValNode(
     override val name: String,
     val expression: ExpressionNode,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ): VariableBindingNode, StatementNode {
     override val children: List<Node>
         get() = listOf(expression)
@@ -173,7 +173,7 @@ interface ExpressionNode : Node {
 data class BooleanLiteralNode(
     val value: Boolean,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ): ExpressionNode {
     override val children: List<Node>
         get() = listOf()
@@ -186,7 +186,7 @@ data class BooleanLiteralNode(
 data class IntegerLiteralNode(
     val value: Int,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
         get() = listOf()
@@ -199,7 +199,7 @@ data class IntegerLiteralNode(
 data class StringLiteralNode(
     val value: String,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
         get() = listOf()
@@ -212,7 +212,7 @@ data class StringLiteralNode(
 data class VariableReferenceNode(
     override val name: String,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : ReferenceNode, ExpressionNode {
     override val children: List<Node>
         get() = listOf()
@@ -227,7 +227,7 @@ data class BinaryOperationNode(
     val left: ExpressionNode,
     val right: ExpressionNode,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
         get() = listOf(left, right)
@@ -241,7 +241,7 @@ data class FunctionCallNode(
     val function: ExpressionNode,
     val arguments: List<ExpressionNode>,
     override val source: Source,
-    override val nodeId: Int = nextId()
+    override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
         get() = listOf(function) + arguments

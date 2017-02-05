@@ -18,7 +18,7 @@ fun typeContext(
     references: Map<ReferenceNode, VariableBindingNode> = mapOf()
 ): TypeContext {
     val finalReferences = (
-        referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> nextId()}) +
+        referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> freshNodeId()}) +
         references.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value.nodeId })
     )
     val types = referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!! }, { entry -> entry.value })

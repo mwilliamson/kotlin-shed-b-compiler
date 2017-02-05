@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.ast.nextId
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 
@@ -50,7 +50,7 @@ class TypeCheckExpressionTests {
                 TypeContext(
                     returnType = null,
                     variables = mutableMapOf(),
-                    variableReferences = VariableReferencesMap(mapOf(reference.nodeId to nextId()))
+                    variableReferences = VariableReferencesMap(mapOf(reference.nodeId to freshNodeId()))
                 )
             ) },
             throwsCompilerError("type of x is unknown")
