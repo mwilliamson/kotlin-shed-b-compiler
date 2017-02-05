@@ -45,19 +45,6 @@ class EvalTypeTests {
         )
     }
 
-    @Test
-    fun whenVariableIsUnresolvedThenCompilerErrorIsThrown() {
-        val reference = typeReference("x")
-
-        assertThat(
-            { evalType(
-                reference,
-                typeContext()
-            ) },
-            throwsCompilerError("reference x is unresolved")
-        )
-    }
-
     private fun isMetaType(type: Type): Matcher<Type> {
         return cast(
             has(MetaType::type, equalTo(type))
