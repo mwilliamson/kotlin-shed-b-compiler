@@ -1,25 +1,72 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import java.util.*
 
 interface VariableReferences {
     operator fun get(node: ReferenceNode): Int?
 }
 
-internal class ResolutionContext(val bindings: Map<String, Int>, val nodes: MutableMap<Int, Int>): VariableReferences {
+internal class ResolutionContext(
+    val bindings: Map<String, Int>,
+    val nodes: MutableMap<Int, Int>,
+    val isInitialised: MutableSet<Int>,
+    val deferred: MutableMap<Int, () -> Unit>
+): VariableReferences {
     override operator fun get(node: ReferenceNode): Int? = nodes[node.nodeId]
     operator fun set(node: ReferenceNode, value: Int): Unit {
         nodes[node.nodeId] = value
     }
 
+    fun initialise(node: VariableBindingNode) {
+        isInitialised.add(node.nodeId)
+    }
+
+    fun defer(node: VariableBindingNode, func: () -> Unit) {
+        deferred[node.nodeId] = func
+    }
+
+    fun isInitialised(nodeId: Int): Boolean {
+        if (isInitialised.contains(nodeId)) {
+            return true
+        } else {
+            val deferredInitialisation = deferred[nodeId]
+            if (deferredInitialisation == null) {
+                return false
+            } else {
+                undefer(nodeId, deferredInitialisation)
+                return true
+            }
+        }
+    }
+
+    fun undefer() {
+        for (deferredEntry in deferred) {
+            if (!isInitialised.contains(deferredEntry.key)) {
+                undefer(deferredEntry.key, deferredEntry.value)
+            }
+        }
+    }
+
+    private fun undefer(nodeId: Int, deferredInitialisation: () -> Unit) {
+        isInitialised.add(nodeId)
+        deferredInitialisation()
+    }
+
     fun enterScope(bindings: Map<String, Int>): ResolutionContext {
-        return ResolutionContext(this.bindings + bindings, nodes)
+        return ResolutionContext(this.bindings + bindings, nodes, isInitialised, deferred)
     }
 }
 
 internal fun resolve(node: Node, globals: Map<String, Int>): VariableReferences {
-    val context = ResolutionContext(globals, mutableMapOf())
+    val context = ResolutionContext(
+        globals,
+        mutableMapOf(),
+        isInitialised = HashSet(globals.values),
+        deferred = mutableMapOf()
+    )
     resolve(node, context)
+    context.undefer()
     return context
 }
 
@@ -27,20 +74,31 @@ internal fun resolve(node: Node, context: ResolutionContext) {
     when (node) {
         is ReferenceNode -> {
             val referentId = context.bindings[node.name]
-            when (referentId) {
-                null ->  throw UnresolvedReferenceError(node.name, node.source)
-                else -> context[node] = referentId
+            if (referentId == null) {
+                throw UnresolvedReferenceError(node.name, node.source)
+            } else {
+                context[node] = referentId
+                if (!context.isInitialised(referentId)) {
+                    throw UninitialisedVariableError(node.name, node.source)
+                }
             }
         }
 
         is FunctionNode -> {
             resolve(node.returnType, context)
             node.arguments.forEach { argument -> resolve(argument, context) }
-            resolveScope(
-                body = node.body,
-                binders = node.arguments,
-                context = context
-            )
+            context.defer(node, {
+                resolveScope(
+                    body = node.body,
+                    binders = node.arguments,
+                    context = context
+                )
+            })
+        }
+
+        is ValNode -> {
+            context.initialise(node)
+            resolve(node.expression, context)
         }
 
         is ModuleNode -> {
@@ -70,6 +128,11 @@ private fun <T: Node> resolveScope(
         binders + body.filterIsInstance<VariableBindingNode>(),
         context
     )
+
+    for (binder in binders) {
+        bodyContext.initialise(binder)
+    }
+
     for (child in body) {
         resolve(child, bodyContext)
     }
