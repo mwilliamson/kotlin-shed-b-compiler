@@ -26,8 +26,10 @@ class ReturnCheckTests {
 
     @Test
     fun functionThatHasUnitReturnTypeDoesntNeedReturnStatement() {
-        val node = module(listOf(function(name = "f", body = listOf())))
-        checkReturns(node, mapOf())
+        val function = function(name = "f", body = listOf())
+        val node = module(listOf(function))
+        val functionType = FunctionType(arguments = listOf(), returns = UnitType)
+        checkReturns(node, mapOf(function.nodeId to functionType))
     }
 
     @Test
