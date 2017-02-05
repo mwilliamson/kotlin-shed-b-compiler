@@ -28,10 +28,16 @@ fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
 
         override val description: String
             get() {
-                return "is sequence:\n" + matchers.mapIndexed { index, matcher -> "  $index: ${matcher.description}\n" }.joinToString("")
+                return "is sequence:\n" + matchers.mapIndexed { index, matcher -> indent("$index: ${matcher.description}") + "\n" }.joinToString("")
             }
 
     }
+}
+
+private fun indent(value: String): String {
+    val indentation = "  "
+    val indexWidth = 2
+    return indentation + value.replace("\n", "\n" + indentation + " ".repeat(indexWidth))
 }
 
 internal fun isFunctionType(
