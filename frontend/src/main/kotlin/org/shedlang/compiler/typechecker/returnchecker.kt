@@ -14,10 +14,7 @@ private fun checkReturns(node: FunctionNode, types: Map<Int, Type>) {
     // TODO: throw a CompilerError on failure
     val nodeType = types[node.nodeId] as? FunctionType
     when (nodeType) {
-        null -> throw CompilerError(
-            "type of ${node.name} is unknown",
-            source = node.source
-        )
+        null -> throw UnknownTypeError(name = node.name, source = node.source)
     }
     if (nodeType != null && nodeType.returns != UnitType && !alwaysReturns(node.body)) {
         throw ReturnCheckError("function ${node.name} is missing return statement", node.source)

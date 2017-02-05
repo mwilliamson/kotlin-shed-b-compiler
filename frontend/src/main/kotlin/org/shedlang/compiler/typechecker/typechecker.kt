@@ -54,7 +54,9 @@ class TypeContext(
 /**
  * This indicates a bug in the compiler or its calling code
  */
-class CompilerError(message: String, val source: Source) : Exception(message)
+open class CompilerError(message: String, val source: Source) : Exception(message)
+class UnknownTypeError(val name: String, source: Source)
+    : CompilerError("type of ${name} is unknown", source = source)
 
 open class TypeCheckError(message: String?, val source: Source) : Exception(message)
 internal class BadStatementError(source: Source)
