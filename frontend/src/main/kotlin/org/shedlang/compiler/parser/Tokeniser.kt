@@ -7,6 +7,7 @@ private val keywords = setOf(
     "if",
     "module",
     "return",
+    "shape",
     "true",
     "val"
 )
