@@ -29,6 +29,10 @@ inline internal fun <reified T: ExpressionNode> isVal(
     ))
 }
 
+internal fun isShape(name: Matcher<String>): Matcher<ModuleStatementNode> {
+    return cast(has(ShapeNode::name, name))
+}
+
 internal fun isFunction(name: Matcher<String>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionNode::name, name))
 }

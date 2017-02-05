@@ -44,6 +44,17 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
     ).joinToString(".")
 }
 
+internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): ShapeNode {
+    tokens.skip(TokenType.KEYWORD, "shape")
+    val name = tokens.nextValue(TokenType.IDENTIFIER)
+    tokens.skip(TokenType.SYMBOL, "{")
+    tokens.skip(TokenType.SYMBOL, "}")
+    return ShapeNode(
+        name = name,
+        source = source
+    )
+}
+
 internal fun tryParseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode? {
     if (!tokens.trySkip(TokenType.KEYWORD, "fun")) {
         return null
