@@ -77,4 +77,17 @@ class ReturnCheckTests {
         val node = valStatement()
         assertThat(alwaysReturns(node), equalTo(false))
     }
+
+    @Test
+    fun whenFunctionTypeIsMissingThenExceptionIsThrown() {
+        val function = function(name = "f", body = listOf())
+        val node = module(listOf(function))
+        assertThat(
+            { checkReturns(node, mapOf()) },
+            throws(cast(has(
+                CompilerError::message,
+                equalTo("type of f is unknown")
+            )))
+        )
+    }
 }
