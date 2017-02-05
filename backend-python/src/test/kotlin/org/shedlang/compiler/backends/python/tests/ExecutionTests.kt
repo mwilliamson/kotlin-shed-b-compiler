@@ -14,8 +14,9 @@ class ExecutionTests {
     @TestFactory
     fun testProgram(): List<DynamicTest> {
         return testPrograms.map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
-            val module = read(filename = "<string>", input = testProgram.source)
-            val generateCode = generateCode(module)
+            val frontendResult = read(filename = "<string>", input = testProgram.source)
+
+            val generateCode = generateCode(frontendResult.module, frontendResult.references)
             val stdlib = """\
                 intToString = str
             """.trimMargin()

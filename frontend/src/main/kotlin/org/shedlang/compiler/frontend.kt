@@ -6,7 +6,13 @@ import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.*
 
 
-fun read(filename: String, input: String): ModuleNode {
+class FrontEndResult(
+    val module: ModuleNode,
+    val references: VariableReferences
+)
+
+
+fun read(filename: String, input: String): FrontEndResult {
     val module = parse(filename = filename, input = input)
 
     val intTypeNodeId = freshNodeId()
@@ -33,5 +39,8 @@ fun read(filename: String, input: String): ModuleNode {
     )
     typeCheck(module, typeContext)
     checkReturns(module, variables)
-    return module
+    return FrontEndResult(
+        module = module,
+        references = variableReferences
+    )
 }

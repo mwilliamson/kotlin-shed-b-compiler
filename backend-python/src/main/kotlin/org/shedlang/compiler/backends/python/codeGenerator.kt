@@ -2,59 +2,99 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
+import org.shedlang.compiler.typechecker.VariableReferences
 
-fun generateCode(node: ModuleNode): PythonModuleNode {
+internal fun generateCode(node: ModuleNode, references: VariableReferences): PythonModuleNode {
+    return generateCode(node, CodeGenerationContext(references))
+}
+
+internal class CodeGenerationContext(
+    private val references: VariableReferences,
+    private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
+    private val namesInScope: MutableSet<String> = mutableSetOf()
+) {
+    fun name(node: VariableBindingNode): String {
+        return name(node.nodeId, node.name)
+    }
+
+    fun name(node: ReferenceNode): String {
+        // TODO: throw a CompilerError (push into VariableReferences?)
+        val variableNodeId = references[node]!!
+        return name(variableNodeId, node.name)
+    }
+
+    private fun name(nodeId: Int, name: String): String {
+        if (!nodeNames.containsKey(nodeId)) {
+            val pythonName = generateName(name)
+            namesInScope.add(pythonName)
+            nodeNames[nodeId] = pythonName
+        }
+        return nodeNames[nodeId]!!
+    }
+
+    private fun generateName(originalName: String): String {
+        var index = 0
+        var name = originalName
+        while (namesInScope.contains(name)) {
+            index++
+            name = originalName + "_" + index
+        }
+        return name
+    }
+}
+
+internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
     return PythonModuleNode(
-        node.body.map(::generateCode),
+        node.body.map({ child -> generateCode(child, context) }),
         source = NodeSource(node)
     )
 }
 
-fun generateCode(node: FunctionNode): PythonFunctionNode {
+internal fun generateCode(node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
     return PythonFunctionNode(
-        name = node.name,
-        arguments = node.arguments.map(ArgumentNode::name),
-        body = node.body.map(::generateCode),
+        // TODO: test renaming
+        name = context.name(node),
+        // TODO: test renaming
+        arguments = node.arguments.map({ argument -> context.name(argument) }),
+        body = generateCode(node.body, context),
         source = NodeSource(node)
     )
 }
 
-fun generateCode(node: StatementNode): PythonStatementNode {
+internal fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<PythonStatementNode> {
+    return statements.map({ statement -> generateCode(statement, context) })
+}
+
+internal fun generateCode(node: StatementNode, context: CodeGenerationContext): PythonStatementNode {
     return node.accept(object : StatementNode.Visitor<PythonStatementNode> {
         override fun visit(node: ReturnNode): PythonStatementNode {
-            return PythonReturnNode(generateCode(node.expression), NodeSource(node))
+            return PythonReturnNode(generateCode(node.expression, context), NodeSource(node))
         }
 
         override fun visit(node: IfStatementNode): PythonStatementNode {
             return PythonIfStatementNode(
-                condition = generateCode(node.condition),
-                trueBranch = node.trueBranch.map(::generateCode),
-                falseBranch = node.falseBranch.map(::generateCode),
+                condition = generateCode(node.condition, context),
+                trueBranch = generateCode(node.trueBranch, context),
+                falseBranch = generateCode(node.falseBranch, context),
                 source = NodeSource(node)
             )
         }
 
         override fun visit(node: ExpressionStatementNode): PythonStatementNode {
-            return PythonExpressionStatementNode(generateCode(node.expression), NodeSource(node))
+            return PythonExpressionStatementNode(generateCode(node.expression, context), NodeSource(node))
         }
 
         override fun visit(node: ValNode): PythonStatementNode {
-            // TODO: handle scoping e.g.
-            // val x = "1";
-            // if (true) {
-            //    val x = "2";
-            // }
-            // print(x) // Should print 1
             return PythonAssignmentNode(
-                name = node.name,
-                expression = generateCode(node.expression),
+                name = context.name(node),
+                expression = generateCode(node.expression, context),
                 source = NodeSource(node)
             )
         }
     })
 }
 
-fun generateCode(node: ExpressionNode): PythonExpressionNode {
+internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext): PythonExpressionNode {
     return node.accept(object : ExpressionNode.Visitor<PythonExpressionNode> {
         override fun visit(node: BooleanLiteralNode): PythonExpressionNode {
             return PythonBooleanLiteralNode(node.value, NodeSource(node))
@@ -69,22 +109,22 @@ fun generateCode(node: ExpressionNode): PythonExpressionNode {
         }
 
         override fun visit(node: VariableReferenceNode): PythonExpressionNode {
-            return PythonVariableReferenceNode(node.name, NodeSource(node))
+            return PythonVariableReferenceNode(context.name(node), NodeSource(node))
         }
 
         override fun visit(node: BinaryOperationNode): PythonExpressionNode {
             return PythonBinaryOperationNode(
                 operator = generateCode(node.operator),
-                left = generateCode(node.left),
-                right = generateCode(node.right),
+                left = generateCode(node.left, context),
+                right = generateCode(node.right, context),
                 source = NodeSource(node)
             )
         }
 
         override fun visit(node: FunctionCallNode): PythonExpressionNode {
             return PythonFunctionCallNode(
-                generateCode(node.function),
-                node.arguments.map(::generateCode),
+                generateCode(node.function, context),
+                node.arguments.map({ argument -> generateCode(argument, context) }),
                 source = NodeSource(node)
             )
         }

@@ -5,10 +5,12 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.python.CodeGenerationContext
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.tests.typechecker.VariableReferencesMap
 
 class CodeGeneratorTests {
     @Test
@@ -94,15 +96,62 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun whenSeparateScopesHaveSameNameInSamePythonScopeThenVariablesAreRenamed() {
+        val outerVal = valStatement(name = "x")
+        val trueVal = valStatement(name = "x")
+        val falseVal = valStatement(name = "x")
+
+        val outerReference = variableReference("x")
+        val trueReference = variableReference("x")
+        val falseReference = variableReference("x")
+
+        val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
+            outerReference to outerVal,
+            trueReference to trueVal,
+            falseReference to falseVal
+        )
+
+        val shed = listOf(
+            outerVal,
+            ifStatement(
+                literalBool(),
+                listOf(
+                    trueVal,
+                    returns(outerReference),
+                    returns(trueReference)
+                ),
+                listOf(
+                    falseVal,
+                    returns(falseReference)
+                )
+            )
+        )
+
+        val nodes = generateCode(shed, context(references))
+
+        assertThat(nodes, isSequence(
+            isPythonAssignment(name = equalTo("x")),
+            cast(allOf(
+                has(PythonIfStatementNode::trueBranch, isSequence(
+                    isPythonAssignment(name = equalTo("x_1")),
+                    isPythonReturn(isPythonVariableReference("x")),
+                    isPythonReturn(isPythonVariableReference("x_1"))
+                )),
+                has(PythonIfStatementNode::falseBranch, isSequence(
+                    isPythonAssignment(name = equalTo("x_2")),
+                    isPythonReturn(isPythonVariableReference("x_2"))
+                ))
+            ))
+        ))
+    }
+
+    @Test
     fun valGeneratesAssignment() {
         val shed = valStatement(name = "x", expression = literalInt(42))
 
         val node = generateCode(shed)
 
-        assertThat(node, cast(allOf(
-            has(PythonAssignmentNode::name, equalTo("x")),
-            has(PythonAssignmentNode::expression, isPythonIntegerLiteral(42))
-        )))
+        assertThat(node, isPythonAssignment(equalTo("x"), isPythonIntegerLiteral(42)))
     }
 
     @Test
@@ -131,10 +180,11 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun variableReferenceGenerateVariableReference() {
+    fun variableReferenceGeneratesVariableReference() {
+        val declaration = argument("x")
         val shed = variableReference("x")
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context(mapOf(shed to declaration)))
 
         assertThat(node, isPythonVariableReference("x"))
     }
@@ -167,15 +217,29 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val shed = functionCall(variableReference("f"), listOf(literalInt(42)))
+        val declaration = argument("f")
+        val function = variableReference("f")
+        val shed = functionCall(function, listOf(literalInt(42)))
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context(mapOf(function to declaration)))
 
         assertThat(node, isPythonFunctionCall(
             isPythonVariableReference("f"),
             isSequence(isPythonIntegerLiteral(42))
         ))
     }
+
+    private fun generateCode(node: ModuleNode) = generateCode(node, context())
+    private fun generateCode(node: FunctionNode) = generateCode(node, context())
+    private fun generateCode(node: List<StatementNode>) = generateCode(node, context())
+    private fun generateCode(node: StatementNode) = generateCode(node, context())
+    private fun generateCode(node: ExpressionNode) = generateCode(node, context())
+
+    private fun context(
+        references: Map<ReferenceNode, VariableBindingNode> = mapOf()
+    ) = CodeGenerationContext(
+        references = VariableReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value.nodeId}))
+    )
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)
         = cast(has(PythonModuleNode::body, body))
@@ -194,6 +258,16 @@ class CodeGeneratorTests {
     private fun isPythonReturn(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>
         = cast(has(PythonReturnNode::expression, expression))
+
+    private fun isPythonAssignment(
+        name: Matcher<String>,
+        expression: Matcher<PythonExpressionNode> = anything
+    ): Matcher<PythonStatementNode> {
+        return cast(allOf(
+            has(PythonAssignmentNode::name, name),
+            has(PythonAssignmentNode::expression, expression)
+        ))
+    }
 
     private fun isPythonBooleanLiteral(value: Boolean)
         : Matcher<PythonExpressionNode>
