@@ -28,7 +28,7 @@ fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
 
         override val description: String
             get() {
-                return "is sequence:\n" + matchers.mapIndexed { index, matcher -> "  " + index + ": " + matcher.description }.joinToString("")
+                return "is sequence:\n" + matchers.mapIndexed { index, matcher -> "  $index: ${matcher.description}\n" }.joinToString("")
             }
 
     }
