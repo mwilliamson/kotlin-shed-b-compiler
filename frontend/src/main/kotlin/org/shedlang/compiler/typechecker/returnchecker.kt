@@ -11,7 +11,6 @@ internal fun checkReturns(node: ModuleNode, types: Map<Int, Type>) {
 }
 
 private fun checkReturns(node: FunctionNode, types: Map<Int, Type>) {
-    // TODO: throw a CompilerError on failure
     val nodeType = types[node.nodeId]
     when (nodeType) {
         null -> throw UnknownTypeError(name = node.name, source = node.source)
