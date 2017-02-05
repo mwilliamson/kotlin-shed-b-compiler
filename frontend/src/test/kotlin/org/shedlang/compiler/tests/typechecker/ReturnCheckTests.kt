@@ -92,4 +92,14 @@ class ReturnCheckTests {
             )))
         )
     }
+
+    @Test
+    fun whenTypeOfFunctionIsNotFunctionTypeThenExceptionIsThrown() {
+        val function = function(name = "f", body = listOf())
+        val node = module(listOf(function))
+        assertThat(
+            { checkReturns(node, mapOf(function.nodeId to IntType)) },
+            throws(has(NotFunctionTypeError::actual, cast(equalTo(IntType))))
+        )
+    }
 }

@@ -57,6 +57,8 @@ class TypeContext(
 open class CompilerError(message: String, val source: Source) : Exception(message)
 class UnknownTypeError(val name: String, source: Source)
     : CompilerError("type of ${name} is unknown", source = source)
+class NotFunctionTypeError(val actual: Type, source: Source)
+    : TypeCheckError("expected function type but was ${actual}", source)
 
 open class TypeCheckError(message: String?, val source: Source) : Exception(message)
 internal class BadStatementError(source: Source)

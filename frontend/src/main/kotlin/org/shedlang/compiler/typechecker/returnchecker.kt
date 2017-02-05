@@ -12,12 +12,18 @@ internal fun checkReturns(node: ModuleNode, types: Map<Int, Type>) {
 
 private fun checkReturns(node: FunctionNode, types: Map<Int, Type>) {
     // TODO: throw a CompilerError on failure
-    val nodeType = types[node.nodeId] as? FunctionType
+    val nodeType = types[node.nodeId]
     when (nodeType) {
         null -> throw UnknownTypeError(name = node.name, source = node.source)
-    }
-    if (nodeType != null && nodeType.returns != UnitType && !alwaysReturns(node.body)) {
-        throw ReturnCheckError("function ${node.name} is missing return statement", node.source)
+        is FunctionType -> {
+            if (nodeType.returns != UnitType && !alwaysReturns(node.body)) {
+                throw ReturnCheckError(
+                    "function ${node.name} is missing return statement",
+                    source = node.source
+                )
+            }
+        }
+        else -> throw NotFunctionTypeError(nodeType, source = node.source)
     }
 }
 
