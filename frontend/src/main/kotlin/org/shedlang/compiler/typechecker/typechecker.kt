@@ -192,10 +192,6 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             return StringType
         }
 
-        override fun visit(node: ShapeLiteralNode): Type {
-            throw UnsupportedOperationException("not implemented")
-        }
-
         override fun visit(node: VariableReferenceNode): Type {
             return context.typeOf(node)
         }

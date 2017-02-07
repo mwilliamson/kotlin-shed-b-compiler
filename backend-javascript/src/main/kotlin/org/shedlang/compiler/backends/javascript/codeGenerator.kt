@@ -72,10 +72,6 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
             return JavascriptStringLiteralNode(node.value, NodeSource(node))
         }
 
-        override fun visit(node: ShapeLiteralNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
-        }
-
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
             return JavascriptVariableReferenceNode(node.name, NodeSource(node))
         }

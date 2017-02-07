@@ -117,10 +117,6 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return PythonStringLiteralNode(node.value, NodeSource(node))
         }
 
-        override fun visit(node: ShapeLiteralNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
-        }
-
         override fun visit(node: VariableReferenceNode): PythonExpressionNode {
             return PythonVariableReferenceNode(context.name(node), NodeSource(node))
         }
