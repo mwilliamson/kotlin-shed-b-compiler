@@ -338,43 +338,6 @@ internal fun parseType(source: Source, tokens: TokenIterator<TokenType>) : TypeN
 
 private fun parseIdentifier(tokens: TokenIterator<TokenType>) = tokens.nextValue(TokenType.IDENTIFIER)
 
-private fun <T> parseManyNodes(
-    parseElement: (Source, TokenIterator<TokenType>) -> T?,
-    tokens: TokenIterator<TokenType>
-) : List<T> {
-    return parseMany(
-        { tokens -> parseElement.parse(tokens) },
-        tokens
-    )
-}
-
-private fun <T> parseMany(
-    parseElement: (TokenIterator<TokenType>) -> T?,
-    tokens: TokenIterator<TokenType>
-): List<T> {
-    val elements: MutableList<T> = mutableListOf()
-    while (true) {
-        val element = parseElement(tokens)
-        if (element == null) {
-            return elements
-        } else {
-            elements.add(element)
-        }
-    }
-}
-
-private fun <T> parseOneOrMoreNodesWithSeparator(
-    parseElement: (Source, TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>
-) : List<T> {
-    return parseOneOrMoreWithSeparator(
-        {tokens -> parseElement.parse(tokens)},
-        parseSeparator,
-        tokens
-    )
-}
-
 private fun <T> parseOneOrMoreWithSeparator(
     parseElement: (TokenIterator<TokenType>) -> T,
     parseSeparator: (TokenIterator<TokenType>) -> Boolean,
