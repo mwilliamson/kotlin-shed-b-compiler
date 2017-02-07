@@ -262,6 +262,7 @@ private fun lookupOperator(operator: String) : OperationParser? {
         "-" -> OperationParser.SUBTRACT
         "*" -> OperationParser.MULTIPLY
         "(" -> OperationParser.CALL
+        "." -> OperationParser.FIELD_ACCESS
         else -> null
     }
 }
@@ -277,6 +278,7 @@ private interface OperationParser {
         val SUBTRACT = InfixOperationParser(Operator.SUBTRACT, 11)
         val MULTIPLY = InfixOperationParser(Operator.MULTIPLY, 12)
         val CALL = FunctionCallParser
+        val FIELD_ACCESS = FieldAccessParser
     }
 }
 
@@ -308,6 +310,20 @@ private object FunctionCallParser : OperationParser {
 
     override val precedence: Int
         get() = 14
+}
+
+private object FieldAccessParser : OperationParser {
+    override val precedence: Int
+        get() = 14
+
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val fieldName = parseIdentifier(tokens)
+        return FieldAccessNode(
+            receiver = left,
+            fieldName = fieldName,
+            source = left.source
+        )
+    }
 
 }
 

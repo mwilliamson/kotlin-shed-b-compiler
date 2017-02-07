@@ -70,6 +70,14 @@ internal fun isFunctionCall(
     ))
 }
 
+internal fun isFieldAccess(
+    receiver: Matcher<ExpressionNode>,
+    fieldName: Matcher<String>
+): Matcher<ExpressionNode> = cast(allOf(
+    has(FieldAccessNode::receiver, receiver),
+    has(FieldAccessNode::fieldName, fieldName)
+))
+
 internal fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
 
 internal fun isTypeReference(name: String) = cast(has(TypeReferenceNode::name, equalTo(name)))
