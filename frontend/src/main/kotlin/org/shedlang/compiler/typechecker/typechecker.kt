@@ -229,6 +229,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 }
             }
         }
+
+        override fun visit(node: FieldAccessNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 
