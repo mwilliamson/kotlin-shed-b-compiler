@@ -2,7 +2,9 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseShape
 import org.shedlang.compiler.tests.isSequence
 
@@ -18,6 +20,15 @@ class ParseShapeTests {
     }
 
     @Test
+    fun emptyShapeMayNotHaveTrailingComma() {
+        val source = "shape X { , }"
+        assertThat(
+            { parseString(::parseShape, source) },
+            throws<UnexpectedTokenException>()
+        )
+    }
+
+    @Test
     fun shapeHasCommaSeparatedFields() {
         val source = "shape X { a: Int, b: String }"
         val node = parseString(::parseShape, source)
@@ -30,6 +41,20 @@ class ParseShapeTests {
                 isShapeField(
                     name = equalTo("b"),
                     type = isTypeReference("String")
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun fieldMayHaveTrailingComma() {
+        val source = "shape X { a: Int, }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            fields = isSequence(
+                isShapeField(
+                    name = equalTo("a"),
+                    type = isTypeReference("Int")
                 )
             )
         ))

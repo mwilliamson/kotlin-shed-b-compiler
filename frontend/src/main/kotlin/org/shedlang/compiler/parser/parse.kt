@@ -53,7 +53,8 @@ internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): Shape
         parseElement = ::parseShapeField,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL, ",") },
         isEnd = { tokens.isNext(TokenType.SYMBOL, "}") },
-        tokens = tokens
+        tokens = tokens,
+        allowTrailingSeparator = true
     )
 
     tokens.skip(TokenType.SYMBOL, "}")
@@ -378,13 +379,15 @@ private fun <T> parseZeroOrMoreNodes(
     parseElement: (Source, TokenIterator<TokenType>) -> T,
     parseSeparator: (TokenIterator<TokenType>) -> Unit,
     isEnd: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>
+    tokens: TokenIterator<TokenType>,
+    allowTrailingSeparator: Boolean = false
 ) : List<T> {
     return parseZeroOrMore(
         { tokens -> parseElement.parse(tokens) },
         parseSeparator,
         isEnd,
-        tokens
+        tokens,
+        allowTrailingSeparator = allowTrailingSeparator
     )
 }
 
@@ -392,16 +395,23 @@ private fun <T> parseZeroOrMore(
     parseElement: (TokenIterator<TokenType>) -> T,
     parseSeparator: (TokenIterator<TokenType>) -> Unit,
     isEnd: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>
+    tokens: TokenIterator<TokenType>,
+    allowTrailingSeparator: Boolean = false
 ) : List<T> {
-    val elements = mutableListOf<T>()
-
-    while (!isEnd(tokens)) {
-        if (elements.isNotEmpty()) {
-            parseSeparator(tokens)
-        }
-        elements.add(parseElement(tokens))
+    if (isEnd(tokens)) {
+        return listOf()
     }
 
-    return elements
+    val elements = mutableListOf<T>()
+
+    while (true) {
+        elements.add(parseElement(tokens))
+        if (isEnd(tokens)) {
+            return elements
+        }
+        parseSeparator(tokens)
+        if (allowTrailingSeparator && isEnd(tokens)) {
+            return elements
+        }
+    }
 }
