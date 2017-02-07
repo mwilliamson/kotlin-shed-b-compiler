@@ -199,6 +199,7 @@ interface ExpressionNode : Node {
         fun visit(node: BooleanLiteralNode): T
         fun visit(node: IntegerLiteralNode): T
         fun visit(node: StringLiteralNode): T
+        fun visit(node: ShapeLiteralNode): T
         fun visit(node: VariableReferenceNode): T
         fun visit(node: BinaryOperationNode): T
         fun visit(node: FunctionCallNode): T
@@ -245,6 +246,29 @@ data class StringLiteralNode(
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class ShapeLiteralNode(
+    val fields: List<ShapeLiteralFieldNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ExpressionNode {
+    override val children: List<Node>
+        get() = fields
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class ShapeLiteralFieldNode(
+    val fieldName: String,
+    val expression: ExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : Node {
+    override val children: List<Node>
+        get() = listOf(expression)
 }
 
 data class VariableReferenceNode(
