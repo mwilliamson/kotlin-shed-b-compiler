@@ -44,6 +44,6 @@ internal fun isFunctionType(
     arguments: Matcher<List<Type>>,
     returnType: Matcher<Type>
 ): Matcher<Type> = cast(allOf(
-    has(FunctionType::arguments, arguments),
+    has(FunctionType::positionalArguments, arguments),
     has(FunctionType::returns, returnType)
 ))

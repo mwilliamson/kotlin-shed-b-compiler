@@ -14,7 +14,7 @@ class ReturnCheckTests {
     fun checkingReturnsInModuleChecksBodiesOfFunctions() {
         val function = function(name = "f", body = listOf())
         val node = module(listOf(function))
-        val functionType = FunctionType(arguments = listOf(), returns = IntType)
+        val functionType = positionalFunctionType(listOf(), IntType)
         assertThat(
             { checkReturns(node, mapOf(function.nodeId to functionType)) },
             throws(cast(has(
@@ -28,7 +28,7 @@ class ReturnCheckTests {
     fun functionThatHasUnitReturnTypeDoesntNeedReturnStatement() {
         val function = function(name = "f", body = listOf())
         val node = module(listOf(function))
-        val functionType = FunctionType(arguments = listOf(), returns = UnitType)
+        val functionType = positionalFunctionType(listOf(), UnitType)
         checkReturns(node, mapOf(function.nodeId to functionType))
     }
 

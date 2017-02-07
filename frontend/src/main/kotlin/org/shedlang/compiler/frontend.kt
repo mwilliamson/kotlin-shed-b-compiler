@@ -29,8 +29,8 @@ fun read(filename: String, input: String): FrontEndResult {
     val variables = mutableMapOf(
         unitTypeNodeId to MetaType(UnitType),
         intTypeNodeId to MetaType(IntType),
-        printNodeId to FunctionType(listOf(StringType), UnitType),
-        intToStringNodeId to FunctionType(listOf(IntType), StringType)
+        printNodeId to positionalFunctionType(listOf(StringType), UnitType),
+        intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
     )
     val typeContext = TypeContext(
         returnType = null,

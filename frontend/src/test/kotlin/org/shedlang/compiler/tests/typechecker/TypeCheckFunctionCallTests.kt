@@ -15,7 +15,7 @@ class TypeCheckFunctionCallTests {
         val functionReference = variableReference("f")
         val node = functionCall(function = functionReference)
 
-        val typeContext = typeContext(referenceTypes = mapOf(functionReference to FunctionType(listOf(), IntType)))
+        val typeContext = typeContext(referenceTypes = mapOf(functionReference to positionalFunctionType(listOf(), IntType)))
         val type = inferType(node, typeContext)
 
         assertThat(type, cast(equalTo(IntType)))
@@ -30,7 +30,7 @@ class TypeCheckFunctionCallTests {
         )
         assertThat(
             { inferType(node, typeContext(referenceTypes = mapOf(functionReference to IntType))) },
-            throwsUnexpectedType(expected = FunctionType(listOf(IntType, BoolType), AnyType), actual = IntType)
+            throwsUnexpectedType(expected = positionalFunctionType(listOf(IntType, BoolType), AnyType), actual = IntType)
         )
     }
 
@@ -42,7 +42,7 @@ class TypeCheckFunctionCallTests {
             arguments = listOf(literalInt(1))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            functionReference to FunctionType(listOf(BoolType), IntType)
+            functionReference to positionalFunctionType(listOf(BoolType), IntType)
         ))
         assertThat(
             { inferType(node, typeContext) },
@@ -58,7 +58,7 @@ class TypeCheckFunctionCallTests {
             arguments = listOf(literalInt(1))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            functionReference to FunctionType(listOf(), IntType)
+            functionReference to positionalFunctionType(listOf(), IntType)
         ))
         assertThat(
             { inferType(node, typeContext) },
@@ -77,7 +77,7 @@ class TypeCheckFunctionCallTests {
             arguments = listOf()
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            functionReference to FunctionType(listOf(IntType), IntType)
+            functionReference to positionalFunctionType(listOf(IntType), IntType)
         ))
         assertThat(
             { inferType(node, typeContext) },

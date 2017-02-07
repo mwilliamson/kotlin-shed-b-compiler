@@ -11,7 +11,20 @@ object StringType : Type
 object AnyType : Type
 class MetaType(val type: Type): Type
 
-data class FunctionType(val arguments: List<Type>, val returns: Type): Type
+data class FunctionType(
+    val positionalArguments: List<Type>,
+    val namedArguments: List<NamedArgument>,
+    val returns: Type
+): Type
+
+fun positionalFunctionType(arguments: List<Type>, returns: Type)
+    = FunctionType(
+        positionalArguments = arguments,
+        namedArguments = listOf(),
+        returns = returns
+    )
+
+data class NamedArgument(val name: String, val type: Type)
 
 class TypeContext(
     val returnType: Type?,
@@ -107,7 +120,11 @@ private fun inferType(function: FunctionNode, context: TypeContext): FunctionTyp
         { argument -> evalType(argument.type, context) }
     )
     val returnType = evalType(function.returnType, context)
-    return FunctionType(argumentTypes, returnType)
+    return FunctionType(
+        positionalArguments = argumentTypes,
+        namedArguments = listOf(),
+        returns = returnType
+    )
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {
@@ -209,10 +226,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             val functionType = inferType(node.function, context)
             return when (functionType) {
                 is FunctionType -> {
-                    node.arguments.zip(functionType.arguments, { arg, argType -> verifyType(arg, context, expected = argType) })
-                    if (functionType.arguments.size != node.arguments.size) {
+                    node.arguments.zip(functionType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
+                    if (functionType.positionalArguments.size != node.arguments.size) {
                         throw WrongNumberOfArgumentsError(
-                            expected = functionType.arguments.size,
+                            expected = functionType.positionalArguments.size,
                             actual = node.arguments.size,
                             source = node.source
                         )
@@ -222,7 +239,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 else -> {
                     val argumentTypes = node.arguments.map { argument -> inferType(argument, context) }
                     throw UnexpectedTypeError(
-                        expected = FunctionType(argumentTypes, AnyType),
+                        expected = FunctionType(argumentTypes, listOf(), AnyType),
                         actual = functionType,
                         source = node.function.source
                     )
