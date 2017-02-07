@@ -13,7 +13,7 @@ class MetaType(val type: Type): Type
 
 data class FunctionType(
     val positionalArguments: List<Type>,
-    val namedArguments: List<NamedArgument>,
+    val namedArguments: List<NamedArgumentType>,
     val returns: Type
 ): Type
 
@@ -24,7 +24,7 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
         returns = returns
     )
 
-data class NamedArgument(val name: String, val type: Type)
+data class NamedArgumentType(val name: String, val type: Type)
 
 class TypeContext(
     val returnType: Type?,
@@ -226,18 +226,18 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             val functionType = inferType(node.function, context)
             return when (functionType) {
                 is FunctionType -> {
-                    node.arguments.zip(functionType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
-                    if (functionType.positionalArguments.size != node.arguments.size) {
+                    node.positionalArguments.zip(functionType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
+                    if (functionType.positionalArguments.size != node.positionalArguments.size) {
                         throw WrongNumberOfArgumentsError(
                             expected = functionType.positionalArguments.size,
-                            actual = node.arguments.size,
+                            actual = node.positionalArguments.size,
                             source = node.source
                         )
                     }
                     functionType.returns
                 }
                 else -> {
-                    val argumentTypes = node.arguments.map { argument -> inferType(argument, context) }
+                    val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                     throw UnexpectedTypeError(
                         expected = FunctionType(argumentTypes, listOf(), AnyType),
                         actual = functionType,

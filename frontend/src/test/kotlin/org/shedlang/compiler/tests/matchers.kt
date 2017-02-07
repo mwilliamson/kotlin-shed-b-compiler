@@ -9,6 +9,18 @@ fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
     return matchers.reduce { first, second -> first and second }
 }
 
+fun <K, V> isMap(vararg matchers: Pair<K, Matcher<V>>): Matcher<Map<K, V>> {
+    val entryMatchers = matchers.map({ entry -> allOf(
+        has(Map.Entry<K, V>::key, equalTo(entry.first)),
+        has(Map.Entry<K, V>::value, entry.second)
+    ) })
+    return has<Map<K, V>, Iterable<Map.Entry<K, V>>>(
+        name = "entries",
+        feature = { map -> map.entries },
+        featureMatcher = isSequence(*entryMatchers.toTypedArray())
+    )
+}
+
 fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
     return object : Matcher.Primitive<Iterable<T>>() {
         override fun invoke(actual: Iterable<T>): MatchResult {

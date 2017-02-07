@@ -88,7 +88,7 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         override fun visit(node: FunctionCallNode): JavascriptExpressionNode {
             return JavascriptFunctionCallNode(
                 generateCode(node.function),
-                node.arguments.map(::generateCode),
+                node.positionalArguments.map(::generateCode),
                 source = NodeSource(node)
             )
         }

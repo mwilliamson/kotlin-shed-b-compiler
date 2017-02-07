@@ -67,13 +67,13 @@ internal class TokenIterator<T>(
         return token.tokenType == tokenType
     }
 
-    fun isNext(tokenType: T, value: String): Boolean {
-        val token = peek()
+    fun isNext(tokenType: T, value: String, skip: Int = 0): Boolean {
+        val token = peek(skip = skip)
         return token.tokenType == tokenType && token.value == value
     }
 
-    fun peek(): Token<T> {
-        return getToken(index)
+    fun peek(skip: Int = 0): Token<T> {
+        return getToken(index + skip)
     }
 
     fun next(): Token<T> {

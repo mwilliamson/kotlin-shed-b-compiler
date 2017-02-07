@@ -133,7 +133,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: FunctionCallNode): PythonExpressionNode {
             return PythonFunctionCallNode(
                 generateCode(node.function, context),
-                node.arguments.map({ argument -> generateCode(argument, context) }),
+                node.positionalArguments.map({ argument -> generateCode(argument, context) }),
                 source = NodeSource(node)
             )
         }

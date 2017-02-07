@@ -277,12 +277,13 @@ data class BinaryOperationNode(
 
 data class FunctionCallNode(
     val function: ExpressionNode,
-    val arguments: List<ExpressionNode>,
+    val positionalArguments: List<ExpressionNode>,
+    val namedArguments: Map<String, ExpressionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(function) + arguments
+        get() = listOf(function) + positionalArguments + namedArguments.values
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

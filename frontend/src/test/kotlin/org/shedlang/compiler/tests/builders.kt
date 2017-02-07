@@ -50,7 +50,8 @@ fun functionCall(
     arguments: List<ExpressionNode> = listOf()
 ) = FunctionCallNode(
     function = function,
-    arguments = arguments,
+    positionalArguments = arguments,
+    namedArguments = mapOf(),
     source = anySource()
 )
 

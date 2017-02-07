@@ -1,15 +1,13 @@
 package org.shedlang.compiler.tests.parser
 
-import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.parser.parseExpression
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.literalInt
 
 class ParseBinaryExpressionTests {
     @Test
@@ -83,6 +81,17 @@ class ParseBinaryExpressionTests {
         assertThat(node, isFunctionCall(
             isVariableReference("x"),
             isSequence(isVariableReference("y"), isVariableReference("z"))
+        ))
+    }
+
+    @Test
+    fun canParseFunctionCallWithNamedArgument() {
+        val source = "x(y=z)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isFunctionCall(
+            left = isVariableReference("x"),
+            positionalArguments = isSequence(),
+            namedArguments = isMap("y" to isVariableReference("z"))
         ))
     }
 

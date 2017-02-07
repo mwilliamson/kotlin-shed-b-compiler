@@ -295,17 +295,42 @@ private class InfixOperationParser(
 private object FunctionCallParser : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val arguments = parseZeroOrMore(
-            parseElement = ::parseExpression,
+            parseElement = { tokens -> parseArgument(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL, ",") },
             isEnd = { tokens.isNext(TokenType.SYMBOL, ")") },
             tokens = tokens
         )
+        // TODO: check named arguments appear after all positional arguments
         tokens.skip(TokenType.SYMBOL, ")")
+        val positionalArguments = arguments
+            .filterIsInstance<ParsedArgument.Positional>()
+            .map({ parsedArgument -> parsedArgument.expression })
+        val namedArguments = arguments
+            .filterIsInstance<ParsedArgument.Named>()
+            .associate({ parsedArgument -> parsedArgument.name to parsedArgument.expression })
         return FunctionCallNode(
             function = left,
-            arguments = arguments,
+            positionalArguments = positionalArguments,
+            namedArguments = namedArguments,
             source = left.source
         )
+    }
+
+    private sealed class ParsedArgument {
+        class Positional(val expression: ExpressionNode): ParsedArgument()
+        class Named(val name: String, val expression: ExpressionNode): ParsedArgument()
+    }
+
+    private fun parseArgument(tokens: TokenIterator<TokenType>): ParsedArgument {
+        if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL, "=", skip = 1)) {
+            val name = parseIdentifier(tokens)
+            tokens.skip(TokenType.SYMBOL, "=")
+            val expression = parseExpression(tokens)
+            return ParsedArgument.Named(name, expression)
+        } else {
+            val expression = parseExpression(tokens)
+            return ParsedArgument.Positional(expression)
+        }
     }
 
     override val precedence: Int
