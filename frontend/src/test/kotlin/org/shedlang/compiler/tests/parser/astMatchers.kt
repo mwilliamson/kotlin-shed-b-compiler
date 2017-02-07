@@ -1,9 +1,6 @@
 package org.shedlang.compiler.tests.parser
 
-import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 
@@ -29,9 +26,23 @@ inline internal fun <reified T: ExpressionNode> isVal(
     ))
 }
 
-internal fun isShape(name: Matcher<String>): Matcher<ModuleStatementNode> {
-    return cast(has(ShapeNode::name, name))
+internal fun isShape(
+    name: Matcher<String> = anything,
+    fields: Matcher<List<ShapeFieldNode>>
+): Matcher<ModuleStatementNode> {
+    return cast(allOf(
+        has(ShapeNode::name, name),
+        has(ShapeNode::fields, fields)
+    ))
 }
+
+internal fun isShapeField(
+    name: Matcher<String>,
+    type: Matcher<TypeNode>
+) = allOf(
+    has(ShapeFieldNode::name, name),
+    has(ShapeFieldNode::type, type)
+)
 
 internal fun isFunction(name: Matcher<String>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionNode::name, name))
@@ -60,3 +71,5 @@ internal fun isFunctionCall(
 }
 
 internal fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
+
+internal fun isTypeReference(name: String) = cast(has(TypeReferenceNode::name, equalTo(name)))

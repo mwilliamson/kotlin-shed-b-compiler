@@ -65,15 +65,26 @@ interface ModuleStatementNode: Node {
 
 data class ShapeNode(
     override val name: String,
+    val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): VariableBindingNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = listOf()
+        get() = fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class ShapeFieldNode(
+    val name: String,
+    val type: TypeNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val children: List<Node>
+        get() = listOf(type)
 }
 
 data class FunctionNode(
