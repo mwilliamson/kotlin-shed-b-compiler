@@ -7,7 +7,7 @@ import org.shedlang.compiler.parser.parseShape
 
 class ParseShapeTests {
     @Test
-    fun expressionIsReadForExpressionStatements() {
+    fun emptyShape() {
         val source = "shape X { }"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
