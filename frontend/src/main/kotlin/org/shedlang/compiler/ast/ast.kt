@@ -249,6 +249,7 @@ data class StringLiteralNode(
 }
 
 data class ShapeLiteralNode(
+    val type: TypeNode,
     val fields: List<ShapeLiteralFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
