@@ -106,7 +106,6 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
     tokens.skip(TokenType.SYMBOL, "{")
     val body = parseZeroOrMore(
         parseElement = ::parseFunctionStatement,
-        parseSeparator = { tokens -> },
         isEnd = { tokens.isNext(TokenType.SYMBOL, "}") },
         tokens = tokens
     )
@@ -393,7 +392,7 @@ private fun <T> parseZeroOrMoreNodes(
 
 private fun <T> parseZeroOrMore(
     parseElement: (TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Unit,
+    parseSeparator: (TokenIterator<TokenType>) -> Unit = { tokens -> },
     isEnd: (TokenIterator<TokenType>) -> Boolean,
     tokens: TokenIterator<TokenType>,
     allowTrailingSeparator: Boolean = false
