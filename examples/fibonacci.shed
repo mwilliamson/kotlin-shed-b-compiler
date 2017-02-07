@@ -11,16 +11,16 @@ shape FibonacciPair {
 
 fun fibonacci2(n: Int) : FibonacciPair {
     if (n == 0) {
-        return FibonacciPair {
+        return FibonacciPair(
             first = 1,
             second = 0
-        };
+        );
     } else {
         val previous = fibonacci2(n - 1);
-        return FibonacciPair {
+        return FibonacciPair(
             first = previous.second,
             second = previous.first + previous.second
-        };
+        );
     }
 }
 
