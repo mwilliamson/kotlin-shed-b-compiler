@@ -62,6 +62,11 @@ internal class TokenIterator<T>(
         return tokens[index - 1].value
     }
 
+    fun isNext(tokenType: T): Boolean {
+        val token = peek()
+        return token.tokenType == tokenType
+    }
+
     fun isNext(tokenType: T, value: String): Boolean {
         val token = peek()
         return token.tokenType == tokenType && token.value == value

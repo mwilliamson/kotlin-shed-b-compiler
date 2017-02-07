@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.parser.tryParseFunction
+import org.shedlang.compiler.parser.parseFunction
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
 
@@ -15,7 +15,7 @@ class ParseFunctionTests {
     @Test
     fun canReadZeroArgumentFunctionSignature() {
         val source = "fun f() : Unit { }"
-        val function = parseString(::tryParseFunction, source)!!
+        val function = parseString(::parseFunction, source)
         assertThat(function, allOf(
             has(FunctionNode::name, equalTo("f")),
             has(FunctionNode::arguments, isSequence()),
@@ -28,7 +28,7 @@ class ParseFunctionTests {
     @Test
     fun canReadOneArgumentFunctionSignature() {
         val source = "fun f(x: Int) : Unit { }"
-        val function = parseString(::tryParseFunction, source)!!
+        val function = parseString(::parseFunction, source)
         assertThat(function, has(FunctionNode::arguments, isSequence(
             isArgument("x", "Int")
         )))
@@ -37,7 +37,7 @@ class ParseFunctionTests {
     @Test
     fun canReadManyArgumentFunctionSignature() {
         val source = "fun f(x: Int, y: String) : Unit { }"
-        val function = parseString(::tryParseFunction, source)!!
+        val function = parseString(::parseFunction, source)
         assertThat(function, has(FunctionNode::arguments, isSequence(
             isArgument("x", "Int"),
             isArgument("y", "String")
@@ -47,7 +47,7 @@ class ParseFunctionTests {
     @Test
     fun canReadBody() {
         val source = "fun f() : Int { return 1; return 2; }"
-        val function = parseString(::tryParseFunction, source)!!
+        val function = parseString(::parseFunction, source)
         assertThat(function, has(FunctionNode::body, isSequence(
             cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(1))))),
             cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(2)))))

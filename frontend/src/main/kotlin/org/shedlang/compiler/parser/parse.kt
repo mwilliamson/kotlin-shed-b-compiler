@@ -22,9 +22,10 @@ internal fun <T> ((Source, TokenIterator<TokenType>) -> T).parse(tokens: TokenIt
 
 internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): ModuleNode {
     val moduleName = parseModuleNameDeclaration(tokens)
-    val body = parseManyNodes(
-        ::tryParseFunction,
-        tokens
+    val body = parseZeroOrMore(
+        parseElement = ::parseModuleStatement,
+        isEnd = { tokens -> tokens.isNext(TokenType.END) },
+        tokens = tokens
     )
     return ModuleNode(moduleName, body, source)
 }
@@ -42,6 +43,20 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
         { tokens -> tokens.trySkip(TokenType.SYMBOL, ".") },
         tokens
     ).joinToString(".")
+}
+
+internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {
+    if (tokens.isNext(TokenType.KEYWORD, "shape")) {
+        return ::parseShape.parse(tokens)
+    } else if (tokens.isNext(TokenType.KEYWORD, "fun")) {
+        return ::parseFunction.parse(tokens)
+    } else {
+        throw UnexpectedTokenException(
+            expected = "module statement",
+            actual = tokens.peek().describe(),
+            location = tokens.location()
+        )
+    }
 }
 
 internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): ShapeNode {
@@ -75,10 +90,8 @@ private fun parseShapeField(source: Source, tokens: TokenIterator<TokenType>): S
     )
 }
 
-internal fun tryParseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode? {
-    if (!tokens.trySkip(TokenType.KEYWORD, "fun")) {
-        return null
-    }
+internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode {
+    tokens.skip(TokenType.KEYWORD, "fun")
 
     val name = parseIdentifier(tokens)
 
