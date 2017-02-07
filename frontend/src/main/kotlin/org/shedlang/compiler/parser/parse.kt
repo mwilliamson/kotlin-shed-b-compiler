@@ -223,7 +223,7 @@ private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) :
     val expression = tryParseExpression(tokens, precedence = precedence)
     if (expression == null) {
         throw UnexpectedTokenException(
-            expected = "expected",
+            expected = "expression",
             actual = tokens.peek().describe(),
             location = tokens.location()
         )
