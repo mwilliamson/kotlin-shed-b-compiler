@@ -68,7 +68,8 @@ internal fun isFunctionCall(
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(FunctionCallNode::function, left),
-        has(FunctionCallNode::positionalArguments, positionalArguments)
+        has(FunctionCallNode::positionalArguments, positionalArguments),
+        has(FunctionCallNode::namedArguments, namedArguments)
     ))
 }
 
