@@ -99,14 +99,20 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         }
 
         is FunctionNode -> {
-            resolve(node.returnType, context)
-            node.arguments.forEach { argument -> resolve(argument, context) }
             context.defer(node, {
+                resolve(node.returnType, context)
+                node.arguments.forEach { argument -> resolve(argument, context) }
                 resolveScope(
                     body = node.body,
                     binders = node.arguments,
                     context = context
                 )
+            })
+        }
+
+        is ShapeNode -> {
+            context.defer(node, {
+                node.fields.forEach({ field -> resolve(field, context) })
             })
         }
 

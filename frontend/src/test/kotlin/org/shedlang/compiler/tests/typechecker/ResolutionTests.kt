@@ -196,6 +196,38 @@ class ResolutionTests {
         )
     }
 
+    @Test
+    fun shapeCanBeDeclaredAfterBeingUsedInFunctionSignature() {
+        val shapeReference = typeReference("X")
+        val shape = shape(name = "X")
+
+        val node = module(body = listOf(
+            function(returnType = shapeReference),
+            shape
+        ))
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[shapeReference], equalTo(shape.nodeId))
+    }
+
+    @Test
+    fun shapeCanBeDeclaredAfterBeingUsedInShapeDefinition() {
+        val shapeReference = typeReference("X")
+        val shape = shape(name = "X")
+
+        val node = module(body = listOf(
+            shape(name = "Y", fields = listOf(
+                shapeField(name = "a", type = shapeReference)
+            )),
+            shape
+        ))
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[shapeReference], equalTo(shape.nodeId))
+    }
+
     private fun resolutionContext(
         bindings: Map<String, Int> = mapOf(),
         isInitialised: Set<Int> = setOf(),

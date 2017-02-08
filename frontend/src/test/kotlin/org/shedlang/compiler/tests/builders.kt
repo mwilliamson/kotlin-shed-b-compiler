@@ -68,6 +68,24 @@ fun function(
     source = anySource()
 )
 
+fun shape(
+    name: String,
+    fields: List<ShapeFieldNode> = listOf()
+) = ShapeNode(
+    name = name,
+    fields = fields,
+    source = anySource()
+)
+
+fun shapeField(
+    name: String,
+    type: TypeNode
+) = ShapeFieldNode(
+    name = name,
+    type = type,
+    source = anySource()
+)
+
 fun argument(
     name: String,
     type: TypeNode = typeReference("Int")
@@ -78,7 +96,7 @@ fun argument(
 )
 
 fun module(
-    body: List<FunctionNode>
+    body: List<ModuleStatementNode>
 ) = ModuleNode(
     name = "",
     body = body,
