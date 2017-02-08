@@ -3,16 +3,26 @@ package org.shedlang.compiler.parser
 import org.shedlang.compiler.ast.*
 
 internal fun parse(filename: String, input: String): ModuleNode {
-    val tokens = tokenise(input)
-        .filter { token -> token.tokenType != TokenType.WHITESPACE }
-    val tokenIterator = TokenIterator(
-        filename,
-        tokens,
-        end = Token(input.length, TokenType.END, "")
-    )
+    val tokenIterator = parserTokenise(filename, input)
     val module = ::parseModule.parse(tokenIterator)
     tokenIterator.skip(TokenType.END)
     return module
+}
+
+internal fun parserTokenise(filename: String, input: String): TokenIterator<TokenType> {
+    val tokens = tokenise(input)
+        .filter { token -> token.tokenType != TokenType.WHITESPACE }
+    return TokenIterator(
+        locate = { characterIndex ->
+            StringSource(
+                filename = filename,
+                contents = input,
+                characterIndex = characterIndex
+            )
+        },
+        tokens = tokens,
+        end = Token(input.length, TokenType.END, "")
+    )
 }
 
 internal fun <T> ((Source, TokenIterator<TokenType>) -> T).parse(tokens: TokenIterator<TokenType>): T {

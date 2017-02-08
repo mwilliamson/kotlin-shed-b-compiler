@@ -41,7 +41,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.SYMBOL) }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(StringSource("<string>", 0))),
+                has(UnexpectedTokenException::location, equalTo(stringSource(0))),
                 has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
@@ -70,7 +70,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.SYMBOL, "a") }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(StringSource("<string>", 0))),
+                has(UnexpectedTokenException::location, equalTo(stringSource(0))),
                 has(UnexpectedTokenException::expected, equalTo("SYMBOL: a")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
@@ -86,7 +86,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.IDENTIFIER, "b") }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(StringSource("<string>", 0))),
+                has(UnexpectedTokenException::location, equalTo(stringSource(0))),
                 has(UnexpectedTokenException::expected, equalTo("IDENTIFIER: b")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
@@ -102,6 +102,18 @@ class TokenIteratorTests {
     private val END_TOKEN = Token(-1, TokenType.END, "")
 
     private fun tokenIterator(tokens: List<Token<TokenType>>): TokenIterator<TokenType> {
-        return TokenIterator("<string>", tokens, end = END_TOKEN)
+        return TokenIterator(
+            locate = { characterIndex -> stringSource(characterIndex) },
+            tokens = tokens,
+            end = END_TOKEN
+        )
+    }
+
+    private fun stringSource(characterIndex: Int): StringSource {
+        return StringSource(
+            filename = "<filename>",
+            contents = "<contents>",
+            characterIndex = characterIndex
+        )
     }
 }

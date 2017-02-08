@@ -16,7 +16,11 @@ interface ReferenceNode: Node {
 
 interface Source
 
-data class StringSource(val filename: String, val characterIndex: Int) : Source
+data class StringSource(
+    val filename: String,
+    val contents: String,
+    val characterIndex: Int
+) : Source
 data class NodeSource(val node: Node): Source
 
 private var nextId = 0

@@ -9,14 +9,14 @@ internal class UnexpectedTokenException(
 ) : Exception("Error at $location\nExpected: $expected\nBut got: $actual")
 
 internal class TokenIterator<T>(
-    private val filename: String,
+    private val locate: (Int) -> StringSource,
     private val tokens: List<Token<T>>,
     private val end: Token<T>
 ) {
     private var index = 0
 
     fun location(): StringSource {
-        return StringSource(filename, index)
+        return locate(peek().characterIndex)
     }
 
     fun trySkip(tokenType: T, value: String): Boolean {

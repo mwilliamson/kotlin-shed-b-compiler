@@ -3,7 +3,7 @@ package org.shedlang.compiler.tests
 import org.shedlang.compiler.ast.*
 
 fun anySource(): Source {
-    return StringSource("<string>", 0)
+    return StringSource(filename = "<string>", contents = "", characterIndex = 0)
 }
 
 fun ifStatement(

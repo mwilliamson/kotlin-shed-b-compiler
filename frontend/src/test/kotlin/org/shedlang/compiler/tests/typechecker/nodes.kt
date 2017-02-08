@@ -26,7 +26,7 @@ fun typeContext(
     return TypeContext(returnType, HashMap(types), VariableReferencesMap(finalReferences))
 }
 
-private val badSource = StringSource("<bad source>", 0)
+private val badSource = StringSource("<bad source>", "", 0)
 private val badStatement = BadStatementNode(source = badSource)
 fun assertStatementInStatementIsTypeChecked(build: (StatementNode) -> StatementNode) {
     assertStatementIsTypeChecked({ badStatement -> typeCheck(build(badStatement), emptyTypeContext()) })
