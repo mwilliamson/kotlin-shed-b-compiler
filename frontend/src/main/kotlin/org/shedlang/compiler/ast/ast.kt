@@ -20,7 +20,31 @@ data class StringSource(
     val filename: String,
     val contents: String,
     val characterIndex: Int
-) : Source
+) : Source {
+    fun context(): String {
+        if (characterIndex >= contents.length) {
+            val lastLine = contents.substringAfterLast("\n")
+            return context(lastLine, indent = lastLine.length)
+        } else {
+            val lines = contents.splitToSequence("\n")
+            var position = 0
+
+            for (line in lines) {
+                val nextLinePosition = position + line.length + 1
+                if (nextLinePosition > characterIndex) {
+                    return context(line, indent = characterIndex - position)
+                }
+                position = nextLinePosition
+            }
+            throw Exception("should be impossible (but evidently isn't)")
+
+        }
+    }
+
+    private fun context(line: String, indent: Int): String {
+        return line + "\n" + " ".repeat(indent) + "^"
+    }
+}
 data class NodeSource(val node: Node): Source
 
 private var nextId = 0
