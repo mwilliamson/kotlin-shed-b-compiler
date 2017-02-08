@@ -14,38 +14,42 @@ interface ReferenceNode: Node {
     val name: String
 }
 
-interface Source
+interface Source {
+    fun describe(): String
+}
 
 data class StringSource(
     val filename: String,
     val contents: String,
     val characterIndex: Int
 ) : Source {
-    fun context(): String {
-        if (characterIndex >= contents.length) {
-            val lastLine = contents.substringAfterLast("\n")
-            return context(lastLine, indent = lastLine.length)
-        } else {
-            val lines = contents.splitToSequence("\n")
-            var position = 0
+    override fun describe(): String {
+        val lines = contents.splitToSequence("\n")
+        var position = 0
 
-            for (line in lines) {
-                val nextLinePosition = position + line.length + 1
-                if (nextLinePosition > characterIndex) {
-                    return context(line, indent = characterIndex - position)
-                }
-                position = nextLinePosition
+        for ((lineIndex, line) in lines.withIndex()) {
+            val nextLinePosition = position + line.length + 1
+            if (nextLinePosition > characterIndex || nextLinePosition >= contents.length) {
+                return context(
+                    line,
+                    lineIndex = lineIndex,
+                    columnIndex = characterIndex - position
+                )
             }
-            throw Exception("should be impossible (but evidently isn't)")
-
+            position = nextLinePosition
         }
+        throw Exception("should be impossible (but evidently isn't)")
     }
 
-    private fun context(line: String, indent: Int): String {
-        return line + "\n" + " ".repeat(indent) + "^"
+    private fun context(line: String, lineIndex: Int, columnIndex: Int): String {
+        return "${filename}:${lineIndex + 1}:${columnIndex + 1}\n${line}\n${" ".repeat(columnIndex)}^"
     }
 }
-data class NodeSource(val node: Node): Source
+data class NodeSource(val node: Node): Source {
+    override fun describe(): String {
+        return node.source.describe()
+    }
+}
 
 private var nextId = 0
 

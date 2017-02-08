@@ -19,15 +19,20 @@ class SourceTests {
         return listOf(
             TestCase(
                 "one line, first character",
-                contents = "abcd",
+                contents = """abcd""",
                 characterIndex = 0,
-                expectedContext = "abcd\n^"
+                expectedContext = """
+                    <filename>:1:1
+                    abcd
+                    ^
+                """
             ),
             TestCase(
                 "one line, last character",
                 contents = "abcd",
                 characterIndex = 3,
                 expectedContext = """
+                    <filename>:1:4
                     abcd
                        ^
                 """
@@ -37,6 +42,7 @@ class SourceTests {
                 contents = "abcd",
                 characterIndex = 4,
                 expectedContext = """
+                    <filename>:1:5
                     abcd
                         ^
                 """
@@ -49,6 +55,7 @@ class SourceTests {
                 """,
                 characterIndex = 7,
                 expectedContext = """
+                    <filename>:2:4
                     def
                        ^
                 """
@@ -61,6 +68,7 @@ class SourceTests {
                 """,
                 characterIndex = 0,
                 expectedContext = """
+                    <filename>:1:1
                     abc
                     ^
                 """
@@ -73,6 +81,7 @@ class SourceTests {
                 """,
                 characterIndex = 2,
                 expectedContext = """
+                    <filename>:1:3
                     abc
                       ^
                 """
@@ -85,6 +94,7 @@ class SourceTests {
                 """,
                 characterIndex = 4,
                 expectedContext = """
+                    <filename>:2:1
                     def
                     ^
                 """
@@ -96,7 +106,7 @@ class SourceTests {
                 characterIndex = testCase.characterIndex
             )
 
-            assertThat(source.context(), equalTo(testCase.expectedContext.trimIndent()))
+            assertThat(source.describe(), equalTo(testCase.expectedContext.trimIndent()))
         })})
     }
 }
