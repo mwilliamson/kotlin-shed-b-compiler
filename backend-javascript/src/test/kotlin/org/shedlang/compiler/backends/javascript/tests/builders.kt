@@ -64,6 +64,15 @@ fun jsFunctionCall(
     source = anySource()
 )
 
+fun jsPropertyAccess(
+    receiver: JavascriptExpressionNode,
+    propertyName: String
+) = JavascriptPropertyAccessNode(
+    receiver = receiver,
+    propertyName = propertyName,
+    source = anySource()
+)
+
 fun jsFunction(
     name: String,
     arguments: List<String> = listOf(),

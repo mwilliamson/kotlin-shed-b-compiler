@@ -315,6 +315,16 @@ class SerialiserTests {
         assertThat(output, equalTo("(f + g)()"))
     }
 
+    @Test
+    fun propertyAccessSerialisation() {
+        val node = jsPropertyAccess(
+            receiver= jsVariableReference("x"),
+            propertyName = "y"
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x.y"))
+    }
+
     private fun indentedSerialise(node: JavascriptStatementNode): String {
         return serialise(node, indentation = 1)
     }

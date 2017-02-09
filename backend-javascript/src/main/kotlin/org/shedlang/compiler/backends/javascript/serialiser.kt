@@ -93,6 +93,10 @@ internal fun serialise(node: JavascriptExpressionNode) : String {
                 ")"
         }
 
+        override fun visit(node: JavascriptPropertyAccessNode): String {
+            val receiver = serialiseSubExpression(node, node.receiver, associative = true)
+            return receiver + "." + node.propertyName
+        }
     })
 }
 
@@ -148,6 +152,10 @@ private fun precedence(node: JavascriptExpressionNode): Int {
         }
 
         override fun visit(node: JavascriptFunctionCallNode): Int {
+            return 18
+        }
+
+        override fun visit(node: JavascriptPropertyAccessNode): Int {
             return 18
         }
     })
