@@ -94,7 +94,11 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return JavascriptPropertyAccessNode(
+                generateCode(node.receiver),
+                node.fieldName,
+                source = NodeSource(node)
+            )
         }
     })
 }

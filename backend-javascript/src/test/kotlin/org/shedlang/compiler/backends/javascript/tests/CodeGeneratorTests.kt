@@ -177,6 +177,18 @@ class CodeGeneratorTests {
         ))
     }
 
+    @Test
+    fun fieldAccessGeneratesPropertyAccess() {
+        val shed = fieldAccess(variableReference("x"), "y")
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptPropertyAccess(
+            isJavascriptVariableReference("x"),
+            equalTo("y")
+        ))
+    }
+
     private fun isJavascriptModule(body: Matcher<List<JavascriptStatementNode>>)
         = cast(has(JavascriptModuleNode::body, body))
 
@@ -229,5 +241,13 @@ class CodeGeneratorTests {
     = cast(allOf(
         has(JavascriptFunctionCallNode::function, function),
         has(JavascriptFunctionCallNode::arguments, arguments)
+    ))
+
+    private fun isJavascriptPropertyAccess(
+        receiver: Matcher<JavascriptExpressionNode>,
+        propertyName: Matcher<String>
+    ) : Matcher<JavascriptExpressionNode> = cast(allOf(
+        has(JavascriptPropertyAccessNode::receiver, receiver),
+        has(JavascriptPropertyAccessNode::propertyName, propertyName)
     ))
 }
