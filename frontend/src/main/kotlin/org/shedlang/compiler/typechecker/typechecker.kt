@@ -13,7 +13,7 @@ class MetaType(val type: Type): Type
 
 data class FunctionType(
     val positionalArguments: List<Type>,
-    val namedArguments: List<NamedArgumentType>,
+    val namedArguments: Map<String, Type>,
     val returns: Type
 ): Type
 
@@ -25,11 +25,9 @@ data class ShapeType(
 fun positionalFunctionType(arguments: List<Type>, returns: Type)
     = FunctionType(
         positionalArguments = arguments,
-        namedArguments = listOf(),
+        namedArguments = mapOf(),
         returns = returns
     )
-
-data class NamedArgumentType(val name: String, val type: Type)
 
 class TypeContext(
     val returnType: Type?,
@@ -144,7 +142,7 @@ private fun inferType(function: FunctionNode, context: TypeContext): FunctionTyp
     val returnType = evalType(function.returnType, context)
     return FunctionType(
         positionalArguments = argumentTypes,
-        namedArguments = listOf(),
+        namedArguments = mapOf(),
         returns = returnType
     )
 }
@@ -282,7 +280,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             } else {
                 val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                 throw UnexpectedTypeError(
-                    expected = FunctionType(argumentTypes, listOf(), AnyType),
+                    expected = FunctionType(argumentTypes, mapOf(), AnyType),
                     actual = receiverType,
                     source = node.function.source
                 )
