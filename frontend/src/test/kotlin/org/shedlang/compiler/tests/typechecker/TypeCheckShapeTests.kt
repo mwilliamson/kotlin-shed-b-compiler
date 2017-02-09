@@ -2,12 +2,11 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.BoolType
-import org.shedlang.compiler.typechecker.IntType
-import org.shedlang.compiler.typechecker.MetaType
-import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.typechecker.*
 
 class TypeCheckShapeTests {
     @Test
@@ -31,5 +30,25 @@ class TypeCheckShapeTests {
             name = equalTo("X"),
             fields = listOf("a" to isIntType, "b" to isBoolType)
         )))
+    }
+
+    @Test
+    fun whenShapeDeclaresMultipleFieldsWithSameNameThenExceptionIsThrown() {
+        val intType = typeReference("Int")
+        val node = shape("X", listOf(
+            shapeField("a", intType),
+            shapeField("a", intType)
+        ))
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            intType to MetaType(IntType)
+        ))
+
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(
+                has(FieldAlreadyDeclaredError::fieldName, equalTo("a"))
+            )
+        )
     }
 }

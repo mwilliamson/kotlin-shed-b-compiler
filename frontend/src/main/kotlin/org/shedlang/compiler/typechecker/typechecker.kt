@@ -94,6 +94,8 @@ class ReturnOutsideOfFunctionError(source: Source)
     : TypeCheckError("Cannot return outside of a function", source)
 class NoSuchFieldError(val fieldName: String, source: Source)
     : TypeCheckError("No such field: " + fieldName, source)
+class FieldAlreadyDeclaredError(val fieldName: String, source: Source)
+    : TypeCheckError("Field has already been declared: ${fieldName}", source)
 
 internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     val (typeDeclarations, otherStatements) = module.body
@@ -130,6 +132,12 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
 }
 
 private fun inferType(node: ShapeNode, context: TypeContext): Type {
+    for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
+        if (fields.size > 1) {
+            throw FieldAlreadyDeclaredError(fieldName = fieldName, source = fields[1].source)
+        }
+    }
+
     val shapeType = ShapeType(
         name = node.name,
         fields = node.fields.associate({ field -> field.name to evalType(field.type, context) })
