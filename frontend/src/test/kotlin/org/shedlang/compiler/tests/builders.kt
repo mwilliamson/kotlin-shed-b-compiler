@@ -49,11 +49,12 @@ fun binaryOperation(
 
 fun functionCall(
     function: ExpressionNode,
-    arguments: List<ExpressionNode> = listOf()
+    positionalArguments: List<ExpressionNode> = listOf(),
+    namedArguments: Map<String, ExpressionNode> = mapOf()
 ) = FunctionCallNode(
     function = function,
-    positionalArguments = arguments,
-    namedArguments = mapOf(),
+    positionalArguments = positionalArguments,
+    namedArguments = namedArguments,
     source = anySource()
 )
 

@@ -84,6 +84,12 @@ class UnexpectedTypeError(val expected: Type, val actual: Type, source: Source)
     : TypeCheckError("Expected type $expected but was $actual", source)
 class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: Source)
     : TypeCheckError("Expected $expected arguments, but got $actual", source)
+class MissingArgumentError(val argumentName: String, source: Source)
+    : TypeCheckError("Call is missing argument: $argumentName", source)
+class ExtraArgumentError(val argumentName: String, source: Source)
+    : TypeCheckError("Call has extra argument: $argumentName", source)
+class PositionalArgumentPassedToShapeConstructorError(source: Source)
+    : TypeCheckError("Positional arguments cannot be passed to shape constructors", source)
 class ReturnOutsideOfFunctionError(source: Source)
     : TypeCheckError("Cannot return outside of a function", source)
 class NoSuchFieldError(val fieldName: String, source: Source)
@@ -239,27 +245,47 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         override fun visit(node: FunctionCallNode): Type {
-            val functionType = inferType(node.function, context)
-            return when (functionType) {
-                is FunctionType -> {
-                    node.positionalArguments.zip(functionType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
-                    if (functionType.positionalArguments.size != node.positionalArguments.size) {
-                        throw WrongNumberOfArgumentsError(
-                            expected = functionType.positionalArguments.size,
-                            actual = node.positionalArguments.size,
-                            source = node.source
-                        )
-                    }
-                    functionType.returns
-                }
-                else -> {
-                    val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
-                    throw UnexpectedTypeError(
-                        expected = FunctionType(argumentTypes, listOf(), AnyType),
-                        actual = functionType,
-                        source = node.function.source
+            val receiverType = inferType(node.function, context)
+            if (receiverType is FunctionType) {
+                node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
+                if (receiverType.positionalArguments.size != node.positionalArguments.size) {
+                    throw WrongNumberOfArgumentsError(
+                        expected = receiverType.positionalArguments.size,
+                        actual = node.positionalArguments.size,
+                        source = node.source
                     )
                 }
+                return receiverType.returns
+            } else if (receiverType is MetaType && receiverType.type is ShapeType) {
+                val shapeType = receiverType.type
+
+                if (node.positionalArguments.any()) {
+                    throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
+                }
+
+                for ((fieldName, type) in shapeType.fields) {
+                    val actual = node.namedArguments[fieldName]
+                    if (actual == null) {
+                        throw MissingArgumentError(fieldName, source = node.source)
+                    } else {
+                        verifyType(actual, context, expected = type)
+                    }
+                }
+
+                for ((argumentName, actual) in node.namedArguments) {
+                    if (!shapeType.fields.containsKey(argumentName)) {
+                        throw ExtraArgumentError(argumentName, source = actual.source)
+                    }
+                }
+
+                return shapeType
+            } else {
+                val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
+                throw UnexpectedTypeError(
+                    expected = FunctionType(argumentTypes, listOf(), AnyType),
+                    actual = receiverType,
+                    source = node.function.source
+                )
             }
         }
 
