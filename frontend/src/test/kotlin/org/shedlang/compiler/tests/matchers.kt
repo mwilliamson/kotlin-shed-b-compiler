@@ -1,8 +1,7 @@
 package org.shedlang.compiler.tests
 
 import com.natpryce.hamkrest.*
-import org.shedlang.compiler.typechecker.FunctionType
-import org.shedlang.compiler.typechecker.Type
+import org.shedlang.compiler.typechecker.*
 
 
 fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
@@ -59,3 +58,16 @@ internal fun isFunctionType(
     has(FunctionType::positionalArguments, arguments),
     has(FunctionType::returns, returnType)
 ))
+
+internal fun isShapeType(
+    name: Matcher<String>,
+    fields: List<Pair<String, Matcher<Type>>>
+): Matcher<Type> = cast(allOf(
+    has(ShapeType::name, name),
+    has(ShapeType::fields, isMap(*fields.toTypedArray()))
+))
+
+internal val isIntType: Matcher<Type> = cast(equalTo(IntType))
+internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))
+
+internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))

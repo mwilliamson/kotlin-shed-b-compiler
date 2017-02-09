@@ -17,6 +17,11 @@ data class FunctionType(
     val returns: Type
 ): Type
 
+data class ShapeType(
+    val name: String,
+    val fields: Map<String, Type>
+): Type
+
 fun positionalFunctionType(arguments: List<Type>, returns: Type)
     = FunctionType(
         positionalArguments = arguments,
@@ -97,22 +102,24 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext) {
 
 internal fun inferType(statement: ModuleStatementNode, context: TypeContext): Type {
     return statement.accept(object : ModuleStatementNode.Visitor<Type> {
-        override fun visit(node: ShapeNode): Type {
-            throw UnsupportedOperationException("not implemented")
-        }
-
+        override fun visit(node: ShapeNode): Type = inferType(node, context)
         override fun visit(node: FunctionNode): Type = inferType(node, context)
     })
 }
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
-        override fun visit(node: ShapeNode) {
-            throw UnsupportedOperationException("not implemented")
-        }
-
+        override fun visit(node: ShapeNode) {}
         override fun visit(node: FunctionNode): Unit = typeCheck(node, context)
     })
+}
+
+private fun inferType(node: ShapeNode, context: TypeContext): Type {
+    val shapeType = ShapeType(
+        name = node.name,
+        fields = node.fields.associate({ field -> field.name to evalType(field.type, context) })
+    )
+    return MetaType(shapeType)
 }
 
 private fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
