@@ -92,8 +92,8 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                 )
             } else {
                 return JavascriptObjectLiteralNode(
-                    node.namedArguments.entries.associate({ argument ->
-                        argument.key to generateCode(argument.value)
+                    node.namedArguments.associate({ argument ->
+                        argument.name to generateCode(argument.expression)
                     }),
                     source = NodeSource(node)
                 )

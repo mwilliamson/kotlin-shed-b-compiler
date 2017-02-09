@@ -54,7 +54,9 @@ fun call(
 ) = CallNode(
     receiver = receiver,
     positionalArguments = positionalArguments,
-    namedArguments = namedArguments,
+    namedArguments = namedArguments.map({ argument ->
+        CallNamedArgumentNode(argument.key, argument.value, source = anySource())
+    }),
     source = anySource()
 )
 

@@ -261,19 +261,19 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
                 }
 
-                for ((fieldName, type) in shapeType.fields) {
-                    val actual = node.namedArguments[fieldName]
-                    if (actual == null) {
-                        throw MissingArgumentError(fieldName, source = node.source)
+                for (argument in node.namedArguments) {
+                    val fieldType = shapeType.fields[argument.name]
+                    if (fieldType == null) {
+                        throw ExtraArgumentError(argument.name, source = argument.source)
                     } else {
-                        verifyType(actual, context, expected = type)
+                        verifyType(argument.expression, context, expected = fieldType)
                     }
                 }
 
-                for ((argumentName, actual) in node.namedArguments) {
-                    if (!shapeType.fields.containsKey(argumentName)) {
-                        throw ExtraArgumentError(argumentName, source = actual.source)
-                    }
+                val missingFieldNames = shapeType.fields.keys - node.namedArguments.map({ argument -> argument.name })
+
+                for (fieldName in missingFieldNames) {
+                    throw MissingArgumentError(fieldName, source = node.source)
                 }
 
                 return shapeType

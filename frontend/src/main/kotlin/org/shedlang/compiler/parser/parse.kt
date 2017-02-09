@@ -305,7 +305,7 @@ private class InfixOperationParser(
 private object FunctionCallParser : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val arguments = parseZeroOrMore(
-            parseElement = { tokens -> parseArgument(tokens) },
+            parseElement = { tokens -> ::parseArgument.parse(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL, ",") },
             isEnd = { tokens.isNext(TokenType.SYMBOL, ")") },
             tokens = tokens
@@ -314,10 +314,10 @@ private object FunctionCallParser : OperationParser {
         tokens.skip(TokenType.SYMBOL, ")")
         val positionalArguments = arguments
             .filterIsInstance<ParsedArgument.Positional>()
-            .map({ parsedArgument -> parsedArgument.expression })
+            .map(ParsedArgument.Positional::expression)
         val namedArguments = arguments
             .filterIsInstance<ParsedArgument.Named>()
-            .associate({ parsedArgument -> parsedArgument.name to parsedArgument.expression })
+            .map(ParsedArgument.Named::node)
         return CallNode(
             receiver = left,
             positionalArguments = positionalArguments,
@@ -326,25 +326,29 @@ private object FunctionCallParser : OperationParser {
         )
     }
 
-    private sealed class ParsedArgument {
-        class Positional(val expression: ExpressionNode): ParsedArgument()
-        class Named(val name: String, val expression: ExpressionNode): ParsedArgument()
-    }
-
-    private fun parseArgument(tokens: TokenIterator<TokenType>): ParsedArgument {
-        if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL, "=", skip = 1)) {
-            val name = parseIdentifier(tokens)
-            tokens.skip(TokenType.SYMBOL, "=")
-            val expression = parseExpression(tokens)
-            return ParsedArgument.Named(name, expression)
-        } else {
-            val expression = parseExpression(tokens)
-            return ParsedArgument.Positional(expression)
-        }
-    }
-
     override val precedence: Int
         get() = 14
+}
+
+private sealed class ParsedArgument {
+    class Positional(val expression: ExpressionNode): ParsedArgument()
+    class Named(val node: CallNamedArgumentNode): ParsedArgument()
+}
+
+private fun parseArgument(source: Source, tokens: TokenIterator<TokenType>): ParsedArgument {
+    if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL, "=", skip = 1)) {
+        val name = parseIdentifier(tokens)
+        tokens.skip(TokenType.SYMBOL, "=")
+        val expression = parseExpression(tokens)
+        return ParsedArgument.Named(CallNamedArgumentNode(
+            name = name,
+            expression = expression,
+            source = source
+        ))
+    } else {
+        val expression = parseExpression(tokens)
+        return ParsedArgument.Positional(expression)
+    }
 }
 
 private object FieldAccessParser : OperationParser {

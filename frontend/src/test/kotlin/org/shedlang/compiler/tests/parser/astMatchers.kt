@@ -3,7 +3,7 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.isMap
+import org.shedlang.compiler.tests.isSequence
 
 inline internal fun <reified T: ExpressionNode> isReturn(
     expression: Matcher<T>
@@ -64,7 +64,7 @@ internal fun isBinaryOperation(
 internal fun isCall(
     receiver: Matcher<ExpressionNode>,
     positionalArguments: Matcher<List<ExpressionNode>>,
-    namedArguments: Matcher<Map<String, ExpressionNode>> = isMap()
+    namedArguments: Matcher<List<CallNamedArgumentNode>> = isSequence()
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(CallNode::receiver, receiver),
@@ -72,6 +72,14 @@ internal fun isCall(
         has(CallNode::namedArguments, namedArguments)
     ))
 }
+
+internal fun isCallNamedArgument(
+    name: Matcher<String>,
+    expression: Matcher<ExpressionNode>
+) = allOf(
+    has(CallNamedArgumentNode::name, name),
+    has(CallNamedArgumentNode::expression, expression)
+)
 
 internal fun isFieldAccess(
     receiver: Matcher<ExpressionNode>,

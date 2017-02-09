@@ -312,16 +312,26 @@ data class BinaryOperationNode(
 data class CallNode(
     val receiver: ExpressionNode,
     val positionalArguments: List<ExpressionNode>,
-    val namedArguments: Map<String, ExpressionNode>,
+    val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(receiver) + positionalArguments + namedArguments.values
+        get() = listOf(receiver) + positionalArguments + namedArguments
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class CallNamedArgumentNode(
+    val name: String,
+    val expression: ExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val children: List<Node>
+        get() = listOf(expression)
 }
 
 data class FieldAccessNode(

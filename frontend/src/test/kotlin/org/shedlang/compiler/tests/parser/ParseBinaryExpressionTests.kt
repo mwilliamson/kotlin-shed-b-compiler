@@ -1,13 +1,11 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.parser.parseExpression
-import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.literalInt
 
 class ParseBinaryExpressionTests {
     @Test
@@ -91,7 +89,12 @@ class ParseBinaryExpressionTests {
         assertThat(node, isCall(
             receiver = isVariableReference("x"),
             positionalArguments = isSequence(),
-            namedArguments = isMap("y" to isVariableReference("z"))
+            namedArguments = isSequence(
+                isCallNamedArgument(
+                    name = equalTo("y"),
+                    expression = isVariableReference("z")
+                )
+            )
         ))
     }
 
