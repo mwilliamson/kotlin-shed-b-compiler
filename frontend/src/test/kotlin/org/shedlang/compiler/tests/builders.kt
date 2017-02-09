@@ -1,6 +1,8 @@
 package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.typechecker.ShapeType
+import org.shedlang.compiler.typechecker.Type
 
 fun anySource(): Source {
     return StringSource(filename = "<string>", contents = "", characterIndex = 0)
@@ -55,6 +57,15 @@ fun functionCall(
     source = anySource()
 )
 
+fun fieldAccess(
+    receiver: ExpressionNode,
+    fieldName: String
+) = FieldAccessNode(
+    receiver = receiver,
+    fieldName = fieldName,
+    source = anySource()
+)
+
 fun function(
     name: String = "f",
     arguments: List<ArgumentNode> = listOf(),
@@ -104,3 +115,9 @@ fun module(
 )
 
 fun typeReference(name: String) = TypeReferenceNode(name, anySource())
+
+
+fun shapeType(name: String, fields: Map<String, Type>) = ShapeType(
+    name = name,
+    fields = fields
+)

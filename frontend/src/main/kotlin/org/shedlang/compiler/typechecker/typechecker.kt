@@ -262,7 +262,14 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         override fun visit(node: FieldAccessNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            val receiverType = inferType(node.receiver, context)
+            if (receiverType is ShapeType) {
+                // TODO: handle missing field
+                return receiverType.fields[node.fieldName]!!
+            } else {
+                // TODO
+                throw CompilerError("TODO", source = node.source)
+            }
         }
     })
 }
