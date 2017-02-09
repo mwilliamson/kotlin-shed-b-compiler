@@ -88,12 +88,16 @@ class ReturnOutsideOfFunctionError(source: Source)
     : TypeCheckError("Cannot return outside of a function", source)
 
 internal fun typeCheck(module: ModuleNode, context: TypeContext) {
-    val declaredTypes = module.body.associateBy(
-        ModuleStatementNode::nodeId,
-        { statement -> inferType(statement, context) }
-    )
+    val (typeDeclarations, otherStatements) = module.body
+        .partition({ statement -> statement is TypeDeclarationNode })
 
-    context.addTypes(declaredTypes)
+
+    for (statements in listOf(typeDeclarations, otherStatements)) {
+        context.addTypes(statements.associateBy(
+            ModuleStatementNode::nodeId,
+            { statement -> inferType(statement, context) }
+        ))
+    }
 
     for (statement in module.body) {
         typeCheck(statement, context)

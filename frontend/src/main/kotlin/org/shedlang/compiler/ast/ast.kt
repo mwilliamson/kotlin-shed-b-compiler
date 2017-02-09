@@ -10,6 +10,8 @@ interface VariableBindingNode: Node {
     val name: String
 }
 
+interface TypeDeclarationNode: VariableBindingNode
+
 interface ReferenceNode: Node {
     val name: String
 }
@@ -100,7 +102,7 @@ data class ShapeNode(
     val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode, ModuleStatementNode {
+): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
         get() = fields
 

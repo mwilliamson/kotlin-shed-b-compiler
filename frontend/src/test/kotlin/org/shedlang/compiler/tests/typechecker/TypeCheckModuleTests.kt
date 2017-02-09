@@ -45,4 +45,20 @@ class TypeCheckModuleTests {
             )
         ))
     }
+
+    @Test
+    fun functionsCanUseShapesBeforeSyntacticDeclaration() {
+        val shapeReference = typeReference("X")
+        val shape = shape(name = "X")
+        val node = module(body = listOf(
+            function(returnType = shapeReference),
+            shape
+        ))
+
+        typeCheck(node, typeContext(
+            references = mapOf(
+                shapeReference to shape
+            )
+        ))
+    }
 }
