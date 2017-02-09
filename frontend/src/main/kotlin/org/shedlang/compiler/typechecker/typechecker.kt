@@ -276,8 +276,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     return fieldType
                 }
             } else {
-                // TODO
-                throw CompilerError("TODO", source = node.source)
+                throw NoSuchFieldError(
+                    fieldName = node.fieldName,
+                    source = node.source
+                )
             }
         }
     })

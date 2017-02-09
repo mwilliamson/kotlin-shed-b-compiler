@@ -11,6 +11,7 @@ import org.shedlang.compiler.tests.shapeType
 import org.shedlang.compiler.tests.variableReference
 import org.shedlang.compiler.typechecker.IntType
 import org.shedlang.compiler.typechecker.NoSuchFieldError
+import org.shedlang.compiler.typechecker.UnitType
 import org.shedlang.compiler.typechecker.inferType
 
 class TypeCheckFieldAccessTests {
@@ -31,6 +32,20 @@ class TypeCheckFieldAccessTests {
         val receiver = variableReference("x")
         val node = fieldAccess(receiver = receiver, fieldName = "y")
         val shapeType = shapeType(name = "X")
+
+        val typeContext = typeContext(referenceTypes = mapOf(receiver to shapeType))
+
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(has(NoSuchFieldError::fieldName, equalTo("y")))
+        )
+    }
+
+    @Test
+    fun whenReceiverIsNotShapeThenErrorIsThrown() {
+        val receiver = variableReference("x")
+        val node = fieldAccess(receiver = receiver, fieldName = "y")
+        val shapeType = UnitType
 
         val typeContext = typeContext(referenceTypes = mapOf(receiver to shapeType))
 
