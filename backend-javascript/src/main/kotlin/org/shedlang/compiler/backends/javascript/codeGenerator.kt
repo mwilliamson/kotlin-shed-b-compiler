@@ -86,11 +86,20 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: FunctionCallNode): JavascriptExpressionNode {
-            return JavascriptFunctionCallNode(
-                generateCode(node.function),
-                node.positionalArguments.map(::generateCode),
-                source = NodeSource(node)
-            )
+            if (node.namedArguments.isEmpty()) {
+                return JavascriptFunctionCallNode(
+                    generateCode(node.function),
+                    node.positionalArguments.map(::generateCode),
+                    source = NodeSource(node)
+                )
+            } else {
+                return JavascriptObjectLiteralNode(
+                    node.namedArguments.entries.associate({ argument ->
+                        argument.key to generateCode(argument.value)
+                    }),
+                    source = NodeSource(node)
+                )
+            }
         }
 
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {

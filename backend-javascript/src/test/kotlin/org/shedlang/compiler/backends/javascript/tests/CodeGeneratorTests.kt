@@ -178,6 +178,22 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun shapeCallGeneratesObject() {
+        val shed = functionCall(
+            variableReference("X"),
+            namedArguments = mapOf("a" to literalBool(true))
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptObject(
+            properties = isMap(
+                "a" to isJavascriptBooleanLiteral(true)
+            )
+        ))
+    }
+
+    @Test
     fun fieldAccessGeneratesPropertyAccess() {
         val shed = fieldAccess(variableReference("x"), "y")
 
@@ -250,4 +266,10 @@ class CodeGeneratorTests {
         has(JavascriptPropertyAccessNode::receiver, receiver),
         has(JavascriptPropertyAccessNode::propertyName, propertyName)
     ))
+
+    private fun isJavascriptObject(
+        properties: Matcher<Map<String, JavascriptExpressionNode>>
+    ): Matcher<JavascriptExpressionNode> = cast(
+        has(JavascriptObjectLiteralNode::properties, properties)
+    )
 }
