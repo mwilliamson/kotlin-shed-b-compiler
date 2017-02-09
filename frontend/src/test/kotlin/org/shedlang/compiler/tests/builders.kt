@@ -50,13 +50,20 @@ fun binaryOperation(
 fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
-    namedArguments: Map<String, ExpressionNode> = mapOf()
+    namedArguments: List<CallNamedArgumentNode> = listOf()
 ) = CallNode(
     receiver = receiver,
     positionalArguments = positionalArguments,
-    namedArguments = namedArguments.map({ argument ->
-        CallNamedArgumentNode(argument.key, argument.value, source = anySource())
-    }),
+    namedArguments = namedArguments,
+    source = anySource()
+)
+
+fun callNamedArgument(
+    name: String,
+    expression: ExpressionNode
+) = CallNamedArgumentNode(
+    name = name,
+    expression = expression,
     source = anySource()
 )
 

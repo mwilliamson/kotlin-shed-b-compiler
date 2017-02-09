@@ -136,7 +136,7 @@ class TypeCheckFunctionCallTests {
         val shapeReference = variableReference("X")
         val node = call(
             receiver = shapeReference,
-            namedArguments = mapOf("a" to literalInt())
+            namedArguments = listOf(callNamedArgument("a", literalInt()))
         )
 
         val shapeType = shapeType(name = "X", fields = mapOf("a" to BoolType))
@@ -153,7 +153,7 @@ class TypeCheckFunctionCallTests {
         val shapeReference = variableReference("X")
         val node = call(
             receiver = shapeReference,
-            namedArguments = mapOf("a" to literalInt())
+            namedArguments = listOf(callNamedArgument("a", literalInt()))
         )
 
         val shapeType = shapeType(name = "X")
@@ -162,6 +162,26 @@ class TypeCheckFunctionCallTests {
         assertThat(
             { inferType(node, typeContext) },
             throws(has(ExtraArgumentError::argumentName, equalTo("a")))
+        )
+    }
+
+    @Test
+    fun errorWhenSameNamedArgumentIsPassedMultipleTimes() {
+        val shapeReference = variableReference("X")
+        val node = call(
+            receiver = shapeReference,
+            namedArguments = listOf(
+                callNamedArgument("a", literalInt()),
+                callNamedArgument("a", literalInt())
+            )
+        )
+
+        val shapeType = shapeType(name = "X", fields = mapOf("a" to IntType))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(has(ArgumentAlreadyPassedError::argumentName, equalTo("a")))
         )
     }
 }

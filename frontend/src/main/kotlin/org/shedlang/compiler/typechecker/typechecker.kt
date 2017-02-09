@@ -86,6 +86,8 @@ class MissingArgumentError(val argumentName: String, source: Source)
     : TypeCheckError("Call is missing argument: $argumentName", source)
 class ExtraArgumentError(val argumentName: String, source: Source)
     : TypeCheckError("Call has extra argument: $argumentName", source)
+class ArgumentAlreadyPassedError(val argumentName: String, source: Source)
+    : TypeCheckError("Argument has already been passed: $argumentName", source)
 class PositionalArgumentPassedToShapeConstructorError(source: Source)
     : TypeCheckError("Positional arguments cannot be passed to shape constructors", source)
 class ReturnOutsideOfFunctionError(source: Source)
@@ -244,6 +246,13 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
         override fun visit(node: CallNode): Type {
             val receiverType = inferType(node.receiver, context)
+
+            for ((name, arguments) in node.namedArguments.groupBy(CallNamedArgumentNode::name)) {
+                if (arguments.size > 1) {
+                    throw ArgumentAlreadyPassedError(name, source = arguments[1].source)
+                }
+            }
+
             if (receiverType is FunctionType) {
                 node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
                 if (receiverType.positionalArguments.size != node.positionalArguments.size) {
