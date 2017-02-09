@@ -117,7 +117,7 @@ fun module(
 fun typeReference(name: String) = TypeReferenceNode(name, anySource())
 
 
-fun shapeType(name: String, fields: Map<String, Type>) = ShapeType(
+fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = ShapeType(
     name = name,
     fields = fields
 )

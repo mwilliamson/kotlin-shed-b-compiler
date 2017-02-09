@@ -86,6 +86,8 @@ class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: So
     : TypeCheckError("Expected $expected arguments, but got $actual", source)
 class ReturnOutsideOfFunctionError(source: Source)
     : TypeCheckError("Cannot return outside of a function", source)
+class NoSuchFieldError(val fieldName: String, source: Source)
+    : TypeCheckError("No such field: " + fieldName, source)
 
 internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     val (typeDeclarations, otherStatements) = module.body
@@ -264,8 +266,15 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         override fun visit(node: FieldAccessNode): Type {
             val receiverType = inferType(node.receiver, context)
             if (receiverType is ShapeType) {
-                // TODO: handle missing field
-                return receiverType.fields[node.fieldName]!!
+                val fieldType = receiverType.fields[node.fieldName]
+                if (fieldType == null) {
+                    throw NoSuchFieldError(
+                        fieldName = node.fieldName,
+                        source = node.source
+                    )
+                } else {
+                    return fieldType
+                }
             } else {
                 // TODO
                 throw CompilerError("TODO", source = node.source)
