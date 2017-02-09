@@ -91,13 +91,16 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     val (typeDeclarations, otherStatements) = module.body
         .partition({ statement -> statement is TypeDeclarationNode })
 
-
-    for (statements in listOf(typeDeclarations, otherStatements)) {
-        context.addTypes(statements.associateBy(
-            ModuleStatementNode::nodeId,
-            { statement -> inferType(statement, context) }
+    for (typeDeclaration in typeDeclarations) {
+        context.addTypes(mapOf(
+            typeDeclaration.nodeId to inferType(typeDeclaration, context)
         ))
     }
+
+    context.addTypes(otherStatements.associateBy(
+        ModuleStatementNode::nodeId,
+        { statement -> inferType(statement, context) }
+    ))
 
     for (statement in module.body) {
         typeCheck(statement, context)

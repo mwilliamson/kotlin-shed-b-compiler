@@ -61,4 +61,21 @@ class TypeCheckModuleTests {
             )
         ))
     }
+
+    @Test
+    fun shapeCanReferencePreviouslyDeclaredShape() {
+        val firstShapeReference = typeReference("X")
+        val firstShape = shape(name = "X")
+        val secondShape = shape(name = "Y", fields = listOf(shapeField("x", firstShapeReference)))
+        val node = module(body = listOf(
+            firstShape,
+            secondShape
+        ))
+
+        typeCheck(node, typeContext(
+            references = mapOf(
+                firstShapeReference to firstShape
+            )
+        ))
+    }
 }
