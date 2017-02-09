@@ -12,29 +12,34 @@ internal fun serialise(node: JavascriptModuleNode): String {
         .joinToString("")
 }
 
+private fun line(text: String, indentation: Int) = indent(text, indentation) + "\n"
+private fun indent(text: String, indentation: Int) = " ".repeat(indentation * INDENTATION_WIDTH) + text
+
 internal fun serialise(node: JavascriptStatementNode, indentation: Int): String {
-    fun line(text: String) = " ".repeat(indentation * INDENTATION_WIDTH) + text + "\n"
+    fun line(text: String) = line(text, indentation)
 
     fun simpleStatement(text: String) = line(text + ";")
 
     return node.accept(object : JavascriptStatementNode.Visitor<String> {
         override fun visit(node: JavascriptReturnNode): String {
-            return simpleStatement("return " + serialise(node.expression))
+            val expression = serialise(node.expression, indentation = indentation)
+            return simpleStatement("return " + expression)
         }
 
         override fun visit(node: JavascriptIfStatementNode): String {
-            val condition = line("if (" + serialise(node.condition) + ") {")
+            val condition = serialise(node.condition, indentation = indentation)
+            val ifLine = line("if (" + condition + ") {")
             val trueBranch = serialiseBlock(node.trueBranch, indentation)
             val falseBranch = if (node.falseBranch.isEmpty()) {
                 line("}")
             } else {
                 line("} else {") + serialiseBlock(node.falseBranch, indentation) + line("}")
             }
-            return condition + trueBranch + falseBranch
+            return ifLine + trueBranch + falseBranch
         }
 
         override fun visit(node: JavascriptExpressionStatementNode): String {
-            return simpleStatement(serialise(node.expression))
+            return simpleStatement(serialise(node.expression, indentation = 1))
         }
 
         override fun visit(node: JavascriptFunctionNode): String {
@@ -48,7 +53,8 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         }
 
         override fun visit(node: JavascriptConstNode): String {
-            return simpleStatement("const ${node.name} = ${serialise(node.expression)}")
+            val expression = serialise(node.expression, indentation = indentation)
+            return simpleStatement("const ${node.name} = $expression")
         }
     })
 }
@@ -60,7 +66,7 @@ private fun serialiseBlock(
     return statements.map({ statement -> serialise(statement, indentation + 1) }).joinToString("")
 }
 
-internal fun serialise(node: JavascriptExpressionNode) : String {
+internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : String {
     return node.accept(object : JavascriptExpressionNode.Visitor<String> {
         override fun visit(node: JavascriptBooleanLiteralNode): String {
             return if (node.value) "true" else "false"
@@ -79,38 +85,56 @@ internal fun serialise(node: JavascriptExpressionNode) : String {
         }
 
         override fun visit(node: JavascriptBinaryOperationNode): String {
-            return serialiseSubExpression(node, node.left, associative = true) +
+            return serialiseSubExpression(node, node.left, associative = true, indentation = indentation) +
                 " " +
                 serialise(node.operator) +
                 " " +
-                serialiseSubExpression(node, node.right, associative = false)
+                serialiseSubExpression(node, node.right, associative = false, indentation = indentation)
         }
 
         override fun visit(node: JavascriptFunctionCallNode): String {
-            return serialiseSubExpression(node, node.function, associative = true) +
-                "(" +
-                node.arguments.map(::serialise).joinToString(", ") +
-                ")"
+            val function = serialiseSubExpression(node, node.function, associative = true, indentation = indentation)
+            val arguments = node.arguments
+                .map({ argument -> serialise(argument, indentation = indentation) })
+                .joinToString(", ")
+            return "${function}(${arguments})"
         }
 
         override fun visit(node: JavascriptPropertyAccessNode): String {
-            val receiver = serialiseSubExpression(node, node.receiver, associative = true)
+            val receiver = serialiseSubExpression(node, node.receiver, associative = true, indentation = indentation)
             return receiver + "." + node.propertyName
+        }
+
+        override fun visit(node: JavascriptObjectLiteralNode): String {
+            if (node.properties.isEmpty()) {
+                return "{}"
+            } else {
+                val open = line("{", indentation = indentation)
+                val properties = node.properties.entries.mapIndexed(fun(index, property): String {
+                    val value = serialise(property.value, indentation = indentation + 1)
+                    val comma = if (index == node.properties.size - 1) "" else ","
+                    return line(
+                        "${property.key}: ${value}${comma}",
+                        indentation = indentation + 1
+                    )
+                }).joinToString("")
+                val close = indent("}", indentation = indentation)
+                return open + properties + close
+            }
         }
     })
 }
 
-val subExpressionSerialiser = SubExpressionSerialiser<JavascriptExpressionNode>(
-    serialise = ::serialise,
-    precedence = ::precedence
-)
-
 private fun serialiseSubExpression(
     parentNode: JavascriptExpressionNode,
     node: JavascriptExpressionNode,
-    associative: Boolean
+    associative: Boolean,
+    indentation: Int
 ): String {
-    return subExpressionSerialiser.serialiseSubExpression(
+    return SubExpressionSerialiser<JavascriptExpressionNode>(
+        serialise = { expression -> serialise(expression, indentation = indentation)},
+        precedence = ::precedence
+    ).serialiseSubExpression(
         parentNode = parentNode,
         node = node,
         associative = associative
@@ -126,6 +150,10 @@ private fun serialise(operator: JavascriptOperator) = when(operator) {
 
 private fun precedence(node: JavascriptExpressionNode): Int {
     return node.accept(object : JavascriptExpressionNode.Visitor<Int> {
+        override fun visit(node: JavascriptObjectLiteralNode): Int {
+            return 21
+        }
+
         override fun visit(node: JavascriptBooleanLiteralNode): Int {
             return 21
         }

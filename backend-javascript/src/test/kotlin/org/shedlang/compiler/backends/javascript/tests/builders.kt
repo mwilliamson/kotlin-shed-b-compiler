@@ -73,6 +73,13 @@ fun jsPropertyAccess(
     source = anySource()
 )
 
+fun jsObject(
+    properties: Map<String, JavascriptExpressionNode>
+) = JavascriptObjectLiteralNode(
+    properties = properties,
+    source = anySource()
+)
+
 fun jsFunction(
     name: String,
     arguments: List<String> = listOf(),

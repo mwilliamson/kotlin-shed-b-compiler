@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionNode
 import org.shedlang.compiler.backends.javascript.ast.JavascriptOperator
 import org.shedlang.compiler.backends.javascript.ast.JavascriptStatementNode
 import org.shedlang.compiler.backends.javascript.serialise
@@ -318,14 +319,52 @@ class SerialiserTests {
     @Test
     fun propertyAccessSerialisation() {
         val node = jsPropertyAccess(
-            receiver= jsVariableReference("x"),
+            receiver = jsVariableReference("x"),
             propertyName = "y"
         )
         val output = serialise(node)
         assertThat(output, equalTo("x.y"))
     }
 
+    @Test
+    fun emptyObjectLiteralSerialisation() {
+        val node = jsObject(mapOf())
+        val output = serialise(node)
+        assertThat(output, equalTo("{}"))
+    }
+
+    @Test
+    fun singlePropertyObjectLiteralSerialisation() {
+        val node = jsObject(mapOf("x" to jsLiteralBool(true)))
+        val output = indentedSerialise(node)
+        assertThat(output, equalTo(listOf(
+            "    {",
+            "        x: true",
+            "    }"
+        ).joinToString("\n")))
+    }
+
+    @Test
+    fun multiplePropertyObjectLiteralSerialisation() {
+        val node = jsObject(mapOf("x" to jsLiteralBool(true), "y" to jsLiteralBool(false)))
+        val output = indentedSerialise(node)
+        assertThat(output, equalTo(listOf(
+            "    {",
+            "        x: true,",
+            "        y: false",
+            "    }"
+        ).joinToString("\n")))
+    }
+
     private fun indentedSerialise(node: JavascriptStatementNode): String {
         return serialise(node, indentation = 1)
+    }
+
+    private fun indentedSerialise(node: JavascriptExpressionNode): String {
+        return serialise(node, indentation = 1)
+    }
+
+    private fun serialise(node: JavascriptExpressionNode): String {
+        return serialise(node, indentation = 0)
     }
 }
