@@ -61,15 +61,15 @@ internal fun isBinaryOperation(
     ))
 }
 
-internal fun isFunctionCall(
-    left: Matcher<ExpressionNode>,
+internal fun isCall(
+    receiver: Matcher<ExpressionNode>,
     positionalArguments: Matcher<List<ExpressionNode>>,
     namedArguments: Matcher<Map<String, ExpressionNode>> = isMap()
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
-        has(FunctionCallNode::function, left),
-        has(FunctionCallNode::positionalArguments, positionalArguments),
-        has(FunctionCallNode::namedArguments, namedArguments)
+        has(CallNode::receiver, receiver),
+        has(CallNode::positionalArguments, positionalArguments),
+        has(CallNode::namedArguments, namedArguments)
     ))
 }
 

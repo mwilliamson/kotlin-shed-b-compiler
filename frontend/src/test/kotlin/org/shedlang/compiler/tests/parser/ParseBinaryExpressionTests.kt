@@ -58,7 +58,7 @@ class ParseBinaryExpressionTests {
     fun canParseFunctionCallWithNoArguments() {
         val source = "x()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isFunctionCall(
+        assertThat(node, isCall(
             isVariableReference("x"),
             isSequence()
         ))
@@ -68,7 +68,7 @@ class ParseBinaryExpressionTests {
     fun canParseFunctionCallWithOneArgument() {
         val source = "x(y)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isFunctionCall(
+        assertThat(node, isCall(
             isVariableReference("x"),
             isSequence(isVariableReference("y"))
         ))
@@ -78,7 +78,7 @@ class ParseBinaryExpressionTests {
     fun canParseFunctionCallWithManyArguments() {
         val source = "x(y, z)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isFunctionCall(
+        assertThat(node, isCall(
             isVariableReference("x"),
             isSequence(isVariableReference("y"), isVariableReference("z"))
         ))
@@ -88,8 +88,8 @@ class ParseBinaryExpressionTests {
     fun canParseFunctionCallWithNamedArgument() {
         val source = "x(y=z)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isFunctionCall(
-            left = isVariableReference("x"),
+        assertThat(node, isCall(
+            receiver = isVariableReference("x"),
             positionalArguments = isSequence(),
             namedArguments = isMap("y" to isVariableReference("z"))
         ))

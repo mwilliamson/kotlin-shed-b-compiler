@@ -235,7 +235,7 @@ interface ExpressionNode : Node {
         fun visit(node: StringLiteralNode): T
         fun visit(node: VariableReferenceNode): T
         fun visit(node: BinaryOperationNode): T
-        fun visit(node: FunctionCallNode): T
+        fun visit(node: CallNode): T
         fun visit(node: FieldAccessNode): T
     }
 
@@ -309,15 +309,15 @@ data class BinaryOperationNode(
     }
 }
 
-data class FunctionCallNode(
-    val function: ExpressionNode,
+data class CallNode(
+    val receiver: ExpressionNode,
     val positionalArguments: List<ExpressionNode>,
     val namedArguments: Map<String, ExpressionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(function) + positionalArguments + namedArguments.values
+        get() = listOf(receiver) + positionalArguments + namedArguments.values
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

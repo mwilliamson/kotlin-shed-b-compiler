@@ -83,10 +83,10 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
             )
         }
 
-        override fun visit(node: FunctionCallNode): JavascriptExpressionNode {
+        override fun visit(node: CallNode): JavascriptExpressionNode {
             if (node.namedArguments.isEmpty()) {
                 return JavascriptFunctionCallNode(
-                    generateCode(node.function),
+                    generateCode(node.receiver),
                     node.positionalArguments.map(::generateCode),
                     source = NodeSource(node)
                 )

@@ -13,7 +13,7 @@ class TypeCheckFunctionCallTests {
     @Test
     fun functionCallTypeIsReturnTypeOfFunction() {
         val functionReference = variableReference("f")
-        val node = functionCall(function = functionReference)
+        val node = call(receiver = functionReference)
 
         val typeContext = typeContext(referenceTypes = mapOf(functionReference to positionalFunctionType(listOf(), IntType)))
         val type = inferType(node, typeContext)
@@ -24,8 +24,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun whenFunctionExpressionIsNotFunctionTypeThenCallDoesNotTypeCheck() {
         val functionReference = variableReference("f")
-        val node = functionCall(
-            function = functionReference,
+        val node = call(
+            receiver = functionReference,
             positionalArguments = listOf(literalInt(1), literalBool(true))
         )
         assertThat(
@@ -37,8 +37,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenArgumentTypesDoNotMatch() {
         val functionReference = variableReference("f")
-        val node = functionCall(
-            function = functionReference,
+        val node = call(
+            receiver = functionReference,
             positionalArguments = listOf(literalInt(1))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -53,8 +53,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenExtraArgumentIsPassed() {
         val functionReference = variableReference("f")
-        val node = functionCall(
-            function = functionReference,
+        val node = call(
+            receiver = functionReference,
             positionalArguments = listOf(literalInt(1))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -72,8 +72,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenArgumentIsMissing() {
         val functionReference = variableReference("f")
-        val node = functionCall(
-            function = functionReference,
+        val node = call(
+            receiver = functionReference,
             positionalArguments = listOf()
         )
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -91,7 +91,7 @@ class TypeCheckFunctionCallTests {
     @Test
     fun shapeCallTypeIsShapeType() {
         val shapeReference = variableReference("X")
-        val node = functionCall(function = shapeReference)
+        val node = call(receiver = shapeReference)
 
         val shapeType = shapeType(name = "X")
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
@@ -103,8 +103,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenShapeCallIsPassedPositionalArgument() {
         val shapeReference = variableReference("X")
-        val node = functionCall(
-            function = shapeReference,
+        val node = call(
+            receiver = shapeReference,
             positionalArguments = listOf(literalBool())
         )
 
@@ -120,7 +120,7 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenShapeCallIsMissingField() {
         val shapeReference = variableReference("X")
-        val node = functionCall(function = shapeReference)
+        val node = call(receiver = shapeReference)
 
         val shapeType = shapeType(name = "X", fields = mapOf("a" to BoolType))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
@@ -134,8 +134,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenShapeCallIsPassedWrongTypeForField() {
         val shapeReference = variableReference("X")
-        val node = functionCall(
-            function = shapeReference,
+        val node = call(
+            receiver = shapeReference,
             namedArguments = mapOf("a" to literalInt())
         )
 
@@ -151,8 +151,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun errorWhenShapeCallHasExtraField() {
         val shapeReference = variableReference("X")
-        val node = functionCall(
-            function = shapeReference,
+        val node = call(
+            receiver = shapeReference,
             namedArguments = mapOf("a" to literalInt())
         )
 

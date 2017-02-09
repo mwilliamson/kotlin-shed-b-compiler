@@ -219,7 +219,7 @@ class CodeGeneratorTests {
     fun functionCallGeneratesFunctionCall() {
         val declaration = argument("f")
         val function = variableReference("f")
-        val shed = functionCall(function, listOf(literalInt(42)))
+        val shed = call(function, listOf(literalInt(42)))
 
         val node = generateCode(shed, context(mapOf(function to declaration)))
 

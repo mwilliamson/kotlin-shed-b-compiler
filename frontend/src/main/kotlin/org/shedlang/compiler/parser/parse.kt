@@ -318,8 +318,8 @@ private object FunctionCallParser : OperationParser {
         val namedArguments = arguments
             .filterIsInstance<ParsedArgument.Named>()
             .associate({ parsedArgument -> parsedArgument.name to parsedArgument.expression })
-        return FunctionCallNode(
-            function = left,
+        return CallNode(
+            receiver = left,
             positionalArguments = positionalArguments,
             namedArguments = namedArguments,
             source = left.source

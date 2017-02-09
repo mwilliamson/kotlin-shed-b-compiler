@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.functionCall
+import org.shedlang.compiler.tests.call
 import org.shedlang.compiler.tests.literalInt
 import org.shedlang.compiler.tests.valStatement
 import org.shedlang.compiler.tests.variableReference
@@ -16,7 +16,7 @@ class TypeCheckValTests {
     @Test
     fun expressionIsTypeChecked() {
         val functionReference = variableReference("f")
-        val node = valStatement(name = "x", expression = functionCall(functionReference))
+        val node = valStatement(name = "x", expression = call(functionReference))
         assertThat(
             { typeCheck(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))

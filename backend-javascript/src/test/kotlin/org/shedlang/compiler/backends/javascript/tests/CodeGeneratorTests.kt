@@ -167,7 +167,7 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val shed = functionCall(variableReference("f"), listOf(literalInt(42)))
+        val shed = call(variableReference("f"), listOf(literalInt(42)))
 
         val node = generateCode(shed)
 
@@ -179,7 +179,7 @@ class CodeGeneratorTests {
 
     @Test
     fun shapeCallGeneratesObject() {
-        val shed = functionCall(
+        val shed = call(
             variableReference("X"),
             namedArguments = mapOf("a" to literalBool(true))
         )

@@ -129,11 +129,11 @@ class ResolutionTests {
     fun functionsCanCallEachOtherRecursively() {
         val referenceToSecond = variableReference("g")
         val definitionOfFirst = function(name = "f", body = listOf(
-            expressionStatement(functionCall(referenceToSecond, listOf()))
+            expressionStatement(call(referenceToSecond, listOf()))
         ))
         val referenceToFirst = variableReference("f")
         val definitionOfSecond = function(name = "g", body = listOf(
-            expressionStatement(functionCall(referenceToFirst, listOf()))
+            expressionStatement(call(referenceToFirst, listOf()))
         ))
         val node = module(body = listOf(
             definitionOfFirst,

@@ -242,8 +242,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
         }
 
-        override fun visit(node: FunctionCallNode): Type {
-            val receiverType = inferType(node.function, context)
+        override fun visit(node: CallNode): Type {
+            val receiverType = inferType(node.receiver, context)
             if (receiverType is FunctionType) {
                 node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
                 if (receiverType.positionalArguments.size != node.positionalArguments.size) {
@@ -282,7 +282,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw UnexpectedTypeError(
                     expected = FunctionType(argumentTypes, mapOf(), AnyType),
                     actual = receiverType,
-                    source = node.function.source
+                    source = node.receiver.source
                 )
             }
         }

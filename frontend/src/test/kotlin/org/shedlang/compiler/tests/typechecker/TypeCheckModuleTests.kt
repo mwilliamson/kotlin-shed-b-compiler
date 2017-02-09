@@ -26,11 +26,11 @@ class TypeCheckModuleTests {
         val unit = typeReference("Unit")
         val referenceG = variableReference("g")
         val declarationF = function(name = "f", returnType = unit, body = listOf(
-            expressionStatement(functionCall(referenceG, listOf()))
+            expressionStatement(call(referenceG, listOf()))
         ))
         val referenceF = variableReference("f")
         val declarationG = function(name = "g", returnType = unit, body = listOf(
-            expressionStatement(functionCall(referenceF, listOf()))
+            expressionStatement(call(referenceF, listOf()))
         ))
         val node = module(body = listOf(
             declarationF,
