@@ -41,7 +41,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isJavascriptFunction(
+        assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))

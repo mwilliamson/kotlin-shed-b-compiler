@@ -5,18 +5,16 @@ import org.shedlang.compiler.backends.javascript.ast.*
 
 internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
     return JavascriptModuleNode(
-        node.body.map(::generateCode),
+        node.body.flatMap(::generateCode),
         source = NodeSource(node)
     )
 }
 
-internal fun generateCode(node: ModuleStatementNode): JavascriptStatementNode {
-    return node.accept(object : ModuleStatementNode.Visitor<JavascriptStatementNode> {
-        override fun visit(node: ShapeNode): JavascriptStatementNode {
-            throw UnsupportedOperationException("not implemented")
-        }
+internal fun generateCode(node: ModuleStatementNode): List<JavascriptStatementNode> {
+    return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
+        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf()
 
-        override fun visit(node: FunctionNode): JavascriptStatementNode = generateCode(node)
+        override fun visit(node: FunctionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
     })
 }
 
