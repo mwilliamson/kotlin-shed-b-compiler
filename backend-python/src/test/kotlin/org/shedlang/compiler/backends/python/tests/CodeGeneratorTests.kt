@@ -229,6 +229,20 @@ class CodeGeneratorTests {
         ))
     }
 
+    @Test
+    fun fieldAccessGeneratesAttributeAccess() {
+        val declaration = argument("x")
+        val receiver = variableReference("x")
+        val shed = fieldAccess(receiver, "y")
+
+        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+
+        assertThat(node, isPythonAttributeAccess(
+            receiver = isPythonVariableReference("x"),
+            attributeName = equalTo("y")
+        ))
+    }
+
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: FunctionNode) = generateCode(node, context())
     private fun generateCode(node: StatementNode) = generateCode(node, context())
@@ -302,5 +316,14 @@ class CodeGeneratorTests {
     = cast(allOf(
         has(PythonFunctionCallNode::function, function),
         has(PythonFunctionCallNode::arguments, arguments)
+    ))
+
+    private fun isPythonAttributeAccess(
+        receiver: Matcher<PythonExpressionNode>,
+        attributeName: Matcher<String>
+    ) : Matcher<PythonExpressionNode>
+        = cast(allOf(
+        has(PythonAttributeAccessNode::receiver, receiver),
+        has(PythonAttributeAccessNode::attributeName, attributeName)
     ))
 }

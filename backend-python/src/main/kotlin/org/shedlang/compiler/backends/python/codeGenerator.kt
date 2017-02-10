@@ -139,7 +139,11 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: FieldAccessNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonAttributeAccessNode(
+                generateCode(node.receiver, context),
+                node.fieldName,
+                source = NodeSource(node)
+            )
         }
     })
 }
