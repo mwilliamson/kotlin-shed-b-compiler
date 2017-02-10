@@ -346,6 +346,16 @@ class SerialiserTests {
         assertThat(output, equalTo("(f + g)()"))
     }
 
+    @Test
+    fun attributeAccessSerialisation() {
+        val node = pythonAttributeAccess(
+            receiver = pythonVariableReference("x"),
+            attributeName = "y"
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("x.y"))
+    }
+
     private fun indentedSerialise(node: PythonFunctionNode): String {
         return serialise(node, indentation = 1)
     }

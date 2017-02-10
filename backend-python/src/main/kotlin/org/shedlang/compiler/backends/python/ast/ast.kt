@@ -90,6 +90,7 @@ interface PythonExpressionNode : PythonNode {
         fun visit(node: PythonVariableReferenceNode): T
         fun visit(node: PythonBinaryOperationNode): T
         fun visit(node: PythonFunctionCallNode): T
+        fun visit(node: PythonAttributeAccessNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -152,6 +153,16 @@ enum class PythonOperator {
 data class PythonFunctionCallNode(
     val function: PythonExpressionNode,
     val arguments: List<PythonExpressionNode>,
+    override val source: Source
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PythonAttributeAccessNode(
+    val receiver: PythonExpressionNode,
+    val attributeName: String,
     override val source: Source
 ): PythonExpressionNode {
     override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {

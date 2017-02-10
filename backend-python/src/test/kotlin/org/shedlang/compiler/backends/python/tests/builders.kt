@@ -68,3 +68,12 @@ fun pythonFunctionCall(
     arguments = arguments,
     source = anySource()
 )
+
+fun pythonAttributeAccess(
+    receiver: PythonExpressionNode,
+    attributeName: String
+) = PythonAttributeAccessNode(
+    receiver = receiver,
+    attributeName = attributeName,
+    source = anySource()
+)
