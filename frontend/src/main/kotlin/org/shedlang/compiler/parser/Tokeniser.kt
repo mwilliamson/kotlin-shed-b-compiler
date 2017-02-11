@@ -9,6 +9,7 @@ private val keywords = setOf(
     "return",
     "shape",
     "true",
+    "union",
     "val"
 )
 
