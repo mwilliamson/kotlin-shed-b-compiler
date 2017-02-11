@@ -134,6 +134,9 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return PythonFunctionCallNode(
                 generateCode(node.receiver, context),
                 node.positionalArguments.map({ argument -> generateCode(argument, context) }),
+                node.namedArguments.associate({ argument ->
+                    argument.name to generateCode(argument.expression, context)
+                }),
                 source = NodeSource(node)
             )
         }

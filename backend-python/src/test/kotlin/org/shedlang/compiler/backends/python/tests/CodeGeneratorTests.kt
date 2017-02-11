@@ -219,13 +219,18 @@ class CodeGeneratorTests {
     fun functionCallGeneratesFunctionCall() {
         val declaration = argument("f")
         val function = variableReference("f")
-        val shed = call(function, listOf(literalInt(42)))
+        val shed = call(
+            function,
+            listOf(literalInt(42)),
+            listOf(callNamedArgument("x", literalBool(true)))
+        )
 
         val node = generateCode(shed, context(mapOf(function to declaration)))
 
         assertThat(node, isPythonFunctionCall(
             isPythonVariableReference("f"),
-            isSequence(isPythonIntegerLiteral(42))
+            isSequence(isPythonIntegerLiteral(42)),
+            isMap("x" to isPythonBooleanLiteral(true))
         ))
     }
 
@@ -311,11 +316,13 @@ class CodeGeneratorTests {
 
     private fun isPythonFunctionCall(
         function: Matcher<PythonExpressionNode>,
-        arguments: Matcher<List<PythonExpressionNode>>
+        arguments: Matcher<List<PythonExpressionNode>> = isSequence(),
+        keywordArguments: Matcher<Map<String, PythonExpressionNode>> = isMap()
     ) : Matcher<PythonExpressionNode>
     = cast(allOf(
         has(PythonFunctionCallNode::function, function),
-        has(PythonFunctionCallNode::arguments, arguments)
+        has(PythonFunctionCallNode::arguments, arguments),
+        has(PythonFunctionCallNode::keywordArguments, keywordArguments)
     ))
 
     private fun isPythonAttributeAccess(
