@@ -34,6 +34,37 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun shapeGeneratesClass() {
+        val shed = shape(
+            name = "X",
+            fields = listOf(
+                shapeField("a", typeReference("Int"))
+            )
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonClass(
+            name = equalTo("X"),
+            body = isSequence(
+                isPythonFunction(
+                    name = equalTo("__init__"),
+                    arguments = isSequence(equalTo("self"), equalTo("a")),
+                    body = isSequence(
+                        isPythonAssignment(
+                            target = isPythonAttributeAccess(
+                                receiver = isPythonVariableReference("self"),
+                                attributeName = equalTo("a")
+                            ),
+                            expression = isPythonVariableReference("a")
+                        )
+                    )
+                )
+            )
+        ))
+    }
+
+    @Test
     fun functionGeneratesFunction() {
         val shed = function(
             name = "f",
@@ -252,6 +283,7 @@ class CodeGeneratorTests {
     }
 
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
+    private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionNode) = generateCode(node, context())
     private fun generateCode(node: StatementNode) = generateCode(node, context())
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
@@ -264,6 +296,15 @@ class CodeGeneratorTests {
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)
         = cast(has(PythonModuleNode::body, body))
+
+    private fun isPythonClass(
+        name: Matcher<String>,
+        body: Matcher<List<PythonStatementNode>> = anything
+    ) : Matcher<PythonStatementNode>
+        = cast(allOf(
+        has(PythonClassNode::name, name),
+        has(PythonClassNode::body, body)
+    ))
 
     private fun isPythonFunction(
         name: Matcher<String>,

@@ -51,15 +51,37 @@ internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): Pyt
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): PythonStatementNode {
     return node.accept(object : ModuleStatementNode.Visitor<PythonStatementNode> {
-        override fun visit(node: ShapeNode): PythonStatementNode {
-            throw UnsupportedOperationException("not implemented")
-        }
-
+        override fun visit(node: ShapeNode): PythonStatementNode = generateCode(node, context)
         override fun visit(node: FunctionNode): PythonStatementNode = generateCode(node, context)
     })
 }
 
-internal fun generateCode(node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
+private fun generateCode(node: ShapeNode, context: CodeGenerationContext): PythonClassNode {
+    val init = PythonFunctionNode(
+        name = "__init__",
+        arguments = listOf("self") + node.fields.map({ field -> field.name }),
+        body = node.fields.map({ field ->
+            PythonAssignmentNode(
+                target = PythonAttributeAccessNode(
+                    receiver = PythonVariableReferenceNode("self", source = NodeSource(field)),
+                    attributeName = field.name,
+                    source = NodeSource(field)
+                ),
+                expression = PythonVariableReferenceNode(field.name, source = NodeSource(field)),
+                source = NodeSource(field)
+            )
+        }),
+        source = NodeSource(node)
+    )
+    return PythonClassNode(
+        // TODO: test renaming
+        name = context.name(node),
+        body = listOf(init),
+        source = NodeSource(node)
+    )
+}
+
+private fun generateCode(node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
     return PythonFunctionNode(
         // TODO: test renaming
         name = context.name(node),
