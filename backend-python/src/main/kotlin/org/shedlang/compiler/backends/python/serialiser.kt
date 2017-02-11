@@ -14,6 +14,12 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
     fun line(text: String) = " ".repeat(indentation * INDENTATION_WIDTH) + text + "\n"
 
     return node.accept(object : PythonStatementNode.Visitor<String> {
+        override fun visit(node: PythonClassNode): String {
+            val declaration = line("class ${node.name}(object):")
+            val body = serialiseBlock(node, node.body, indentation)
+            return declaration + body
+        }
+
         override fun visit(node: PythonFunctionNode): String {
             val signature = line("def " + node.name + "(" + node.arguments.joinToString(", ") + "):")
             val body = serialiseBlock(node, node.body, indentation)

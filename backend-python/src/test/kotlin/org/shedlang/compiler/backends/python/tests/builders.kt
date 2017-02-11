@@ -6,6 +6,15 @@ import org.shedlang.compiler.tests.anySource
 fun pythonModule(body: List<PythonStatementNode>)
     = PythonModuleNode(body = body, source = anySource())
 
+fun pythonClass(
+    name: String,
+    body: List<PythonStatementNode> = listOf()
+) = PythonClassNode(
+    name = name,
+    body = body,
+    source = anySource()
+)
+
 fun pythonFunction(
     name: String,
     arguments: List<String> = listOf(),

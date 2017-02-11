@@ -53,6 +53,32 @@ class SerialiserTests {
     }
 
     @Test
+    fun emptyClassSerialisation() {
+        assertThat(
+            indentedSerialise(pythonClass(name = "X")),
+            equalTo(listOf(
+                "    class X(object):",
+                "        pass",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun classBodyIsSerialised() {
+        assertThat(
+            indentedSerialise(pythonClass(name = "X", body = listOf(
+                pythonExpressionStatement(pythonLiteralBoolean(true))
+            ))),
+            equalTo(listOf(
+                "    class X(object):",
+                "        True",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun formalFunctionArgumentsAreSeparatedByCommas() {
         assertThat(
             indentedSerialise(
