@@ -1,6 +1,13 @@
 package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.*
+import java.nio.CharBuffer
+import java.util.regex.Pattern
+
+internal class UnrecognisedEscapeSequenceError(
+    val escapeSequence: String,
+    val source: Source
+) : Exception("Unrecognised escape sequence")
 
 internal fun parse(filename: String, input: String): ModuleNode {
     val tokenIterator = parserTokenise(filename, input)
@@ -367,12 +374,46 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
         TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, source)
         TokenType.KEYWORD_TRUE -> return BooleanLiteralNode(true, source)
         TokenType.KEYWORD_FALSE -> return BooleanLiteralNode(false, source)
+        TokenType.STRING -> return StringLiteralNode(
+            decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source),
+            source
+        )
         TokenType.SYMBOL_OPEN_PAREN -> {
             val expression = parseExpression(tokens)
             tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
             return expression
         }
         else -> return null
+    }
+}
+
+private fun decodeEscapeSequence(value: String, source: Source): String {
+    return decodeEscapeSequence(CharBuffer.wrap(value), source = source)
+}
+
+private val STRING_ESCAPE_PATTERN = Pattern.compile("\\\\(.)")
+
+private fun decodeEscapeSequence(value: CharBuffer, source: Source): String {
+    val matcher = STRING_ESCAPE_PATTERN.matcher(value)
+    val decoded = StringBuilder()
+    var lastIndex = 0
+    while (matcher.find()) {
+        decoded.append(value.subSequence(lastIndex, matcher.start()))
+        decoded.append(escapeSequence(matcher.group(1), source = source))
+        lastIndex = matcher.end()
+    }
+    decoded.append(value.subSequence(lastIndex, value.length))
+    return decoded.toString()
+}
+
+private fun escapeSequence(code: String, source: Source): Char {
+    when (code) {
+        "n" -> return '\n'
+        "r" -> return '\r'
+        "t" -> return '\t'
+        "\"" -> return '"'
+        "\\" -> return '\\'
+        else -> throw UnrecognisedEscapeSequenceError("\\" + code, source = source)
     }
 }
 
