@@ -313,10 +313,13 @@ class SerialiserTests {
             arguments = listOf(
                 pythonVariableReference("x"),
                 pythonVariableReference("y")
+            ),
+            keywordArguments = mapOf(
+                "z" to pythonLiteralInt(1)
             )
         )
         val output = serialise(node)
-        assertThat(output, equalTo("f(x, y)"))
+        assertThat(output, equalTo("f(x, y, z=1)"))
     }
 
     @Test

@@ -88,10 +88,11 @@ internal fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonFunctionCallNode): String {
-            return serialiseSubExpression(node, node.function, associative = true) +
-                "(" +
-                node.arguments.map(::serialise).joinToString(", ") +
-                ")"
+            val receiver = serialiseSubExpression(node, node.function, associative = true)
+            val positionals = node.arguments.map(::serialise)
+            val keywords = node.keywordArguments.map({ argument -> "${argument.key}=${serialise(argument.value)}" })
+            val arguments = (positionals + keywords).joinToString(", ")
+            return "${receiver}(${arguments})"
         }
 
         override fun visit(node: PythonAttributeAccessNode): String {
