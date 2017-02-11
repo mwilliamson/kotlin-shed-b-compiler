@@ -1,35 +1,33 @@
 package org.shedlang.compiler.parser
 
-import java.nio.CharBuffer
 import java.util.regex.Pattern
 
 internal class RegexTokeniser<T>(unknown: T, rules: List<RegexTokeniser.TokenRule<T>>) {
-    internal data class TokenRule<T>(val type: T, val regex: Pattern)
+    internal data class TokenRule<T>(val type: T, val regex: Pattern) {
+        init {
+            if (regex.matcher("").groupCount() != 0) {
+                throw RuntimeException("regex cannot contain any groups")
+            }
+        }
+    }
 
-    private val rules: List<TokenRule<T>>
+    private val pattern: Pattern
+    private val rules: List<T>
 
     init {
-        this.rules = rules.plus(rule(unknown, "."))
+        val allRules = rules.plus(rule(unknown, "."))
+        this.pattern = Pattern.compile(allRules.map({ rule -> "(${rule.regex.pattern()})" }).joinToString("|"))
+        this.rules = allRules.map({ rule -> rule.type })
     }
 
     internal fun tokenise(value: String): List<Token<T>> {
+        val matcher = pattern.matcher(value)
         val tokens : MutableList<Token<T>> = mutableListOf()
-        val remaining = CharBuffer.wrap(value)
-        while (remaining.hasRemaining()) {
-            var matched = false
-            for (rule in rules) {
-                val matcher = rule.regex.matcher(remaining)
-                if (matcher.lookingAt()) {
-                    tokens.add(Token(remaining.position(), rule.type, matcher.group()))
-                    remaining.position(remaining.position() + matcher.end())
-                    matched = true
-                    break
-                }
-            }
-            if (!matched) {
-                // Should be impossible
-                throw RuntimeException("Remaining: " + remaining)
-            }
+        while (matcher.lookingAt()) {
+            val groupIndex = IntRange(1, this.rules.size).find({ index -> matcher.group(index) != null })!!
+            val tokenType = this.rules[groupIndex - 1]
+            tokens.add(Token(matcher.regionStart(), tokenType, matcher.group()))
+            matcher.region(matcher.end(), value.length)
         }
         return tokens
     }
