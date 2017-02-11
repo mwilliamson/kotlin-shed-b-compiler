@@ -28,7 +28,44 @@ val testPrograms = listOf(
                 print(intToString(fact(5)));
             }
         """.trimIndent(),
-        expectedResult = ExecutionResult(stdout = "120"))
+        expectedResult = ExecutionResult(stdout = "120")
+    ),
+
+    TestProgram(
+        name = "recursive fibonacci",
+        source = """
+            module example;
+
+            fun fibonacci(n: Int) : Int {
+                return fibonacci2(n).second;
+            }
+
+            shape FibonacciPair {
+                first: Int,
+                second: Int,
+            }
+
+            fun fibonacci2(n: Int) : FibonacciPair {
+                if (n == 0) {
+                    return FibonacciPair(
+                        first = 1,
+                        second = 0
+                    );
+                } else {
+                    val previous = fibonacci2(n - 1);
+                    return FibonacciPair(
+                        first = previous.second,
+                        second = previous.first + previous.second
+                    );
+                }
+            }
+
+            fun main(): Unit {
+                print(intToString(fibonacci(6)));
+            }
+        """.trimIndent(),
+        expectedResult = ExecutionResult(stdout = "8")
+    )
 )
 
 
