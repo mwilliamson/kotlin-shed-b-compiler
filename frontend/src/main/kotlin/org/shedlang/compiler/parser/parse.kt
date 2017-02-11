@@ -41,24 +41,24 @@ internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): Modu
 }
 
 private fun parseModuleNameDeclaration(tokens: TokenIterator<TokenType>): String {
-    tokens.skip(TokenType.KEYWORD, "module")
+    tokens.skip(TokenType.KEYWORD_MODULE)
     val moduleName = parseModuleName(tokens)
-    tokens.skip(TokenType.SYMBOL, ";")
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
     return moduleName
 }
 
 internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
     return parseOneOrMoreWithSeparator(
         { tokens -> parseIdentifier(tokens) },
-        { tokens -> tokens.trySkip(TokenType.SYMBOL, ".") },
+        { tokens -> tokens.trySkip(TokenType.SYMBOL_DOT) },
         tokens
     ).joinToString(".")
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {
-    if (tokens.isNext(TokenType.KEYWORD, "shape")) {
+    if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
         return ::parseShape.parse(tokens)
-    } else if (tokens.isNext(TokenType.KEYWORD, "fun")) {
+    } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
         return ::parseFunction.parse(tokens)
     } else {
         throw UnexpectedTokenException(
@@ -70,19 +70,19 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
 }
 
 internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): ShapeNode {
-    tokens.skip(TokenType.KEYWORD, "shape")
+    tokens.skip(TokenType.KEYWORD_SHAPE)
     val name = parseIdentifier(tokens)
-    tokens.skip(TokenType.SYMBOL, "{")
+    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val fields = parseZeroOrMoreNodes(
         parseElement = ::parseShapeField,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL, ",") },
-        isEnd = { tokens.isNext(TokenType.SYMBOL, "}") },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
         tokens = tokens,
         allowTrailingSeparator = true
     )
 
-    tokens.skip(TokenType.SYMBOL, "}")
+    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return ShapeNode(
         name = name,
         fields = fields,
@@ -101,18 +101,18 @@ private fun parseShapeField(source: Source, tokens: TokenIterator<TokenType>): S
 }
 
 internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode {
-    tokens.skip(TokenType.KEYWORD, "fun")
+    tokens.skip(TokenType.KEYWORD_FUN)
 
     val name = parseIdentifier(tokens)
 
-    tokens.skip(TokenType.SYMBOL, "(")
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseZeroOrMoreNodes(
         parseElement = ::parseFormalArgument,
-        parseSeparator = {tokens -> tokens.skip(TokenType.SYMBOL, ",")},
-        isEnd = { tokens.isNext(TokenType.SYMBOL, ")") },
+        parseSeparator = {tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         tokens = tokens
     )
-    tokens.skip(TokenType.SYMBOL, ")")
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
     val returnType = parseTypeSpec(tokens)
     val body = parseFunctionStatements(tokens)
 
@@ -126,13 +126,13 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
 }
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
-    tokens.skip(TokenType.SYMBOL, "{")
+    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val body = parseZeroOrMore(
         parseElement = ::parseFunctionStatement,
-        isEnd = { tokens.isNext(TokenType.SYMBOL, "}") },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
         tokens = tokens
     )
-    tokens.skip(TokenType.SYMBOL, "}")
+    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return body
 }
 
@@ -143,34 +143,29 @@ private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>
 }
 
 private fun parseTypeSpec(tokens: TokenIterator<TokenType>): TypeNode {
-    tokens.skip(TokenType.SYMBOL, ":")
+    tokens.skip(TokenType.SYMBOL_COLON)
     val type = ::parseType.parse(tokens)
     return type
 }
 
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
     val token = tokens.peek()
-    if (token.tokenType == TokenType.KEYWORD) {
-        val parseStatement : ((Source, TokenIterator<TokenType>) -> StatementNode)? = when (token.value) {
-            "return" -> ::parseReturn
-            "if" -> ::parseIfStatement
-            "val" -> ::parseVal
-            else -> null
+    when (token.tokenType) {
+        TokenType.KEYWORD_RETURN -> return ::parseReturn.parse(tokens)
+        TokenType.KEYWORD_IF -> return ::parseIfStatement.parse(tokens)
+        TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
+        else -> {
+            val expressionStatement = ::tryParseExpressionStatement.parse(tokens)
+            if (expressionStatement == null) {
+                throw UnexpectedTokenException(
+                    location = tokens.location(),
+                    expected = "function statement",
+                    actual = token.describe()
+                )
+            } else {
+                return expressionStatement
+            }
         }
-        if (parseStatement != null) {
-            tokens.skip()
-            return parseStatement.parse(tokens)
-        }
-    }
-    val expressionStatement = ::tryParseExpressionStatement.parse(tokens)
-    if (expressionStatement == null) {
-        throw UnexpectedTokenException(
-            location = tokens.location(),
-            expected = "function statement",
-            actual = token.describe()
-        )
-    } else {
-        return expressionStatement
     }
 }
 
@@ -179,25 +174,27 @@ private fun tryParseExpressionStatement(source: Source, tokens: TokenIterator<To
     if (expression == null) {
         return null
     } else {
-        tokens.skip(TokenType.SYMBOL, ";")
+        tokens.skip(TokenType.SYMBOL_SEMICOLON)
         return ExpressionStatementNode(expression, source)
     }
 }
 
 private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
+    tokens.skip(TokenType.KEYWORD_RETURN)
     val expression = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL, ";")
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
     return ReturnNode(expression, source)
 }
 
 private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfStatementNode {
-    tokens.skip(TokenType.SYMBOL, "(")
+    tokens.skip(TokenType.KEYWORD_IF)
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val condition = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL, ")")
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
     val trueBranch = parseFunctionStatements(tokens)
 
-    tokens.skip(TokenType.KEYWORD, "else")
+    tokens.skip(TokenType.KEYWORD_ELSE)
     val falseBranch = parseFunctionStatements(tokens)
 
     return IfStatementNode(
@@ -209,10 +206,11 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
 }
 
 private fun parseVal(source: Source, tokens: TokenIterator<TokenType>): ValNode {
+    tokens.skip(TokenType.KEYWORD_VAL)
     val name = parseIdentifier(tokens)
-    tokens.skip(TokenType.SYMBOL, "=")
+    tokens.skip(TokenType.SYMBOL_EQUALS)
     val expression = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL, ";")
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
     return ValNode(
         name = name,
@@ -251,28 +249,24 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
     var left: ExpressionNode = primaryExpression
     while (true) {
         val next = tokens.peek()
-        if (next.tokenType == TokenType.SYMBOL) {
-            val operationParser = lookupOperator(next.value)
-            if (operationParser == null || operationParser.precedence < precedence) {
-                return left
-            } else {
-                tokens.skip()
-                left = operationParser.parse(left, tokens)
-            }
-        } else {
+        val operationParser = lookupOperator(next.tokenType)
+        if (operationParser == null || operationParser.precedence < precedence) {
             return left
+        } else {
+            tokens.skip()
+            left = operationParser.parse(left, tokens)
         }
     }
 }
 
-private fun lookupOperator(operator: String) : OperationParser? {
-    return when (operator) {
-        "==" -> OperationParser.EQUALS
-        "+" -> OperationParser.ADD
-        "-" -> OperationParser.SUBTRACT
-        "*" -> OperationParser.MULTIPLY
-        "(" -> OperationParser.CALL
-        "." -> OperationParser.FIELD_ACCESS
+private fun lookupOperator(tokenType: TokenType) : OperationParser? {
+    return when (tokenType) {
+        TokenType.SYMBOL_DOUBLE_EQUALS -> OperationParser.EQUALS
+        TokenType.SYMBOL_PLUS -> OperationParser.ADD
+        TokenType.SYMBOL_MINUS -> OperationParser.SUBTRACT
+        TokenType.SYMBOL_ASTERISK -> OperationParser.MULTIPLY
+        TokenType.SYMBOL_OPEN_PAREN -> OperationParser.CALL
+        TokenType.SYMBOL_DOT -> OperationParser.FIELD_ACCESS
         else -> null
     }
 }
@@ -306,12 +300,12 @@ private object FunctionCallParser : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val arguments = parseZeroOrMore(
             parseElement = { tokens -> ::parseArgument.parse(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL, ",") },
-            isEnd = { tokens.isNext(TokenType.SYMBOL, ")") },
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
             tokens = tokens
         )
         // TODO: check named arguments appear after all positional arguments
-        tokens.skip(TokenType.SYMBOL, ")")
+        tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
         val positionalArguments = arguments
             .filterIsInstance<ParsedArgument.Positional>()
             .map(ParsedArgument.Positional::expression)
@@ -336,9 +330,9 @@ private sealed class ParsedArgument {
 }
 
 private fun parseArgument(source: Source, tokens: TokenIterator<TokenType>): ParsedArgument {
-    if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL, "=", skip = 1)) {
+    if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL_EQUALS, skip = 1)) {
         val name = parseIdentifier(tokens)
-        tokens.skip(TokenType.SYMBOL, "=")
+        tokens.skip(TokenType.SYMBOL_EQUALS)
         val expression = parseExpression(tokens)
         return ParsedArgument.Named(CallNamedArgumentNode(
             name = name,
@@ -371,19 +365,15 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
     when (token.tokenType) {
         TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), source)
         TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, source)
-        TokenType.KEYWORD -> when (token.value) {
-            "true" -> return BooleanLiteralNode(true, source)
-            "false" -> return BooleanLiteralNode(false, source)
+        TokenType.KEYWORD_TRUE -> return BooleanLiteralNode(true, source)
+        TokenType.KEYWORD_FALSE -> return BooleanLiteralNode(false, source)
+        TokenType.SYMBOL_OPEN_PAREN -> {
+            val expression = parseExpression(tokens)
+            tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+            return expression
         }
-        TokenType.SYMBOL -> when (token.value) {
-            "(" -> {
-                val expression = parseExpression(tokens)
-                tokens.skip(TokenType.SYMBOL, ")")
-                return expression
-            }
-        }
+        else -> return null
     }
-    return null
 }
 
 internal fun parseType(source: Source, tokens: TokenIterator<TokenType>) : TypeNode {

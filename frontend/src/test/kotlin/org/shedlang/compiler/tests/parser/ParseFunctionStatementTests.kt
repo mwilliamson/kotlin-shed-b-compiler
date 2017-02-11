@@ -17,7 +17,7 @@ class ParseFunctionStatementTests {
             { parseString(::parseFunctionStatement, source) },
             throws(allOf(
                 has(UnexpectedTokenException::expected, equalTo("function statement")),
-                has(UnexpectedTokenException::actual, equalTo("KEYWORD: module"))
+                has(UnexpectedTokenException::actual, equalTo("KEYWORD_MODULE: module"))
             ))
         )
     }

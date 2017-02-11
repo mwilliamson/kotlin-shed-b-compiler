@@ -19,8 +19,8 @@ internal class TokenIterator<T>(
         return locate(peek().characterIndex)
     }
 
-    fun trySkip(tokenType: T, value: String): Boolean {
-        val isNext = isNext(tokenType, value)
+    fun trySkip(tokenType: T): Boolean {
+        val isNext = isNext(tokenType)
         if (isNext) {
             index++
         }
@@ -44,32 +44,14 @@ internal class TokenIterator<T>(
         }
     }
 
-    fun skip(tokenType: T, value: String) {
-        val token = peek()
-        if (token.tokenType == tokenType && token.value == value) {
-            index++
-        } else {
-            throw UnexpectedTokenException(
-                location = location(),
-                expected = describeToken(tokenType, value),
-                actual = describeToken(token.tokenType, token.value)
-            )
-        }
-    }
-
     fun nextValue(tokenType: T): String {
         skip(tokenType)
         return tokens[index - 1].value
     }
 
-    fun isNext(tokenType: T): Boolean {
-        val token = peek()
-        return token.tokenType == tokenType
-    }
-
-    fun isNext(tokenType: T, value: String, skip: Int = 0): Boolean {
+    fun isNext(tokenType: T, skip: Int = 0): Boolean {
         val token = peek(skip = skip)
-        return token.tokenType == tokenType && token.value == value
+        return token.tokenType == tokenType
     }
 
     fun peek(skip: Int = 0): Token<T> {

@@ -10,11 +10,15 @@ import kotlin.test.assertEquals
 class TokeniserTests {
     @TestFactory
     fun keywordsAreTokenised(): List<DynamicTest> {
-        return listOf("if", "else", "module").map { keyword ->
-            DynamicTest.dynamicTest(keyword, {
+        return listOf(
+            "if" to TokenType.KEYWORD_IF,
+            "else" to TokenType.KEYWORD_ELSE,
+            "module" to TokenType.KEYWORD_MODULE
+        ).map { keyword ->
+            DynamicTest.dynamicTest(keyword.first, {
                 assertEquals(
-                    listOf(Token(0, TokenType.KEYWORD, keyword)),
-                    tokenise(keyword)
+                    listOf(Token(0, keyword.second, keyword.first)),
+                    tokenise(keyword.first)
                 )
             })
         }
@@ -34,11 +38,16 @@ class TokeniserTests {
 
     @TestFactory
     fun symbolsAreTokenised(): List<DynamicTest> {
-        return listOf(".", ",", ":", "==").map { symbol ->
-            DynamicTest.dynamicTest(symbol, {
+        return listOf(
+            "." to TokenType.SYMBOL_DOT,
+            "," to TokenType.SYMBOL_COMMA,
+            ":" to TokenType.SYMBOL_COLON,
+            "==" to TokenType.SYMBOL_DOUBLE_EQUALS
+        ).map { symbol ->
+            DynamicTest.dynamicTest(symbol.first, {
                 assertEquals(
-                    listOf(Token(0, TokenType.SYMBOL, symbol)),
-                    tokenise(symbol)
+                    listOf(Token(0, symbol.second, symbol.first)),
+                    tokenise(symbol.first)
                 )
             })
         }

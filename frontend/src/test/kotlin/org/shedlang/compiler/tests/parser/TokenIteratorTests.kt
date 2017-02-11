@@ -48,51 +48,6 @@ class TokenIteratorTests {
         }
     }
 
-    @Nested
-    inner class SkipByTokenTypeAndValue {
-        @Test
-        fun movesToNextTokenWhenTokenTypeAndValueMatch() {
-            val tokens = tokenIterator(listOf(
-                Token(0, TokenType.IDENTIFIER, "a"),
-                Token(1, TokenType.IDENTIFIER, "b")
-            ))
-            tokens.skip(TokenType.IDENTIFIER, "a")
-            assertThat(tokens.location(), has(StringSource::characterIndex, equalTo(1)))
-        }
-
-        @Test
-        fun throwsExceptionWhenNextTokenHasUnexpectedType() {
-            val tokens = tokenIterator(listOf(
-                Token(0, TokenType.IDENTIFIER, "a")
-            ))
-            val exception = assertThrows<UnexpectedTokenException>(
-                UnexpectedTokenException::class.java,
-                { tokens.skip(TokenType.SYMBOL, "a") }
-            )
-            assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(stringSource(0))),
-                has(UnexpectedTokenException::expected, equalTo("SYMBOL: a")),
-                has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
-            ))
-        }
-
-        @Test
-        fun throwsExceptionWhenNextTokenHasUnexpectedValue() {
-            val tokens = tokenIterator(listOf(
-                Token(0, TokenType.IDENTIFIER, "a")
-            ))
-            val exception = assertThrows<UnexpectedTokenException>(
-                UnexpectedTokenException::class.java,
-                { tokens.skip(TokenType.IDENTIFIER, "b") }
-            )
-            assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(stringSource(0))),
-                has(UnexpectedTokenException::expected, equalTo("IDENTIFIER: b")),
-                has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
-            ))
-        }
-    }
-
     @Test
     fun whenThereAreNoMoreTokensThenPeekReturnsEndToken() {
         val tokens = tokenIterator(listOf())
