@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
 import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.parser.Token
 import org.shedlang.compiler.parser.TokenType
@@ -63,6 +64,61 @@ class TokeniserTests {
                 )
             })
         }
+    }
+
+    @TestFactory
+    fun stringsAreTokenised(): List<DynamicTest> {
+        return listOf(
+            "\"\"",
+            "\"abc\"",
+            "\"\\n\"",
+            "\"\\\"\""
+        ).map { string ->
+            DynamicTest.dynamicTest(string, {
+                assertEquals(
+                    listOf(Token(0, TokenType.STRING, string)),
+                    tokenise(string)
+                )
+            })
+        }
+    }
+
+    @Test
+    fun doubleQuoteTerminatesString() {
+        assertEquals(
+            listOf(
+                Token(0, TokenType.STRING, "\"a\""),
+                Token(3, TokenType.STRING, "\"b\"")
+            ),
+            tokenise("\"a\"\"b\"")
+        )
+    }
+
+    @TestFactory
+    fun unterminatedStringsAreTokenised(): List<DynamicTest> {
+        return listOf(
+            "\"",
+            "\"abc"
+        ).map { string ->
+            DynamicTest.dynamicTest(string, {
+                assertEquals(
+                    listOf(Token(0, TokenType.UNTERMINATED_STRING, string)),
+                    tokenise(string)
+                )
+            })
+        }
+    }
+
+    @Test
+    fun unescapedNewlineCannotAppearInString() {
+        assertEquals(
+            listOf(
+                Token(0, TokenType.UNTERMINATED_STRING, "\""),
+                Token(1, TokenType.WHITESPACE, "\n"),
+                Token(2, TokenType.UNTERMINATED_STRING, "\"")
+            ),
+            tokenise("\"\n\"")
+        )
     }
 
     data class WhitespaceTestCase(val input: String, val description: String)

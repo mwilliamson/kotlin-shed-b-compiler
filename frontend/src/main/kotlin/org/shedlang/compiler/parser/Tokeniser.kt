@@ -4,6 +4,8 @@ package org.shedlang.compiler.parser;
 private fun literal(tokenType: TokenType, string: String)
     = RegexTokeniser.rule(tokenType, Regex.escape(string))
 
+private val unterminatedStringPattern = "\"(?:[^\\\\\"\n]|\\\\.)*"
+
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     literal(TokenType.KEYWORD_ELSE, "else"),
     literal(TokenType.KEYWORD_FALSE, "false"),
@@ -33,6 +35,8 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     literal(TokenType.SYMBOL_ASTERISK, "*"),
 
     RegexTokeniser.rule(TokenType.IDENTIFIER, "[A-Za-z][A-Za-z0-9]*"),
+    RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
+    RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
     RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+")
 ))
 
@@ -71,6 +75,8 @@ internal enum class TokenType {
     SYMBOL_ASTERISK,
 
     INTEGER,
+    STRING,
+    UNTERMINATED_STRING,
     WHITESPACE,
     END
 }
