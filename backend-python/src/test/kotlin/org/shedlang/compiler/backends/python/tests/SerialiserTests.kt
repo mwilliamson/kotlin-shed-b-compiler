@@ -9,7 +9,6 @@ import org.shedlang.compiler.backends.python.ast.PythonFunctionNode
 import org.shedlang.compiler.backends.python.ast.PythonOperator
 import org.shedlang.compiler.backends.python.ast.PythonStatementNode
 import org.shedlang.compiler.backends.python.serialise
-import org.shedlang.compiler.tests.variableReference
 
 class SerialiserTests {
     @Test
