@@ -95,7 +95,7 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
 
         override fun visit(node: ValNode): PythonStatementNode {
             return PythonAssignmentNode(
-                name = context.name(node),
+                target = PythonVariableReferenceNode(context.name(node), source = NodeSource(node)),
                 expression = generateCode(node.expression, context),
                 source = NodeSource(node)
             )

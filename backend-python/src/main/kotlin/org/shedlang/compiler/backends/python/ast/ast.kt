@@ -84,7 +84,7 @@ data class PythonPassNode(
 }
 
 data class PythonAssignmentNode(
-    val name: String,
+    val target: PythonExpressionNode,
     val expression: PythonExpressionNode,
     override val source: Source
 ): PythonStatementNode {

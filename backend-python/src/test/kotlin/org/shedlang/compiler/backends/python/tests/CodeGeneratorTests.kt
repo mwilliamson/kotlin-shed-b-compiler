@@ -130,15 +130,15 @@ class CodeGeneratorTests {
         val nodes = generateCode(shed, context(references))
 
         assertThat(nodes, isSequence(
-            isPythonAssignment(name = equalTo("x")),
+            isPythonAssignment(target = isPythonVariableReference("x")),
             cast(allOf(
                 has(PythonIfStatementNode::trueBranch, isSequence(
-                    isPythonAssignment(name = equalTo("x_1")),
+                    isPythonAssignment(target = isPythonVariableReference("x_1")),
                     isPythonReturn(isPythonVariableReference("x")),
                     isPythonReturn(isPythonVariableReference("x_1"))
                 )),
                 has(PythonIfStatementNode::falseBranch, isSequence(
-                    isPythonAssignment(name = equalTo("x_2")),
+                    isPythonAssignment(target = isPythonVariableReference("x_2")),
                     isPythonReturn(isPythonVariableReference("x_2"))
                 ))
             ))
@@ -151,7 +151,10 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonAssignment(equalTo("x"), isPythonIntegerLiteral(42)))
+        assertThat(node, isPythonAssignment(
+            target = isPythonVariableReference("x"),
+            expression = isPythonIntegerLiteral(42)
+        ))
     }
 
     @Test
@@ -278,11 +281,11 @@ class CodeGeneratorTests {
         = cast(has(PythonReturnNode::expression, expression))
 
     private fun isPythonAssignment(
-        name: Matcher<String>,
+        target: Matcher<PythonExpressionNode>,
         expression: Matcher<PythonExpressionNode> = anything
     ): Matcher<PythonStatementNode> {
         return cast(allOf(
-            has(PythonAssignmentNode::name, name),
+            has(PythonAssignmentNode::target, target),
             has(PythonAssignmentNode::expression, expression)
         ))
     }
