@@ -198,10 +198,7 @@ class TypeCheckFunctionCallTests {
             referenceTypes = mapOf(functionReference to functionType),
             effects = listOf(IoEffect)
         )
-        assertThat(
-            { inferType(node, typeContext) },
-            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
-        )
+        inferType(node, typeContext)
     }
 
     @Test

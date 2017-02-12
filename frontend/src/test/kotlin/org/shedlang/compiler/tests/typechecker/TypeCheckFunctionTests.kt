@@ -101,4 +101,30 @@ class TypeCheckFunctionTests {
             effects = isSequence(cast(equalTo(IoEffect)))
         ))
     }
+
+    @Test
+    fun effectsAreAddedToBodyContext() {
+        val unitType = typeReference("Unit")
+        val effect = variableReference("!io")
+        val functionReference = variableReference("f")
+
+        val node = function(
+            returnType = unitType,
+            effects = listOf(effect),
+            body = listOf(
+                expressionStatement(call(functionReference))
+            )
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(
+                effects = listOf(IoEffect),
+                returns = UnitType
+            ),
+            unitType to MetaType(UnitType),
+            effect to EffectType(IoEffect)
+        ))
+        typeCheck(node, typeContext)
+        // TODO: come up with a way of ensuring undefer() is eventually called
+        typeContext.undefer()
+    }
 }

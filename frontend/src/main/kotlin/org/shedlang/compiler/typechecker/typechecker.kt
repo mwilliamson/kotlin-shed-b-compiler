@@ -215,7 +215,10 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
             argumentTypes,
             { argument, argumentType -> argument.nodeId to argumentType }
         ).toMap())
-        val bodyContext = context.enterFunction(returnType = returnType, effects = listOf())
+        val bodyContext = context.enterFunction(
+            returnType = returnType,
+            effects = effects
+        )
         typeCheck(function.body, bodyContext)
     })
 }
@@ -333,8 +336,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     )
                 }
 
-                if (receiverType.effects.isNotEmpty()) {
-                    throw UnhandledEffectError(receiverType.effects[0], source = node.source)
+                val unhandledEffects = receiverType.effects - context.effects
+                if (unhandledEffects.isNotEmpty()) {
+                    throw UnhandledEffectError(unhandledEffects[0], source = node.source)
                 }
 
                 return receiverType.returns
