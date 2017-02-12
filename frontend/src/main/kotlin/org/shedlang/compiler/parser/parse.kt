@@ -120,6 +120,14 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
         tokens = tokens
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+
+    val effects = parseZeroOrMoreNodes(
+        parseElement = ::parseVariableReference,
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_ARROW) },
+        tokens = tokens
+    )
+
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = ::parseType.parse(tokens)
     val body = parseFunctionStatements(tokens)
@@ -128,6 +136,7 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
         name = name,
         arguments = arguments,
         returnType = returnType,
+        effects = effects,
         body = body,
         source = source
     )
@@ -375,8 +384,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             return IntegerLiteralNode(token.value.toInt(), source)
         }
         TokenType.IDENTIFIER -> {
-            val token = tokens.next()
-            return VariableReferenceNode(token.value, source)
+            return parseVariableReference(source, tokens)
         }
         TokenType.KEYWORD_TRUE -> {
             tokens.skip()
@@ -399,6 +407,15 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
         }
         else -> return null
     }
+}
+
+private fun parseVariableReference(source: Source, tokens: TokenIterator<TokenType>): VariableReferenceNode {
+    val value = tokens.nextValue(TokenType.IDENTIFIER)
+    return VariableReferenceNode(value, source)
+}
+
+private fun parseVariableReference(source: Source, token: Token<TokenType>): VariableReferenceNode {
+    return VariableReferenceNode(token.value, source)
 }
 
 private fun decodeEscapeSequence(value: String, source: Source): String {

@@ -125,6 +125,7 @@ data class FunctionNode(
     override val name: String,
     val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
+    val effects: List<VariableReferenceNode>,
     val body: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()

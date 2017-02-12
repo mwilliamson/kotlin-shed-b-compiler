@@ -54,6 +54,32 @@ class ParseFunctionTests {
         )))
     }
 
+    @Test
+    fun canReadFunctionWithZeroEffects() {
+        val source = "fun f() -> Unit { }"
+        val function = parseString(::parseFunction, source)
+        assertThat(function, has(FunctionNode::effects, isSequence()))
+    }
+
+    @Test
+    fun canReadFunctionWithOneEffect() {
+        val source = "fun f() !io -> Unit { }"
+        val function = parseString(::parseFunction, source)
+        assertThat(function, has(FunctionNode::effects, isSequence(
+            isVariableReference("!io")
+        )))
+    }
+
+    @Test
+    fun canReadFunctionWithMultipleEffects() {
+        val source = "fun f() !a, !b -> Unit { }"
+        val function = parseString(::parseFunction, source)
+        assertThat(function, has(FunctionNode::effects, isSequence(
+            isVariableReference("!a"),
+            isVariableReference("!b")
+        )))
+    }
+
     private fun isArgument(name: String, typeReference: String): Matcher<ArgumentNode> {
         return allOf(
             has(ArgumentNode::name, equalTo(name)),

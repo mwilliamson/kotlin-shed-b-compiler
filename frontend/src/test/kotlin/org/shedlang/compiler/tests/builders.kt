@@ -85,6 +85,7 @@ fun function(
     name = name,
     arguments = arguments,
     returnType = returnType,
+    effects = listOf(),
     body = body,
     source = anySource()
 )
