@@ -2,6 +2,9 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 
+interface Effect
+object IoEffect : Effect
+
 interface Type
 
 object UnitType: Type
@@ -14,7 +17,8 @@ class MetaType(val type: Type): Type
 data class FunctionType(
     val positionalArguments: List<Type>,
     val namedArguments: Map<String, Type>,
-    val returns: Type
+    val returns: Type,
+    val effects: List<Effect>
 ): Type
 
 data class ShapeType(
@@ -26,7 +30,8 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
     = FunctionType(
         positionalArguments = arguments,
         namedArguments = mapOf(),
-        returns = returns
+        returns = returns,
+        effects = listOf()
     )
 
 class TypeContext(
@@ -153,7 +158,8 @@ private fun inferType(function: FunctionNode, context: TypeContext): FunctionTyp
     return FunctionType(
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
-        returns = returnType
+        returns = returnType,
+        effects = listOf()
     )
 }
 
@@ -297,7 +303,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             } else {
                 val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                 throw UnexpectedTypeError(
-                    expected = FunctionType(argumentTypes, mapOf(), AnyType),
+                    expected = FunctionType(argumentTypes, mapOf(), AnyType, effects = listOf()),
                     actual = receiverType,
                     source = node.receiver.source
                 )
