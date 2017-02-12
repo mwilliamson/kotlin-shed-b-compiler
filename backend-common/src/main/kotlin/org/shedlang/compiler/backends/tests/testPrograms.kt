@@ -24,7 +24,7 @@ val testPrograms = listOf(
                 }
             }
 
-            fun main() -> !io Unit {
+            fun main() !io -> Unit {
                 print(intToString(fact(5)));
             }
         """.trimIndent(),
@@ -60,7 +60,7 @@ val testPrograms = listOf(
                 }
             }
 
-            fun main() -> !io Unit {
+            fun main() !io -> Unit {
                 print(intToString(fibonacci(6)));
             }
         """.trimIndent(),
