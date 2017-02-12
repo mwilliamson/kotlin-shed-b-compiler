@@ -47,9 +47,7 @@ fun read(filename: String, input: String): FrontEndResult {
         ),
         intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
     )
-    val typeContext = TypeContext(
-        returnType = null,
-        effects = listOf(),
+    val typeContext = newTypeContext(
         variables = variables,
         variableReferences = variableReferences
     )

@@ -27,9 +27,7 @@ class TypeCheckValTests {
     fun valTakesTypeOfExpression() {
         val node = valStatement(name = "x", expression = literalInt())
         val variables = mutableMapOf<Int, Type>()
-        val typeContext = TypeContext(
-            returnType = null,
-            effects = listOf(),
+        val typeContext = newTypeContext(
             variables = variables,
             variableReferences = VariableReferencesMap(mapOf())
         )

@@ -47,12 +47,39 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
         effects = listOf()
     )
 
+fun newTypeContext(
+    variables: MutableMap<Int, Type> = mutableMapOf(),
+    variableReferences: VariableReferences
+): TypeContext {
+    return TypeContext(
+        returnType = null,
+        effects = listOf(),
+        variables = variables,
+        variableReferences = variableReferences,
+        deferred = mutableListOf()
+    )
+}
+
 class TypeContext(
     val returnType: Type?,
     val effects: List<Effect>,
     private val variables: MutableMap<Int, Type>,
-    private val variableReferences: VariableReferences
+    private val variableReferences: VariableReferences,
+    private val deferred: MutableList<() -> Unit>
 ) {
+    fun typeOf(node: VariableBindingNode): Type {
+        val type = variables[node.nodeId]
+        if (type == null) {
+            // TODO: test this
+            throw CompilerError(
+                "type of ${node.name} is unknown",
+                source = node.source
+            )
+        } else {
+            return type
+        }
+    }
+
     fun typeOf(reference: ReferenceNode): Type {
         val targetNodeId = variableReferences[reference]
         val type = variables[targetNodeId]
@@ -75,8 +102,22 @@ class TypeContext(
             returnType = returnType,
             effects = effects,
             variables = variables,
-            variableReferences = variableReferences
+            variableReferences = variableReferences,
+            deferred = deferred
         )
+    }
+
+    fun defer(deferred: () -> Unit) {
+        this.deferred.add(deferred)
+    }
+
+    fun undefer() {
+        while (this.deferred.isNotEmpty()) {
+            val index = this.deferred.size - 1
+            val deferred = this.deferred[index]
+            this.deferred.removeAt(index)
+            deferred()
+        }
     }
 }
 
@@ -124,36 +165,24 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext) {
         .partition({ statement -> statement is TypeDeclarationNode })
 
     for (typeDeclaration in typeDeclarations) {
-        context.addTypes(mapOf(
-            typeDeclaration.nodeId to inferType(typeDeclaration, context)
-        ))
+        typeCheck(typeDeclaration, context)
     }
 
-    context.addTypes(otherStatements.associateBy(
-        ModuleStatementNode::nodeId,
-        { statement -> inferType(statement, context) }
-    ))
-
-    for (statement in module.body) {
+    for (statement in otherStatements) {
         typeCheck(statement, context)
     }
-}
 
-internal fun inferType(statement: ModuleStatementNode, context: TypeContext): Type {
-    return statement.accept(object : ModuleStatementNode.Visitor<Type> {
-        override fun visit(node: ShapeNode): Type = inferType(node, context)
-        override fun visit(node: FunctionNode): Type = inferType(node, context)
-    })
+    context.undefer()
 }
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
-        override fun visit(node: ShapeNode) {}
-        override fun visit(node: FunctionNode): Unit = typeCheck(node, context)
+        override fun visit(node: ShapeNode) = typeCheck(node, context)
+        override fun visit(node: FunctionNode) = typeCheck(node, context)
     })
 }
 
-private fun inferType(node: ShapeNode, context: TypeContext): Type {
+private fun typeCheck(node: ShapeNode, context: TypeContext) {
     for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
         if (fields.size > 1) {
             throw FieldAlreadyDeclaredError(fieldName = fieldName, source = fields[1].source)
@@ -164,32 +193,31 @@ private fun inferType(node: ShapeNode, context: TypeContext): Type {
         name = node.name,
         fields = node.fields.associate({ field -> field.name to evalType(field.type, context) })
     )
-    return MetaType(shapeType)
+    context.addTypes(mapOf(node.nodeId to MetaType(shapeType)))
 }
 
-private fun inferType(function: FunctionNode, context: TypeContext): FunctionType {
+private fun typeCheck(function: FunctionNode, context: TypeContext) {
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
     val effects = function.effects.map({ effect -> evalEffect(effect, context) })
     val returnType = evalType(function.returnType, context)
-    return FunctionType(
+
+    context.addTypes(mapOf(function.nodeId to FunctionType(
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effects = effects,
         returns = returnType
-    )
-}
+    )))
 
-private fun typeCheck(function: FunctionNode, context: TypeContext) {
-    val argumentTypes = function.arguments.associateBy(
-        ArgumentNode::nodeId,
-        { argument -> evalType(argument.type, context) }
-    )
-    val returnType = evalType(function.returnType, context)
-    context.addTypes(argumentTypes)
-    val bodyContext = context.enterFunction(returnType = returnType, effects = listOf())
-    typeCheck(function.body, bodyContext)
+    context.defer({
+        context.addTypes(function.arguments.zip(
+            argumentTypes,
+            { argument, argumentType -> argument.nodeId to argumentType }
+        ).toMap())
+        val bodyContext = context.enterFunction(returnType = returnType, effects = listOf())
+        typeCheck(function.body, bodyContext)
+    })
 }
 
 internal fun evalType(type: TypeNode, context: TypeContext): Type {

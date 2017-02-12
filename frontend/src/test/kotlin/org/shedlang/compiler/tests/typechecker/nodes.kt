@@ -28,7 +28,8 @@ fun typeContext(
         returnType = returnType,
         effects = effects,
         variables = HashMap(types),
-        variableReferences = VariableReferencesMap(finalReferences)
+        variableReferences = VariableReferencesMap(finalReferences),
+        deferred = mutableListOf()
     )
 }
 

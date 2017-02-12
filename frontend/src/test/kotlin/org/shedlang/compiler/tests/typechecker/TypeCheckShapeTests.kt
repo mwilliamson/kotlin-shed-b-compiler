@@ -18,15 +18,12 @@ class TypeCheckShapeTests {
             shapeField("b", boolType)
         ))
 
-
-        val type = inferType(
-            node,
-            typeContext(referenceTypes = mapOf(
-                intType to MetaType(IntType),
-                boolType to MetaType(BoolType)
-            ))
-        )
-        assertThat(type, isMetaType(isShapeType(
+        val typeContext = typeContext(referenceTypes = mapOf(
+            intType to MetaType(IntType),
+            boolType to MetaType(BoolType)
+        ))
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             name = equalTo("X"),
             fields = listOf("a" to isIntType, "b" to isBoolType)
         )))
@@ -45,7 +42,7 @@ class TypeCheckShapeTests {
         ))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { typeCheck(node, typeContext) },
             throws(
                 has(FieldAlreadyDeclaredError::fieldName, equalTo("a"))
             )

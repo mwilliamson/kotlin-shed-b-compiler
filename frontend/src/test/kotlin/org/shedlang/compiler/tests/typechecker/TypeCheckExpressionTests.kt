@@ -47,9 +47,7 @@ class TypeCheckExpressionTests {
         assertThat(
             { inferType(
                 reference,
-                TypeContext(
-                    returnType = null,
-                    effects = listOf(),
+                newTypeContext(
                     variables = mutableMapOf(),
                     variableReferences = VariableReferencesMap(mapOf(reference.nodeId to freshNodeId()))
                 )

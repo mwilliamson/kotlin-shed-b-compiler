@@ -35,9 +35,7 @@ class EvalTypeTests {
         assertThat(
             { evalType(
                 reference,
-                TypeContext(
-                    returnType = null,
-                    effects = listOf(),
+                newTypeContext(
                     variables = mutableMapOf(),
                     variableReferences = VariableReferencesMap(mapOf(reference.nodeId to freshNodeId()))
                 )
