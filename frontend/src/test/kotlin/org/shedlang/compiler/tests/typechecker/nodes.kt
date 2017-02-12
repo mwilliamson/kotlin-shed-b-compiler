@@ -14,6 +14,7 @@ fun emptyTypeContext(): TypeContext {
 
 fun typeContext(
     returnType: Type? = null,
+    effects: List<Effect> = listOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf()
 ): TypeContext {
@@ -23,7 +24,12 @@ fun typeContext(
     )
     val types = referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!! }, { entry -> entry.value })
 
-    return TypeContext(returnType, HashMap(types), VariableReferencesMap(finalReferences))
+    return TypeContext(
+        returnType = returnType,
+        effects = effects,
+        variables = HashMap(types),
+        variableReferences = VariableReferencesMap(finalReferences)
+    )
 }
 
 private val badSource = StringSource("<bad source>", "", 0)

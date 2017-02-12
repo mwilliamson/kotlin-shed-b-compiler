@@ -49,6 +49,7 @@ fun read(filename: String, input: String): FrontEndResult {
     )
     val typeContext = TypeContext(
         returnType = null,
+        effects = listOf(),
         variables = variables,
         variableReferences = variableReferences
     )

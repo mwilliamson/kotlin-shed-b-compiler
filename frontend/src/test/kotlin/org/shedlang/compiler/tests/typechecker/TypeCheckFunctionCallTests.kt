@@ -184,4 +184,42 @@ class TypeCheckFunctionCallTests {
             throws(has(ArgumentAlreadyPassedError::argumentName, equalTo("a")))
         )
     }
+
+    @Test
+    fun whenEffectIsInScopeThenCanCallFunctionWithEffect() {
+        val functionReference = variableReference("f")
+        val node = call(receiver = functionReference)
+        val functionType = functionType(
+            effects = listOf(IoEffect),
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            effects = listOf(IoEffect)
+        )
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
+
+    @Test
+    fun errorWhenCallingFunctionWithEffectNotInScope() {
+        val functionReference = variableReference("f")
+        val node = call(receiver = functionReference)
+        val functionType = functionType(
+            effects = listOf(IoEffect),
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            effects = listOf(object : Effect {})
+        )
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
 }

@@ -27,6 +27,18 @@ data class ShapeType(
     val fields: Map<String, Type>
 ): Type
 
+fun functionType(
+    positionalArguments: List<Type> = listOf(),
+    namedArguments: Map<String, Type> = mapOf(),
+    returns: Type,
+    effects: List<Effect> = listOf()
+) = FunctionType(
+    positionalArguments = positionalArguments,
+    namedArguments = namedArguments,
+    returns = returns,
+    effects = effects
+)
+
 fun positionalFunctionType(arguments: List<Type>, returns: Type)
     = FunctionType(
         positionalArguments = arguments,
@@ -37,6 +49,7 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 
 class TypeContext(
     val returnType: Type?,
+    val effects: List<Effect>,
     private val variables: MutableMap<Int, Type>,
     private val variableReferences: VariableReferences
 ) {
@@ -57,9 +70,10 @@ class TypeContext(
         variables += types
     }
 
-    fun enterFunction(returnType: Type): TypeContext {
+    fun enterFunction(returnType: Type, effects: List<Effect>): TypeContext {
         return TypeContext(
             returnType = returnType,
+            effects = effects,
             variables = variables,
             variableReferences = variableReferences
         )
@@ -102,6 +116,8 @@ class NoSuchFieldError(val fieldName: String, source: Source)
     : TypeCheckError("No such field: " + fieldName, source)
 class FieldAlreadyDeclaredError(val fieldName: String, source: Source)
     : TypeCheckError("Field has already been declared: ${fieldName}", source)
+class UnhandledEffectError(val effect: Effect, source: Source)
+    : TypeCheckError("Unhandled effect: ${effect}", source)
 
 internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     val (typeDeclarations, otherStatements) = module.body
@@ -171,7 +187,7 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
     )
     val returnType = evalType(function.returnType, context)
     context.addTypes(argumentTypes)
-    val bodyContext = context.enterFunction(returnType = returnType)
+    val bodyContext = context.enterFunction(returnType = returnType, effects = listOf())
     typeCheck(function.body, bodyContext)
 }
 
@@ -277,6 +293,11 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                         source = node.source
                     )
                 }
+
+                if (receiverType.effects.isNotEmpty()) {
+                    throw UnhandledEffectError(receiverType.effects[0], source = node.source)
+                }
+
                 return receiverType.returns
             } else if (receiverType is MetaType && receiverType.type is ShapeType) {
                 val shapeType = receiverType.type

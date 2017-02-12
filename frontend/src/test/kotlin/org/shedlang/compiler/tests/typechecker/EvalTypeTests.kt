@@ -37,6 +37,7 @@ class EvalTypeTests {
                 reference,
                 TypeContext(
                     returnType = null,
+                    effects = listOf(),
                     variables = mutableMapOf(),
                     variableReferences = VariableReferencesMap(mapOf(reference.nodeId to freshNodeId()))
                 )

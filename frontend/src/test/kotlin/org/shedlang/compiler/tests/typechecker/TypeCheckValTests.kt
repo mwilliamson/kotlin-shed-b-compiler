@@ -29,6 +29,7 @@ class TypeCheckValTests {
         val variables = mutableMapOf<Int, Type>()
         val typeContext = TypeContext(
             returnType = null,
+            effects = listOf(),
             variables = variables,
             variableReferences = VariableReferencesMap(mapOf())
         )
