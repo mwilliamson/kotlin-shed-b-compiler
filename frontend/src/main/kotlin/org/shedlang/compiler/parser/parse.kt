@@ -368,17 +368,31 @@ private object FieldAccessParser : OperationParser {
 }
 
 internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<TokenType>) : ExpressionNode? {
-    val token = tokens.next();
-    when (token.tokenType) {
-        TokenType.INTEGER -> return IntegerLiteralNode(token.value.toInt(), source)
-        TokenType.IDENTIFIER -> return VariableReferenceNode(token.value, source)
-        TokenType.KEYWORD_TRUE -> return BooleanLiteralNode(true, source)
-        TokenType.KEYWORD_FALSE -> return BooleanLiteralNode(false, source)
-        TokenType.STRING -> return StringLiteralNode(
-            decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source),
-            source
-        )
+    val tokenType = tokens.peek().tokenType;
+    when (tokenType) {
+        TokenType.INTEGER -> {
+            val token = tokens.next()
+            return IntegerLiteralNode(token.value.toInt(), source)
+        }
+        TokenType.IDENTIFIER -> {
+            val token = tokens.next()
+            return VariableReferenceNode(token.value, source)
+        }
+        TokenType.KEYWORD_TRUE -> {
+            tokens.skip()
+            return BooleanLiteralNode(true, source)
+        }
+        TokenType.KEYWORD_FALSE -> {
+            tokens.skip()
+            return BooleanLiteralNode(false, source)
+        }
+        TokenType.STRING -> {
+            val token = tokens.next()
+            val value = decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source)
+            return StringLiteralNode(value, source)
+        }
         TokenType.SYMBOL_OPEN_PAREN -> {
+            tokens.skip()
             val expression = parseExpression(tokens)
             tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
             return expression
