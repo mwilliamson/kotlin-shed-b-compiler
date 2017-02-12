@@ -53,10 +53,12 @@ private fun indent(value: String): String {
 
 internal fun isFunctionType(
     arguments: Matcher<List<Type>>,
-    returnType: Matcher<Type>
+    returnType: Matcher<Type>,
+    effects: Matcher<Iterable<Effect>> = anything
 ): Matcher<Type> = cast(allOf(
     has(FunctionType::positionalArguments, arguments),
-    has(FunctionType::returns, returnType)
+    has(FunctionType::returns, returnType),
+    has(FunctionType::effects, effects)
 ))
 
 internal fun isShapeType(

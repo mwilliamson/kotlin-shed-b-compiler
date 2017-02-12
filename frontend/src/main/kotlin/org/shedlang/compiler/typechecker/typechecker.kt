@@ -171,12 +171,13 @@ private fun inferType(function: FunctionNode, context: TypeContext): FunctionTyp
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
+    val effects = function.effects.map({ effect -> evalEffect(effect, context) })
     val returnType = evalType(function.returnType, context)
     return FunctionType(
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
-        returns = returnType,
-        effects = listOf()
+        effects = effects,
+        returns = returnType
     )
 }
 
@@ -205,6 +206,16 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
             }
         }
     })
+}
+
+internal fun evalEffect(node: VariableReferenceNode, context: TypeContext): Effect {
+    val effectType = context.typeOf(node)
+    if (effectType is EffectType) {
+        return effectType.effect
+    } else {
+        // TODO: throw a more appropriate exception
+        throw CompilerError("TODO", source = node.source)
+    }
 }
 
 internal fun typeCheck(statement: StatementNode, context: TypeContext) {

@@ -1,6 +1,8 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.anything
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
@@ -67,6 +69,29 @@ class TypeCheckFunctionTests {
         assertThat(signature, isFunctionType(
             arguments = equalTo(listOf(IntType, BoolType)),
             returnType = equalTo(IntType)
+        ))
+    }
+
+    @Test
+    fun effectsAreIncludedInSignature() {
+        val unitType = typeReference("Unit")
+        val effect = variableReference("!io")
+
+        val node = function(
+            returnType = unitType,
+            effects = listOf(effect)
+        )
+        val signature = inferType(
+            node,
+            typeContext(referenceTypes = mapOf(
+                unitType to MetaType(UnitType),
+                effect to EffectType(IoEffect)
+            ))
+        )
+        assertThat(signature, isFunctionType(
+            arguments = anything,
+            returnType = anything,
+            effects = isSequence(cast(equalTo(IoEffect)))
         ))
     }
 }
