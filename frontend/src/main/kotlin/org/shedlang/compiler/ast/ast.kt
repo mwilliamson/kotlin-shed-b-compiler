@@ -131,7 +131,7 @@ data class FunctionNode(
     override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = arguments + returnType + body
+        get() = arguments + effects + returnType + body
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
