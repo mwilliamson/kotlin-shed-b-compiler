@@ -120,7 +120,8 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
         tokens = tokens
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
-    val returnType = parseTypeSpec(tokens)
+    tokens.skip(TokenType.SYMBOL_ARROW)
+    val returnType = ::parseType.parse(tokens)
     val body = parseFunctionStatements(tokens)
 
     return FunctionNode(
@@ -151,8 +152,7 @@ private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>
 
 private fun parseTypeSpec(tokens: TokenIterator<TokenType>): TypeNode {
     tokens.skip(TokenType.SYMBOL_COLON)
-    val type = ::parseType.parse(tokens)
-    return type
+    return ::parseType.parse(tokens)
 }
 
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {

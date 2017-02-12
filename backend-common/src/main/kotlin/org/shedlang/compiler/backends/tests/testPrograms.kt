@@ -16,7 +16,7 @@ val testPrograms = listOf(
         source = """
             module example;
 
-            fun fact(n: Int) : Int {
+            fun fact(n: Int) -> Int {
                 if (n == 0) {
                     return 1;
                 } else {
@@ -24,7 +24,7 @@ val testPrograms = listOf(
                 }
             }
 
-            fun main() : Unit {
+            fun main() -> Unit {
                 print(intToString(fact(5)));
             }
         """.trimIndent(),
@@ -36,7 +36,7 @@ val testPrograms = listOf(
         source = """
             module example;
 
-            fun fibonacci(n: Int) : Int {
+            fun fibonacci(n: Int) -> Int {
                 return fibonacci2(n).second;
             }
 
@@ -45,7 +45,7 @@ val testPrograms = listOf(
                 second: Int,
             }
 
-            fun fibonacci2(n: Int) : FibonacciPair {
+            fun fibonacci2(n: Int) -> FibonacciPair {
                 if (n == 0) {
                     return FibonacciPair(
                         first = 1,
@@ -60,7 +60,7 @@ val testPrograms = listOf(
                 }
             }
 
-            fun main(): Unit {
+            fun main() -> Unit {
                 print(intToString(fibonacci(6)));
             }
         """.trimIndent(),
