@@ -13,6 +13,7 @@ object IntType : Type
 object StringType : Type
 object AnyType : Type
 class MetaType(val type: Type): Type
+class EffectType(val effect: Effect): Type
 
 data class FunctionType(
     val positionalArguments: List<Type>,

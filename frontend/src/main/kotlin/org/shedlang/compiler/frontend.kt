@@ -17,18 +17,28 @@ fun read(filename: String, input: String): FrontEndResult {
 
     val intTypeNodeId = freshNodeId()
     val unitTypeNodeId = freshNodeId()
+
+    val ioEffectNodeId = freshNodeId()
+
     val printNodeId = freshNodeId()
     val intToStringNodeId = freshNodeId()
 
     val variableReferences = resolve(module, mapOf(
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
+
+        "!io" to ioEffectNodeId,
+
         "print" to printNodeId,
         "intToString" to intToStringNodeId
     ))
+
     val variables = mutableMapOf(
         unitTypeNodeId to MetaType(UnitType),
         intTypeNodeId to MetaType(IntType),
+
+        ioEffectNodeId to EffectType(IoEffect),
+
         printNodeId to FunctionType(
             positionalArguments = listOf(StringType),
             namedArguments = mapOf(),
