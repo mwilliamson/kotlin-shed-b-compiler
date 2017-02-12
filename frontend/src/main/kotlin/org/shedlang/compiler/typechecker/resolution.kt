@@ -100,6 +100,9 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is FunctionNode -> {
             context.defer(node, {
+                for (effect in node.effects) {
+                    resolve(effect, context)
+                }
                 resolve(node.returnType, context)
                 node.arguments.forEach { argument -> resolve(argument, context) }
                 resolveScope(

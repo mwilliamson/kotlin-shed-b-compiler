@@ -100,6 +100,25 @@ class ResolutionTests {
     }
 
     @Test
+    fun functionEffectsAreResolved() {
+        val effect = variableReference("!io")
+        val node = function(
+            effects = listOf(effect),
+            returnType = typeReference("Int"),
+            body = listOf()
+        )
+
+        val effectNodeId = freshNodeId()
+
+        val references = resolve(node, globals = mapOf(
+            "Int" to freshNodeId(),
+            "!io" to effectNodeId
+        ))
+
+        assertThat(references[effect], equalTo(effectNodeId))
+    }
+
+    @Test
     fun valIntroducesVariableToFunctionScope() {
         val reference = variableReference("x")
         val valStatement = valStatement(name = "x", expression = literalInt())
