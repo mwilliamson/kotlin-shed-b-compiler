@@ -33,7 +33,7 @@ fun read(filename: String, input: String): FrontEndResult {
         "intToString" to intToStringNodeId
     ))
 
-    val variables = mutableMapOf(
+    val globalNodeTypes = mapOf(
         unitTypeNodeId to MetaType(UnitType),
         intTypeNodeId to MetaType(IntType),
 
@@ -47,12 +47,12 @@ fun read(filename: String, input: String): FrontEndResult {
         ),
         intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
     )
-    val typeContext = newTypeContext(
-        nodeTypes = variables,
+    val nodeTypes = typeCheck(
+        module,
+        nodeTypes = globalNodeTypes,
         resolvedReferences = resolvedReferences
     )
-    typeCheck(module, typeContext)
-    checkReturns(module, variables)
+    checkReturns(module, nodeTypes)
     return FrontEndResult(
         module = module,
         references = resolvedReferences

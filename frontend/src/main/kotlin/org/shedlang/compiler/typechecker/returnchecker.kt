@@ -4,25 +4,23 @@ import org.shedlang.compiler.ast.*
 
 open class ReturnCheckError(message: String?, val source: Source) : Exception(message)
 
-internal fun checkReturns(node: ModuleNode, types: Map<Int, Type>) {
+internal fun checkReturns(node: ModuleNode, types: NodeTypes) {
     descendantsAndSelf(node).forEach({descendant -> when(descendant) {
         is FunctionNode -> checkReturns(descendant, types)
     }})
 }
 
-private fun checkReturns(node: FunctionNode, types: Map<Int, Type>) {
-    val nodeType = types[node.nodeId]
-    when (nodeType) {
-        null -> throw UnknownTypeError(name = node.name, source = node.source)
-        is FunctionType -> {
-            if (nodeType.returns != UnitType && !alwaysReturns(node.body)) {
-                throw ReturnCheckError(
-                    "function ${node.name} is missing return statement",
-                    source = node.source
-                )
-            }
+private fun checkReturns(node: FunctionNode, types: NodeTypes) {
+    val nodeType = types.typeOf(node)
+    if (nodeType is FunctionType) {
+        if (nodeType.returns != UnitType && !alwaysReturns(node.body)) {
+            throw ReturnCheckError(
+                "function ${node.name} is missing return statement",
+                source = node.source
+            )
         }
-        else -> throw NotFunctionTypeError(nodeType, source = node.source)
+    } else {
+        throw NotFunctionTypeError(nodeType, source = node.source)
     }
 }
 

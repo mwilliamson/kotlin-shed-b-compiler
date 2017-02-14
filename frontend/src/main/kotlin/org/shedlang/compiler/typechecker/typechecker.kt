@@ -1,6 +1,7 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import java.util.*
 
 interface Effect
 object IoEffect : Effect
@@ -159,6 +160,37 @@ class FieldAlreadyDeclaredError(val fieldName: String, source: Source)
     : TypeCheckError("Field has already been declared: ${fieldName}", source)
 class UnhandledEffectError(val effect: Effect, source: Source)
     : TypeCheckError("Unhandled effect: ${effect}", source)
+
+internal interface NodeTypes {
+    fun typeOf(node: VariableBindingNode): Type
+}
+
+internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
+    override fun typeOf(node: VariableBindingNode): Type {
+        // TODO: move test from return checker
+        val type = nodeTypes[node.nodeId]
+        if (type == null) {
+            throw UnknownTypeError(name = node.name, source = node.source)
+        } else {
+            return type
+        }
+    }
+
+}
+
+internal fun typeCheck(
+    module: ModuleNode,
+    nodeTypes: Map<Int, Type>,
+    resolvedReferences: ResolvedReferences
+): NodeTypes {
+    val mutableNodeTypes = HashMap(nodeTypes)
+    val typeContext = newTypeContext(
+        nodeTypes = mutableNodeTypes,
+        resolvedReferences = resolvedReferences
+    )
+    typeCheck(module, typeContext)
+    return NodeTypesMap(mutableNodeTypes)
+}
 
 internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     val (typeDeclarations, otherStatements) = module.body

@@ -6,6 +6,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ModuleNode
+import org.shedlang.compiler.ast.Node
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 
@@ -16,7 +18,7 @@ class ReturnCheckTests {
         val node = module(listOf(function))
         val functionType = positionalFunctionType(listOf(), IntType)
         assertThat(
-            { checkReturns(node, mapOf(function.nodeId to functionType)) },
+            { checkReturns(node, mapOf(function to functionType)) },
             throws(cast(has(
                 ReturnCheckError::message,
                 equalTo("function f is missing return statement")
@@ -29,7 +31,7 @@ class ReturnCheckTests {
         val function = function(name = "f", body = listOf())
         val node = module(listOf(function))
         val functionType = positionalFunctionType(listOf(), UnitType)
-        checkReturns(node, mapOf(function.nodeId to functionType))
+        checkReturns(node, mapOf(function to functionType))
     }
 
     @Test
@@ -95,8 +97,14 @@ class ReturnCheckTests {
         val function = function(name = "f", body = listOf())
         val node = module(listOf(function))
         assertThat(
-            { checkReturns(node, mapOf(function.nodeId to IntType)) },
+            { checkReturns(node, mapOf(function to IntType)) },
             throws(has(NotFunctionTypeError::actual, cast(equalTo(IntType))))
         )
+    }
+
+    private fun checkReturns(node: ModuleNode, types: Map<Node, Type>) {
+        return checkReturns(node, NodeTypesMap(types.entries.associate({ entry ->
+            entry.key.nodeId to entry.value
+        })))
     }
 }
