@@ -48,13 +48,13 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
     )
 
 fun newTypeContext(
-    variables: MutableMap<Int, Type> = mutableMapOf(),
+    nodeTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences
 ): TypeContext {
     return TypeContext(
         returnType = null,
         effects = listOf(),
-        variables = variables,
+        nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         deferred = mutableListOf()
     )
@@ -63,12 +63,12 @@ fun newTypeContext(
 class TypeContext(
     val returnType: Type?,
     val effects: List<Effect>,
-    private val variables: MutableMap<Int, Type>,
+    private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val deferred: MutableList<() -> Unit>
 ) {
     fun typeOf(node: VariableBindingNode): Type {
-        val type = variables[node.nodeId]
+        val type = nodeTypes[node.nodeId]
         if (type == null) {
             // TODO: test this
             throw CompilerError(
@@ -82,7 +82,7 @@ class TypeContext(
 
     fun typeOf(reference: ReferenceNode): Type {
         val targetNodeId = resolvedReferences[reference]
-        val type = variables[targetNodeId]
+        val type = nodeTypes[targetNodeId]
         if (type == null) {
             throw CompilerError(
                 "type of ${reference.name} is unknown",
@@ -94,14 +94,14 @@ class TypeContext(
     }
 
     fun addTypes(types: Map<Int, Type>) {
-        variables += types
+        nodeTypes += types
     }
 
     fun enterFunction(returnType: Type, effects: List<Effect>): TypeContext {
         return TypeContext(
             returnType = returnType,
             effects = effects,
-            variables = variables,
+            nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
             deferred = deferred
         )

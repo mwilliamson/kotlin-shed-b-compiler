@@ -48,7 +48,7 @@ fun read(filename: String, input: String): FrontEndResult {
         intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
     )
     val typeContext = newTypeContext(
-        variables = variables,
+        nodeTypes = variables,
         resolvedReferences = resolvedReferences
     )
     typeCheck(module, typeContext)

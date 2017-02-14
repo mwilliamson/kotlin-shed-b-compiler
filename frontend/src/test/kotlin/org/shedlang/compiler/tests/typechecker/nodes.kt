@@ -27,7 +27,7 @@ fun typeContext(
     return TypeContext(
         returnType = returnType,
         effects = effects,
-        variables = HashMap(types),
+        nodeTypes = HashMap(types),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = mutableListOf()
     )

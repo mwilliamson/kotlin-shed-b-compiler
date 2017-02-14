@@ -28,7 +28,7 @@ class TypeCheckValTests {
         val node = valStatement(name = "x", expression = literalInt())
         val variables = mutableMapOf<Int, Type>()
         val typeContext = newTypeContext(
-            variables = variables,
+            nodeTypes = variables,
             resolvedReferences = ResolvedReferencesMap(mapOf())
         )
         typeCheck(node, typeContext)

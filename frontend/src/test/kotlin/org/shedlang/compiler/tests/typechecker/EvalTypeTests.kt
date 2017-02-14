@@ -36,7 +36,7 @@ class EvalTypeTests {
             { evalType(
                 reference,
                 newTypeContext(
-                    variables = mutableMapOf(),
+                    nodeTypes = mutableMapOf(),
                     resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to freshNodeId()))
                 )
             ) },
