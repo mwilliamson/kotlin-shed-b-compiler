@@ -83,16 +83,6 @@ class ReturnCheckTests {
     }
 
     @Test
-    fun whenFunctionTypeIsMissingThenExceptionIsThrown() {
-        val function = function(name = "f", body = listOf())
-        val node = module(listOf(function))
-        assertThat(
-            { checkReturns(node, mapOf()) },
-            throws(has(UnknownTypeError::name, equalTo("f")))
-        )
-    }
-
-    @Test
     fun whenTypeOfFunctionIsNotFunctionTypeThenExceptionIsThrown() {
         val function = function(name = "f", body = listOf())
         val node = module(listOf(function))

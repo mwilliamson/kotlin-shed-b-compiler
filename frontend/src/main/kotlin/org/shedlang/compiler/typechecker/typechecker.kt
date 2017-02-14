@@ -167,7 +167,6 @@ internal interface NodeTypes {
 
 internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
     override fun typeOf(node: VariableBindingNode): Type {
-        // TODO: move test from return checker
         val type = nodeTypes[node.nodeId]
         if (type == null) {
             throw UnknownTypeError(name = node.name, source = node.source)
