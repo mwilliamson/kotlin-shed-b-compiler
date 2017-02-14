@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.python.CodeGenerationContext
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.VariableReferencesMap
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
 class CodeGeneratorTests {
     @Test
@@ -291,7 +291,7 @@ class CodeGeneratorTests {
     private fun context(
         references: Map<ReferenceNode, VariableBindingNode> = mapOf()
     ) = CodeGenerationContext(
-        references = VariableReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value.nodeId}))
+        references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value.nodeId}))
     )
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)

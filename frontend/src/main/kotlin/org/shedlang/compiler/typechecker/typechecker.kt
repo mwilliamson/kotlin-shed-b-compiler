@@ -49,13 +49,13 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 
 fun newTypeContext(
     variables: MutableMap<Int, Type> = mutableMapOf(),
-    variableReferences: VariableReferences
+    resolvedReferences: ResolvedReferences
 ): TypeContext {
     return TypeContext(
         returnType = null,
         effects = listOf(),
         variables = variables,
-        variableReferences = variableReferences,
+        resolvedReferences = resolvedReferences,
         deferred = mutableListOf()
     )
 }
@@ -64,7 +64,7 @@ class TypeContext(
     val returnType: Type?,
     val effects: List<Effect>,
     private val variables: MutableMap<Int, Type>,
-    private val variableReferences: VariableReferences,
+    private val resolvedReferences: ResolvedReferences,
     private val deferred: MutableList<() -> Unit>
 ) {
     fun typeOf(node: VariableBindingNode): Type {
@@ -81,7 +81,7 @@ class TypeContext(
     }
 
     fun typeOf(reference: ReferenceNode): Type {
-        val targetNodeId = variableReferences[reference]
+        val targetNodeId = resolvedReferences[reference]
         val type = variables[targetNodeId]
         if (type == null) {
             throw CompilerError(
@@ -102,7 +102,7 @@ class TypeContext(
             returnType = returnType,
             effects = effects,
             variables = variables,
-            variableReferences = variableReferences,
+            resolvedReferences = resolvedReferences,
             deferred = deferred
         )
     }

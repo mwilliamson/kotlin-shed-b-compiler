@@ -3,11 +3,11 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.*
 import java.util.*
 
-interface VariableReferences {
+interface ResolvedReferences {
     operator fun get(node: ReferenceNode): Int
 }
 
-class VariableReferencesMap(private val references: Map<Int, Int>) : VariableReferences {
+class ResolvedReferencesMap(private val references: Map<Int, Int>) : ResolvedReferences {
     override fun get(node: ReferenceNode): Int {
         val targetNodeId = references[node.nodeId]
         if (targetNodeId == null) {
@@ -72,7 +72,7 @@ internal class ResolutionContext(
     }
 }
 
-internal fun resolve(node: Node, globals: Map<String, Int>): VariableReferences {
+internal fun resolve(node: Node, globals: Map<String, Int>): ResolvedReferences {
     val context = ResolutionContext(
         globals,
         mutableMapOf(),
@@ -81,7 +81,7 @@ internal fun resolve(node: Node, globals: Map<String, Int>): VariableReferences 
     )
     resolve(node, context)
     context.undefer()
-    return VariableReferencesMap(context.nodes)
+    return ResolvedReferencesMap(context.nodes)
 }
 
 internal fun resolve(node: Node, context: ResolutionContext) {

@@ -2,14 +2,14 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
-import org.shedlang.compiler.typechecker.VariableReferences
+import org.shedlang.compiler.typechecker.ResolvedReferences
 
-internal fun generateCode(node: ModuleNode, references: VariableReferences): PythonModuleNode {
+internal fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
     return generateCode(node, CodeGenerationContext(references))
 }
 
 internal class CodeGenerationContext(
-    private val references: VariableReferences,
+    private val references: ResolvedReferences,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf()
 ) {

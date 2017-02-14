@@ -49,7 +49,7 @@ class TypeCheckExpressionTests {
                 reference,
                 newTypeContext(
                     variables = mutableMapOf(),
-                    variableReferences = VariableReferencesMap(mapOf(reference.nodeId to freshNodeId()))
+                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to freshNodeId()))
                 )
             ) },
             throwsCompilerError("type of x is unknown")

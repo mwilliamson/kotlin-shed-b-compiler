@@ -8,7 +8,7 @@ import org.shedlang.compiler.typechecker.*
 
 class FrontEndResult(
     val module: ModuleNode,
-    val references: VariableReferences
+    val references: ResolvedReferences
 )
 
 
@@ -23,7 +23,7 @@ fun read(filename: String, input: String): FrontEndResult {
     val printNodeId = freshNodeId()
     val intToStringNodeId = freshNodeId()
 
-    val variableReferences = resolve(module, mapOf(
+    val resolvedReferences = resolve(module, mapOf(
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
 
@@ -49,12 +49,12 @@ fun read(filename: String, input: String): FrontEndResult {
     )
     val typeContext = newTypeContext(
         variables = variables,
-        variableReferences = variableReferences
+        resolvedReferences = resolvedReferences
     )
     typeCheck(module, typeContext)
     checkReturns(module, variables)
     return FrontEndResult(
         module = module,
-        references = variableReferences
+        references = resolvedReferences
     )
 }
