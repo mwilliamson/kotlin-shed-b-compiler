@@ -1,9 +1,13 @@
 module example;
 
-fun fact(n: Int) : Int {
+fun fact(n: Int) -> Int {
     if (n == 0) {
         return 1;
     } else {
         return n * fact(n - 1);
     }
+}
+
+fun main() !io -> Unit {
+    print(intToString(fact(5)));
 }
