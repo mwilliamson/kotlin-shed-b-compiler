@@ -13,6 +13,13 @@ import org.shedlang.compiler.typechecker.*
 
 class TypeCheckExpressionTests {
     @Test
+    fun unitLiteralIsTypedAsUnit() {
+        val node = literalUnit()
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(equalTo(UnitType)))
+    }
+
+    @Test
     fun booleanLiteralIsTypedAsInteger() {
         val node = literalBool(true)
         val type = inferType(node, emptyTypeContext())

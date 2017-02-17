@@ -246,6 +246,7 @@ data class ValNode(
 
 interface ExpressionNode : Node {
     interface Visitor<T> {
+        fun visit(node: UnitLiteralNode): T
         fun visit(node: BooleanLiteralNode): T
         fun visit(node: IntegerLiteralNode): T
         fun visit(node: StringLiteralNode): T
@@ -257,6 +258,18 @@ interface ExpressionNode : Node {
     }
 
     fun <T> accept(visitor: ExpressionNode.Visitor<T>): T
+}
+
+data class UnitLiteralNode(
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): ExpressionNode {
+    override val children: List<Node>
+        get() = listOf()
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class BooleanLiteralNode(

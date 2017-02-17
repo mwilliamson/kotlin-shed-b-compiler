@@ -1,10 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -13,6 +10,13 @@ import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
 
 class ParsePrimaryExpressionTests {
+    @Test
+    fun unitKeywordCanBeParsedAsIntegerLiteral() {
+        val source = "unit"
+        val node = parsePrimaryExpression(source)
+        assertThat(node, isA<UnitLiteralNode>())
+    }
+
     @Test
     fun integerTokenCanBeParsedAsIntegerLiteral() {
         val source = "1"

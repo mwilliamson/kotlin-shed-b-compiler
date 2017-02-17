@@ -418,6 +418,10 @@ private object IsParser : OperationParser {
 internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<TokenType>) : ExpressionNode? {
     val tokenType = tokens.peek().tokenType;
     when (tokenType) {
+        TokenType.KEYWORD_UNIT -> {
+            tokens.skip()
+            return UnitLiteralNode(source)
+        }
         TokenType.INTEGER -> {
             val token = tokens.next()
             return IntegerLiteralNode(token.value.toInt(), source)

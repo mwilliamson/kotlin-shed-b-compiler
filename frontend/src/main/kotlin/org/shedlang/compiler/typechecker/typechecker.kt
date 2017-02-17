@@ -328,6 +328,10 @@ private fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
 
 internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
     return expression.accept(object : ExpressionNode.Visitor<Type> {
+        override fun visit(node: UnitLiteralNode): Type {
+            return UnitType
+        }
+
         override fun visit(node: BooleanLiteralNode): Type {
             return BoolType
         }
