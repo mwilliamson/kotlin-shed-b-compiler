@@ -119,6 +119,12 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             })
         }
 
+        is UnionNode -> {
+            context.defer(node, {
+                node.members.forEach({ member -> resolve(member, context) })
+            })
+        }
+
         is ValNode -> {
             context.initialise(node)
             resolve(node.expression, context)

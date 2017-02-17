@@ -109,6 +109,15 @@ fun shapeField(
     source = anySource()
 )
 
+fun union(
+    name: String,
+    members: List<TypeNode>
+) = UnionNode(
+    name = name,
+    members = members,
+    source = anySource()
+)
+
 fun argument(
     name: String,
     type: TypeNode = typeReference("Int")

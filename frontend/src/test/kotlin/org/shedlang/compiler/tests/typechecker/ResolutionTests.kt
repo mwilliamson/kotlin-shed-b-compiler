@@ -247,6 +247,21 @@ class ResolutionTests {
         assertThat(references[shapeReference], equalTo(shape.nodeId))
     }
 
+    @Test
+    fun unionCanReferenceTypeDefinedLater() {
+        val shapeReference = typeReference("X")
+        val shape = shape(name = "X")
+
+        val node = module(body = listOf(
+            union("Y", listOf(shapeReference)),
+            shape
+        ))
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[shapeReference], equalTo(shape.nodeId))
+    }
+
     private fun resolutionContext(
         bindings: Map<String, Int> = mapOf(),
         isInitialised: Set<Int> = setOf(),
