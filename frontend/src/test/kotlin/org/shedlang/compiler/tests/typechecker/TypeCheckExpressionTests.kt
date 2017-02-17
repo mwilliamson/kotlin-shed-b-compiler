@@ -20,7 +20,7 @@ class TypeCheckExpressionTests {
     }
 
     @Test
-    fun booleanLiteralIsTypedAsInteger() {
+    fun booleanLiteralIsTypedAsBoolean() {
         val node = literalBool(true)
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(BoolType)))
