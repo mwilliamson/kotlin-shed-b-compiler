@@ -189,6 +189,13 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun unitLiteralGeneratesNone() {
+        val shed = literalUnit()
+        val node = generateCode(shed)
+        assertThat(node, isPythonNone())
+    }
+
+    @Test
     fun booleanLiteralGeneratesBooleanLiteral() {
         val shed = literalBool(true)
 
@@ -330,6 +337,10 @@ class CodeGeneratorTests {
             has(PythonAssignmentNode::expression, expression)
         ))
     }
+
+    private fun isPythonNone()
+        : Matcher<PythonExpressionNode>
+        = isA<PythonNoneLiteralNode>()
 
     private fun isPythonBooleanLiteral(value: Boolean)
         : Matcher<PythonExpressionNode>

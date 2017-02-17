@@ -129,7 +129,7 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
 internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext): PythonExpressionNode {
     return node.accept(object : ExpressionNode.Visitor<PythonExpressionNode> {
         override fun visit(node: UnitLiteralNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonNoneLiteralNode(NodeSource(node))
         }
 
         override fun visit(node: BooleanLiteralNode): PythonExpressionNode {

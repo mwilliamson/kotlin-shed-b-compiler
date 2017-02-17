@@ -180,6 +180,14 @@ class SerialiserTests {
     }
 
     @Test
+    fun noneSerialisation() {
+        assertThat(
+            serialise(pythonNone()),
+            equalTo("None")
+        )
+    }
+
+    @Test
     fun booleanSerialisation() {
         assertThat(
             serialise(pythonLiteralBoolean(true)),

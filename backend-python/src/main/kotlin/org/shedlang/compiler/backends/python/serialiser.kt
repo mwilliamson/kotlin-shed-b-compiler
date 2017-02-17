@@ -69,6 +69,10 @@ private fun serialiseBlock(
 
 internal fun serialise(node: PythonExpressionNode): String {
     return node.accept(object : PythonExpressionNode.Visitor<String>{
+        override fun visit(node: PythonNoneLiteralNode): String {
+            return "None"
+        }
+
         override fun visit(node: PythonBooleanLiteralNode): String {
             return if (node.value) "True" else "False"
         }
@@ -141,6 +145,10 @@ private fun isLeftAssociative(operator: PythonOperator) = when(operator) {
 
 private fun precedence(node: PythonExpressionNode): Int {
     return node.accept(object : PythonExpressionNode.Visitor<Int> {
+        override fun visit(node: PythonNoneLiteralNode): Int {
+            return 18
+        }
+
         override fun visit(node: PythonBooleanLiteralNode): Int {
             return 18
         }

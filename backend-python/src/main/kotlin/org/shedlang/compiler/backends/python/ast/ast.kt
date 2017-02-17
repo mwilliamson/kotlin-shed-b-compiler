@@ -95,6 +95,7 @@ data class PythonAssignmentNode(
 
 interface PythonExpressionNode : PythonNode {
     interface Visitor<T> {
+        fun visit(node: PythonNoneLiteralNode): T
         fun visit(node: PythonBooleanLiteralNode): T
         fun visit(node: PythonIntegerLiteralNode): T
         fun visit(node: PythonStringLiteralNode): T
@@ -105,6 +106,14 @@ interface PythonExpressionNode : PythonNode {
     }
 
     fun <T> accept(visitor: Visitor<T>): T
+}
+
+data class PythonNoneLiteralNode(
+    override val source: Source
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class PythonBooleanLiteralNode(
