@@ -17,6 +17,7 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     literal(TokenType.KEYWORD_SHAPE, "shape"),
     literal(TokenType.KEYWORD_TRUE, "true"),
     literal(TokenType.KEYWORD_UNION, "union"),
+    literal(TokenType.KEYWORD_UNIT, "unit"),
     literal(TokenType.KEYWORD_VAL, "val"),
 
     RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
@@ -60,6 +61,7 @@ internal enum class TokenType {
     KEYWORD_SHAPE,
     KEYWORD_TRUE,
     KEYWORD_UNION,
+    KEYWORD_UNIT,
     KEYWORD_VAL,
 
     IDENTIFIER,
