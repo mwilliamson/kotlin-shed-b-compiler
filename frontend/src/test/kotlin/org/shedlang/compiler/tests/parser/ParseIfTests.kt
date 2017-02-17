@@ -24,4 +24,17 @@ class ParseIfTests {
             ))
         )))
     }
+
+    @Test
+    fun elseBranchIsOptional() {
+        val source = "if (x) { return y; }"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node, cast(allOf(
+            has(IfStatementNode::condition, isVariableReference("x")),
+            has(IfStatementNode::trueBranch, isSequence(
+                isReturn(isVariableReference("y"))
+            )),
+            has(IfStatementNode::falseBranch, isSequence())
+        )))
+    }
 }
