@@ -98,6 +98,10 @@ class TypeContext(
         nodeTypes += types
     }
 
+    fun addType(node: VariableBindingNode, type: Type) {
+        nodeTypes[node.nodeId] = type
+    }
+
     fun enterFunction(returnType: Type, effects: List<Effect>): TypeContext {
         return TypeContext(
             returnType = returnType,
@@ -239,12 +243,13 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
     val effects = function.effects.map({ effect -> evalEffect(effect, context) })
     val returnType = evalType(function.returnType, context)
 
-    context.addTypes(mapOf(function.nodeId to FunctionType(
+    val type = FunctionType(
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effects = effects,
         returns = returnType
-    )))
+    )
+    context.addType(function, type)
 
     context.defer({
         context.addTypes(function.arguments.zip(
@@ -311,7 +316,7 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
 
         override fun visit(node: ValNode) {
             val type = inferType(node.expression, context)
-            context.addTypes(mapOf(node.nodeId to type))
+            context.addType(node, type)
         }
     })
 }
