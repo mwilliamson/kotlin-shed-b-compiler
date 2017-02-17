@@ -376,44 +376,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             if (receiverType is FunctionType) {
-                node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
-                if (receiverType.positionalArguments.size != node.positionalArguments.size) {
-                    throw WrongNumberOfArgumentsError(
-                        expected = receiverType.positionalArguments.size,
-                        actual = node.positionalArguments.size,
-                        source = node.source
-                    )
-                }
-
-                val unhandledEffects = receiverType.effects - context.effects
-                if (unhandledEffects.isNotEmpty()) {
-                    throw UnhandledEffectError(unhandledEffects[0], source = node.source)
-                }
-
-                return receiverType.returns
+                return inferFunctionCallType(node, receiverType)
             } else if (receiverType is MetaType && receiverType.type is ShapeType) {
                 val shapeType = receiverType.type
-
-                if (node.positionalArguments.any()) {
-                    throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
-                }
-
-                for (argument in node.namedArguments) {
-                    val fieldType = shapeType.fields[argument.name]
-                    if (fieldType == null) {
-                        throw ExtraArgumentError(argument.name, source = argument.source)
-                    } else {
-                        verifyType(argument.expression, context, expected = fieldType)
-                    }
-                }
-
-                val missingFieldNames = shapeType.fields.keys - node.namedArguments.map({ argument -> argument.name })
-
-                for (fieldName in missingFieldNames) {
-                    throw MissingArgumentError(fieldName, source = node.source)
-                }
-
-                return shapeType
+                return inferConstructorCallType(node, shapeType)
             } else {
                 val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                 throw UnexpectedTypeError(
@@ -422,6 +388,47 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     source = node.receiver.source
                 )
             }
+        }
+
+        private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
+            node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
+            if (receiverType.positionalArguments.size != node.positionalArguments.size) {
+                throw WrongNumberOfArgumentsError(
+                    expected = receiverType.positionalArguments.size,
+                    actual = node.positionalArguments.size,
+                    source = node.source
+                )
+            }
+
+            val unhandledEffects = receiverType.effects - context.effects
+            if (unhandledEffects.isNotEmpty()) {
+                throw UnhandledEffectError(unhandledEffects[0], source = node.source)
+            }
+
+            return receiverType.returns
+        }
+
+        private fun inferConstructorCallType(node: CallNode, shapeType: ShapeType): Type {
+            if (node.positionalArguments.any()) {
+                throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
+            }
+
+            for (argument in node.namedArguments) {
+                val fieldType = shapeType.fields[argument.name]
+                if (fieldType == null) {
+                    throw ExtraArgumentError(argument.name, source = argument.source)
+                } else {
+                    verifyType(argument.expression, context, expected = fieldType)
+                }
+            }
+
+            val missingFieldNames = shapeType.fields.keys - node.namedArguments.map({ argument -> argument.name })
+
+            for (fieldName in missingFieldNames) {
+                throw MissingArgumentError(fieldName, source = node.source)
+            }
+
+            return shapeType
         }
 
         override fun visit(node: FieldAccessNode): Type {
