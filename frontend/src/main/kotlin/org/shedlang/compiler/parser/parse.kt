@@ -65,6 +65,8 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {
     if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
         return ::parseShape.parse(tokens)
+    } else if (tokens.isNext(TokenType.KEYWORD_UNION)) {
+        return ::parseUnion.parse(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
         return ::parseFunction.parse(tokens)
     } else {
@@ -105,6 +107,24 @@ private fun parseShapeField(source: Source, tokens: TokenIterator<TokenType>): S
         type = type,
         source = source
     )
+}
+
+private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionNode {
+    tokens.skip(TokenType.KEYWORD_UNION)
+    val name = parseIdentifier(tokens)
+    tokens.skip(TokenType.SYMBOL_EQUALS)
+
+    val members = parseMany(
+        parseElement = { tokens -> ::parseType.parse(tokens) },
+        parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_BAR) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
+        allowZero = false,
+        tokens = tokens
+    )
+
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
+
+    return UnionNode(name = name, members = members, source = source)
 }
 
 internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode {
@@ -490,7 +510,25 @@ private fun <T> parseZeroOrMore(
     tokens: TokenIterator<TokenType>,
     allowTrailingSeparator: Boolean = false
 ) : List<T> {
-    if (isEnd(tokens)) {
+    return parseMany(
+        parseElement = parseElement,
+        parseSeparator = parseSeparator,
+        isEnd = isEnd,
+        tokens = tokens,
+        allowTrailingSeparator = allowTrailingSeparator,
+        allowZero = true
+    )
+}
+
+private fun <T> parseMany(
+    parseElement: (TokenIterator<TokenType>) -> T,
+    parseSeparator: (TokenIterator<TokenType>) -> Unit = { tokens -> },
+    isEnd: (TokenIterator<TokenType>) -> Boolean,
+    tokens: TokenIterator<TokenType>,
+    allowTrailingSeparator: Boolean = false,
+    allowZero: Boolean
+) : List<T> {
+    if (allowZero && isEnd(tokens)) {
         return listOf()
     }
 

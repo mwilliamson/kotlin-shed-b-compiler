@@ -1,5 +1,7 @@
 package org.shedlang.compiler.ast
 
+import com.sun.xml.internal.bind.v2.model.core.TypeRef
+
 interface Node {
     val source: Source
     val nodeId: Int
@@ -91,6 +93,7 @@ data class ModuleNode(
 interface ModuleStatementNode: Node {
     interface Visitor<T> {
         fun visit(node: ShapeNode): T
+        fun visit(node: UnionNode): T
         fun visit(node: FunctionNode): T
     }
 
@@ -119,6 +122,20 @@ data class ShapeFieldNode(
 ): Node {
     override val children: List<Node>
         get() = listOf(type)
+}
+
+data class UnionNode(
+    override val name: String,
+    val members: List<TypeNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): TypeDeclarationNode, ModuleStatementNode {
+    override val children: List<Node>
+        get() = members
+
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class FunctionNode(

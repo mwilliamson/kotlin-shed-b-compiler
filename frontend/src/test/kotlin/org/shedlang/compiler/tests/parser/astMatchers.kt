@@ -45,6 +45,16 @@ internal fun isShapeField(
     has(ShapeFieldNode::type, type)
 )
 
+internal fun isUnion(
+    name: Matcher<String> = anything,
+    members: Matcher<List<TypeNode>>
+): Matcher<ModuleStatementNode> {
+    return cast(allOf(
+        has(UnionNode::name, name),
+        has(UnionNode::members, members)
+    ))
+}
+
 internal fun isFunction(name: Matcher<String>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionNode::name, name))
 }

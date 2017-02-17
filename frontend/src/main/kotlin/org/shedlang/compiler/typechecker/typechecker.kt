@@ -209,6 +209,7 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext) {
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
         override fun visit(node: ShapeNode) = typeCheck(node, context)
+        override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionNode) = typeCheck(node, context)
     })
 }
@@ -225,6 +226,10 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         fields = node.fields.associate({ field -> field.name to evalType(field.type, context) })
     )
     context.addTypes(mapOf(node.nodeId to MetaType(shapeType)))
+}
+
+private fun typeCheck(node: UnionNode, context: TypeContext) {
+    throw NotImplementedError("TODO")
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {

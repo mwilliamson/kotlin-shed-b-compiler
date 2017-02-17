@@ -44,15 +44,16 @@ internal class CodeGenerationContext(
 
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
     return PythonModuleNode(
-        node.body.map({ child -> generateCode(child, context) }),
+        node.body.flatMap({ child -> generateCode(child, context) }),
         source = NodeSource(node)
     )
 }
 
-internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): PythonStatementNode {
-    return node.accept(object : ModuleStatementNode.Visitor<PythonStatementNode> {
-        override fun visit(node: ShapeNode): PythonStatementNode = generateCode(node, context)
-        override fun visit(node: FunctionNode): PythonStatementNode = generateCode(node, context)
+internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
+    return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
+        override fun visit(node: ShapeNode) = listOf(generateCode(node, context))
+        override fun visit(node: UnionNode): List<PythonStatementNode> = listOf()
+        override fun visit(node: FunctionNode) = listOf(generateCode(node, context))
     })
 }
 

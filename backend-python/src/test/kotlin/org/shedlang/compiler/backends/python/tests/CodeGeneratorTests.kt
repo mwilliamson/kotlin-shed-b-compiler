@@ -42,7 +42,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed).single()
 
         assertThat(node, isPythonClass(
             name = equalTo("X"),
@@ -72,7 +72,7 @@ class CodeGeneratorTests {
             body = listOf(returns(literalInt(42)))
         )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed).single()
 
         assertThat(node, isPythonFunction(
             name = equalTo("f"),
