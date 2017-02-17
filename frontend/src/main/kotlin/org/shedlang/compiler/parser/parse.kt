@@ -303,6 +303,7 @@ private fun lookupOperator(tokenType: TokenType) : OperationParser? {
         TokenType.SYMBOL_ASTERISK -> OperationParser.MULTIPLY
         TokenType.SYMBOL_OPEN_PAREN -> OperationParser.CALL
         TokenType.SYMBOL_DOT -> OperationParser.FIELD_ACCESS
+        TokenType.KEYWORD_IS -> OperationParser.IS
         else -> null
     }
 }
@@ -319,6 +320,7 @@ private interface OperationParser {
         val MULTIPLY = InfixOperationParser(Operator.MULTIPLY, 12)
         val CALL = FunctionCallParser
         val FIELD_ACCESS = FieldAccessParser
+        val IS = IsParser
     }
 }
 
@@ -393,7 +395,20 @@ private object FieldAccessParser : OperationParser {
             source = left.source
         )
     }
+}
 
+private object IsParser : OperationParser {
+    override val precedence: Int
+        get() = 9
+
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val type = ::parseType.parse(tokens)
+        return IsNode(
+            expression = left,
+            type = type,
+            source = left.source
+        )
+    }
 }
 
 internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<TokenType>) : ExpressionNode? {

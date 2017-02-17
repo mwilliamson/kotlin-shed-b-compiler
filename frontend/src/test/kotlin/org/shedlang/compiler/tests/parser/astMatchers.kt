@@ -71,6 +71,16 @@ internal fun isBinaryOperation(
     ))
 }
 
+internal fun isIsOperation(
+    expression: Matcher<ExpressionNode>,
+    type: Matcher<TypeNode>
+) : Matcher<ExpressionNode> {
+    return cast(allOf(
+        has(IsNode::expression, expression),
+        has(IsNode::type, type)
+    ))
+}
+
 internal fun isCall(
     receiver: Matcher<ExpressionNode>,
     positionalArguments: Matcher<List<ExpressionNode>>,
