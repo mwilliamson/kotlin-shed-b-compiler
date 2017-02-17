@@ -153,6 +153,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
 
+        override fun visit(node: IsNode): PythonExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: CallNode): PythonExpressionNode {
             return PythonFunctionCallNode(
                 generateCode(node.receiver, context),

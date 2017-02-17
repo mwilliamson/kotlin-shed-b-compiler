@@ -1,7 +1,5 @@
 package org.shedlang.compiler.ast
 
-import com.sun.xml.internal.bind.v2.model.core.TypeRef
-
 interface Node {
     val source: Source
     val nodeId: Int
@@ -253,6 +251,7 @@ interface ExpressionNode : Node {
         fun visit(node: StringLiteralNode): T
         fun visit(node: VariableReferenceNode): T
         fun visit(node: BinaryOperationNode): T
+        fun visit(node: IsNode): T
         fun visit(node: CallNode): T
         fun visit(node: FieldAccessNode): T
     }
@@ -321,6 +320,20 @@ data class BinaryOperationNode(
 ) : ExpressionNode {
     override val children: List<Node>
         get() = listOf(left, right)
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class IsNode(
+    val expression: ExpressionNode,
+    val type: TypeNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ExpressionNode {
+    override val children: List<Node>
+        get() = listOf(expression, type)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

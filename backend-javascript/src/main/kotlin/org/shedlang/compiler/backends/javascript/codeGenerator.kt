@@ -83,6 +83,10 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
             )
         }
 
+        override fun visit(node: IsNode): JavascriptExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: CallNode): JavascriptExpressionNode {
             if (node.namedArguments.isEmpty()) {
                 return JavascriptFunctionCallNode(

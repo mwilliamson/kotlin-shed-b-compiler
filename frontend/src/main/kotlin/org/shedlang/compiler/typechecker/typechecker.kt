@@ -353,6 +353,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
         }
 
+        override fun visit(node: IsNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: CallNode): Type {
             val receiverType = inferType(node.receiver, context)
 
