@@ -75,7 +75,7 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
-            return JavascriptVariableReferenceNode(node.name, NodeSource(node))
+            return generateCodeForReferenceNode(node)
         }
 
         override fun visit(node: BinaryOperationNode): JavascriptExpressionNode {
@@ -88,7 +88,17 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: IsNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return JavascriptFunctionCallNode(
+                JavascriptVariableReferenceNode(
+                    name = "\$shed.isType",
+                    source = NodeSource(node)
+                ),
+                listOf(
+                    generateCode(node.expression),
+                    generateCode(node.type)
+                ),
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: CallNode): JavascriptExpressionNode {
@@ -126,4 +136,17 @@ private fun generateCode(operator: Operator): JavascriptOperator {
         Operator.MULTIPLY -> JavascriptOperator.MULTIPLY
 
     }
+}
+
+private fun generateCode(node: TypeNode): JavascriptExpressionNode {
+    // TODO: test this
+    return node.accept(object : TypeNode.Visitor<JavascriptExpressionNode> {
+        override fun visit(node: TypeReferenceNode): JavascriptExpressionNode {
+            return generateCodeForReferenceNode(node)
+        }
+    })
+}
+
+private fun generateCodeForReferenceNode(node: ReferenceNode): JavascriptExpressionNode {
+    return JavascriptVariableReferenceNode(node.name, NodeSource(node))
 }

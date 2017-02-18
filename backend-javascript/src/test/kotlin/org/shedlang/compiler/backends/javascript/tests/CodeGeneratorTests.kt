@@ -173,6 +173,25 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun isOperationGeneratesTypeCheck() {
+        val reference = variableReference("x")
+        val typeReference = typeReference("X")
+
+        val shed = isOperation(
+            expression = reference,
+            type = typeReference
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptFunctionCall(
+            // TODO: should be a field access
+            isJavascriptVariableReference("\$shed.isType"),
+            isSequence(isJavascriptVariableReference("x"), isJavascriptVariableReference("X"))
+        ))
+    }
+
+    @Test
     fun functionCallGeneratesFunctionCall() {
         val shed = call(variableReference("f"), listOf(literalInt(42)))
 
