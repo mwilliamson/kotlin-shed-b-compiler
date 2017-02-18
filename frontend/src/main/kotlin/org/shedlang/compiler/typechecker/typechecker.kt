@@ -23,15 +23,29 @@ data class FunctionType(
     val effects: List<Effect>
 ): Type
 
-data class ShapeType(
-    val name: String,
-    val fields: Map<String, Type>
-): Type
+interface ShapeType: Type {
+    val name: String;
+    val fields: Map<String, Type>;
+}
 
-data class UnionType(
-    val name: String,
-    val members: List<Type>
-): Type
+data class LazyShapeType(
+    override val name: String,
+    val getFields: Lazy<Map<String, Type>>
+): ShapeType {
+    override val fields: Map<String, Type> by getFields
+}
+
+interface UnionType: Type {
+    val name: String;
+    val members: List<Type>;
+}
+
+data class LazyUnionType(
+    override val name: String,
+    private val getMembers: Lazy<List<Type>>
+): UnionType {
+    override val members: List<Type> by getMembers
+}
 
 fun functionType(
     positionalArguments: List<Type> = listOf(),
@@ -230,22 +244,36 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         }
     }
 
-    val shapeType = ShapeType(
+    // TODO: test laziness
+    val fields = lazy({
+        node.fields.associate({ field -> field.name to evalType(field.type, context) })
+    })
+
+    val shapeType = LazyShapeType(
         name = node.name,
-        fields = node.fields.associate({ field -> field.name to evalType(field.type, context) })
+        getFields = fields
     )
-    context.addTypes(mapOf(node.nodeId to MetaType(shapeType)))
+    context.addType(node, MetaType(shapeType))
+    context.defer({
+        fields.value
+    })
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check for duplicates in members
+    // TODO: check for circularity
+    // TODO: test laziness
 
-    val unionType = UnionType(
+    val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
+    val unionType = LazyUnionType(
         name = node.name,
-        members = node.members.map({ member -> evalType(member, context) })
+        getMembers = members
     )
 
     context.addType(node, MetaType(unionType))
+    context.defer({
+        members.value
+    })
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {
