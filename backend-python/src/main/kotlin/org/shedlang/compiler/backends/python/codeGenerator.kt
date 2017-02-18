@@ -158,7 +158,12 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: IsNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return PythonFunctionCallNode(
+                function = PythonVariableReferenceNode("isinstance", source = node.source),
+                arguments = listOf(generateCode(node.expression, context), generateCode(node.type, context)),
+                keywordArguments = mapOf(),
+                source = node.source
+            )
         }
 
         override fun visit(node: CallNode): PythonExpressionNode {
@@ -190,4 +195,14 @@ private fun generateCode(operator: Operator): PythonOperator {
         Operator.MULTIPLY -> PythonOperator.MULTIPLY
 
     }
+}
+
+private fun generateCode(node: TypeNode, context: CodeGenerationContext): PythonExpressionNode {
+    // TODO: test code gen for types
+    return node.accept(object : TypeNode.Visitor<PythonExpressionNode> {
+        override fun visit(node: TypeReferenceNode): PythonExpressionNode {
+            // TODO: test renaming
+            return PythonVariableReferenceNode(context.name(node), NodeSource(node))
+        }
+    })
 }

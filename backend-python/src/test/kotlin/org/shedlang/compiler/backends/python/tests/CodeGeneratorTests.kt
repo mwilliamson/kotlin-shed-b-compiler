@@ -257,6 +257,30 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun isOperationGeneratesIsInstanceCall() {
+        val declaration = argument("x")
+        val reference = variableReference("x")
+        val typeReference = typeReference("X")
+        val typeDeclaration = shape("X", listOf())
+
+        val shed = isOperation(
+            expression = reference,
+            type = typeReference
+        )
+
+        val context = context(mapOf(
+            reference to declaration,
+            typeReference to typeDeclaration
+        ))
+        val node = generateCode(shed, context)
+
+        assertThat(node, isPythonFunctionCall(
+            isPythonVariableReference("isinstance"),
+            isSequence(isPythonVariableReference("x"), isPythonVariableReference("X"))
+        ))
+    }
+
+    @Test
     fun functionCallGeneratesFunctionCall() {
         val declaration = argument("f")
         val function = variableReference("f")
