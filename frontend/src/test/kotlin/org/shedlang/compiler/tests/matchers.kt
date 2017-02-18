@@ -69,6 +69,14 @@ internal fun isShapeType(
     has(ShapeType::fields, isMap(*fields.toTypedArray()))
 ))
 
+internal fun isUnionType(
+    name: Matcher<String>,
+    members: Matcher<List<Type>>
+): Matcher<Type> = cast(allOf(
+    has(UnionType::name, name),
+    has(UnionType::members, members)
+))
+
 internal val isIntType: Matcher<Type> = cast(equalTo(IntType))
 internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))
 

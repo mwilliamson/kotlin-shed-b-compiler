@@ -28,6 +28,11 @@ data class ShapeType(
     val fields: Map<String, Type>
 ): Type
 
+data class UnionType(
+    val name: String,
+    val members: List<Type>
+): Type
+
 fun functionType(
     positionalArguments: List<Type> = listOf(),
     namedArguments: Map<String, Type> = mapOf(),
@@ -233,7 +238,14 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {
-    throw NotImplementedError("TODO")
+    // TODO: check for duplicates in members
+
+    val unionType = UnionType(
+        name = node.name,
+        members = node.members.map({ member -> evalType(member, context) })
+    )
+
+    context.addType(node, MetaType(unionType))
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {
