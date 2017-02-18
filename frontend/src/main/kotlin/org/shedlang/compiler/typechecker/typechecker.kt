@@ -499,7 +499,19 @@ private fun verifyType(expression: ExpressionNode, context: TypeContext, expecte
 }
 
 private fun verifyType(expected: Type, actual: Type, source: Source) {
-    if (actual != expected) {
+    if (!canCoerce(from = actual, to = expected)) {
         throw UnexpectedTypeError(expected = expected, actual = actual, source = source)
     }
+}
+
+internal fun canCoerce(from: Type, to: Type): Boolean {
+    if (from == to) {
+        return true
+    }
+
+    if (to is UnionType) {
+        return to.members.any({ member -> canCoerce(from = from, to = member) })
+    }
+
+    return false
 }
