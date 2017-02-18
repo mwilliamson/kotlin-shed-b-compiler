@@ -154,6 +154,14 @@ class SerialiserTests {
     }
 
     @Test
+    fun nullSerialisation() {
+        assertThat(
+            serialise(jsLiteralNull()),
+            equalTo("null")
+        )
+    }
+
+    @Test
     fun booleanSerialisation() {
         assertThat(
             serialise(jsLiteralBool(true)),

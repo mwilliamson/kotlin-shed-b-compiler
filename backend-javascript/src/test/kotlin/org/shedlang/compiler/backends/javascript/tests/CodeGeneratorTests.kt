@@ -106,6 +106,13 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun unitLiteralGeneratesNull() {
+        val shed = literalUnit()
+        val node = generateCode(shed)
+        assertThat(node, isJavascriptNull())
+    }
+
+    @Test
     fun booleanLiteralGeneratesBooleanLiteral() {
         val shed = literalBool(true)
 
@@ -226,6 +233,10 @@ class CodeGeneratorTests {
     private fun isJavascriptBooleanLiteral(value: Boolean)
         : Matcher<JavascriptExpressionNode>
         = cast(has(JavascriptBooleanLiteralNode::value, equalTo(value)))
+
+    private fun isJavascriptNull()
+        : Matcher<JavascriptExpressionNode>
+        = isA<JavascriptNullLiteralNode>()
 
     private fun isJavascriptIntegerLiteral(value: Int)
         : Matcher<JavascriptExpressionNode>

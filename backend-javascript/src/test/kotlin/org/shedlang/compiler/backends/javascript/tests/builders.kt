@@ -3,6 +3,10 @@ package org.shedlang.compiler.backends.javascript.tests
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.tests.anySource
 
+fun jsLiteralNull() = JavascriptNullLiteralNode(
+    source = anySource()
+)
+
 fun jsLiteralBool(value: Boolean) = JavascriptBooleanLiteralNode(
     value = value,
     source = anySource()

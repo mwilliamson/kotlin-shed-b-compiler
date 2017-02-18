@@ -75,6 +75,7 @@ data class JavascriptConstNode(
 
 interface JavascriptExpressionNode : JavascriptNode {
     interface Visitor<T> {
+        fun visit(node: JavascriptNullLiteralNode): T
         fun visit(node: JavascriptBooleanLiteralNode): T
         fun visit(node: JavascriptIntegerLiteralNode): T
         fun visit(node: JavascriptStringLiteralNode): T
@@ -86,6 +87,14 @@ interface JavascriptExpressionNode : JavascriptNode {
     }
 
     fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T
+}
+
+data class JavascriptNullLiteralNode(
+    override val source: Source
+): JavascriptExpressionNode {
+    override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class JavascriptBooleanLiteralNode(

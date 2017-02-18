@@ -59,7 +59,7 @@ internal fun generateCode(node: StatementNode): JavascriptStatementNode {
 internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
     return node.accept(object : ExpressionNode.Visitor<JavascriptExpressionNode> {
         override fun visit(node: UnitLiteralNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return JavascriptNullLiteralNode(NodeSource(node))
         }
 
         override fun visit(node: BooleanLiteralNode): JavascriptExpressionNode {

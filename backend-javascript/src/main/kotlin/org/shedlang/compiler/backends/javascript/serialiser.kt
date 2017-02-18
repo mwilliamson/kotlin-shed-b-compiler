@@ -68,6 +68,10 @@ private fun serialiseBlock(
 
 internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : String {
     return node.accept(object : JavascriptExpressionNode.Visitor<String> {
+        override fun visit(node: JavascriptNullLiteralNode): String {
+            return "null"
+        }
+
         override fun visit(node: JavascriptBooleanLiteralNode): String {
             return if (node.value) "true" else "false"
         }
@@ -150,6 +154,10 @@ private fun serialise(operator: JavascriptOperator) = when(operator) {
 
 private fun precedence(node: JavascriptExpressionNode): Int {
     return node.accept(object : JavascriptExpressionNode.Visitor<Int> {
+        override fun visit(node: JavascriptNullLiteralNode): Int {
+            return 21
+        }
+
         override fun visit(node: JavascriptObjectLiteralNode): Int {
             return 21
         }
