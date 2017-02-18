@@ -304,6 +304,10 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
     })
 }
 
+private fun typeCheck(type: TypeNode, context: TypeContext) {
+    evalType(type, context)
+}
+
 internal fun evalType(type: TypeNode, context: TypeContext): Type {
     return type.accept(object : TypeNode.Visitor<Type> {
         override fun visit(node: TypeReferenceNode): Type {
@@ -403,7 +407,12 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         override fun visit(node: IsNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            // TODO: test expression and type checking
+
+            typeCheck(node.expression, context)
+            evalType(node.type, context)
+
+            return BoolType
         }
 
         override fun visit(node: CallNode): Type {

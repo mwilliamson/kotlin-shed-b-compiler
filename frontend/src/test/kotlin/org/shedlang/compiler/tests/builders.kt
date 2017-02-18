@@ -48,6 +48,15 @@ fun binaryOperation(
     source = anySource()
 )
 
+fun isOperation(
+    expression: ExpressionNode,
+    type: TypeNode
+) = IsNode(
+    expression = expression,
+    type = type,
+    source = anySource()
+)
+
 fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
