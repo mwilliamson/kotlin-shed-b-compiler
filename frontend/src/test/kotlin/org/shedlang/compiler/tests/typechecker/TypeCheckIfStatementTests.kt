@@ -2,11 +2,8 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.ifStatement
-import org.shedlang.compiler.tests.literalInt
-import org.shedlang.compiler.typechecker.BoolType
-import org.shedlang.compiler.typechecker.IntType
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.*
 
 class TypeCheckIfStatementTests {
     @Test
@@ -26,5 +23,38 @@ class TypeCheckIfStatementTests {
     @Test
     fun falseBranchIsTypeChecked() {
         assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(falseBranch = listOf(badStatement)) }
+    }
+
+    // TODO: Test that refined type is only in true branch (not false branch, nor following statements)
+    @Test
+    fun whenConditionIsIsOperationThenTypeIsRefinedInTrueBranch() {
+        val argument = argument("x")
+
+        val variableReference = variableReference("x")
+        val intType = typeReference("Int")
+        val statement = ifStatement(
+            condition = isOperation(variableReference, intType),
+            trueBranch = listOf(
+                returns(variableReference)
+            )
+        )
+
+        val typeContext = typeContext(
+            returnType = IntType,
+            referenceTypes = mapOf(
+                intType to MetaType(IntType)
+            ),
+            references = mapOf(
+                variableReference to argument
+            ),
+            types = mapOf(
+                argument to object: UnionType {
+                    override val name = "X"
+                    override val members = listOf(IntType, UnitType)
+                }
+            )
+        )
+
+        typeCheck(statement, typeContext)
     }
 }

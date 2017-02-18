@@ -121,11 +121,26 @@ class TypeContext(
         nodeTypes[node.nodeId] = type
     }
 
+    fun addType(node: ReferenceNode, type: Type) {
+        val targetNodeId = resolvedReferences[node]
+        nodeTypes[targetNodeId] = type
+    }
+
     fun enterFunction(returnType: Type, effects: List<Effect>): TypeContext {
         return TypeContext(
             returnType = returnType,
             effects = effects,
             nodeTypes = nodeTypes,
+            resolvedReferences = resolvedReferences,
+            deferred = deferred
+        ).enterScope()
+    }
+
+    fun enterScope(): TypeContext {
+        return TypeContext(
+            returnType = returnType,
+            effects = effects,
+            nodeTypes = HashMap(nodeTypes),
             resolvedReferences = resolvedReferences,
             deferred = deferred
         )
@@ -342,7 +357,14 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
 
         override fun visit(node: IfStatementNode) {
             verifyType(node.condition, context, expected = BoolType)
-            typeCheck(node.trueBranch, context)
+
+            val trueContext = context.enterScope()
+
+            if (node.condition is IsNode && node.condition.expression is VariableReferenceNode) {
+                trueContext.addType(node.condition.expression, evalType(node.condition.type, context))
+            }
+
+            typeCheck(node.trueBranch, trueContext)
             typeCheck(node.falseBranch, context)
         }
 

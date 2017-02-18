@@ -16,18 +16,22 @@ fun typeContext(
     returnType: Type? = null,
     effects: List<Effect> = listOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
-    references: Map<ReferenceNode, VariableBindingNode> = mapOf()
+    references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
+    types: Map<VariableBindingNode, Type> = mapOf()
 ): TypeContext {
     val finalReferences = (
         referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> freshNodeId()}) +
         references.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value.nodeId })
     )
-    val types = referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!! }, { entry -> entry.value })
+    val finalTypes = (
+        referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!! }, { entry -> entry.value }) +
+        types.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value })
+    )
 
     return TypeContext(
         returnType = returnType,
         effects = effects,
-        nodeTypes = HashMap(types),
+        nodeTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = mutableListOf()
     )
