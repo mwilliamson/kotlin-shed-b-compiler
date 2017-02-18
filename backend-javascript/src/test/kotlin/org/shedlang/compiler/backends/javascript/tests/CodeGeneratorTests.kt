@@ -32,6 +32,21 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun shapeGeneratesType() {
+        val shed = shape(name = "X")
+
+        val node = generateCode(shed).single()
+
+        assertThat(node, isJavascriptConst(
+            name = equalTo("X"),
+            expression = isJavascriptFunctionCall(
+                isJavascriptVariableReference("\$shed.declareShape"),
+                isSequence(isJavascriptStringLiteral("X"))
+            )
+        ))
+    }
+
+    @Test
     fun functionGeneratesFunction() {
         val shed = function(
             name = "f",
@@ -99,10 +114,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, cast(allOf(
-            has(JavascriptConstNode::name, equalTo("x")),
-            has(JavascriptConstNode::expression, isJavascriptBooleanLiteral(true))
-        )))
+        assertThat(node, isJavascriptConst(equalTo("x"), isJavascriptBooleanLiteral(true)))
     }
 
     @Test
@@ -244,6 +256,14 @@ class CodeGeneratorTests {
             has(JavascriptFunctionNode::arguments, arguments),
             has(JavascriptFunctionNode::body, body)
         ))
+
+    private fun isJavascriptConst(
+        name: Matcher<String>,
+        expression: Matcher<JavascriptExpressionNode>
+    ): Matcher<JavascriptStatementNode>  = cast(allOf(
+        has(JavascriptConstNode::name, name),
+        has(JavascriptConstNode::expression, expression)
+    ))
 
     private fun isJavascriptReturn(expression: Matcher<JavascriptExpressionNode>)
         : Matcher<JavascriptStatementNode>

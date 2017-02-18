@@ -12,10 +12,26 @@ internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
 
 internal fun generateCode(node: ModuleStatementNode): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
-        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf()
+        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf()
         override fun visit(node: FunctionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
     })
+}
+
+private fun generateCode(node: ShapeNode) : JavascriptStatementNode {
+    val source = NodeSource(node)
+    return JavascriptConstNode(
+        name = node.name,
+        expression = JavascriptFunctionCallNode(
+            JavascriptVariableReferenceNode(
+                "\$shed.declareShape",
+                source = source
+            ),
+            listOf(JavascriptStringLiteralNode(node.name, source = source)),
+            source = source
+        ),
+        source = source
+    )
 }
 
 private fun generateCode(node: FunctionNode): JavascriptFunctionNode {

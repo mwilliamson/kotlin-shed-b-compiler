@@ -26,8 +26,24 @@ class ExecutionTests {
                     function print(value) {
                         console.log(value);
                     }
+
+                    function declareShape(name) {
+                        return {
+                            name: name,
+                            typeId: freshTypeId()
+                        };
+                    }
+
+                    var nextTypeId = 1;
+                    function freshTypeId() {
+                        return nextTypeId++;
+                    }
+
+                    var ${"$"}shed = {
+                        declareShape: declareShape
+                    };
                 """
-                val contents = serialise(generateCode) + "\nmain()\n" + stdlib + "\n"
+                val contents = stdlib + serialise(generateCode) + "\nmain()\n" + "\n"
                 val result = run(listOf("node", "-e", contents))
                 assertThat(result, equalTo(testProgram.expectedResult))
             } catch (error: TypeCheckError) {
