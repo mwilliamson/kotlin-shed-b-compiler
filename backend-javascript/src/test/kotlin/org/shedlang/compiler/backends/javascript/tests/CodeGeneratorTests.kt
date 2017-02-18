@@ -226,6 +226,7 @@ class CodeGeneratorTests {
 
         assertThat(node, isJavascriptObject(
             properties = isMap(
+                "\$shedType" to isJavascriptVariableReference("X"),
                 "a" to isJavascriptBooleanLiteral(true)
             )
         ))

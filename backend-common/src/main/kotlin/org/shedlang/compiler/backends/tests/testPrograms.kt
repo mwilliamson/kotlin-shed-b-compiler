@@ -28,7 +28,7 @@ val testPrograms = listOf(
                 print(intToString(fact(5)));
             }
         """.trimIndent(),
-        expectedResult = ExecutionResult(stdout = "120")
+        expectedResult = ExecutionResult(stdout = "120\n")
     ),
 
     TestProgram(
@@ -64,11 +64,39 @@ val testPrograms = listOf(
                 print(intToString(fibonacci(6)));
             }
         """.trimIndent(),
-        expectedResult = ExecutionResult(stdout = "8")
+        expectedResult = ExecutionResult(stdout = "8\n")
+    ),
+
+    TestProgram(
+        name = "cons",
+        source = """
+            module example;
+
+            union List = Cons | Unit;
+            shape Cons {
+                head: Int,
+                tail: List,
+            }
+
+            fun cons(head: Int, tail: List) -> List {
+                return Cons(head=head, tail=tail);
+            }
+
+            fun printInts(list: List) !io -> Unit {
+                if (list is Cons) {
+                    print(intToString(list.head));
+                    printInts(list.tail);
+                }
+            }
+
+            fun main() !io -> Unit {
+                val list = cons(1, cons(2, cons(3, unit)));
+                printInts(list);
+            }
+        """.trimIndent(),
+        expectedResult = ExecutionResult(stdout = "1\n2\n3\n")
     )
 )
-
-
 
 fun run(arguments: List<String>): ExecutionResult {
     return run(arguments, null)
@@ -80,7 +108,7 @@ private fun run(arguments: List<String>, directoryPath: Path?): ExecutionResult 
         .start()
 
     val exitCode = process.waitFor()
-    val output = readString(process.inputStream).trim()
+    val output = readString(process.inputStream)
     val stderrOutput = readString(process.errorStream)
     return ExecutionResult(exitCode, output, stderrOutput)
 }

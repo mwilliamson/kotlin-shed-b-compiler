@@ -39,8 +39,13 @@ class ExecutionTests {
                         return nextTypeId++;
                     }
 
+                    function isType(value, type) {
+                        return value != null && value.${"$"}shedType === type;
+                    }
+
                     var ${"$"}shed = {
-                        declareShape: declareShape
+                        declareShape: declareShape,
+                        isType: isType
                     };
                 """
                 val contents = stdlib + serialise(generateCode) + "\nmain()\n" + "\n"

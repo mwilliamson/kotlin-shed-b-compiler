@@ -125,10 +125,11 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                     source = NodeSource(node)
                 )
             } else {
+                val fieldArguments = node.namedArguments.associate({ argument ->
+                    argument.name to generateCode(argument.expression)
+                })
                 return JavascriptObjectLiteralNode(
-                    node.namedArguments.associate({ argument ->
-                        argument.name to generateCode(argument.expression)
-                    }),
+                    mapOf("\$shedType" to generateCode(node.receiver)) + fieldArguments,
                     source = NodeSource(node)
                 )
             }
