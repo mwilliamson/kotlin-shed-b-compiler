@@ -139,4 +139,18 @@ class TokeniserTests {
             })
         }
     }
+
+    @Test
+    fun doubleSlashStartsLineComment() {
+        assertEquals(
+            listOf(
+                Token(0, TokenType.INTEGER, "1"),
+                Token(1, TokenType.WHITESPACE, " "),
+                Token(2, TokenType.COMMENT, "// blah"),
+                Token(9, TokenType.WHITESPACE, "\n"),
+                Token(10, TokenType.INTEGER, "2")
+            ),
+            tokenise("1 // blah\n2")
+        )
+    }
 }

@@ -41,7 +41,8 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     RegexTokeniser.rule(TokenType.IDENTIFIER, "!?[A-Za-z][A-Za-z0-9]*"),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
     RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
-    RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+")
+    RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+"),
+    RegexTokeniser.rule(TokenType.COMMENT, "//[^\n]*")
 ))
 
 internal fun tokenise(value: String): List<Token<TokenType>> {
@@ -86,5 +87,6 @@ internal enum class TokenType {
     STRING,
     UNTERMINATED_STRING,
     WHITESPACE,
+    COMMENT,
     END
 }

@@ -18,7 +18,7 @@ internal fun parse(filename: String, input: String): ModuleNode {
 
 internal fun parserTokenise(filename: String, input: String): TokenIterator<TokenType> {
     val tokens = tokenise(input)
-        .filter { token -> token.tokenType != TokenType.WHITESPACE }
+        .filter { token -> token.tokenType != TokenType.WHITESPACE && token.tokenType != TokenType.COMMENT }
     return TokenIterator(
         locate = { characterIndex ->
             StringSource(
