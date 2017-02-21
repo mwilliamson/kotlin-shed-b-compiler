@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.tests
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.file.Path
+import java.nio.file.Paths
 
 data class TestProgram(
     val name: String,
@@ -10,93 +11,34 @@ data class TestProgram(
     val expectedResult: ExecutionResult
 )
 
-val testPrograms = listOf(
-    TestProgram(
-        name = "recursive factorial",
-        source = """
-            module example;
+fun testPrograms(): List<TestProgram> {
+    val root = findRoot()
+    val exampleDirectory = root.resolve("examples").toFile()
+    val exampleFilenames = exampleDirectory.list()
 
-            fun fact(n: Int) -> Int {
-                if (n == 0) {
-                    return 1;
-                } else {
-                    return n * fact(n - 1);
-                }
-            }
+    return exampleFilenames.toList().map(fun(filename): TestProgram {
+        val text = exampleDirectory.resolve(filename).readText()
+        val name = Regex("^// name:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)!!.groupValues[1]
+        val stdout = Regex("^// stdout:((?:\n//   .*)*)", setOf(RegexOption.MULTILINE))
+            .find(text)!!
+            .groupValues[1]
+            .trimMargin("//   ") + "\n"
+        return TestProgram(
+            name = name,
+            source = text,
+            expectedResult = ExecutionResult(stdout = stdout)
+        )
+    })
+}
 
-            fun main() !io -> Unit {
-                print(intToString(fact(5)));
-            }
-        """.trimIndent(),
-        expectedResult = ExecutionResult(stdout = "120\n")
-    ),
-
-    TestProgram(
-        name = "recursive fibonacci",
-        source = """
-            module example;
-
-            fun fibonacci(n: Int) -> Int {
-                return fibonacci2(n).second;
-            }
-
-            shape FibonacciPair {
-                first: Int,
-                second: Int,
-            }
-
-            fun fibonacci2(n: Int) -> FibonacciPair {
-                if (n == 0) {
-                    return FibonacciPair(
-                        first = 1,
-                        second = 0
-                    );
-                } else {
-                    val previous = fibonacci2(n - 1);
-                    return FibonacciPair(
-                        first = previous.second,
-                        second = previous.first + previous.second
-                    );
-                }
-            }
-
-            fun main() !io -> Unit {
-                print(intToString(fibonacci(6)));
-            }
-        """.trimIndent(),
-        expectedResult = ExecutionResult(stdout = "8\n")
-    ),
-
-    TestProgram(
-        name = "cons",
-        source = """
-            module example;
-
-            union List = Cons | Unit;
-            shape Cons {
-                head: Int,
-                tail: List,
-            }
-
-            fun cons(head: Int, tail: List) -> List {
-                return Cons(head=head, tail=tail);
-            }
-
-            fun printInts(list: List) !io -> Unit {
-                if (list is Cons) {
-                    print(intToString(list.head));
-                    printInts(list.tail);
-                }
-            }
-
-            fun main() !io -> Unit {
-                val list = cons(1, cons(2, cons(3, unit)));
-                printInts(list);
-            }
-        """.trimIndent(),
-        expectedResult = ExecutionResult(stdout = "1\n2\n3\n")
-    )
-)
+private fun findRoot(): Path {
+    val rootFilenames = listOf("examples", "frontend")
+    var directory = Paths.get(System.getProperty("user.dir"))
+    while (!directory.toFile().list().toList().containsAll(rootFilenames)) {
+        directory = directory.parent
+    }
+    return directory
+}
 
 fun run(arguments: List<String>): ExecutionResult {
     return run(arguments, null)

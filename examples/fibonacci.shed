@@ -1,3 +1,7 @@
+// name: recursive fibonacci
+// stdout:
+//   8
+
 module example;
 
 fun fibonacci(n: Int) -> Int {

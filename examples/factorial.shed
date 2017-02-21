@@ -1,3 +1,7 @@
+// name: recursive factorial
+// stdout:
+//   120
+
 module example;
 
 fun fact(n: Int) -> Int {

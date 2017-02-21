@@ -14,7 +14,7 @@ import org.shedlang.compiler.typechecker.TypeCheckError
 class ExecutionTests {
     @TestFactory
     fun testProgram(): List<DynamicTest> {
-        return testPrograms.map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
+        return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 val frontEndResult = read(filename = "<string>", input = testProgram.source)
                 val generateCode = generateCode(frontEndResult.module)
