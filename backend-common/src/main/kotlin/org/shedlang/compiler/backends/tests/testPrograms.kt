@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.tests
 
+import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.file.Path
@@ -12,12 +13,8 @@ data class TestProgram(
 )
 
 fun testPrograms(): List<TestProgram> {
-    val root = findRoot()
-    val exampleDirectory = root.resolve("examples").toFile()
-    val exampleFilenames = exampleDirectory.list()
-
-    return exampleFilenames.toList().map(fun(filename): TestProgram {
-        val text = exampleDirectory.resolve(filename).readText()
+    return findTestFiles().map(fun(file): TestProgram {
+        val text = file.readText()
         val name = Regex("^// name:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)!!.groupValues[1]
         val stdout = Regex("^// stdout:((?:\n//   .*)*)", setOf(RegexOption.MULTILINE))
             .find(text)!!
@@ -28,6 +25,19 @@ fun testPrograms(): List<TestProgram> {
             source = text,
             expectedResult = ExecutionResult(stdout = stdout)
         )
+    })
+}
+
+private fun findTestFiles(): List<File> {
+    val root = findRoot()
+    val exampleDirectory = root.resolve("examples").toFile()
+    return exampleDirectory.list().map(fun(name): File {
+        val file = exampleDirectory.resolve(name)
+        if (file.isDirectory) {
+            return file.resolve("main.shed")
+        } else {
+            return file
+        }
     })
 }
 
