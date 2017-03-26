@@ -62,6 +62,19 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
     ).joinToString(".")
 }
 
+internal fun parseImport(source: Source, tokens: TokenIterator<TokenType>): ImportNode {
+    tokens.skip(TokenType.KEYWORD_IMPORT)
+    val moduleNameParts = parseMany(
+        parseElement = ::parseIdentifier,
+        parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_DOT) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
+        tokens = tokens,
+        allowZero = false
+    )
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
+    return ImportNode(module = moduleNameParts.joinToString("."), source = source)
+}
+
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {
     if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
         return ::parseShape.parse(tokens)

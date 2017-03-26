@@ -88,6 +88,15 @@ data class ModuleNode(
         get() = body
 }
 
+data class ImportNode(
+    val module: String,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : Node {
+    override val children: List<Node>
+        get() = listOf()
+}
+
 interface ModuleStatementNode: Node {
     interface Visitor<T> {
         fun visit(node: ShapeNode): T
