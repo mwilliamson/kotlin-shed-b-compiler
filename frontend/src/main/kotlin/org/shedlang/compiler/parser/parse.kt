@@ -64,6 +64,8 @@ internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
 
 internal fun parseImport(source: Source, tokens: TokenIterator<TokenType>): ImportNode {
     tokens.skip(TokenType.KEYWORD_IMPORT)
+    val isLocal = tokens.trySkip(TokenType.SYMBOL_DOT)
+
     val moduleNameParts = parseMany(
         parseElement = ::parseIdentifier,
         parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_DOT) },
@@ -72,7 +74,8 @@ internal fun parseImport(source: Source, tokens: TokenIterator<TokenType>): Impo
         allowZero = false
     )
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
-    return ImportNode(module = moduleNameParts.joinToString("."), source = source)
+    val moduleName = (if (isLocal) "." else "") + moduleNameParts.joinToString(".")
+    return ImportNode(module = moduleName, source = source)
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {

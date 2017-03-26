@@ -19,4 +19,11 @@ class ParseImportTests {
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(module = equalTo("example.x")))
     }
+
+    @Test
+    fun relativeImportsStartWithDot() {
+        val source = "import .example.x;"
+        val node = parseString(::parseImport, source)
+        assertThat(node, isImport(module = equalTo(".example.x")))
+    }
 }
