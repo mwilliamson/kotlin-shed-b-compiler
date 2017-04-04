@@ -33,13 +33,26 @@ internal class CodeGenerationContext(
 
     private fun generateName(originalName: String): String {
         var index = 0
-        var name = originalName
+        var name = generateBaseName(originalName)
         while (namesInScope.contains(name)) {
             index++
             name = originalName + "_" + index
         }
         return name
     }
+
+    private fun generateBaseName(originalName: String): String {
+        if (originalName[0].isUpperCase()) {
+            return originalName
+        } else {
+            return camelCaseToSnakeCase(originalName)
+        }
+    }
+
+    private fun camelCaseToSnakeCase(name: String): String {
+        return Regex("\\p{javaUpperCase}").replace(name, { char -> "_" + char.value.toLowerCase() })
+    }
+
 }
 
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {

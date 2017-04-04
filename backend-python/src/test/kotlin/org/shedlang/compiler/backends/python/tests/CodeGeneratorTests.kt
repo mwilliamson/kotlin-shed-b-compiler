@@ -313,6 +313,28 @@ class CodeGeneratorTests {
         ))
     }
 
+    @Test
+    fun namesHavePep8Casing() {
+        assertThat(
+            generateCode(valStatement(name = "oneTwoThree")),
+            isPythonAssignment(
+                target = isPythonVariableReference("one_two_three")
+            )
+        )
+        assertThat(
+            generateCode(function(name = "oneTwoThree")),
+            isSequence(
+                isPythonFunction(name = equalTo("one_two_three"))
+            )
+        )
+        assertThat(
+            generateCode(shape(name = "OneTwoThree")),
+            isSequence(
+                isPythonClass(name = equalTo("OneTwoThree"))
+            )
+        )
+    }
+
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionNode) = generateCode(node, context())

@@ -20,7 +20,7 @@ class ExecutionTests {
 
                 val generateCode = generateCode(frontendResult.module, frontendResult.references)
                 val stdlib = """\
-                    intToString = str
+                    int_to_string = str
                 """.trimMargin()
                 val contents = stdlib + "\n" + serialise(generateCode) + "\nmain()\n"
                 val result = run(listOf("python", "-c", contents))
