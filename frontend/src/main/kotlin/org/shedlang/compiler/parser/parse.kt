@@ -39,12 +39,22 @@ internal fun <T> ((Source, TokenIterator<TokenType>) -> T).parse(tokens: TokenIt
 
 internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): ModuleNode {
     val moduleName = parseModuleNameDeclaration(tokens)
+    val imports = parseZeroOrMore(
+        parseElement = { tokens -> ::parseImport.parse(tokens) },
+        isEnd = { tokens -> !tokens.isNext(TokenType.KEYWORD_IMPORT) },
+        tokens = tokens
+    )
     val body = parseZeroOrMore(
         parseElement = ::parseModuleStatement,
         isEnd = { tokens -> tokens.isNext(TokenType.END) },
         tokens = tokens
     )
-    return ModuleNode(moduleName, body, source)
+    return ModuleNode(
+        name = moduleName,
+        imports = imports,
+        body = body,
+        source = source
+    )
 }
 
 private fun parseModuleNameDeclaration(tokens: TokenIterator<TokenType>): String {

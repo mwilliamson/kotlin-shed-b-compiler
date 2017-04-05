@@ -80,6 +80,7 @@ data class TypeReferenceNode(
 
 data class ModuleNode(
     val name: String,
+    val imports: List<ImportNode>,
     val body: List<ModuleStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()

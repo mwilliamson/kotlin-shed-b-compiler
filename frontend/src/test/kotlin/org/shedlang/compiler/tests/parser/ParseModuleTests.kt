@@ -20,8 +20,24 @@ class ParseModuleTests {
 
         assertThat(node, allOf(
             has(ModuleNode::name, equalTo("abc")),
+            has(ModuleNode::imports, equalTo(listOf())),
             has(ModuleNode::body, equalTo(listOf()))
         ))
+    }
+
+    @Test
+    fun moduleCanHaveImports() {
+        val source = """
+            module abc;
+
+            import .x.y;
+        """.trimIndent()
+
+        val node = parse("<string>", source)
+
+        assertThat(node, has(ModuleNode::imports, isSequence(
+            isImport(equalTo(".x.y"))
+        )))
     }
 
     @Test

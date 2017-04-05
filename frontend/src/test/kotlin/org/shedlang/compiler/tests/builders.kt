@@ -138,9 +138,11 @@ fun argument(
 )
 
 fun module(
-    body: List<ModuleStatementNode>
+    body: List<ModuleStatementNode>,
+    imports: List<ImportNode> = listOf()
 ) = ModuleNode(
     name = "",
+    imports = imports,
     body = body,
     source = anySource()
 )
