@@ -54,9 +54,9 @@ fun run(arguments: List<String>): ExecutionResult {
     return run(arguments, null)
 }
 
-private fun run(arguments: List<String>, directoryPath: Path?): ExecutionResult {
+fun run(arguments: List<String>, workingDirectory: File?): ExecutionResult {
     val process = ProcessBuilder(*arguments.toTypedArray())
-        .directory(directoryPath?.toFile())
+        .directory(workingDirectory)
         .start()
 
     val exitCode = process.waitFor()

@@ -34,7 +34,10 @@ class ExecutionTests {
                             writer = writer
                         )
                     }
-                    val result = run(listOf("python", destination.absolutePath))
+                    val result = run(
+                        listOf("python", "-m", moduleName),
+                        workingDirectory = temporaryDirectory.file
+                    )
                     assertThat(result, equalTo(testProgram.expectedResult))
                 }
             } catch (error: TypeCheckError) {
