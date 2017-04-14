@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.tests
 
+import java.io.Closeable
 import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
@@ -74,5 +75,16 @@ data class ExecutionResult(val exitCode: Int = 0, val stdout: String = "", val s
         if (exitCode != 0) {
             throw RuntimeException("stderr was: " + stderr)
         }
+    }
+}
+
+fun temporaryDirectory(): TemporaryDirectory {
+    val file = createTempDir()
+    return TemporaryDirectory(file)
+}
+
+class TemporaryDirectory(val file: File) : Closeable {
+    override fun close() {
+        file.deleteRecursively()
     }
 }

@@ -8,11 +8,11 @@ import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.backends.python.generateCode
 import org.shedlang.compiler.backends.python.serialise
 import org.shedlang.compiler.backends.tests.run
+import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.read
 import org.shedlang.compiler.typechecker.ResolvedReferences
 import org.shedlang.compiler.typechecker.TypeCheckError
-import java.io.Closeable
 import java.io.File
 import java.io.Writer
 import java.nio.charset.StandardCharsets
@@ -58,16 +58,5 @@ class ExecutionTests {
         """.trimMargin()
         val contents = stdlib + "\n" + serialise(generateCode) + "\nmain()\n"
         writer.write(contents)
-    }
-
-    private fun temporaryDirectory(): TemporaryDirectory {
-        val file = createTempDir()
-        return TemporaryDirectory(file)
-    }
-
-    private class TemporaryDirectory(val file: File) : Closeable {
-        override fun close() {
-            file.deleteRecursively()
-        }
     }
 }
