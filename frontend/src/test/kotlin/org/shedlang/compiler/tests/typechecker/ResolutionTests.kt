@@ -145,6 +145,25 @@ class ResolutionTests {
     }
 
     @Test
+    fun importIntroducesVariable() {
+        val import = import("x.y.z")
+        val reference = variableReference("z")
+        val module = module(
+            imports = listOf(import),
+            body = listOf(
+                function(
+                    body = listOf(expressionStatement(reference)),
+                    returnType = typeReference("Unit")
+                )
+            )
+        )
+
+        val references = resolve(module, globals = mapOf("Unit" to freshNodeId()))
+
+        assertThat(references[reference], equalTo(import.nodeId))
+    }
+
+    @Test
     fun functionsCanCallEachOtherRecursively() {
         val referenceToSecond = variableReference("g")
         val definitionOfFirst = function(name = "f", body = listOf(

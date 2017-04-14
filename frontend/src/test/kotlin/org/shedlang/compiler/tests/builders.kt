@@ -147,6 +147,8 @@ fun module(
     source = anySource()
 )
 
+fun import(module: String) = ImportNode(module, source = anySource())
+
 fun typeReference(name: String) = TypeReferenceNode(name, anySource())
 
 

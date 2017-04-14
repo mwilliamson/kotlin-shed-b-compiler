@@ -131,7 +131,11 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         }
 
         is ModuleNode -> {
-            resolveScope(body = node.body, context = context)
+            resolveScope(body = node.imports + node.body, context = context)
+        }
+
+        is ImportNode -> {
+            context.initialise(node)
         }
 
         is IfStatementNode -> {

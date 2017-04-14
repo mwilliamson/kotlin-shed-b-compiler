@@ -86,14 +86,17 @@ data class ModuleNode(
     override val nodeId: Int = freshNodeId()
 ) : Node {
     override val children: List<Node>
-        get() = body
+        get() = imports + body
 }
 
 data class ImportNode(
     val module: String,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : Node {
+) : VariableBindingNode {
+    override val name: String
+        get() = module.substringAfterLast(".")
+
     override val children: List<Node>
         get() = listOf()
 }
