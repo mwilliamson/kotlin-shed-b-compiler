@@ -85,6 +85,9 @@ data class ModuleNode(
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
+    val nameParts: List<String>
+        get() = name.split(".")
+
     override val children: List<Node>
         get() = imports + body
 }

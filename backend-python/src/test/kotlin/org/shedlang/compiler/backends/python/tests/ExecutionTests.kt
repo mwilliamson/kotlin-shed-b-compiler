@@ -24,8 +24,8 @@ class ExecutionTests {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     val frontendResult = read(filename = "<string>", input = testProgram.source)
-                    val moduleName = frontendResult.module.name
-                    val modulePath = moduleName.split(".").joinToString(File.separator) + ".py"
+                    val moduleName = frontendResult.module.nameParts
+                    val modulePath = moduleName.joinToString(File.separator) + ".py"
                     val destination = temporaryDirectory.file.resolve(modulePath)
                     destination.writer(StandardCharsets.UTF_8).use { writer ->
                         compileModule(
@@ -35,7 +35,7 @@ class ExecutionTests {
                         )
                     }
                     val result = run(
-                        listOf("python", "-m", moduleName),
+                        listOf("python", "-m", moduleName.joinToString(".")),
                         workingDirectory = temporaryDirectory.file
                     )
                     assertThat(result, equalTo(testProgram.expectedResult))
