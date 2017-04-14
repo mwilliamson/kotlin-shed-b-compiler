@@ -11,6 +11,37 @@ import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.read
 import org.shedlang.compiler.typechecker.TypeCheckError
 
+val stdlib = """
+    function intToString(value) {
+        return value.toString();
+    }
+
+    function print(value) {
+        console.log(value);
+    }
+
+    function declareShape(name) {
+        return {
+            name: name,
+            typeId: freshTypeId()
+        };
+    }
+
+    var nextTypeId = 1;
+    function freshTypeId() {
+        return nextTypeId++;
+    }
+
+    function isType(value, type) {
+        return value != null && value.${"$"}shedType === type;
+    }
+
+    var ${"$"}shed = {
+        declareShape: declareShape,
+        isType: isType
+    };
+"""
+
 class ExecutionTests {
     @TestFactory
     fun testProgram(): List<DynamicTest> {
@@ -18,36 +49,6 @@ class ExecutionTests {
             try {
                 val frontEndResult = read(filename = "<string>", input = testProgram.source)
                 val generateCode = generateCode(frontEndResult.module)
-                val stdlib = """
-                    function intToString(value) {
-                        return value.toString();
-                    }
-
-                    function print(value) {
-                        console.log(value);
-                    }
-
-                    function declareShape(name) {
-                        return {
-                            name: name,
-                            typeId: freshTypeId()
-                        };
-                    }
-
-                    var nextTypeId = 1;
-                    function freshTypeId() {
-                        return nextTypeId++;
-                    }
-
-                    function isType(value, type) {
-                        return value != null && value.${"$"}shedType === type;
-                    }
-
-                    var ${"$"}shed = {
-                        declareShape: declareShape,
-                        isType: isType
-                    };
-                """
                 val contents = stdlib + serialise(generateCode) + "\nmain()\n" + "\n"
                 val result = run(listOf("node", "-e", contents))
                 assertThat(result, equalTo(testProgram.expectedResult))
