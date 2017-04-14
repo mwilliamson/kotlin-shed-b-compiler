@@ -12,16 +12,29 @@ import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.read
 import org.shedlang.compiler.typechecker.ResolvedReferences
 import org.shedlang.compiler.typechecker.TypeCheckError
+import java.io.Closeable
+import java.io.File
+import java.io.Writer
+import java.nio.charset.StandardCharsets
 
 class ExecutionTests {
     @TestFactory
     fun testProgram(): List<DynamicTest> {
         return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
-                val frontendResult = read(filename = "<string>", input = testProgram.source)
-                val contents = compileModule(frontendResult.module, frontendResult.references)
-                val result = run(listOf("python", "-c", contents))
-                assertThat(result, equalTo(testProgram.expectedResult))
+                temporaryDirectory().use { temporaryDirectory ->
+                    val frontendResult = read(filename = "<string>", input = testProgram.source)
+                    val destination = temporaryDirectory.file.resolve("main.py")
+                    destination.writer(StandardCharsets.UTF_8).use { writer ->
+                        compileModule(
+                            module = frontendResult.module,
+                            references = frontendResult.references,
+                            writer = writer
+                        )
+                    }
+                    val result = run(listOf("python", destination.absolutePath))
+                    assertThat(result, equalTo(testProgram.expectedResult))
+                }
             } catch (error: TypeCheckError) {
                 print(error.source.describe())
                 throw error
@@ -29,12 +42,27 @@ class ExecutionTests {
         }) })
     }
 
-    private fun compileModule(module: ModuleNode, references: ResolvedReferences): String {
+    private fun compileModule(
+        module: ModuleNode,
+        references: ResolvedReferences,
+        writer: Writer
+    ) {
         val generateCode = generateCode(module, references)
         val stdlib = """\
             int_to_string = str
         """.trimMargin()
         val contents = stdlib + "\n" + serialise(generateCode) + "\nmain()\n"
-        return contents
+        writer.write(contents)
+    }
+
+    private fun temporaryDirectory(): TemporaryDirectory {
+        val file = createTempDir()
+        return TemporaryDirectory(file)
+    }
+
+    private class TemporaryDirectory(val file: File) : Closeable {
+        override fun close() {
+            file.deleteRecursively()
+        }
     }
 }
