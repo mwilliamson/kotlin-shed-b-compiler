@@ -540,6 +540,10 @@ internal fun canCoerce(from: Type, to: Type): Boolean {
         return true
     }
 
+    if (from is UnionType) {
+        return from.members.all({ member -> canCoerce(from = member, to = to) })
+    }
+
     if (to is UnionType) {
         return to.members.any({ member -> canCoerce(from = from, to = member) })
     }
