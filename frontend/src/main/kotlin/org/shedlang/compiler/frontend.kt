@@ -4,28 +4,47 @@ import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.*
+import java.nio.file.Path
 
 
 class FrontEndResult(
     val module: ModuleNode,
-    val references: ResolvedReferences
+    val references: ResolvedReferences,
+    val moduleType: ModuleType
 )
 
+private val intTypeNodeId = freshNodeId()
+private val unitTypeNodeId = freshNodeId()
+private val stringTypeNodeId = freshNodeId()
 
-fun read(filename: String, input: String): FrontEndResult {
-    val module = parse(filename = filename, input = input)
+private val ioEffectNodeId = freshNodeId()
 
-    val intTypeNodeId = freshNodeId()
-    val unitTypeNodeId = freshNodeId()
+private val printNodeId = freshNodeId()
+private val intToStringNodeId = freshNodeId()
 
-    val ioEffectNodeId = freshNodeId()
+private val globalNodeTypes = mapOf(
+    unitTypeNodeId to MetaType(UnitType),
+    intTypeNodeId to MetaType(IntType),
+    stringTypeNodeId to MetaType(StringType),
 
-    val printNodeId = freshNodeId()
-    val intToStringNodeId = freshNodeId()
+    ioEffectNodeId to EffectType(IoEffect),
+
+    printNodeId to FunctionType(
+        positionalArguments = listOf(StringType),
+        namedArguments = mapOf(),
+        effects = listOf(IoEffect),
+        returns = UnitType
+    ),
+    intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
+)
+
+fun read(path: Path): FrontEndResult {
+    val module = parse(filename = path.toString(), input = path.toFile().readText())
 
     val resolvedReferences = resolve(module, mapOf(
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
+        "String" to stringTypeNodeId,
 
         "!io" to ioEffectNodeId,
 
@@ -33,29 +52,32 @@ fun read(filename: String, input: String): FrontEndResult {
         "intToString" to intToStringNodeId
     ))
 
-    val globalNodeTypes = mapOf(
-        unitTypeNodeId to MetaType(UnitType),
-        intTypeNodeId to MetaType(IntType),
-
-        ioEffectNodeId to EffectType(IoEffect),
-
-        printNodeId to FunctionType(
-            positionalArguments = listOf(StringType),
-            namedArguments = mapOf(),
-            effects = listOf(IoEffect),
-            returns = UnitType
-        ),
-        intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
-    )
-    val nodeTypes = typeCheck(
+    val typeCheckResult = typeCheck(
         module,
         nodeTypes = globalNodeTypes,
         resolvedReferences = resolvedReferences,
-        getModule = { moduleName -> throw UnsupportedOperationException() }
+        getModule = { moduleName ->
+            val result = read(resolveModule(path, moduleName))
+            result.moduleType
+        }
     )
-    checkReturns(module, nodeTypes)
+    checkReturns(module, typeCheckResult.types)
     return FrontEndResult(
         module = module,
-        references = resolvedReferences
+        references = resolvedReferences,
+        moduleType = typeCheckResult.moduleType
     )
+}
+
+fun resolveModule(path: Path, moduleName: String): Path {
+    // TODO: remove duplication with ModuleNode.nameParts
+    // TODO: test this properly
+    val partialPath = moduleName.split(".").fold(path, { path, part ->
+        if (part == "") {
+            path.parent
+        } else {
+            path.resolve(part)
+        }
+    })
+    return partialPath.resolveSibling(partialPath.fileName.toString() + ".shed")
 }

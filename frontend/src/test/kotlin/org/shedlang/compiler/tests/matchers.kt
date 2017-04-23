@@ -52,7 +52,7 @@ private fun indent(value: String): String {
 }
 
 internal fun isFunctionType(
-    arguments: Matcher<List<Type>>,
+    arguments: Matcher<List<Type>> = anything,
     returnType: Matcher<Type>,
     effects: Matcher<Iterable<Effect>> = anything
 ): Matcher<Type> = cast(allOf(

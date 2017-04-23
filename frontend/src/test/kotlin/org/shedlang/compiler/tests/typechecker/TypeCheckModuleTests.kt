@@ -1,5 +1,7 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.tests.*
@@ -76,6 +78,26 @@ class TypeCheckModuleTests {
             references = mapOf(
                 firstShapeReference to firstShape
             )
+        ))
+    }
+
+    @Test
+    fun typeOfModuleIsReturned() {
+        val unitReference = typeReference("Unit")
+        val node = module(
+            body = listOf(
+                function(
+                    name = "f",
+                    returnType = unitReference
+                )
+            )
+        )
+
+        val result = typeCheck(node, typeContext(
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        ))
+        assertThat(result.fields, isMap(
+            "f" to isFunctionType(returnType = equalTo(UnitType))
         ))
     }
 }

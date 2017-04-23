@@ -16,9 +16,13 @@ object AnyType : Type
 class MetaType(val type: Type): Type
 class EffectType(val effect: Effect): Type
 
-data class ModuleType(
+interface HasFieldsType : Type {
     val fields: Map<String, Type>
-): Type
+}
+
+data class ModuleType(
+    override val fields: Map<String, Type>
+): HasFieldsType
 
 data class FunctionType(
     val positionalArguments: List<Type>,
@@ -27,9 +31,8 @@ data class FunctionType(
     val effects: List<Effect>
 ): Type
 
-interface ShapeType: Type {
-    val name: String;
-    val fields: Map<String, Type>;
+interface ShapeType: HasFieldsType {
+    val name: String
 }
 
 data class LazyShapeType(
@@ -213,7 +216,7 @@ class FieldAlreadyDeclaredError(val fieldName: String, source: Source)
 class UnhandledEffectError(val effect: Effect, source: Source)
     : TypeCheckError("Unhandled effect: ${effect}", source)
 
-internal interface NodeTypes {
+interface NodeTypes {
     fun typeOf(node: VariableBindingNode): Type
 }
 
@@ -226,26 +229,33 @@ internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
             return type
         }
     }
-
 }
+
+data class TypeCheckResult(
+    val types: NodeTypes,
+    val moduleType: ModuleType
+)
 
 internal fun typeCheck(
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
     getModule: (String) -> ModuleType
-): NodeTypes {
+): TypeCheckResult {
     val mutableNodeTypes = HashMap(nodeTypes)
     val typeContext = newTypeContext(
         nodeTypes = mutableNodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule
     )
-    typeCheck(module, typeContext)
-    return NodeTypesMap(mutableNodeTypes)
+    val moduleType = typeCheck(module, typeContext)
+    return TypeCheckResult(
+        types = NodeTypesMap(mutableNodeTypes),
+        moduleType = moduleType
+    )
 }
 
-internal fun typeCheck(module: ModuleNode, context: TypeContext) {
+internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
     for (import in module.imports) {
         typeCheck(import, context)
     }
@@ -262,6 +272,11 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     }
 
     context.undefer()
+
+    return ModuleType(fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
+        { statement -> statement.name },
+        { statement -> context.typeOf(statement) }
+    ))
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
@@ -514,7 +529,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
         override fun visit(node: FieldAccessNode): Type {
             val receiverType = inferType(node.receiver, context)
-            if (receiverType is ShapeType) {
+            if (receiverType is HasFieldsType) {
                 val fieldType = receiverType.fields[node.fieldName]
                 if (fieldType == null) {
                     throw NoSuchFieldError(

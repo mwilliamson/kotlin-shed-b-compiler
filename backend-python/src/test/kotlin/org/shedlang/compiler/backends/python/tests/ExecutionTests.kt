@@ -23,7 +23,7 @@ class ExecutionTests {
         return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
-                    val frontendResult = read(filename = "<string>", input = testProgram.source)
+                    val frontendResult = read(testProgram.path)
                     val moduleName = frontendResult.module.nameParts
                     val modulePath = moduleName.joinToString(File.separator) + ".py"
                     val destination = temporaryDirectory.file.resolve(modulePath)

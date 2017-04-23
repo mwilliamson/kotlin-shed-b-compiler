@@ -9,7 +9,7 @@ import java.nio.file.Paths
 
 data class TestProgram(
     val name: String,
-    val source: String,
+    val path: Path,
     val expectedResult: ExecutionResult
 )
 
@@ -23,7 +23,7 @@ fun testPrograms(): List<TestProgram> {
             .trimMargin("//   ") + "\n"
         return TestProgram(
             name = name,
-            source = text,
+            path = file.toPath(),
             expectedResult = ExecutionResult(stdout = stdout)
         )
     })
