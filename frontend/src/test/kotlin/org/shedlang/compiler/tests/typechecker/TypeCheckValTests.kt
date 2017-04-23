@@ -29,7 +29,8 @@ class TypeCheckValTests {
         val variables = mutableMapOf<Int, Type>()
         val typeContext = newTypeContext(
             nodeTypes = variables,
-            resolvedReferences = ResolvedReferencesMap(mapOf())
+            resolvedReferences = ResolvedReferencesMap(mapOf()),
+            getModule = { moduleName -> throw UnsupportedOperationException() }
         )
         typeCheck(node, typeContext)
         assertThat(variables[node.nodeId]!!, cast(equalTo(IntType)))

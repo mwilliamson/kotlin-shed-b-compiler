@@ -17,7 +17,8 @@ fun typeContext(
     effects: List<Effect> = listOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-    types: Map<VariableBindingNode, Type> = mapOf()
+    types: Map<VariableBindingNode, Type> = mapOf(),
+    modules: Map<String, ModuleType> = mapOf()
 ): TypeContext {
     val finalReferences = (
         referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> freshNodeId()}) +
@@ -33,7 +34,8 @@ fun typeContext(
         effects = effects,
         nodeTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
-        deferred = mutableListOf()
+        deferred = mutableListOf(),
+        getModule = { moduleName -> modules[moduleName]!! }
     )
 }
 

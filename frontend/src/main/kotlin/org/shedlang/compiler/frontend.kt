@@ -50,7 +50,8 @@ fun read(filename: String, input: String): FrontEndResult {
     val nodeTypes = typeCheck(
         module,
         nodeTypes = globalNodeTypes,
-        resolvedReferences = resolvedReferences
+        resolvedReferences = resolvedReferences,
+        getModule = { moduleName -> throw UnsupportedOperationException() }
     )
     checkReturns(module, nodeTypes)
     return FrontEndResult(

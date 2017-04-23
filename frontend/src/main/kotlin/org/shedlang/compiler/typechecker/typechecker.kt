@@ -16,6 +16,10 @@ object AnyType : Type
 class MetaType(val type: Type): Type
 class EffectType(val effect: Effect): Type
 
+data class ModuleType(
+    val fields: Map<String, Type>
+): Type
+
 data class FunctionType(
     val positionalArguments: List<Type>,
     val namedArguments: Map<String, Type>,
@@ -69,13 +73,15 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 
 fun newTypeContext(
     nodeTypes: MutableMap<Int, Type> = mutableMapOf(),
-    resolvedReferences: ResolvedReferences
+    resolvedReferences: ResolvedReferences,
+    getModule: (String) -> ModuleType
 ): TypeContext {
     return TypeContext(
         returnType = null,
         effects = listOf(),
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
+        getModule = getModule,
         deferred = mutableListOf()
     )
 }
@@ -85,8 +91,14 @@ class TypeContext(
     val effects: List<Effect>,
     private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
+    private val getModule: (String) -> ModuleType,
     private val deferred: MutableList<() -> Unit>
 ) {
+
+    fun moduleType(module: String): ModuleType {
+        return getModule(module)
+    }
+
     fun typeOf(node: VariableBindingNode): Type {
         val type = nodeTypes[node.nodeId]
         if (type == null) {
@@ -132,6 +144,7 @@ class TypeContext(
             effects = effects,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
+            getModule = getModule,
             deferred = deferred
         ).enterScope()
     }
@@ -142,6 +155,7 @@ class TypeContext(
             effects = effects,
             nodeTypes = HashMap(nodeTypes),
             resolvedReferences = resolvedReferences,
+            getModule = getModule,
             deferred = deferred
         )
     }
@@ -218,18 +232,24 @@ internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
 internal fun typeCheck(
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
-    resolvedReferences: ResolvedReferences
+    resolvedReferences: ResolvedReferences,
+    getModule: (String) -> ModuleType
 ): NodeTypes {
     val mutableNodeTypes = HashMap(nodeTypes)
     val typeContext = newTypeContext(
         nodeTypes = mutableNodeTypes,
-        resolvedReferences = resolvedReferences
+        resolvedReferences = resolvedReferences,
+        getModule = getModule
     )
     typeCheck(module, typeContext)
     return NodeTypesMap(mutableNodeTypes)
 }
 
 internal fun typeCheck(module: ModuleNode, context: TypeContext) {
+    for (import in module.imports) {
+        typeCheck(import, context)
+    }
+
     val (typeDeclarations, otherStatements) = module.body
         .partition({ statement -> statement is TypeDeclarationNode })
 
@@ -242,6 +262,10 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext) {
     }
 
     context.undefer()
+}
+
+internal fun typeCheck(import: ImportNode, context: TypeContext) {
+    context.addType(import, context.moduleType(import.module))
 }
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {

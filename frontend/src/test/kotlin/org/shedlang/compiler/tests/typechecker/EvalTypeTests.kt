@@ -37,7 +37,8 @@ class EvalTypeTests {
                 reference,
                 newTypeContext(
                     nodeTypes = mutableMapOf(),
-                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to freshNodeId()))
+                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to freshNodeId())),
+                    getModule = { moduleName -> throw UnsupportedOperationException() }
                 )
             ) },
             throwsCompilerError("type of x is unknown")
