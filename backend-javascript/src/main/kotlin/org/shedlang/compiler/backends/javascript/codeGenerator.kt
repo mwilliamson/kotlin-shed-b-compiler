@@ -4,12 +4,33 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
 
 internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
+    val imports = node.imports.map(::generateCode)
     val body = node.body.flatMap(::generateCode)
     val exports = node.body.filterIsInstance<VariableBindingNode>()
         .map(::generateExport)
     return JavascriptModuleNode(
-        body + exports,
+        imports + body + exports,
         source = NodeSource(node)
+    )
+}
+
+private fun generateCode(import: ImportNode): JavascriptStatementNode {
+    val source = NodeSource(import)
+
+    val base = when (import.path.base) {
+        ImportPathBase.Relative -> "./"
+        ImportPathBase.Absolute -> throw UnsupportedOperationException()
+    }
+    val importPath = base + import.path.parts.joinToString("/")
+
+    return JavascriptConstNode(
+        name = import.name,
+        expression = JavascriptFunctionCallNode(
+            JavascriptVariableReferenceNode("require", source = source),
+            listOf(JavascriptStringLiteralNode(importPath, source = source)),
+            source = source
+        ),
+        source = source
     )
 }
 

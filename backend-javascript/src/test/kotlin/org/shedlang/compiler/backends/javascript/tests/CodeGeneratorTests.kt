@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
@@ -21,7 +22,26 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun moduleGeneratesModule() {
+    fun moduleImportsGenerateJavascriptImports() {
+        val shed = module(imports = listOf(import(ImportPath.relative(listOf("x")))))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptModule(
+            body = isSequence(
+                isJavascriptConst(
+                    name = equalTo("x"),
+                    expression = isJavascriptFunctionCall(
+                        isJavascriptVariableReference("require"),
+                        isSequence(isJavascriptStringLiteral("./x"))
+                    )
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun moduleIncludesBodyAndExports() {
         val shed = module(body = listOf(function(name = "f")))
 
         val node = generateCode(shed)

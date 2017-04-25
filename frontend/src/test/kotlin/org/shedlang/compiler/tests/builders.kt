@@ -138,7 +138,7 @@ fun argument(
 )
 
 fun module(
-    body: List<ModuleStatementNode>,
+    body: List<ModuleStatementNode> = listOf(),
     imports: List<ImportNode> = listOf()
 ) = ModuleNode(
     path = listOf(),
