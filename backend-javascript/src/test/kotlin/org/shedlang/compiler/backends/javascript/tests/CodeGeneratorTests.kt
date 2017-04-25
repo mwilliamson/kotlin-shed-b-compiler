@@ -27,7 +27,16 @@ class CodeGeneratorTests {
         val node = generateCode(shed)
 
         assertThat(node, isJavascriptModule(
-            body = isSequence(isJavascriptFunction(name = equalTo("f")))
+            body = isSequence(
+                isJavascriptFunction(name = equalTo("f")),
+                isJavascriptAssignmentStatement(
+                    isJavascriptPropertyAccess(
+                        isJavascriptVariableReference("exports"),
+                        equalTo("f")
+                    ),
+                    isJavascriptVariableReference("f")
+                )
+            )
         ))
     }
 
@@ -43,6 +52,18 @@ class CodeGeneratorTests {
                 isJavascriptVariableReference("\$shed.declareShape"),
                 isSequence(isJavascriptStringLiteral("X"))
             )
+        ))
+    }
+
+    @Test
+    fun unionGeneratesStub() {
+        val shed = union("X", listOf())
+
+        val node = generateCode(shed).single()
+
+        assertThat(node, isJavascriptConst(
+            name = equalTo("X"),
+            expression = isJavascriptNull()
         ))
     }
 
@@ -270,6 +291,9 @@ class CodeGeneratorTests {
         : Matcher<JavascriptStatementNode>
         = cast(has(JavascriptReturnNode::expression, expression))
 
+    private fun isJavascriptExpressionStatement(expression: Matcher<JavascriptExpressionNode>)
+        = cast(has(JavascriptExpressionStatementNode::expression, expression))
+
     private fun isJavascriptBooleanLiteral(value: Boolean)
         : Matcher<JavascriptExpressionNode>
         = cast(has(JavascriptBooleanLiteralNode::value, equalTo(value)))
@@ -322,5 +346,20 @@ class CodeGeneratorTests {
         properties: Matcher<Map<String, JavascriptExpressionNode>>
     ): Matcher<JavascriptExpressionNode> = cast(
         has(JavascriptObjectLiteralNode::properties, properties)
+    )
+
+    private fun isJavascriptAssignment(
+        target: Matcher<JavascriptExpressionNode>,
+        expression: Matcher<JavascriptExpressionNode>
+    ): Matcher<JavascriptExpressionNode> = cast(allOf(
+        has(JavascriptAssignmentNode::target, target),
+        has(JavascriptAssignmentNode::expression, expression)
+    ))
+
+    private fun isJavascriptAssignmentStatement(
+        target: Matcher<JavascriptExpressionNode>,
+        expression: Matcher<JavascriptExpressionNode>
+    ) = isJavascriptExpressionStatement(
+        isJavascriptAssignment(target = target, expression = expression)
     )
 }

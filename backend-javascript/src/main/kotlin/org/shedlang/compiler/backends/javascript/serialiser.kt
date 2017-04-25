@@ -126,6 +126,10 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
                 return open + properties + close
             }
         }
+
+        override fun visit(node: JavascriptAssignmentNode): String {
+            return serialiseSubExpression(node, node.target, associative = false, indentation = indentation) + " = " + serialiseSubExpression(node, node.expression, associative = true, indentation = indentation)
+        }
     })
 }
 
@@ -193,6 +197,10 @@ private fun precedence(node: JavascriptExpressionNode): Int {
 
         override fun visit(node: JavascriptPropertyAccessNode): Int {
             return 18
+        }
+
+        override fun visit(node: JavascriptAssignmentNode): Int {
+            return 3
         }
     })
 }

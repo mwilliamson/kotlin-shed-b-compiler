@@ -4,8 +4,24 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
 
 internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
+    val body = node.body.flatMap(::generateCode)
+    val exports = node.body.filterIsInstance<VariableBindingNode>()
+        .map({ statement ->
+            JavascriptExpressionStatementNode(
+                JavascriptAssignmentNode(
+                    JavascriptPropertyAccessNode(
+                        JavascriptVariableReferenceNode("exports", source = NodeSource(statement)),
+                        statement.name,
+                        source = NodeSource(statement)
+                    ),
+                    JavascriptVariableReferenceNode(statement.name, source = NodeSource(statement)),
+                    source = NodeSource(statement)
+                ),
+                source = NodeSource(statement)
+            )
+        })
     return JavascriptModuleNode(
-        node.body.flatMap(::generateCode),
+        body + exports,
         source = NodeSource(node)
     )
 }
@@ -13,7 +29,7 @@ internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
 internal fun generateCode(node: ModuleStatementNode): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node))
-        override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf()
+        override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: FunctionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
     })
 }
@@ -30,6 +46,15 @@ private fun generateCode(node: ShapeNode) : JavascriptStatementNode {
             listOf(JavascriptStringLiteralNode(node.name, source = source)),
             source = source
         ),
+        source = source
+    )
+}
+
+private fun generateCode(node: UnionNode) : JavascriptStatementNode {
+    val source = NodeSource(node)
+    return JavascriptConstNode(
+        name = node.name,
+        expression = JavascriptNullLiteralNode(source = source),
         source = source
     )
 }
