@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.allOf
@@ -51,7 +52,7 @@ class ParseModuleTests {
         val node = parse("<string>", source)
 
         assertThat(node, has(ModuleNode::imports, isSequence(
-            isImport(equalTo(".x.y"))
+            isImport(equalTo(ImportPath.relative(listOf("x", "y"))))
         )))
     }
 

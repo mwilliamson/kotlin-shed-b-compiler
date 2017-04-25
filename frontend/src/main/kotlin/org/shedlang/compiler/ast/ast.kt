@@ -89,13 +89,24 @@ data class ModuleNode(
         get() = imports + body
 }
 
+data class ImportPath(val base: ImportPathBase, val parts: List<String>) {
+    companion object {
+        fun absolute(parts: List<String>) = ImportPath(ImportPathBase.Absolute, parts)
+        fun relative(parts: List<String>) = ImportPath(ImportPathBase.Relative, parts)
+    }
+}
+sealed class ImportPathBase {
+    object Absolute: ImportPathBase()
+    object Relative: ImportPathBase()
+}
+
 data class ImportNode(
-    val module: String,
+    val path: ImportPath,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode {
     override val name: String
-        get() = module.substringAfterLast(".")
+        get() = path.parts.last()
 
     override val children: List<Node>
         get() = listOf()

@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
@@ -146,7 +147,7 @@ class ResolutionTests {
 
     @Test
     fun importIntroducesVariable() {
-        val import = import("x.y.z")
+        val import = import(path = ImportPath.absolute(listOf("x", "y", "z")))
         val reference = variableReference("z")
         val module = module(
             imports = listOf(import),

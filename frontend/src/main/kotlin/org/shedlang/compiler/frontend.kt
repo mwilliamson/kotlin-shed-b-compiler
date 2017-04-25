@@ -1,9 +1,12 @@
 package org.shedlang.compiler
 
+import org.shedlang.compiler.ast.ImportPath
+import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.*
+import java.io.File
 import java.nio.file.Path
 
 
@@ -56,8 +59,8 @@ fun read(path: Path): FrontEndResult {
         module,
         nodeTypes = globalNodeTypes,
         resolvedReferences = resolvedReferences,
-        getModule = { moduleName ->
-            val result = read(resolveModule(path, moduleName))
+        getModule = { importPath ->
+            val result = read(resolveModule(path, importPath))
             result.moduleType
         }
     )
@@ -69,15 +72,12 @@ fun read(path: Path): FrontEndResult {
     )
 }
 
-fun resolveModule(path: Path, moduleName: String): Path {
-    // TODO: remove duplication with ModuleNode.nameParts
+fun resolveModule(path: Path, importPath: ImportPath): Path {
     // TODO: test this properly
-    val partialPath = moduleName.split(".").fold(path, { path, part ->
-        if (part == "") {
-            path.parent
-        } else {
-            path.resolve(part)
-        }
-    })
-    return partialPath.resolveSibling(partialPath.fileName.toString() + ".shed")
+    val base = when (importPath.base) {
+        ImportPathBase.Absolute -> throw UnsupportedOperationException()
+        is ImportPathBase.Relative -> path
+    }
+
+    return base.resolveSibling(importPath.parts.joinToString(File.separator) + ".shed")
 }

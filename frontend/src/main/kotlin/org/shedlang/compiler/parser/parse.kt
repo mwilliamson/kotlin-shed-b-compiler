@@ -84,8 +84,11 @@ internal fun parseImport(source: Source, tokens: TokenIterator<TokenType>): Impo
         allowZero = false
     )
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
-    val moduleName = (if (isLocal) "." else "") + moduleNameParts.joinToString(".")
-    return ImportNode(module = moduleName, source = source)
+    val path = ImportPath(
+        base = if (isLocal) ImportPathBase.Relative else ImportPathBase.Absolute,
+        parts = moduleNameParts
+    )
+    return ImportNode(path = path, source = source)
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {

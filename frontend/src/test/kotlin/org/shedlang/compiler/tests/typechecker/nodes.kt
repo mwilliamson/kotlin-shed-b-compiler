@@ -18,7 +18,7 @@ fun typeContext(
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     types: Map<VariableBindingNode, Type> = mapOf(),
-    modules: Map<String, ModuleType> = mapOf()
+    modules: Map<ImportPath, ModuleType> = mapOf()
 ): TypeContext {
     val finalReferences = (
         referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> freshNodeId()}) +

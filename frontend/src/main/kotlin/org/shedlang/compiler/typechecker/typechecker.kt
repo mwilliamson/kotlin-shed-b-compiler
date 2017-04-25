@@ -77,7 +77,7 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 fun newTypeContext(
     nodeTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
-    getModule: (String) -> ModuleType
+    getModule: (ImportPath) -> ModuleType
 ): TypeContext {
     return TypeContext(
         returnType = null,
@@ -94,12 +94,12 @@ class TypeContext(
     val effects: List<Effect>,
     private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
-    private val getModule: (String) -> ModuleType,
+    private val getModule: (ImportPath) -> ModuleType,
     private val deferred: MutableList<() -> Unit>
 ) {
 
-    fun moduleType(module: String): ModuleType {
-        return getModule(module)
+    fun moduleType(path: ImportPath): ModuleType {
+        return getModule(path)
     }
 
     fun typeOf(node: VariableBindingNode): Type {
@@ -240,7 +240,7 @@ internal fun typeCheck(
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (String) -> ModuleType
+    getModule: (ImportPath) -> ModuleType
 ): TypeCheckResult {
     val mutableNodeTypes = HashMap(nodeTypes)
     val typeContext = newTypeContext(
@@ -280,7 +280,7 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
-    context.addType(import, context.moduleType(import.module))
+    context.addType(import, context.moduleType(import.path))
 }
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {

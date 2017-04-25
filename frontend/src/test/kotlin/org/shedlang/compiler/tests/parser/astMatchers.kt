@@ -5,7 +5,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
 
-internal fun isImport(module: Matcher<String>) = has(ImportNode::module, module)
+internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
 inline internal fun <reified T: ExpressionNode> isReturn(
     expression: Matcher<T>
