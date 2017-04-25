@@ -6,23 +6,25 @@ import org.shedlang.compiler.backends.javascript.ast.*
 internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
     val body = node.body.flatMap(::generateCode)
     val exports = node.body.filterIsInstance<VariableBindingNode>()
-        .map({ statement ->
-            JavascriptExpressionStatementNode(
-                JavascriptAssignmentNode(
-                    JavascriptPropertyAccessNode(
-                        JavascriptVariableReferenceNode("exports", source = NodeSource(statement)),
-                        statement.name,
-                        source = NodeSource(statement)
-                    ),
-                    JavascriptVariableReferenceNode(statement.name, source = NodeSource(statement)),
-                    source = NodeSource(statement)
-                ),
-                source = NodeSource(statement)
-            )
-        })
+        .map(::generateExport)
     return JavascriptModuleNode(
         body + exports,
         source = NodeSource(node)
+    )
+}
+
+private fun generateExport(statement: VariableBindingNode): JavascriptExpressionStatementNode {
+    return JavascriptExpressionStatementNode(
+        JavascriptAssignmentNode(
+            JavascriptPropertyAccessNode(
+                JavascriptVariableReferenceNode("exports", source = NodeSource(statement)),
+                statement.name,
+                source = NodeSource(statement)
+            ),
+            JavascriptVariableReferenceNode(statement.name, source = NodeSource(statement)),
+            source = NodeSource(statement)
+        ),
+        source = NodeSource(statement)
     )
 }
 
