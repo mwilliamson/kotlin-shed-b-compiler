@@ -24,7 +24,7 @@ class ExecutionTests {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     val frontendResult = read(testProgram.path)
-                    val moduleName = frontendResult.module.nameParts
+                    val moduleName = frontendResult.module.path
                     val modulePath = moduleName.joinToString(File.separator) + ".py"
                     val destination = temporaryDirectory.file.resolve(modulePath)
                     destination.writer(StandardCharsets.UTF_8).use { writer ->

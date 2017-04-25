@@ -19,7 +19,22 @@ class ParseModuleTests {
         val node = parse("<string>", source)
 
         assertThat(node, allOf(
-            has(ModuleNode::name, equalTo("abc")),
+            has(ModuleNode::path, equalTo(listOf("abc"))),
+            has(ModuleNode::imports, equalTo(listOf())),
+            has(ModuleNode::body, equalTo(listOf()))
+        ))
+    }
+
+    @Test
+    fun modulePathIsSplitByDots() {
+        val source = """
+            module abc.def.ghi;
+        """.trimIndent()
+
+        val node = parse("<string>", source)
+
+        assertThat(node, allOf(
+            has(ModuleNode::path, equalTo(listOf("abc", "def", "ghi"))),
             has(ModuleNode::imports, equalTo(listOf())),
             has(ModuleNode::body, equalTo(listOf()))
         ))

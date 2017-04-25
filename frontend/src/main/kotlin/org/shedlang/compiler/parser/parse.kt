@@ -50,7 +50,7 @@ internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): Modu
         tokens = tokens
     )
     return ModuleNode(
-        name = moduleName,
+        path = moduleName.split("."),
         imports = imports,
         body = body,
         source = source

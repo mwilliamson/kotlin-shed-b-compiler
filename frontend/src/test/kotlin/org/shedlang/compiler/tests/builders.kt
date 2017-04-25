@@ -141,7 +141,7 @@ fun module(
     body: List<ModuleStatementNode>,
     imports: List<ImportNode> = listOf()
 ) = ModuleNode(
-    name = "",
+    path = listOf(),
     imports = imports,
     body = body,
     source = anySource()

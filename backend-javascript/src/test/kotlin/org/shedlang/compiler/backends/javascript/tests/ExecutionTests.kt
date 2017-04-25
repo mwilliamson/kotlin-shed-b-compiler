@@ -54,8 +54,7 @@ class ExecutionTests {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     val frontendResult = read(testProgram.path)
-                    val moduleName = frontendResult.module.nameParts
-                    val modulePath = moduleName.joinToString(File.separator) + ".js"
+                    val modulePath = frontendResult.module.path.joinToString(File.separator) + ".js"
                     val destination = temporaryDirectory.file.resolve(modulePath)
                     destination.writer(StandardCharsets.UTF_8).use { writer ->
                         compileModule(
