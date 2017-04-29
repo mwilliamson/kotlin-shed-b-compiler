@@ -29,7 +29,7 @@ class SerialiserTests {
     @Test
     fun importFromSerialisation() {
         val node = pythonImportFrom(
-            module = listOf("a", "b", "c"),
+            module = "a.b.c",
             names = listOf("d", "e")
         )
         assertThat(

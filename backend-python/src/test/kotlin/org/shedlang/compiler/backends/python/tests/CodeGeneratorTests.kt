@@ -23,6 +23,22 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun moduleImportsGeneratePythonImports() {
+        val shed = module(imports = listOf(import(ImportPath.relative(listOf("x", "y")))))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonModule(
+            body = isSequence(
+                isPythonImportFrom(
+                    module = equalTo(".x"),
+                    names = isSequence(equalTo("y"))
+                )
+            )
+        ))
+    }
+
+    @Test
     fun moduleGeneratesModule() {
         val shed = module(body = listOf(function(name = "f")))
 
@@ -349,6 +365,14 @@ class CodeGeneratorTests {
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)
         = cast(has(PythonModuleNode::body, body))
+
+    private fun isPythonImportFrom(
+        module: Matcher<String>,
+        names: Matcher<List<String>>
+    ) = cast(allOf(
+        has(PythonImportFromNode::module, module),
+        has(PythonImportFromNode::names, names)
+    ))
 
     private fun isPythonClass(
         name: Matcher<String>,

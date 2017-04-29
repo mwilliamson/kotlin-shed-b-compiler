@@ -56,10 +56,27 @@ internal class CodeGenerationContext(
 }
 
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
+    val imports = node.imports.map({ import -> generateCode(import, context) })
+    val body = node.body.flatMap({ child -> generateCode(child, context) })
     return PythonModuleNode(
-        node.body.flatMap({ child -> generateCode(child, context) }),
+        imports + body,
         source = NodeSource(node)
     )
+}
+
+private fun generateCode(node: ImportNode, context: CodeGenerationContext): PythonStatementNode {
+    // TODO: assign names properly using context
+    val source = NodeSource(node)
+
+    if (node.path.base == ImportPathBase.Relative) {
+        return PythonImportFromNode(
+            module = "." + node.path.parts.take(node.path.parts.size - 1).joinToString("."),
+            names = listOf(node.path.parts.last()),
+            source = source
+        )
+    } else {
+        throw UnsupportedOperationException()
+    }
 }
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {

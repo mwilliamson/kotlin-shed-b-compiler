@@ -27,7 +27,7 @@ interface PythonStatementNode : PythonNode {
 }
 
 data class PythonImportFromNode(
-    val module: List<String>,
+    val module: String,
     val names: List<String>,
     override val source: Source
 ): PythonStatementNode {

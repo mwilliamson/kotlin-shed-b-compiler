@@ -15,7 +15,7 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
 
     return node.accept(object : PythonStatementNode.Visitor<String> {
         override fun visit(node: PythonImportFromNode): String {
-            return "from " + node.module.joinToString(".") + " import " + node.names.joinToString(", ")
+            return "from " + node.module + " import " + node.names.joinToString(", ")
         }
 
         override fun visit(node: PythonClassNode): String {
