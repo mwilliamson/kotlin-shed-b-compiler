@@ -34,7 +34,7 @@ class SerialiserTests {
         )
         assertThat(
             serialise(node),
-            equalTo("from a.b.c import d, e")
+            equalTo("from a.b.c import d, e\n")
         )
     }
 
