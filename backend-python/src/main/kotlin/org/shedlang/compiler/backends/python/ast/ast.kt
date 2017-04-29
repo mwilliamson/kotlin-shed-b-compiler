@@ -13,6 +13,7 @@ data class PythonModuleNode(
 
 interface PythonStatementNode : PythonNode {
     interface Visitor<T> {
+        fun visit(node: PythonImportFromNode): T
         fun visit(node: PythonClassNode): T
         fun visit(node: PythonFunctionNode): T
         fun visit(node: PythonExpressionStatementNode): T
@@ -23,6 +24,16 @@ interface PythonStatementNode : PythonNode {
     }
 
     fun <T> accept(visitor: Visitor<T>): T
+}
+
+data class PythonImportFromNode(
+    val module: List<String>,
+    val names: List<String>,
+    override val source: Source
+): PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class PythonClassNode(

@@ -27,6 +27,18 @@ class SerialiserTests {
     }
 
     @Test
+    fun importFromSerialisation() {
+        val node = pythonImportFrom(
+            module = listOf("a", "b", "c"),
+            names = listOf("d", "e")
+        )
+        assertThat(
+            serialise(node),
+            equalTo("from a.b.c import d, e")
+        )
+    }
+
+    @Test
     fun emptyFunctionSerialisation() {
         assertThat(
             indentedSerialise(pythonFunction(name = "f")),
