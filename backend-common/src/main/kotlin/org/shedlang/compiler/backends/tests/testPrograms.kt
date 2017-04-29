@@ -9,13 +9,16 @@ import java.nio.file.Paths
 
 data class TestProgram(
     val name: String,
-    val path: Path,
+    val base: Path,
+    val main: Path,
     val expectedResult: ExecutionResult
 )
 
+private data class TestProgramFiles(val base: Path, val main: Path)
+
 fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(file): TestProgram {
-        val text = file.readText()
+        val text = file.base.resolve(file.main).toFile().readText()
         val name = Regex("^// name:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)!!.groupValues[1]
         val stdout = Regex("^// stdout:((?:\n//   .*)*)", setOf(RegexOption.MULTILINE))
             .find(text)!!
@@ -23,22 +26,26 @@ fun testPrograms(): List<TestProgram> {
             .trimMargin("//   ") + "\n"
         return TestProgram(
             name = name,
-            path = file.toPath(),
+            base = file.base,
+            main = file.main,
             expectedResult = ExecutionResult(stdout = stdout)
         )
     })
 }
 
-private fun findTestFiles(): List<File> {
-    val root = findRoot()
-    val exampleDirectory = root.resolve("examples").toFile()
-    return exampleDirectory.list().map(fun(name): File {
+private fun findTestFiles(): List<TestProgramFiles> {
+    val exampleDirectory = findRoot().resolve("examples")
+    return exampleDirectory.toFile().list().map(fun(name): TestProgramFiles {
         val file = exampleDirectory.resolve(name)
-        if (file.isDirectory) {
-            return file.resolve("main.shed")
+        val main = if (file.toFile().isDirectory) {
+            file.resolve("main.shed")
         } else {
-            return file
+            file
         }
+        return TestProgramFiles(
+            base = exampleDirectory,
+            main = exampleDirectory.relativize(main)
+        )
     })
 }
 

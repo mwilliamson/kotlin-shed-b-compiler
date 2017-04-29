@@ -8,12 +8,18 @@ import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.*
 import java.io.File
 import java.nio.file.Path
+import java.util.*
 
 
 class FrontEndResult(
-    val module: ModuleNode,
-    val references: ResolvedReferences,
-    val moduleType: ModuleType
+    val modules: List<Module>
+)
+
+class Module(
+    val path: List<String>,
+    val node: ModuleNode,
+    val type: ModuleType,
+    val references: ResolvedReferences
 )
 
 private val intTypeNodeId = freshNodeId()
@@ -41,10 +47,27 @@ private val globalNodeTypes = mapOf(
     intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
 )
 
-fun read(path: Path): FrontEndResult {
-    val module = parse(filename = path.toString(), input = path.toFile().readText())
+fun read(base: Path, path: Path): FrontEndResult {
+    val modules = HashMap<Path, Module>()
 
-    val resolvedReferences = resolve(module, mapOf(
+    fun getModule(path: Path): Module {
+        if (!modules.containsKey(path)) {
+            modules[path] = readModule(base = base, relativePath = path, getModule = ::getModule)
+        }
+
+        return modules[path]!!
+    }
+
+    getModule(path)
+
+    return FrontEndResult(modules = modules.values.toList())
+}
+
+fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
+    val path = base.resolve(relativePath)
+    val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
+
+    val resolvedReferences = resolve(moduleNode, mapOf(
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
         "String" to stringTypeNodeId,
@@ -56,19 +79,24 @@ fun read(path: Path): FrontEndResult {
     ))
 
     val typeCheckResult = typeCheck(
-        module,
+        moduleNode,
         nodeTypes = globalNodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = { importPath ->
-            val result = read(resolveModule(path, importPath))
-            result.moduleType
+            val result = getModule(resolveModule(relativePath, importPath))
+            result.type
         }
     )
-    checkReturns(module, typeCheckResult.types)
-    return FrontEndResult(
-        module = module,
-        references = resolvedReferences,
-        moduleType = typeCheckResult.moduleType
+    checkReturns(moduleNode, typeCheckResult.types)
+
+    val pathParts = relativePath.map(Path::toString)
+    val modulePath = pathParts.take(pathParts.size - 1) + pathParts.last().removeSuffix(".shed")
+
+    return Module(
+        path = modulePath,
+        node = moduleNode,
+        type = typeCheckResult.moduleType,
+        references = resolvedReferences
     )
 }
 

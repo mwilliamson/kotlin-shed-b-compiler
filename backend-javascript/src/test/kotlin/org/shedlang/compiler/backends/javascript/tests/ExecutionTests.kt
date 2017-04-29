@@ -53,12 +53,16 @@ class ExecutionTests {
         return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
-                    val frontendResult = read(testProgram.path)
-                    val modulePath = frontendResult.module.path.joinToString(File.separator) + ".js"
+                    val frontendResult = read(
+                        base = testProgram.base,
+                        path = testProgram.main
+                    )
+                    val module = frontendResult.modules.single()
+                    val modulePath = module.path.joinToString(File.separator) + ".js"
                     val destination = temporaryDirectory.file.resolve(modulePath)
                     destination.writer(StandardCharsets.UTF_8).use { writer ->
                         compileModule(
-                            module = frontendResult.module,
+                            module = module.node,
                             writer = writer
                         )
                     }
