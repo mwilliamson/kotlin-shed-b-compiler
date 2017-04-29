@@ -10,6 +10,7 @@ import org.shedlang.compiler.backends.javascript.serialise
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
+import org.shedlang.compiler.identifyModule
 import org.shedlang.compiler.read
 import org.shedlang.compiler.typechecker.TypeCheckError
 import java.io.File
@@ -57,17 +58,21 @@ class ExecutionTests {
                         base = testProgram.base,
                         path = testProgram.main
                     )
-                    val module = frontendResult.modules.single()
-                    val modulePath = module.path.joinToString(File.separator) + ".js"
-                    val destination = temporaryDirectory.file.resolve(modulePath)
-                    destination.writer(StandardCharsets.UTF_8).use { writer ->
-                        compileModule(
-                            module = module.node,
-                            writer = writer
-                        )
-                    }
+
+                    frontendResult.modules.forEach({ module ->
+                        val modulePath = modulePath(module.path)
+                        val destination = temporaryDirectory.file.resolve(modulePath)
+                        destination.toPath().parent.toFile().mkdirs()
+                        destination.writer(StandardCharsets.UTF_8).use { writer ->
+                            compileModule(
+                                module = module.node,
+                                writer = writer
+                            )
+                        }
+                    })
+                    val mainJsModule = "./" + identifyModule(testProgram.main).joinToString("/")
                     val result = run(
-                        listOf("node", modulePath),
+                        listOf("node", "-e", "require(\"${mainJsModule}\").main()"),
                         workingDirectory = temporaryDirectory.file
                     )
                     assertThat(result, equalTo(testProgram.expectedResult))
@@ -79,9 +84,11 @@ class ExecutionTests {
         }) })
     }
 
+    private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
+
     private fun compileModule(module: ModuleNode, writer: Writer) {
         val generateCode = generateCode(module)
-        val contents = stdlib + serialise(generateCode) + "\nmain()\n" + "\n"
+        val contents = stdlib + serialise(generateCode) + "\n"
         writer.write(contents)
     }
 }

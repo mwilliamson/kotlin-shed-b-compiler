@@ -89,15 +89,17 @@ fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Mod
     )
     checkReturns(moduleNode, typeCheckResult.types)
 
-    val pathParts = relativePath.map(Path::toString)
-    val modulePath = pathParts.take(pathParts.size - 1) + pathParts.last().removeSuffix(".shed")
-
     return Module(
-        path = modulePath,
+        path = identifyModule(relativePath),
         node = moduleNode,
         type = typeCheckResult.moduleType,
         references = resolvedReferences
     )
+}
+
+fun identifyModule(path: Path): List<String> {
+    val pathParts = path.map(Path::toString)
+    return pathParts.take(pathParts.size - 1) + pathParts.last().removeSuffix(".shed")
 }
 
 fun resolveModule(path: Path, importPath: ImportPath): Path {
