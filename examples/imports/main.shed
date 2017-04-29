@@ -1,0 +1,11 @@
+// name: local import
+// stdout:
+//   Hello, world!
+
+module example;
+
+import .messages;
+
+fun main() !io -> Unit {
+    print(messages.message());
+}

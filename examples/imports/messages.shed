@@ -1,0 +1,5 @@
+module example.messages;
+
+fun message() -> String {
+   return "Hello, world!";
+}
