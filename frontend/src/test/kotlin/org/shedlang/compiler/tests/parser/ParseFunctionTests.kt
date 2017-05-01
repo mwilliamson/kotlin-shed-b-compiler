@@ -18,6 +18,7 @@ class ParseFunctionTests {
         val function = parseString(::parseFunction, source)
         assertThat(function, allOf(
             has(FunctionNode::name, equalTo("f")),
+            has(FunctionNode::typeParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::returnType, cast(
                 has(TypeReferenceNode::name, equalTo("Unit"))
@@ -42,6 +43,18 @@ class ParseFunctionTests {
             isArgument("x", "Int"),
             isArgument("y", "String")
         )))
+    }
+
+    @Test
+    fun canReadTypeParameters() {
+        val source = "fun f[T, U](t: T) -> U { }"
+        val function = parseString(::parseFunction, source)
+        assertThat(function, allOf(
+            has(FunctionNode::typeParameters, isSequence(
+                isTypeParameter(name = equalTo("T")),
+                isTypeParameter(name = equalTo("U"))
+            ))
+        ))
     }
 
     @Test

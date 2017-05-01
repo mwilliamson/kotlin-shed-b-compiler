@@ -161,6 +161,21 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
 
     val name = parseIdentifier(tokens)
 
+    val typeParameters = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
+        val typeParameters = parseMany(
+            parseElement = { tokens -> ::parseTypeParameter.parse(tokens) },
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+            allowZero = false,
+            allowTrailingSeparator = true,
+            tokens = tokens
+        )
+        tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
+        typeParameters
+    } else {
+        listOf()
+    }
+
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseZeroOrMoreNodes(
         parseElement = ::parseFormalArgument,
@@ -183,7 +198,7 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
 
     return FunctionNode(
         name = name,
-        typeParameters = listOf(),
+        typeParameters = typeParameters,
         arguments = arguments,
         returnType = returnType,
         effects = effects,
@@ -201,6 +216,11 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return body
+}
+
+private fun parseTypeParameter(source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
+    val name = parseIdentifier(tokens)
+    return TypeParameterNode(name = name, source = source)
 }
 
 private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {

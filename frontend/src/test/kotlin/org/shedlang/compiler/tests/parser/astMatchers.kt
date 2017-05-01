@@ -61,6 +61,10 @@ internal fun isFunction(name: Matcher<String>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionNode::name, name))
 }
 
+internal fun isTypeParameter(name: Matcher<String>): Matcher<TypeParameterNode> {
+    return has(TypeParameterNode::name, name)
+}
+
 internal fun isBinaryOperation(
     operator: Operator,
     left: Matcher<ExpressionNode>,
