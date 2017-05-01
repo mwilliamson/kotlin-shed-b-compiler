@@ -1,0 +1,13 @@
+// name: polymorphic identity
+// stdout:
+//   Hello, world
+
+module example;
+
+fun identity[T](value: T) -> T {
+    return value;
+}
+
+fun main() !io -> Unit {
+    print(identity("Hello, world"));
+}
