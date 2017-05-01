@@ -88,12 +88,14 @@ fun fieldAccess(
 
 fun function(
     name: String = "f",
+    typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
     effects: List<VariableReferenceNode> = listOf(),
     returnType: TypeNode = typeReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionNode(
     name = name,
+    typeParameters = typeParameters,
     arguments = arguments,
     returnType = returnType,
     effects = effects,

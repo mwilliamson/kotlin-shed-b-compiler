@@ -162,6 +162,7 @@ data class UnionNode(
 
 data class FunctionNode(
     override val name: String,
+    val typeParameters: List<TypeParameterNode>,
     val arguments: List<ArgumentNode>,
     val returnType: TypeNode,
     val effects: List<VariableReferenceNode>,
@@ -175,6 +176,15 @@ data class FunctionNode(
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class TypeParameterNode(
+    override val name: String,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): VariableBindingNode, Node {
+    override val children: List<Node>
+        get() = listOf()
 }
 
 data class ArgumentNode(

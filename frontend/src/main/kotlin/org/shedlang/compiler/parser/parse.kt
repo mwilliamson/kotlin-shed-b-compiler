@@ -183,6 +183,7 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
 
     return FunctionNode(
         name = name,
+        typeParameters = listOf(),
         arguments = arguments,
         returnType = returnType,
         effects = effects,
