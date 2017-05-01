@@ -16,6 +16,12 @@ object AnyType : Type
 class MetaType(val type: Type): Type
 class EffectType(val effect: Effect): Type
 
+private var nextTypeParameterId = 0
+
+fun freshTypeParameterId() = nextTypeParameterId++
+
+class TypeParameter(val typeParameterId: Int = freshTypeParameterId()): Type
+
 interface HasFieldsType : Type {
     val fields: Map<String, Type>
 }
@@ -25,6 +31,7 @@ data class ModuleType(
 ): HasFieldsType
 
 data class FunctionType(
+    val typeParameters: List<TypeParameter>,
     val positionalArguments: List<Type>,
     val namedArguments: Map<String, Type>,
     val returns: Type,
@@ -55,11 +62,13 @@ data class LazyUnionType(
 }
 
 fun functionType(
+    typeParameters: List<TypeParameter> = listOf(),
     positionalArguments: List<Type> = listOf(),
     namedArguments: Map<String, Type> = mapOf(),
     returns: Type,
     effects: List<Effect> = listOf()
 ) = FunctionType(
+    typeParameters = typeParameters,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
     returns = returns,
@@ -67,12 +76,7 @@ fun functionType(
 )
 
 fun positionalFunctionType(arguments: List<Type>, returns: Type)
-    = FunctionType(
-        positionalArguments = arguments,
-        namedArguments = mapOf(),
-        returns = returns,
-        effects = listOf()
-    )
+    = functionType(positionalArguments = arguments, returns = returns)
 
 fun newTypeContext(
     nodeTypes: MutableMap<Int, Type> = mutableMapOf(),
@@ -338,6 +342,7 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
     val returnType = evalType(function.returnType, context)
 
     val type = FunctionType(
+        typeParameters = listOf(),
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effects = effects,
@@ -479,7 +484,13 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             } else {
                 val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                 throw UnexpectedTypeError(
-                    expected = FunctionType(argumentTypes, mapOf(), AnyType, effects = listOf()),
+                    expected = FunctionType(
+                        typeParameters = listOf(),
+                        positionalArguments = argumentTypes,
+                        namedArguments = mapOf(),
+                        returns = AnyType,
+                        effects = listOf()
+                    ),
                     actual = receiverType,
                     source = node.receiver.source
                 )

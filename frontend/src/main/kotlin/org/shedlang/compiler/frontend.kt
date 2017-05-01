@@ -39,6 +39,7 @@ private val globalNodeTypes = mapOf(
     ioEffectNodeId to EffectType(IoEffect),
 
     printNodeId to FunctionType(
+        typeParameters = listOf(),
         positionalArguments = listOf(StringType),
         namedArguments = mapOf(),
         effects = listOf(IoEffect),
