@@ -37,6 +37,14 @@ class TokeniserTests {
         }
     }
 
+    @Test
+    fun identifierWithKeywordAsPrefixIsTokenisedAsIdentifier() {
+        assertEquals(
+            listOf(Token(0, TokenType.IDENTIFIER, "value")),
+            tokenise("value")
+        )
+    }
+
     @TestFactory
     fun symbolsAreTokenised(): List<DynamicTest> {
         return listOf(

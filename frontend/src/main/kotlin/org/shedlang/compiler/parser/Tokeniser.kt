@@ -1,45 +1,49 @@
 package org.shedlang.compiler.parser;
 
 
-private fun literal(tokenType: TokenType, string: String)
+private fun keyword(tokenType: TokenType, string: String)
+    = RegexTokeniser.rule(tokenType, Regex.escape(string) + "(?![A-Za-z0-9])")
+
+
+private fun symbol(tokenType: TokenType, string: String)
     = RegexTokeniser.rule(tokenType, Regex.escape(string))
 
 private val unterminatedStringPattern = "\"(?:[^\\\\\"\n]|\\\\.)*"
 
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
-    literal(TokenType.KEYWORD_ELSE, "else"),
-    literal(TokenType.KEYWORD_FALSE, "false"),
-    literal(TokenType.KEYWORD_FUN, "fun"),
-    literal(TokenType.KEYWORD_IF, "if"),
-    literal(TokenType.KEYWORD_IMPORT, "import"),
-    literal(TokenType.KEYWORD_IS, "is"),
-    literal(TokenType.KEYWORD_MODULE, "module"),
-    literal(TokenType.KEYWORD_RETURN, "return"),
-    literal(TokenType.KEYWORD_SHAPE, "shape"),
-    literal(TokenType.KEYWORD_TRUE, "true"),
-    literal(TokenType.KEYWORD_UNION, "union"),
-    literal(TokenType.KEYWORD_UNIT, "unit"),
-    literal(TokenType.KEYWORD_VAL, "val"),
+    keyword(TokenType.KEYWORD_ELSE, "else"),
+    keyword(TokenType.KEYWORD_FALSE, "false"),
+    keyword(TokenType.KEYWORD_FUN, "fun"),
+    keyword(TokenType.KEYWORD_IF, "if"),
+    keyword(TokenType.KEYWORD_IMPORT, "import"),
+    keyword(TokenType.KEYWORD_IS, "is"),
+    keyword(TokenType.KEYWORD_MODULE, "module"),
+    keyword(TokenType.KEYWORD_RETURN, "return"),
+    keyword(TokenType.KEYWORD_SHAPE, "shape"),
+    keyword(TokenType.KEYWORD_TRUE, "true"),
+    keyword(TokenType.KEYWORD_UNION, "union"),
+    keyword(TokenType.KEYWORD_UNIT, "unit"),
+    keyword(TokenType.KEYWORD_VAL, "val"),
 
     RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
 
-    literal(TokenType.SYMBOL_ARROW, "->"),
-    literal(TokenType.SYMBOL_DOT, "."),
-    literal(TokenType.SYMBOL_COMMA, ","),
-    literal(TokenType.SYMBOL_COLON, ":"),
-    literal(TokenType.SYMBOL_SEMICOLON, ";"),
-    literal(TokenType.SYMBOL_OPEN_PAREN, "("),
-    literal(TokenType.SYMBOL_CLOSE_PAREN, ")"),
-    literal(TokenType.SYMBOL_OPEN_BRACE, "{"),
-    literal(TokenType.SYMBOL_CLOSE_BRACE, "}"),
-    literal(TokenType.SYMBOL_OPEN_SQUARE_BRACKET, "["),
-    literal(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET, "]"),
-    literal(TokenType.SYMBOL_DOUBLE_EQUALS, "=="),
-    literal(TokenType.SYMBOL_EQUALS, "="),
-    literal(TokenType.SYMBOL_PLUS, "+"),
-    literal(TokenType.SYMBOL_MINUS, "-"),
-    literal(TokenType.SYMBOL_ASTERISK, "*"),
-    literal(TokenType.SYMBOL_BAR, "|"),
+    symbol(TokenType.SYMBOL_ARROW, "->"),
+    symbol(TokenType.SYMBOL_DOT, "."),
+    symbol(TokenType.SYMBOL_COMMA, ","),
+    symbol(TokenType.SYMBOL_COLON, ":"),
+    symbol(TokenType.SYMBOL_SEMICOLON, ";"),
+    symbol(TokenType.SYMBOL_OPEN_PAREN, "("),
+    symbol(TokenType.SYMBOL_CLOSE_PAREN, ")"),
+    symbol(TokenType.SYMBOL_OPEN_BRACE, "{"),
+    symbol(TokenType.SYMBOL_CLOSE_BRACE, "}"),
+    symbol(TokenType.SYMBOL_OPEN_SQUARE_BRACKET, "["),
+    symbol(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET, "]"),
+    symbol(TokenType.SYMBOL_DOUBLE_EQUALS, "=="),
+    symbol(TokenType.SYMBOL_EQUALS, "="),
+    symbol(TokenType.SYMBOL_PLUS, "+"),
+    symbol(TokenType.SYMBOL_MINUS, "-"),
+    symbol(TokenType.SYMBOL_ASTERISK, "*"),
+    symbol(TokenType.SYMBOL_BAR, "|"),
 
     RegexTokeniser.rule(TokenType.IDENTIFIER, "!?[A-Za-z][A-Za-z0-9]*"),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
