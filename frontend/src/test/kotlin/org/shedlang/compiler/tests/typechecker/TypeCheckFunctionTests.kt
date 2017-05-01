@@ -32,6 +32,14 @@ class TypeCheckFunctionTests {
             typeContext.typeOf(typeParameterReference),
             equalTo(typeContext.typeOf(typeParameter))
         )
+        assertThat(
+            typeContext.typeOf(node),
+            cast(
+                has(FunctionType::typeParameters, isSequence(
+                    has(TypeParameter::name, equalTo("T"))
+                ))
+            )
+        )
     }
 
     @Test

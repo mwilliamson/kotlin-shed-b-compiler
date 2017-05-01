@@ -339,10 +339,11 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {
-    for (typeParameterNode in function.typeParameters) {
+    val typeParameters = function.typeParameters.map({ typeParameterNode ->
         val typeParameter = TypeParameter(name = typeParameterNode.name)
         context.addType(typeParameterNode, MetaType(typeParameter))
-    }
+        typeParameter
+    })
 
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
@@ -351,7 +352,7 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
     val returnType = evalType(function.returnType, context)
 
     val type = FunctionType(
-        typeParameters = listOf(),
+        typeParameters = typeParameters,
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effects = effects,
