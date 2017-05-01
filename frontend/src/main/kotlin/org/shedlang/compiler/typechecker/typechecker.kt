@@ -20,7 +20,10 @@ private var nextTypeParameterId = 0
 
 fun freshTypeParameterId() = nextTypeParameterId++
 
-class TypeParameter(val typeParameterId: Int = freshTypeParameterId()): Type
+class TypeParameter(
+    val name: String,
+    val typeParameterId: Int = freshTypeParameterId()
+): Type
 
 interface HasFieldsType : Type {
     val fields: Map<String, Type>
@@ -335,6 +338,11 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {
+    for (typeParameterNode in function.typeParameters) {
+        val typeParameter = TypeParameter(name = typeParameterNode.name)
+        context.addType(typeParameterNode, MetaType(typeParameter))
+    }
+
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
