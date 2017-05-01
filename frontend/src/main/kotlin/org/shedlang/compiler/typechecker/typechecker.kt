@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.jetbrains.kotlin.utils.keysToMap
 import org.shedlang.compiler.ast.*
 import java.util.*
 
@@ -506,7 +507,22 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
-            node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType -> verifyType(arg, context, expected = argType) })
+            val typeParameterBindings = HashMap<TypeParameter, Type?>(receiverType.typeParameters.keysToMap({ typeParameter -> null }))
+            fun getSignatureType(type: Type): Type {
+                // TODO: handle unbound types
+                return typeParameterBindings.getOrDefault(type, type)!!
+            }
+
+            node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType ->
+                val actualType = inferType(arg, context)
+                val boundType = typeParameterBindings.getOrDefault(argType, argType)
+                if (argType is TypeParameter && boundType == null) {
+                    typeParameterBindings[argType] = actualType
+                } else {
+                    // TODO: use boundType here
+                    verifyType(arg, context, expected = argType)
+                }
+            })
             if (receiverType.positionalArguments.size != node.positionalArguments.size) {
                 throw WrongNumberOfArgumentsError(
                     expected = receiverType.positionalArguments.size,
@@ -520,7 +536,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw UnhandledEffectError(unhandledEffects[0], source = node.source)
             }
 
-            return receiverType.returns
+            return getSignatureType(receiverType.returns)
         }
 
         private fun inferConstructorCallType(node: CallNode, shapeType: ShapeType): Type {
