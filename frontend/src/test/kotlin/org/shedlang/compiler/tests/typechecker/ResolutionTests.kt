@@ -101,6 +101,22 @@ class ResolutionTests {
     }
 
     @Test
+    fun functionTypeParametersAreAddedToScope() {
+        val reference = typeReference("T")
+        val typeParameter = typeParameter("T")
+        val node = function(
+            typeParameters = listOf(typeParameter),
+            arguments = listOf(argument(type = reference)),
+            returnType = typeReference("T"),
+            body = listOf()
+        )
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[reference], equalTo(typeParameter.nodeId))
+    }
+
+    @Test
     fun functionEffectsAreResolved() {
         val effect = variableReference("!io")
         val node = function(

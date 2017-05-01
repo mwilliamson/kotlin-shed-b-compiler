@@ -100,15 +100,17 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is FunctionNode -> {
             context.defer(node, {
+                val bodyContext = resolveScope(binders = node.typeParameters, context = context)
+
                 for (effect in node.effects) {
-                    resolve(effect, context)
+                    resolve(effect, bodyContext)
                 }
-                resolve(node.returnType, context)
-                node.arguments.forEach { argument -> resolve(argument, context) }
+                resolve(node.returnType, bodyContext)
+                node.arguments.forEach { argument -> resolve(argument, bodyContext) }
                 resolveScope(
                     body = node.body,
                     binders = node.arguments,
-                    context = context
+                    context = bodyContext
                 )
             })
         }
@@ -152,11 +154,11 @@ internal fun resolve(node: Node, context: ResolutionContext) {
     }
 }
 
-private fun <T: Node> resolveScope(
-    body: List<T>,
+private fun resolveScope(
+    body: List<Node> = listOf(),
     binders: List<VariableBindingNode> = listOf(),
     context: ResolutionContext
-) {
+): ResolutionContext {
     val bodyContext = enterScope(
         binders + body.filterIsInstance<VariableBindingNode>(),
         context
@@ -169,6 +171,8 @@ private fun <T: Node> resolveScope(
     for (child in body) {
         resolve(child, bodyContext)
     }
+
+    return bodyContext
 }
 
 private fun enterScope(binders: List<VariableBindingNode>, context: ResolutionContext): ResolutionContext {

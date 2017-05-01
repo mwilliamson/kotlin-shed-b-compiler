@@ -130,8 +130,15 @@ fun union(
     source = anySource()
 )
 
+fun typeParameter(
+    name: String
+) = TypeParameterNode(
+    name = name,
+    source = anySource()
+)
+
 fun argument(
-    name: String,
+    name: String = "x",
     type: TypeNode = typeReference("Int")
 ) = ArgumentNode(
     name = name,
