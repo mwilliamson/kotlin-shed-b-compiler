@@ -520,11 +520,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     if (boundType == null) {
                         typeParameterBindings[argType] = actualType
                     } else {
-                        verifyType(
-                            actual = actualType,
-                            expected = boundType,
-                            source = arg.source
-                        )
+                        typeParameterBindings[argType] = union(boundType, actualType)
                     }
                 } else {
                     verifyType(
@@ -548,6 +544,15 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             return getSignatureType(receiverType.returns)
+        }
+
+        private fun union(left: Type, right: Type): Type {
+            // TODO: check coercion the other way round
+            if (canCoerce(from = right, to = left)) {
+                return left
+            } else {
+                return LazyUnionType("T", lazy({ -> listOf(left, right)}))
+            }
         }
 
         private fun inferConstructorCallType(node: CallNode, shapeType: ShapeType): Type {
