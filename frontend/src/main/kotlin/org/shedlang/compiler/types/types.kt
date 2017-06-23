@@ -96,7 +96,6 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 
 
 fun union(left: Type, right: Type): Type {
-    // TODO: check coercion the other way round
     if (canCoerce(from = right, to = left)) {
         return left
     } else if (canCoerce(from = left, to = right)) {
