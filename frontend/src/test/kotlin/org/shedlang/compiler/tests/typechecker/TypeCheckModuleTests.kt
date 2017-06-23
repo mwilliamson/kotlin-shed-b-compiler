@@ -5,8 +5,8 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.MetaType
-import org.shedlang.compiler.typechecker.UnitType
+import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.UnitType
 import org.shedlang.compiler.typechecker.typeCheck
 
 class TypeCheckModuleTests {

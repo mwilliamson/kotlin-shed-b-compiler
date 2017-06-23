@@ -8,6 +8,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.*
 
 class TypeCheckFunctionTests {
     @Test

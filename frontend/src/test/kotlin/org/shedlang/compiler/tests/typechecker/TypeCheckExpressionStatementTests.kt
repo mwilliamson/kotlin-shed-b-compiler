@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.expressionStatement
 import org.shedlang.compiler.tests.call
 import org.shedlang.compiler.tests.variableReference
-import org.shedlang.compiler.typechecker.Type
+import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
-import org.shedlang.compiler.typechecker.UnitType
+import org.shedlang.compiler.types.UnitType
 import org.shedlang.compiler.typechecker.typeCheck
 
 class TypeCheckExpressionStatementTests {

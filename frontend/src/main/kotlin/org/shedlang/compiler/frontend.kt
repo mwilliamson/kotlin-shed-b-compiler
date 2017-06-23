@@ -6,6 +6,7 @@ import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.*
 import java.io.File
 import java.nio.file.Path
 import java.util.*

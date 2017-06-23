@@ -7,6 +7,9 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
 
 class TypeCheckShapeTests {
     @Test

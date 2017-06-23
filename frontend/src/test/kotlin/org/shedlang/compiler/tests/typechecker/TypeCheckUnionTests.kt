@@ -4,9 +4,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.BoolType
-import org.shedlang.compiler.typechecker.IntType
-import org.shedlang.compiler.typechecker.MetaType
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.typechecker.typeCheck
 
 class TypeCheckUnionTests {

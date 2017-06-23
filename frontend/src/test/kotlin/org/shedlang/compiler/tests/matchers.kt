@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests
 
 import com.natpryce.hamkrest.*
+import org.shedlang.compiler.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.*
 
 
 fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {

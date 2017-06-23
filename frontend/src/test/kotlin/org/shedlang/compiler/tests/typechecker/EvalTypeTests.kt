@@ -9,6 +9,10 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.typeReference
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.AnyType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.Type
 
 class EvalTypeTests {
     @Test

@@ -1,5 +1,7 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.types.FunctionType
+import org.shedlang.compiler.types.UnitType
 import org.shedlang.compiler.ast.*
 
 open class ReturnCheckError(message: String?, val source: Source) : Exception(message)

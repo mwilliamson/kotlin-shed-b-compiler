@@ -1,85 +1,8 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.types.*
 import java.util.*
-
-interface Effect
-object IoEffect : Effect
-
-interface Type
-
-object UnitType: Type
-object BoolType : Type
-object IntType : Type
-object StringType : Type
-object AnyType : Type
-class MetaType(val type: Type): Type
-class EffectType(val effect: Effect): Type
-
-private var nextTypeParameterId = 0
-
-fun freshTypeParameterId() = nextTypeParameterId++
-
-class TypeParameter(
-    val name: String,
-    val typeParameterId: Int = freshTypeParameterId()
-): Type
-
-interface HasFieldsType : Type {
-    val fields: Map<String, Type>
-}
-
-data class ModuleType(
-    override val fields: Map<String, Type>
-): HasFieldsType
-
-data class FunctionType(
-    val typeParameters: List<TypeParameter>,
-    val positionalArguments: List<Type>,
-    val namedArguments: Map<String, Type>,
-    val returns: Type,
-    val effects: List<Effect>
-): Type
-
-interface ShapeType: HasFieldsType {
-    val name: String
-}
-
-data class LazyShapeType(
-    override val name: String,
-    val getFields: Lazy<Map<String, Type>>
-): ShapeType {
-    override val fields: Map<String, Type> by getFields
-}
-
-interface UnionType: Type {
-    val name: String;
-    val members: List<Type>;
-}
-
-data class LazyUnionType(
-    override val name: String,
-    private val getMembers: Lazy<List<Type>>
-): UnionType {
-    override val members: List<Type> by getMembers
-}
-
-fun functionType(
-    typeParameters: List<TypeParameter> = listOf(),
-    positionalArguments: List<Type> = listOf(),
-    namedArguments: Map<String, Type> = mapOf(),
-    returns: Type,
-    effects: List<Effect> = listOf()
-) = FunctionType(
-    typeParameters = typeParameters,
-    positionalArguments = positionalArguments,
-    namedArguments = namedArguments,
-    returns = returns,
-    effects = effects
-)
-
-fun positionalFunctionType(arguments: List<Type>, returns: Type)
-    = functionType(positionalArguments = arguments, returns = returns)
 
 fun newTypeContext(
     nodeTypes: MutableMap<Int, Type> = mutableMapOf(),
@@ -520,7 +443,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     if (boundType == null) {
                         typeParameterBindings[argType] = actualType
                     } else {
-                        typeParameterBindings[argType] = union(boundType, actualType)
+                        typeParameterBindings[argType] = org.shedlang.compiler.types.union(boundType, actualType)
                     }
                 } else {
                     verifyType(
@@ -544,15 +467,6 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             return getSignatureType(receiverType.returns)
-        }
-
-        private fun union(left: Type, right: Type): Type {
-            // TODO: check coercion the other way round
-            if (canCoerce(from = right, to = left)) {
-                return left
-            } else {
-                return LazyUnionType("T", lazy({ -> listOf(left, right)}))
-            }
         }
 
         private fun inferConstructorCallType(node: CallNode, shapeType: ShapeType): Type {

@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.isOperation
 import org.shedlang.compiler.tests.literalBool
 import org.shedlang.compiler.tests.typeReference
-import org.shedlang.compiler.typechecker.BoolType
-import org.shedlang.compiler.typechecker.MetaType
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.typechecker.inferType
 
 class TypeCheckIsOperationTests {

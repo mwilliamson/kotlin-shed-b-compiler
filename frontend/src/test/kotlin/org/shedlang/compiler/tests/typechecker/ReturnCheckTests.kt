@@ -10,6 +10,10 @@ import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.Node
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.positionalFunctionType
 
 class ReturnCheckTests {
     @Test

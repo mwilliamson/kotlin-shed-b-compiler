@@ -1,8 +1,8 @@
 package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.typechecker.ShapeType
-import org.shedlang.compiler.typechecker.Type
+import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.Type
 
 fun anySource(): Source {
     return StringSource(filename = "<string>", contents = "", characterIndex = 0)

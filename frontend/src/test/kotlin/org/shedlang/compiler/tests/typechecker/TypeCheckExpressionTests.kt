@@ -10,6 +10,10 @@ import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.StringType
+import org.shedlang.compiler.types.UnitType
 
 class TypeCheckExpressionTests {
     @Test

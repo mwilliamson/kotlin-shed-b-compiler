@@ -5,8 +5,8 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.literalInt
 import org.shedlang.compiler.tests.returns
-import org.shedlang.compiler.typechecker.BoolType
-import org.shedlang.compiler.typechecker.IntType
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.typechecker.ReturnOutsideOfFunctionError
 import org.shedlang.compiler.typechecker.typeCheck
 

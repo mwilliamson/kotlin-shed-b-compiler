@@ -11,6 +11,9 @@ import org.shedlang.compiler.tests.literalInt
 import org.shedlang.compiler.tests.valStatement
 import org.shedlang.compiler.tests.variableReference
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.UnitType
 
 class TypeCheckValTests {
     @Test
