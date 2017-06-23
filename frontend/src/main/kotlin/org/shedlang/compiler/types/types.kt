@@ -17,8 +17,10 @@ class MetaType(val type: Type): Type
 class EffectType(val effect: Effect): Type
 
 private var nextTypeParameterId = 0
-
 fun freshTypeParameterId() = nextTypeParameterId++
+
+private var nextAnonymousTypeId = 0
+fun freshAnonymousTypeId() = nextAnonymousTypeId++
 
 class TypeParameter(
     val name: String,
@@ -62,6 +64,12 @@ data class SimpleUnionType(
     override val members: List<Type>
 ): UnionType
 
+
+data class AnonymousUnionType(
+    override val name: String = "_Union" + freshAnonymousTypeId(),
+    override val members: List<Type>
+): UnionType
+
 data class LazyUnionType(
     override val name: String,
     private val getMembers: Lazy<List<Type>>
@@ -93,7 +101,11 @@ fun union(left: Type, right: Type): Type {
         return left
     } else if (canCoerce(from = left, to = right)) {
         return right
+    } else if (left is AnonymousUnionType) {
+        return AnonymousUnionType(members = left.members + right)
+    } else if (right is AnonymousUnionType) {
+        return AnonymousUnionType(members = listOf(left) + right.members)
     } else {
-        return SimpleUnionType("T", listOf(left, right))
+        return AnonymousUnionType(members = listOf(left, right))
     }
 }

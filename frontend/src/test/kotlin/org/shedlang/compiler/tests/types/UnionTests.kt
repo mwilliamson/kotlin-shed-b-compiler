@@ -4,14 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.isIntType
-import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.isStringType
-import org.shedlang.compiler.tests.isUnionType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.SimpleUnionType
-import org.shedlang.compiler.types.StringType
-import org.shedlang.compiler.types.union
+import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.types.*
 
 class UnionTests {
     @Test
@@ -36,5 +30,17 @@ class UnionTests {
         val right = StringType
         val union = union(left, right)
         assertThat(union, isUnionType(members = isSequence(isIntType, isStringType)))
+    }
+
+    @Test
+    fun repeatedUnionsFromLeftProduceSingleUnion() {
+        val union = union(union(IntType, StringType), BoolType)
+        assertThat(union, isUnionType(members = isSequence(isIntType, isStringType, isBoolType)))
+    }
+
+    @Test
+    fun repeatedUnionsFromRightProduceSingleUnion() {
+        val union = union(IntType, union(StringType, BoolType))
+        assertThat(union, isUnionType(members = isSequence(isIntType, isStringType, isBoolType)))
     }
 }
