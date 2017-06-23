@@ -42,6 +42,26 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun functionCallWithImplicitTypeArgumentsWithTypeParameterInstantiatedToSameTypeTwice() {
+        val functionReference = variableReference("f")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(literalInt(), literalInt())
+        )
+
+        val typeParameter = TypeParameter(name = "T")
+        val functionType = functionType(
+            typeParameters = listOf(typeParameter),
+            positionalArguments = listOf(typeParameter, typeParameter),
+            returns = typeParameter
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, cast(equalTo(IntType)))
+    }
+
+    @Test
     fun whenFunctionExpressionIsNotFunctionTypeThenCallDoesNotTypeCheck() {
         val functionReference = variableReference("f")
         val node = call(

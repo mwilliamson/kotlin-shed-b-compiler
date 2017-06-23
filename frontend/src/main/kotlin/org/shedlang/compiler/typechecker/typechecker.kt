@@ -1,6 +1,5 @@
 package org.shedlang.compiler.typechecker
 
-import org.jetbrains.kotlin.utils.keysToMap
 import org.shedlang.compiler.ast.*
 import java.util.*
 
@@ -508,7 +507,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
-            val typeParameterBindings = HashMap<TypeParameter, Type?>(receiverType.typeParameters.keysToMap({ typeParameter -> null }))
+            val typeParameterBindings = HashMap<TypeParameter, Type>()
             fun getSignatureType(type: Type): Type {
                 // TODO: handle unbound types
                 return typeParameterBindings.getOrDefault(type, type)!!
@@ -516,12 +515,23 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
             node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType ->
                 val actualType = inferType(arg, context)
-                val boundType = typeParameterBindings.getOrDefault(argType, argType)
-                if (argType is TypeParameter && boundType == null) {
-                    typeParameterBindings[argType] = actualType
+                if (argType is TypeParameter) {
+                    val boundType = typeParameterBindings.get(argType)
+                    if (boundType == null) {
+                        typeParameterBindings[argType] = actualType
+                    } else {
+                        verifyType(
+                            actual = actualType,
+                            expected = boundType,
+                            source = arg.source
+                        )
+                    }
                 } else {
-                    // TODO: use boundType here
-                    verifyType(arg, context, expected = argType)
+                    verifyType(
+                        actual = actualType,
+                        expected = argType,
+                        source = arg.source
+                    )
                 }
             })
             if (receiverType.positionalArguments.size != node.positionalArguments.size) {
