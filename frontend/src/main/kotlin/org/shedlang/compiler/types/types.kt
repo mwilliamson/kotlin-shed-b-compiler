@@ -57,6 +57,11 @@ interface UnionType: Type {
     val members: List<Type>;
 }
 
+data class SimpleUnionType(
+    override val name: String,
+    override val members: List<Type>
+): UnionType
+
 data class LazyUnionType(
     override val name: String,
     private val getMembers: Lazy<List<Type>>
@@ -86,7 +91,9 @@ fun union(left: Type, right: Type): Type {
     // TODO: check coercion the other way round
     if (canCoerce(from = right, to = left)) {
         return left
+    } else if (canCoerce(from = left, to = right)) {
+        return right
     } else {
-        return LazyUnionType("T", lazy({ -> listOf(left, right)}))
+        return SimpleUnionType("T", listOf(left, right))
     }
 }
