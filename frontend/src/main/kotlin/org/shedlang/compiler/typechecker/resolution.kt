@@ -100,13 +100,11 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is FunctionNode -> {
             context.defer(node, {
-                val bodyContext = resolveScope(binders = node.typeParameters, context = context)
-
-                for (effect in node.effects) {
-                    resolve(effect, bodyContext)
-                }
-                resolve(node.returnType, bodyContext)
-                node.arguments.forEach { argument -> resolve(argument, bodyContext) }
+                val bodyContext = resolveScope(
+                    binders = node.typeParameters,
+                    body = node.effects + listOf(node.returnType) + node.arguments,
+                    context = context
+                )
                 resolveScope(
                     body = node.body,
                     binders = node.arguments,
