@@ -312,6 +312,10 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
                 )
             }
         }
+
+        override fun visit(node: TypeApplicationNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

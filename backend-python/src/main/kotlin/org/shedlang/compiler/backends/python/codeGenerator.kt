@@ -234,5 +234,9 @@ private fun generateCode(node: TypeNode, context: CodeGenerationContext): Python
             // TODO: test renaming
             return PythonVariableReferenceNode(context.name(node), NodeSource(node))
         }
+
+        override fun visit(node: TypeApplicationNode): PythonExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }

@@ -120,3 +120,10 @@ internal fun isFieldAccess(
 internal fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
 
 internal fun isTypeReference(name: String) = cast(has(TypeReferenceNode::name, equalTo(name)))
+internal fun isTypeApplication(
+    receiver: Matcher<TypeNode>,
+    arguments: Matcher<List<TypeNode>>
+) = cast(allOf(
+    has(TypeApplicationNode::receiver, receiver),
+    has(TypeApplicationNode::arguments, arguments)
+))
