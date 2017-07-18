@@ -15,6 +15,7 @@ class ParseShapeTests {
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
             name = equalTo("X"),
+            typeParameters = isSequence(),
             fields = isSequence()
         ))
     }
@@ -57,6 +58,31 @@ class ParseShapeTests {
                     type = isTypeReference("Int")
                 )
             )
+        ))
+    }
+
+    @Test
+    fun shapeCanHaveTypeParameter() {
+        val source = "shape X[T] { }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            name = equalTo("X"),
+            typeParameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            fields = isSequence()
+        ))
+    }
+
+    @Test
+    fun shapeCanHaveManyTypeParameters() {
+        val source = "shape X[T, U] { }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            name = equalTo("X"),
+            typeParameters = isSequence(
+                isTypeParameter(name = equalTo("T")),
+                isTypeParameter(name = equalTo("U"))
+            ),
+            fields = isSequence()
         ))
     }
 }

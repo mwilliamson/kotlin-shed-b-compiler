@@ -105,9 +105,11 @@ fun function(
 
 fun shape(
     name: String,
+    typeParameters: List<TypeParameterNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
     name = name,
+    typeParameters = typeParameters,
     fields = fields,
     source = anySource()
 )

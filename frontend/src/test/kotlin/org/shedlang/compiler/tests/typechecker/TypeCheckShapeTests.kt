@@ -6,7 +6,8 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.FieldAlreadyDeclaredError
+import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
@@ -16,7 +17,7 @@ class TypeCheckShapeTests {
     fun shapeDeclaresType() {
         val intType = typeReference("Int")
         val boolType = typeReference("Bool")
-        val node = shape("X", listOf(
+        val node = shape("X", fields = listOf(
             shapeField("a", intType),
             shapeField("b", boolType)
         ))
@@ -35,7 +36,7 @@ class TypeCheckShapeTests {
     @Test
     fun whenShapeDeclaresMultipleFieldsWithSameNameThenExceptionIsThrown() {
         val intType = typeReference("Int")
-        val node = shape("X", listOf(
+        val node = shape("X", fields = listOf(
             shapeField("a", intType),
             shapeField("a", intType)
         ))

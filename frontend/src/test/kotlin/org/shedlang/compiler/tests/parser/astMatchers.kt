@@ -31,10 +31,12 @@ inline internal fun <reified T: ExpressionNode> isVal(
 
 internal fun isShape(
     name: Matcher<String> = anything,
+    typeParameters: Matcher<List<TypeParameterNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>>
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(ShapeNode::name, name),
+        has(ShapeNode::typeParameters, typeParameters),
         has(ShapeNode::fields, fields)
     ))
 }

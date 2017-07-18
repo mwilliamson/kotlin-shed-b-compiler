@@ -139,12 +139,13 @@ interface ModuleStatementNode: Node {
 
 data class ShapeNode(
     override val name: String,
+    val typeParameters: List<TypeParameterNode>,
     val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = fields
+        get() = typeParameters + fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

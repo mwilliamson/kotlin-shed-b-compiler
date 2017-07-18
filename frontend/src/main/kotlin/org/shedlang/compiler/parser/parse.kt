@@ -110,6 +110,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
 internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): ShapeNode {
     tokens.skip(TokenType.KEYWORD_SHAPE)
     val name = parseIdentifier(tokens)
+    val typeParameters = parseTypeParameters(tokens)
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val fields = parseZeroOrMoreNodes(
@@ -123,6 +124,7 @@ internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): Shape
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return ShapeNode(
         name = name,
+        typeParameters = typeParameters,
         fields = fields,
         source = source
     )
