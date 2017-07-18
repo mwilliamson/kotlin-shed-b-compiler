@@ -141,6 +141,8 @@ private fun parseShapeField(source: Source, tokens: TokenIterator<TokenType>): S
 private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionNode {
     tokens.skip(TokenType.KEYWORD_UNION)
     val name = parseIdentifier(tokens)
+    val typeParameters = parseTypeParameters(tokens)
+
     tokens.skip(TokenType.SYMBOL_EQUALS)
 
     val members = parseMany(
@@ -153,28 +155,19 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
 
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
-    return UnionNode(name = name, members = members, source = source)
+    return UnionNode(
+        name = name,
+        typeParameters = typeParameters,
+        members = members,
+        source = source
+    )
 }
 
 internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode {
     tokens.skip(TokenType.KEYWORD_FUN)
 
     val name = parseIdentifier(tokens)
-
-    val typeParameters = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
-        val typeParameters = parseMany(
-            parseElement = { tokens -> ::parseTypeParameter.parse(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
-            allowZero = false,
-            allowTrailingSeparator = true,
-            tokens = tokens
-        )
-        tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        typeParameters
-    } else {
-        listOf()
-    }
+    val typeParameters = parseTypeParameters(tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseZeroOrMoreNodes(
@@ -205,6 +198,23 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
         body = body,
         source = source
     )
+}
+
+private fun parseTypeParameters(tokens: TokenIterator<TokenType>): List<TypeParameterNode> {
+    return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
+        val typeParameters = parseMany(
+            parseElement = { tokens -> ::parseTypeParameter.parse(tokens) },
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+            allowZero = false,
+            allowTrailingSeparator = true,
+            tokens = tokens
+        )
+        tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
+        typeParameters
+    } else {
+        listOf()
+    }
 }
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {

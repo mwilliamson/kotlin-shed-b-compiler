@@ -148,6 +148,7 @@ data class ShapeFieldNode(
 
 data class UnionNode(
     override val name: String,
+    val typeParameters: List<TypeParameterNode>,
     val members: List<TypeNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()

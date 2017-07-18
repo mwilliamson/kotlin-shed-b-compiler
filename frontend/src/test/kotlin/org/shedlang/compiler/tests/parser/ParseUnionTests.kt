@@ -13,6 +13,18 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = equalTo("X"),
+            typeParameters = isSequence(),
+            members = isSequence(isTypeReference("Y"), isTypeReference("Z"))
+        ))
+    }
+
+    @Test
+    fun unionCanHaveTypeParameter() {
+        val source = "union X[T] = Y | Z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            name = equalTo("X"),
+            typeParameters = isSequence(isTypeParameter(name = equalTo("T"))),
             members = isSequence(isTypeReference("Y"), isTypeReference("Z"))
         ))
     }

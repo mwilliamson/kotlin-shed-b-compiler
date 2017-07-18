@@ -123,9 +123,11 @@ fun shapeField(
 
 fun union(
     name: String,
-    members: List<TypeNode>
+    members: List<TypeNode>,
+    typeParameters: List<TypeParameterNode> = listOf()
 ) = UnionNode(
     name = name,
+    typeParameters = typeParameters,
     members = members,
     source = anySource()
 )
