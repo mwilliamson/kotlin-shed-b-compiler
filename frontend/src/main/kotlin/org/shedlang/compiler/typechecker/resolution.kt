@@ -115,7 +115,11 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is ShapeNode -> {
             context.defer(node, {
-                node.fields.forEach({ field -> resolve(field, context) })
+                resolveScope(
+                    binders = node.typeParameters,
+                    body = node.fields,
+                    context = context
+                )
             })
         }
 

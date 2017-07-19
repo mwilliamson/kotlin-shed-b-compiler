@@ -284,6 +284,20 @@ class ResolutionTests {
     }
 
     @Test
+    fun shapeTypeParametersAreAddedToScope() {
+        val reference = typeReference("T")
+        val typeParameter = typeParameter("T")
+        val node = shape(
+            typeParameters = listOf(typeParameter),
+            fields = listOf(shapeField(type = reference))
+        )
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[reference], equalTo(typeParameter.nodeId))
+    }
+
+    @Test
     fun unionCanReferenceTypeDefinedLater() {
         val shapeReference = typeReference("X")
         val shape = shape(name = "X")

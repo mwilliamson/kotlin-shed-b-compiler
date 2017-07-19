@@ -104,7 +104,7 @@ fun function(
 )
 
 fun shape(
-    name: String,
+    name: String = "Shape",
     typeParameters: List<TypeParameterNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
@@ -115,7 +115,7 @@ fun shape(
 )
 
 fun shapeField(
-    name: String,
+    name: String = "field",
     type: TypeNode
 ) = ShapeFieldNode(
     name = name,
