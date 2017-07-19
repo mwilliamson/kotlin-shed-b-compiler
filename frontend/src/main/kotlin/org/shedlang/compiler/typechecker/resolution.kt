@@ -121,7 +121,11 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is UnionNode -> {
             context.defer(node, {
-                node.members.forEach({ member -> resolve(member, context) })
+                resolveScope(
+                    binders = node.typeParameters,
+                    body = node.members,
+                    context = context
+                )
             })
         }
 

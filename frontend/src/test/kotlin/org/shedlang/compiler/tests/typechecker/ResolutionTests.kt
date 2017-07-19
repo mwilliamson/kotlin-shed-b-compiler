@@ -298,6 +298,20 @@ class ResolutionTests {
         assertThat(references[shapeReference], equalTo(shape.nodeId))
     }
 
+    @Test
+    fun unionTypeParametersAreAddedToScope() {
+        val reference = typeReference("T")
+        val typeParameter = typeParameter("T")
+        val node = union(
+            typeParameters = listOf(typeParameter),
+            members = listOf(reference)
+        )
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[reference], equalTo(typeParameter.nodeId))
+    }
+
     private fun resolutionContext(
         bindings: Map<String, Int> = mapOf(),
         isInitialised: Set<Int> = setOf(),
