@@ -7,8 +7,11 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.tests.isIntType
 import org.shedlang.compiler.tests.typeReference
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.typechecker.evalType
+import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.types.AnyType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
@@ -47,6 +50,17 @@ class EvalTypeTests {
             ) },
             throwsCompilerError("type of x is unknown")
         )
+    }
+
+    @Test
+    fun typeOfTypeReferenceIsTypeOfMetaType() {
+        val reference = typeReference("x")
+
+        val type = evalType(
+            reference,
+            typeContext(referenceTypes = mapOf(reference to MetaType(IntType)))
+        )
+        assertThat(type, isIntType)
     }
 
     private fun isMetaType(type: Type): Matcher<Type> {
