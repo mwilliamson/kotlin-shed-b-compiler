@@ -222,10 +222,7 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
 }
 
 private fun typeCheck(node: ShapeNode, context: TypeContext) {
-    val typeParameters = node.typeParameters.map({ parameter -> TypeParameter(name = parameter.name) })
-    for ((parameterNode, parameterType) in node.typeParameters.zip(typeParameters)) {
-        context.addType(parameterNode, MetaType(parameterType))
-    }
+    val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
     for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
         if (fields.size > 1) {
@@ -257,17 +254,31 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check for duplicates in members
     // TODO: check for circularity
     // TODO: test laziness
+    val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
     val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
     val unionType = LazyUnionType(
         name = node.name,
         getMembers = members
     )
+    val type = if (node.typeParameters.isEmpty()) {
+        unionType
+    } else {
+        TypeFunction(typeParameters, unionType)
+    }
 
-    context.addType(node, MetaType(unionType))
+    context.addType(node, MetaType(type))
     context.defer({
         members.value
     })
+}
+
+private fun typeCheckTypeParameters(parameterNodes: List<TypeParameterNode>, context: TypeContext): List<TypeParameter> {
+    val typeParameters = parameterNodes.map({ parameter -> TypeParameter(name = parameter.name) })
+    for ((parameterNode, parameterType) in parameterNodes.zip(typeParameters)) {
+        context.addType(parameterNode, MetaType(parameterType))
+    }
+    return typeParameters
 }
 
 private fun typeCheck(function: FunctionNode, context: TypeContext) {
