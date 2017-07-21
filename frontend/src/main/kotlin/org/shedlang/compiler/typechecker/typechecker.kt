@@ -480,13 +480,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw UnhandledEffectError(unhandledEffects[0], source = node.source)
             }
 
-            // TODO: handle type parameters not at top-level
-            if (receiverType.returns is TypeParameter) {
-                return typeParameterBindings.get(receiverType.returns)!!
-            } else {
-                return receiverType.returns
-            }
-
+            return replaceTypes(receiverType.returns, typeParameterBindings)
         }
 
         private fun inferConstructorCallType(node: CallNode, typeFunction: TypeFunction?, shapeType: ShapeType): Type {

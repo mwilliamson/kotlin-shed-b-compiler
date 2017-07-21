@@ -182,7 +182,7 @@ private fun appliedTypeName(receiver: TypeFunction, arguments: List<Type>): Stri
     return receiver.type.name + "[" + argumentsString + "]"
 }
 
-private fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
+internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
     if (type is TypeParameter) {
         return typeMap.getOrElse(type, { type })
     } else if (type is UnionType) {
