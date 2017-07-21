@@ -222,6 +222,11 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
 }
 
 private fun typeCheck(node: ShapeNode, context: TypeContext) {
+    val typeParameters = node.typeParameters.map({ parameter -> TypeParameter(name = parameter.name) })
+    for ((parameterNode, parameterType) in node.typeParameters.zip(typeParameters)) {
+        context.addType(parameterNode, MetaType(parameterType))
+    }
+
     for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
         if (fields.size > 1) {
             throw FieldAlreadyDeclaredError(fieldName = fieldName, source = fields[1].source)
@@ -237,7 +242,12 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         name = node.name,
         getFields = fields
     )
-    context.addType(node, MetaType(shapeType))
+    val type = if (node.typeParameters.isEmpty()) {
+        shapeType
+    } else {
+        TypeFunction(typeParameters, shapeType)
+    }
+    context.addType(node, MetaType(type))
     context.defer({
         fields.value
     })

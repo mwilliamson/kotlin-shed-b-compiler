@@ -52,4 +52,29 @@ class TypeCheckShapeTests {
             )
         )
     }
+
+    @Test
+    fun shapeWithTypeParametersDeclaresTypeFunction() {
+        val typeParameterDeclaration = typeParameter("T")
+        val typeParameterReference = typeReference("T")
+        val node = shape(
+            "X",
+            typeParameters = listOf(typeParameterDeclaration),
+            fields = listOf(
+                shapeField("a", typeParameterReference)
+            )
+        )
+
+        val typeContext = typeContext(
+            references = mapOf(typeParameterReference to typeParameterDeclaration)
+        )
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
+            parameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            type = isShapeType(
+                name = equalTo("X"),
+                fields = listOf("a" to isTypeParameter(name = equalTo("T")))
+            )
+        )))
+    }
 }

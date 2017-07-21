@@ -1,8 +1,6 @@
 package org.shedlang.compiler.tests
 
 import com.natpryce.hamkrest.*
-import org.shedlang.compiler.*
-import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
 
 
@@ -84,3 +82,17 @@ internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))
 internal val isStringType: Matcher<Type> = cast(equalTo(StringType))
 
 internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))
+
+internal fun isTypeFunction(
+    parameters: Matcher<List<TypeParameter>>,
+    type: Matcher<Type>
+): Matcher<Type> = cast(allOf(
+    has(TypeFunction::parameters, parameters),
+    has(TypeFunction::type, type)
+))
+
+internal fun isTypeParameter(
+    name: Matcher<String>
+): Matcher<Type> = cast(
+    has(TypeParameter::name, name)
+)
