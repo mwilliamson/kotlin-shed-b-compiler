@@ -162,6 +162,30 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun shapeCallWithImplicitTypeArguments() {
+        val shapeReference = variableReference("Box")
+
+        val typeParameter = TypeParameter("T")
+        val shapeType = TypeFunction(
+            listOf(typeParameter),
+            shapeType("Box", fields = mapOf(
+                "value" to typeParameter
+            ))
+        )
+        val node = call(receiver = shapeReference, namedArguments = listOf(
+            callNamedArgument("value", literalBool())
+        ))
+
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isShapeType(
+            name = equalTo("Box[Bool]"),
+            fields = listOf("value" to isBoolType)
+        ))
+    }
+
+    @Test
     fun errorWhenShapeCallIsPassedPositionalArgument() {
         val shapeReference = variableReference("X")
         val node = call(

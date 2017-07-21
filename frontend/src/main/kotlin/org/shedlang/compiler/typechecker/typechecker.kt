@@ -444,7 +444,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 return inferFunctionCallType(node, receiverType)
             } else if (receiverType is MetaType && receiverType.type is ShapeType) {
                 val shapeType = receiverType.type
-                return inferConstructorCallType(node, shapeType)
+                return inferConstructorCallType(node, null, shapeType)
+            } else if (receiverType is MetaType && receiverType.type is TypeFunction && receiverType.type.type is ShapeType) {
+                return inferConstructorCallType(node, receiverType.type, receiverType.type.type)
             } else {
                 val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                 throw UnexpectedTypeError(
@@ -501,17 +503,36 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             return getSignatureType(receiverType.returns)
         }
 
-        private fun inferConstructorCallType(node: CallNode, shapeType: ShapeType): Type {
+        private fun inferConstructorCallType(node: CallNode, typeFunction: TypeFunction?, shapeType: ShapeType): Type {
             if (node.positionalArguments.any()) {
                 throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
             }
 
+            val typeParameterBindings = HashMap<TypeParameter, Type>()
+            fun getSignatureType(type: Type): Type {
+                // TODO: handle unbound types
+                return typeParameterBindings.getOrDefault(type, type)!!
+            }
+
             for (argument in node.namedArguments) {
+                val actualType = inferType(argument.expression, context)
                 val fieldType = shapeType.fields[argument.name]
                 if (fieldType == null) {
                     throw ExtraArgumentError(argument.name, source = argument.source)
+                } else if (fieldType is TypeParameter) {
+                    // TODO: should check that fieldType is in typeParameters (ditto for function calls)
+                    val boundType = typeParameterBindings.get(fieldType)
+                    if (boundType == null) {
+                        typeParameterBindings[fieldType] = actualType
+                    } else {
+                        typeParameterBindings[fieldType] = org.shedlang.compiler.types.union(boundType, actualType)
+                    }
                 } else {
-                    verifyType(argument.expression, context, expected = fieldType)
+                    verifyType(
+                        actual = actualType,
+                        expected = fieldType,
+                        source = argument.source
+                    )
                 }
             }
 
@@ -521,7 +542,12 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw MissingArgumentError(fieldName, source = node.source)
             }
 
-            return shapeType
+            if (typeFunction == null) {
+                return shapeType
+            } else {
+                // TODO: check all types parameters inferred
+                return applyType(typeFunction, typeFunction.parameters.map({ parameter -> typeParameterBindings[parameter]!! }))
+            }
         }
 
         override fun visit(node: FieldAccessNode): Type {
