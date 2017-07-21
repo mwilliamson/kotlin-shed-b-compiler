@@ -64,7 +64,7 @@ internal fun isFunctionType(
 ))
 
 internal fun isShapeType(
-    name: Matcher<String>,
+    name: Matcher<String> = anything,
     fields: List<Pair<String, Matcher<Type>>>
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),

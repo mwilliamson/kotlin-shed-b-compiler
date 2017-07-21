@@ -163,6 +163,14 @@ fun module(
 fun import(path: ImportPath) = ImportNode(path = path, source = anySource())
 
 fun typeReference(name: String) = TypeReferenceNode(name, anySource())
+fun typeApplication(
+    receiver: TypeNode,
+    arguments: List<TypeNode>
+) = TypeApplicationNode(
+    receiver = receiver,
+    arguments = arguments,
+    source = anySource()
+)
 
 
 fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: ShapeType {

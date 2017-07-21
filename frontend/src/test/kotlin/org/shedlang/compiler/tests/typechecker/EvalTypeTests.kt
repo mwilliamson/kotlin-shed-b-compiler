@@ -7,15 +7,11 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.tests.isIntType
-import org.shedlang.compiler.tests.typeReference
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
-import org.shedlang.compiler.types.AnyType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.*
 
 class EvalTypeTests {
     @Test
@@ -61,6 +57,35 @@ class EvalTypeTests {
             typeContext(referenceTypes = mapOf(reference to MetaType(IntType)))
         )
         assertThat(type, isIntType)
+    }
+
+    @Test
+    fun typeApplicationHasTypeOfApplyingType() {
+        val listReference = typeReference("Box")
+        val boolReference = typeReference("Bool")
+
+        val typeParameter = TypeParameter("T")
+        val listType = TypeFunction(
+            listOf(typeParameter),
+            shapeType("Box", fields = mapOf(
+                "value" to typeParameter
+            ))
+        )
+        val application = typeApplication(listReference, listOf(boolReference))
+
+        val type = evalType(
+            application,
+            typeContext(referenceTypes = mapOf(
+                listReference to MetaType(listType),
+                boolReference to MetaType(BoolType)
+            ))
+        )
+        assertThat(type, isShapeType(
+            name = equalTo("Box[Bool]"),
+            fields = listOf(
+                "value" to isBoolType
+            )
+        ))
     }
 
     private fun isMetaType(type: Type): Matcher<Type> {

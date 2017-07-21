@@ -314,7 +314,14 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
         }
 
         override fun visit(node: TypeApplicationNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            val receiver = evalType(node.receiver, context)
+            val arguments = node.arguments.map({ argument -> evalType(argument, context) })
+            if (receiver is TypeFunction) {
+                return applyType(receiver, arguments)
+            } else {
+                // TODO: throw a more appropriate exception
+                throw CompilerError("TODO", source = node.source)
+            }
         }
     })
 }
