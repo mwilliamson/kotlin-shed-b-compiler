@@ -150,12 +150,25 @@ fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
             replaceTypes(field.value, typeMap)
         })
         return LazyShapeType(
-            name = receiver.type.name + "[" + arguments.joinToString(separator = ", ", transform = { type -> type.name }) + "]",
+            name = appliedTypeName(receiver, arguments),
             getFields = lazy({ fields })
+        )
+    } else if (receiver.type is UnionType) {
+        val members = receiver.type.members.map({ member ->
+            replaceTypes(member, typeMap)
+        })
+        return LazyUnionType(
+            name = appliedTypeName(receiver, arguments),
+            getMembers = lazy({ members })
         )
     } else {
         throw UnsupportedOperationException()
     }
+}
+
+private fun appliedTypeName(receiver: TypeFunction, arguments: List<Type>): String {
+    val argumentsString = arguments.joinToString(separator = ", ", transform = { type -> type.name })
+    return receiver.type.name + "[" + argumentsString + "]"
 }
 
 private fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {

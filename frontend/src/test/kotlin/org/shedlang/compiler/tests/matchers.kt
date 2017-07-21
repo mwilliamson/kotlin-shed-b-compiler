@@ -71,7 +71,7 @@ internal fun isShapeType(
 
 internal fun isUnionType(
     name: Matcher<String> = anything,
-    members: Matcher<List<Type>>
+    members: Matcher<List<Type>> = anything
 ): Matcher<Type> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::members, members)
