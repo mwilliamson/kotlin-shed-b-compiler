@@ -185,6 +185,21 @@ private fun appliedTypeName(receiver: TypeFunction, arguments: List<Type>): Stri
 private fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
     if (type is TypeParameter) {
         return typeMap.getOrElse(type, { type })
+    } else if (type is UnionType) {
+        // TODO: deal with changing name of already applied type parameters
+        return LazyUnionType(type.name, lazy({
+            type.members.map({ memberType -> replaceTypes(memberType, typeMap) })
+        }))
+    } else if (type is ShapeType) {
+        // TODO: deal with changing name of already applied type parameters
+        return LazyShapeType(
+            name = type.name,
+            getFields = lazy({
+                type.fields.mapValues({ field -> replaceTypes(field.value, typeMap) })
+            }),
+            shapeId = type.shapeId,
+            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
+        )
     } else {
         return type
     }

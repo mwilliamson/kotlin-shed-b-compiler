@@ -62,6 +62,12 @@ internal fun isFunctionType(
 ))
 
 internal fun isShapeType(
+    name: Matcher<String>
+): Matcher<Type> = cast(
+    has(ShapeType::name, name)
+)
+
+internal fun isShapeType(
     name: Matcher<String> = anything,
     fields: List<Pair<String, Matcher<Type>>>
 ): Matcher<Type> = cast(allOf(
@@ -96,3 +102,19 @@ internal fun isTypeParameter(
 ): Matcher<Type> = cast(
     has(TypeParameter::name, name)
 )
+
+internal fun isEquivalentType(type: Type): Matcher<Type> {
+    return object: Matcher.Primitive<Type>() {
+        override fun invoke(actual: Type): MatchResult {
+            if (org.shedlang.compiler.typechecker.isEquivalentType(type, actual)) {
+                return MatchResult.Match
+            } else {
+                return MatchResult.Mismatch("was: " + actual)
+            }
+        }
+
+        override val description: String
+            get() = "is equivalent to " + type
+
+    }
+}

@@ -68,4 +68,48 @@ class TypeApplicationTests {
             isUnionType(members = isSequence(isBoolType, isIntType))
         )
     }
+
+    @Test
+    fun applyingTypeToUnionReplacesTypeParametersInMembers() {
+        val shapeTypeParameter = TypeParameter("U")
+        val shapeType = TypeFunction(
+            listOf(shapeTypeParameter),
+            shapeType("Shape")
+        )
+
+        val unionTypeParameter = TypeParameter("T")
+        val union = TypeFunction(
+            listOf(unionTypeParameter),
+            unionType("Union", members = listOf(applyType(shapeType, listOf(unionTypeParameter))))
+        )
+
+        assertThat(
+            applyType(union, listOf(BoolType)),
+            isUnionType(members = isSequence(
+                isEquivalentType(applyType(shapeType, listOf(BoolType)))
+            ))
+        )
+    }
+
+    @Test
+    fun applyingTypeToShapeReplacesTypeParametersInFields() {
+        val unionTypeParameter = TypeParameter("T")
+        val union = TypeFunction(
+            listOf(unionTypeParameter),
+            unionType("Union", members = listOf(unionTypeParameter))
+        )
+
+        val shapeTypeParameter = TypeParameter("U")
+        val shapeType = TypeFunction(
+            listOf(shapeTypeParameter),
+            shapeType("Shape", fields = mapOf("value" to applyType(union, listOf(shapeTypeParameter))))
+        )
+
+        assertThat(
+            applyType(shapeType, listOf(BoolType)),
+            isShapeType(fields = listOf(
+                "value" to isEquivalentType(applyType(union, listOf(BoolType)))
+            ))
+        )
+    }
 }

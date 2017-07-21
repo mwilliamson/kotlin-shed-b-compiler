@@ -594,6 +594,6 @@ internal fun canCoerce(from: Type, to: Type): Boolean {
     return false
 }
 
-private fun isEquivalentType(first: Type, second: Type): Boolean {
+internal fun isEquivalentType(first: Type, second: Type): Boolean {
     return canCoerce(from = first, to = second) && canCoerce(from = second, to = first)
 }
