@@ -27,11 +27,11 @@ object AnyType : Type {
 }
 class MetaType(val type: Type): Type {
     override val shortDescription: String
-        get() = throw UnsupportedOperationException()
+        get() = "MetaType(${type.shortDescription})"
 }
 class EffectType(val effect: Effect): Type {
     override val shortDescription: String
-        get() = throw UnsupportedOperationException()
+        get() = "EffectType(${effect})"
 }
 
 private var nextTypeParameterId = 0
@@ -56,7 +56,8 @@ data class TypeFunction(
     val type: Type
 ): Type {
     override val shortDescription: String
-        get() = throw UnsupportedOperationException()
+    // TODO: should be something like (T, U) => Shape[T, U]
+        get() = "TypeFunction(TODO)"
 }
 
 interface HasFieldsType : Type {
@@ -67,7 +68,8 @@ data class ModuleType(
     override val fields: Map<String, Type>
 ): HasFieldsType {
     override val shortDescription: String
-        get() = throw UnsupportedOperationException()
+    // TODO: should include name of module
+        get() = "ModuleType(TODO)"
 }
 
 data class FunctionType(
@@ -78,7 +80,7 @@ data class FunctionType(
     val effects: List<Effect>
 ): Type {
     override val shortDescription: String
-        get() = throw UnsupportedOperationException()
+        get() = "FunctionType(TODO)"
 }
 
 interface ShapeType: HasFieldsType {
