@@ -43,7 +43,7 @@ fun freshAnonymousTypeId() = nextAnonymousTypeId++
 private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
-class TypeParameter(
+data class TypeParameter(
     override val name: String,
     val typeParameterId: Int = freshTypeParameterId()
 ): Type
