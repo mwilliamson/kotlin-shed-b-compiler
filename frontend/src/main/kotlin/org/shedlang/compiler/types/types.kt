@@ -7,30 +7,30 @@ interface Effect
 object IoEffect : Effect
 
 interface Type {
-    val name: String
+    val shortDescription: String
 }
 
 object UnitType: Type {
-    override val name = "Unit"
+    override val shortDescription = "Unit"
 }
 object BoolType : Type {
-    override val name = "Bool"
+    override val shortDescription = "Bool"
 }
 object IntType : Type {
-    override val name = "Int"
+    override val shortDescription = "Int"
 }
 object StringType : Type {
-    override val name = "String"
+    override val shortDescription = "String"
 }
 object AnyType : Type {
-    override val name = "Any"
+    override val shortDescription = "Any"
 }
 class MetaType(val type: Type): Type {
-    override val name: String
+    override val shortDescription: String
         get() = throw UnsupportedOperationException()
 }
 class EffectType(val effect: Effect): Type {
-    override val name: String
+    override val shortDescription: String
         get() = throw UnsupportedOperationException()
 }
 
@@ -44,15 +44,18 @@ private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
 data class TypeParameter(
-    override val name: String,
+    val name: String,
     val typeParameterId: Int = freshTypeParameterId()
-): Type
+): Type {
+    override val shortDescription: String
+        get() = name
+}
 
 data class TypeFunction(
     val parameters: List<TypeParameter>,
     val type: Type
 ): Type {
-    override val name: String
+    override val shortDescription: String
         get() = throw UnsupportedOperationException()
 }
 
@@ -63,7 +66,7 @@ interface HasFieldsType : Type {
 data class ModuleType(
     override val fields: Map<String, Type>
 ): HasFieldsType {
-    override val name: String
+    override val shortDescription: String
         get() = throw UnsupportedOperationException()
 }
 
@@ -74,12 +77,12 @@ data class FunctionType(
     val returns: Type,
     val effects: List<Effect>
 ): Type {
-    override val name: String
+    override val shortDescription: String
         get() = throw UnsupportedOperationException()
 }
 
 interface ShapeType: HasFieldsType {
-    override val name: String
+    val name: String
     val shapeId: Int
     val typeArguments: List<Type>
 }
@@ -90,29 +93,56 @@ data class LazyShapeType(
     override val shapeId: Int = freshShapeId(),
     override val typeArguments: List<Type>
 ): ShapeType {
+    override val shortDescription: String
+        get() = if (typeArguments.isEmpty()) {
+            name
+        } else {
+            appliedTypeShortDescription(name, typeArguments)
+        }
     override val fields: Map<String, Type> by getFields
 }
 
 interface UnionType: Type {
-    override val name: String;
-    val members: List<Type>;
+    val name: String
+    val members: List<Type>
+    val typeArguments: List<Type>
 }
 
 data class SimpleUnionType(
     override val name: String,
     override val members: List<Type>
-): UnionType
+): UnionType {
+    override val shortDescription: String
+        get() = name
+
+    override val typeArguments: List<Type>
+        get() = listOf()
+}
 
 
 data class AnonymousUnionType(
     override val name: String = "_Union" + freshAnonymousTypeId(),
     override val members: List<Type>
-): UnionType
+): UnionType {
+    override val typeArguments: List<Type>
+        get() = listOf()
+
+    override val shortDescription: String
+        get() = name
+}
 
 data class LazyUnionType(
     override val name: String,
-    private val getMembers: Lazy<List<Type>>
+    private val getMembers: Lazy<List<Type>>,
+    override val typeArguments: List<Type>
 ): UnionType {
+    override val shortDescription: String
+        get() = if (typeArguments.isEmpty()) {
+            name
+        } else {
+            appliedTypeShortDescription(name, typeArguments)
+        }
+
     override val members: List<Type> by getMembers
 }
 
@@ -154,7 +184,7 @@ fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
 
     if (receiver.type is ShapeType) {
         return LazyShapeType(
-            name = appliedTypeName(receiver, arguments),
+            name = receiver.type.name,
             getFields = lazy({
                 receiver.type.fields.mapValues({ field ->
                     replaceTypes(field.value, typeMap)
@@ -165,21 +195,17 @@ fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
         )
     } else if (receiver.type is UnionType) {
         return LazyUnionType(
-            name = appliedTypeName(receiver, arguments),
+            name = receiver.type.name,
             getMembers = lazy({
                 receiver.type.members.map({ member ->
                     replaceTypes(member, typeMap)
                 })
-            })
+            }),
+            typeArguments = arguments
         )
     } else {
         throw UnsupportedOperationException()
     }
-}
-
-private fun appliedTypeName(receiver: TypeFunction, arguments: List<Type>): String {
-    val argumentsString = arguments.joinToString(separator = ", ", transform = { type -> type.name })
-    return receiver.type.name + "[" + argumentsString + "]"
 }
 
 internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
@@ -187,9 +213,13 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
         return typeMap.getOrElse(type, { type })
     } else if (type is UnionType) {
         // TODO: deal with changing name of already applied type parameters
-        return LazyUnionType(type.name, lazy({
-            type.members.map({ memberType -> replaceTypes(memberType, typeMap) })
-        }))
+        return LazyUnionType(
+            type.name,
+            lazy({
+                type.members.map({ memberType -> replaceTypes(memberType, typeMap) })
+            }),
+            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
+        )
     } else if (type is ShapeType) {
         // TODO: deal with changing name of already applied type parameters
         return LazyShapeType(
@@ -203,4 +233,9 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
     } else {
         return type
     }
+}
+
+private fun appliedTypeShortDescription(name: String, arguments: List<Type>): String {
+    val argumentsString = arguments.joinToString(separator = ", ", transform = { type -> type.shortDescription })
+    return name + "[" + argumentsString + "]"
 }

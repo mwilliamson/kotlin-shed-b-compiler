@@ -2,8 +2,8 @@ package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.SimpleUnionType
 import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.UnionType
 import org.shedlang.compiler.types.freshShapeId
 
 fun anySource(): Source {
@@ -180,9 +180,9 @@ fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: Shape
     override val fields = fields
     override val shapeId = freshShapeId()
     override val typeArguments: List<Type> = listOf()
+
+    override val shortDescription: String
+        get() = name
 }
 
-fun unionType(name: String, members: List<Type>) = object: UnionType {
-    override val name: String = name
-    override val members: List<Type> = members
-}
+fun unionType(name: String, members: List<Type>) = SimpleUnionType(name = name, members = members)

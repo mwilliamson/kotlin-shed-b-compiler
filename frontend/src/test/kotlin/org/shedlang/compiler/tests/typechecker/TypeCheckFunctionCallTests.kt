@@ -180,7 +180,8 @@ class TypeCheckFunctionCallTests {
         val type = inferType(node, typeContext)
 
         assertThat(type, isShapeType(
-            name = equalTo("Box[Bool]"),
+            name = equalTo("Box"),
+            typeArguments = isSequence(isBoolType),
             fields = listOf("value" to isBoolType)
         ))
     }

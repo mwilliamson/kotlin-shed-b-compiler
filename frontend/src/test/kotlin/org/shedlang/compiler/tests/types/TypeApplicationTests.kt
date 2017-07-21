@@ -8,7 +8,7 @@ import org.shedlang.compiler.types.*
 
 class TypeApplicationTests {
     @Test
-    fun applyingTypeToShapeRenamesShape() {
+    fun applyingTypeToShapeUpdatesTypeArguments() {
         val typeParameter1 = TypeParameter("T")
         val typeParameter2 = TypeParameter("U")
         val shape = TypeFunction(
@@ -17,7 +17,10 @@ class TypeApplicationTests {
         )
         assertThat(
             applyType(shape, listOf(BoolType, IntType)),
-            isShapeType(name = equalTo("Pair[Bool, Int]"), fields = listOf())
+            isShapeType(
+                name = equalTo("Pair"),
+                typeArguments = isSequence(isBoolType, isIntType)
+            )
         )
     }
 
@@ -42,7 +45,7 @@ class TypeApplicationTests {
     }
 
     @Test
-    fun applyingTypeToUnionRenamesUnion() {
+    fun applyingTypeToUnionUpdatesTypeArguments() {
         val typeParameter1 = TypeParameter("T")
         val typeParameter2 = TypeParameter("U")
         val union = TypeFunction(
@@ -51,7 +54,10 @@ class TypeApplicationTests {
         )
         assertThat(
             applyType(union, listOf(BoolType, IntType)),
-            isUnionType(name = equalTo("Either[Bool, Int]"))
+            isUnionType(
+                name = equalTo("Either"),
+                typeArguments = isSequence(isBoolType, isIntType)
+            )
         )
     }
 

@@ -3,8 +3,11 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.UnitType
 
 class TypeCheckIfStatementTests {
     @Test
@@ -49,10 +52,7 @@ class TypeCheckIfStatementTests {
                 variableReference to argument
             ),
             types = mapOf(
-                argument to object: UnionType {
-                    override val name = "X"
-                    override val members = listOf(IntType, UnitType)
-                }
+                argument to unionType("X", listOf(IntType, UnitType))
             )
         )
 

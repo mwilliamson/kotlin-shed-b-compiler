@@ -62,24 +62,30 @@ internal fun isFunctionType(
 ))
 
 internal fun isShapeType(
-    name: Matcher<String>
-): Matcher<Type> = cast(
-    has(ShapeType::name, name)
-)
+    name: Matcher<String>,
+    typeArguments: Matcher<List<Type>>
+): Matcher<Type> = cast(allOf(
+    has(ShapeType::name, name),
+    has(ShapeType::typeArguments, typeArguments)
+))
 
 internal fun isShapeType(
     name: Matcher<String> = anything,
+    typeArguments: Matcher<List<Type>> = anything,
     fields: List<Pair<String, Matcher<Type>>>
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),
+    has(ShapeType::typeArguments, typeArguments),
     has(ShapeType::fields, isMap(*fields.toTypedArray()))
 ))
 
 internal fun isUnionType(
     name: Matcher<String> = anything,
+    typeArguments: Matcher<List<Type>> = anything,
     members: Matcher<List<Type>> = anything
 ): Matcher<Type> = cast(allOf(
     has(UnionType::name, name),
+    has(UnionType::typeArguments, typeArguments),
     has(UnionType::members, members)
 ))
 
