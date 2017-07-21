@@ -4,6 +4,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnionType
+import org.shedlang.compiler.types.freshShapeId
 
 fun anySource(): Source {
     return StringSource(filename = "<string>", contents = "", characterIndex = 0)
@@ -177,6 +178,8 @@ fun typeApplication(
 fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: ShapeType {
     override val name = name
     override val fields = fields
+    override val shapeId = freshShapeId()
+    override val typeArguments: List<Type> = listOf()
 }
 
 fun unionType(name: String, members: List<Type>) = object: UnionType {

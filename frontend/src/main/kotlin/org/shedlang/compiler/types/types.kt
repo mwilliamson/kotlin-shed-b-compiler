@@ -40,6 +40,9 @@ fun freshTypeParameterId() = nextTypeParameterId++
 private var nextAnonymousTypeId = 0
 fun freshAnonymousTypeId() = nextAnonymousTypeId++
 
+private var nextShapeId = 0
+fun freshShapeId() = nextShapeId++
+
 class TypeParameter(
     override val name: String,
     val typeParameterId: Int = freshTypeParameterId()
@@ -77,11 +80,15 @@ data class FunctionType(
 
 interface ShapeType: HasFieldsType {
     override val name: String
+    val shapeId: Int
+    val typeArguments: List<Type>
 }
 
 data class LazyShapeType(
     override val name: String,
-    val getFields: Lazy<Map<String, Type>>
+    val getFields: Lazy<Map<String, Type>>,
+    override val shapeId: Int = freshShapeId(),
+    override val typeArguments: List<Type>
 ): ShapeType {
     override val fields: Map<String, Type> by getFields
 }
@@ -152,7 +159,9 @@ fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
                 receiver.type.fields.mapValues({ field ->
                     replaceTypes(field.value, typeMap)
                 })
-            })
+            }),
+            shapeId = receiver.type.shapeId,
+            typeArguments = arguments
         )
     } else if (receiver.type is UnionType) {
         return LazyUnionType(

@@ -237,7 +237,8 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     val shapeType = LazyShapeType(
         name = node.name,
-        getFields = fields
+        getFields = fields,
+        typeArguments = typeParameters
     )
     val type = if (node.typeParameters.isEmpty()) {
         shapeType
@@ -586,5 +587,13 @@ internal fun canCoerce(from: Type, to: Type): Boolean {
         return to.members.any({ member -> canCoerce(from = from, to = member) })
     }
 
+    if (from is ShapeType && to is ShapeType) {
+        return from.shapeId == to.shapeId && from.typeArguments.zip(to.typeArguments, ::isEquivalentType).all({ x -> x })
+    }
+
     return false
+}
+
+private fun isEquivalentType(first: Type, second: Type): Boolean {
+    return canCoerce(from = first, to = second) && canCoerce(from = second, to = first)
 }

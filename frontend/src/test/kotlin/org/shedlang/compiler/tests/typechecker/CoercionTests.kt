@@ -3,11 +3,9 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.tests.shapeType
 import org.shedlang.compiler.typechecker.canCoerce
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StringType
-import org.shedlang.compiler.types.UnionType
-import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.*
 
 class CoercionTests {
     @Test
@@ -58,5 +56,37 @@ class CoercionTests {
         }
 
         assertThat(canCoerce(from = union, to = subsetUnion), equalTo(false))
+    }
+
+    @Test
+    fun canCoerceShapeWithAppliedTypeArgumentsToShapeAppliedWithSameTypeArguments() {
+        val typeParameter = TypeParameter("T")
+        val shapeType = TypeFunction(
+            listOf(typeParameter),
+            shapeType("Box", fields = mapOf(
+                "value" to typeParameter
+            ))
+        )
+        val canCoerce = canCoerce(
+            from = applyType(shapeType, listOf(BoolType)),
+            to = applyType(shapeType, listOf(BoolType))
+        )
+        assertThat(canCoerce, equalTo(true))
+    }
+
+    @Test
+    fun cannotCoerceShapeWithAppliedTypeArgumentsToShapeAppliedWithDifferentTypeArguments() {
+        val typeParameter = TypeParameter("T")
+        val shapeType = TypeFunction(
+            listOf(typeParameter),
+            shapeType("Box", fields = mapOf(
+                "value" to typeParameter
+            ))
+        )
+        val canCoerce = canCoerce(
+            from = applyType(shapeType, listOf(BoolType)),
+            to = applyType(shapeType, listOf(IntType))
+        )
+        assertThat(canCoerce, equalTo(false))
     }
 }
