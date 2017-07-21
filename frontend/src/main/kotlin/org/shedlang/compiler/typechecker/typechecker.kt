@@ -464,29 +464,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
-            val typeParameterBindings = HashMap<TypeParameter, Type>()
-            fun getSignatureType(type: Type): Type {
-                // TODO: handle unbound types
-                return typeParameterBindings.getOrDefault(type, type)!!
-            }
+            val typeParameterBindings = checkArguments(node.positionalArguments.zip(receiverType.positionalArguments))
 
-            node.positionalArguments.zip(receiverType.positionalArguments, { arg, argType ->
-                val actualType = inferType(arg, context)
-                if (argType is TypeParameter) {
-                    val boundType = typeParameterBindings.get(argType)
-                    if (boundType == null) {
-                        typeParameterBindings[argType] = actualType
-                    } else {
-                        typeParameterBindings[argType] = org.shedlang.compiler.types.union(boundType, actualType)
-                    }
-                } else {
-                    verifyType(
-                        actual = actualType,
-                        expected = argType,
-                        source = arg.source
-                    )
-                }
-            })
             if (receiverType.positionalArguments.size != node.positionalArguments.size) {
                 throw WrongNumberOfArgumentsError(
                     expected = receiverType.positionalArguments.size,
@@ -500,7 +479,13 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw UnhandledEffectError(unhandledEffects[0], source = node.source)
             }
 
-            return getSignatureType(receiverType.returns)
+            // TODO: handle type parameters not at top-level
+            if (receiverType.returns is TypeParameter) {
+                return typeParameterBindings.get(receiverType.returns)!!
+            } else {
+                return receiverType.returns
+            }
+
         }
 
         private fun inferConstructorCallType(node: CallNode, typeFunction: TypeFunction?, shapeType: ShapeType): Type {
@@ -508,33 +493,14 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
             }
 
-            val typeParameterBindings = HashMap<TypeParameter, Type>()
-            fun getSignatureType(type: Type): Type {
-                // TODO: handle unbound types
-                return typeParameterBindings.getOrDefault(type, type)!!
-            }
-
-            for (argument in node.namedArguments) {
-                val actualType = inferType(argument.expression, context)
+            val typeParameterBindings = checkArguments(node.namedArguments.map(fun(argument): Pair<ExpressionNode, Type> {
                 val fieldType = shapeType.fields[argument.name]
                 if (fieldType == null) {
                     throw ExtraArgumentError(argument.name, source = argument.source)
-                } else if (fieldType is TypeParameter) {
-                    // TODO: should check that fieldType is in typeParameters (ditto for function calls)
-                    val boundType = typeParameterBindings.get(fieldType)
-                    if (boundType == null) {
-                        typeParameterBindings[fieldType] = actualType
-                    } else {
-                        typeParameterBindings[fieldType] = org.shedlang.compiler.types.union(boundType, actualType)
-                    }
                 } else {
-                    verifyType(
-                        actual = actualType,
-                        expected = fieldType,
-                        source = argument.source
-                    )
+                    return argument.expression to fieldType
                 }
-            }
+            }))
 
             val missingFieldNames = shapeType.fields.keys - node.namedArguments.map({ argument -> argument.name })
 
@@ -548,6 +514,30 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 // TODO: check all types parameters inferred
                 return applyType(typeFunction, typeFunction.parameters.map({ parameter -> typeParameterBindings[parameter]!! }))
             }
+        }
+
+        private fun checkArguments(arguments: List<Pair<ExpressionNode, Type>>): Map<TypeParameter, Type> {
+            val typeParameterBindings = HashMap<TypeParameter, Type>()
+            for (argument in arguments) {
+                val actualType = inferType(argument.first, context)
+                val formalType = argument.second
+                if (formalType is TypeParameter) {
+                    // TODO: should check that formalType is in typeParameters
+                    val boundType = typeParameterBindings.get(formalType)
+                    if (boundType == null) {
+                        typeParameterBindings[formalType] = actualType
+                    } else {
+                        typeParameterBindings[formalType] = org.shedlang.compiler.types.union(boundType, actualType)
+                    }
+                } else {
+                    verifyType(
+                        actual = actualType,
+                        expected = formalType,
+                        source = argument.first.source
+                    )
+                }
+            }
+            return typeParameterBindings
         }
 
         override fun visit(node: FieldAccessNode): Type {
