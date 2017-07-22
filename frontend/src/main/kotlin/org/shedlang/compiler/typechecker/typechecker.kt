@@ -466,7 +466,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
-            val typeParameterBindings = checkArguments(node.positionalArguments.zip(receiverType.positionalArguments))
+            val typeParameterBindings = checkArguments(
+                parameters = receiverType.typeParameters,
+                arguments = node.positionalArguments.zip(receiverType.positionalArguments)
+            )
 
             if (receiverType.positionalArguments.size != node.positionalArguments.size) {
                 throw WrongNumberOfArgumentsError(
@@ -489,14 +492,17 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
             }
 
-            val typeParameterBindings = checkArguments(node.namedArguments.map(fun(argument): Pair<ExpressionNode, Type> {
-                val fieldType = shapeType.fields[argument.name]
-                if (fieldType == null) {
-                    throw ExtraArgumentError(argument.name, source = argument.source)
-                } else {
-                    return argument.expression to fieldType
-                }
-            }))
+            val typeParameterBindings = checkArguments(
+                parameters = typeFunction?.parameters ?: listOf(),
+                arguments = node.namedArguments.map({ argument ->
+                    val fieldType = shapeType.fields[argument.name]
+                    if (fieldType == null) {
+                        throw ExtraArgumentError(argument.name, source = argument.source)
+                    } else {
+                        argument.expression to fieldType
+                    }
+                })
+            )
 
             val missingFieldNames = shapeType.fields.keys - node.namedArguments.map({ argument -> argument.name })
 
@@ -512,28 +518,23 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
         }
 
-        private fun checkArguments(arguments: List<Pair<ExpressionNode, Type>>): Map<TypeParameter, Type> {
-            val typeParameterBindings = HashMap<TypeParameter, Type>()
+        private fun checkArguments(
+            arguments: List<Pair<ExpressionNode, Type>>,
+            parameters: List<TypeParameter>
+        ): Map<TypeParameter, Type> {
+            val constraints = TypeConstraintSolver(parameters = HashSet(parameters))
             for (argument in arguments) {
                 val actualType = inferType(argument.first, context)
                 val formalType = argument.second
-                if (formalType is TypeParameter) {
-                    // TODO: should check that formalType is in typeParameters
-                    val boundType = typeParameterBindings.get(formalType)
-                    if (boundType == null) {
-                        typeParameterBindings[formalType] = actualType
-                    } else {
-                        typeParameterBindings[formalType] = org.shedlang.compiler.types.union(boundType, actualType)
-                    }
-                } else {
-                    verifyType(
-                        actual = actualType,
+                if (!constraints.coerce(from = actualType, to = formalType)) {
+                    throw UnexpectedTypeError(
                         expected = formalType,
+                        actual = actualType,
                         source = argument.first.source
                     )
                 }
             }
-            return typeParameterBindings
+            return constraints.bindings
         }
 
         override fun visit(node: FieldAccessNode): Type {
@@ -570,25 +571,77 @@ private fun verifyType(expected: Type, actual: Type, source: Source) {
 }
 
 internal fun canCoerce(from: Type, to: Type): Boolean {
-    if (from == to) {
-        return true
-    }
-
-    if (from is UnionType) {
-        return from.members.all({ member -> canCoerce(from = member, to = to) })
-    }
-
-    if (to is UnionType) {
-        return to.members.any({ member -> canCoerce(from = from, to = member) })
-    }
-
-    if (from is ShapeType && to is ShapeType) {
-        return from.shapeId == to.shapeId && from.typeArguments.zip(to.typeArguments, ::isEquivalentType).all({ x -> x })
-    }
-
-    return false
+    return coerce(from = from, to = to) is CoercionResult.Success
 }
 
 internal fun isEquivalentType(first: Type, second: Type): Boolean {
     return canCoerce(from = first, to = second) && canCoerce(from = second, to = first)
 }
+
+internal fun coerce(
+    from: Type,
+    to: Type,
+    parameters: Set<TypeParameter> = setOf()
+): CoercionResult {
+    return coerce(listOf(from to to), parameters = parameters)
+}
+
+internal fun coerce(
+    constraints: List<Pair<Type, Type>>,
+    parameters: Set<TypeParameter> = setOf()
+): CoercionResult {
+    val solver = TypeConstraintSolver(parameters = parameters)
+    for ((from, to) in constraints) {
+        if (!solver.coerce(from = from, to = to)) {
+            return CoercionResult.Failure
+        }
+    }
+    return CoercionResult.Success(solver.bindings)
+}
+
+internal sealed class CoercionResult {
+    internal class Success(val bindings: Map<TypeParameter, Type>): CoercionResult()
+    internal object Failure: CoercionResult()
+}
+
+private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
+    internal val bindings: MutableMap<TypeParameter, Type> = mutableMapOf()
+
+    fun coerce(from: Type, to: Type): Boolean {
+        if (from == to) {
+            return true
+        }
+
+        if (from is UnionType) {
+            return from.members.all({ member -> coerce(from = member, to = to) })
+        }
+
+        if (to is UnionType) {
+            return to.members.any({ member -> coerce(from = from, to = member) })
+        }
+
+        if (from is ShapeType && to is ShapeType) {
+            return from.shapeId == to.shapeId && from.typeArguments.zip(
+                to.typeArguments,
+                { left, right -> isEquivalentType(left, right) }
+            ).all({ x -> x })
+        }
+
+        if (to is TypeParameter && to in parameters) {
+            val boundType = bindings[to]
+            bindings[to] = if (boundType == null) {
+                from
+            } else {
+                union(boundType, from)
+            }
+            return true
+        }
+
+        return false
+    }
+
+    private fun isEquivalentType(left: Type, right: Type): Boolean {
+        return coerce(from = left, to = right) && coerce(from = right, to = left)
+    }
+}
+
