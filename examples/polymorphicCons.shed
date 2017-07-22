@@ -1,0 +1,29 @@
+// name: polymorphic cons
+// stdout:
+//   1
+//   2
+//   3
+
+module example;
+
+union List[T] = Cons[T] | Unit;
+shape Cons[T] {
+    head: T,
+    tail: List[T],
+}
+
+fun cons[T](head: T, tail: List[T]) -> List[T] {
+    return Cons(head=head, tail=tail);
+}
+
+fun printInts(list: List[Int]) !io -> Unit {
+    if (list is Cons[Int]) {
+        print(intToString(list.head));
+        printInts(list.tail);
+    }
+}
+
+fun main() !io -> Unit {
+    val list = cons(1, cons(2, cons(3, unit)));
+    printInts(list);
+}
