@@ -606,6 +606,7 @@ internal sealed class CoercionResult {
 
 private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
     internal val bindings: MutableMap<TypeParameter, Type> = mutableMapOf()
+    internal val closed: MutableSet<TypeParameter> = mutableSetOf()
 
     fun coerce(from: Type, to: Type): Boolean {
         if (from == to) {
@@ -629,12 +630,28 @@ private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
 
         if (to is TypeParameter && to in parameters) {
             val boundType = bindings[to]
-            bindings[to] = if (boundType == null) {
-                from
+            if (boundType == null) {
+                bindings[to] = from
+                return true
+            } else if (to in closed) {
+                return false
             } else {
-                union(boundType, from)
+                bindings[to] = union(boundType, from)
+                return true
             }
-            return true
+        }
+
+        if (from is TypeParameter && from in parameters) {
+            val boundType = bindings[from]
+            if (boundType == null) {
+                bindings[from] = to
+                closed.add(from)
+                return true
+            } else if (boundType == to) {
+                return true
+            } else {
+                return false
+            }
         }
 
         return false

@@ -100,7 +100,7 @@ class TypeConstraintsTests {
     }
 
     @Test
-    fun coercingMultipleTypesToTypeParameterBindingsTypeParameterToUnionOfTypes() {
+    fun coercingMultipleTypesToTypeParameterBindsTypeParameterToUnionOfTypes() {
         val typeParameter = TypeParameter("T")
         assertThat(
             coerce(
@@ -108,6 +108,67 @@ class TypeConstraintsTests {
                 parameters = setOf(typeParameter)
             ),
             isSuccess(typeParameter to union(StringType, IntType))
+        )
+    }
+
+    @Test
+    fun coercingTypeParameterToTypeBindsTypeParameterToType() {
+        val typeParameter = TypeParameter("T")
+        assertThat(
+            coerce(
+                listOf(typeParameter to StringType),
+                parameters = setOf(typeParameter)
+            ),
+            isSuccess(typeParameter to StringType)
+        )
+    }
+
+    @Test
+    fun whenTypeParameterIsCoercedToTypeThanCanCoerceTypeParameterToSameType() {
+        val typeParameter = TypeParameter("T")
+        assertThat(
+            coerce(
+                listOf(typeParameter to StringType, typeParameter to StringType),
+                parameters = setOf(typeParameter)
+            ),
+            isSuccess(typeParameter to StringType)
+        )
+    }
+
+    @Test
+    fun cannotCoerceTypeParametersToDistinctTypes() {
+        // TODO: could be the bottom type instead
+        val typeParameter = TypeParameter("T")
+        assertThat(
+            coerce(
+                listOf(typeParameter to StringType, typeParameter to IntType),
+                parameters = setOf(typeParameter)
+            ),
+            isFailure
+        )
+    }
+
+    @Test
+    fun whenTypeParameterIsCoercedToTypeThanCannotCoerceDistinctTypeToTypeParameter() {
+        val typeParameter = TypeParameter("T")
+        assertThat(
+            coerce(
+                listOf(typeParameter to StringType, IntType to typeParameter),
+                parameters = setOf(typeParameter)
+            ),
+            isFailure
+        )
+    }
+
+    @Test
+    fun whenTypeIsCoercedToTypeParameterThenCannotCoerceTypeParameterToDistinctType() {
+        val typeParameter = TypeParameter("T")
+        assertThat(
+            coerce(
+                listOf(IntType to typeParameter, typeParameter to StringType),
+                parameters = setOf(typeParameter)
+            ),
+            isFailure
         )
     }
 
