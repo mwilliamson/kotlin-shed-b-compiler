@@ -12,6 +12,7 @@
         <module>backend-common</module>
         <module>backend-javascript</module>
         <module>backend-python</module>
+        <module>cli</module>
         <module>frontend</module>
     </modules>
 
@@ -43,14 +44,12 @@
 
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-compiler</artifactId>
+            <artifactId>kotlin-stdlib</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
-
-
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-stdlib</artifactId>
+            <artifactId>kotlin-reflect</artifactId>
             <version>${kotlin.version}</version>
         </dependency>
         <dependency>

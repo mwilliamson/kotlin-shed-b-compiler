@@ -4,4 +4,5 @@
 /backend-common/target
 /backend-javascript/target
 /backend-python/target
+/cli/target
 /frontend/target
