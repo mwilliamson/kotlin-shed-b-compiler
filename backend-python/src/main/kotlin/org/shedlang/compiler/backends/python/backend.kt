@@ -36,15 +36,15 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
 
 private fun compileModule(module: Module, writer: Writer) {
     val generateCode = generateCode(module.node, module.references)
-    val stdlib = """\
+    val stdlib = """
         int_to_string = str
-    """.trimMargin()
+    """.trimIndent()
     val contents = stdlib + "\n" + serialise(generateCode) + "\n"
     writer.write(contents)
     if (module.node.body.any({ node -> node is FunctionNode && node.name == "main" })) {
-        writer.write("""\
+        writer.write("""
             if __name__ == "__main__":
                 main()
-        """.trimMargin())
+        """.trimIndent())
     }
 }
