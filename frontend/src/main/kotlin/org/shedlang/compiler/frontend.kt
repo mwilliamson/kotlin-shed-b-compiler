@@ -73,11 +73,9 @@ private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
     val modules = HashMap<Path, Module>()
 
     fun getModule(path: Path): Module {
-        if (!modules.containsKey(path)) {
-            modules[path] = readModule(base = base, relativePath = path, getModule = ::getModule)
-        }
-
-        return modules[path]!!
+        return modules.computeIfAbsent(path, { path ->
+            readModule(base = base, relativePath = path, getModule = ::getModule)
+        })
     }
 
     paths.forEach({ path -> getModule(path) })
