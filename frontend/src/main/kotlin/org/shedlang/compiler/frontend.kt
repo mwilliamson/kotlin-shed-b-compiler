@@ -5,7 +5,10 @@ import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.parser.parse
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.ResolvedReferences
+import org.shedlang.compiler.typechecker.checkReturns
+import org.shedlang.compiler.typechecker.resolve
+import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
 import java.io.File
 import java.nio.file.Path
@@ -50,6 +53,23 @@ private val globalNodeTypes = mapOf(
 )
 
 fun read(base: Path, path: Path): FrontEndResult {
+    return readAll(base, listOf(path))
+}
+
+fun readDirectory(base: Path): FrontEndResult {
+    if (base.toFile().isFile) {
+        return read(base = base.parent, path = base.fileName)
+    } else {
+        val paths = base.toFile()
+            .walk()
+            .filter({ file -> file.path.endsWith(".shed") })
+            .map({ file -> base.relativize(file.toPath()) })
+
+        return readAll(base, paths = paths.asIterable())
+    }
+}
+
+private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
     val modules = HashMap<Path, Module>()
 
     fun getModule(path: Path): Module {
@@ -60,12 +80,12 @@ fun read(base: Path, path: Path): FrontEndResult {
         return modules[path]!!
     }
 
-    getModule(path)
+    paths.forEach({ path -> getModule(path) })
 
     return FrontEndResult(modules = modules.values.toList())
 }
 
-fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
+private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
     val path = base.resolve(relativePath)
     val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
 
