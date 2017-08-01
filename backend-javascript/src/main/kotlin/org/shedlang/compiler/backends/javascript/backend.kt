@@ -2,26 +2,31 @@ package org.shedlang.compiler.backends.javascript
 
 import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
+import org.shedlang.compiler.backends.Backend
 import java.io.File
 import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
-fun compile(frontendResult: FrontEndResult, target: Path) {
-
-    frontendResult.modules.forEach({ module ->
-        val modulePath = modulePath(module.path)
-        val destination = target.resolve(modulePath)
-        destination.parent.toFile().mkdirs()
-        destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
-            compileModule(
-                module = module,
-                writer = writer
-            )
-        }
-    })
+val backend = object: Backend {
+    override fun compile(frontEndResult: FrontEndResult, target: Path) {
+        frontEndResult.modules.forEach({ module ->
+            val modulePath = modulePath(module.path)
+            val destination = target.resolve(modulePath)
+            destination.parent.toFile().mkdirs()
+            destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
+                compileModule(
+                    module = module,
+                    writer = writer
+                )
+            }
+        })
+    }
 }
 
+fun compile(frontendResult: FrontEndResult, target: Path) {
+    backend.compile(frontendResult, target = target)
+}
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
 
