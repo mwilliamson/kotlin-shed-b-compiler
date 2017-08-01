@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.ast.FunctionNode
 import java.io.File
 import java.io.Writer
 import java.nio.charset.StandardCharsets
@@ -41,7 +40,7 @@ private fun compileModule(module: Module, writer: Writer) {
     """.trimIndent()
     val contents = stdlib + "\n" + serialise(generateCode) + "\n"
     writer.write(contents)
-    if (module.node.body.any({ node -> node is FunctionNode && node.name == "main" })) {
+    if (module.hasMain()) {
         writer.write("""
             if __name__ == "__main__":
                 main()

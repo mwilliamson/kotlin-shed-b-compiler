@@ -23,9 +23,9 @@ class ExecutionTests {
                         path = testProgram.main
                     )
                     compile(frontendResult, target = temporaryDirectory.file.toPath())
-                    val mainJsModule = "./" + identifyModule(testProgram.main).joinToString("/")
+                    val mainJsModule = "./" + identifyModule(testProgram.main).joinToString("/") + ".js"
                     val result = run(
-                        listOf("node", "-e", "require(\"${mainJsModule}\").main()"),
+                        listOf("node", mainJsModule),
                         workingDirectory = temporaryDirectory.file
                     )
                     assertThat(result, equalTo(testProgram.expectedResult))

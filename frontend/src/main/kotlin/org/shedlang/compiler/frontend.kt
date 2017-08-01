@@ -1,9 +1,6 @@
 package org.shedlang.compiler
 
-import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.ast.ImportPathBase
-import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.ResolvedReferences
 import org.shedlang.compiler.typechecker.checkReturns
@@ -24,7 +21,11 @@ class Module(
     val node: ModuleNode,
     val type: ModuleType,
     val references: ResolvedReferences
-)
+) {
+    fun hasMain() = node.body.any({ node ->
+        node is FunctionNode && node.name == "main"
+    })
+}
 
 private val intTypeNodeId = freshNodeId()
 private val unitTypeNodeId = freshNodeId()
