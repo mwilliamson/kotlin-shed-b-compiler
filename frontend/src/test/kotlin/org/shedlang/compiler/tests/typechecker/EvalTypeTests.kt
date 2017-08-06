@@ -89,6 +89,29 @@ class EvalTypeTests {
         ))
     }
 
+    @Test
+    fun canEvaluateFunctionTypeNode() {
+        val intReference = typeReference("Int")
+        val boolReference = typeReference("Bool")
+
+        val node = functionType(
+            arguments = listOf(intReference),
+            returnType = boolReference
+        )
+
+        val type = evalType(
+            node,
+            typeContext(referenceTypes = mapOf(
+                intReference to MetaType(IntType),
+                boolReference to MetaType(BoolType)
+            ))
+        )
+        assertThat(type, isFunctionType(
+            arguments = isSequence(isIntType),
+            returnType = isBoolType
+        ))
+    }
+
     private fun isMetaType(type: Type): Matcher<Type> {
         return cast(
             has(MetaType::type, equalTo(type))

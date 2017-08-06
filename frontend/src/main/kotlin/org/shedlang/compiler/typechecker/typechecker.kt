@@ -348,7 +348,13 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
         }
 
         override fun visit(node: FunctionTypeNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return FunctionType(
+                typeParameters = listOf(),
+                positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
+                namedArguments = mapOf(),
+                returns = evalType(node.returnType, context),
+                effects = listOf()
+            )
         }
     })
 }

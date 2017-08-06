@@ -173,6 +173,14 @@ fun typeApplication(
     arguments = arguments,
     source = anySource()
 )
+fun functionType(
+    arguments: List<TypeNode>,
+    returnType: TypeNode
+) = FunctionTypeNode(
+    arguments = arguments,
+    returnType = returnType,
+    source = anySource()
+)
 
 
 fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: ShapeType {
