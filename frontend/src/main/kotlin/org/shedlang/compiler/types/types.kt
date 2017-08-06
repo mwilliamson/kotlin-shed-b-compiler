@@ -25,6 +25,9 @@ object StringType : Type {
 object AnyType : Type {
     override val shortDescription = "Any"
 }
+object NothingType : Type {
+    override val shortDescription = "Nothing"
+}
 class MetaType(val type: Type): Type {
     override val shortDescription: String
         get() = "MetaType(${type.shortDescription})"
