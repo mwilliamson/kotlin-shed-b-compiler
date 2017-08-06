@@ -25,4 +25,17 @@ class ParseTypeTests {
             )
         ))
     }
+
+    @Test
+    fun functionTypeIsRepresentedByParenthesisedArgumentsThenArrowThenReturnType() {
+        val source = "(A, B) -> C"
+        val node = parseString(::parseType, source)
+        assertThat(node, isFunctionType(
+            arguments = isSequence(
+                isTypeReference(name = "A"),
+                isTypeReference(name = "B")
+            ),
+            returnType = isTypeReference(name = "C")
+        ))
+    }
 }

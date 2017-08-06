@@ -238,5 +238,9 @@ private fun generateCode(node: TypeNode, context: CodeGenerationContext): Python
         override fun visit(node: TypeApplicationNode): PythonExpressionNode {
             return generateCode(node.receiver, context)
         }
+
+        override fun visit(node: FunctionTypeNode): PythonExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }

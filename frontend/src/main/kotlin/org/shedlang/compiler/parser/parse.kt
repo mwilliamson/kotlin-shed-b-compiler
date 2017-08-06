@@ -554,22 +554,46 @@ private fun escapeSequence(code: String, source: Source): Char {
 }
 
 internal fun parseType(source: Source, tokens: TokenIterator<TokenType>) : TypeNode {
-    val name = parseIdentifier(tokens)
-    val typeReference = TypeReferenceNode(name, source)
-    if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
-        val arguments = parseMany(
-            parseElement = { tokens -> ::parseType.parse(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
-            allowZero = false,
-            allowTrailingSeparator = true,
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
-            tokens = tokens
-        )
-        tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        return TypeApplicationNode(receiver = typeReference, arguments = arguments, source = source)
+    if (tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
+        return parseFunctionType(source, tokens)
     } else {
-        return typeReference
+        val name = parseIdentifier(tokens)
+        val typeReference = TypeReferenceNode(name, source)
+        if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
+            val arguments = parseMany(
+                parseElement = { tokens -> ::parseType.parse(tokens) },
+                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
+                allowZero = false,
+                allowTrailingSeparator = true,
+                isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+                tokens = tokens
+            )
+            tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
+            return TypeApplicationNode(receiver = typeReference, arguments = arguments, source = source)
+        } else {
+            return typeReference
+        }
     }
+}
+
+private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>): TypeNode {
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+    val arguments = parseMany(
+        parseElement = { tokens -> ::parseType.parse(tokens) },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        allowZero = true,
+        allowTrailingSeparator = true,
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+        tokens = tokens
+    )
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+    tokens.skip(TokenType.SYMBOL_ARROW)
+    val returnType = ::parseType.parse(tokens)
+    return FunctionTypeNode(
+        arguments = arguments,
+        returnType = returnType,
+        source = source
+    )
 }
 
 private fun parseIdentifier(tokens: TokenIterator<TokenType>) = tokens.nextValue(TokenType.IDENTIFIER)

@@ -346,6 +346,10 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
                 throw CompilerError("TODO", source = node.source)
             }
         }
+
+        override fun visit(node: FunctionTypeNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

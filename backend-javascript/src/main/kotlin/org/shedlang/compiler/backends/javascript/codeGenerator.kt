@@ -213,6 +213,10 @@ private fun generateCode(node: TypeNode): JavascriptExpressionNode {
         override fun visit(node: TypeApplicationNode): JavascriptExpressionNode {
             return generateCode(node.receiver)
         }
+
+        override fun visit(node: FunctionTypeNode): JavascriptExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

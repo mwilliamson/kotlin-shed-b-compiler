@@ -61,6 +61,7 @@ interface TypeNode : Node {
     interface Visitor<T> {
         fun visit(node: TypeReferenceNode): T
         fun visit(node: TypeApplicationNode): T
+        fun visit(node: FunctionTypeNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -87,6 +88,20 @@ data class TypeApplicationNode(
 ) : TypeNode {
     override val children: List<Node>
         get() = listOf(receiver) + arguments
+
+    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class FunctionTypeNode(
+    val arguments: List<TypeNode>,
+    val returnType: TypeNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): TypeNode {
+    override val children: List<Node>
+        get() = arguments + listOf(returnType)
 
     override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
         return visitor.visit(this)

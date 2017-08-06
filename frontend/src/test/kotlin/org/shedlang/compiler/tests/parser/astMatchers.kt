@@ -129,3 +129,10 @@ internal fun isTypeApplication(
     has(TypeApplicationNode::receiver, receiver),
     has(TypeApplicationNode::arguments, arguments)
 ))
+internal fun isFunctionType(
+    arguments: Matcher<List<TypeNode>>,
+    returnType: Matcher<TypeNode>
+) = cast(allOf(
+    has(FunctionTypeNode::arguments, arguments),
+    has(FunctionTypeNode::returnType, returnType)
+))
