@@ -155,7 +155,7 @@ fun functionType(
     typeParameters: List<TypeParameter> = listOf(),
     positionalArguments: List<Type> = listOf(),
     namedArguments: Map<String, Type> = mapOf(),
-    returns: Type,
+    returns: Type = UnitType,
     effects: List<Effect> = listOf()
 ) = FunctionType(
     typeParameters = typeParameters,
@@ -208,6 +208,14 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
             }),
             shapeId = type.shapeId,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
+        )
+    } else if (type is FunctionType) {
+        return FunctionType(
+            positionalArguments = type.positionalArguments.map({ argument -> replaceTypes(argument, typeMap) }),
+            namedArguments = type.namedArguments.mapValues({ argument -> replaceTypes(argument.value, typeMap) }),
+            effects = type.effects,
+            returns = replaceTypes(type.returns, typeMap),
+            typeParameters = type.typeParameters
         )
     } else if (type is UnitType || type is BoolType || type is IntType || type is StringType) {
         return type

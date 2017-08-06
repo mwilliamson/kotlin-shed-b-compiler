@@ -2,12 +2,10 @@ package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.TypeParameter
-import org.shedlang.compiler.types.applyType
+import org.shedlang.compiler.types.*
 
 class TypeApplicationTests {
     @Test
@@ -127,5 +125,46 @@ class TypeApplicationTests {
                 "value" to isEquivalentType(applyType(union, listOf(BoolType)))
             ))
         )
+    }
+
+    @Nested
+    class FunctionTypeTests {
+        val typeParameter = TypeParameter("T")
+
+        @Test
+        fun positionalArgumentsAreReplaced() {
+            val functionType = functionType(
+                positionalArguments = listOf(typeParameter)
+            )
+
+            assertThat(
+                replaceTypes(functionType, mapOf(typeParameter to IntType)),
+                isFunctionType(arguments = isSequence(isIntType))
+            )
+        }
+
+        @Test
+        fun namedArgumentsAreReplaced() {
+            val functionType = functionType(
+                namedArguments = mapOf("x" to typeParameter)
+            )
+
+            assertThat(
+                replaceTypes(functionType, mapOf(typeParameter to IntType)),
+                isFunctionType(namedArguments = isMap("x" to isIntType))
+            )
+        }
+
+        @Test
+        fun returnTypeIsReplaced() {
+            val functionType = functionType(
+                returns = typeParameter
+            )
+
+            assertThat(
+                replaceTypes(functionType, mapOf(typeParameter to IntType)),
+                isFunctionType(returnType= isIntType)
+            )
+        }
     }
 }
