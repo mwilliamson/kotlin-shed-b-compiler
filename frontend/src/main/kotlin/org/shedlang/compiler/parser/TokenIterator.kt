@@ -6,7 +6,7 @@ internal class UnexpectedTokenException(
     val location: StringSource,
     val expected: String,
     val actual: String
-) : Exception("Error at $location\nExpected: $expected\nBut got: $actual")
+) : Exception("Error at ${location.describe()}\nExpected: $expected\nBut got: $actual")
 
 internal class TokenIterator<T>(
     private val locate: (Int) -> StringSource,
