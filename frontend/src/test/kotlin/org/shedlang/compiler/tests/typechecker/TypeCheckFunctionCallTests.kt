@@ -166,11 +166,12 @@ class TypeCheckFunctionCallTests {
         val shapeReference = variableReference("Box")
 
         val typeParameter = TypeParameter("T")
-        val shapeType = TypeFunction(
-            listOf(typeParameter),
-            shapeType("Box", fields = mapOf(
+        val shapeType = parametrizedShapeType(
+            "Box",
+            parameters = listOf(typeParameter),
+            fields = mapOf(
                 "value" to typeParameter
-            ))
+            )
         )
         val node = call(receiver = shapeReference, namedArguments = listOf(
             callNamedArgument("value", literalBool())

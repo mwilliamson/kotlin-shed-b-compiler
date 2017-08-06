@@ -65,11 +65,12 @@ class EvalTypeTests {
         val boolReference = typeReference("Bool")
 
         val typeParameter = TypeParameter("T")
-        val listType = TypeFunction(
-            listOf(typeParameter),
-            shapeType("Box", fields = mapOf(
+        val listType = parametrizedShapeType(
+            "Box",
+            parameters = listOf(typeParameter),
+            fields = mapOf(
                 "value" to typeParameter
-            ))
+            )
         )
         val application = typeApplication(listReference, listOf(boolReference))
 

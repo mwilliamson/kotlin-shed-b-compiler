@@ -54,7 +54,7 @@ data class TypeParameter(
         get() = name
 }
 
-data class TypeFunction(
+data class TypeFunction (
     val parameters: List<TypeParameter>,
     val type: Type
 ): Type {
@@ -186,31 +186,7 @@ fun union(left: Type, right: Type): Type {
 
 fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
     val typeMap = receiver.parameters.zip(arguments).toMap()
-
-    if (receiver.type is ShapeType) {
-        return LazyShapeType(
-            name = receiver.type.name,
-            getFields = lazy({
-                receiver.type.fields.mapValues({ field ->
-                    replaceTypes(field.value, typeMap)
-                })
-            }),
-            shapeId = receiver.type.shapeId,
-            typeArguments = arguments
-        )
-    } else if (receiver.type is UnionType) {
-        return LazyUnionType(
-            name = receiver.type.name,
-            getMembers = lazy({
-                receiver.type.members.map({ member ->
-                    replaceTypes(member, typeMap)
-                })
-            }),
-            typeArguments = arguments
-        )
-    } else {
-        throw UnsupportedOperationException()
-    }
+    return replaceTypes(receiver.type, typeMap)
 }
 
 internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {

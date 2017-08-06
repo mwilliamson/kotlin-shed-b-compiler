@@ -1,10 +1,7 @@
 package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.types.ShapeType
-import org.shedlang.compiler.types.SimpleUnionType
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.freshShapeId
+import org.shedlang.compiler.types.*
 
 fun anySource(): Source {
     return StringSource(filename = "<string>", contents = "", characterIndex = 0)
@@ -182,6 +179,21 @@ fun functionType(
     source = anySource()
 )
 
+fun parametrizedShapeType(
+    name: String,
+    parameters: List<TypeParameter>,
+    fields: Map<String, Type> = mapOf()
+) = TypeFunction(
+    type = object: ShapeType {
+        override val name = name
+        override val fields = fields
+        override val shapeId = freshShapeId()
+        override val typeArguments = parameters
+
+        override val shortDescription = name
+    },
+    parameters = parameters
+)
 
 fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: ShapeType {
     override val name = name
@@ -192,5 +204,21 @@ fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: Shape
     override val shortDescription: String
         get() = name
 }
+
+
+fun parametrizedUnionType(
+    name: String,
+    parameters: List<TypeParameter>,
+    members: List<Type>
+) = TypeFunction(
+    type = object: UnionType {
+        override val name = name
+        override val members = members
+        override val typeArguments = parameters
+
+        override val shortDescription = name
+    },
+    parameters = parameters
+)
 
 fun unionType(name: String, members: List<Type>) = SimpleUnionType(name = name, members = members)

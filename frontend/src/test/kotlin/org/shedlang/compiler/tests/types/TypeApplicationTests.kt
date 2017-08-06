@@ -4,16 +4,20 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.TypeParameter
+import org.shedlang.compiler.types.applyType
 
 class TypeApplicationTests {
     @Test
     fun applyingTypeToShapeUpdatesTypeArguments() {
         val typeParameter1 = TypeParameter("T")
         val typeParameter2 = TypeParameter("U")
-        val shape = TypeFunction(
-            listOf(typeParameter1, typeParameter2),
-            shapeType("Pair", fields = mapOf())
+        val shape = parametrizedShapeType(
+            "Pair",
+            parameters = listOf(typeParameter1, typeParameter2),
+            fields = mapOf()
         )
         assertThat(
             applyType(shape, listOf(BoolType, IntType)),
@@ -28,12 +32,13 @@ class TypeApplicationTests {
     fun applyingTypeToShapeReplacesTypeParameters() {
         val typeParameter1 = TypeParameter("T")
         val typeParameter2 = TypeParameter("U")
-        val shape = TypeFunction(
-            listOf(typeParameter1, typeParameter2),
-            shapeType("Pair", fields = mapOf(
+        val shape = parametrizedShapeType(
+            "Pair",
+            parameters = listOf(typeParameter1, typeParameter2),
+            fields = mapOf(
                 "first" to typeParameter1,
                 "second" to typeParameter2
-            ))
+            )
         )
         assertThat(
             applyType(shape, listOf(BoolType, IntType)),
@@ -48,9 +53,10 @@ class TypeApplicationTests {
     fun applyingTypeToUnionUpdatesTypeArguments() {
         val typeParameter1 = TypeParameter("T")
         val typeParameter2 = TypeParameter("U")
-        val union = TypeFunction(
-            listOf(typeParameter1, typeParameter2),
-            unionType("Either", members = listOf())
+        val union = parametrizedUnionType(
+            "Either",
+            parameters = listOf(typeParameter1, typeParameter2),
+            members = listOf()
         )
         assertThat(
             applyType(union, listOf(BoolType, IntType)),
@@ -65,9 +71,10 @@ class TypeApplicationTests {
     fun applyingTypeToUnionReplacesTypeParameters() {
         val typeParameter1 = TypeParameter("T")
         val typeParameter2 = TypeParameter("U")
-        val union = TypeFunction(
-            listOf(typeParameter1, typeParameter2),
-            unionType("Either", members = listOf(typeParameter1, typeParameter2))
+        val union = parametrizedUnionType(
+            "Either",
+            parameters = listOf(typeParameter1, typeParameter2),
+            members = listOf(typeParameter1, typeParameter2)
         )
         assertThat(
             applyType(union, listOf(BoolType, IntType)),
@@ -78,15 +85,16 @@ class TypeApplicationTests {
     @Test
     fun applyingTypeToUnionReplacesTypeParametersInMembers() {
         val shapeTypeParameter = TypeParameter("U")
-        val shapeType = TypeFunction(
-            listOf(shapeTypeParameter),
-            shapeType("Shape")
+        val shapeType = parametrizedShapeType(
+            "Shape",
+            listOf(shapeTypeParameter)
         )
 
         val unionTypeParameter = TypeParameter("T")
-        val union = TypeFunction(
-            listOf(unionTypeParameter),
-            unionType("Union", members = listOf(applyType(shapeType, listOf(unionTypeParameter))))
+        val union = parametrizedUnionType(
+            "Union",
+            parameters = listOf(unionTypeParameter),
+            members = listOf(applyType(shapeType, listOf(unionTypeParameter)))
         )
 
         assertThat(
@@ -100,15 +108,17 @@ class TypeApplicationTests {
     @Test
     fun applyingTypeToShapeReplacesTypeParametersInFields() {
         val unionTypeParameter = TypeParameter("T")
-        val union = TypeFunction(
-            listOf(unionTypeParameter),
-            unionType("Union", members = listOf(unionTypeParameter))
+        val union = parametrizedUnionType(
+            "Union",
+            parameters = listOf(unionTypeParameter),
+            members = listOf(unionTypeParameter)
         )
 
         val shapeTypeParameter = TypeParameter("U")
-        val shapeType = TypeFunction(
-            listOf(shapeTypeParameter),
-            shapeType("Shape", fields = mapOf("value" to applyType(union, listOf(shapeTypeParameter))))
+        val shapeType = parametrizedShapeType(
+            "Shape",
+            parameters = listOf(shapeTypeParameter),
+            fields = mapOf("value" to applyType(union, listOf(shapeTypeParameter)))
         )
 
         assertThat(
