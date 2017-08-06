@@ -217,7 +217,6 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
     if (type is TypeParameter) {
         return typeMap.getOrElse(type, { type })
     } else if (type is UnionType) {
-        // TODO: deal with changing name of already applied type parameters
         return LazyUnionType(
             type.name,
             lazy({
@@ -226,7 +225,6 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
         )
     } else if (type is ShapeType) {
-        // TODO: deal with changing name of already applied type parameters
         return LazyShapeType(
             name = type.name,
             getFields = lazy({
