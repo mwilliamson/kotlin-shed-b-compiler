@@ -609,7 +609,7 @@ private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
     internal val closed: MutableSet<TypeParameter> = mutableSetOf()
 
     fun coerce(from: Type, to: Type): Boolean {
-        if (from == to) {
+        if (from == to || to == AnyType) {
             return true
         }
 

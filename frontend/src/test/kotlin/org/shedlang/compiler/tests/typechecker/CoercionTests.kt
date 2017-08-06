@@ -20,6 +20,13 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceAllTypesToAnyType() {
+        assertThat(canCoerce(from = UnitType, to = AnyType), equalTo(true))
+        val shapeType = shapeType("Box", mapOf("value" to IntType))
+        assertThat(canCoerce(from = shapeType, to = AnyType), equalTo(true))
+    }
+
+    @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
         val union = unionType("X", listOf(UnitType, IntType))
 
