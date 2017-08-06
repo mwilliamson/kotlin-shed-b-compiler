@@ -209,8 +209,10 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
             shapeId = type.shapeId,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
         )
-    } else {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType) {
         return type
+    } else {
+        throw NotImplementedError("Type replacement not implemented for: " + type)
     }
 }
 
