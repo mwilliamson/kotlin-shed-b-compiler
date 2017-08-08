@@ -83,7 +83,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
     return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
         override fun visit(node: ShapeNode) = listOf(generateCode(node, context))
         override fun visit(node: UnionNode): List<PythonStatementNode> = listOf()
-        override fun visit(node: FunctionNode) = listOf(generateCode(node, context))
+        override fun visit(node: FunctionDeclarationNode) = listOf(generateCode(node, context))
     })
 }
 
@@ -112,7 +112,7 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
     )
 }
 
-private fun generateCode(node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
+private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {
     return PythonFunctionNode(
         // TODO: test renaming
         name = context.name(node),

@@ -97,7 +97,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
     } else if (tokens.isNext(TokenType.KEYWORD_UNION)) {
         return ::parseUnion.parse(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
-        return ::parseFunction.parse(tokens)
+        return ::parseFunctionDeclaration.parse(tokens)
     } else {
         throw UnexpectedTokenException(
             expected = "module statement",
@@ -165,7 +165,7 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     )
 }
 
-internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): FunctionNode {
+internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<TokenType>): FunctionDeclarationNode {
     tokens.skip(TokenType.KEYWORD_FUN)
 
     val name = parseIdentifier(tokens)
@@ -191,7 +191,7 @@ internal fun parseFunction(source: Source, tokens: TokenIterator<TokenType>): Fu
     val returnType = ::parseType.parse(tokens)
     val body = parseFunctionStatements(tokens)
 
-    return FunctionNode(
+    return FunctionDeclarationNode(
         name = name,
         typeParameters = typeParameters,
         arguments = arguments,

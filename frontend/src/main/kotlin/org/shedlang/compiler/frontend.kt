@@ -3,7 +3,6 @@ package org.shedlang.compiler
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.ResolvedReferences
-import org.shedlang.compiler.typechecker.checkReturns
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
@@ -23,7 +22,7 @@ class Module(
     val references: ResolvedReferences
 ) {
     fun hasMain() = node.body.any({ node ->
-        node is FunctionNode && node.name == "main"
+        node is FunctionDeclarationNode && node.name == "main"
     })
 }
 
@@ -108,7 +107,6 @@ private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Modu
             result.type
         }
     )
-    checkReturns(moduleNode, typeCheckResult.types)
 
     return Module(
         path = identifyModule(relativePath),

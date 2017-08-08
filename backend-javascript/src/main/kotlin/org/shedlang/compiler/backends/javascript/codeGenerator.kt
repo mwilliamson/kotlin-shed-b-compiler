@@ -53,7 +53,7 @@ internal fun generateCode(node: ModuleStatementNode): List<JavascriptStatementNo
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
-        override fun visit(node: FunctionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
+        override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node))
     })
 }
 
@@ -82,7 +82,7 @@ private fun generateCode(node: UnionNode) : JavascriptStatementNode {
     )
 }
 
-private fun generateCode(node: FunctionNode): JavascriptFunctionNode {
+private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionNode {
     return JavascriptFunctionNode(
         name = node.name,
         arguments = node.arguments.map(ArgumentNode::name),

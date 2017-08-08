@@ -92,7 +92,7 @@ fun function(
     effects: List<VariableReferenceNode> = listOf(),
     returnType: TypeNode = typeReference("Unit"),
     body: List<StatementNode> = listOf()
-) = FunctionNode(
+) = FunctionDeclarationNode(
     name = name,
     typeParameters = typeParameters,
     arguments = arguments,

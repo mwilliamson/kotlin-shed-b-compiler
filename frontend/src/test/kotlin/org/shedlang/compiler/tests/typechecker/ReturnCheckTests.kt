@@ -6,36 +6,46 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.ast.Node
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.ReturnCheckError
+import org.shedlang.compiler.typechecker.alwaysReturns
+import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.UnitType
-import org.shedlang.compiler.types.positionalFunctionType
 
 class ReturnCheckTests {
     @Test
     fun checkingReturnsInModuleChecksBodiesOfFunctions() {
-        val function = function(name = "f", body = listOf())
-        val node = module(listOf(function))
-        val functionType = positionalFunctionType(listOf(), IntType)
+        val intType = typeReference("Int")
+        val typeContext = typeContext(referenceTypes = mapOf(intType to MetaType(IntType)))
+        val node = function(
+            returnType = intType,
+            body = listOf()
+        )
+
+
         assertThat(
-            { checkReturns(node, mapOf(function to functionType)) },
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
             throws(cast(has(
                 ReturnCheckError::message,
-                equalTo("function f is missing return statement")
+                equalTo("function is missing return statement")
             )))
         )
     }
 
     @Test
     fun functionThatHasUnitReturnTypeDoesntNeedReturnStatement() {
-        val function = function(name = "f", body = listOf())
-        val node = module(listOf(function))
-        val functionType = positionalFunctionType(listOf(), UnitType)
-        checkReturns(node, mapOf(function to functionType))
+        val unitType = typeReference("Unit")
+        val typeContext = typeContext(referenceTypes = mapOf(unitType to MetaType(UnitType)))
+        val node = function(
+            returnType = unitType,
+            body = listOf()
+        )
+        typeCheck(node, typeContext)
     }
 
     @Test
@@ -84,21 +94,5 @@ class ReturnCheckTests {
     fun valStatementNeverReturns() {
         val node = valStatement()
         assertThat(alwaysReturns(node), equalTo(false))
-    }
-
-    @Test
-    fun whenTypeOfFunctionIsNotFunctionTypeThenExceptionIsThrown() {
-        val function = function(name = "f", body = listOf())
-        val node = module(listOf(function))
-        assertThat(
-            { checkReturns(node, mapOf(function to IntType)) },
-            throws(has(NotFunctionTypeError::actual, cast(equalTo(IntType))))
-        )
-    }
-
-    private fun checkReturns(node: ModuleNode, types: Map<Node, Type>) {
-        return checkReturns(node, NodeTypesMap(types.entries.associate({ entry ->
-            entry.key.nodeId to entry.value
-        })))
     }
 }

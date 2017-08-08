@@ -7,20 +7,24 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
 
 class TypeCheckFunctionTests {
     @Test
     fun typeParameterTypeIsAdded() {
+        val unitReference = typeReference("Unit")
+
         val typeParameter = typeParameter("T")
         val typeParameterReference = typeReference("T")
         val node = function(
             typeParameters = listOf(typeParameter),
-            returnType = typeParameterReference
+            arguments = listOf(argument(type = typeParameterReference)),
+            returnType = unitReference
         )
         val typeContext = typeContext(
-            references = mapOf(typeParameterReference to typeParameter)
+            references = mapOf(typeParameterReference to typeParameter),
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
         )
 
         typeCheck(node, typeContext)

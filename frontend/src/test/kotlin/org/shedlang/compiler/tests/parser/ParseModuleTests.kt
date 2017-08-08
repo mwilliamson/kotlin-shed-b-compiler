@@ -72,8 +72,8 @@ class ParseModuleTests {
 
         assertThat(node, allOf(
             has(ModuleNode::body, isSequence(
-                isFunction(name = equalTo("f")),
-                isFunction(name = equalTo("g"))
+                isFunctionDeclaration(name = equalTo("f")),
+                isFunctionDeclaration(name = equalTo("g"))
             ))
         ))
     }

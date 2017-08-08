@@ -146,7 +146,7 @@ interface ModuleStatementNode: Node {
     interface Visitor<T> {
         fun visit(node: ShapeNode): T
         fun visit(node: UnionNode): T
-        fun visit(node: FunctionNode): T
+        fun visit(node: FunctionDeclarationNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -192,16 +192,24 @@ data class UnionNode(
     }
 }
 
-data class FunctionNode(
+interface FunctionNode : Node {
+    val typeParameters: List<TypeParameterNode>
+    val arguments: List<ArgumentNode>
+    val returnType: TypeNode
+    val effects: List<VariableReferenceNode>
+    val body: List<StatementNode>
+}
+
+data class FunctionDeclarationNode(
     override val name: String,
-    val typeParameters: List<TypeParameterNode>,
-    val arguments: List<ArgumentNode>,
-    val returnType: TypeNode,
-    val effects: List<VariableReferenceNode>,
-    val body: List<StatementNode>,
+    override val typeParameters: List<TypeParameterNode>,
+    override val arguments: List<ArgumentNode>,
+    override val returnType: TypeNode,
+    override val effects: List<VariableReferenceNode>,
+    override val body: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : VariableBindingNode, ModuleStatementNode {
+) : FunctionNode, VariableBindingNode, ModuleStatementNode {
     override val children: List<Node>
         get() = arguments + effects + returnType + body
 

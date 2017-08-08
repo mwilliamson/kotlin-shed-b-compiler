@@ -98,7 +98,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             }
         }
 
-        is FunctionNode -> {
+        is FunctionDeclarationNode -> {
             context.defer(node, {
                 val bodyContext = resolveScope(
                     binders = node.typeParameters,

@@ -217,7 +217,7 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
-        override fun visit(node: FunctionNode) = typeCheck(node, context)
+        override fun visit(node: FunctionDeclarationNode) = typeCheck(node, context)
     })
 }
 
@@ -283,7 +283,12 @@ private fun typeCheckTypeParameters(parameterNodes: List<TypeParameterNode>, con
     return typeParameters
 }
 
-private fun typeCheck(function: FunctionNode, context: TypeContext) {
+private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
+    val type = typeCheckFunction(function, context)
+    context.addType(function, type)
+}
+
+internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Type {
     val typeParameters = function.typeParameters.map({ typeParameterNode ->
         val typeParameter = TypeParameter(name = typeParameterNode.name)
         context.addType(typeParameterNode, MetaType(typeParameter))
@@ -296,15 +301,6 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
     val effects = function.effects.map({ effect -> evalEffect(effect, context) })
     val returnType = evalType(function.returnType, context)
 
-    val type = FunctionType(
-        typeParameters = typeParameters,
-        positionalArguments = argumentTypes,
-        namedArguments = mapOf(),
-        effects = effects,
-        returns = returnType
-    )
-    context.addType(function, type)
-
     context.defer({
         context.addTypes(function.arguments.zip(
             argumentTypes,
@@ -316,6 +312,18 @@ private fun typeCheck(function: FunctionNode, context: TypeContext) {
         )
         typeCheck(function.body, bodyContext)
     })
+
+    val functionType = FunctionType(
+        typeParameters = typeParameters,
+        positionalArguments = argumentTypes,
+        namedArguments = mapOf(),
+        effects = effects,
+        returns = returnType
+    )
+
+    checkReturns(function, functionType)
+
+    return functionType
 }
 
 private fun typeCheck(type: TypeNode, context: TypeContext) {

@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.parser.parseFunction
+import org.shedlang.compiler.parser.parseFunctionDeclaration
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
 
@@ -15,9 +15,9 @@ class ParseFunctionTests {
     @Test
     fun canReadZeroArgumentFunctionSignature() {
         val source = "fun f() -> Unit { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionNode::name, equalTo("f")),
+            has(FunctionDeclarationNode::name, equalTo("f")),
             has(FunctionNode::typeParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::returnType, cast(
@@ -29,7 +29,7 @@ class ParseFunctionTests {
     @Test
     fun canReadOneArgumentFunctionSignature() {
         val source = "fun f(x: Int) -> Unit { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::arguments, isSequence(
             isArgument("x", "Int")
         )))
@@ -38,7 +38,7 @@ class ParseFunctionTests {
     @Test
     fun canReadManyArgumentFunctionSignature() {
         val source = "fun f(x: Int, y: String) -> Unit { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::arguments, isSequence(
             isArgument("x", "Int"),
             isArgument("y", "String")
@@ -48,7 +48,7 @@ class ParseFunctionTests {
     @Test
     fun canReadTypeParameters() {
         val source = "fun f[T, U](t: T) -> U { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::typeParameters, isSequence(
                 isTypeParameter(name = equalTo("T")),
@@ -60,7 +60,7 @@ class ParseFunctionTests {
     @Test
     fun canReadBody() {
         val source = "fun f() -> Int { return 1; return 2; }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::body, isSequence(
             cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(1))))),
             cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(2)))))
@@ -70,14 +70,14 @@ class ParseFunctionTests {
     @Test
     fun canReadFunctionWithZeroEffects() {
         val source = "fun f() -> Unit { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence()))
     }
 
     @Test
     fun canReadFunctionWithOneEffect() {
         val source = "fun f() !io -> Unit { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
             isVariableReference("!io")
         )))
@@ -86,7 +86,7 @@ class ParseFunctionTests {
     @Test
     fun canReadFunctionWithMultipleEffects() {
         val source = "fun f() !a, !b -> Unit { }"
-        val function = parseString(::parseFunction, source)
+        val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
             isVariableReference("!a"),
             isVariableReference("!b")

@@ -5,9 +5,9 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.UnitType
-import org.shedlang.compiler.typechecker.typeCheck
 
 class TypeCheckModuleTests {
     @Test
@@ -50,17 +50,23 @@ class TypeCheckModuleTests {
 
     @Test
     fun functionsCanUseShapesBeforeSyntacticDeclaration() {
+        val unitReference = typeReference("Unit")
+
         val shapeReference = typeReference("X")
         val shape = shape(name = "X")
         val node = module(body = listOf(
-            function(returnType = shapeReference),
+            function(
+                arguments = listOf(argument(type = shapeReference)),
+                returnType = unitReference
+            ),
             shape
         ))
 
         typeCheck(node, typeContext(
             references = mapOf(
                 shapeReference to shape
-            )
+            ),
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
         ))
     }
 

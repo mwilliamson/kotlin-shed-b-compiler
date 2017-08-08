@@ -61,8 +61,8 @@ internal fun isUnion(
     ))
 }
 
-internal fun isFunction(name: Matcher<String>): Matcher<ModuleStatementNode> {
-    return cast(has(FunctionNode::name, name))
+internal fun isFunctionDeclaration(name: Matcher<String>): Matcher<ModuleStatementNode> {
+    return cast(has(FunctionDeclarationNode::name, name))
 }
 
 internal fun isTypeParameter(name: Matcher<String>): Matcher<TypeParameterNode> {
