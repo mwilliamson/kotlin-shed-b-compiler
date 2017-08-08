@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.parser.parseFunctionDeclaration
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
@@ -90,6 +91,18 @@ class ParseFunctionTests {
         assertThat(function, has(FunctionNode::effects, isSequence(
             isVariableReference("!a"),
             isVariableReference("!b")
+        )))
+    }
+    @Test
+    fun canParseAnonymousFunctionExpression() {
+        val source = "fun () -> Unit { }"
+        val function = parseString(::parseExpression, source)
+        assertThat(function, cast(allOf(
+            has(FunctionNode::typeParameters, isSequence()),
+            has(FunctionNode::arguments, isSequence()),
+            has(FunctionNode::returnType, cast(
+                has(TypeReferenceNode::name, equalTo("Unit"))
+            ))
         )))
     }
 

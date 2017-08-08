@@ -200,6 +200,23 @@ interface FunctionNode : Node {
     val body: List<StatementNode>
 }
 
+data class FunctionExpressionNode(
+    override val typeParameters: List<TypeParameterNode>,
+    override val arguments: List<ArgumentNode>,
+    override val returnType: TypeNode,
+    override val effects: List<VariableReferenceNode>,
+    override val body: List<StatementNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : FunctionNode, ExpressionNode {
+    override val children: List<Node>
+        get() = arguments + effects + returnType + body
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
 data class FunctionDeclarationNode(
     override val name: String,
     override val typeParameters: List<TypeParameterNode>,
@@ -329,6 +346,7 @@ interface ExpressionNode : Node {
         fun visit(node: IsNode): T
         fun visit(node: CallNode): T
         fun visit(node: FieldAccessNode): T
+        fun visit(node: FunctionExpressionNode): T
     }
 
     fun <T> accept(visitor: ExpressionNode.Visitor<T>): T

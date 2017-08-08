@@ -190,6 +190,10 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                 source = NodeSource(node)
             )
         }
+
+        override fun visit(node: FunctionExpressionNode): JavascriptExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 
