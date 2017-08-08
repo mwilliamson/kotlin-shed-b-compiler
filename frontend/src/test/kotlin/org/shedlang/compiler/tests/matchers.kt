@@ -91,6 +91,7 @@ internal fun isUnionType(
     has(UnionType::members, members)
 ))
 
+internal val isUnitType: Matcher<Type> = cast(equalTo(UnitType))
 internal val isIntType: Matcher<Type> = cast(equalTo(IntType))
 internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))
 internal val isStringType: Matcher<Type> = cast(equalTo(StringType))

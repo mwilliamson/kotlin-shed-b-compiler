@@ -9,11 +9,11 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StringType
-import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.typechecker.UnexpectedTypeError
+import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.typechecker.newTypeContext
+import org.shedlang.compiler.types.*
 
 class TypeCheckExpressionTests {
     @Test
@@ -104,5 +104,27 @@ class TypeCheckExpressionTests {
         val node = binaryOperation(Operator.EQUALS, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(BoolType)))
+    }
+
+    @Test
+    fun functionExpressionHasFunctionType() {
+        val intReference = typeReference("Int")
+        val unitReference = typeReference("Unit")
+        val node = functionExpression(
+            arguments = listOf(argument(type = intReference)),
+            returnType = unitReference
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                intReference to MetaType(IntType),
+                unitReference to MetaType(UnitType)
+            )
+        )
+        val type = inferType(node, typeContext)
+        assertThat(type, isFunctionType(
+            arguments = isSequence(isIntType),
+            returnType = isUnitType
+        ))
     }
 }

@@ -102,6 +102,21 @@ fun function(
     source = anySource()
 )
 
+fun functionExpression(
+    typeParameters: List<TypeParameterNode> = listOf(),
+    arguments: List<ArgumentNode> = listOf(),
+    effects: List<VariableReferenceNode> = listOf(),
+    returnType: TypeNode = typeReference("Unit"),
+    body: List<StatementNode> = listOf()
+) = FunctionExpressionNode(
+    typeParameters = typeParameters,
+    arguments = arguments,
+    returnType = returnType,
+    effects = effects,
+    body = body,
+    source = anySource()
+)
+
 fun shape(
     name: String = "Shape",
     typeParameters: List<TypeParameterNode> = listOf(),

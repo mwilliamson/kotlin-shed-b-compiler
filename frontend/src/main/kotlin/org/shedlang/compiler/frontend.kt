@@ -26,6 +26,7 @@ class Module(
     })
 }
 
+private val anyTypeNodeId = freshNodeId()
 private val intTypeNodeId = freshNodeId()
 private val unitTypeNodeId = freshNodeId()
 private val stringTypeNodeId = freshNodeId()
@@ -36,6 +37,7 @@ private val printNodeId = freshNodeId()
 private val intToStringNodeId = freshNodeId()
 
 private val globalNodeTypes = mapOf(
+    anyTypeNodeId to MetaType(AnyType),
     unitTypeNodeId to MetaType(UnitType),
     intTypeNodeId to MetaType(IntType),
     stringTypeNodeId to MetaType(StringType),
@@ -88,6 +90,7 @@ private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Modu
     val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
 
     val resolvedReferences = resolve(moduleNode, mapOf(
+        "Any" to anyTypeNodeId,
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
         "String" to stringTypeNodeId,

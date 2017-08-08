@@ -576,7 +576,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         override fun visit(node: FunctionExpressionNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return typeCheckFunction(node, context)
         }
     })
 }
