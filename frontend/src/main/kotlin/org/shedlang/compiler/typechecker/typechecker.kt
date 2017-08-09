@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.all
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 import java.util.*
@@ -641,6 +642,18 @@ private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
 
         if (to is UnionType) {
             return to.members.any({ member -> coerce(from = from, to = member) })
+        }
+
+        if (from is FunctionType && to is FunctionType) {
+            return (
+                from.typeParameters.isEmpty() && to.typeParameters.isEmpty() &&
+                from.positionalArguments.size == to.positionalArguments.size &&
+                from.positionalArguments.zip(to.positionalArguments, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
+                from.namedArguments.keys == to.namedArguments.keys &&
+                from.namedArguments.all({ fromArg -> coerce(from = to.namedArguments[fromArg.key]!!, to = fromArg.value) }) &&
+                from.effects == to.effects &&
+                coerce(from = from.returns, to = to.returns)
+            )
         }
 
         if (from is ShapeType && to is ShapeType) {

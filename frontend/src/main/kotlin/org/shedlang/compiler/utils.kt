@@ -7,3 +7,12 @@ fun <T: Any?> T?.orElseThrow(exception: Exception): T {
         return this
     }
 }
+
+internal fun Iterable<Boolean>.all(): Boolean {
+    for (element in this) {
+        if (!element) {
+            return false
+        }
+    }
+    return true
+}

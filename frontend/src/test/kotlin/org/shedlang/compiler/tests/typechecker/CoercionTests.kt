@@ -42,6 +42,125 @@ class CoercionTests {
     }
 
     @Test
+    fun functionTypesAreContravariantInPositionalArgumentType() {
+        assertThat(
+            canCoerce(
+                from = functionType(positionalArguments = listOf(AnyType)),
+                to = functionType(positionalArguments = listOf(IntType))
+            ),
+            equalTo(true)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(positionalArguments = listOf(IntType)),
+                to = functionType(positionalArguments = listOf(AnyType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun cannotCoerceFunctionTypesWithDifferentNumberOfPositionalArguments() {
+        assertThat(
+            canCoerce(
+                from = functionType(positionalArguments = listOf()),
+                to = functionType(positionalArguments = listOf(IntType))
+            ),
+            equalTo(false)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(positionalArguments = listOf(IntType)),
+                to = functionType(positionalArguments = listOf())
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun functionTypesAreContravariantInNamedArgumentType() {
+        assertThat(
+            canCoerce(
+                from = functionType(namedArguments = mapOf("x" to AnyType)),
+                to = functionType(namedArguments = mapOf("x" to IntType))
+            ),
+            equalTo(true)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(namedArguments = mapOf("x" to IntType)),
+                to = functionType(namedArguments = mapOf("x" to AnyType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun cannotCoerceFunctionTypesWithDifferentNamedArguments() {
+        assertThat(
+            canCoerce(
+                from = functionType(namedArguments = mapOf()),
+                to = functionType(namedArguments = mapOf("x" to IntType))
+            ),
+            equalTo(false)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(namedArguments = mapOf("x" to IntType)),
+                to = functionType(namedArguments = mapOf())
+            ),
+            equalTo(false)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(namedArguments = mapOf("x" to IntType)),
+                to = functionType(namedArguments = mapOf("y" to IntType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun functionTypesAreCovariantInReturnType() {
+        assertThat(
+            canCoerce(
+                from = functionType(returns = IntType),
+                to = functionType(returns = AnyType)
+            ),
+            equalTo(true)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(returns = AnyType),
+                to = functionType(returns = IntType)
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun functionTypeEffectsMustMatch() {
+        assertThat(
+            canCoerce(
+                from = functionType(effects = listOf()),
+                to = functionType(effects = listOf(IoEffect))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun functionTypeWithTypeParametersNeverMatch() {
+        assertThat(
+            canCoerce(
+                from = functionType(typeParameters = listOf(TypeParameter("T"))),
+                to = functionType(typeParameters = listOf(TypeParameter("T")))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
         val union = unionType("X", listOf(UnitType, IntType))
 
