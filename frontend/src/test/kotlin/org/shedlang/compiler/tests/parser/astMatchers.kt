@@ -22,7 +22,7 @@ inline internal fun <reified T: ExpressionNode> isExpressionStatement(
 inline internal fun <reified T: ExpressionNode> isVal(
     name: Matcher<String>,
     expression: Matcher<T>
-): Matcher<StatementNode> {
+): Matcher<Node> {
     return cast(allOf(
         has(ValNode::name, name),
         has(ValNode::expression, cast(expression))

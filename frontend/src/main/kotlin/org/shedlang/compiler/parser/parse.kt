@@ -98,6 +98,8 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
         return ::parseUnion.parse(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
         return ::parseFunctionDeclaration.parse(tokens)
+    } else if (tokens.isNext(TokenType.KEYWORD_VAL)) {
+        return ::parseVal.parse(tokens)
     } else {
         throw UnexpectedTokenException(
             expected = "module statement",

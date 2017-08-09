@@ -54,6 +54,7 @@ internal fun generateCode(node: ModuleStatementNode): List<JavascriptStatementNo
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node))
+        override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node))
     })
 }
 
@@ -111,13 +112,17 @@ internal fun generateCode(node: StatementNode): JavascriptStatementNode {
         }
 
         override fun visit(node: ValNode): JavascriptStatementNode {
-            return JavascriptConstNode(
-                name = node.name,
-                expression = generateCode(node.expression),
-                source = NodeSource(node)
-            )
+            return generateCode(node)
         }
     })
+}
+
+private fun generateCode(node: ValNode): JavascriptConstNode {
+    return JavascriptConstNode(
+        name = node.name,
+        expression = generateCode(node.expression),
+        source = NodeSource(node)
+    )
 }
 
 internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {

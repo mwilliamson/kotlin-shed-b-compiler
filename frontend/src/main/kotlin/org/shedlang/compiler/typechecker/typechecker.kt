@@ -219,6 +219,7 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionDeclarationNode) = typeCheck(node, context)
+        override fun visit(node: ValNode) = typeCheck(node, context)
     })
 }
 
@@ -410,10 +411,15 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
         }
 
         override fun visit(node: ValNode) {
-            val type = inferType(node.expression, context)
-            context.addType(node, type)
+            typeCheck(node, context)
         }
     })
+}
+
+private fun typeCheck(node: ValNode, context: TypeContext) {
+    // TODO: when checking expression, need to check functions can be initialised
+    val type = inferType(node.expression, context)
+    context.addType(node, type)
 }
 
 private fun typeCheck(statements: List<StatementNode>, context: TypeContext) {

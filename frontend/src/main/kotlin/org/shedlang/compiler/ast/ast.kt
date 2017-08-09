@@ -147,6 +147,7 @@ interface ModuleStatementNode: Node {
         fun visit(node: ShapeNode): T
         fun visit(node: UnionNode): T
         fun visit(node: FunctionDeclarationNode): T
+        fun visit(node: ValNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -326,11 +327,14 @@ data class ValNode(
     val expression: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode, StatementNode {
+): VariableBindingNode, StatementNode, ModuleStatementNode {
     override val children: List<Node>
         get() = listOf(expression)
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }

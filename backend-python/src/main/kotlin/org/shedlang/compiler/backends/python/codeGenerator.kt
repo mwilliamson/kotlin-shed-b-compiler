@@ -84,6 +84,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: ShapeNode) = listOf(generateCode(node, context))
         override fun visit(node: UnionNode): List<PythonStatementNode> = listOf()
         override fun visit(node: FunctionDeclarationNode) = listOf(generateCode(node, context))
+        override fun visit(node: ValNode) = listOf(generateCode(node, context))
     })
 }
 
@@ -147,13 +148,17 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
         }
 
         override fun visit(node: ValNode): PythonStatementNode {
-            return PythonAssignmentNode(
-                target = PythonVariableReferenceNode(context.name(node), source = NodeSource(node)),
-                expression = generateCode(node.expression, context),
-                source = NodeSource(node)
-            )
+            return generateCode(node, context)
         }
     })
+}
+
+private fun generateCode(node: ValNode, context: CodeGenerationContext): PythonAssignmentNode {
+    return PythonAssignmentNode(
+        target = PythonVariableReferenceNode(context.name(node), source = NodeSource(node)),
+        expression = generateCode(node.expression, context),
+        source = NodeSource(node)
+    )
 }
 
 internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext): PythonExpressionNode {

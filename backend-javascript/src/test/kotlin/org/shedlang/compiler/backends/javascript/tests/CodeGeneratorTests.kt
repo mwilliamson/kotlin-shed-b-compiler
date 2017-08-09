@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
@@ -153,7 +154,7 @@ class CodeGeneratorTests {
     fun valGeneratesConst() {
         val shed = valStatement(name = "x", expression = literalBool(true))
 
-        val node = generateCode(shed)
+        val node = generateCode(shed as StatementNode)
 
         assertThat(node, isJavascriptConst(equalTo("x"), isJavascriptBooleanLiteral(true)))
     }
