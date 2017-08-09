@@ -80,7 +80,7 @@ data class FunctionType(
     val positionalArguments: List<Type>,
     val namedArguments: Map<String, Type>,
     val returns: Type,
-    val effects: List<Effect>
+    val effects: Set<Effect>
 ): Type {
     override val shortDescription: String
         get() = "FunctionType(TODO)"
@@ -156,7 +156,7 @@ fun functionType(
     positionalArguments: List<Type> = listOf(),
     namedArguments: Map<String, Type> = mapOf(),
     returns: Type = UnitType,
-    effects: List<Effect> = listOf()
+    effects: Set<Effect> = setOf()
 ) = FunctionType(
     typeParameters = typeParameters,
     positionalArguments = positionalArguments,

@@ -277,13 +277,13 @@ class TypeCheckFunctionCallTests {
         val functionReference = variableReference("f")
         val node = call(receiver = functionReference)
         val functionType = functionType(
-            effects = listOf(IoEffect),
+            effects = setOf(IoEffect),
             returns = UnitType
         )
 
         val typeContext = typeContext(
             referenceTypes = mapOf(functionReference to functionType),
-            effects = listOf(IoEffect)
+            effects = setOf(IoEffect)
         )
         inferType(node, typeContext)
     }
@@ -293,13 +293,13 @@ class TypeCheckFunctionCallTests {
         val functionReference = variableReference("f")
         val node = call(receiver = functionReference)
         val functionType = functionType(
-            effects = listOf(IoEffect),
+            effects = setOf(IoEffect),
             returns = UnitType
         )
 
         val typeContext = typeContext(
             referenceTypes = mapOf(functionReference to functionType),
-            effects = listOf(object : Effect {})
+            effects = setOf(object : Effect {})
         )
         assertThat(
             { inferType(node, typeContext) },

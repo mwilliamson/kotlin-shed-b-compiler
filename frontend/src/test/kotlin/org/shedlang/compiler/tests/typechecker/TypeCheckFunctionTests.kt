@@ -155,7 +155,7 @@ class TypeCheckFunctionTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                effects = listOf(IoEffect),
+                effects = setOf(IoEffect),
                 returns = UnitType
             ),
             unitType to MetaType(UnitType),

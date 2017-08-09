@@ -142,8 +142,8 @@ class CoercionTests {
     fun functionTypeEffectsMustMatch() {
         assertThat(
             canCoerce(
-                from = functionType(effects = listOf()),
-                to = functionType(effects = listOf(IoEffect))
+                from = functionType(effects = setOf()),
+                to = functionType(effects = setOf(IoEffect))
             ),
             equalTo(false)
         )

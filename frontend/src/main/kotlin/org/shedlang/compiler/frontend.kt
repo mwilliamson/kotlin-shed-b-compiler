@@ -48,7 +48,7 @@ private val globalNodeTypes = mapOf(
         typeParameters = listOf(),
         positionalArguments = listOf(StringType),
         namedArguments = mapOf(),
-        effects = listOf(IoEffect),
+        effects = setOf(IoEffect),
         returns = UnitType
     ),
     intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)

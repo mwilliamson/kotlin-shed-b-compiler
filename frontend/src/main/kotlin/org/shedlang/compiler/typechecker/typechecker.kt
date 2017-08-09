@@ -12,7 +12,7 @@ fun newTypeContext(
 ): TypeContext {
     return TypeContext(
         returnType = null,
-        effects = listOf(),
+        effects = setOf(),
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -22,7 +22,7 @@ fun newTypeContext(
 
 class TypeContext(
     val returnType: Type?,
-    val effects: List<Effect>,
+    val effects: Set<Effect>,
     private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleType,
@@ -72,7 +72,7 @@ class TypeContext(
         nodeTypes[targetNodeId] = type
     }
 
-    fun enterFunction(returnType: Type, effects: List<Effect>): TypeContext {
+    fun enterFunction(returnType: Type, effects: Set<Effect>): TypeContext {
         return TypeContext(
             returnType = returnType,
             effects = effects,
@@ -300,7 +300,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
-    val effects = function.effects.map({ effect -> evalEffect(effect, context) })
+    val effects = function.effects.map({ effect -> evalEffect(effect, context) }).toSet()
     val returnType = evalType(function.returnType, context)
 
     context.defer({
@@ -363,7 +363,7 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
                 positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
                 namedArguments = mapOf(),
                 returns = evalType(node.returnType, context),
-                effects = listOf()
+                effects = setOf()
             )
         }
     })
@@ -481,7 +481,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                         positionalArguments = argumentTypes,
                         namedArguments = mapOf(),
                         returns = AnyType,
-                        effects = listOf()
+                        effects = setOf()
                     ),
                     actual = receiverType,
                     source = node.receiver.source
@@ -505,7 +505,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
             val unhandledEffects = receiverType.effects - context.effects
             if (unhandledEffects.isNotEmpty()) {
-                throw UnhandledEffectError(unhandledEffects[0], source = node.source)
+                throw UnhandledEffectError(unhandledEffects.first(), source = node.source)
             }
 
             return replaceTypes(receiverType.returns, typeParameterBindings)
