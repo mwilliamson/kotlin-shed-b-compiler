@@ -417,7 +417,6 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
 }
 
 private fun typeCheck(node: ValNode, context: TypeContext) {
-    // TODO: when checking expression, need to check functions can be initialised
     val type = inferType(node.expression, context)
     context.addType(node, type)
 }
