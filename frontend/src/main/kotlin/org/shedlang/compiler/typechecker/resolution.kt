@@ -134,8 +134,8 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         }
 
         is ValNode -> {
-            context.initialise(node)
             resolve(node.expression, context)
+            context.initialise(node)
         }
 
         is ModuleNode -> {

@@ -202,6 +202,26 @@ class ResolutionTests {
     }
 
     @Test
+    fun valExpressionCannotCallFunctionThatDirectlyUsesVariable() {
+        val valDeclaration = valStatement(name = "x", expression = call(variableReference("f")))
+        val function = function(
+            name = "f",
+            returnType = typeReference("Int"),
+            body = listOf(returns(variableReference("x")))
+        )
+
+        val node = module(body = listOf(
+            function,
+            valDeclaration
+        ))
+
+        assertThat(
+            { resolve(node, globals = mapOf("Int" to freshNodeId()))},
+            throws(has(UninitialisedVariableError::name, equalTo("x")))
+        )
+    }
+
+    @Test
     fun conditionOfIfStatementIsResolved() {
         val reference = variableReference("x")
         val node = ifStatement(condition = reference)
