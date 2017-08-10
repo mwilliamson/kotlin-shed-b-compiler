@@ -138,6 +138,8 @@ class ArgumentAlreadyPassedError(val argumentName: String, source: Source)
     : TypeCheckError("Argument has already been passed: $argumentName", source)
 class PositionalArgumentPassedToShapeConstructorError(source: Source)
     : TypeCheckError("Positional arguments cannot be passed to shape constructors", source)
+class CouldNotInferTypeParameterError(parameter: TypeParameter, source: Source)
+    : TypeCheckError("Could not infer type for type parameter $parameter", source)
 class ReturnOutsideOfFunctionError(source: Source)
     : TypeCheckError("Cannot return outside of a function", source)
 class NoSuchFieldError(val fieldName: String, source: Source)
@@ -537,8 +539,17 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             if (typeFunction == null) {
                 return shapeType
             } else {
-                // TODO: check all types parameters inferred
-                return applyType(typeFunction, typeFunction.parameters.map({ parameter -> typeParameterBindings[parameter]!! }))
+                return applyType(typeFunction, typeFunction.parameters.map({ parameter ->
+                    val boundType = typeParameterBindings[parameter]
+                    if (boundType == null) {
+                        throw CouldNotInferTypeParameterError(
+                            parameter = parameter,
+                            source = node.source
+                        )
+                    } else {
+                        boundType
+                    }
+                }))
             }
         }
 
