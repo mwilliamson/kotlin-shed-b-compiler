@@ -658,6 +658,10 @@ private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
             return false
         }
 
+        if (from is TypeParameter && from.variance == Variance.CONTRAVARIANT) {
+            return false
+        }
+
         if (from is UnionType) {
             return from.members.all({ member -> coerce(from = member, to = to) })
         }

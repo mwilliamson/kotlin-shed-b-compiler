@@ -57,7 +57,8 @@ data class TypeParameter(
 
 enum class Variance {
     INVARIANT,
-    COVARIANT
+    COVARIANT,
+    CONTRAVARIANT
 }
 
 data class TypeFunction (
@@ -176,6 +177,7 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 
 fun invariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.INVARIANT)
 fun covariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.COVARIANT)
+fun contravariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.CONTRAVARIANT)
 
 fun union(left: Type, right: Type): Type {
     if (canCoerce(from = right, to = left)) {
