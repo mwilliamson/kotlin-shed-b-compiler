@@ -1,12 +1,12 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.parametrizedShapeType
-import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.tests.unionType
+import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.canCoerce
+import org.shedlang.compiler.typechecker.coerce
 import org.shedlang.compiler.types.*
 
 class CoercionTests {
@@ -218,4 +218,50 @@ class CoercionTests {
         )
         assertThat(canCoerce, equalTo(false))
     }
+
+    @Test
+    fun canCoerceInvariantTypeParameterToSubtypeOfType() {
+        val typeParameter = invariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(typeParameter to IntType),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isSuccess(typeParameter to isIntType))
+    }
+
+    @Test
+    fun cannotCoerceInvariantTypeParameterToSubtypeOfMultipleTypes() {
+        val typeParameter = invariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(typeParameter to IntType, typeParameter to BoolType),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun canCoerceInvariantTypeParameterToSupertypeOfType() {
+        val typeParameter = invariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(IntType to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isSuccess(typeParameter to isIntType))
+    }
+
+    @Test
+    fun canCoerceInvariantTypeParameterToSupertypeOfMultipleTypes() {
+        val typeParameter = invariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(IntType to typeParameter, BoolType to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(isIntType, isBoolType))))
+    }
+
+    private fun isSuccess(vararg bindings: Pair<TypeParameter, Matcher<Type>>): Matcher<CoercionResult> {
+        return cast(has(CoercionResult.Success::bindings, isMap(*bindings)))
+    }
+
+    private val isFailure = isA<CoercionResult.Failure>()
 }
