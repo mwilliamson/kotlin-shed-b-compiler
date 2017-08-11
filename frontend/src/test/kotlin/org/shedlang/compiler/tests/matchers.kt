@@ -64,7 +64,7 @@ internal fun isFunctionType(
 ))
 
 internal fun isShapeType(
-    name: Matcher<String>,
+    name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>>
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),
@@ -91,6 +91,7 @@ internal fun isUnionType(
     has(UnionType::members, members)
 ))
 
+internal val isAnyType: Matcher<Type> = cast(equalTo(AnyType))
 internal val isUnitType: Matcher<Type> = cast(equalTo(UnitType))
 internal val isIntType: Matcher<Type> = cast(equalTo(IntType))
 internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))

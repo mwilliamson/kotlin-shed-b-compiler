@@ -188,8 +188,8 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
-    fun whenTypeParameterCannotBeInferredThenErrorIsThrown() {
-        val shapeReference = variableReference("Box")
+    fun whenInvariantTypeParameterIsNotConstraintedThenErrorIsThrown() {
+        val shapeReference = variableReference("Thing")
 
         val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
@@ -205,6 +205,26 @@ class TypeCheckFunctionCallTests {
             { inferType(node, typeContext) },
             throws<CouldNotInferTypeParameterError>()
         )
+    }
+
+    @Test
+    fun whenCovariantTypeParameterIsNotConstraintedThenTypeParameterIsAny() {
+        val shapeReference = variableReference("Thing")
+
+        val typeParameter = covariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Thing",
+            parameters = listOf(typeParameter),
+            fields = mapOf()
+        )
+        val node = call(receiver = shapeReference, namedArguments = listOf())
+
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+
+        val type = inferType(node, typeContext)
+        assertThat(type, isShapeType(
+            typeArguments = isSequence(isAnyType)
+        ))
     }
 
     @Test

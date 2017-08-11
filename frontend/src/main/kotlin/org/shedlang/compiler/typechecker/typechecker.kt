@@ -543,13 +543,15 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             } else {
                 return applyType(typeFunction, typeFunction.parameters.map({ parameter ->
                     val boundType = typeParameterBindings[parameter]
-                    if (boundType == null) {
+                    if (boundType != null) {
+                        boundType
+                    } else if (parameter.variance == Variance.COVARIANT) {
+                        AnyType
+                    } else {
                         throw CouldNotInferTypeParameterError(
                             parameter = parameter,
                             source = node.source
                         )
-                    } else {
-                        boundType
                     }
                 }))
             }
