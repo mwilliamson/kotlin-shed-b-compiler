@@ -228,6 +228,26 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun whenContravariantTypeParameterIsNotConstraintedThenTypeParameterIsNothing() {
+        val shapeReference = variableReference("Thing")
+
+        val typeParameter = contravariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Thing",
+            parameters = listOf(typeParameter),
+            fields = mapOf()
+        )
+        val node = call(receiver = shapeReference, namedArguments = listOf())
+
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+
+        val type = inferType(node, typeContext)
+        assertThat(type, isShapeType(
+            typeArguments = isSequence(isNothingType)
+        ))
+    }
+
+    @Test
     fun errorWhenShapeCallIsPassedPositionalArgument() {
         val shapeReference = variableReference("X")
         val node = call(
