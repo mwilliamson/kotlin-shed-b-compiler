@@ -668,6 +668,7 @@ private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
             return false
         }
 
+        // TODO: deal with type parameters
         if (from is UnionType) {
             return from.members.all({ member -> coerce(from = member, to = to) })
         }
