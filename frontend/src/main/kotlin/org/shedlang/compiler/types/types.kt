@@ -96,6 +96,7 @@ data class FunctionType(
 interface ShapeType: HasFieldsType {
     val name: String
     val shapeId: Int
+    val typeParameters: List<TypeParameter>
     val typeArguments: List<Type>
 }
 
@@ -103,6 +104,7 @@ data class LazyShapeType(
     override val name: String,
     val getFields: Lazy<Map<String, Type>>,
     override val shapeId: Int = freshShapeId(),
+    override val typeParameters: List<TypeParameter>,
     override val typeArguments: List<Type>
 ): ShapeType {
     override val shortDescription: String
@@ -217,6 +219,7 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
                 type.fields.mapValues({ field -> replaceTypes(field.value, typeMap) })
             }),
             shapeId = type.shapeId,
+            typeParameters = type.typeParameters,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
         )
     } else if (type is FunctionType) {

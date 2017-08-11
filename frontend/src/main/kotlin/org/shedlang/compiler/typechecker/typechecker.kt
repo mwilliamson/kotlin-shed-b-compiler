@@ -3,6 +3,7 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.all
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
+import org.shedlang.compiler.zip3
 import java.util.*
 
 fun newTypeContext(
@@ -242,6 +243,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     val shapeType = LazyShapeType(
         name = node.name,
         getFields = fields,
+        typeParameters = typeParameters,
         typeArguments = typeParameters
     )
     val type = if (node.typeParameters.isEmpty()) {
@@ -687,10 +689,16 @@ private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
         }
 
         if (from is ShapeType && to is ShapeType) {
-            return from.shapeId == to.shapeId && from.typeArguments.zip(
+            return from.shapeId == to.shapeId && zip3(
+                from.typeParameters,
+                from.typeArguments,
                 to.typeArguments,
-                { left, right -> isEquivalentType(left, right) }
-            ).all({ x -> x })
+                { parameter, fromArg, toArg -> when (parameter.variance) {
+                    Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
+                    Variance.COVARIANT -> coerce(from = fromArg, to = toArg)
+                    Variance.CONTRAVARIANT -> coerce(from = toArg, to = fromArg)
+                }}
+            ).all()
         }
 
         if (to is TypeParameter && to in parameters) {

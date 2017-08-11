@@ -203,6 +203,7 @@ fun parametrizedShapeType(
         override val name = name
         override val fields = fields
         override val shapeId = freshShapeId()
+        override val typeParameters = parameters
         override val typeArguments = parameters
 
         override val shortDescription = name
@@ -214,6 +215,7 @@ fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: Shape
     override val name = name
     override val fields = fields
     override val shapeId = freshShapeId()
+    override val typeParameters: List<TypeParameter> = listOf()
     override val typeArguments: List<Type> = listOf()
 
     override val shortDescription: String

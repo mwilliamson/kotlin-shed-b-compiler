@@ -220,6 +220,70 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceShapeWithAppliedCovariantTypeArgumentToShapeAppliedWithSuperTypeArgument() {
+        val typeParameter = covariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Box",
+            parameters = listOf(typeParameter),
+            fields = mapOf(
+                "value" to typeParameter
+            )
+        )
+        val canCoerce = canCoerce(
+            from = applyType(shapeType, listOf(BoolType)),
+            to = applyType(shapeType, listOf(AnyType))
+        )
+        assertThat(canCoerce, equalTo(true))
+    }
+
+    @Test
+    fun cannotCoerceShapeWithAppliedCovariantTypeArgumentToShapeAppliedWithSubTypeArgument() {
+        val typeParameter = covariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Box",
+            parameters = listOf(typeParameter),
+            fields = mapOf(
+                "value" to typeParameter
+            )
+        )
+        val canCoerce = canCoerce(
+            from = applyType(shapeType, listOf(AnyType)),
+            to = applyType(shapeType, listOf(BoolType))
+        )
+        assertThat(canCoerce, equalTo(false))
+    }
+
+    @Test
+    fun canCoerceShapeWithAppliedContravariantTypeArgumentToShapeAppliedWithSubTypeArgument() {
+        val typeParameter = contravariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Sink",
+            parameters = listOf(typeParameter),
+            fields = mapOf()
+        )
+        val canCoerce = canCoerce(
+            from = applyType(shapeType, listOf(AnyType)),
+            to = applyType(shapeType, listOf(BoolType))
+        )
+        assertThat(canCoerce, equalTo(true))
+    }
+
+    @Test
+    fun cannotCoerceShapeWithAppliedContravariantTypeArgumentToShapeAppliedWithSuperTypeArgument() {
+        val typeParameter = contravariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Sink",
+            parameters = listOf(typeParameter),
+            fields = mapOf()
+        )
+        val canCoerce = canCoerce(
+            from = applyType(shapeType, listOf(BoolType)),
+            to = applyType(shapeType, listOf(AnyType))
+        )
+        assertThat(canCoerce, equalTo(false))
+    }
+
+    @Test
     fun canCoerceInvariantTypeParameterToSubtypeOfType() {
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
