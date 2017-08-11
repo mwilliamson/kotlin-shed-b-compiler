@@ -259,6 +259,36 @@ class CoercionTests {
         assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(isIntType, isBoolType))))
     }
 
+    @Test
+    fun canCoerceCovariantTypeParameterToSubtypeOfType() {
+        val typeParameter = covariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(typeParameter to IntType),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isSuccess(typeParameter to isIntType))
+    }
+
+    @Test
+    fun cannotCoerceCovariantTypeParameterToSubtypeOfMultipleTypes() {
+        val typeParameter = covariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(typeParameter to IntType, typeParameter to BoolType),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun cannotCoerceCovariantTypeParameterToSupertypeOfType() {
+        val typeParameter = covariantTypeParameter("T")
+        val result = coerce(
+            constraints = listOf(IntType to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
     private fun isSuccess(vararg bindings: Pair<TypeParameter, Matcher<Type>>): Matcher<CoercionResult> {
         return cast(has(CoercionResult.Success::bindings, isMap(*bindings)))
     }
