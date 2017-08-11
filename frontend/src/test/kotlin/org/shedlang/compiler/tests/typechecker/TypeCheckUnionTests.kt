@@ -45,10 +45,10 @@ class TypeCheckUnionTests {
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
-            parameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
             type = isUnionType(
                 name = equalTo("X"),
-                members = isSequence(isTypeParameter(name = equalTo("T")))
+                members = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant))
             )
         )))
     }

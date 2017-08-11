@@ -64,7 +64,7 @@ class EvalTypeTests {
         val listReference = typeReference("Box")
         val boolReference = typeReference("Bool")
 
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val listType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),

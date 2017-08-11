@@ -52,7 +52,7 @@ class TypeConstraintsTests {
 
     @Test
     fun canCoerceShapeWithAppliedTypeArgumentsToShapeAppliedWithSameTypeArguments() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
@@ -69,7 +69,7 @@ class TypeConstraintsTests {
 
     @Test
     fun cannotCoerceShapeWithAppliedTypeArgumentsToShapeAppliedWithDifferentTypeArguments() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
@@ -87,14 +87,14 @@ class TypeConstraintsTests {
     @Test
     fun cannotCoerceTypeToFreeParameter() {
         assertThat(
-            coerce(from = StringType, to = TypeParameter("T"), parameters = setOf()),
+            coerce(from = StringType, to = invariantTypeParameter("T"), parameters = setOf()),
             isFailure
         )
     }
 
     @Test
     fun coercingTypeToTypeParameterBindsTypeParameterToType() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(from = StringType, to = typeParameter, parameters = setOf(typeParameter)),
             isSuccess(typeParameter to StringType)
@@ -103,7 +103,7 @@ class TypeConstraintsTests {
 
     @Test
     fun coercingMultipleTypesToTypeParameterBindsTypeParameterToUnionOfTypes() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
                 listOf(StringType to typeParameter, IntType to typeParameter),
@@ -115,7 +115,7 @@ class TypeConstraintsTests {
 
     @Test
     fun coercingTypeParameterToTypeBindsTypeParameterToType() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
                 listOf(typeParameter to StringType),
@@ -127,7 +127,7 @@ class TypeConstraintsTests {
 
     @Test
     fun whenTypeParameterIsCoercedToTypeThanCanCoerceTypeParameterToSameType() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
                 listOf(typeParameter to StringType, typeParameter to StringType),
@@ -140,7 +140,7 @@ class TypeConstraintsTests {
     @Test
     fun cannotCoerceTypeParametersToDistinctTypes() {
         // TODO: could be the bottom type instead
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
                 listOf(typeParameter to StringType, typeParameter to IntType),
@@ -152,7 +152,7 @@ class TypeConstraintsTests {
 
     @Test
     fun whenTypeParameterIsCoercedToTypeThanCannotCoerceDistinctTypeToTypeParameter() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
                 listOf(typeParameter to StringType, IntType to typeParameter),
@@ -164,7 +164,7 @@ class TypeConstraintsTests {
 
     @Test
     fun whenTypeIsCoercedToTypeParameterThenCannotCoerceTypeParameterToDistinctType() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
                 listOf(IntType to typeParameter, typeParameter to StringType),

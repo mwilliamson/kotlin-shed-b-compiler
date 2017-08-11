@@ -280,7 +280,9 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 }
 
 private fun typeCheckTypeParameters(parameterNodes: List<TypeParameterNode>, context: TypeContext): List<TypeParameter> {
-    val typeParameters = parameterNodes.map({ parameter -> TypeParameter(name = parameter.name) })
+    val typeParameters = parameterNodes.map({ parameter ->
+        TypeParameter(name = parameter.name, variance = Variance.INVARIANT)
+    })
     for ((parameterNode, parameterType) in parameterNodes.zip(typeParameters)) {
         context.addType(parameterNode, MetaType(parameterType))
     }
@@ -294,7 +296,7 @@ private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
 
 internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Type {
     val typeParameters = function.typeParameters.map({ typeParameterNode ->
-        val typeParameter = TypeParameter(name = typeParameterNode.name)
+        val typeParameter = TypeParameter(name = typeParameterNode.name, variance = Variance.INVARIANT)
         context.addType(typeParameterNode, MetaType(typeParameter))
         typeParameter
     })

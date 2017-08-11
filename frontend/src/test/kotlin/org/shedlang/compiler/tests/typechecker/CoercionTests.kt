@@ -153,8 +153,8 @@ class CoercionTests {
     fun functionTypeWithTypeParametersNeverMatch() {
         assertThat(
             canCoerce(
-                from = functionType(typeParameters = listOf(TypeParameter("T"))),
-                to = functionType(typeParameters = listOf(TypeParameter("T")))
+                from = functionType(typeParameters = listOf(invariantTypeParameter("T"))),
+                to = functionType(typeParameters = listOf(invariantTypeParameter("T")))
             ),
             equalTo(false)
         )
@@ -187,7 +187,7 @@ class CoercionTests {
 
     @Test
     fun canCoerceShapeWithAppliedTypeArgumentsToShapeAppliedWithSameTypeArguments() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
@@ -204,7 +204,7 @@ class CoercionTests {
 
     @Test
     fun cannotCoerceShapeWithAppliedTypeArgumentsToShapeAppliedWithDifferentTypeArguments() {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),

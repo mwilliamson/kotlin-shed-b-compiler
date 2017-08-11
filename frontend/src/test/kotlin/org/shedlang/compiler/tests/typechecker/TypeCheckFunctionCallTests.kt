@@ -30,7 +30,7 @@ class TypeCheckFunctionCallTests {
             positionalArguments = listOf(literalInt())
         )
 
-        val typeParameter = TypeParameter(name = "T")
+        val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             typeParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter),
@@ -50,7 +50,7 @@ class TypeCheckFunctionCallTests {
             positionalArguments = listOf(literalInt(), literalInt())
         )
 
-        val typeParameter = TypeParameter(name = "T")
+        val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             typeParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter, typeParameter),
@@ -70,7 +70,7 @@ class TypeCheckFunctionCallTests {
             positionalArguments = listOf(literalInt(), literalString())
         )
 
-        val typeParameter = TypeParameter(name = "T")
+        val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             typeParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter, typeParameter),
@@ -165,7 +165,7 @@ class TypeCheckFunctionCallTests {
     fun shapeCallWithImplicitTypeArguments() {
         val shapeReference = variableReference("Box")
 
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
@@ -191,7 +191,7 @@ class TypeCheckFunctionCallTests {
     fun whenTypeParameterCannotBeInferredThenErrorIsThrown() {
         val shapeReference = variableReference("Box")
 
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
         val shapeType = parametrizedShapeType(
             "Thing",
             parameters = listOf(typeParameter),

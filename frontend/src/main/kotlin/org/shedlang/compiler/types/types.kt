@@ -48,10 +48,15 @@ fun freshShapeId() = nextShapeId++
 
 data class TypeParameter(
     val name: String,
+    val variance: Variance,
     val typeParameterId: Int = freshTypeParameterId()
 ): Type {
     override val shortDescription: String
         get() = name
+}
+
+enum class Variance {
+    INVARIANT
 }
 
 data class TypeFunction (
@@ -168,6 +173,7 @@ fun functionType(
 fun positionalFunctionType(arguments: List<Type>, returns: Type)
     = functionType(positionalArguments = arguments, returns = returns)
 
+fun invariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.INVARIANT)
 
 fun union(left: Type, right: Type): Type {
     if (canCoerce(from = right, to = left)) {

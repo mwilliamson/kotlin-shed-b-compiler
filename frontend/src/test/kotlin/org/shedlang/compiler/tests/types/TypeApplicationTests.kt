@@ -10,8 +10,8 @@ import org.shedlang.compiler.types.*
 class TypeApplicationTests {
     @Test
     fun applyingTypeToShapeUpdatesTypeArguments() {
-        val typeParameter1 = TypeParameter("T")
-        val typeParameter2 = TypeParameter("U")
+        val typeParameter1 = invariantTypeParameter("T")
+        val typeParameter2 = invariantTypeParameter("U")
         val shape = parametrizedShapeType(
             "Pair",
             parameters = listOf(typeParameter1, typeParameter2),
@@ -28,8 +28,8 @@ class TypeApplicationTests {
 
     @Test
     fun applyingTypeToShapeReplacesTypeParameters() {
-        val typeParameter1 = TypeParameter("T")
-        val typeParameter2 = TypeParameter("U")
+        val typeParameter1 = invariantTypeParameter("T")
+        val typeParameter2 = invariantTypeParameter("U")
         val shape = parametrizedShapeType(
             "Pair",
             parameters = listOf(typeParameter1, typeParameter2),
@@ -49,8 +49,8 @@ class TypeApplicationTests {
 
     @Test
     fun applyingTypeToUnionUpdatesTypeArguments() {
-        val typeParameter1 = TypeParameter("T")
-        val typeParameter2 = TypeParameter("U")
+        val typeParameter1 = invariantTypeParameter("T")
+        val typeParameter2 = invariantTypeParameter("U")
         val union = parametrizedUnionType(
             "Either",
             parameters = listOf(typeParameter1, typeParameter2),
@@ -67,8 +67,8 @@ class TypeApplicationTests {
 
     @Test
     fun applyingTypeToUnionReplacesTypeParameters() {
-        val typeParameter1 = TypeParameter("T")
-        val typeParameter2 = TypeParameter("U")
+        val typeParameter1 = invariantTypeParameter("T")
+        val typeParameter2 = invariantTypeParameter("U")
         val union = parametrizedUnionType(
             "Either",
             parameters = listOf(typeParameter1, typeParameter2),
@@ -82,13 +82,13 @@ class TypeApplicationTests {
 
     @Test
     fun applyingTypeToUnionReplacesTypeParametersInMembers() {
-        val shapeTypeParameter = TypeParameter("U")
+        val shapeTypeParameter = invariantTypeParameter("U")
         val shapeType = parametrizedShapeType(
             "Shape",
             listOf(shapeTypeParameter)
         )
 
-        val unionTypeParameter = TypeParameter("T")
+        val unionTypeParameter = invariantTypeParameter("T")
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
@@ -105,14 +105,14 @@ class TypeApplicationTests {
 
     @Test
     fun applyingTypeToShapeReplacesTypeParametersInFields() {
-        val unionTypeParameter = TypeParameter("T")
+        val unionTypeParameter = invariantTypeParameter("T")
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
             members = listOf(unionTypeParameter)
         )
 
-        val shapeTypeParameter = TypeParameter("U")
+        val shapeTypeParameter = invariantTypeParameter("U")
         val shapeType = parametrizedShapeType(
             "Shape",
             parameters = listOf(shapeTypeParameter),
@@ -129,7 +129,7 @@ class TypeApplicationTests {
 
     @Nested
     class FunctionTypeTests {
-        val typeParameter = TypeParameter("T")
+        val typeParameter = invariantTypeParameter("T")
 
         @Test
         fun positionalArgumentsAreReplaced() {

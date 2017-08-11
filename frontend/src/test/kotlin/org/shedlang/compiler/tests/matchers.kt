@@ -107,10 +107,14 @@ internal fun isTypeFunction(
 ))
 
 internal fun isTypeParameter(
-    name: Matcher<String>
-): Matcher<Type> = cast(
-    has(TypeParameter::name, name)
-)
+    name: Matcher<String>,
+    variance: Matcher<Variance>
+): Matcher<Type> = cast(allOf(
+    has(TypeParameter::name, name),
+    has(TypeParameter::variance, variance)
+))
+
+internal val isInvariant = equalTo(Variance.INVARIANT)
 
 internal fun isEquivalentType(type: Type): Matcher<Type> {
     return object: Matcher.Primitive<Type>() {

@@ -70,10 +70,10 @@ class TypeCheckShapeTests {
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
-            parameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
             type = isShapeType(
                 name = equalTo("X"),
-                fields = listOf("a" to isTypeParameter(name = equalTo("T")))
+                fields = listOf("a" to isTypeParameter(name = equalTo("T"), variance = isInvariant))
             )
         )))
     }
