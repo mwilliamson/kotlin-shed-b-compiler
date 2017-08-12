@@ -498,8 +498,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
             // TODO: named arguments
             val typeParameterBindings = checkArguments(
+                call = node,
                 typeParameters = receiverType.typeParameters,
-                typeArguments = node.typeArguments,
                 arguments = node.positionalArguments.zip(receiverType.positionalArguments)
             )
 
@@ -526,8 +526,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             val typeParameterBindings = checkArguments(
+                call = node,
                 typeParameters = typeFunction?.parameters ?: listOf(),
-                typeArguments = node.typeArguments,
                 arguments = node.namedArguments.map({ argument ->
                     val fieldType = shapeType.fields[argument.name]
                     if (fieldType == null) {
@@ -548,35 +548,23 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 return shapeType
             } else {
                 return applyType(typeFunction, typeFunction.parameters.map({ parameter ->
-                    val boundType = typeParameterBindings[parameter]
-                    if (boundType != null) {
-                        boundType
-                    } else if (parameter.variance == Variance.COVARIANT) {
-                        AnyType
-                    } else if (parameter.variance == Variance.CONTRAVARIANT) {
-                        NothingType
-                    } else {
-                        throw CouldNotInferTypeParameterError(
-                            parameter = parameter,
-                            source = node.source
-                        )
-                    }
+                    typeParameterBindings[parameter]!!
                 }))
             }
         }
 
         private fun checkArguments(
+            call: CallNode,
             arguments: List<Pair<ExpressionNode, Type>>,
-            typeParameters: List<TypeParameter>,
-            typeArguments: List<TypeNode>
+            typeParameters: List<TypeParameter>
         ): Map<TypeParameter, Type> {
             // TODO: check number of type arguments
-            val constraints = if (typeArguments.isEmpty()) {
+            val constraints = if (call.typeArguments.isEmpty()) {
                 TypeConstraintSolver(parameters = typeParameters.toMutableSet())
             } else {
                 TypeConstraintSolver(
                     parameters = setOf(),
-                    bindings = typeParameters.zip(typeArguments, { typeParameter, typeArgument ->
+                    bindings = typeParameters.zip(call.typeArguments, { typeParameter, typeArgument ->
                         typeParameter to evalType(typeArgument, context)
                     }).toMap().toMutableMap(),
                     closed = typeParameters.toMutableSet()
@@ -593,7 +581,21 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     )
                 }
             }
-            return constraints.bindings
+            return typeParameters.associate({ parameter ->
+                val boundType = constraints.bindings[parameter]
+                parameter to if (boundType != null) {
+                    boundType
+                } else if (parameter.variance == Variance.COVARIANT) {
+                    AnyType
+                } else if (parameter.variance == Variance.CONTRAVARIANT) {
+                    NothingType
+                } else {
+                    throw CouldNotInferTypeParameterError(
+                        parameter = parameter,
+                        source = call.source
+                    )
+                }
+            })
         }
 
         override fun visit(node: FieldAccessNode): Type {
