@@ -2,8 +2,10 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isSequence
 
@@ -96,6 +98,33 @@ class ParseBinaryExpressionTests {
                 )
             )
         ))
+    }
+
+    @Test
+    fun canParseFunctionCallWithExplicitTypeArgument() {
+        val source = "f[T]()"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isCall(
+            typeArguments = isSequence(isTypeReference("T"))
+        ))
+    }
+
+    @Test
+    fun canParseFunctionCallWithExplicitTypeArguments() {
+        val source = "f[T, U]()"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isCall(
+            typeArguments = isSequence(isTypeReference("T"), isTypeReference("U"))
+        ))
+    }
+
+    @Test
+    fun explicitTypeArgumentsMustHaveAtLeastOneArgument() {
+        val source = "f[]()"
+        assertThat(
+            { parseString(::parseExpression, source) },
+            throws<UnexpectedTokenException>()
+        )
     }
 
     @Test

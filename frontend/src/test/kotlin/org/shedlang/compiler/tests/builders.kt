@@ -59,9 +59,11 @@ fun isOperation(
 fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
-    namedArguments: List<CallNamedArgumentNode> = listOf()
+    namedArguments: List<CallNamedArgumentNode> = listOf(),
+    typeArguments: List<TypeNode> = listOf()
 ) = CallNode(
     receiver = receiver,
+    typeArguments = typeArguments,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
     source = anySource()

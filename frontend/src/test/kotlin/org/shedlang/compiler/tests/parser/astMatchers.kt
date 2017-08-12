@@ -3,7 +3,6 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.Variance
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
@@ -99,12 +98,14 @@ internal fun isIsOperation(
 }
 
 internal fun isCall(
-    receiver: Matcher<ExpressionNode>,
-    positionalArguments: Matcher<List<ExpressionNode>>,
-    namedArguments: Matcher<List<CallNamedArgumentNode>> = isSequence()
+    receiver: Matcher<ExpressionNode> = anything,
+    positionalArguments: Matcher<List<ExpressionNode>> = anything,
+    namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
+    typeArguments: Matcher<List<TypeNode>> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(CallNode::receiver, receiver),
+        has(CallNode::typeArguments, typeArguments),
         has(CallNode::positionalArguments, positionalArguments),
         has(CallNode::namedArguments, namedArguments)
     ))

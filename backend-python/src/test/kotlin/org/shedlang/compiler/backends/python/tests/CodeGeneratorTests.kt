@@ -302,8 +302,8 @@ class CodeGeneratorTests {
         val function = variableReference("f")
         val shed = call(
             function,
-            listOf(literalInt(42)),
-            listOf(callNamedArgument("x", literalBool(true)))
+            positionalArguments = listOf(literalInt(42)),
+            namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
         val node = generateCode(shed, context(mapOf(function to declaration)))
