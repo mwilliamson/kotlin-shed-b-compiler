@@ -117,6 +117,7 @@ internal fun isTypeParameter(
 ))
 
 internal val isInvariant = equalTo(Variance.INVARIANT)
+internal val isCovariant = equalTo(Variance.COVARIANT)
 
 internal fun isEquivalentType(type: Type): Matcher<Type> {
     return object: Matcher.Primitive<Type>() {

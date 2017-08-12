@@ -252,8 +252,13 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
 }
 
 private fun parseTypeParameter(source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
+    val variance = if (tokens.trySkip(TokenType.SYMBOL_PLUS)) {
+        Variance.COVARIANT
+    } else {
+        Variance.INVARIANT
+    }
     val name = parseIdentifier(tokens)
-    return TypeParameterNode(name = name, variance = Variance.INVARIANT, source = source)
+    return TypeParameterNode(name = name, variance = variance, source = source)
 }
 
 private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {
