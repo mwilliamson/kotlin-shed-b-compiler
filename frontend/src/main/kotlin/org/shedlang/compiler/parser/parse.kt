@@ -222,7 +222,7 @@ private fun parseFunction(tokens: TokenIterator<TokenType>): ParsedFunction {
     )
 }
 
-private fun parseTypeParameters(tokens: TokenIterator<TokenType>): List<TypeParameterNode> {
+internal fun parseTypeParameters(tokens: TokenIterator<TokenType>): List<TypeParameterNode> {
     return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
         val typeParameters = parseMany(
             parseElement = { tokens -> ::parseTypeParameter.parse(tokens) },
