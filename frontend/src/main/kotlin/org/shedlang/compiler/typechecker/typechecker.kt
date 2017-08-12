@@ -498,7 +498,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
             // TODO: named arguments
             val typeParameterBindings = checkArguments(
-                parameters = receiverType.typeParameters,
+                typeParameters = receiverType.typeParameters,
+                typeArguments = node.typeArguments,
                 arguments = node.positionalArguments.zip(receiverType.positionalArguments)
             )
 
@@ -525,7 +526,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             val typeParameterBindings = checkArguments(
-                parameters = typeFunction?.parameters ?: listOf(),
+                typeParameters = typeFunction?.parameters ?: listOf(),
+                typeArguments = node.typeArguments,
                 arguments = node.namedArguments.map({ argument ->
                     val fieldType = shapeType.fields[argument.name]
                     if (fieldType == null) {
@@ -565,9 +567,21 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
         private fun checkArguments(
             arguments: List<Pair<ExpressionNode, Type>>,
-            parameters: List<TypeParameter>
+            typeParameters: List<TypeParameter>,
+            typeArguments: List<TypeNode>
         ): Map<TypeParameter, Type> {
-            val constraints = TypeConstraintSolver(parameters = HashSet(parameters))
+            // TODO: check number of type arguments
+            val constraints = if (typeArguments.isEmpty()) {
+                TypeConstraintSolver(parameters = typeParameters.toMutableSet())
+            } else {
+                TypeConstraintSolver(
+                    parameters = setOf(),
+                    bindings = typeParameters.zip(typeArguments, { typeParameter, typeArgument ->
+                        typeParameter to evalType(typeArgument, context)
+                    }).toMap().toMutableMap(),
+                    closed = typeParameters.toMutableSet()
+                )
+            }
             for (argument in arguments) {
                 val actualType = inferType(argument.first, context)
                 val formalType = argument.second
@@ -653,10 +667,11 @@ internal sealed class CoercionResult {
     internal object Failure: CoercionResult()
 }
 
-private class TypeConstraintSolver(private val parameters: Set<TypeParameter>) {
-    internal val bindings: MutableMap<TypeParameter, Type> = mutableMapOf()
-    internal val closed: MutableSet<TypeParameter> = mutableSetOf()
-
+private class TypeConstraintSolver(
+    private val parameters: Set<TypeParameter>,
+    internal val bindings: MutableMap<TypeParameter, Type> = mutableMapOf(),
+    private val closed: MutableSet<TypeParameter> = mutableSetOf()
+) {
     fun coerce(from: Type, to: Type): Boolean {
         if (from == to || to == AnyType || from == NothingType) {
             return true

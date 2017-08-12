@@ -40,7 +40,7 @@ class TypeCheckFunctionCallTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType,
-            unitReference to UnitType
+            unitReference to MetaType(UnitType)
         ))
         val type = inferType(node, typeContext)
 
