@@ -437,7 +437,10 @@ class TypeCheckFunctionCallTests {
 
         val typeContext = typeContext(
             referenceTypes = mapOf(functionReference to functionType),
-            effects = setOf(object : Effect {})
+            effects = setOf(object : Effect {
+                override val shortDescription: String
+                    get() = "async"
+            })
         )
         assertThat(
             { inferType(node, typeContext) },

@@ -3,8 +3,13 @@ package org.shedlang.compiler.types
 import org.shedlang.compiler.typechecker.canCoerce
 
 
-interface Effect
-object IoEffect : Effect
+interface Effect {
+    val shortDescription: String
+}
+object IoEffect : Effect {
+    override val shortDescription: String
+        get() = "!Io"
+}
 
 interface Type {
     val shortDescription: String
@@ -51,6 +56,7 @@ data class TypeParameter(
     val variance: Variance,
     val typeParameterId: Int = freshTypeParameterId()
 ): Type {
+    // TODO: include variance
     override val shortDescription: String
         get() = name
 }
@@ -90,7 +96,32 @@ data class FunctionType(
     val effects: Set<Effect>
 ): Type {
     override val shortDescription: String
-        get() = "FunctionType(TODO)"
+        get() {
+            val typeParameters = if (typeParameters.isEmpty()) {
+                ""
+            } else {
+                val typeParameterStrings = typeParameters
+                    .map({ parameter -> parameter.shortDescription })
+                    .joinToString(", ")
+                "[${typeParameterStrings}]"
+            }
+
+            val positionalArgumentStrings = positionalArguments
+                .map({ argument -> argument.shortDescription })
+            val namedArgumentStrings = namedArguments
+                .asIterable()
+                .sortedBy({ (name, _) -> name })
+                .map({ (name, type) -> "${name}: ${type.shortDescription}" })
+            val arguments = (positionalArgumentStrings + namedArgumentStrings)
+                .joinToString(", ")
+
+            val effects = effects
+                .sortedBy({ effect -> effect.shortDescription })
+                .map({ effect -> " " + effect.shortDescription })
+                .joinToString(",")
+
+            return "${typeParameters}(${arguments})${effects} -> ${returns.shortDescription}"
+        }
 }
 
 interface ShapeType: HasFieldsType {
