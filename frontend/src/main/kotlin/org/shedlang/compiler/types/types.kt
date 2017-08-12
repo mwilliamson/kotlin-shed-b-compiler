@@ -56,9 +56,15 @@ data class TypeParameter(
     val variance: Variance,
     val typeParameterId: Int = freshTypeParameterId()
 ): Type {
-    // TODO: include variance
     override val shortDescription: String
-        get() = name
+        get() {
+            val prefix = when (variance) {
+                Variance.INVARIANT -> ""
+                Variance.COVARIANT -> "+"
+                Variance.CONTRAVARIANT  -> "-"
+            }
+            return prefix + name
+        }
 }
 
 enum class Variance {
