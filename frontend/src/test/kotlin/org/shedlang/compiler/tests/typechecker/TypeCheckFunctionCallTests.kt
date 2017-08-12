@@ -23,6 +23,29 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun typeOfNamedArgumentsAreCheckedForFunctionCall() {
+        val functionReference = variableReference("f")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(),
+            namedArguments = listOf(callNamedArgument("x", literalUnit()))
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(
+                positionalArguments = listOf(),
+                namedArguments = mapOf("x" to BoolType),
+                returns = IntType
+            ))
+        )
+
+        assertThat(
+            { inferType(node, typeContext) },
+            throwsUnexpectedType(expected = BoolType, actual = UnitType)
+        )
+    }
+
+    @Test
     fun functionCallWithExplicitTypeArguments() {
         val functionReference = variableReference("f")
         val unitReference = typeReference("Unit")

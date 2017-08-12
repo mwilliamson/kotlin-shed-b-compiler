@@ -496,20 +496,12 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
-            // TODO: named arguments
             val typeParameterBindings = checkArguments(
                 call = node,
                 typeParameters = receiverType.typeParameters,
-                arguments = node.positionalArguments.zip(receiverType.positionalArguments)
+                positionalParameters = receiverType.positionalArguments,
+                namedParameters = receiverType.namedArguments
             )
-
-            if (receiverType.positionalArguments.size != node.positionalArguments.size) {
-                throw WrongNumberOfArgumentsError(
-                    expected = receiverType.positionalArguments.size,
-                    actual = node.positionalArguments.size,
-                    source = node.source
-                )
-            }
 
             val unhandledEffects = receiverType.effects - context.effects
             if (unhandledEffects.isNotEmpty()) {
@@ -528,21 +520,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             val typeParameterBindings = checkArguments(
                 call = node,
                 typeParameters = typeFunction?.parameters ?: listOf(),
-                arguments = node.namedArguments.map({ argument ->
-                    val fieldType = shapeType.fields[argument.name]
-                    if (fieldType == null) {
-                        throw ExtraArgumentError(argument.name, source = argument.source)
-                    } else {
-                        argument.expression to fieldType
-                    }
-                })
+                positionalParameters = listOf(),
+                namedParameters = shapeType.fields
             )
-
-            val missingFieldNames = shapeType.fields.keys - node.namedArguments.map({ argument -> argument.name })
-
-            for (fieldName in missingFieldNames) {
-                throw MissingArgumentError(fieldName, source = node.source)
-            }
 
             if (typeFunction == null) {
                 return shapeType
@@ -555,8 +535,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
         private fun checkArguments(
             call: CallNode,
-            arguments: List<Pair<ExpressionNode, Type>>,
-            typeParameters: List<TypeParameter>
+            typeParameters: List<TypeParameter>,
+            positionalParameters: List<Type>,
+            namedParameters: Map<String, Type>
         ): Map<TypeParameter, Type> {
             // TODO: check number of type arguments
             val constraints = if (call.typeArguments.isEmpty()) {
@@ -570,6 +551,32 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     closed = typeParameters.toMutableSet()
                 )
             }
+
+            val positionalArguments = call.positionalArguments.zip(positionalParameters)
+            if (positionalParameters.size != call.positionalArguments.size) {
+                throw WrongNumberOfArgumentsError(
+                    expected = positionalParameters.size,
+                    actual = call.positionalArguments.size,
+                    source = call.source
+                )
+            }
+
+            val namedArguments = call.namedArguments.map({ argument ->
+                val fieldType = namedParameters[argument.name]
+                if (fieldType == null) {
+                    throw ExtraArgumentError(argument.name, source = argument.source)
+                } else {
+                    argument.expression to fieldType
+                }
+            })
+
+            val missingNamedArguments = namedParameters.keys - call.namedArguments.map({ argument -> argument.name })
+            for (missingNamedArgument in missingNamedArguments) {
+                throw MissingArgumentError(missingNamedArgument, source = call.source)
+            }
+            
+            val arguments = positionalArguments + namedArguments
+
             for (argument in arguments) {
                 val actualType = inferType(argument.first, context)
                 val formalType = argument.second
