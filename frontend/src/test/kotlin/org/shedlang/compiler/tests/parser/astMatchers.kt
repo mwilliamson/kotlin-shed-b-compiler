@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.types.Variance
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
@@ -65,8 +66,14 @@ internal fun isFunctionDeclaration(name: Matcher<String>): Matcher<ModuleStateme
     return cast(has(FunctionDeclarationNode::name, name))
 }
 
-internal fun isTypeParameter(name: Matcher<String>): Matcher<TypeParameterNode> {
-    return has(TypeParameterNode::name, name)
+internal fun isTypeParameter(
+    name: Matcher<String>,
+    variance: Matcher<Variance> = anything
+): Matcher<TypeParameterNode> {
+    return allOf(
+        has(TypeParameterNode::name, name),
+        has(TypeParameterNode::variance, variance)
+    )
 }
 
 internal fun isBinaryOperation(

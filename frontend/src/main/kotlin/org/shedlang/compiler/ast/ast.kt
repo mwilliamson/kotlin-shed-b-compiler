@@ -1,5 +1,7 @@
 package org.shedlang.compiler.ast
 
+import org.shedlang.compiler.types.Variance
+
 interface Node {
     val source: Source
     val nodeId: Int
@@ -238,6 +240,7 @@ data class FunctionDeclarationNode(
 
 data class TypeParameterNode(
     override val name: String,
+    val variance: Variance,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): VariableBindingNode, Node {

@@ -1,6 +1,7 @@
 package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
 
@@ -252,7 +253,7 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
 
 private fun parseTypeParameter(source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
     val name = parseIdentifier(tokens)
-    return TypeParameterNode(name = name, source = source)
+    return TypeParameterNode(name = name, variance = Variance.INVARIANT, source = source)
 }
 
 private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {
