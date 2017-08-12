@@ -71,6 +71,36 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun whenWrongNumberOfTypeArgumentsIsProvidedThenErrorIsThrown() {
+        val functionReference = variableReference("f")
+        val unitReference = typeReference("Unit")
+        val node = call(
+            receiver = functionReference,
+            typeArguments = listOf(unitReference, unitReference),
+            positionalArguments = listOf()
+        )
+
+        val typeParameter = invariantTypeParameter(name = "T")
+        val functionType = functionType(
+            typeParameters = listOf(typeParameter),
+            positionalArguments = listOf(),
+            returns = typeParameter
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType,
+            unitReference to MetaType(UnitType)
+        ))
+
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(allOf(
+                has(WrongNumberOfTypeArgumentsError::expected, equalTo(1)),
+                has(WrongNumberOfTypeArgumentsError::actual, equalTo(2))
+            ))
+        )
+    }
+
+    @Test
     fun functionCallWithImplicitTypeArguments() {
         val functionReference = variableReference("f")
         val node = call(

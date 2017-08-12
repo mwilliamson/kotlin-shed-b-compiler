@@ -131,6 +131,8 @@ class UnexpectedTypeError(val expected: Type, val actual: Type, source: Source)
     : TypeCheckError("Expected type ${expected.shortDescription} but was ${actual.shortDescription}", source)
 class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: Source)
     : TypeCheckError("Expected $expected arguments, but got $actual", source)
+class WrongNumberOfTypeArgumentsError(val expected: Int, val actual: Int, source: Source)
+    : TypeCheckError("Expected $expected type arguments, but got $actual", source)
 class MissingArgumentError(val argumentName: String, source: Source)
     : TypeCheckError("Call is missing argument: $argumentName", source)
 class ExtraArgumentError(val argumentName: String, source: Source)
@@ -539,10 +541,17 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             positionalParameters: List<Type>,
             namedParameters: Map<String, Type>
         ): Map<TypeParameter, Type> {
-            // TODO: check number of type arguments
             val constraints = if (call.typeArguments.isEmpty()) {
                 TypeConstraintSolver(parameters = typeParameters.toMutableSet())
             } else {
+                if (call.typeArguments.size != typeParameters.size) {
+                    throw WrongNumberOfTypeArgumentsError(
+                        expected = typeParameters.size,
+                        actual = call.typeArguments.size,
+                        source = call.source
+                    )
+                }
+
                 TypeConstraintSolver(
                     parameters = setOf(),
                     bindings = typeParameters.zip(call.typeArguments, { typeParameter, typeArgument ->
@@ -574,7 +583,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             for (missingNamedArgument in missingNamedArguments) {
                 throw MissingArgumentError(missingNamedArgument, source = call.source)
             }
-            
+
             val arguments = positionalArguments + namedArguments
 
             for (argument in arguments) {
