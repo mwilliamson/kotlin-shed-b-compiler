@@ -254,6 +254,8 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
 private fun parseTypeParameter(source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
     val variance = if (tokens.trySkip(TokenType.SYMBOL_PLUS)) {
         Variance.COVARIANT
+    } else if (tokens.trySkip(TokenType.SYMBOL_MINUS)) {
+        Variance.CONTRAVARIANT
     } else {
         Variance.INVARIANT
     }

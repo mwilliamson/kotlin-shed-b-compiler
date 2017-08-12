@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.parseTypeParameters
+import org.shedlang.compiler.tests.isContravariant
 import org.shedlang.compiler.tests.isCovariant
 import org.shedlang.compiler.tests.isInvariant
 import org.shedlang.compiler.tests.isSequence
@@ -22,6 +23,14 @@ class ParseTypeParametersTests {
         val typeParameters = parseString(::parseTypeParameters, "[+T]")
         assertThat(typeParameters, isSequence(
             isTypeParameter(name = equalTo("T"), variance = isCovariant)
+        ))
+    }
+
+    @Test
+    fun canParseSingleContravariantTypeParameter() {
+        val typeParameters = parseString(::parseTypeParameters, "[-T]")
+        assertThat(typeParameters, isSequence(
+            isTypeParameter(name = equalTo("T"), variance = isContravariant)
         ))
     }
 }
