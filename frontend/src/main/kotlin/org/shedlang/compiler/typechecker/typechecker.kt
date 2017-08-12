@@ -496,6 +496,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
+            // TODO: named arguments
             val typeParameterBindings = checkArguments(
                 parameters = receiverType.typeParameters,
                 arguments = node.positionalArguments.zip(receiverType.positionalArguments)
