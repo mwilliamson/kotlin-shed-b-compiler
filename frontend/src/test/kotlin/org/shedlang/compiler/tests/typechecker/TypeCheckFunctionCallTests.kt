@@ -23,6 +23,31 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun functionCallWithExplicitTypeArguments() {
+        val functionReference = variableReference("f")
+        val unitReference = typeReference("Unit")
+        val node = call(
+            receiver = functionReference,
+            typeArguments = listOf(unitReference),
+            positionalArguments = listOf()
+        )
+
+        val typeParameter = invariantTypeParameter(name = "T")
+        val functionType = functionType(
+            typeParameters = listOf(typeParameter),
+            positionalArguments = listOf(),
+            returns = typeParameter
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType,
+            unitReference to UnitType
+        ))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, cast(equalTo(UnitType)))
+    }
+
+    @Test
     fun functionCallWithImplicitTypeArguments() {
         val functionReference = variableReference("f")
         val node = call(

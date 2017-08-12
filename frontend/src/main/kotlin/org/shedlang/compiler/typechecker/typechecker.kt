@@ -515,6 +515,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 throw UnhandledEffectError(unhandledEffects.first(), source = node.source)
             }
 
+            // TODO: handle unconstrained types
             return replaceTypes(receiverType.returns, typeParameterBindings)
         }
 
