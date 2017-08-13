@@ -11,6 +11,7 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.Variance
 
 class TypeCheckShapeTests {
     @Test
@@ -75,6 +76,24 @@ class TypeCheckShapeTests {
                 name = equalTo("X"),
                 fields = listOf("a" to isTypeParameter(name = equalTo("T"), variance = isInvariant))
             )
+        )))
+    }
+
+    @Test
+    fun typeParameterHasParsedVariance() {
+        val typeParameterDeclaration = typeParameter("T", variance = Variance.COVARIANT)
+        val typeParameterReference = typeReference("T")
+        val node = shape(
+            "X",
+            typeParameters = listOf(typeParameterDeclaration)
+        )
+
+        val typeContext = typeContext(
+            references = mapOf(typeParameterReference to typeParameterDeclaration)
+        )
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
+            parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isCovariant))
         )))
     }
 }

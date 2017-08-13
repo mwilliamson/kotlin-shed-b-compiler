@@ -102,7 +102,7 @@ internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType:
 
 internal fun isTypeFunction(
     parameters: Matcher<List<TypeParameter>>,
-    type: Matcher<Type>
+    type: Matcher<Type> = anything
 ): Matcher<Type> = cast(allOf(
     has(TypeFunction::parameters, parameters),
     has(TypeFunction::type, type)

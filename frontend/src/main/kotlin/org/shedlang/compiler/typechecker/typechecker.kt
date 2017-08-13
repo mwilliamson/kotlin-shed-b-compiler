@@ -285,7 +285,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
 private fun typeCheckTypeParameters(parameterNodes: List<TypeParameterNode>, context: TypeContext): List<TypeParameter> {
     val typeParameters = parameterNodes.map({ parameter ->
-        TypeParameter(name = parameter.name, variance = Variance.INVARIANT)
+        TypeParameter(name = parameter.name, variance = parameter.variance)
     })
     for ((parameterNode, parameterType) in parameterNodes.zip(typeParameters)) {
         context.addType(parameterNode, MetaType(parameterType))
