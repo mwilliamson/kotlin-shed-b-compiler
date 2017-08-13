@@ -266,6 +266,35 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun shapeCallIgnoresVarianceWhenInferringTypeParameters() {
+        val shapeReference = variableReference("Sink")
+        val argumentReference = variableReference("write")
+
+        val typeParameter = contravariantTypeParameter("T")
+        val shapeType = parametrizedShapeType(
+            "Sink",
+            parameters = listOf(typeParameter),
+            fields = mapOf(
+                "accept" to functionType(positionalArguments = listOf(typeParameter), returns = UnitType)
+            )
+        )
+        val node = call(receiver = shapeReference, namedArguments = listOf(
+            callNamedArgument("accept", argumentReference)
+        ))
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            shapeReference to MetaType(shapeType),
+            argumentReference to functionType(positionalArguments = listOf(IntType), returns = UnitType)
+        ))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isShapeType(
+            name = equalTo("Sink"),
+            typeArguments = isSequence(isIntType)
+        ))
+    }
+
+    @Test
     fun whenInvariantTypeParameterIsNotConstraintedThenErrorIsThrown() {
         val shapeReference = variableReference("Thing")
 

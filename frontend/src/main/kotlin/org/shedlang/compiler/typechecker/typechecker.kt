@@ -689,14 +689,6 @@ private class TypeConstraintSolver(
             return true
         }
 
-        if (to is TypeParameter && to.variance == Variance.COVARIANT) {
-            return false
-        }
-
-        if (from is TypeParameter && from.variance == Variance.CONTRAVARIANT) {
-            return false
-        }
-
         // TODO: deal with type parameters
         if (from is UnionType) {
             return from.members.all({ member -> coerce(from = member, to = to) })

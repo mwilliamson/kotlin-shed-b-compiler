@@ -284,7 +284,7 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceInvariantTypeParameterToSubtypeOfType() {
+    fun canCoerceTypeParameterToSubtypeOfType() {
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
             constraints = listOf(typeParameter to IntType),
@@ -294,7 +294,7 @@ class CoercionTests {
     }
 
     @Test
-    fun cannotCoerceInvariantTypeParameterToSubtypeOfMultipleTypes() {
+    fun cannotCoerceTypeParameterToSubtypeOfMultipleTypes() {
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
             constraints = listOf(typeParameter to IntType, typeParameter to BoolType),
@@ -304,7 +304,7 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceInvariantTypeParameterToSupertypeOfType() {
+    fun canCoerceTypeParameterToSupertypeOfType() {
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
             constraints = listOf(IntType to typeParameter),
@@ -314,68 +314,8 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceInvariantTypeParameterToSupertypeOfMultipleTypes() {
+    fun canCoerceTypeParameterToSupertypeOfMultipleTypes() {
         val typeParameter = invariantTypeParameter("T")
-        val result = coerce(
-            constraints = listOf(IntType to typeParameter, BoolType to typeParameter),
-            parameters = setOf(typeParameter)
-        )
-        assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(isIntType, isBoolType))))
-    }
-
-    @Test
-    fun canCoerceCovariantTypeParameterToSubtypeOfType() {
-        val typeParameter = covariantTypeParameter("T")
-        val result = coerce(
-            constraints = listOf(typeParameter to IntType),
-            parameters = setOf(typeParameter)
-        )
-        assertThat(result, isSuccess(typeParameter to isIntType))
-    }
-
-    @Test
-    fun cannotCoerceCovariantTypeParameterToSubtypeOfMultipleTypes() {
-        val typeParameter = covariantTypeParameter("T")
-        val result = coerce(
-            constraints = listOf(typeParameter to IntType, typeParameter to BoolType),
-            parameters = setOf(typeParameter)
-        )
-        assertThat(result, isFailure)
-    }
-
-    @Test
-    fun cannotCoerceCovariantTypeParameterToSupertypeOfType() {
-        val typeParameter = covariantTypeParameter("T")
-        val result = coerce(
-            constraints = listOf(IntType to typeParameter),
-            parameters = setOf(typeParameter)
-        )
-        assertThat(result, isFailure)
-    }
-
-    @Test
-    fun cannotCoerceContravariantTypeParameterToSubtypeOfType() {
-        val typeParameter = contravariantTypeParameter("T")
-        val result = coerce(
-            constraints = listOf(typeParameter to IntType),
-            parameters = setOf(typeParameter)
-        )
-        assertThat(result, isFailure)
-    }
-
-    @Test
-    fun canCoerceContravariantTypeParameterToSupertypeOfType() {
-        val typeParameter = contravariantTypeParameter("T")
-        val result = coerce(
-            constraints = listOf(IntType to typeParameter),
-            parameters = setOf(typeParameter)
-        )
-        assertThat(result, isSuccess(typeParameter to isIntType))
-    }
-
-    @Test
-    fun canCoerceContravariantTypeParameterToSupertypeOfMultipleTypes() {
-        val typeParameter = contravariantTypeParameter("T")
         val result = coerce(
             constraints = listOf(IntType to typeParameter, BoolType to typeParameter),
             parameters = setOf(typeParameter)
