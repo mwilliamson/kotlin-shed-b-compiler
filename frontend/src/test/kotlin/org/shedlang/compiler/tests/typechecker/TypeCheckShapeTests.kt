@@ -4,14 +4,13 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.FieldAlreadyDeclaredError
+import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.Variance
+import org.shedlang.compiler.types.*
 
 class TypeCheckShapeTests {
     @Test
@@ -95,5 +94,53 @@ class TypeCheckShapeTests {
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
             parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isCovariant))
         )))
+    }
+
+    @Test
+    @Disabled("WIP")
+    fun whenCovariantTypeParameterIsInContravariantPositionThenErrorIsThrown() {
+        val typeParameterDeclaration = typeParameter("T", variance = Variance.COVARIANT)
+        val typeParameterReference = typeReference("T")
+        val unitReference = typeReference("Unit")
+        val node = shape(
+            "Matcher",
+            typeParameters = listOf(typeParameterDeclaration),
+            fields = listOf(
+                shapeField(type = functionType(arguments = listOf(typeParameterReference), returnType = unitReference))
+            )
+        )
+
+        val typeContext = typeContext(
+            references = mapOf(typeParameterReference to typeParameterDeclaration),
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        )
+        assertThat(
+            { typeCheck(node, typeContext) },
+            throws<TypeCheckError>()
+        )
+    }
+
+    @Test
+    @Disabled
+    fun whenContravariantTypeParameterIsInCovariantPositionThenErrorIsThrown() {
+        val typeParameterDeclaration = typeParameter("T", variance = Variance.CONTRAVARIANT)
+        val typeParameterReference = typeReference("T")
+        val unitReference = typeReference("Unit")
+        val node = shape(
+            "Box",
+            typeParameters = listOf(typeParameterDeclaration),
+            fields = listOf(
+                shapeField(type = typeParameterReference)
+            )
+        )
+
+        val typeContext = typeContext(
+            references = mapOf(typeParameterReference to typeParameterDeclaration),
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        )
+        assertThat(
+            { typeCheck(node, typeContext) },
+            throws<TypeCheckError>()
+        )
     }
 }
