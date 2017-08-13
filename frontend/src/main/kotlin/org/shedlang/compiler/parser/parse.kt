@@ -113,7 +113,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
 internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): ShapeNode {
     tokens.skip(TokenType.KEYWORD_SHAPE)
     val name = parseIdentifier(tokens)
-    val typeParameters = parseTypeParameters(tokens)
+    val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val fields = parseZeroOrMoreNodes(
@@ -146,7 +146,7 @@ private fun parseShapeField(source: Source, tokens: TokenIterator<TokenType>): S
 private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionNode {
     tokens.skip(TokenType.KEYWORD_UNION)
     val name = parseIdentifier(tokens)
-    val typeParameters = parseTypeParameters(tokens)
+    val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_EQUALS)
 
@@ -192,7 +192,7 @@ private data class ParsedFunction(
 )
 
 private fun parseFunction(tokens: TokenIterator<TokenType>): ParsedFunction {
-    val typeParameters = parseTypeParameters(tokens)
+    val typeParameters = parseTypeParameters(allowVariance = false, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseZeroOrMoreNodes(
@@ -223,10 +223,13 @@ private fun parseFunction(tokens: TokenIterator<TokenType>): ParsedFunction {
     )
 }
 
-internal fun parseTypeParameters(tokens: TokenIterator<TokenType>): List<TypeParameterNode> {
+internal fun parseTypeParameters(
+    allowVariance: Boolean,
+    tokens: TokenIterator<TokenType>
+): List<TypeParameterNode> {
     return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
         val typeParameters = parseMany(
-            parseElement = { tokens -> ::parseTypeParameter.parse(tokens) },
+            parseElement = { tokens -> parseTypeParameter(allowVariance = allowVariance).parse(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
             allowZero = false,
@@ -251,8 +254,10 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
     return body
 }
 
-private fun parseTypeParameter(source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
-    val variance = if (tokens.trySkip(TokenType.SYMBOL_PLUS)) {
+private fun parseTypeParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
+    val variance = if (!allowVariance) {
+        Variance.INVARIANT
+    } else if (tokens.trySkip(TokenType.SYMBOL_PLUS)) {
         Variance.COVARIANT
     } else if (tokens.trySkip(TokenType.SYMBOL_MINUS)) {
         Variance.CONTRAVARIANT

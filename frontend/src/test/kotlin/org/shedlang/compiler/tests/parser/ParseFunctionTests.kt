@@ -1,15 +1,14 @@
 package org.shedlang.compiler.tests.parser
 
-import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.parser.parseFunctionDeclaration
 import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.isInvariant
 import org.shedlang.compiler.tests.isSequence
 
 class ParseFunctionTests {
@@ -52,10 +51,19 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::typeParameters, isSequence(
-                isTypeParameter(name = equalTo("T")),
-                isTypeParameter(name = equalTo("U"))
+                isTypeParameter(name = equalTo("T"), variance = isInvariant),
+                isTypeParameter(name = equalTo("U"), variance = isInvariant)
             ))
         ))
+    }
+
+    @Test
+    fun typeParametersCannotHaveVariance() {
+        val source = "fun f[+T]() -> T { }"
+        assertThat(
+            { parseString(::parseFunctionDeclaration, source) },
+            throws<UnexpectedTokenException>()
+        )
     }
 
     @Test
