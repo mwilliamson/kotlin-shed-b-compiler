@@ -602,9 +602,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 parameter to if (boundType != null) {
                     boundType
                 } else if (parameter.variance == Variance.COVARIANT) {
-                    AnyType
-                } else if (parameter.variance == Variance.CONTRAVARIANT) {
                     NothingType
+                } else if (parameter.variance == Variance.CONTRAVARIANT) {
+                    AnyType
                 } else {
                     throw CouldNotInferTypeParameterError(
                         parameter = parameter,

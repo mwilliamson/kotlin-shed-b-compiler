@@ -286,7 +286,7 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
-    fun whenCovariantTypeParameterIsNotConstraintedThenTypeParameterIsAny() {
+    fun whenCovariantTypeParameterIsNotConstraintedThenTypeParameterIsNothing() {
         val shapeReference = variableReference("Thing")
 
         val typeParameter = covariantTypeParameter("T")
@@ -301,12 +301,12 @@ class TypeCheckFunctionCallTests {
 
         val type = inferType(node, typeContext)
         assertThat(type, isShapeType(
-            typeArguments = isSequence(isAnyType)
+            typeArguments = isSequence(isNothingType)
         ))
     }
 
     @Test
-    fun whenContravariantTypeParameterIsNotConstraintedThenTypeParameterIsNothing() {
+    fun whenContravariantTypeParameterIsNotConstraintedThenTypeParameterIsAny() {
         val shapeReference = variableReference("Thing")
 
         val typeParameter = contravariantTypeParameter("T")
@@ -321,7 +321,7 @@ class TypeCheckFunctionCallTests {
 
         val type = inferType(node, typeContext)
         assertThat(type, isShapeType(
-            typeArguments = isSequence(isNothingType)
+            typeArguments = isSequence(isAnyType)
         ))
     }
 
