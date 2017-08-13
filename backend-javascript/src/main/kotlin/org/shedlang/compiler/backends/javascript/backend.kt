@@ -53,10 +53,19 @@ private val stdlib = """
     }
 
     function declareShape(name) {
-        return {
-            name: name,
-            typeId: freshTypeId()
-        };
+        const typeId = freshTypeId();
+
+        function shape(fields) {
+            if (fields === undefined) {
+                fields = {};
+            }
+            fields.${"$"}shedType = shape;
+            return fields;
+        }
+
+        shape.typeId = typeId;
+
+        return shape;
     }
 
     var nextTypeId = 1;

@@ -273,18 +273,35 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun shapeCallGeneratesObject() {
+    fun namedArgumentsArePassedAsObject() {
         val shed = call(
-            variableReference("X"),
+            variableReference("f"),
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
 
         val node = generateCode(shed)
 
-        assertThat(node, isJavascriptObject(
-            properties = isMap(
-                "\$shedType" to isJavascriptVariableReference("X"),
-                "a" to isJavascriptBooleanLiteral(true)
+        assertThat(node, isJavascriptFunctionCall(
+            isJavascriptVariableReference("f"),
+            isSequence(isJavascriptObject(isMap("a" to isJavascriptBooleanLiteral(true))))
+        ))
+    }
+
+    @Test
+    fun whenThereAreBothPositionalAndNamedArgumentsThenNamedArgumentsObjectIsLastArgument() {
+        val shed = call(
+            variableReference("f"),
+            positionalArguments = listOf(literalInt(1)),
+            namedArguments = listOf(callNamedArgument("a", literalBool(true)))
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptFunctionCall(
+            isJavascriptVariableReference("f"),
+            isSequence(
+                isJavascriptIntegerLiteral(1),
+                isJavascriptObject(isMap("a" to isJavascriptBooleanLiteral(true)))
             )
         ))
     }

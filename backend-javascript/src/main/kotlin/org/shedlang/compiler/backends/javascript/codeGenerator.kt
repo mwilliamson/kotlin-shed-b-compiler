@@ -182,21 +182,23 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: CallNode): JavascriptExpressionNode {
-            if (node.namedArguments.isEmpty()) {
-                return JavascriptFunctionCallNode(
-                    generateCode(node.receiver),
-                    node.positionalArguments.map(::generateCode),
-                    source = NodeSource(node)
-                )
+            val positionalArguments = node.positionalArguments.map(::generateCode)
+            val namedArguments = if (node.namedArguments.isEmpty()) {
+                listOf()
             } else {
-                val fieldArguments = node.namedArguments.associate({ argument ->
-                    argument.name to generateCode(argument.expression)
-                })
-                return JavascriptObjectLiteralNode(
-                    mapOf("\$shedType" to generateCode(node.receiver)) + fieldArguments,
+                listOf(JavascriptObjectLiteralNode(
+                    node.namedArguments.associate({ argument ->
+                        argument.name to generateCode(argument.expression)
+                    }),
                     source = NodeSource(node)
-                )
+                ))
             }
+            val arguments = positionalArguments + namedArguments
+            return JavascriptFunctionCallNode(
+                generateCode(node.receiver),
+                arguments,
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
