@@ -42,14 +42,8 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
             return simpleStatement(serialise(node.expression, indentation = 1))
         }
 
-        override fun visit(node: JavascriptFunctionNode): String {
-            val signature = line(
-                "function " +
-                    node.name +
-                    "(" + node.arguments.joinToString(", ") + ") {"
-            )
-            val body = serialiseBlock(node.body, indentation = indentation)
-            return signature + body + line("}")
+        override fun visit(node: JavascriptFunctionDeclarationNode): String {
+            return serialiseFunction(node.name, node, indentation = indentation)
         }
 
         override fun visit(node: JavascriptConstNode): String {
@@ -57,6 +51,21 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
             return simpleStatement("const ${node.name} = $expression")
         }
     })
+}
+
+private fun serialiseFunction(
+    name: String?,
+    node: JavascriptFunctionNode,
+    indentation: Int
+): String {
+    val signature = line(
+        "function " +
+            name.orEmpty() +
+            "(" + node.arguments.joinToString(", ") + ") {",
+        indentation = indentation
+    )
+    val body = serialiseBlock(node.body, indentation = indentation)
+    return signature + body + line("}", indentation = indentation)
 }
 
 private fun serialiseBlock(
@@ -130,6 +139,10 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         override fun visit(node: JavascriptAssignmentNode): String {
             return serialiseSubExpression(node, node.target, associative = false, indentation = indentation) + " = " + serialiseSubExpression(node, node.expression, associative = true, indentation = indentation)
         }
+
+        override fun visit(node: JavascriptFunctionExpressionNode): String {
+            return serialiseFunction(name = null, node = node, indentation = indentation)
+        }
     })
 }
 
@@ -201,6 +214,10 @@ private fun precedence(node: JavascriptExpressionNode): Int {
 
         override fun visit(node: JavascriptAssignmentNode): Int {
             return 3
+        }
+
+        override fun visit(node: JavascriptFunctionExpressionNode): Int {
+            return 21
         }
     })
 }

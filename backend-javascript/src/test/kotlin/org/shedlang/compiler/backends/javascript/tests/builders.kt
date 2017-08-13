@@ -88,8 +88,17 @@ fun jsFunction(
     name: String,
     arguments: List<String> = listOf(),
     body: List<JavascriptStatementNode> = listOf()
-) = JavascriptFunctionNode(
+) = JavascriptFunctionDeclarationNode(
     name = name,
+    arguments = arguments,
+    body = body,
+    source = anySource()
+)
+
+fun jsFunctionExpression(
+    arguments: List<String> = listOf(),
+    body: List<JavascriptStatementNode> = listOf()
+) = JavascriptFunctionExpressionNode(
     arguments = arguments,
     body = body,
     source = anySource()

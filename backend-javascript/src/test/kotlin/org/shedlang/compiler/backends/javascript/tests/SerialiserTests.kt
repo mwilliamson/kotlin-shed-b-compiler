@@ -68,6 +68,21 @@ class SerialiserTests {
     }
 
     @Test
+    fun anonymousFunctionExpressionSerialisation() {
+        assertThat(
+            indentedSerialise(jsFunctionExpression(
+                arguments = listOf(),
+                body = listOf()
+            )),
+            equalTo(listOf(
+                "    function () {",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun expressionStatementSerialisation() {
         assertThat(
             indentedSerialise(

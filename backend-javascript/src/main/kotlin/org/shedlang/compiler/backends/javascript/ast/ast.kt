@@ -16,7 +16,7 @@ interface JavascriptStatementNode : JavascriptNode {
         fun visit(node: JavascriptReturnNode): T
         fun visit(node: JavascriptIfStatementNode): T
         fun visit(node: JavascriptExpressionStatementNode): T
-        fun visit(node: JavascriptFunctionNode): T
+        fun visit(node: JavascriptFunctionDeclarationNode): T
         fun visit(node: JavascriptConstNode): T
     }
 
@@ -52,15 +52,30 @@ data class JavascriptExpressionStatementNode(
     }
 }
 
-data class JavascriptFunctionNode(
+data class JavascriptFunctionDeclarationNode(
     val name: String,
-    val arguments: List<String>,
-    val body: List<JavascriptStatementNode>,
+    override val arguments: List<String>,
+    override val body: List<JavascriptStatementNode>,
     override val source: Source
-) : JavascriptStatementNode {
+) : JavascriptFunctionNode, JavascriptStatementNode {
     override fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class JavascriptFunctionExpressionNode(
+    override val arguments: List<String>,
+    override val body: List<JavascriptStatementNode>,
+    override val source: Source
+) : JavascriptFunctionNode, JavascriptExpressionNode {
+    override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+interface JavascriptFunctionNode {
+    val arguments: List<String>
+    val body: List<JavascriptStatementNode>
 }
 
 data class JavascriptConstNode(
@@ -85,6 +100,7 @@ interface JavascriptExpressionNode : JavascriptNode {
         fun visit(node: JavascriptPropertyAccessNode): T
         fun visit(node: JavascriptObjectLiteralNode): T
         fun visit(node: JavascriptAssignmentNode): T
+        fun visit(node: JavascriptFunctionExpressionNode): T
     }
 
     fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T

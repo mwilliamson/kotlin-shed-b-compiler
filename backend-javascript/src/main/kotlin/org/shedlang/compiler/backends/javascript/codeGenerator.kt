@@ -83,13 +83,24 @@ private fun generateCode(node: UnionNode) : JavascriptStatementNode {
     )
 }
 
-private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionNode {
-    return JavascriptFunctionNode(
+private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionDeclarationNode {
+    val javascriptFunction = generateFunction(node)
+    return JavascriptFunctionDeclarationNode(
         name = node.name,
-        arguments = node.arguments.map(ArgumentNode::name),
-        body = node.body.map(::generateCode),
+        arguments = javascriptFunction.arguments,
+        body = javascriptFunction.body,
         source = NodeSource(node)
     )
+}
+
+private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
+    val arguments = node.arguments.map(ArgumentNode::name)
+    val body = node.body.map(::generateCode)
+
+    return object: JavascriptFunctionNode {
+        override val arguments = arguments
+        override val body = body
+    }
 }
 
 internal fun generateCode(node: StatementNode): JavascriptStatementNode {
@@ -197,7 +208,12 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: FunctionExpressionNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            val javascriptFunction = generateFunction(node)
+            return JavascriptFunctionExpressionNode(
+                arguments = javascriptFunction.arguments,
+                body = javascriptFunction.body,
+                source = node.source
+            )
         }
     })
 }

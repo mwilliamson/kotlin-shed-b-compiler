@@ -89,7 +89,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionGeneratesFunction() {
+    fun functionDeclarationGeneratesFunctionDeclaration() {
         val shed = function(
             name = "f",
             arguments = listOf(argument("x"), argument("y")),
@@ -100,6 +100,21 @@ class CodeGeneratorTests {
 
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
+            arguments = isSequence(equalTo("x"), equalTo("y")),
+            body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))
+        ))
+    }
+
+    @Test
+    fun functionExpressionGeneratesFunctionExpression() {
+        val shed = functionExpression(
+            arguments = listOf(argument("x"), argument("y")),
+            body = listOf(returns(literalInt(42)))
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptFunctionExpression(
             arguments = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))
         ))
@@ -295,10 +310,19 @@ class CodeGeneratorTests {
         body: Matcher<List<JavascriptStatementNode>> = anything
     ) : Matcher<JavascriptStatementNode>
         = cast(allOf(
-            has(JavascriptFunctionNode::name, name),
-            has(JavascriptFunctionNode::arguments, arguments),
-            has(JavascriptFunctionNode::body, body)
+            has(JavascriptFunctionDeclarationNode::name, name),
+            has(JavascriptFunctionDeclarationNode::arguments, arguments),
+            has(JavascriptFunctionDeclarationNode::body, body)
         ))
+
+    private fun isJavascriptFunctionExpression(
+        arguments: Matcher<List<String>> = anything,
+        body: Matcher<List<JavascriptStatementNode>> = anything
+    ) : Matcher<JavascriptExpressionNode>
+        = cast(allOf(
+        has(JavascriptFunctionExpressionNode::arguments, arguments),
+        has(JavascriptFunctionExpressionNode::body, body)
+    ))
 
     private fun isJavascriptConst(
         name: Matcher<String>,
