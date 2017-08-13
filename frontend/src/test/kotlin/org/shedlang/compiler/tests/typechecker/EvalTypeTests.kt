@@ -1,14 +1,12 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.types.*
@@ -111,6 +109,22 @@ class EvalTypeTests {
             arguments = isSequence(isIntType),
             returnType = isBoolType
         ))
+    }
+
+    @Test
+    fun functionTypeIsValidated() {
+        val typeParameterReference = typeReference("T")
+        val typeParameter = contravariantTypeParameter("T")
+
+        val node = functionType(returnType = typeParameterReference)
+        val typeContext = typeContext(referenceTypes = mapOf(
+            typeParameterReference to MetaType(typeParameter)
+        ))
+
+        assertThat(
+            { evalType(node, typeContext) },
+            throws(has(TypeCheckError::message, equalTo("return type cannot be contravariant")))
+        )
     }
 
     private fun isMetaType(type: Type): Matcher<Type> {

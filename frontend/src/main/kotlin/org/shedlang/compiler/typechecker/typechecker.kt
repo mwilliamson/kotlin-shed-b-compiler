@@ -256,6 +256,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     context.addType(node, MetaType(type))
     context.defer({
         fields.value
+        checkType(type, source = node.source)
     })
 }
 
@@ -360,13 +361,15 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
         }
 
         override fun visit(node: FunctionTypeNode): Type {
-            return FunctionType(
+            val type = FunctionType(
                 typeParameters = listOf(),
                 positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
                 namedArguments = mapOf(),
                 returns = evalType(node.returnType, context),
                 effects = setOf()
             )
+            checkType(type, source = node.source)
+            return type
         }
     })
 }
@@ -757,3 +760,10 @@ private class TypeConstraintSolver(
     }
 }
 
+private fun checkType(type: Type, source: Source) {
+    val result = validateType(type)
+    if (result.errors.isNotEmpty()) {
+        // TODO: add more appropriate subclass
+        throw TypeCheckError(result.errors.first(), source = source)
+    }
+}

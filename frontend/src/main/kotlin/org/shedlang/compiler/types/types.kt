@@ -15,16 +15,18 @@ interface Type {
     val shortDescription: String
 }
 
-object UnitType: Type {
+interface BasicType : Type
+
+object UnitType: BasicType {
     override val shortDescription = "Unit"
 }
-object BoolType : Type {
+object BoolType : BasicType {
     override val shortDescription = "Bool"
 }
-object IntType : Type {
+object IntType : BasicType {
     override val shortDescription = "Int"
 }
-object StringType : Type {
+object StringType : BasicType {
     override val shortDescription = "String"
 }
 object AnyType : Type {
@@ -277,4 +279,44 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
 private fun appliedTypeShortDescription(name: String, arguments: List<Type>): String {
     val argumentsString = arguments.joinToString(separator = ", ", transform = { type -> type.shortDescription })
     return name + "[" + argumentsString + "]"
+}
+
+internal data class ValidateTypeResult(val errors: List<String>) {
+    companion object {
+        val success = ValidateTypeResult(listOf())
+    }
+}
+
+internal fun validateType(type: Type): ValidateTypeResult {
+    if (type is BasicType || type == AnyType || type == NothingType || type is TypeParameter) {
+        return ValidateTypeResult.success
+    } else if (type is FunctionType) {
+        if (type.returns is TypeParameter && type.returns.variance == Variance.CONTRAVARIANT) {
+            return ValidateTypeResult(listOf("return type cannot be contravariant"))
+        } else {
+            val argumentTypes = type.positionalArguments + type.namedArguments.values
+            return ValidateTypeResult(argumentTypes.mapNotNull({ argumentType ->
+                if (argumentType is TypeParameter && argumentType.variance == Variance.COVARIANT) {
+                    "argument type cannot be covariant"
+                } else {
+                    null
+                }
+            }))
+        }
+    } else if (type is ShapeType) {
+        return ValidateTypeResult(type.fields.mapNotNull({ field ->
+            val fieldType = field.value
+            if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
+                "field type cannot be contravariant"
+            } else {
+                null
+            }
+        }))
+    } else if (type is UnionType) {
+        return ValidateTypeResult.success
+    } else if (type is TypeFunction) {
+        return validateType(type.type)
+    } else {
+        throw NotImplementedError("not implemented for type: ${type.shortDescription}")
+    }
 }

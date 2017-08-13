@@ -190,7 +190,7 @@ fun typeApplication(
     source = anySource()
 )
 fun functionType(
-    arguments: List<TypeNode>,
+    arguments: List<TypeNode> = listOf(),
     returnType: TypeNode
 ) = FunctionTypeNode(
     arguments = arguments,
@@ -215,7 +215,7 @@ fun parametrizedShapeType(
     parameters = parameters
 )
 
-fun shapeType(name: String, fields: Map<String, Type> = mapOf()) = object: ShapeType {
+fun shapeType(name: String = "Shape", fields: Map<String, Type> = mapOf()) = object: ShapeType {
     override val name = name
     override val fields = fields
     override val shapeId = freshShapeId()
