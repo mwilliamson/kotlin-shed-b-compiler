@@ -129,6 +129,23 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun functionExpressionWithNonEmptyBodyThatIsntSingleReturnGeneratesAuxiliaryFunction() {
+        val shed = functionExpression(
+            arguments = listOf(argument("x"), argument("y")),
+            body = listOf(expressionStatement(literalInt(42)))
+        )
+
+        val node = generateCode(shed)
+        val auxiliaryFunction = node.functions.single()
+        assertThat(auxiliaryFunction, isPythonFunction(
+            arguments = isSequence(equalTo("x"), equalTo("y")),
+            body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
+        ))
+
+        assertThat(node.value, isPythonVariableReference(auxiliaryFunction.name))
+    }
+
+    @Test
     fun expressionStatementGeneratesExpressionStatement() {
         val shed = expressionStatement(literalInt(42))
         val node = generateCode(shed)
@@ -411,7 +428,7 @@ class CodeGeneratorTests {
     ))
 
     private fun isPythonFunction(
-        name: Matcher<String>,
+        name: Matcher<String> = anything,
         arguments: Matcher<List<String>> = anything,
         body: Matcher<List<PythonStatementNode>> = anything
     ) : Matcher<PythonStatementNode>

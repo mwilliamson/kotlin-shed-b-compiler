@@ -13,6 +13,10 @@ internal class CodeGenerationContext(
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf()
 ) {
+    fun freshName(): String {
+        return generateName("anonymous")
+    }
+
     fun name(node: VariableBindingNode): String {
         return name(node.nodeId, node.name)
     }
@@ -114,9 +118,13 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
 }
 
 private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {
+    return generateFunction(context.name(node), node, context)
+}
+
+private fun generateFunction(name: String, node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
     return PythonFunctionNode(
         // TODO: test renaming
-        name = context.name(node),
+        name = name,
         // TODO: test renaming
         arguments = generateArguments(node.arguments, context),
         body = generateCode(node.body, context),
@@ -309,24 +317,32 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                     functions = listOf()
                 )
             }
+
             val statement = node.body.singleOrNull()
             if (statement != null && statement is ReturnNode) {
                 val expression = generateCode(statement.expression, context)
-                if (expression.functions.isNotEmpty()) {
-                    throw UnsupportedOperationException()
+                if (expression.functions.isEmpty()) {
+                    return GeneratedExpression(
+                        PythonLambdaNode(
+                            arguments = generateArguments(node.arguments, context),
+                            body = expression.value,
+                            source = NodeSource(node)
+                        ),
+                        functions = listOf()
+                    )
                 }
-
-                return GeneratedExpression(
-                    PythonLambdaNode(
-                        arguments = generateArguments(node.arguments, context),
-                        body = expression.value,
-                        source = NodeSource(node)
-                    ),
-                    functions = listOf()
-                )
-            } else {
-                throw UnsupportedOperationException("not implemented")
             }
+
+            val auxiliaryFunction = generateFunction(
+                name = context.freshName(),
+                node = node,
+                context = context
+            )
+
+            return GeneratedExpression(
+                PythonVariableReferenceNode(auxiliaryFunction.name, source = node.source),
+                functions = listOf(auxiliaryFunction)
+            )
         }
     })
 }
