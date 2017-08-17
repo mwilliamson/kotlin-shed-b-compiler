@@ -1,12 +1,10 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.anything
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.UnhandledEffectError
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
@@ -168,6 +166,93 @@ class TypeCheckFunctionTests {
     }
 
     @Test
+    fun errorIsThrowIfBodyStatementsHaveUnspecifiedEffect() {
+        val unitType = typeReference("Unit")
+        val functionReference = variableReference("f")
+
+        val node = function(
+            returnType = unitType,
+            body = listOf(
+                expressionStatement(call(functionReference))
+            )
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType(
+                    effects = setOf(IoEffect),
+                    returns = UnitType
+                ),
+                unitType to MetaType(UnitType)
+            )
+        )
+        assertThat(
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
+
+    @Test
+    fun effectsAreNotInheritedByNestedFunctionBodyStatements() {
+        val unitType = typeReference("Unit")
+        val functionReference = variableReference("f")
+
+        val node = function(
+            returnType = unitType,
+            body = listOf(
+                expressionStatement(call(functionReference))
+            )
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType(
+                    effects = setOf(IoEffect),
+                    returns = UnitType
+                ),
+                unitType to MetaType(UnitType)
+            ),
+            effects = setOf(IoEffect)
+        )
+        assertThat(
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
+
+    @Test
+    fun effectsAreNotInheritedByNestedFunctionBodyExpression() {
+        val unitType = typeReference("Unit")
+        val functionReference = variableReference("f")
+
+        val node = functionExpression(
+            returnType = unitType,
+            body = call(functionReference)
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType(
+                    effects = setOf(IoEffect),
+                    returns = UnitType
+                ),
+                unitType to MetaType(UnitType)
+            ),
+            effects = setOf(IoEffect)
+        )
+        assertThat(
+            {
+                inferType(node, typeContext)
+                typeContext.undefer()
+            },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
+
+    @Test
     fun whenExpressionBodyDoesNotMatchReturnTypeThenErrorIsThrown() {
         val intType = typeReference("Int")
         val node = functionExpression(
@@ -186,15 +271,31 @@ class TypeCheckFunctionTests {
 
     @Test
     fun whenExplicitReturnTypeIsMissingThenReturnTypeIsTypeOfExpressionBody() {
-        val intType = typeReference("Int")
         val node = functionExpression(
             arguments = listOf(),
             returnType = null,
             body = literalBool()
         )
-        val typeContext = typeContext(
-            referenceTypes = mapOf(intType to MetaType(IntType))
+        assertThat(
+            inferType(node, typeContext()),
+            isFunctionType(returnType = isBoolType)
         )
-        assertThat(inferType(node, typeContext), isFunctionType(returnType = isBoolType))
+    }
+
+    @Test
+    fun explicitReturnTypeIsUsedAsReturnTypeInsteadOfExpressionBodyType() {
+        val anyReference = typeReference("Any")
+        val node = functionExpression(
+            arguments = listOf(),
+            returnType = anyReference,
+            body = literalBool()
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(anyReference to MetaType(AnyType))
+        )
+        assertThat(
+            inferType(node, typeContext),
+            isFunctionType(returnType = isAnyType)
+        )
     }
 }

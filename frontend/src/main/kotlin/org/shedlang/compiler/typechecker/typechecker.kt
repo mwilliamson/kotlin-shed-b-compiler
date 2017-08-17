@@ -73,7 +73,7 @@ class TypeContext(
         nodeTypes[targetNodeId] = type
     }
 
-    fun enterFunction(returnType: Type, effects: Set<Effect>): TypeContext {
+    fun enterFunction(returnType: Type?, effects: Set<Effect>): TypeContext {
         return TypeContext(
             returnType = returnType,
             effects = effects,
@@ -317,33 +317,39 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     val effects = function.effects.map({ effect -> evalEffect(effect, context) }).toSet()
 
     val body = function.body
+    val returnTypeNode = function.returnType
+    val explicitReturnType = if (returnTypeNode == null) {
+        null
+    } else {
+        evalType(returnTypeNode, context)
+    }
+
     val returnType = when (body) {
         is FunctionBody.Expression -> {
-            val returnTypeNode = function.returnType
-            if (returnTypeNode == null) {
-                inferType(body.expression, context)
-            } else {
-                val returnType = evalType(returnTypeNode, context)
-                verifyType(expression = body.expression, expected = returnType, context = context)
-                returnType
+            val bodyContext = context.enterFunction(
+                returnType = null,
+                effects = effects
+            )
+            val expressionType = inferType(body.expression, bodyContext)
+
+            if (explicitReturnType != null) {
+                verifyType(expected = explicitReturnType, actual = expressionType, source = body.expression.source)
             }
+            explicitReturnType ?: expressionType
         }
         is FunctionBody.Statements -> {
-            val returnTypeNode = function.returnType
-            if (returnTypeNode == null) {
+            if (explicitReturnType == null) {
                 throw UnsupportedOperationException("TODO")
             } else {
-                val returnType = evalType(returnTypeNode, context)
-
                 context.defer({
                     val bodyContext = context.enterFunction(
-                        returnType = returnType,
+                        returnType = explicitReturnType,
                         effects = effects
                     )
                     typeCheck(body.nodes, bodyContext)
                 })
 
-                returnType
+                explicitReturnType
             }
         }
     }
