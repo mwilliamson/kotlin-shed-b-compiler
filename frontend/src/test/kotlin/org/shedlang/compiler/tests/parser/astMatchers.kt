@@ -144,3 +144,6 @@ internal fun isFunctionType(
     has(FunctionTypeNode::arguments, arguments),
     has(FunctionTypeNode::returnType, returnType)
 ))
+
+internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
+    = cast(has(IntegerLiteralNode::value, value))

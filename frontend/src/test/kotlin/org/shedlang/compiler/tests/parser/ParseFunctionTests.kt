@@ -101,6 +101,7 @@ class ParseFunctionTests {
             isVariableReference("!b")
         )))
     }
+
     @Test
     fun canParseAnonymousFunctionExpression() {
         val source = "fun () -> Unit { }"
@@ -111,6 +112,15 @@ class ParseFunctionTests {
             has(FunctionNode::returnType, cast(
                 has(TypeReferenceNode::name, equalTo("Unit"))
             ))
+        )))
+    }
+
+    @Test
+    fun bodyOfFunctionExpressionCanBeExpression() {
+        val source = "fun () -> Int => 4"
+        val function = parseString(::parseExpression, source)
+        assertThat(function, cast(allOf(
+            has(FunctionNode::body, isSequence(isReturn(isIntLiteral(equalTo(4)))))
         )))
     }
 

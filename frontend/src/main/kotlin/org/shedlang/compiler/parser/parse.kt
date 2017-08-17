@@ -598,7 +598,15 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
         TokenType.KEYWORD_FUN -> {
             tokens.skip()
             val signature = parseFunctionSignature(tokens)
-            val body = parseFunctionStatements(tokens)
+
+            val body = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
+                val returnExpression = parseExpression(tokens)
+                listOf(ReturnNode(returnExpression, source = returnExpression.source))
+            } else {
+                parseFunctionStatements(tokens)
+            }
+
+
             return FunctionExpressionNode(
                 typeParameters = signature.typeParameters,
                 arguments = signature.arguments,

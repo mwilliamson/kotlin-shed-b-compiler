@@ -28,6 +28,7 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
 
     symbol(TokenType.SYMBOL_ARROW, "->"),
+    symbol(TokenType.SYMBOL_FAT_ARROW, "=>"),
     symbol(TokenType.SYMBOL_DOT, "."),
     symbol(TokenType.SYMBOL_COMMA, ","),
     symbol(TokenType.SYMBOL_COLON, ":"),
@@ -76,6 +77,7 @@ internal enum class TokenType {
     IDENTIFIER,
 
     SYMBOL_ARROW,
+    SYMBOL_FAT_ARROW,
     SYMBOL_DOT,
     SYMBOL_COMMA,
     SYMBOL_COLON,
