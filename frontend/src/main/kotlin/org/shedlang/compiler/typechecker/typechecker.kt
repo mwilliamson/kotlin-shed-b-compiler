@@ -310,6 +310,10 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
+    context.addTypes(function.arguments.zip(
+        argumentTypes,
+        { argument, argumentType -> argument.nodeId to argumentType }
+    ).toMap())
     val effects = function.effects.map({ effect -> evalEffect(effect, context) }).toSet()
 
     val body = function.body
@@ -332,10 +336,6 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
                 val returnType = evalType(returnTypeNode, context)
 
                 context.defer({
-                    context.addTypes(function.arguments.zip(
-                        argumentTypes,
-                        { argument, argumentType -> argument.nodeId to argumentType }
-                    ).toMap())
                     val bodyContext = context.enterFunction(
                         returnType = returnType,
                         effects = effects
