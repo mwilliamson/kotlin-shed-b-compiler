@@ -151,6 +151,11 @@ class FieldAlreadyDeclaredError(val fieldName: String, source: Source)
     : TypeCheckError("Field has already been declared: ${fieldName}", source)
 class UnhandledEffectError(val effect: Effect, source: Source)
     : TypeCheckError("Unhandled effect: ${effect}", source)
+class InvalidOperationError(val operator: Operator, val operands: List<Type>, source: Source)
+    : TypeCheckError(
+        "Operation ${operator} is not valid for operands ${operands.map({operand -> operand.shortDescription}).joinToString(", ")}",
+        source
+    )
 
 interface NodeTypes {
     fun typeOf(node: VariableBindingNode): Type
@@ -436,6 +441,8 @@ private fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
     inferType(expression, context)
 }
 
+private data class OperationType(val operator: Operator, val left: Type, val right: Type)
+
 internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
     return expression.accept(object : ExpressionNode.Visitor<Type> {
         override fun visit(node: UnitLiteralNode) = UnitType
@@ -445,11 +452,23 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         override fun visit(node: VariableReferenceNode) = context.typeOf(node)
 
         override fun visit(node: BinaryOperationNode): Type {
-            verifyType(node.left, context, expected = IntType)
-            verifyType(node.right, context, expected = IntType)
-            return when (node.operator) {
-                Operator.EQUALS -> BoolType
-                Operator.ADD, Operator.SUBTRACT, Operator.MULTIPLY -> IntType
+            val leftType = inferType(node.left, context)
+            val rightType = inferType(node.right, context)
+
+            return when (OperationType(node.operator, leftType, rightType)) {
+                OperationType(Operator.EQUALS, IntType, IntType) -> BoolType
+                OperationType(Operator.ADD, IntType, IntType) -> IntType
+                OperationType(Operator.SUBTRACT, IntType, IntType) -> IntType
+                OperationType(Operator.MULTIPLY, IntType, IntType) -> IntType
+
+                OperationType(Operator.EQUALS, StringType, StringType) -> BoolType
+                OperationType(Operator.ADD, StringType, StringType) -> StringType
+
+                else -> throw InvalidOperationError(
+                    operator = node.operator,
+                    operands = listOf(leftType, rightType),
+                    source = node.source
+                )
             }
         }
 

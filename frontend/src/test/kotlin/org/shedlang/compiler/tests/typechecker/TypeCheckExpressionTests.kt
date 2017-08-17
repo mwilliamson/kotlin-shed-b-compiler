@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
-import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.types.*
@@ -81,8 +81,8 @@ class TypeCheckExpressionTests {
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
-                has(UnexpectedTypeError::expected, cast(equalTo(IntType))),
-                has(UnexpectedTypeError::actual, cast(equalTo(BoolType)))
+                has(InvalidOperationError::operator, equalTo(Operator.ADD)),
+                has(InvalidOperationError::operands, isSequence(isBoolType, isIntType))
             ))
         )
     }
@@ -93,17 +93,45 @@ class TypeCheckExpressionTests {
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
-                has(UnexpectedTypeError::expected, cast(equalTo(IntType))),
-                has(UnexpectedTypeError::actual, cast(equalTo(BoolType)))
+                has(InvalidOperationError::operator, equalTo(Operator.ADD)),
+                has(InvalidOperationError::operands, isSequence(isIntType, isBoolType))
             ))
         )
     }
 
     @Test
-    fun equalityOperationReturnsBoolean() {
+    fun integerSubtractionOperationReturnsInteger() {
+        val node = binaryOperation(Operator.SUBTRACT, literalInt(), literalInt())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, isIntType)
+    }
+
+    @Test
+    fun integerMultiplicationOperationReturnsInteger() {
+        val node = binaryOperation(Operator.MULTIPLY, literalInt(), literalInt())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, isIntType)
+    }
+
+    @Test
+    fun integerEqualityOperationReturnsBoolean() {
         val node = binaryOperation(Operator.EQUALS, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(equalTo(BoolType)))
+        assertThat(type, isBoolType)
+    }
+
+    @Test
+    fun stringEqualityOperationReturnsBoolean() {
+        val node = binaryOperation(Operator.EQUALS, literalString(), literalString())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
+    fun stringAdditionOperationReturnsString() {
+        val node = binaryOperation(Operator.ADD, literalString(), literalString())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(isStringType))
     }
 
     @Test
