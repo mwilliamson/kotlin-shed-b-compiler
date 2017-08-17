@@ -20,9 +20,9 @@ class ParseFunctionTests {
             has(FunctionDeclarationNode::name, equalTo("f")),
             has(FunctionNode::typeParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
-            has(FunctionNode::returnType, cast(
+            has(FunctionNode::returnType, present(cast(
                 has(TypeReferenceNode::name, equalTo("Unit"))
-            ))
+            )))
         ))
     }
 
@@ -70,7 +70,7 @@ class ParseFunctionTests {
     fun canReadBody() {
         val source = "fun f() -> Int { return 1; return 2; }"
         val function = parseString(::parseFunctionDeclaration, source)
-        assertThat(function, has(FunctionNode::body, isSequence(
+        assertThat(function, has(FunctionDeclarationNode::bodyStatements, isSequence(
             cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(1))))),
             cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(2)))))
         )))
@@ -109,9 +109,9 @@ class ParseFunctionTests {
         assertThat(function, cast(allOf(
             has(FunctionNode::typeParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
-            has(FunctionNode::returnType, cast(
+            has(FunctionNode::returnType, present(cast(
                 has(TypeReferenceNode::name, equalTo("Unit"))
-            ))
+            )))
         )))
     }
 
@@ -119,8 +119,21 @@ class ParseFunctionTests {
     fun bodyOfFunctionExpressionCanBeExpression() {
         val source = "fun () -> Int => 4"
         val function = parseString(::parseExpression, source)
+        assertThat(function, cast(
+            has(FunctionNode::body, cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4)))))
+        ))
+    }
+
+    @Test
+    fun whenBodyOfFunctionExpressionIsExpressionThenReturnTypeCanBeOmitted() {
+        val source = "fun () => 4"
+        val function = parseString(::parseExpression, source)
         assertThat(function, cast(allOf(
-            has(FunctionNode::body, isSequence(isReturn(isIntLiteral(equalTo(4)))))
+            has(FunctionNode::returnType, absent()),
+            has(
+                FunctionNode::body,
+                cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4))))
+            )
         )))
     }
 

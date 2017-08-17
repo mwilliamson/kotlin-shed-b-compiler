@@ -309,19 +309,35 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
         { argument -> evalType(argument.type, context) }
     )
     val effects = function.effects.map({ effect -> evalEffect(effect, context) }).toSet()
-    val returnType = evalType(function.returnType, context)
 
-    context.defer({
-        context.addTypes(function.arguments.zip(
-            argumentTypes,
-            { argument, argumentType -> argument.nodeId to argumentType }
-        ).toMap())
-        val bodyContext = context.enterFunction(
-            returnType = returnType,
-            effects = effects
-        )
-        typeCheck(function.body, bodyContext)
-    })
+    val body = function.body
+    val returnType = when (body) {
+        is FunctionBody.Expression -> {
+            throw UnsupportedOperationException("TODO")
+        }
+        is FunctionBody.Statements -> {
+            val returnTypeNode = function.returnType
+            if (returnTypeNode == null) {
+                throw UnsupportedOperationException("TODO")
+            } else {
+                val returnType = evalType(returnTypeNode, context)
+
+                context.defer({
+                    context.addTypes(function.arguments.zip(
+                        argumentTypes,
+                        { argument, argumentType -> argument.nodeId to argumentType }
+                    ).toMap())
+                    val bodyContext = context.enterFunction(
+                        returnType = returnType,
+                        effects = effects
+                    )
+                    typeCheck(body.nodes, bodyContext)
+                })
+
+                returnType
+            }
+        }
+    }
 
     val functionType = FunctionType(
         typeParameters = typeParameters,

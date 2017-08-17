@@ -173,13 +173,15 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
     val name = parseIdentifier(tokens)
     val signature = parseFunctionSignature(tokens)
     val body = parseFunctionStatements(tokens)
+
     return FunctionDeclarationNode(
         name = name,
         typeParameters = signature.typeParameters,
         arguments = signature.arguments,
-        returnType = signature.returnType,
+        // TODO:
+        returnType = signature.returnType!!,
         effects = signature.effects,
-        body = body,
+        body = FunctionBody.Statements(body),
         source = source
     )
 }
@@ -188,7 +190,7 @@ private data class FunctionSignature(
     val typeParameters: List<TypeParameterNode>,
     val arguments: List<ArgumentNode>,
     val effects: List<VariableReferenceNode>,
-    val returnType: TypeNode
+    val returnType: TypeNode?
 )
 
 private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
@@ -206,12 +208,15 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     val effects = parseZeroOrMoreNodes(
         parseElement = ::parseVariableReference,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens.isNext(TokenType.SYMBOL_ARROW) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_ARROW) || tokens.isNext(TokenType.SYMBOL_FAT_ARROW) },
         tokens = tokens
     )
 
-    tokens.skip(TokenType.SYMBOL_ARROW)
-    val returnType = ::parseType.parse(tokens)
+    val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
+        ::parseType.parse(tokens)
+    } else {
+        null
+    }
 
     return FunctionSignature(
         typeParameters = typeParameters,
@@ -600,12 +605,10 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             val signature = parseFunctionSignature(tokens)
 
             val body = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
-                val returnExpression = parseExpression(tokens)
-                listOf(ReturnNode(returnExpression, source = returnExpression.source))
+                FunctionBody.Expression(parseExpression(tokens))
             } else {
-                parseFunctionStatements(tokens)
+                FunctionBody.Statements(parseFunctionStatements(tokens))
             }
-
 
             return FunctionExpressionNode(
                 typeParameters = signature.typeParameters,

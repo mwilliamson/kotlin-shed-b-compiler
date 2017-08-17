@@ -95,7 +95,7 @@ private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionDecla
 
 private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
     val arguments = node.arguments.map(ArgumentNode::name)
-    val body = node.body.map(::generateCode)
+    val body = node.body.statements.map(::generateCode)
 
     return object: JavascriptFunctionNode {
         override val arguments = arguments

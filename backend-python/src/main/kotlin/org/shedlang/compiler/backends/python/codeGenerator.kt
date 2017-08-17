@@ -127,7 +127,7 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
         name = name,
         // TODO: test renaming
         arguments = generateArguments(node.arguments, context),
-        body = generateCode(node.body, context),
+        body = generateCode(node.body.statements, context),
         source = NodeSource(node)
     )
 }
@@ -307,7 +307,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: FunctionExpressionNode): GeneratedExpression {
-            if (node.body.isEmpty()) {
+            if (node.body.statements.isEmpty()) {
                 return GeneratedExpression(
                     PythonLambdaNode(
                         arguments = generateArguments(node.arguments, context),
@@ -318,7 +318,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
             }
 
-            val statement = node.body.singleOrNull()
+            val statement = node.body.statements.singleOrNull()
             if (statement != null && statement is ReturnNode) {
                 val expression = generateCode(statement.expression, context)
                 if (expression.functions.isEmpty()) {

@@ -35,6 +35,13 @@ internal fun alwaysReturns(node: StatementNode): Boolean {
     })
 }
 
+private fun alwaysReturns(body: FunctionBody): Boolean {
+    return when (body) {
+        is FunctionBody.Expression -> true
+        is FunctionBody.Statements -> alwaysReturns(body.nodes)
+    }
+}
+
 private fun alwaysReturns(nodes: List<StatementNode>): Boolean {
     return nodes.any(::alwaysReturns)
 }

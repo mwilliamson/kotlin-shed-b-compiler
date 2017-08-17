@@ -198,22 +198,39 @@ data class UnionNode(
 interface FunctionNode : Node {
     val typeParameters: List<TypeParameterNode>
     val arguments: List<ArgumentNode>
-    val returnType: TypeNode
+    val returnType: TypeNode?
     val effects: List<VariableReferenceNode>
-    val body: List<StatementNode>
+    val body: FunctionBody
+}
+
+sealed class FunctionBody {
+    abstract val nodes: List<Node>
+    abstract val statements: List<StatementNode>
+
+    data class Statements(override val nodes: List<StatementNode>): FunctionBody() {
+        override val statements: List<StatementNode>
+            get() = nodes
+    }
+    data class Expression(val expression: ExpressionNode): FunctionBody() {
+        override val nodes: List<Node>
+            get() = listOf(expression)
+
+        override val statements: List<StatementNode>
+            get() = listOf(ReturnNode(expression, source = expression.source))
+    }
 }
 
 data class FunctionExpressionNode(
     override val typeParameters: List<TypeParameterNode>,
     override val arguments: List<ArgumentNode>,
-    override val returnType: TypeNode,
+    override val returnType: TypeNode?,
     override val effects: List<VariableReferenceNode>,
-    override val body: List<StatementNode>,
+    override val body: FunctionBody,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, ExpressionNode {
     override val children: List<Node>
-        get() = arguments + effects + returnType + body
+        get() = arguments + effects + listOfNotNull(returnType) + body.nodes
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -226,12 +243,15 @@ data class FunctionDeclarationNode(
     override val arguments: List<ArgumentNode>,
     override val returnType: TypeNode,
     override val effects: List<VariableReferenceNode>,
-    override val body: List<StatementNode>,
+    override val body: FunctionBody.Statements,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, VariableBindingNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = arguments + effects + returnType + body
+        get() = arguments + effects + returnType + body.nodes
+
+    val bodyStatements: List<StatementNode>
+        get() = body.nodes
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

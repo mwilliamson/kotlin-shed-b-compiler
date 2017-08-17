@@ -106,7 +106,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
                     context = context
                 )
                 resolveScope(
-                    body = node.body,
+                    body = node.body.nodes,
                     binders = node.arguments,
                     context = bodyContext
                 )

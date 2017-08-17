@@ -100,7 +100,7 @@ fun function(
     arguments = arguments,
     returnType = returnType,
     effects = effects,
-    body = body,
+    body = FunctionBody.Statements(body),
     source = anySource()
 )
 
@@ -115,7 +115,7 @@ fun functionExpression(
     arguments = arguments,
     returnType = returnType,
     effects = effects,
-    body = body,
+    body = FunctionBody.Statements(body),
     source = anySource()
 )
 
