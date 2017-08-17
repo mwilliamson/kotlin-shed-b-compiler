@@ -464,6 +464,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 OperationType(Operator.EQUALS, StringType, StringType) -> BoolType
                 OperationType(Operator.ADD, StringType, StringType) -> StringType
 
+                OperationType(Operator.EQUALS, BoolType, BoolType) -> BoolType
+
                 else -> throw InvalidOperationError(
                     operator = node.operator,
                     operands = listOf(leftType, rightType),
