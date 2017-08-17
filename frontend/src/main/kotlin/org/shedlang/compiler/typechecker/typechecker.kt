@@ -315,7 +315,14 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     val body = function.body
     val returnType = when (body) {
         is FunctionBody.Expression -> {
-            throw UnsupportedOperationException("TODO")
+            val returnTypeNode = function.returnType
+            if (returnTypeNode == null) {
+                inferType(body.expression, context)
+            } else {
+                val returnType = evalType(returnTypeNode, context)
+                verifyType(expression = body.expression, expected = returnType, context = context)
+                returnType
+            }
         }
         is FunctionBody.Statements -> {
             val returnTypeNode = function.returnType

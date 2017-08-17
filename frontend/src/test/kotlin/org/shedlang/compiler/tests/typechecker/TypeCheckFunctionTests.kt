@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
 
@@ -164,5 +165,36 @@ class TypeCheckFunctionTests {
         typeCheck(node, typeContext)
         // TODO: come up with a way of ensuring undefer() is eventually called
         typeContext.undefer()
+    }
+
+    @Test
+    fun whenExpressionBodyDoesNotMatchReturnTypeThenErrorIsThrown() {
+        val intType = typeReference("Int")
+        val node = functionExpression(
+            arguments = listOf(),
+            returnType = intType,
+            body = literalBool()
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to MetaType(IntType))
+        )
+        assertThat(
+            { inferType(node, typeContext) },
+            throwsUnexpectedType(expected = isIntType, actual = isBoolType)
+        )
+    }
+
+    @Test
+    fun whenExplicitReturnTypeIsMissingThenReturnTypeIsTypeOfExpressionBody() {
+        val intType = typeReference("Int")
+        val node = functionExpression(
+            arguments = listOf(),
+            returnType = null,
+            body = literalBool()
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to MetaType(IntType))
+        )
+        assertThat(inferType(node, typeContext), isFunctionType(returnType = isBoolType))
     }
 }

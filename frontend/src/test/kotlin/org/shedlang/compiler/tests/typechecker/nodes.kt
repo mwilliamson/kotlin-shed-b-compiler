@@ -67,6 +67,13 @@ fun throwsUnexpectedType(expected: Matcher<Type>, actual: Type): Matcher<() -> U
     ))
 }
 
+fun throwsUnexpectedType(expected: Matcher<Type>, actual: Matcher<Type>): Matcher<() -> Unit> {
+    return throws(allOf(
+        has(UnexpectedTypeError::expected, expected),
+        has(UnexpectedTypeError::actual, actual)
+    ))
+}
+
 fun throwsCompilerError(message: String): Matcher<() -> Unit> {
     return throws(
         has(CompilerError::message, equalTo(message))
