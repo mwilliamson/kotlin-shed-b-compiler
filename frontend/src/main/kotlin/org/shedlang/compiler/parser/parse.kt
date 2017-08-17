@@ -192,6 +192,26 @@ private data class ParsedFunction(
 )
 
 private fun parseFunction(tokens: TokenIterator<TokenType>): ParsedFunction {
+    val signature = parseFunctionSignature(tokens)
+    val body = parseFunctionStatements(tokens)
+
+    return ParsedFunction(
+        typeParameters = signature.typeParameters,
+        arguments = signature.arguments,
+        returnType = signature.returnType,
+        effects = signature.effects,
+        body = body
+    )
+}
+
+private data class FunctionSignature(
+    val typeParameters: List<TypeParameterNode>,
+    val arguments: List<ArgumentNode>,
+    val effects: List<VariableReferenceNode>,
+    val returnType: TypeNode
+)
+
+private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
     val typeParameters = parseTypeParameters(allowVariance = false, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
@@ -212,14 +232,12 @@ private fun parseFunction(tokens: TokenIterator<TokenType>): ParsedFunction {
 
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = ::parseType.parse(tokens)
-    val body = parseFunctionStatements(tokens)
 
-    return ParsedFunction(
+    return FunctionSignature(
         typeParameters = typeParameters,
         arguments = arguments,
-        returnType = returnType,
         effects = effects,
-        body = body
+        returnType = returnType
     )
 }
 
