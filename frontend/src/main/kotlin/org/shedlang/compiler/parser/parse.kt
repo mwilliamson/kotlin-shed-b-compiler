@@ -616,6 +616,9 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             val body = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
                 FunctionBody.Expression(parseExpression(tokens))
             } else {
+                if (signature.returnType == null) {
+                    throw MissingReturnTypeError("Function expression with statements body must have return type", source = source)
+                }
                 FunctionBody.Statements(parseFunctionStatements(tokens))
             }
 

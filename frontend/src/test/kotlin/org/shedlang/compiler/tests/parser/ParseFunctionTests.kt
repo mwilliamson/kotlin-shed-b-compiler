@@ -147,6 +147,15 @@ class ParseFunctionTests {
         )))
     }
 
+    @Test
+    fun errorIsThrownWhenFunctionExpressionWithStatementsBodyIsMissingReturnType() {
+        val source = "fun () { }"
+        assertThat(
+            { parseString(::parseExpression, source) },
+            throws(has(MissingReturnTypeError::message, equalTo("Function expression with statements body must have return type")))
+        )
+    }
+
     private fun isArgument(name: String, typeReference: String): Matcher<ArgumentNode> {
         return allOf(
             has(ArgumentNode::name, equalTo(name)),
