@@ -156,6 +156,8 @@ class InvalidOperationError(val operator: Operator, val operands: List<Type>, so
         "Operation ${operator} is not valid for operands ${operands.map({operand -> operand.shortDescription}).joinToString(", ")}",
         source
     )
+class MissingReturnTypeError(message: String, source: Source)
+    : TypeCheckError(message, source)
 
 interface NodeTypes {
     fun typeOf(node: VariableBindingNode): Type

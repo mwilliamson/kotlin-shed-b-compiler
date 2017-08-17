@@ -10,6 +10,7 @@ import org.shedlang.compiler.parser.parseFunctionDeclaration
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isInvariant
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.typechecker.MissingReturnTypeError
 
 class ParseFunctionTests {
     @Test
@@ -100,6 +101,15 @@ class ParseFunctionTests {
             isVariableReference("!a"),
             isVariableReference("!b")
         )))
+    }
+
+    @Test
+    fun errorIsRaisedWhenFunctionDeclarationDoesNotProvideReturnType() {
+        val source = "fun f() { }"
+        assertThat(
+            { parseString(::parseFunctionDeclaration, source) },
+            throws(has(MissingReturnTypeError::message, equalTo("Function declaration must have return type")))
+        )
     }
 
     @Test

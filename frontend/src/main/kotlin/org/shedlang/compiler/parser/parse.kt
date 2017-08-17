@@ -1,6 +1,7 @@
 package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.typechecker.MissingReturnTypeError
 import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
@@ -174,16 +175,19 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
     val signature = parseFunctionSignature(tokens)
     val body = parseFunctionStatements(tokens)
 
-    return FunctionDeclarationNode(
-        name = name,
-        typeParameters = signature.typeParameters,
-        arguments = signature.arguments,
-        // TODO:
-        returnType = signature.returnType!!,
-        effects = signature.effects,
-        body = FunctionBody.Statements(body),
-        source = source
-    )
+    if (signature.returnType == null) {
+        throw MissingReturnTypeError("Function declaration must have return type", source = source)
+    } else {
+        return FunctionDeclarationNode(
+            name = name,
+            typeParameters = signature.typeParameters,
+            arguments = signature.arguments,
+            returnType = signature.returnType,
+            effects = signature.effects,
+            body = FunctionBody.Statements(body),
+            source = source
+        )
+    }
 }
 
 private data class FunctionSignature(
@@ -205,10 +209,15 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
+    // TODO: allow trailing commas?
     val effects = parseZeroOrMoreNodes(
         parseElement = ::parseVariableReference,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens.isNext(TokenType.SYMBOL_ARROW) || tokens.isNext(TokenType.SYMBOL_FAT_ARROW) },
+        isEnd = {
+            tokens.isNext(TokenType.SYMBOL_ARROW) ||
+            tokens.isNext(TokenType.SYMBOL_FAT_ARROW) ||
+            tokens.isNext(TokenType.SYMBOL_OPEN_BRACE)
+        },
         tokens = tokens
     )
 
