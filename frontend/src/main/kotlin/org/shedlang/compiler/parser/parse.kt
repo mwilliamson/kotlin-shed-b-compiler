@@ -171,36 +171,16 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
 internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<TokenType>): FunctionDeclarationNode {
     tokens.skip(TokenType.KEYWORD_FUN)
     val name = parseIdentifier(tokens)
-    val function = parseFunction(tokens)
-    return FunctionDeclarationNode(
-        name = name,
-        typeParameters = function.typeParameters,
-        arguments = function.arguments,
-        returnType = function.returnType,
-        effects = function.effects,
-        body = function.body,
-        source = source
-    )
-}
-
-private data class ParsedFunction(
-    val typeParameters: List<TypeParameterNode>,
-    val arguments: List<ArgumentNode>,
-    val returnType: TypeNode,
-    val effects: List<VariableReferenceNode>,
-    val body: List<StatementNode>
-)
-
-private fun parseFunction(tokens: TokenIterator<TokenType>): ParsedFunction {
     val signature = parseFunctionSignature(tokens)
     val body = parseFunctionStatements(tokens)
-
-    return ParsedFunction(
+    return FunctionDeclarationNode(
+        name = name,
         typeParameters = signature.typeParameters,
         arguments = signature.arguments,
         returnType = signature.returnType,
         effects = signature.effects,
-        body = body
+        body = body,
+        source = source
     )
 }
 
@@ -617,13 +597,14 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
         }
         TokenType.KEYWORD_FUN -> {
             tokens.skip()
-            val function = parseFunction(tokens)
+            val signature = parseFunctionSignature(tokens)
+            val body = parseFunctionStatements(tokens)
             return FunctionExpressionNode(
-                typeParameters = function.typeParameters,
-                arguments = function.arguments,
-                returnType = function.returnType,
-                effects = function.effects,
-                body = function.body,
+                typeParameters = signature.typeParameters,
+                arguments = signature.arguments,
+                returnType = signature.returnType,
+                effects = signature.effects,
+                body = body,
                 source = source
             )
         }
