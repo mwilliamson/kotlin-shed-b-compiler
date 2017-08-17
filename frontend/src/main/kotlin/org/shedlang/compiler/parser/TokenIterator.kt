@@ -3,10 +3,13 @@ package org.shedlang.compiler.parser
 import org.shedlang.compiler.ast.StringSource
 
 internal class UnexpectedTokenException(
-    val location: StringSource,
+    location: StringSource,
     val expected: String,
     val actual: String
-) : Exception("Error at ${location.describe()}\nExpected: $expected\nBut got: $actual")
+) : ParseError(
+    "Error at ${location.describe()}\nExpected: $expected\nBut got: $actual",
+    location
+)
 
 internal class TokenIterator<T>(
     private val locate: (Int) -> StringSource,

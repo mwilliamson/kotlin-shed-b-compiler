@@ -2,9 +2,11 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isSequence
@@ -98,6 +100,15 @@ class ParseBinaryExpressionTests {
                 )
             )
         ))
+    }
+
+    @Test
+    fun positionalArgumentCannotAppearAfterNamedArgument() {
+        val source = "f(x=y, z)"
+        assertThat(
+            { parseString(::parseExpression, source) },
+            throws(has(ParseError::message, equalTo("Positional argument cannot appear after named argument")))
+        )
     }
 
     @Test

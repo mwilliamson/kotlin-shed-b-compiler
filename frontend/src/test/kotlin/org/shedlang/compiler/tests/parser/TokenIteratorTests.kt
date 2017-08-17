@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -41,7 +42,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.SYMBOL) }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, equalTo(stringSource(0))),
+                has(UnexpectedTokenException::location, cast(equalTo(stringSource(0)))),
                 has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))

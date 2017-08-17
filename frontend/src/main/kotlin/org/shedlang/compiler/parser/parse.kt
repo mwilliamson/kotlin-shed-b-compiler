@@ -486,20 +486,32 @@ private fun parseCallFromParens(
 }
 
 private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<ExpressionNode>, List<CallNamedArgumentNode>> {
-    val arguments = parseZeroOrMore(
+    val arguments = parseMany(
         parseElement = { tokens -> ::parseArgument.parse(tokens) },
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-        tokens = tokens
+        tokens = tokens,
+        allowZero = true,
+        allowTrailingSeparator = true
     )
-    // TODO: check named arguments appear after all positional arguments
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
-    val positionalArguments = arguments
-        .filterIsInstance<ParsedArgument.Positional>()
-        .map(ParsedArgument.Positional::expression)
-    val namedArguments = arguments
-        .filterIsInstance<ParsedArgument.Named>()
-        .map(ParsedArgument.Named::node)
+
+    val positionalArguments = mutableListOf<ExpressionNode>()
+    val namedArguments = mutableListOf<CallNamedArgumentNode>()
+
+    for (argument in arguments) {
+        when (argument) {
+            is ParsedArgument.Positional -> {
+                if (namedArguments.isEmpty()) {
+                    positionalArguments.add(argument.expression)
+                } else {
+                    throw ParseError("Positional argument cannot appear after named argument", location = argument.expression.source)
+                }
+            }
+            is ParsedArgument.Named -> namedArguments.add(argument.node)
+        }
+    }
+
     return Pair(positionalArguments, namedArguments)
 }
 
@@ -738,20 +750,42 @@ private fun <T> parseMany(
     allowTrailingSeparator: Boolean = false,
     allowZero: Boolean
 ) : List<T> {
+    return parseMany(
+        parseElement = parseElement,
+        parseSeparator = parseSeparator,
+        isEnd = isEnd,
+        tokens = tokens,
+        allowTrailingSeparator = allowTrailingSeparator,
+        allowZero = allowZero,
+        initial = mutableListOf<T>(),
+        reduce = { elements, element -> elements.add(element); elements }
+    )
+}
+
+private fun <T, R> parseMany(
+    parseElement: (TokenIterator<TokenType>) -> T,
+    parseSeparator: (TokenIterator<TokenType>) -> Unit,
+    isEnd: (TokenIterator<TokenType>) -> Boolean,
+    tokens: TokenIterator<TokenType>,
+    allowTrailingSeparator: Boolean,
+    allowZero: Boolean,
+    initial: R,
+    reduce: (R, T) -> R
+) : R {
     if (allowZero && isEnd(tokens)) {
-        return listOf()
+        return initial
     }
 
-    val elements = mutableListOf<T>()
+    var result = initial
 
     while (true) {
-        elements.add(parseElement(tokens))
+        result = reduce(result, parseElement(tokens))
         if (isEnd(tokens)) {
-            return elements
+            return result
         }
         parseSeparator(tokens)
         if (allowTrailingSeparator && isEnd(tokens)) {
-            return elements
+            return result
         }
     }
 }
