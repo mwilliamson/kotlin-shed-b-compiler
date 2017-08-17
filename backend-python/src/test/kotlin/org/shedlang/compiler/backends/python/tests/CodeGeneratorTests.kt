@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.CodeGenerationContext
+import org.shedlang.compiler.backends.python.GeneratedCode
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
 import org.shedlang.compiler.tests.*
@@ -106,10 +107,10 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonLambda(
+        assertThat(node, isGeneratedExpression(isPythonLambda(
             arguments = isSequence(equalTo("x"), equalTo("y")),
             body = isPythonNone()
-        ))
+        )))
     }
 
     @Test
@@ -121,34 +122,24 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonLambda(
+        assertThat(node, isGeneratedExpression(isPythonLambda(
             arguments = isSequence(equalTo("x"), equalTo("y")),
             body = isPythonIntegerLiteral(42)
-        ))
+        )))
     }
 
     @Test
     fun expressionStatementGeneratesExpressionStatement() {
         val shed = expressionStatement(literalInt(42))
-
         val node = generateCode(shed)
-
-        assertThat(node, cast(has(
-            PythonExpressionStatementNode::expression,
-            isPythonIntegerLiteral(42)
-        )))
+        assertThat(node, isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42))))
     }
 
     @Test
     fun returnStatementGeneratesReturnStatement() {
         val shed = returns(literalInt(42))
-
         val node = generateCode(shed)
-
-        assertThat(node, cast(has(
-            PythonReturnNode::expression,
-            isPythonIntegerLiteral(42)
-        )))
+        assertThat(node, isSequence(isPythonReturn(isPythonIntegerLiteral(42))))
     }
 
     @Test
@@ -161,15 +152,17 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, cast(allOf(
-            has(PythonIfStatementNode::condition, isPythonIntegerLiteral(42)),
-            has(PythonIfStatementNode::trueBranch, isSequence(
-                isPythonReturn(isPythonIntegerLiteral(0))
-            )),
-            has(PythonIfStatementNode::falseBranch, isSequence(
-                isPythonReturn(isPythonIntegerLiteral(1))
+        assertThat(node, isSequence(
+            cast(allOf(
+                has(PythonIfStatementNode::condition, isPythonIntegerLiteral(42)),
+                has(PythonIfStatementNode::trueBranch, isSequence(
+                    isPythonReturn(isPythonIntegerLiteral(0))
+                )),
+                has(PythonIfStatementNode::falseBranch, isSequence(
+                    isPythonReturn(isPythonIntegerLiteral(1))
+                ))
             ))
-        )))
+        ))
     }
 
     @Test
@@ -228,9 +221,11 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonAssignment(
-            target = isPythonVariableReference("x"),
-            expression = isPythonIntegerLiteral(42)
+        assertThat(node, isSequence(
+            isPythonAssignment(
+                target = isPythonVariableReference("x"),
+                expression = isPythonIntegerLiteral(42)
+            )
         ))
     }
 
@@ -238,7 +233,7 @@ class CodeGeneratorTests {
     fun unitLiteralGeneratesNone() {
         val shed = literalUnit()
         val node = generateCode(shed)
-        assertThat(node, isPythonNone())
+        assertThat(node, isGeneratedExpression(isPythonNone()))
     }
 
     @Test
@@ -247,7 +242,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonBooleanLiteral(true))
+        assertThat(node, isGeneratedExpression(isPythonBooleanLiteral(true)))
     }
 
     @Test
@@ -256,14 +251,14 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isPythonIntegerLiteral(42))
+        assertThat(node, isGeneratedExpression(isPythonIntegerLiteral(42)))
     }
 
     @Test
     fun stringLiteralGeneratesStringLiteral() {
         val shed = literalString("<string>")
         val node = generateCode(shed)
-        assertThat(node, isPythonStringLiteral("<string>"))
+        assertThat(node, isGeneratedExpression(isPythonStringLiteral("<string>")))
     }
 
     @Test
@@ -273,7 +268,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed, context(mapOf(shed to declaration)))
 
-        assertThat(node, isPythonVariableReference("x"))
+        assertThat(node, isGeneratedExpression(isPythonVariableReference("x")))
     }
 
     @TestFactory
@@ -293,11 +288,11 @@ class CodeGeneratorTests {
 
                 val node = generateCode(shed)
 
-                assertThat(node, isPythonBinaryOperation(
+                assertThat(node, isGeneratedExpression(isPythonBinaryOperation(
                     operator = equalTo(operator.second),
                     left = isPythonIntegerLiteral(0),
                     right = isPythonIntegerLiteral(1)
-                ))
+                )))
             })
         })
     }
@@ -320,10 +315,10 @@ class CodeGeneratorTests {
         ))
         val node = generateCode(shed, context)
 
-        assertThat(node, isPythonFunctionCall(
+        assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("isinstance"),
             isSequence(isPythonVariableReference("x"), isPythonVariableReference("X"))
-        ))
+        )))
     }
 
     @Test
@@ -338,11 +333,11 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed, context(mapOf(function to declaration)))
 
-        assertThat(node, isPythonFunctionCall(
+        assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("f"),
             isSequence(isPythonIntegerLiteral(42)),
             isMap("x" to isPythonBooleanLiteral(true))
-        ))
+        )))
     }
 
     @Test
@@ -353,18 +348,20 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed, context(mapOf(receiver to declaration)))
 
-        assertThat(node, isPythonAttributeAccess(
+        assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
             attributeName = equalTo("y")
-        ))
+        )))
     }
 
     @Test
     fun namesHavePep8Casing() {
         assertThat(
             generateCode(valStatement(name = "oneTwoThree")),
-            isPythonAssignment(
-                target = isPythonVariableReference("one_two_three")
+            isSequence(
+                isPythonAssignment(
+                    target = isPythonVariableReference("one_two_three")
+                )
             )
         )
         assertThat(
@@ -427,7 +424,7 @@ class CodeGeneratorTests {
     private fun isPythonLambda(
         arguments: Matcher<List<String>> = anything,
         body: Matcher<PythonExpressionNode> = anything
-    ) = cast(allOf(
+    ): Matcher<PythonExpressionNode> = cast(allOf(
         has(PythonLambdaNode::arguments, arguments),
         has(PythonLambdaNode::body, body)
     ))
@@ -435,6 +432,10 @@ class CodeGeneratorTests {
     private fun isPythonReturn(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>
         = cast(has(PythonReturnNode::expression, expression))
+
+    private fun isPythonExpressionStatement(expression: Matcher<PythonExpressionNode>)
+        : Matcher<PythonStatementNode>
+        = cast(has(PythonExpressionStatementNode::expression, expression))
 
     private fun isPythonAssignment(
         target: Matcher<PythonExpressionNode>,
@@ -496,4 +497,9 @@ class CodeGeneratorTests {
         has(PythonAttributeAccessNode::receiver, receiver),
         has(PythonAttributeAccessNode::attributeName, attributeName)
     ))
+
+    private fun isGeneratedExpression(value: Matcher<PythonExpressionNode>) = allOf(
+        has(GeneratedCode<PythonExpressionNode>::value, value),
+        has(GeneratedCode<PythonExpressionNode>::functions, isEmpty)
+    )
 }
