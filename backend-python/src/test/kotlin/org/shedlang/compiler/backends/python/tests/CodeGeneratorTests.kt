@@ -81,7 +81,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionGeneratesFunction() {
+    fun functionDeclarationGeneratesFunction() {
         val shed = function(
             name = "f",
             arguments = listOf(argument("x"), argument("y")),
@@ -94,6 +94,36 @@ class CodeGeneratorTests {
             name = equalTo("f"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isPythonReturn(isPythonIntegerLiteral(42)))
+        ))
+    }
+
+    @Test
+    fun functionExpressionWithNoStatementsGeneratesLambda() {
+        val shed = functionExpression(
+            arguments = listOf(argument("x"), argument("y")),
+            body = listOf()
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonLambda(
+            arguments = isSequence(equalTo("x"), equalTo("y")),
+            body = isPythonNone()
+        ))
+    }
+
+    @Test
+    fun functionExpressionWithSingleReturnStatementGeneratesLambda() {
+        val shed = functionExpression(
+            arguments = listOf(argument("x"), argument("y")),
+            body = listOf(returns(literalInt(42)))
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonLambda(
+            arguments = isSequence(equalTo("x"), equalTo("y")),
+            body = isPythonIntegerLiteral(42)
         ))
     }
 
@@ -393,6 +423,14 @@ class CodeGeneratorTests {
             has(PythonFunctionNode::arguments, arguments),
             has(PythonFunctionNode::body, body)
         ))
+
+    private fun isPythonLambda(
+        arguments: Matcher<List<String>> = anything,
+        body: Matcher<PythonExpressionNode> = anything
+    ) = cast(allOf(
+        has(PythonLambdaNode::arguments, arguments),
+        has(PythonLambdaNode::body, body)
+    ))
 
     private fun isPythonReturn(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>

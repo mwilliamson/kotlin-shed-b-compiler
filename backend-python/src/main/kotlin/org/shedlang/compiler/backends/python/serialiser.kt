@@ -113,6 +113,10 @@ internal fun serialise(node: PythonExpressionNode): String {
             val receiver = serialiseSubExpression(node, node.receiver, associative = true)
             return "${receiver}.${node.attributeName}"
         }
+
+        override fun visit(node: PythonLambdaNode): String {
+            throw UnsupportedOperationException()
+        }
     })
 }
 
@@ -184,6 +188,10 @@ private fun precedence(node: PythonExpressionNode): Int {
 
         override fun visit(node: PythonAttributeAccessNode): Int {
             return 16
+        }
+
+        override fun visit(node: PythonLambdaNode): Int {
+            throw UnsupportedOperationException()
         }
     })
 }

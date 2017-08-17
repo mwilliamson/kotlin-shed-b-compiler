@@ -57,6 +57,16 @@ data class PythonFunctionNode(
     }
 }
 
+data class PythonLambdaNode(
+    val arguments: List<String>,
+    val body: PythonExpressionNode,
+    override val source: Source
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
 data class PythonExpressionStatementNode(
     val expression: PythonExpressionNode,
     override val source: Source
@@ -114,6 +124,7 @@ interface PythonExpressionNode : PythonNode {
         fun visit(node: PythonBinaryOperationNode): T
         fun visit(node: PythonFunctionCallNode): T
         fun visit(node: PythonAttributeAccessNode): T
+        fun visit(node: PythonLambdaNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T

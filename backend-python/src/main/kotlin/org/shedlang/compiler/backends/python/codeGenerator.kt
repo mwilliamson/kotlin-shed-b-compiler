@@ -118,11 +118,14 @@ private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationC
         // TODO: test renaming
         name = context.name(node),
         // TODO: test renaming
-        arguments = node.arguments.map({ argument -> context.name(argument) }),
+        arguments = generateArguments(node.arguments, context),
         body = generateCode(node.body, context),
         source = NodeSource(node)
     )
 }
+
+private fun generateArguments(arguments: List<ArgumentNode>, context: CodeGenerationContext) =
+    arguments.map({ argument -> context.name(argument) })
 
 internal fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<PythonStatementNode> {
     return statements.map({ statement -> generateCode(statement, context) })
@@ -221,7 +224,23 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: FunctionExpressionNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            if (node.body.isEmpty()) {
+                return PythonLambdaNode(
+                    arguments = generateArguments(node.arguments, context),
+                    body = PythonNoneLiteralNode(source = NodeSource(node)),
+                    source = NodeSource(node)
+                )
+            }
+            val statement = node.body.singleOrNull()
+            if (statement != null && statement is ReturnNode) {
+                return PythonLambdaNode(
+                    arguments = generateArguments(node.arguments, context),
+                    body = generateCode(statement.expression, context),
+                    source = NodeSource(node)
+                )
+            } else {
+                throw UnsupportedOperationException("not implemented")
+            }
         }
     })
 }
