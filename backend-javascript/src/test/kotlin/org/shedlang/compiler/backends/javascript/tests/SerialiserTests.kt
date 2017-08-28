@@ -361,7 +361,7 @@ class SerialiserTests {
         val node = jsObject(mapOf("x" to jsLiteralBool(true)))
         val output = indentedSerialise(node)
         assertThat(output, equalTo(listOf(
-            "    {",
+            "{",
             "        x: true",
             "    }"
         ).joinToString("\n")))
@@ -372,7 +372,7 @@ class SerialiserTests {
         val node = jsObject(mapOf("x" to jsLiteralBool(true), "y" to jsLiteralBool(false)))
         val output = indentedSerialise(node)
         assertThat(output, equalTo(listOf(
-            "    {",
+            "{",
             "        x: true,",
             "        y: false",
             "    }"

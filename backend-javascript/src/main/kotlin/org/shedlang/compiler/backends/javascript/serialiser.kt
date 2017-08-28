@@ -122,7 +122,7 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
             if (node.properties.isEmpty()) {
                 return "{}"
             } else {
-                val open = line("{", indentation = indentation)
+                val open = "{\n"
                 val properties = node.properties.entries.mapIndexed(fun(index, property): String {
                     val value = serialise(property.value, indentation = indentation + 1)
                     val comma = if (index == node.properties.size - 1) "" else ","
