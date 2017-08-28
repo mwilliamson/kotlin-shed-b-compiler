@@ -9,6 +9,7 @@ import org.shedlang.compiler.backends.python.ast.PythonFunctionNode
 import org.shedlang.compiler.backends.python.ast.PythonOperator
 import org.shedlang.compiler.backends.python.ast.PythonStatementNode
 import org.shedlang.compiler.backends.python.serialise
+import org.shedlang.compiler.tests.literalBool
 
 class SerialiserTests {
     @Test
@@ -403,6 +404,16 @@ class SerialiserTests {
         )
         val output = serialise(node)
         assertThat(output, equalTo("x.y"))
+    }
+
+    @Test
+    fun lambdaSerialisation() {
+        val node = pythonLambda(
+            arguments = listOf("x", "y"),
+            body = pythonLiteralBoolean(true)
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("lambda x, y: True"))
     }
 
     private fun indentedSerialise(node: PythonFunctionNode): String {

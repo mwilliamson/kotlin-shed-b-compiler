@@ -94,3 +94,12 @@ fun pythonAttributeAccess(
     attributeName = attributeName,
     source = anySource()
 )
+
+fun pythonLambda(
+    arguments: List<String>,
+    body: PythonExpressionNode
+) = PythonLambdaNode(
+    arguments = arguments,
+    body = body,
+    source = anySource()
+)

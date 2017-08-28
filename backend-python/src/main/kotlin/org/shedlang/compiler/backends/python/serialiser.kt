@@ -116,7 +116,8 @@ internal fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonLambdaNode): String {
-            throw UnsupportedOperationException()
+            val arguments = node.arguments.joinToString(", ")
+            return "lambda ${arguments}: ${serialise(node.body)}"
         }
     })
 }
