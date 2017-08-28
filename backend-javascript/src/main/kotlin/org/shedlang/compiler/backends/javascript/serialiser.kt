@@ -43,7 +43,8 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         }
 
         override fun visit(node: JavascriptFunctionDeclarationNode): String {
-            return serialiseFunction(node.name, node, indentation = indentation)
+            val function = serialiseFunction(node.name, node, indentation = indentation)
+            return indent(function, indentation = indentation) + "\n"
         }
 
         override fun visit(node: JavascriptConstNode): String {
@@ -58,14 +59,11 @@ private fun serialiseFunction(
     node: JavascriptFunctionNode,
     indentation: Int
 ): String {
-    val signature = line(
-        "function " +
-            name.orEmpty() +
-            "(" + node.arguments.joinToString(", ") + ") {",
-        indentation = indentation
-    )
+    val signature = "function " +
+        name.orEmpty() +
+        "(" + node.arguments.joinToString(", ") + ") {\n"
     val body = serialiseBlock(node.body, indentation = indentation)
-    return signature + body + line("}", indentation = indentation)
+    return signature + body + indent("}", indentation = indentation)
 }
 
 private fun serialiseBlock(
