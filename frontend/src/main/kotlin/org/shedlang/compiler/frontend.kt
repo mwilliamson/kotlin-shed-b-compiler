@@ -26,36 +26,6 @@ class Module(
     })
 }
 
-private val anyTypeNodeId = freshNodeId()
-private val intTypeNodeId = freshNodeId()
-private val unitTypeNodeId = freshNodeId()
-private val stringTypeNodeId = freshNodeId()
-private val boolTypeNodeId = freshNodeId()
-
-private val ioEffectNodeId = freshNodeId()
-
-private val printNodeId = freshNodeId()
-private val intToStringNodeId = freshNodeId()
-
-private val globalNodeTypes = mapOf(
-    anyTypeNodeId to MetaType(AnyType),
-    unitTypeNodeId to MetaType(UnitType),
-    intTypeNodeId to MetaType(IntType),
-    stringTypeNodeId to MetaType(StringType),
-    boolTypeNodeId to MetaType(BoolType),
-
-    ioEffectNodeId to EffectType(IoEffect),
-
-    printNodeId to FunctionType(
-        typeParameters = listOf(),
-        positionalArguments = listOf(StringType),
-        namedArguments = mapOf(),
-        effects = setOf(IoEffect),
-        returns = UnitType
-    ),
-    intToStringNodeId to positionalFunctionType(listOf(IntType), StringType)
-)
-
 fun read(base: Path, path: Path): FrontEndResult {
     return readAll(base, listOf(path))
 }
@@ -87,26 +57,44 @@ private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
     return FrontEndResult(modules = modules.values.toList())
 }
 
+private data class Builtin(
+    val name: String,
+    val type: Type
+) {
+    val nodeId = freshNodeId()
+}
+
+private val builtins = listOf(
+    Builtin("Any", MetaType(AnyType)),
+    Builtin("Unit", MetaType(UnitType)),
+    Builtin("Int", MetaType(IntType)),
+    Builtin("String", MetaType(StringType)),
+    Builtin("Bool", MetaType(BoolType)),
+
+    Builtin("!io", EffectType(IoEffect)),
+
+    Builtin("print", FunctionType(
+        typeParameters = listOf(),
+        positionalArguments = listOf(StringType),
+        namedArguments = mapOf(),
+        effects = setOf(IoEffect),
+        returns = UnitType
+    )),
+    Builtin("intToString", positionalFunctionType(listOf(IntType), StringType))
+)
+
 private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
     val path = base.resolve(relativePath)
     val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
 
-    val resolvedReferences = resolve(moduleNode, mapOf(
-        "Any" to anyTypeNodeId,
-        "Unit" to unitTypeNodeId,
-        "Int" to intTypeNodeId,
-        "String" to stringTypeNodeId,
-        "Bool" to boolTypeNodeId,
-
-        "!io" to ioEffectNodeId,
-
-        "print" to printNodeId,
-        "intToString" to intToStringNodeId
-    ))
+    val resolvedReferences = resolve(
+        moduleNode,
+        builtins.associate({ builtin -> builtin.name to builtin.nodeId})
+    )
 
     val typeCheckResult = typeCheck(
         moduleNode,
-        nodeTypes = globalNodeTypes,
+        nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type}),
         resolvedReferences = resolvedReferences,
         getModule = { importPath ->
             val result = getModule(resolveModule(relativePath, importPath))
