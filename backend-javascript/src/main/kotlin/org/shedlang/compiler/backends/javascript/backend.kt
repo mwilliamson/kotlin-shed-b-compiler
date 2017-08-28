@@ -86,4 +86,4 @@ private val stdlib = """
         declareShape: declareShape,
         isType: isType
     };
-"""
+""".trimIndent()
