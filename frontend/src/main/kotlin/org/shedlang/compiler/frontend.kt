@@ -30,6 +30,7 @@ private val anyTypeNodeId = freshNodeId()
 private val intTypeNodeId = freshNodeId()
 private val unitTypeNodeId = freshNodeId()
 private val stringTypeNodeId = freshNodeId()
+private val boolTypeNodeId = freshNodeId()
 
 private val ioEffectNodeId = freshNodeId()
 
@@ -41,6 +42,7 @@ private val globalNodeTypes = mapOf(
     unitTypeNodeId to MetaType(UnitType),
     intTypeNodeId to MetaType(IntType),
     stringTypeNodeId to MetaType(StringType),
+    boolTypeNodeId to MetaType(BoolType),
 
     ioEffectNodeId to EffectType(IoEffect),
 
@@ -94,6 +96,7 @@ private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Modu
         "Unit" to unitTypeNodeId,
         "Int" to intTypeNodeId,
         "String" to stringTypeNodeId,
+        "Bool" to boolTypeNodeId,
 
         "!io" to ioEffectNodeId,
 
