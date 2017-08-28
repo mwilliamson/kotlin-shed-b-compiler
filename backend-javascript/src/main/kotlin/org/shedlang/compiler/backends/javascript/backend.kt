@@ -37,7 +37,12 @@ private fun compileModule(module: Module, writer: Writer) {
     if (module.hasMain()) {
         writer.write("""
             if (require.main === module) {
-                main();
+                (function() {
+                    const exitCode = main();
+                    if (exitCode != null) {
+                        process.exit(exitCode);
+                    }
+                })();
             }
         """.trimIndent())
     }

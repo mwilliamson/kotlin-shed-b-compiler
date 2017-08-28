@@ -48,9 +48,16 @@ private fun compileModule(module: Module, writer: Writer) {
     val contents = stdlib + "\n" + serialise(generateCode) + "\n"
     writer.write(contents)
     if (module.hasMain()) {
+        // TODO: avoid _shed_main collision
         writer.write("""
+            def _shed_main():
+                import sys as sys
+                exit_code = main()
+                if exit_code is not None:
+                    sys.exit(exit_code)
+
             if __name__ == "__main__":
-                main()
+                _shed_main()
         """.trimIndent())
     }
 }

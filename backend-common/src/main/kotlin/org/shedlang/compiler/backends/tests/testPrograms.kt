@@ -19,16 +19,31 @@ private data class TestProgramFiles(val base: Path, val main: Path)
 fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(file): TestProgram {
         val text = file.base.resolve(file.main).toFile().readText()
+
         val name = Regex("^// name:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)!!.groupValues[1]
-        val stdout = Regex("^// stdout:((?:\n//   .*)*)", setOf(RegexOption.MULTILINE))
-            .find(text)!!
-            .groupValues[1]
-            .trimMargin("//   ") + "\n"
+
+        val exitCodeMatch = Regex("^// exitCode:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)
+        val exitCode = if (exitCodeMatch == null) {
+            0
+        } else {
+            exitCodeMatch.groupValues[1].toInt()
+        }
+
+        val stdoutMatch = Regex("^// stdout:((?:\n//   .*)*)", setOf(RegexOption.MULTILINE))
+            .find(text)
+        val stdout = if (stdoutMatch == null) {
+            ""
+        } else {
+            stdoutMatch
+                .groupValues[1]
+                .trimMargin("//   ") + "\n"
+        }
+
         return TestProgram(
             name = name,
             base = file.base,
             main = file.main,
-            expectedResult = ExecutionResult(stdout = stdout)
+            expectedResult = ExecutionResult(stdout = stdout, exitCode = exitCode)
         )
     })
 }
