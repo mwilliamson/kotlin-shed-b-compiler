@@ -252,7 +252,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 PythonFunctionCallNode(
                     function = PythonVariableReferenceNode("isinstance", source = node.source),
                     arguments = listOf(expression.value, generateCode(node.type, context)),
-                    keywordArguments = mapOf(),
+                    keywordArguments = listOf(),
                     source = node.source
                 ),
                 functions = expression.functions
@@ -283,12 +283,12 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
 
-        private fun generateNamedArguments(node: CallNode): GeneratedCode<Map<String, PythonExpressionNode>> {
-            val results = node.namedArguments.associate({ argument ->
+        private fun generateNamedArguments(node: CallNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
+            val results = node.namedArguments.map({ argument ->
                 argument.name to generateCode(argument.expression, context)
             })
             return GeneratedCode(
-                results.mapValues({ (_, value) -> value.value }),
+                results.map({ (key, value) -> key to value.value }),
                 results.flatMap({ (_, value) -> value.functions })
             )
         }

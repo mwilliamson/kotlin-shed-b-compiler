@@ -104,8 +104,7 @@ internal fun serialise(node: PythonExpressionNode): String {
         override fun visit(node: PythonFunctionCallNode): String {
             val receiver = serialiseSubExpression(node, node.function, associative = true)
             val positionals = node.arguments.map(::serialise)
-            // TODO: order by name
-            val keywords = node.keywordArguments.map({ argument -> "${argument.key}=${serialise(argument.value)}" })
+            val keywords = node.keywordArguments.map({ (key, value) -> "${key}=${serialise(value)}" })
             val arguments = (positionals + keywords).joinToString(", ")
             return "${receiver}(${arguments})"
         }

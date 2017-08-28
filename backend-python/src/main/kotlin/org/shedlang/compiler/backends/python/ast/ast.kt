@@ -195,7 +195,7 @@ enum class PythonOperator {
 data class PythonFunctionCallNode(
     val function: PythonExpressionNode,
     val arguments: List<PythonExpressionNode>,
-    val keywordArguments: Map<String, PythonExpressionNode>,
+    val keywordArguments: List<Pair<String, PythonExpressionNode>>,
     override val source: Source
 ): PythonExpressionNode {
     override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {

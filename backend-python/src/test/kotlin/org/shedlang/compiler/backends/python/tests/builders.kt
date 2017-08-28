@@ -78,7 +78,7 @@ fun pythonBinaryOperation(
 fun pythonFunctionCall(
     function: PythonExpressionNode,
     arguments: List<PythonExpressionNode>,
-    keywordArguments: Map<String, PythonExpressionNode> = mapOf()
+    keywordArguments: List<Pair<String, PythonExpressionNode>> = listOf()
 ) = PythonFunctionCallNode(
     function = function,
     arguments = arguments,

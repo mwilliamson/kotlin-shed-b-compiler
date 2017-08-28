@@ -9,7 +9,6 @@ import org.shedlang.compiler.backends.python.ast.PythonFunctionNode
 import org.shedlang.compiler.backends.python.ast.PythonOperator
 import org.shedlang.compiler.backends.python.ast.PythonStatementNode
 import org.shedlang.compiler.backends.python.serialise
-import org.shedlang.compiler.tests.literalBool
 
 class SerialiserTests {
     @Test
@@ -361,7 +360,7 @@ class SerialiserTests {
                 pythonVariableReference("x"),
                 pythonVariableReference("y")
             ),
-            keywordArguments = mapOf(
+            keywordArguments = listOf(
                 "z" to pythonLiteralInt(1)
             )
         )

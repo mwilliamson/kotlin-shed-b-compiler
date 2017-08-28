@@ -45,6 +45,13 @@ fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
     }
 }
 
+fun <T1, T2> isPair(first: Matcher<T1>, second: Matcher<T2>): Matcher<Pair<T1, T2>> {
+    return allOf(
+        has(Pair<T1, T2>::first, first),
+        has(Pair<T1, T2>::second, second)
+    )
+}
+
 private fun indent(value: String): String {
     val indentation = "  "
     val indexWidth = 2

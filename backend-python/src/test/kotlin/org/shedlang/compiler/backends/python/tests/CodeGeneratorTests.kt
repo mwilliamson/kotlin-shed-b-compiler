@@ -353,7 +353,7 @@ class CodeGeneratorTests {
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("f"),
             isSequence(isPythonIntegerLiteral(42)),
-            isMap("x" to isPythonBooleanLiteral(true))
+            isSequence(isPair(equalTo("x"), isPythonBooleanLiteral(true)))
         )))
     }
 
@@ -498,7 +498,7 @@ class CodeGeneratorTests {
     private fun isPythonFunctionCall(
         function: Matcher<PythonExpressionNode>,
         arguments: Matcher<List<PythonExpressionNode>> = isSequence(),
-        keywordArguments: Matcher<Map<String, PythonExpressionNode>> = isMap()
+        keywordArguments: Matcher<List<Pair<String, PythonExpressionNode>>> = isSequence()
     ) : Matcher<PythonExpressionNode>
     = cast(allOf(
         has(PythonFunctionCallNode::function, function),
