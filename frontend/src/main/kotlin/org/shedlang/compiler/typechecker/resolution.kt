@@ -100,18 +100,11 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is FunctionDeclarationNode -> {
             context.defer(node, {
-                val bodyContext = resolveScope(
-                    binders = node.typeParameters,
-                    body = node.effects + listOf(node.returnType) + node.arguments,
-                    context = context
-                )
-                resolveScope(
-                    body = node.body.nodes,
-                    binders = node.arguments,
-                    context = bodyContext
-                )
+                resolveFunction(node, context)
             })
         }
+
+        is FunctionExpressionNode -> resolveFunction(node, context)
 
         is ShapeNode -> {
             context.defer(node, {
@@ -158,6 +151,19 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             }
         }
     }
+}
+
+private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
+    val bodyContext = resolveScope(
+        binders = node.typeParameters,
+        body = node.effects + listOf(node.returnType).filterNotNull() + node.arguments,
+        context = context
+    )
+    resolveScope(
+        body = node.body.nodes,
+        binders = node.arguments,
+        context = bodyContext
+    )
 }
 
 private fun resolveScope(

@@ -68,10 +68,25 @@ class ResolutionTests {
     }
 
     @Test
-    fun functionArgumentsAreAddedToScope() {
+    fun functionDeclarationArgumentsAreAddedToScope() {
         val reference = variableReference("x")
         val argument = argument(name = "x", type = typeReference("Int"))
         val node = function(
+            arguments = listOf(argument),
+            returnType = typeReference("Int"),
+            body = listOf(returns(reference))
+        )
+
+        val references = resolve(node, globals = mapOf("Int" to -1))
+
+        assertThat(references[reference], equalTo(argument.nodeId))
+    }
+
+    @Test
+    fun functionExpressionArgumentsAreAddedToScope() {
+        val reference = variableReference("x")
+        val argument = argument(name = "x", type = typeReference("Int"))
+        val node = functionExpression(
             arguments = listOf(argument),
             returnType = typeReference("Int"),
             body = listOf(returns(reference))
