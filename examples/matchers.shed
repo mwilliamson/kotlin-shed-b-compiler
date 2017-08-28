@@ -1,0 +1,68 @@
+// name: matchers
+// stdout:
+//   expected world
+//   but was hello
+module example;
+
+fun main() !io -> Unit {
+    val result = assertThat("hello", isString("world"));
+    if (result is Failure) {
+        print(result.message);
+    }
+}
+
+fun assertThat[T](value: T, matcher: Matcher[T]) -> Result {
+    val result = matcher.match(value);
+    if (result is Failure) {
+        return Failure(message = "expected " + matcher.description + "\nbut " + result.message);
+    } else {
+        return result;
+    }
+}
+
+fun anything() -> Matcher[Any] {
+    return Matcher(
+        description = "anything",
+        match = fun (x: Any) -> Result { return success; }
+    );
+}
+
+fun isString(value: String) -> Matcher[String] {
+    return describingMatcher(
+        value,
+        fun (string: String) => string,
+        fun (actual: String) => actual == value,
+    );
+}
+
+fun describingMatcher[T](
+    value: T,
+    toString: (T) -> String,
+    match: (T) -> Bool
+) -> Matcher[T] {
+    return Matcher(
+        description = toString(value),
+        match = fun (actual: T) -> Result {
+            if (match(actual)) {
+                return success;
+            } else {
+                return failure("was " + toString(actual));
+            }
+        },
+    );
+}
+
+shape Matcher[-T] {
+    description: String,
+    match: (T) -> Result,
+}
+
+union Result = Success | Failure;
+shape Success { }
+val success = Success();
+shape Failure {
+    message: String,
+}
+fun failure(message: String) -> Failure {
+    return Failure(message=message);
+}
