@@ -23,7 +23,7 @@ fun assertThat[T](value: T, matcher: Matcher[T]) -> Result {
 fun anything() -> Matcher[Any] {
     return Matcher(
         description = "anything",
-        match = fun (x: Any) -> Result { return success; }
+        match = fun (x: Any) => success,
     );
 }
 
