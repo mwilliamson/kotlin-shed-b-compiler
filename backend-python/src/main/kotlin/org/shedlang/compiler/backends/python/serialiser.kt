@@ -21,13 +21,13 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         override fun visit(node: PythonClassNode): String {
             val declaration = line("class ${node.name}(object):")
             val body = serialiseBlock(node, node.body, indentation)
-            return declaration + body
+            return ensureTrailingBlankLine(declaration + body)
         }
 
         override fun visit(node: PythonFunctionNode): String {
             val signature = line("def " + node.name + "(" + node.arguments.joinToString(", ") + "):")
             val body = serialiseBlock(node, node.body, indentation)
-            return signature + body
+            return ensureTrailingBlankLine(signature + body)
         }
 
         override fun visit(node: PythonExpressionStatementNode): String {
@@ -195,4 +195,14 @@ private fun precedence(node: PythonExpressionNode): Int {
             throw UnsupportedOperationException()
         }
     })
+}
+
+private fun ensureTrailingBlankLine(value: String): String {
+    if (value.endsWith("\n\n")) {
+        return value
+    } else if (value.endsWith("\n")) {
+        return value + "\n"
+    } else {
+        return value + "\n\n"
+    }
 }

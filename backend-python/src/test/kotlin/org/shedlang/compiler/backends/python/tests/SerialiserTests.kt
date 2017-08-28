@@ -45,6 +45,7 @@ class SerialiserTests {
             equalTo(listOf(
                 "    def f():",
                 "        pass",
+                "",
                 ""
             ).joinToString("\n"))
         )
@@ -59,6 +60,23 @@ class SerialiserTests {
             equalTo(listOf(
                 "    def f():",
                 "        return 42",
+                "",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun nestedFunctionsDoNotAccumulateTrailingNewlines() {
+        assertThat(
+            indentedSerialise(pythonFunction(name = "f", body = listOf(
+                pythonFunction(name="g", body = listOf())
+            ))),
+            equalTo(listOf(
+                "    def f():",
+                "        def g():",
+                "            pass",
+                "",
                 ""
             ).joinToString("\n"))
         )
@@ -71,6 +89,7 @@ class SerialiserTests {
             equalTo(listOf(
                 "    class X(object):",
                 "        pass",
+                "",
                 ""
             ).joinToString("\n"))
         )
@@ -85,6 +104,7 @@ class SerialiserTests {
             equalTo(listOf(
                 "    class X(object):",
                 "        True",
+                "",
                 ""
             ).joinToString("\n"))
         )
@@ -99,6 +119,7 @@ class SerialiserTests {
             equalTo(listOf(
                 "    def f(x, y):",
                 "        pass",
+                "",
                 ""
             ).joinToString("\n"))
         )
