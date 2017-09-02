@@ -813,7 +813,7 @@ private class TypeConstraintSolver(
                 closed.add(from)
                 return true
             } else {
-                return isEquivalentType(boundType, to)
+                return coerce(from = boundType, to = to)
             }
         }
 

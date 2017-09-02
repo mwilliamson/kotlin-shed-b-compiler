@@ -150,6 +150,26 @@ class TypeConstraintsTests {
     }
 
     @Test
+    fun canCoerceBoundTypeParameterToOtherTypeParameterBoundToSuperType() {
+        val firstTypeParameter = invariantTypeParameter("T")
+        val secondTypeParameter = invariantTypeParameter("U")
+        assertThat(
+            coerce(
+                listOf(
+                    firstTypeParameter to functionType(returns = StringType),
+                    secondTypeParameter to functionType(returns = AnyType),
+                    functionType(returns = firstTypeParameter) to functionType(returns = secondTypeParameter)
+                ),
+                parameters = setOf(firstTypeParameter, secondTypeParameter)
+            ),
+            isSuccess(
+                firstTypeParameter to functionType(returns = StringType),
+                secondTypeParameter to functionType(returns = AnyType)
+            )
+        )
+    }
+
+    @Test
     fun cannotCoerceTypeParametersToDistinctTypes() {
         // TODO: could be the bottom type instead
         val typeParameter = invariantTypeParameter("T")
