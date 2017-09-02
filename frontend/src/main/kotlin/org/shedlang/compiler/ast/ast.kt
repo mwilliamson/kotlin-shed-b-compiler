@@ -119,7 +119,7 @@ data class FunctionTypeNode(
     override val nodeId: Int = freshNodeId()
 ): StaticNode {
     override val children: List<Node>
-        get() = arguments + listOf(returnType)
+        get() = arguments + effects + listOf(returnType)
 
     override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
         return visitor.visit(this)
