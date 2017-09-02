@@ -30,7 +30,7 @@ internal fun coerce(
             return CoercionResult.Failure
         }
     }
-    return CoercionResult.Success(solver.bindings)
+    return CoercionResult.Success(solver.typeBindings)
 }
 
 internal sealed class CoercionResult {
@@ -40,7 +40,7 @@ internal sealed class CoercionResult {
 
 internal class TypeConstraintSolver(
     private val parameters: Set<TypeParameter>,
-    internal val bindings: MutableMap<TypeParameter, Type> = mutableMapOf(),
+    internal val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf(),
     private val closed: MutableSet<TypeParameter> = mutableSetOf()
 ) {
     fun coerce(from: Type, to: Type): Boolean {
@@ -83,22 +83,22 @@ internal class TypeConstraintSolver(
         }
 
         if (to is TypeParameter && to in parameters) {
-            val boundType = bindings[to]
+            val boundType = typeBindings[to]
             if (boundType == null) {
-                bindings[to] = from
+                typeBindings[to] = from
                 return true
             } else if (to in closed) {
                 return coerce(from = from, to = boundType)
             } else {
-                bindings[to] = union(boundType, from)
+                typeBindings[to] = union(boundType, from)
                 return true
             }
         }
 
         if (from is TypeParameter && from in parameters) {
-            val boundType = bindings[from]
+            val boundType = typeBindings[from]
             if (boundType == null) {
-                bindings[from] = to
+                typeBindings[from] = to
                 closed.add(from)
                 return true
             } else {

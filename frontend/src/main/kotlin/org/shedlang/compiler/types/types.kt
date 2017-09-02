@@ -59,6 +59,13 @@ fun freshShapeId() = nextShapeId++
 interface StaticParameter {
     val name: String
     val shortDescription: String
+
+    fun <T> accept(visitor: Visitor<T>): T
+
+    interface Visitor<T> {
+        fun visit(parameter: TypeParameter): T
+        fun visit(parameter: EffectParameter): T
+    }
 }
 
 data class TypeParameter(
@@ -75,6 +82,10 @@ data class TypeParameter(
             }
             return prefix + name
         }
+
+    override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class EffectParameter(
@@ -83,6 +94,10 @@ data class EffectParameter(
 ): StaticParameter, Effect {
     override val shortDescription: String
         get() = name
+
+    override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 enum class Variance {
@@ -255,36 +270,41 @@ fun union(left: Type, right: Type): Type {
 
 fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
     val typeMap = receiver.parameters.zip(arguments).toMap()
-    return replaceTypes(receiver.type, typeMap)
+    return replaceTypes(receiver.type, StaticBindings(types = typeMap, effects = mapOf()))
 }
 
-internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
+internal class StaticBindings(
+    val types: Map<TypeParameter, Type>,
+    val effects: Map<EffectParameter, Effect> = mapOf()
+)
+
+internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
     if (type is TypeParameter) {
-        return typeMap.getOrElse(type, { type })
+        return bindings.types.getOrElse(type, { type })
     } else if (type is UnionType) {
         return LazyUnionType(
             type.name,
             lazy({
-                type.members.map({ memberType -> replaceTypes(memberType, typeMap) })
+                type.members.map({ memberType -> replaceTypes(memberType, bindings) })
             }),
-            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
+            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) })
         )
     } else if (type is ShapeType) {
         return LazyShapeType(
             name = type.name,
             getFields = lazy({
-                type.fields.mapValues({ field -> replaceTypes(field.value, typeMap) })
+                type.fields.mapValues({ field -> replaceTypes(field.value, bindings) })
             }),
             shapeId = type.shapeId,
             typeParameters = type.typeParameters,
-            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, typeMap) })
+            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) })
         )
     } else if (type is FunctionType) {
         return FunctionType(
-            positionalArguments = type.positionalArguments.map({ argument -> replaceTypes(argument, typeMap) }),
-            namedArguments = type.namedArguments.mapValues({ argument -> replaceTypes(argument.value, typeMap) }),
-            effects = type.effects,
-            returns = replaceTypes(type.returns, typeMap),
+            positionalArguments = type.positionalArguments.map({ argument -> replaceTypes(argument, bindings) }),
+            namedArguments = type.namedArguments.mapValues({ argument -> replaceTypes(argument.value, bindings) }),
+            effects = type.effects.map({ effect -> replaceEffects(effect, bindings) }).toSet(),
+            returns = replaceTypes(type.returns, bindings),
             staticParameters = type.staticParameters
         )
     } else if (type is UnitType || type is BoolType || type is IntType || type is StringType) {
@@ -292,6 +312,10 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)
     }
+}
+
+internal fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
+    return bindings.effects[effect] ?: effect
 }
 
 private fun appliedTypeShortDescription(name: String, arguments: List<Type>): String {

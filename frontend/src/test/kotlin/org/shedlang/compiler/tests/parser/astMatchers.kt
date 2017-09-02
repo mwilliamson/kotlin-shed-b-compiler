@@ -105,7 +105,7 @@ internal fun isCall(
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(CallNode::receiver, receiver),
-        has(CallNode::typeArguments, typeArguments),
+        has(CallNode::staticArguments, typeArguments),
         has(CallNode::positionalArguments, positionalArguments),
         has(CallNode::namedArguments, namedArguments)
     ))

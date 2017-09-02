@@ -40,7 +40,7 @@ private fun inferFunctionCallType(
     receiverType: FunctionType,
     context: TypeContext
 ): Type {
-    val typeParameterBindings = checkArguments(
+    val bindings = checkArguments(
         call = node,
         staticParameters = receiverType.staticParameters,
         positionalParameters = receiverType.positionalArguments,
@@ -48,13 +48,14 @@ private fun inferFunctionCallType(
         context = context
     )
 
-    val unhandledEffects = receiverType.effects - context.effects
+    val effects = receiverType.effects.map({ effect -> replaceEffects(effect, bindings) })
+    val unhandledEffects = effects - context.effects
     if (unhandledEffects.isNotEmpty()) {
         throw UnhandledEffectError(unhandledEffects.first(), source = node.source)
     }
 
     // TODO: handle unconstrained types
-    return replaceTypes(receiverType.returns, typeParameterBindings)
+    return replaceTypes(receiverType.returns, bindings)
 }
 
 private fun inferConstructorCallType(
@@ -79,7 +80,7 @@ private fun inferConstructorCallType(
         return shapeType
     } else {
         return applyType(typeFunction, typeFunction.parameters.map({ parameter ->
-            typeParameterBindings[parameter]!!
+            typeParameterBindings.types[parameter]!!
         }))
     }
 }
@@ -90,7 +91,7 @@ private fun checkArguments(
     positionalParameters: List<Type>,
     namedParameters: Map<String, Type>,
     context: TypeContext
-): Map<TypeParameter, Type> {
+): StaticBindings {
     val positionalArguments = call.positionalArguments.zip(positionalParameters)
     if (positionalParameters.size != call.positionalArguments.size) {
         throw WrongNumberOfArgumentsError(
@@ -117,7 +118,7 @@ private fun checkArguments(
     val arguments = positionalArguments + namedArguments
     return checkArgumentTypes(
         staticParameters = staticParameters,
-        staticArguments = call.typeArguments,
+        staticArguments = call.staticArguments,
         arguments = arguments,
         source = call.source,
         context = context
@@ -130,7 +131,7 @@ private fun checkArgumentTypes(
     arguments: List<Pair<ExpressionNode, Type>>,
     source: Source,
     context: TypeContext
-): Map<TypeParameter, Type> {
+): StaticBindings {
     if (staticArguments.isEmpty()) {
         val typeParameters = staticParameters.filterIsInstance<TypeParameter>()
         val inferredTypeArguments = typeParameters.map({ parameter -> TypeParameter(
@@ -145,7 +146,10 @@ private fun checkArgumentTypes(
             val actualType = inferType(argument.first, context)
             val formalType = replaceTypes(
                 argument.second,
-                typeParameters.zip(inferredTypeArguments).toMap()
+                StaticBindings(
+                    types = typeParameters.zip(inferredTypeArguments).toMap(),
+                    effects = mapOf()
+                )
             )
             if (!constraints.coerce(from = actualType, to = formalType)) {
                 throw UnexpectedTypeError(
@@ -155,9 +159,9 @@ private fun checkArgumentTypes(
                 )
             }
         }
-        return typeParameters.zip(inferredTypeArguments)
+        val typeMap = typeParameters.zip(inferredTypeArguments)
             .associate({ (parameter, inferredArgument) ->
-                val boundType = constraints.bindings[inferredArgument]
+                val boundType = constraints.typeBindings[inferredArgument]
                 parameter to if (boundType != null) {
                     boundType
                 } else if (parameter.variance == Variance.COVARIANT) {
@@ -171,6 +175,7 @@ private fun checkArgumentTypes(
                     )
                 }
             })
+        return StaticBindings(types = typeMap, effects = mapOf())
     } else {
         if (staticArguments.size != staticParameters.size) {
             throw WrongNumberOfStaticArgumentsError(
@@ -180,23 +185,33 @@ private fun checkArgumentTypes(
             )
         }
 
-        val typeMap = staticParameters.zip(staticArguments)
-            .filterIsInstance<Pair<TypeParameter, StaticNode>>()
-            .map({ (typeParameter, typeArgument) ->
-                typeParameter to evalType(typeArgument, context)
+        val typeMap = mutableMapOf<TypeParameter, Type>()
+        val effectMap = mutableMapOf<EffectParameter, Effect>()
+
+        for ((staticParameter, staticArgument) in staticParameters.zip(staticArguments)) {
+            staticParameter.accept(object: StaticParameter.Visitor<Unit> {
+                override fun visit(parameter: TypeParameter) {
+                    typeMap[parameter] = evalType(staticArgument, context)
+                }
+
+                override fun visit(parameter: EffectParameter) {
+                    effectMap[parameter] = evalEffect(staticArgument, context)
+                }
             })
-            .toMap()
+        }
+
+        val bindings = StaticBindings(types = typeMap, effects = effectMap)
 
         checkArgumentTypes(
             staticParameters = listOf(),
             staticArguments = listOf(),
             arguments = arguments.map({ (expression, type) ->
-                expression to replaceTypes(type, typeMap)
+                expression to replaceTypes(type, bindings)
             }),
             source = source,
             context = context
         )
 
-        return typeMap
+        return bindings
     }
 }

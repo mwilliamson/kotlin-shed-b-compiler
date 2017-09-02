@@ -489,7 +489,7 @@ private fun parseCallFromParens(
     val (positionalArguments, namedArguments) = parseCallArguments(tokens)
     return CallNode(
         receiver = left,
-        typeArguments = typeArguments,
+        staticArguments = typeArguments,
         positionalArguments = positionalArguments,
         namedArguments = namedArguments,
         source = left.source

@@ -490,14 +490,14 @@ data class IsNode(
 
 data class CallNode(
     val receiver: ExpressionNode,
-    val typeArguments: List<StaticNode>,
+    val staticArguments: List<StaticNode>,
     val positionalArguments: List<ExpressionNode>,
     val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(receiver) + typeArguments + positionalArguments + namedArguments
+        get() = listOf(receiver) + staticArguments + positionalArguments + namedArguments
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

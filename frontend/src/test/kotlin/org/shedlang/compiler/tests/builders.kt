@@ -60,10 +60,10 @@ fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<CallNamedArgumentNode> = listOf(),
-    typeArguments: List<StaticNode> = listOf()
+    staticArguments: List<StaticNode> = listOf()
 ) = CallNode(
     receiver = receiver,
-    typeArguments = typeArguments,
+    staticArguments = staticArguments,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
     source = anySource()

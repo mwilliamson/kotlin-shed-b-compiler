@@ -1,9 +1,7 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.all
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
-import org.shedlang.compiler.zip3
 import typeCheckTypeParameters
 import java.util.*
 

@@ -138,7 +138,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceTypes(functionType, mapOf(typeParameter to IntType)),
+                replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
                 isFunctionType(arguments = isSequence(isIntType))
             )
         }
@@ -150,7 +150,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceTypes(functionType, mapOf(typeParameter to IntType)),
+                replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
                 isFunctionType(namedArguments = isMap("x" to isIntType))
             )
         }
@@ -162,7 +162,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceTypes(functionType, mapOf(typeParameter to IntType)),
+                replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
                 isFunctionType(returnType= isIntType)
             )
         }
