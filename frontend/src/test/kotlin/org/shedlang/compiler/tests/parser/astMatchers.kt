@@ -75,6 +75,12 @@ internal fun isTypeParameter(
     ))
 }
 
+internal fun isEffectParameterNode(
+    name: Matcher<String>
+): Matcher<StaticParameterNode> {
+    return cast(has(EffectParameterNode::name, name))
+}
+
 internal fun isBinaryOperation(
     operator: Operator,
     left: Matcher<ExpressionNode>,

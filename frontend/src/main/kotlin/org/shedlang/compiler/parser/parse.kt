@@ -180,7 +180,7 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
     } else {
         return FunctionDeclarationNode(
             name = name,
-            staticParameters = signature.typeParameters,
+            staticParameters = signature.staticParameters,
             arguments = signature.arguments,
             returnType = signature.returnType,
             effects = signature.effects,
@@ -191,14 +191,14 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
 }
 
 private data class FunctionSignature(
-    val typeParameters: List<TypeParameterNode>,
+    val staticParameters: List<StaticParameterNode>,
     val arguments: List<ArgumentNode>,
     val effects: List<StaticNode>,
     val returnType: StaticNode?
 )
 
 private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
-    val typeParameters = parseTypeParameters(allowVariance = false, tokens = tokens)
+    val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseZeroOrMoreNodes(
@@ -219,7 +219,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     }
 
     return FunctionSignature(
-        typeParameters = typeParameters,
+        staticParameters = staticParameters,
         arguments = arguments,
         effects = effects,
         returnType = returnType
@@ -230,9 +230,23 @@ internal fun parseTypeParameters(
     allowVariance: Boolean,
     tokens: TokenIterator<TokenType>
 ): List<TypeParameterNode> {
+    val staticParameters = parseStaticParameters(allowVariance = allowVariance, tokens = tokens)
+    return staticParameters.map({ parameter ->
+        if (parameter is TypeParameterNode) {
+            parameter
+        } else {
+            throw UnsupportedOperationException("TODO")
+        }
+    })
+}
+
+internal fun parseStaticParameters(
+    allowVariance: Boolean,
+    tokens: TokenIterator<TokenType>
+): List<StaticParameterNode> {
     return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
         val typeParameters = parseMany(
-            parseElement = { tokens -> parseTypeParameter(allowVariance = allowVariance).parse(tokens) },
+            parseElement = { tokens -> parseStaticParameter(allowVariance = allowVariance).parse(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
             allowZero = false,
@@ -270,18 +284,25 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
     return body
 }
 
-private fun parseTypeParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): TypeParameterNode {
-    val variance = if (!allowVariance) {
-        Variance.INVARIANT
-    } else if (tokens.trySkip(TokenType.SYMBOL_PLUS)) {
-        Variance.COVARIANT
-    } else if (tokens.trySkip(TokenType.SYMBOL_MINUS)) {
-        Variance.CONTRAVARIANT
+private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): StaticParameterNode {
+    if (tokens.isNext(TokenType.IDENTIFIER) && tokens.peek().value.startsWith("!")) {
+        return EffectParameterNode(
+            name = tokens.nextValue(TokenType.IDENTIFIER),
+            source = source
+        )
     } else {
-        Variance.INVARIANT
+        val variance = if (!allowVariance) {
+            Variance.INVARIANT
+        } else if (tokens.trySkip(TokenType.SYMBOL_PLUS)) {
+            Variance.COVARIANT
+        } else if (tokens.trySkip(TokenType.SYMBOL_MINUS)) {
+            Variance.CONTRAVARIANT
+        } else {
+            Variance.INVARIANT
+        }
+        val name = parseIdentifier(tokens)
+        return TypeParameterNode(name = name, variance = variance, source = source)
     }
-    val name = parseIdentifier(tokens)
-    return TypeParameterNode(name = name, variance = variance, source = source)
 }
 
 private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {
@@ -625,7 +646,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             }
 
             return FunctionExpressionNode(
-                staticParameters = signature.typeParameters,
+                staticParameters = signature.staticParameters,
                 arguments = signature.arguments,
                 returnType = signature.returnType,
                 effects = signature.effects,

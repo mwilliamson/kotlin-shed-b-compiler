@@ -68,6 +68,17 @@ class ParseFunctionTests {
     }
 
     @Test
+    fun canReadEffectParameters() {
+        val source = "fun f[!E]() -> U { }"
+        val function = parseString(::parseFunctionDeclaration, source)
+        assertThat(function, allOf(
+            has(FunctionNode::staticParameters, isSequence(
+                isEffectParameterNode(name = equalTo("!E"))
+            ))
+        ))
+    }
+
+    @Test
     fun canReadBody() {
         val source = "fun f() -> Int { return 1; return 2; }"
         val function = parseString(::parseFunctionDeclaration, source)
