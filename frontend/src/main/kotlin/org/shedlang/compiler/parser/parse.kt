@@ -210,16 +210,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
     // TODO: allow trailing commas?
-    val effects = parseZeroOrMoreNodes(
-        parseElement = ::parseVariableReference,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = {
-            tokens.isNext(TokenType.SYMBOL_ARROW) ||
-            tokens.isNext(TokenType.SYMBOL_FAT_ARROW) ||
-            tokens.isNext(TokenType.SYMBOL_OPEN_BRACE)
-        },
-        tokens = tokens
-    )
+    val effects = parseEffects(tokens)
 
     val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
         parseType(tokens)
@@ -253,6 +244,19 @@ internal fun parseTypeParameters(
     } else {
         listOf()
     }
+}
+
+private fun parseEffects(tokens: TokenIterator<TokenType>): List<VariableReferenceNode> {
+    return parseZeroOrMoreNodes(
+        parseElement = ::parseVariableReference,
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = {
+            tokens.isNext(TokenType.SYMBOL_ARROW) ||
+                tokens.isNext(TokenType.SYMBOL_FAT_ARROW) ||
+                tokens.isNext(TokenType.SYMBOL_OPEN_BRACE)
+        },
+        tokens = tokens
+    )
 }
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
@@ -725,11 +729,13 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
         tokens = tokens
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+    val effects = parseEffects(tokens)
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = parseType(tokens)
     return FunctionTypeNode(
         arguments = arguments,
         returnType = returnType,
+        effects = effects,
         source = source
     )
 }

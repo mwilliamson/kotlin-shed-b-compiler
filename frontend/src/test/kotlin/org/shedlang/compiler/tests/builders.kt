@@ -218,6 +218,7 @@ fun functionType(
 ) = FunctionTypeNode(
     arguments = arguments,
     returnType = returnType,
+    effects = listOf(),
     source = anySource()
 )
 

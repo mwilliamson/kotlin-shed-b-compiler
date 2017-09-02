@@ -49,4 +49,13 @@ class ParseTypeTests {
             returnType = isTypeReference(name = "C")
         ))
     }
+
+    @Test
+    fun functionTypeCanHaveEffects() {
+        val source = "() !E -> R"
+        val node = parseString(::parseType, source)
+        assertThat(node, isFunctionType(
+            effects = isSequence(isVariableReference("!E"))
+        ))
+    }
 }

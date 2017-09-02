@@ -114,6 +114,7 @@ data class TypeApplicationNode(
 data class FunctionTypeNode(
     val arguments: List<TypeNode>,
     val returnType: TypeNode,
+    val effects: List<VariableReferenceNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeNode {

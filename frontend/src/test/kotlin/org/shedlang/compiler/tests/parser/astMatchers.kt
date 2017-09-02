@@ -147,11 +147,13 @@ internal fun isTypeApplication(
     has(TypeApplicationNode::arguments, arguments)
 ))
 internal fun isFunctionType(
-    arguments: Matcher<List<TypeNode>>,
-    returnType: Matcher<TypeNode>
+    arguments: Matcher<List<TypeNode>> = anything,
+    returnType: Matcher<TypeNode> = anything,
+    effects: Matcher<List<VariableReferenceNode>> = anything
 ) = cast(allOf(
     has(FunctionTypeNode::arguments, arguments),
-    has(FunctionTypeNode::returnType, returnType)
+    has(FunctionTypeNode::returnType, returnType),
+    has(FunctionTypeNode::effects, effects)
 ))
 
 internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
