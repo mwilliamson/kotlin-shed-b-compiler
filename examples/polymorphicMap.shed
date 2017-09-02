@@ -1,0 +1,42 @@
+// name: map
+// stdout:
+//   1
+//   2
+//   3
+
+module example;
+
+union List[T] = Cons[T] | Unit;
+shape Cons[T] {
+    head: T,
+    tail: List[T],
+}
+
+fun cons[T](head: T, tail: List[T]) -> List[T] {
+    return Cons(head=head, tail=tail);
+}
+
+fun printInts(list: List[Int]) !io -> Unit {
+    val strings = map(intToString, list);
+    printStrings(strings);
+}
+
+fun printStrings(list: List[String]) !io -> Unit {
+    if (list is Cons[String]) {
+        print(list.head);
+        printStrings(list.tail);
+    }
+}
+
+fun map[T, R](func: (T) -> R, list: List[T]) -> List[R] {
+    if (list is Cons[T]) {
+        return cons(func(list.head), map(func, list.tail));
+    } else {
+        return unit;
+    }
+}
+
+fun main() !io -> Unit {
+    val list = cons(1, cons(2, cons(3, unit)));
+    printInts(list);
+}
