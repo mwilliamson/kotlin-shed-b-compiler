@@ -138,7 +138,7 @@ class TypeConstraintsTests {
     }
 
     @Test
-    fun whenTypeParameterIsCoercedToTypeThanCanCoerceSameTypeToTypeParameter() {
+    fun whenTypeParameterIsCoercedToTypeThenCanCoerceSameTypeToTypeParameter() {
         val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
