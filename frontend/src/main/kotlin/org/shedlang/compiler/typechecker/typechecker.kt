@@ -624,11 +624,20 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             source: Source
         ): Map<TypeParameter, Type> {
             if (typeArguments.isEmpty()) {
-                val constraints = TypeConstraintSolver(parameters = typeParameters.toMutableSet())
+                val inferredTypeArguments = typeParameters.map({ parameter -> TypeParameter(
+                    name = parameter.name,
+                    variance = parameter.variance
+                )})
 
+                val constraints = TypeConstraintSolver(
+                    parameters = inferredTypeArguments.toMutableSet()
+                )
                 for (argument in arguments) {
                     val actualType = inferType(argument.first, context)
-                    val formalType = argument.second
+                    val formalType = replaceTypes(
+                        argument.second,
+                        typeParameters.zip(inferredTypeArguments).toMap()
+                    )
                     if (!constraints.coerce(from = actualType, to = formalType)) {
                         throw UnexpectedTypeError(
                             expected = formalType,
@@ -637,21 +646,22 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                         )
                     }
                 }
-                return typeParameters.associate({ parameter ->
-                    val boundType = constraints.bindings[parameter]
-                    parameter to if (boundType != null) {
-                        boundType
-                    } else if (parameter.variance == Variance.COVARIANT) {
-                        NothingType
-                    } else if (parameter.variance == Variance.CONTRAVARIANT) {
-                        AnyType
-                    } else {
-                        throw CouldNotInferTypeParameterError(
-                            parameter = parameter,
-                            source = source
-                        )
-                    }
-                })
+                return typeParameters.zip(inferredTypeArguments)
+                    .associate({ (parameter, inferredArgument) ->
+                        val boundType = constraints.bindings[inferredArgument]
+                        parameter to if (boundType != null) {
+                            boundType
+                        } else if (parameter.variance == Variance.COVARIANT) {
+                            NothingType
+                        } else if (parameter.variance == Variance.CONTRAVARIANT) {
+                            AnyType
+                        } else {
+                            throw CouldNotInferTypeParameterError(
+                                parameter = parameter,
+                                source = source
+                            )
+                        }
+                    })
             } else {
                 if (typeArguments.size != typeParameters.size) {
                     throw WrongNumberOfTypeArgumentsError(

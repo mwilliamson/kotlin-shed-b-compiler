@@ -164,6 +164,30 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
+    fun canRecursivelyCallFunctionWithInferredTypeParameters() {
+        val functionReference = variableReference("f")
+        val argReference = variableReference("x")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(argReference)
+        )
+
+        val typeParameter = invariantTypeParameter(name = "T")
+        val functionType = functionType(
+            typeParameters = listOf(typeParameter),
+            positionalArguments = listOf(typeParameter),
+            returns = typeParameter
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            argReference to typeParameter,
+            functionReference to functionType
+        ))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, cast(equalTo(typeParameter)))
+    }
+
+    @Test
     fun whenFunctionExpressionIsNotFunctionTypeThenCallDoesNotTypeCheck() {
         val functionReference = variableReference("f")
         val node = call(
