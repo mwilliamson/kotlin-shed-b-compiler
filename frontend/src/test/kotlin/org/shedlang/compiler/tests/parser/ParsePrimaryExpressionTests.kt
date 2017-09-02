@@ -59,7 +59,8 @@ class ParsePrimaryExpressionTests {
             testCase("escaped double-quotes are decoded", "\"\\\"\"", "\""),
             testCase("escaped tabs are decoded", "\"\\t\"", "\t"),
             testCase("escaped newlines are decoded", "\"\\n\"", "\n"),
-            testCase("escaped carriage returns are decoded", "\"\\r\"", "\r")
+            testCase("escaped carriage returns are decoded", "\"\\r\"", "\r"),
+            testCase("hexadecimal unicode escape sequences are decoded", "\"\\u001B\"", "\u001B")
         )
     }
 

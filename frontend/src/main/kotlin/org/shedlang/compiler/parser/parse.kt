@@ -656,8 +656,17 @@ private fun decodeEscapeSequence(value: CharBuffer, source: Source): String {
     var lastIndex = 0
     while (matcher.find()) {
         decoded.append(value.subSequence(lastIndex, matcher.start()))
-        decoded.append(escapeSequence(matcher.group(1), source = source))
-        lastIndex = matcher.end()
+        val code = matcher.group(1)
+        if (code == "u") {
+            val endIndex = matcher.end() + 4
+            val hex = value.subSequence(matcher.end(), endIndex).toString()
+            val codePoint = hex.toInt(16)
+            decoded.append(codePoint.toChar())
+            lastIndex = endIndex
+        } else {
+            decoded.append(escapeSequence(code, source = source))
+            lastIndex = matcher.end()
+        }
     }
     decoded.append(value.subSequence(lastIndex, value.length))
     return decoded.toString()
