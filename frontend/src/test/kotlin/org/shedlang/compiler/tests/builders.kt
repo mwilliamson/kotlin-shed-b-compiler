@@ -89,14 +89,14 @@ fun fieldAccess(
 
 fun function(
     name: String = "f",
-    typeParameters: List<TypeParameterNode> = listOf(),
+    staticParameters: List<StaticParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = name,
-    staticParameters = typeParameters,
+    staticParameters = staticParameters,
     arguments = arguments,
     returnType = returnType,
     effects = effects,
@@ -174,6 +174,13 @@ fun typeParameter(
     source = anySource()
 )
 
+fun effectParameterDeclaration(
+    name: String
+) = EffectParameterNode(
+    name = name,
+    source = anySource()
+)
+
 fun argument(
     name: String = "x",
     type: StaticNode = staticReference("Int")
@@ -212,13 +219,14 @@ fun staticApplication(
     arguments = arguments,
     source = anySource()
 )
-fun functionType(
+fun functionTypeNode(
     arguments: List<StaticNode> = listOf(),
-    returnType: StaticNode
+    returnType: StaticNode,
+    effects: List<StaticNode> = listOf()
 ) = FunctionTypeNode(
     arguments = arguments,
     returnType = returnType,
-    effects = listOf(),
+    effects = effects,
     source = anySource()
 )
 

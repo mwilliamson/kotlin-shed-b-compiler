@@ -279,12 +279,26 @@ interface StaticParameterNode: VariableBindingNode {
 
     interface Visitor<T> {
         fun visit(node: TypeParameterNode): T
+        fun visit(node: EffectParameterNode): T
     }
 }
 
 data class TypeParameterNode(
     override val name: String,
     val variance: Variance,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): StaticParameterNode, Node {
+    override val children: List<Node>
+        get() = listOf()
+
+    override fun <T> accept(visitor: StaticParameterNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class EffectParameterNode(
+    override val name: String,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticParameterNode, Node {

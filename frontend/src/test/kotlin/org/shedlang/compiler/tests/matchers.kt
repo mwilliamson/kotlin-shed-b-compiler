@@ -106,6 +106,7 @@ internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))
 internal val isStringType: Matcher<Type> = cast(equalTo(StringType))
 
 internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))
+internal fun isEffectType(effect: Matcher<Effect>): Matcher<Type> = cast(has(EffectType::effect, effect))
 
 internal fun isTypeFunction(
     parameters: Matcher<List<TypeParameter>>,

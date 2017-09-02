@@ -120,7 +120,7 @@ class ResolutionTests {
         val reference = staticReference("T")
         val typeParameter = typeParameter("T")
         val node = function(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             arguments = listOf(argument(type = reference)),
             returnType = staticReference("T"),
             body = listOf()

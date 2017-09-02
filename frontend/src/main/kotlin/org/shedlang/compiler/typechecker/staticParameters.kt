@@ -1,9 +1,9 @@
+
+import org.shedlang.compiler.ast.EffectParameterNode
 import org.shedlang.compiler.ast.StaticParameterNode
 import org.shedlang.compiler.ast.TypeParameterNode
 import org.shedlang.compiler.typechecker.TypeContext
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.StaticParameter
-import org.shedlang.compiler.types.TypeParameter
+import org.shedlang.compiler.types.*
 
 internal fun typeCheckStaticParameters(
     parameters: List<StaticParameterNode>,
@@ -21,12 +21,18 @@ internal fun typeCheckTypeParameters(parameters: List<TypeParameterNode>, contex
 }
 
 private fun typeCheckStaticParameter(
-    parameter: StaticParameterNode,
+    node: StaticParameterNode,
     context: TypeContext
 ): StaticParameter {
-    return parameter.accept(object: StaticParameterNode.Visitor<StaticParameter> {
+    return node.accept(object: StaticParameterNode.Visitor<StaticParameter> {
         override fun visit(node: TypeParameterNode): StaticParameter {
             return typeCheckTypeParameter(node, context)
+        }
+
+        override fun visit(node: EffectParameterNode): StaticParameter {
+            val parameter = EffectParameter(name = node.name)
+            context.addType(node, EffectType(parameter))
+            return parameter
         }
     })
 }

@@ -17,7 +17,7 @@ class TypeCheckFunctionTests {
         val typeParameter = typeParameter("T")
         val typeParameterReference = staticReference("T")
         val node = function(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             arguments = listOf(argument(type = typeParameterReference)),
             returnType = unitReference
         )
@@ -41,6 +41,42 @@ class TypeCheckFunctionTests {
             cast(
                 has(FunctionType::staticParameters, isSequence(
                     cast(has(TypeParameter::name, equalTo("T")))
+                ))
+            )
+        )
+    }
+
+    @Test
+    fun effectParameterTypeIsAdded() {
+        val unitReference = staticReference("Unit")
+
+        val effectParameter = effectParameterDeclaration("E")
+        val effectParameterReference = staticReference("E")
+        val node = function(
+            staticParameters = listOf(effectParameter),
+            arguments = listOf(argument(type = functionTypeNode(effects = listOf(effectParameterReference), returnType = unitReference))),
+            returnType = unitReference
+        )
+        val typeContext = typeContext(
+            references = mapOf(effectParameterReference to effectParameter),
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        )
+
+        typeCheck(node, typeContext)
+        typeContext.undefer()
+
+        assertThat(typeContext.typeOf(effectParameter), isEffectType(
+            cast(has(EffectParameter::name, equalTo("E")))
+        ))
+        assertThat(
+            typeContext.typeOf(effectParameterReference),
+            equalTo(typeContext.typeOf(effectParameter))
+        )
+        assertThat(
+            typeContext.typeOf(node),
+            cast(
+                has(FunctionType::staticParameters, isSequence(
+                    cast(has(EffectParameter::name, equalTo("E")))
                 ))
             )
         )

@@ -110,7 +110,7 @@ class EvalTypeTests {
         val intReference = staticReference("Int")
         val boolReference = staticReference("Bool")
 
-        val node = functionType(
+        val node = functionTypeNode(
             arguments = listOf(intReference),
             returnType = boolReference
         )
@@ -133,7 +133,7 @@ class EvalTypeTests {
         val typeParameterReference = staticReference("T")
         val typeParameter = contravariantTypeParameter("T")
 
-        val node = functionType(returnType = typeParameterReference)
+        val node = functionTypeNode(returnType = typeParameterReference)
         val typeContext = typeContext(referenceTypes = mapOf(
             typeParameterReference to MetaType(typeParameter)
         ))
