@@ -2,7 +2,7 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
-import typeCheckTypeParameters
+import typeCheckStaticParameters
 import java.util.*
 
 fun newTypeContext(
@@ -176,7 +176,7 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
 }
 
 internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Type {
-    val typeParameters = typeCheckTypeParameters(function.typeParameters, context)
+    val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
     val argumentTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
@@ -226,7 +226,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     }
 
     val functionType = FunctionType(
-        staticParameters = typeParameters,
+        staticParameters = staticParameters,
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effects = effects,

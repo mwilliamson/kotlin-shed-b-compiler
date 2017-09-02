@@ -96,7 +96,7 @@ fun function(
     body: List<StatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = name,
-    typeParameters = typeParameters,
+    staticParameters = typeParameters,
     arguments = arguments,
     returnType = returnType,
     effects = effects,
@@ -111,7 +111,7 @@ fun functionExpression(
     returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionExpressionNode(
-    typeParameters = typeParameters,
+    staticParameters = typeParameters,
     arguments = arguments,
     returnType = returnType,
     effects = effects,
@@ -126,7 +126,7 @@ fun functionExpression(
     returnType: StaticNode? = staticReference("Unit"),
     body: ExpressionNode
 ) = FunctionExpressionNode(
-    typeParameters = typeParameters,
+    staticParameters = typeParameters,
     arguments = arguments,
     returnType = returnType,
     effects = effects,

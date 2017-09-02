@@ -68,11 +68,11 @@ internal fun isFunctionDeclaration(name: Matcher<String>): Matcher<ModuleStateme
 internal fun isTypeParameter(
     name: Matcher<String>,
     variance: Matcher<Variance> = anything
-): Matcher<TypeParameterNode> {
-    return allOf(
+): Matcher<StaticParameterNode> {
+    return cast(allOf(
         has(TypeParameterNode::name, name),
         has(TypeParameterNode::variance, variance)
-    )
+    ))
 }
 
 internal fun isBinaryOperation(

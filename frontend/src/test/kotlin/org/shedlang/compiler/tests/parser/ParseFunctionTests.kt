@@ -19,7 +19,7 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionDeclarationNode::name, equalTo("f")),
-            has(FunctionNode::typeParameters, isSequence()),
+            has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::returnType, present(cast(
                 has(StaticReferenceNode::name, equalTo("Unit"))
@@ -51,7 +51,7 @@ class ParseFunctionTests {
         val source = "fun f[T, U](t: T) -> U { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionNode::typeParameters, isSequence(
+            has(FunctionNode::staticParameters, isSequence(
                 isTypeParameter(name = equalTo("T"), variance = isInvariant),
                 isTypeParameter(name = equalTo("U"), variance = isInvariant)
             ))
@@ -117,7 +117,7 @@ class ParseFunctionTests {
         val source = "fun () -> Unit { }"
         val function = parseString(::parseExpression, source)
         assertThat(function, cast(allOf(
-            has(FunctionNode::typeParameters, isSequence()),
+            has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::returnType, present(cast(
                 has(StaticReferenceNode::name, equalTo("Unit"))

@@ -212,7 +212,7 @@ data class UnionNode(
 }
 
 interface FunctionNode : Node {
-    val typeParameters: List<TypeParameterNode>
+    val staticParameters: List<StaticParameterNode>
     val arguments: List<ArgumentNode>
     val returnType: StaticNode?
     val effects: List<StaticNode>
@@ -237,7 +237,7 @@ sealed class FunctionBody {
 }
 
 data class FunctionExpressionNode(
-    override val typeParameters: List<TypeParameterNode>,
+    override val staticParameters: List<StaticParameterNode>,
     override val arguments: List<ArgumentNode>,
     override val returnType: StaticNode?,
     override val effects: List<StaticNode>,
@@ -255,7 +255,7 @@ data class FunctionExpressionNode(
 
 data class FunctionDeclarationNode(
     override val name: String,
-    override val typeParameters: List<TypeParameterNode>,
+    override val staticParameters: List<StaticParameterNode>,
     override val arguments: List<ArgumentNode>,
     override val returnType: StaticNode,
     override val effects: List<StaticNode>,
@@ -274,14 +274,26 @@ data class FunctionDeclarationNode(
     }
 }
 
+interface StaticParameterNode: VariableBindingNode {
+    fun <T> accept(visitor: Visitor<T>): T
+
+    interface Visitor<T> {
+        fun visit(node: TypeParameterNode): T
+    }
+}
+
 data class TypeParameterNode(
     override val name: String,
     val variance: Variance,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode, Node {
+): StaticParameterNode, Node {
     override val children: List<Node>
         get() = listOf()
+
+    override fun <T> accept(visitor: StaticParameterNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class ArgumentNode(

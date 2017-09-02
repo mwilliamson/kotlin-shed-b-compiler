@@ -180,7 +180,7 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
     } else {
         return FunctionDeclarationNode(
             name = name,
-            typeParameters = signature.typeParameters,
+            staticParameters = signature.typeParameters,
             arguments = signature.arguments,
             returnType = signature.returnType,
             effects = signature.effects,
@@ -625,7 +625,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             }
 
             return FunctionExpressionNode(
-                typeParameters = signature.typeParameters,
+                staticParameters = signature.typeParameters,
                 arguments = signature.arguments,
                 returnType = signature.returnType,
                 effects = signature.effects,

@@ -155,7 +155,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
 private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
     val bodyContext = resolveScope(
-        binders = node.typeParameters,
+        binders = node.staticParameters,
         body = node.effects + listOf(node.returnType).filterNotNull() + node.arguments,
         context = context
     )
