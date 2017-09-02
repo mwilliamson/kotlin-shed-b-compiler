@@ -39,8 +39,9 @@ internal sealed class CoercionResult {
 }
 
 internal class TypeConstraintSolver(
-    private val parameters: Set<TypeParameter>,
+    private val parameters: Set<StaticParameter>,
     internal val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf(),
+    internal val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf(),
     private val closed: MutableSet<TypeParameter> = mutableSetOf()
 ) {
     fun coerce(from: Type, to: Type): Boolean {
@@ -64,7 +65,8 @@ internal class TypeConstraintSolver(
                     from.positionalArguments.zip(to.positionalArguments, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
                     from.namedArguments.keys == to.namedArguments.keys &&
                     from.namedArguments.all({ fromArg -> coerce(from = to.namedArguments[fromArg.key]!!, to = fromArg.value) }) &&
-                    from.effects == to.effects &&
+                    from.effects.size == to.effects.size &&
+                    from.effects.zip(to.effects, { fromEffect, toEffect -> coerceEffect(from = fromEffect, to = toEffect)}).all() &&
                     coerce(from = from.returns, to = to.returns)
                 )
         }
@@ -103,6 +105,22 @@ internal class TypeConstraintSolver(
                 return true
             } else {
                 return coerce(from = boundType, to = to)
+            }
+        }
+
+        return false
+    }
+
+    fun coerceEffect(from: Effect, to: Effect): Boolean {
+        if (from == to) {
+            return true
+        }
+
+        if (to is EffectParameter && to in parameters) {
+            val boundEffect = effectBindings[to]
+            if (boundEffect == null) {
+                effectBindings[to] = from
+                return true
             }
         }
 

@@ -140,7 +140,8 @@ private fun checkArgumentTypes(
         ) })
 
         val constraints = TypeConstraintSolver(
-            parameters = inferredTypeArguments.toMutableSet()
+            // TODO: need to regenerate effect parameters in the same way as type parameters
+            parameters = (inferredTypeArguments + staticParameters.filterIsInstance<EffectParameter>()).toMutableSet()
         )
         for (argument in arguments) {
             val actualType = inferType(argument.first, context)
@@ -175,7 +176,8 @@ private fun checkArgumentTypes(
                     )
                 }
             })
-        return StaticBindings(types = typeMap, effects = mapOf())
+        // TODO: handle unbound effects
+        return StaticBindings(types = typeMap, effects = constraints.effectBindings)
     } else {
         if (staticArguments.size != staticParameters.size) {
             throw WrongNumberOfStaticArgumentsError(

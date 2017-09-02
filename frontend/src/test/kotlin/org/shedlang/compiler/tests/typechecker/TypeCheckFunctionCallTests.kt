@@ -526,9 +526,12 @@ class TypeCheckFunctionCallTests {
                 functionReference to functionType,
                 effectReference to EffectType(IoEffect)
             ),
-            effects = setOf(IoEffect)
+            effects = setOf()
         )
-        inferType(node, typeContext)
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
     }
 
     @Test
@@ -563,8 +566,50 @@ class TypeCheckFunctionCallTests {
                 ),
                 effectReference to EffectType(IoEffect)
             ),
-            effects = setOf(IoEffect)
+            effects = setOf()
         )
-        inferType(node, typeContext)
+        assertThat(
+            { inferType(node, typeContext) },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
+
+    @Test
+    fun canCallFunctionWithImplicitEffectArgument() {
+        val effectParameter = effectParameter("E")
+        val effectReference = staticReference("Io")
+
+        val functionReference = variableReference("f")
+        val otherFunctionReference = variableReference("g")
+
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(otherFunctionReference)
+        )
+        val functionType = functionType(
+            staticParameters = listOf(effectParameter),
+            positionalArguments = listOf(functionType(
+                effects = setOf(effectParameter),
+                returns = UnitType
+            )),
+            effects = setOf(effectParameter),
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType,
+                otherFunctionReference to functionType(
+                    effects = setOf(IoEffect),
+                    returns = UnitType
+                ),
+                effectReference to EffectType(IoEffect)
+            ),
+            effects = setOf()
+        )
+        assertThat(
+            { inferType(node, typeContext) },
+            throwsException(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
     }
 }
