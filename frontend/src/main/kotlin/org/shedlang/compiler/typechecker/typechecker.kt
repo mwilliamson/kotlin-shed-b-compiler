@@ -812,11 +812,8 @@ private class TypeConstraintSolver(
                 bindings[from] = to
                 closed.add(from)
                 return true
-                // TODO: should be isEquivalentType(boundType, to)
-            } else if (boundType == to) {
-                return true
             } else {
-                return false
+                return isEquivalentType(boundType, to)
             }
         }
 
