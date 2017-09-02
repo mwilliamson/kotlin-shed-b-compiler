@@ -799,8 +799,7 @@ private class TypeConstraintSolver(
                 bindings[to] = from
                 return true
             } else if (to in closed) {
-                // TODO: should be coerce(from = from, to = boundType)
-                return false
+                return coerce(from = from, to = boundType)
             } else {
                 bindings[to] = union(boundType, from)
                 return true

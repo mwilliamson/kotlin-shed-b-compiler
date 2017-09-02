@@ -138,6 +138,18 @@ class TypeConstraintsTests {
     }
 
     @Test
+    fun whenTypeParameterIsCoercedToTypeThanCanCoerceSameTypeToTypeParameter() {
+        val typeParameter = invariantTypeParameter("T")
+        assertThat(
+            coerce(
+                listOf(typeParameter to StringType, StringType to typeParameter),
+                parameters = setOf(typeParameter)
+            ),
+            isSuccess(typeParameter to StringType)
+        )
+    }
+
+    @Test
     fun cannotCoerceTypeParametersToDistinctTypes() {
         // TODO: could be the bottom type instead
         val typeParameter = invariantTypeParameter("T")
