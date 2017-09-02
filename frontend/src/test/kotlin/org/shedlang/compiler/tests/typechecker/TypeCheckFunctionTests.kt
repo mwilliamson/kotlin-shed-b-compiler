@@ -39,8 +39,8 @@ class TypeCheckFunctionTests {
         assertThat(
             typeContext.typeOf(node),
             cast(
-                has(FunctionType::typeParameters, isSequence(
-                    has(TypeParameter::name, equalTo("T"))
+                has(FunctionType::staticParameters, isSequence(
+                    cast(has(TypeParameter::name, equalTo("T")))
                 ))
             )
         )

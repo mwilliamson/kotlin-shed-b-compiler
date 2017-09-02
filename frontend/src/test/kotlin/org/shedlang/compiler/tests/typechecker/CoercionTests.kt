@@ -153,8 +153,8 @@ class CoercionTests {
     fun functionTypeWithTypeParametersNeverMatch() {
         assertThat(
             canCoerce(
-                from = functionType(typeParameters = listOf(invariantTypeParameter("T"))),
-                to = functionType(typeParameters = listOf(invariantTypeParameter("T")))
+                from = functionType(staticParameters = listOf(invariantTypeParameter("T"))),
+                to = functionType(staticParameters = listOf(invariantTypeParameter("T")))
             ),
             equalTo(false)
         )

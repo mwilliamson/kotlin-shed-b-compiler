@@ -59,7 +59,7 @@ class TypeCheckFunctionCallTests {
         val argumentTypeParameter = invariantTypeParameter(name = "T")
         val returnTypeParameter = invariantTypeParameter(name = "R")
         val functionType = functionType(
-            typeParameters = listOf(argumentTypeParameter, returnTypeParameter),
+            staticParameters = listOf(argumentTypeParameter, returnTypeParameter),
             positionalArguments = listOf(argumentTypeParameter),
             returns = returnTypeParameter
         )
@@ -85,7 +85,7 @@ class TypeCheckFunctionCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             positionalArguments = listOf(),
             returns = typeParameter
         )
@@ -97,8 +97,8 @@ class TypeCheckFunctionCallTests {
         assertThat(
             { inferType(node, typeContext) },
             throws(allOf(
-                has(WrongNumberOfTypeArgumentsError::expected, equalTo(1)),
-                has(WrongNumberOfTypeArgumentsError::actual, equalTo(2))
+                has(WrongNumberOfStaticArgumentsError::expected, equalTo(1)),
+                has(WrongNumberOfStaticArgumentsError::actual, equalTo(2))
             ))
         )
     }
@@ -113,7 +113,7 @@ class TypeCheckFunctionCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter),
             returns = typeParameter
         )
@@ -133,7 +133,7 @@ class TypeCheckFunctionCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
@@ -153,7 +153,7 @@ class TypeCheckFunctionCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
@@ -174,7 +174,7 @@ class TypeCheckFunctionCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             positionalArguments = listOf(typeParameter),
             returns = typeParameter
         )

@@ -74,7 +74,7 @@ private val builtins = listOf(
     Builtin("!io", EffectType(IoEffect)),
 
     Builtin("print", FunctionType(
-        typeParameters = listOf(),
+        staticParameters = listOf(),
         positionalArguments = listOf(StringType),
         namedArguments = mapOf(),
         effects = setOf(IoEffect),

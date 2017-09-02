@@ -47,17 +47,25 @@ class EffectType(val effect: Effect): Type {
 private var nextTypeParameterId = 0
 fun freshTypeParameterId() = nextTypeParameterId++
 
+private var nextEffectParameterId = 0
+fun freshEffectParameterId() = nextEffectParameterId++
+
 private var nextAnonymousTypeId = 0
 fun freshAnonymousTypeId() = nextAnonymousTypeId++
 
 private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
+interface StaticParameter {
+    val name: String
+    val shortDescription: String
+}
+
 data class TypeParameter(
-    val name: String,
+    override val name: String,
     val variance: Variance,
     val typeParameterId: Int = freshTypeParameterId()
-): Type {
+): StaticParameter, Type {
     override val shortDescription: String
         get() {
             val prefix = when (variance) {
@@ -67,6 +75,14 @@ data class TypeParameter(
             }
             return prefix + name
         }
+}
+
+data class EffectParameter(
+    override val name: String,
+    val staticParameterId: Int = freshEffectParameterId()
+): StaticParameter, Effect {
+    override val shortDescription: String
+        get() = name
 }
 
 enum class Variance {
@@ -97,7 +113,7 @@ data class ModuleType(
 }
 
 data class FunctionType(
-    val typeParameters: List<TypeParameter>,
+    val staticParameters: List<StaticParameter>,
     val positionalArguments: List<Type>,
     val namedArguments: Map<String, Type>,
     val returns: Type,
@@ -105,10 +121,10 @@ data class FunctionType(
 ): Type {
     override val shortDescription: String
         get() {
-            val typeParameters = if (typeParameters.isEmpty()) {
+            val typeParameters = if (staticParameters.isEmpty()) {
                 ""
             } else {
-                val typeParameterStrings = typeParameters
+                val typeParameterStrings = staticParameters
                     .map({ parameter -> parameter.shortDescription })
                     .joinToString(", ")
                 "[${typeParameterStrings}]"
@@ -200,13 +216,13 @@ data class LazyUnionType(
 }
 
 fun functionType(
-    typeParameters: List<TypeParameter> = listOf(),
+    staticParameters: List<StaticParameter> = listOf(),
     positionalArguments: List<Type> = listOf(),
     namedArguments: Map<String, Type> = mapOf(),
     returns: Type = UnitType,
     effects: Set<Effect> = setOf()
 ) = FunctionType(
-    typeParameters = typeParameters,
+    staticParameters = staticParameters,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
     returns = returns,
@@ -219,6 +235,8 @@ fun positionalFunctionType(arguments: List<Type>, returns: Type)
 fun invariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.INVARIANT)
 fun covariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.COVARIANT)
 fun contravariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.CONTRAVARIANT)
+
+fun effectParameter(name: String) = EffectParameter(name)
 
 fun union(left: Type, right: Type): Type {
     if (canCoerce(from = right, to = left)) {
@@ -267,7 +285,7 @@ internal fun replaceTypes(type: Type, typeMap: Map<TypeParameter, Type>): Type {
             namedArguments = type.namedArguments.mapValues({ argument -> replaceTypes(argument.value, typeMap) }),
             effects = type.effects,
             returns = replaceTypes(type.returns, typeMap),
-            typeParameters = type.typeParameters
+            staticParameters = type.staticParameters
         )
     } else if (type is UnitType || type is BoolType || type is IntType || type is StringType) {
         return type

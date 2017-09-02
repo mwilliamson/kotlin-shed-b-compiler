@@ -131,8 +131,8 @@ class UnexpectedTypeError(val expected: Type, val actual: Type, source: Source)
     : TypeCheckError("Expected type ${expected.shortDescription} but was ${actual.shortDescription}", source)
 class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: Source)
     : TypeCheckError("Expected $expected arguments, but got $actual", source)
-class WrongNumberOfTypeArgumentsError(val expected: Int, val actual: Int, source: Source)
-    : TypeCheckError("Expected $expected type arguments, but got $actual", source)
+class WrongNumberOfStaticArgumentsError(val expected: Int, val actual: Int, source: Source)
+    : TypeCheckError("Expected $expected static arguments, but got $actual", source)
 class MissingArgumentError(val argumentName: String, source: Source)
     : TypeCheckError("Call is missing argument: $argumentName", source)
 class ExtraArgumentError(val argumentName: String, source: Source)
@@ -355,7 +355,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     }
 
     val functionType = FunctionType(
-        typeParameters = typeParameters,
+        staticParameters = typeParameters,
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effects = effects,
@@ -412,7 +412,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
 
         override fun visit(node: FunctionTypeNode): Type {
             val type = FunctionType(
-                typeParameters = listOf(),
+                staticParameters = listOf(),
                 positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
                 namedArguments = mapOf(),
                 returns = evalType(node.returnType, context),
@@ -548,7 +548,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
                 throw UnexpectedTypeError(
                     expected = FunctionType(
-                        typeParameters = listOf(),
+                        staticParameters = listOf(),
                         positionalArguments = argumentTypes,
                         namedArguments = mapOf(),
                         returns = AnyType,
@@ -563,7 +563,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         private fun inferFunctionCallType(node: CallNode, receiverType: FunctionType): Type {
             val typeParameterBindings = checkArguments(
                 call = node,
-                typeParameters = receiverType.typeParameters,
+                staticParameters = receiverType.staticParameters,
                 positionalParameters = receiverType.positionalArguments,
                 namedParameters = receiverType.namedArguments
             )
@@ -584,7 +584,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
             val typeParameterBindings = checkArguments(
                 call = node,
-                typeParameters = typeFunction?.parameters ?: listOf(),
+                staticParameters = typeFunction?.parameters ?: listOf(),
                 positionalParameters = listOf(),
                 namedParameters = shapeType.fields
             )
@@ -600,7 +600,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
         private fun checkArguments(
             call: CallNode,
-            typeParameters: List<TypeParameter>,
+            staticParameters: List<StaticParameter>,
             positionalParameters: List<Type>,
             namedParameters: Map<String, Type>
         ): Map<TypeParameter, Type> {
@@ -628,16 +628,17 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             val arguments = positionalArguments + namedArguments
-            return checkArgumentTypes(typeParameters, call.typeArguments, arguments, call.source)
+            return checkArgumentTypes(staticParameters, call.typeArguments, arguments, call.source)
         }
 
         private fun checkArgumentTypes(
-            typeParameters: List<TypeParameter>,
-            typeArguments: List<StaticNode>,
+            staticParameters: List<StaticParameter>,
+            staticArguments: List<StaticNode>,
             arguments: List<Pair<ExpressionNode, Type>>,
             source: Source
         ): Map<TypeParameter, Type> {
-            if (typeArguments.isEmpty()) {
+            if (staticArguments.isEmpty()) {
+                val typeParameters = staticParameters.filterIsInstance<TypeParameter>()
                 val inferredTypeArguments = typeParameters.map({ parameter -> TypeParameter(
                     name = parameter.name,
                     variance = parameter.variance
@@ -677,21 +678,24 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                         }
                     })
             } else {
-                if (typeArguments.size != typeParameters.size) {
-                    throw WrongNumberOfTypeArgumentsError(
-                        expected = typeParameters.size,
-                        actual = typeArguments.size,
+                if (staticArguments.size != staticParameters.size) {
+                    throw WrongNumberOfStaticArgumentsError(
+                        expected = staticParameters.size,
+                        actual = staticArguments.size,
                         source = source
                     )
                 }
 
-                val typeMap = typeParameters.zip(typeArguments, { typeParameter, typeArgument ->
-                    typeParameter to evalType(typeArgument, context)
-                }).toMap()
+                val typeMap = staticParameters.zip(staticArguments)
+                    .filterIsInstance<Pair<TypeParameter, StaticNode>>()
+                    .map({ (typeParameter, typeArgument) ->
+                        typeParameter to evalType(typeArgument, context)
+                    })
+                    .toMap()
 
                 checkArgumentTypes(
-                    typeParameters = listOf(),
-                    typeArguments = listOf(),
+                    staticParameters = listOf(),
+                    staticArguments = listOf(),
                     arguments = arguments.map({ (expression, type) ->
                         expression to replaceTypes(type, typeMap)
                     }),
@@ -794,7 +798,7 @@ private class TypeConstraintSolver(
 
         if (from is FunctionType && to is FunctionType) {
             return (
-                from.typeParameters.isEmpty() && to.typeParameters.isEmpty() &&
+                from.staticParameters.isEmpty() && to.staticParameters.isEmpty() &&
                 from.positionalArguments.size == to.positionalArguments.size &&
                 from.positionalArguments.zip(to.positionalArguments, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
                 from.namedArguments.keys == to.namedArguments.keys &&
