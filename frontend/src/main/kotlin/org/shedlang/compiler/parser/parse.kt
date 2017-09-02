@@ -193,7 +193,7 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
 private data class FunctionSignature(
     val typeParameters: List<TypeParameterNode>,
     val arguments: List<ArgumentNode>,
-    val effects: List<VariableReferenceNode>,
+    val effects: List<StaticNode>,
     val returnType: StaticNode?
 )
 
@@ -246,9 +246,9 @@ internal fun parseTypeParameters(
     }
 }
 
-private fun parseEffects(tokens: TokenIterator<TokenType>): List<VariableReferenceNode> {
-    return parseZeroOrMoreNodes(
-        parseElement = ::parseVariableReference,
+private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
+    return parseZeroOrMore(
+        parseElement = ::parseType,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = {
             tokens.isNext(TokenType.SYMBOL_ARROW) ||

@@ -37,11 +37,11 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = equalTo("a"),
-                    type = isTypeReference("Int")
+                    type = isStaticReference("Int")
                 ),
                 isShapeField(
                     name = equalTo("b"),
-                    type = isTypeReference("String")
+                    type = isStaticReference("String")
                 )
             )
         ))
@@ -55,7 +55,7 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = equalTo("a"),
-                    type = isTypeReference("Int")
+                    type = isStaticReference("Int")
                 )
             )
         ))

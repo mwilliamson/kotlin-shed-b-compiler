@@ -14,8 +14,8 @@ import org.shedlang.compiler.types.*
 class TypeCheckShapeTests {
     @Test
     fun shapeDeclaresType() {
-        val intType = typeReference("Int")
-        val boolType = typeReference("Bool")
+        val intType = staticReference("Int")
+        val boolType = staticReference("Bool")
         val node = shape("X", fields = listOf(
             shapeField("a", intType),
             shapeField("b", boolType)
@@ -34,7 +34,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenShapeDeclaresMultipleFieldsWithSameNameThenExceptionIsThrown() {
-        val intType = typeReference("Int")
+        val intType = staticReference("Int")
         val node = shape("X", fields = listOf(
             shapeField("a", intType),
             shapeField("a", intType)
@@ -55,7 +55,7 @@ class TypeCheckShapeTests {
     @Test
     fun shapeWithTypeParametersDeclaresTypeFunction() {
         val typeParameterDeclaration = typeParameter("T")
-        val typeParameterReference = typeReference("T")
+        val typeParameterReference = staticReference("T")
         val node = shape(
             "X",
             typeParameters = listOf(typeParameterDeclaration),
@@ -80,7 +80,7 @@ class TypeCheckShapeTests {
     @Test
     fun typeParameterHasParsedVariance() {
         val typeParameterDeclaration = typeParameter("T", variance = Variance.COVARIANT)
-        val typeParameterReference = typeReference("T")
+        val typeParameterReference = staticReference("T")
         val node = shape(
             "X",
             typeParameters = listOf(typeParameterDeclaration)
@@ -98,8 +98,8 @@ class TypeCheckShapeTests {
     @Test
     fun typeOfShapeIsValidated() {
         val typeParameterDeclaration = typeParameter("T", variance = Variance.CONTRAVARIANT)
-        val typeParameterReference = typeReference("T")
-        val unitReference = typeReference("Unit")
+        val typeParameterReference = staticReference("T")
+        val unitReference = staticReference("Unit")
         val node = shape(
             "Box",
             typeParameters = listOf(typeParameterDeclaration),

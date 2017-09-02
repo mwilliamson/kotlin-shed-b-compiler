@@ -13,7 +13,7 @@ class TypeCheckModuleTests {
     @Test
     fun bodyIsTypeChecked() {
         assertStatementIsTypeChecked(fun(badStatement: StatementNode) {
-            val unit = typeReference("Unit")
+            val unit = staticReference("Unit")
             val node = module(body = listOf(
                 function(returnType = unit, body = listOf(badStatement))
             ))
@@ -25,7 +25,7 @@ class TypeCheckModuleTests {
 
     @Test
     fun functionsCanCallEachOtherRecursively() {
-        val unit = typeReference("Unit")
+        val unit = staticReference("Unit")
         val referenceG = variableReference("g")
         val declarationF = function(name = "f", returnType = unit, body = listOf(
             expressionStatement(call(referenceG, listOf()))
@@ -50,9 +50,9 @@ class TypeCheckModuleTests {
 
     @Test
     fun functionsCanUseShapesBeforeSyntacticDeclaration() {
-        val unitReference = typeReference("Unit")
+        val unitReference = staticReference("Unit")
 
-        val shapeReference = typeReference("X")
+        val shapeReference = staticReference("X")
         val shape = shape(name = "X")
         val node = module(body = listOf(
             function(
@@ -72,7 +72,7 @@ class TypeCheckModuleTests {
 
     @Test
     fun shapeCanReferencePreviouslyDeclaredShape() {
-        val firstShapeReference = typeReference("X")
+        val firstShapeReference = staticReference("X")
         val firstShape = shape(name = "X")
         val secondShape = shape(name = "Y", fields = listOf(shapeField("x", firstShapeReference)))
         val node = module(body = listOf(
@@ -89,7 +89,7 @@ class TypeCheckModuleTests {
 
     @Test
     fun typeOfModuleIsReturned() {
-        val unitReference = typeReference("Unit")
+        val unitReference = staticReference("Unit")
         val node = module(
             body = listOf(
                 function(

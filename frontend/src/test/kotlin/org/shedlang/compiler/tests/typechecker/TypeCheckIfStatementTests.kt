@@ -35,7 +35,7 @@ class TypeCheckIfStatementTests {
         val argument = argument("x")
 
         val variableReference = variableReference("x")
-        val intType = typeReference("Int")
+        val intType = staticReference("Int")
         val statement = ifStatement(
             condition = isOperation(variableReference, intType),
             trueBranch = listOf(

@@ -244,7 +244,7 @@ class CodeGeneratorTests {
     @Test
     fun isOperationGeneratesTypeCheck() {
         val reference = variableReference("x")
-        val typeReference = typeReference("X")
+        val typeReference = staticReference("X")
 
         val shed = isOperation(
             expression = reference,

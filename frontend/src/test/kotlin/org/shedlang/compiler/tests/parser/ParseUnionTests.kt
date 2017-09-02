@@ -14,7 +14,7 @@ class ParseUnionTests {
         assertThat(node, isUnion(
             name = equalTo("X"),
             typeParameters = isSequence(),
-            members = isSequence(isTypeReference("Y"), isTypeReference("Z"))
+            members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
 
@@ -25,7 +25,7 @@ class ParseUnionTests {
         assertThat(node, isUnion(
             name = equalTo("X"),
             typeParameters = isSequence(isTypeParameter(name = equalTo("T"))),
-            members = isSequence(isTypeReference("Y"), isTypeReference("Z"))
+            members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
 
@@ -39,7 +39,7 @@ class ParseUnionTests {
                 isTypeParameter(name = equalTo("T")),
                 isTypeParameter(name = equalTo("U"))
             ),
-            members = isSequence(isTypeReference("Y"), isTypeReference("Z"))
+            members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
 }

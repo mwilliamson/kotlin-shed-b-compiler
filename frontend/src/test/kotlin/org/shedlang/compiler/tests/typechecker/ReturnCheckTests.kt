@@ -17,7 +17,7 @@ import org.shedlang.compiler.types.UnitType
 class ReturnCheckTests {
     @Test
     fun checkingReturnsInModuleChecksBodiesOfFunctions() {
-        val intType = typeReference("Int")
+        val intType = staticReference("Int")
         val typeContext = typeContext(referenceTypes = mapOf(intType to MetaType(IntType)))
         val node = function(
             returnType = intType,
@@ -39,7 +39,7 @@ class ReturnCheckTests {
 
     @Test
     fun functionThatHasUnitReturnTypeDoesntNeedReturnStatement() {
-        val unitType = typeReference("Unit")
+        val unitType = staticReference("Unit")
         val typeContext = typeContext(referenceTypes = mapOf(unitType to MetaType(UnitType)))
         val node = function(
             returnType = unitType,

@@ -91,8 +91,8 @@ fun function(
     name: String = "f",
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
-    effects: List<VariableReferenceNode> = listOf(),
-    returnType: StaticNode = typeReference("Unit"),
+    effects: List<StaticNode> = listOf(),
+    returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = name,
@@ -107,8 +107,8 @@ fun function(
 fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
-    effects: List<VariableReferenceNode> = listOf(),
-    returnType: StaticNode = typeReference("Unit"),
+    effects: List<StaticNode> = listOf(),
+    returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionExpressionNode(
     typeParameters = typeParameters,
@@ -122,8 +122,8 @@ fun functionExpression(
 fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
-    effects: List<VariableReferenceNode> = listOf(),
-    returnType: StaticNode? = typeReference("Unit"),
+    effects: List<StaticNode> = listOf(),
+    returnType: StaticNode? = staticReference("Unit"),
     body: ExpressionNode
 ) = FunctionExpressionNode(
     typeParameters = typeParameters,
@@ -176,7 +176,7 @@ fun typeParameter(
 
 fun argument(
     name: String = "x",
-    type: StaticNode = typeReference("Int")
+    type: StaticNode = staticReference("Int")
 ) = ArgumentNode(
     name = name,
     type = type,
@@ -195,7 +195,7 @@ fun module(
 
 fun import(path: ImportPath) = ImportNode(path = path, source = anySource())
 
-fun typeReference(name: String) = StaticReferenceNode(name, anySource())
+fun staticReference(name: String) = StaticReferenceNode(name, anySource())
 fun staticFieldAccess(
     receiver: StaticNode,
     fieldName: String
@@ -204,7 +204,7 @@ fun staticFieldAccess(
     fieldName = fieldName,
     source = anySource()
 )
-fun typeApplication(
+fun staticApplication(
     receiver: StaticNode,
     arguments: List<StaticNode>
 ) = StaticApplicationNode(

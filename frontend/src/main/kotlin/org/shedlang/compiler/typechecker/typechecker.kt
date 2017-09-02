@@ -424,8 +424,8 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
     })
 }
 
-internal fun evalEffect(node: VariableReferenceNode, context: TypeContext): Effect {
-    val effectType = context.typeOf(node)
+internal fun evalEffect(node: StaticNode, context: TypeContext): Effect {
+    val effectType = evalStatic(node, context)
     if (effectType is EffectType) {
         return effectType.effect
     } else {

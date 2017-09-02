@@ -12,8 +12,8 @@ import org.shedlang.compiler.types.MetaType
 class TypeCheckUnionTests {
     @Test
     fun unionDeclaresType() {
-        val intType = typeReference("Int")
-        val boolType = typeReference("Bool")
+        val intType = staticReference("Int")
+        val boolType = staticReference("Bool")
         val node = union("X", listOf(
             intType,
             boolType
@@ -33,7 +33,7 @@ class TypeCheckUnionTests {
     @Test
     fun unionWithTypeParametersDeclaresTypeFunction() {
         val typeParameterDeclaration = typeParameter("T")
-        val typeParameterReference = typeReference("T")
+        val typeParameterReference = staticReference("T")
         val node = union(
             "X",
             typeParameters = listOf(typeParameterDeclaration),

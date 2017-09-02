@@ -14,7 +14,7 @@ import org.shedlang.compiler.types.*
 class EvalTypeTests {
     @Test
     fun whenReferencedVariableIsNotATypeThenErrorIsThrown() {
-        val reference = typeReference("x")
+        val reference = staticReference("x")
 
         assertThat(
             { evalType(
@@ -31,7 +31,7 @@ class EvalTypeTests {
 
     @Test
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
-        val reference = typeReference("x")
+        val reference = staticReference("x")
 
         assertThat(
             { evalType(
@@ -48,7 +48,7 @@ class EvalTypeTests {
 
     @Test
     fun typeOfTypeReferenceIsTypeOfMetaType() {
-        val reference = typeReference("x")
+        val reference = staticReference("x")
 
         val type = evalType(
             reference,
@@ -59,8 +59,8 @@ class EvalTypeTests {
 
     @Test
     fun typeApplicationHasTypeOfApplyingType() {
-        val listReference = typeReference("Box")
-        val boolReference = typeReference("Bool")
+        val listReference = staticReference("Box")
+        val boolReference = staticReference("Bool")
 
         val typeParameter = invariantTypeParameter("T")
         val listType = parametrizedShapeType(
@@ -70,7 +70,7 @@ class EvalTypeTests {
                 "value" to typeParameter
             )
         )
-        val application = typeApplication(listReference, listOf(boolReference))
+        val application = staticApplication(listReference, listOf(boolReference))
 
         val type = evalType(
             application,
@@ -90,7 +90,7 @@ class EvalTypeTests {
 
     @Test
     fun staticFieldAccessHasTypeOfField() {
-        val moduleReference = typeReference("M")
+        val moduleReference = staticReference("M")
         val moduleType = ModuleType(fields = mapOf(
             "T" to MetaType(IntType)
         ))
@@ -107,8 +107,8 @@ class EvalTypeTests {
 
     @Test
     fun canEvaluateFunctionTypeNode() {
-        val intReference = typeReference("Int")
-        val boolReference = typeReference("Bool")
+        val intReference = staticReference("Int")
+        val boolReference = staticReference("Bool")
 
         val node = functionType(
             arguments = listOf(intReference),
@@ -130,7 +130,7 @@ class EvalTypeTests {
 
     @Test
     fun functionTypeIsValidated() {
-        val typeParameterReference = typeReference("T")
+        val typeParameterReference = staticReference("T")
         val typeParameter = contravariantTypeParameter("T")
 
         val node = functionType(returnType = typeParameterReference)

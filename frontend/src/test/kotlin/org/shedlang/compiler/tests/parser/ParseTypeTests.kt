@@ -11,7 +11,7 @@ class ParseTypeTests {
     fun identifierIsParsedAsTypeReference() {
         val source = "T"
         val node = parseString(::parseType, source)
-        assertThat(node, isTypeReference(name = "T"))
+        assertThat(node, isStaticReference(name = "T"))
     }
 
     @Test
@@ -19,7 +19,7 @@ class ParseTypeTests {
         val source = "M.T"
         val node = parseString(::parseType, source)
         assertThat(node, isStaticFieldAccess(
-            receiver = isTypeReference(name = "M"),
+            receiver = isStaticReference(name = "M"),
             fieldName = equalTo("T")
         ))
     }
@@ -28,11 +28,11 @@ class ParseTypeTests {
     fun typeApplicationIsRepresentedBySquareBrackets() {
         val source = "X[T, U]"
         val node = parseString(::parseType, source)
-        assertThat(node, isTypeApplication(
-            receiver = isTypeReference(name = "X"),
+        assertThat(node, isStaticApplication(
+            receiver = isStaticReference(name = "X"),
             arguments = isSequence(
-                isTypeReference(name = "T"),
-                isTypeReference(name = "U")
+                isStaticReference(name = "T"),
+                isStaticReference(name = "U")
             )
         ))
     }
@@ -43,10 +43,10 @@ class ParseTypeTests {
         val node = parseString(::parseType, source)
         assertThat(node, isFunctionType(
             arguments = isSequence(
-                isTypeReference(name = "A"),
-                isTypeReference(name = "B")
+                isStaticReference(name = "A"),
+                isStaticReference(name = "B")
             ),
-            returnType = isTypeReference(name = "C")
+            returnType = isStaticReference(name = "C")
         ))
     }
 
@@ -55,7 +55,7 @@ class ParseTypeTests {
         val source = "() !E -> R"
         val node = parseString(::parseType, source)
         assertThat(node, isFunctionType(
-            effects = isSequence(isVariableReference("!E"))
+            effects = isSequence(isStaticReference("!E"))
         ))
     }
 }

@@ -12,10 +12,10 @@ import org.shedlang.compiler.types.*
 class TypeCheckFunctionTests {
     @Test
     fun typeParameterTypeIsAdded() {
-        val unitReference = typeReference("Unit")
+        val unitReference = staticReference("Unit")
 
         val typeParameter = typeParameter("T")
-        val typeParameterReference = typeReference("T")
+        val typeParameterReference = staticReference("T")
         val node = function(
             typeParameters = listOf(typeParameter),
             arguments = listOf(argument(type = typeParameterReference)),
@@ -48,7 +48,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun bodyOfFunctionIsTypeChecked() {
-        val unit = typeReference("Unit")
+        val unit = staticReference("Unit")
         val typeContext = typeContext(referenceTypes = mapOf(unit to MetaType(UnitType)))
 
         assertStatementIsTypeChecked(fun(badStatement) {
@@ -63,7 +63,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun returnStatementsInBodyMustReturnCorrectType() {
-        val intType = typeReference("Int")
+        val intType = staticReference("Int")
         val typeContext = typeContext(referenceTypes = mapOf(intType to MetaType(IntType)))
         val node = function(
             returnType = intType,
@@ -79,7 +79,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun functionArgumentsAreTyped() {
-        val intType = typeReference("Int")
+        val intType = staticReference("Int")
         val argument = argument(name = "x", type = intType)
         val argumentReference = variableReference("x")
         val node = function(
@@ -97,8 +97,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun signatureOfFunctionIsDeterminedFromArgumentsAndReturnType() {
-        val intType = typeReference("Int")
-        val boolType = typeReference("Bool")
+        val intType = staticReference("Int")
+        val boolType = staticReference("Bool")
         val node = function(
             arguments = listOf(
                 argument(name = "x", type = intType),
@@ -120,8 +120,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreIncludedInSignature() {
-        val unitType = typeReference("Unit")
-        val effect = variableReference("!io")
+        val unitType = staticReference("Unit")
+        val effect = staticReference("!io")
 
         val node = function(
             returnType = unitType,
@@ -141,8 +141,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreAddedToBodyContext() {
-        val unitType = typeReference("Unit")
-        val effect = variableReference("!io")
+        val unitType = staticReference("Unit")
+        val effect = staticReference("!io")
         val functionReference = variableReference("f")
 
         val node = function(
@@ -167,7 +167,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun errorIsThrowIfBodyStatementsHaveUnspecifiedEffect() {
-        val unitType = typeReference("Unit")
+        val unitType = staticReference("Unit")
         val functionReference = variableReference("f")
 
         val node = function(
@@ -196,7 +196,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreNotInheritedByNestedFunctionBodyStatements() {
-        val unitType = typeReference("Unit")
+        val unitType = staticReference("Unit")
         val functionReference = variableReference("f")
 
         val node = function(
@@ -226,7 +226,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreNotInheritedByNestedFunctionBodyExpression() {
-        val unitType = typeReference("Unit")
+        val unitType = staticReference("Unit")
         val functionReference = variableReference("f")
 
         val node = functionExpression(
@@ -254,7 +254,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun whenExpressionBodyDoesNotMatchReturnTypeThenErrorIsThrown() {
-        val intType = typeReference("Int")
+        val intType = staticReference("Int")
         val node = functionExpression(
             arguments = listOf(),
             returnType = intType,
@@ -284,7 +284,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun explicitReturnTypeIsUsedAsReturnTypeInsteadOfExpressionBodyType() {
-        val anyReference = typeReference("Any")
+        val anyReference = staticReference("Any")
         val node = functionExpression(
             arguments = listOf(),
             returnType = anyReference,

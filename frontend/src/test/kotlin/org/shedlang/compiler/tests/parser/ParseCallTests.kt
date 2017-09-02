@@ -71,7 +71,7 @@ class ParseCallTests {
         val source = "f[T]()"
         val node = parseString(::parseExpression, source)
         assertThat(node, isCall(
-            typeArguments = isSequence(isTypeReference("T"))
+            typeArguments = isSequence(isStaticReference("T"))
         ))
     }
 
@@ -80,7 +80,7 @@ class ParseCallTests {
         val source = "f[T, U]()"
         val node = parseString(::parseExpression, source)
         assertThat(node, isCall(
-            typeArguments = isSequence(isTypeReference("T"), isTypeReference("U"))
+            typeArguments = isSequence(isStaticReference("T"), isStaticReference("U"))
         ))
     }
 

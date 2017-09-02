@@ -89,7 +89,7 @@ class ParseFunctionTests {
         val source = "fun f() !io -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
-            isVariableReference("!io")
+            isStaticReference("!io")
         )))
     }
 
@@ -98,8 +98,8 @@ class ParseFunctionTests {
         val source = "fun f() !a, !b -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
-            isVariableReference("!a"),
-            isVariableReference("!b")
+            isStaticReference("!a"),
+            isStaticReference("!b")
         )))
     }
 

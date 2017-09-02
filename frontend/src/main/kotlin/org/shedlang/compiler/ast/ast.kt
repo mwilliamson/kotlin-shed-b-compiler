@@ -114,7 +114,7 @@ data class StaticApplicationNode(
 data class FunctionTypeNode(
     val arguments: List<StaticNode>,
     val returnType: StaticNode,
-    val effects: List<VariableReferenceNode>,
+    val effects: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticNode {
@@ -215,7 +215,7 @@ interface FunctionNode : Node {
     val typeParameters: List<TypeParameterNode>
     val arguments: List<ArgumentNode>
     val returnType: StaticNode?
-    val effects: List<VariableReferenceNode>
+    val effects: List<StaticNode>
     val body: FunctionBody
 }
 
@@ -240,7 +240,7 @@ data class FunctionExpressionNode(
     override val typeParameters: List<TypeParameterNode>,
     override val arguments: List<ArgumentNode>,
     override val returnType: StaticNode?,
-    override val effects: List<VariableReferenceNode>,
+    override val effects: List<StaticNode>,
     override val body: FunctionBody,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -258,7 +258,7 @@ data class FunctionDeclarationNode(
     override val typeParameters: List<TypeParameterNode>,
     override val arguments: List<ArgumentNode>,
     override val returnType: StaticNode,
-    override val effects: List<VariableReferenceNode>,
+    override val effects: List<StaticNode>,
     override val body: FunctionBody.Statements,
     override val source: Source,
     override val nodeId: Int = freshNodeId()

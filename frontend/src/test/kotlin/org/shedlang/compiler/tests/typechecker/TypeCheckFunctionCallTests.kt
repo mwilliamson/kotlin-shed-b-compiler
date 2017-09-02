@@ -48,8 +48,8 @@ class TypeCheckFunctionCallTests {
     @Test
     fun functionCallWithExplicitTypeArguments() {
         val functionReference = variableReference("f")
-        val intReference = typeReference("Int")
-        val unitReference = typeReference("Unit")
+        val intReference = staticReference("Int")
+        val unitReference = staticReference("Unit")
         val node = call(
             receiver = functionReference,
             typeArguments = listOf(intReference, unitReference),
@@ -76,7 +76,7 @@ class TypeCheckFunctionCallTests {
     @Test
     fun whenWrongNumberOfTypeArgumentsIsProvidedThenErrorIsThrown() {
         val functionReference = variableReference("f")
-        val unitReference = typeReference("Unit")
+        val unitReference = staticReference("Unit")
         val node = call(
             receiver = functionReference,
             typeArguments = listOf(unitReference, unitReference),

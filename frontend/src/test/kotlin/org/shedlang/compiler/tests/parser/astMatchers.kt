@@ -127,9 +127,11 @@ internal fun isFieldAccess(
     has(FieldAccessNode::fieldName, fieldName)
 ))
 
-internal fun isVariableReference(name: String) = cast(has(VariableReferenceNode::name, equalTo(name)))
+internal fun isVariableReference(name: String) : Matcher<ExpressionNode>
+    = cast(has(VariableReferenceNode::name, equalTo(name)))
 
-internal fun isTypeReference(name: String) = cast(has(StaticReferenceNode::name, equalTo(name)))
+internal fun isStaticReference(name: String) : Matcher<StaticNode>
+    = cast(has(StaticReferenceNode::name, equalTo(name)))
 
 internal fun isStaticFieldAccess(
     receiver: Matcher<StaticNode>,
@@ -139,18 +141,18 @@ internal fun isStaticFieldAccess(
     has(StaticFieldAccessNode::fieldName, fieldName)
 ))
 
-internal fun isTypeApplication(
+internal fun isStaticApplication(
     receiver: Matcher<StaticNode>,
     arguments: Matcher<List<StaticNode>>
-) = cast(allOf(
+): Matcher<StaticNode> = cast(allOf(
     has(StaticApplicationNode::receiver, receiver),
     has(StaticApplicationNode::arguments, arguments)
 ))
 internal fun isFunctionType(
     arguments: Matcher<List<StaticNode>> = anything,
     returnType: Matcher<StaticNode> = anything,
-    effects: Matcher<List<VariableReferenceNode>> = anything
-) = cast(allOf(
+    effects: Matcher<List<StaticNode>> = anything
+): Matcher<StaticNode> = cast(allOf(
     has(FunctionTypeNode::arguments, arguments),
     has(FunctionTypeNode::returnType, returnType),
     has(FunctionTypeNode::effects, effects)

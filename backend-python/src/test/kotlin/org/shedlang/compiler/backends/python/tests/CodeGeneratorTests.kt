@@ -55,7 +55,7 @@ class CodeGeneratorTests {
         val shed = shape(
             name = "X",
             fields = listOf(
-                shapeField("a", typeReference("Int"))
+                shapeField("a", staticReference("Int"))
             )
         )
 
@@ -318,7 +318,7 @@ class CodeGeneratorTests {
     fun isOperationGeneratesIsInstanceCall() {
         val declaration = argument("x")
         val reference = variableReference("x")
-        val typeReference = typeReference("X")
+        val typeReference = staticReference("X")
         val typeDeclaration = shape("X", listOf())
 
         val shed = isOperation(
