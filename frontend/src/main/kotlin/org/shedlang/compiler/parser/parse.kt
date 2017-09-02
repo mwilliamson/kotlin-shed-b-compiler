@@ -396,7 +396,7 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
     var left: ExpressionNode = primaryExpression
     while (true) {
         val next = tokens.peek()
-        val operationParser = lookupOperator(next.tokenType)
+        val operationParser = OperationParser.lookup(next.tokenType)
         if (operationParser == null || operationParser.precedence < precedence) {
             return left
         } else {
@@ -406,39 +406,28 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
     }
 }
 
-private fun lookupOperator(tokenType: TokenType) : OperationParser? {
-    return when (tokenType) {
-        TokenType.SYMBOL_DOUBLE_EQUALS -> OperationParser.EQUALS
-        TokenType.SYMBOL_PLUS -> OperationParser.ADD
-        TokenType.SYMBOL_MINUS -> OperationParser.SUBTRACT
-        TokenType.SYMBOL_ASTERISK -> OperationParser.MULTIPLY
-        TokenType.SYMBOL_OPEN_SQUARE_BRACKET -> OperationParser.CALL_WITH_EXPLICIT_TYPE_ARGUMENTS
-        TokenType.SYMBOL_OPEN_PAREN -> OperationParser.CALL
-        TokenType.SYMBOL_DOT -> OperationParser.FIELD_ACCESS
-        TokenType.KEYWORD_IS -> OperationParser.IS
-        else -> null
-    }
-}
-
-private interface OperationParser {
-    val precedence: Int
-
-    fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode
-
+private interface OperationParser: ExpressionParser<ExpressionNode> {
     companion object {
-        val EQUALS = InfixOperationParser(Operator.EQUALS, 8)
-        val ADD = InfixOperationParser(Operator.ADD, 11)
-        val SUBTRACT = InfixOperationParser(Operator.SUBTRACT, 11)
-        val MULTIPLY = InfixOperationParser(Operator.MULTIPLY, 12)
-        val CALL_WITH_EXPLICIT_TYPE_ARGUMENTS = CallWithExplicitTypeArgumentsParser
-        val CALL = CallParser
-        val FIELD_ACCESS = FieldAccessParser
-        val IS = IsParser
+        val parsers = listOf(
+            InfixOperationParser(Operator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, 8),
+            InfixOperationParser(Operator.ADD, TokenType.SYMBOL_PLUS, 11),
+            InfixOperationParser(Operator.SUBTRACT, TokenType.SYMBOL_MINUS, 11),
+            InfixOperationParser(Operator.MULTIPLY, TokenType.SYMBOL_ASTERISK, 12),
+            CallWithExplicitTypeArgumentsParser,
+            CallParser,
+            FieldAccessParser,
+            IsParser
+        ).associateBy({parser -> parser.operatorToken})
+
+        fun lookup(tokenType: TokenType): OperationParser? {
+            return parsers[tokenType]
+        }
     }
 }
 
 private class InfixOperationParser(
     private val operator: Operator,
+    override val operatorToken: TokenType,
     override val precedence: Int
 ) : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
@@ -448,6 +437,9 @@ private class InfixOperationParser(
 }
 
 private object CallWithExplicitTypeArgumentsParser : OperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
+
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val typeArguments = parseMany(
             parseElement = { tokens -> parseType(tokens) },
@@ -470,6 +462,9 @@ private object CallWithExplicitTypeArgumentsParser : OperationParser {
 }
 
 private object CallParser : OperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_OPEN_PAREN
+
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         return parseCallFromParens(
             left = left,
@@ -549,6 +544,9 @@ private fun parseArgument(source: Source, tokens: TokenIterator<TokenType>): Par
 }
 
 private object FieldAccessParser : OperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_DOT
+
     override val precedence: Int
         get() = 14
 
@@ -563,6 +561,9 @@ private object FieldAccessParser : OperationParser {
 }
 
 private object IsParser : OperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.KEYWORD_IS
+
     override val precedence: Int
         get() = 9
 
@@ -691,7 +692,7 @@ private fun parseType(
     var left: TypeNode = ::parsePrimaryStaticExpression.parse(tokens = tokens)
     while (true) {
         val next = tokens.peek()
-        val operationParser = lookupStaticOperator(next.tokenType)
+        val operationParser = StaticOperationParser.lookup(next.tokenType)
         if (operationParser == null || operationParser.precedence < precedence) {
             return left
         } else {
@@ -733,24 +734,27 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
     )
 }
 
-private fun lookupStaticOperator(tokenType: TokenType): StaticOperationParser? {
-    return when (tokenType) {
-        TokenType.SYMBOL_OPEN_SQUARE_BRACKET -> StaticOperationParser.TYPE_APPLICATION
-        else -> null
+private interface StaticOperationParser: ExpressionParser<TypeNode> {
+    companion object {
+        private val parsers = listOf(TypeApplicationParser).associateBy({ parser -> parser.operatorToken })
+
+        fun lookup(tokenType: TokenType): StaticOperationParser? {
+            return parsers[tokenType]
+        }
     }
 }
 
-private interface StaticOperationParser {
+private interface ExpressionParser<T> {
     val precedence: Int
+    val operatorToken: TokenType
 
-    fun parse(left: TypeNode, tokens: TokenIterator<TokenType>): TypeNode
-
-    companion object {
-        val TYPE_APPLICATION = TypeApplicationParser
-    }
+    fun parse(left: T, tokens: TokenIterator<TokenType>): T
 }
 
 private object TypeApplicationParser : StaticOperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
+
     override fun parse(left: TypeNode, tokens: TokenIterator<TokenType>): TypeNode {
         val arguments = parseMany(
             parseElement = { tokens -> parseType(tokens) },
