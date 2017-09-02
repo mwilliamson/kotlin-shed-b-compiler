@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.parseType
 import org.shedlang.compiler.tests.isSequence
@@ -11,6 +12,16 @@ class ParseTypeTests {
         val source = "T"
         val node = parseString(::parseType, source)
         assertThat(node, isTypeReference(name = "T"))
+    }
+
+    @Test
+    fun staticFieldAccessIsParsed() {
+        val source = "M.T"
+        val node = parseString(::parseType, source)
+        assertThat(node, isStaticFieldAccess(
+            receiver = isTypeReference(name = "M"),
+            fieldName = equalTo("T")
+        ))
     }
 
     @Test

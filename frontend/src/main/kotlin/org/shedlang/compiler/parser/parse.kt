@@ -736,7 +736,10 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
 
 private interface StaticOperationParser: ExpressionParser<TypeNode> {
     companion object {
-        private val parsers = listOf(TypeApplicationParser).associateBy({ parser -> parser.operatorToken })
+        private val parsers = listOf(
+            TypeApplicationParser,
+            StaticFieldAccessParser
+        ).associateBy({ parser -> parser.operatorToken })
 
         fun lookup(tokenType: TokenType): StaticOperationParser? {
             return parsers[tokenType]
@@ -770,7 +773,19 @@ private object TypeApplicationParser : StaticOperationParser {
 
     override val precedence: Int
         get() = 14
+}
 
+private object StaticFieldAccessParser : StaticOperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_DOT
+
+    override fun parse(left: TypeNode, tokens: TokenIterator<TokenType>): TypeNode {
+        val fieldName = parseIdentifier(tokens)
+        return StaticFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
+    }
+
+    override val precedence: Int
+        get() = 14
 }
 
 private fun parseIdentifier(tokens: TokenIterator<TokenType>) = tokens.nextValue(TokenType.IDENTIFIER)

@@ -135,7 +135,7 @@ class ParseFunctionTests {
     }
 
     @Test
-    fun whenBodyOfFunctionExpressionIsExpressionThenReturnTypeCanBeOmitted() {
+    fun returnTypeofFunctionExpressionCanBeOmitted() {
         val source = "fun () => 4"
         val function = parseString(::parseExpression, source)
         assertThat(function, cast(allOf(
@@ -145,15 +145,6 @@ class ParseFunctionTests {
                 cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4))))
             )
         )))
-    }
-
-    @Test
-    fun errorIsThrownWhenFunctionExpressionWithStatementsBodyIsMissingReturnType() {
-        val source = "fun () { }"
-        assertThat(
-            { parseString(::parseExpression, source) },
-            throws(has(MissingReturnTypeError::message, equalTo("Function expression with statements body must have return type")))
-        )
     }
 
     private fun isArgument(name: String, typeReference: String): Matcher<ArgumentNode> {

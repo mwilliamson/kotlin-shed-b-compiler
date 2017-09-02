@@ -385,6 +385,10 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
             }
         }
 
+        override fun visit(node: StaticFieldAccessNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: TypeApplicationNode): Type {
             val receiver = evalType(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalType(argument, context) })

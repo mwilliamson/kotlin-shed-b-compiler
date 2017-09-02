@@ -365,6 +365,10 @@ private fun generateCode(node: TypeNode, context: CodeGenerationContext): Python
             return PythonVariableReferenceNode(context.name(node), NodeSource(node))
         }
 
+        override fun visit(node: StaticFieldAccessNode): PythonExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: TypeApplicationNode): PythonExpressionNode {
             return generateCode(node.receiver, context)
         }

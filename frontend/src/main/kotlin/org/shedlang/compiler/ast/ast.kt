@@ -62,6 +62,7 @@ internal fun freshNodeId() = nextId++
 interface TypeNode : Node {
     interface Visitor<T> {
         fun visit(node: TypeReferenceNode): T
+        fun visit(node: StaticFieldAccessNode): T
         fun visit(node: TypeApplicationNode): T
         fun visit(node: FunctionTypeNode): T
     }
@@ -76,6 +77,20 @@ data class TypeReferenceNode(
 ) : ReferenceNode, TypeNode {
     override val children: List<Node>
         get() = listOf()
+
+    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class StaticFieldAccessNode(
+    val receiver: TypeNode,
+    val fieldName: String,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : TypeNode {
+    override val children: List<Node>
+        get() = listOf(receiver)
 
     override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
         return visitor.visit(this)
