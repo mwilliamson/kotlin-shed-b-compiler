@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
@@ -502,5 +503,30 @@ class TypeCheckFunctionCallTests {
             { inferType(node, typeContext) },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
+    }
+
+    @Test
+    @Disabled("WIP")
+    fun canCallFunctionWithExplicitEffectArgument() {
+        val effectParameter = effectParameter("E")
+        val effectReference = staticReference("Io")
+
+        val functionReference = variableReference("f")
+
+        val node = call(receiver = functionReference)
+        val functionType = functionType(
+            staticParameters = listOf(effectParameter),
+            effects = setOf(effectParameter),
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType,
+                effectReference to EffectType(IoEffect)
+            ),
+            effects = setOf(IoEffect)
+        )
+        inferType(node, typeContext)
     }
 }
