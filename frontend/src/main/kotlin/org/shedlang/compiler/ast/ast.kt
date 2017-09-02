@@ -59,69 +59,69 @@ private var nextId = 0
 
 internal fun freshNodeId() = nextId++
 
-interface TypeNode : Node {
+interface StaticNode : Node {
     interface Visitor<T> {
-        fun visit(node: TypeReferenceNode): T
+        fun visit(node: StaticReferenceNode): T
         fun visit(node: StaticFieldAccessNode): T
-        fun visit(node: TypeApplicationNode): T
+        fun visit(node: StaticApplicationNode): T
         fun visit(node: FunctionTypeNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
 }
 
-data class TypeReferenceNode(
+data class StaticReferenceNode(
     override val name: String,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ReferenceNode, TypeNode {
+) : ReferenceNode, StaticNode {
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class StaticFieldAccessNode(
-    val receiver: TypeNode,
+    val receiver: StaticNode,
     val fieldName: String,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : TypeNode {
+) : StaticNode {
     override val children: List<Node>
         get() = listOf(receiver)
 
-    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-data class TypeApplicationNode(
-    val receiver: TypeNode,
-    val arguments: List<TypeNode>,
+data class StaticApplicationNode(
+    val receiver: StaticNode,
+    val arguments: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : TypeNode {
+) : StaticNode {
     override val children: List<Node>
         get() = listOf(receiver) + arguments
 
-    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class FunctionTypeNode(
-    val arguments: List<TypeNode>,
-    val returnType: TypeNode,
+    val arguments: List<StaticNode>,
+    val returnType: StaticNode,
     val effects: List<VariableReferenceNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): TypeNode {
+): StaticNode {
     override val children: List<Node>
         get() = arguments + listOf(returnType)
 
-    override fun <T> accept(visitor: TypeNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -188,7 +188,7 @@ data class ShapeNode(
 
 data class ShapeFieldNode(
     val name: String,
-    val type: TypeNode,
+    val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): Node {
@@ -199,7 +199,7 @@ data class ShapeFieldNode(
 data class UnionNode(
     override val name: String,
     val typeParameters: List<TypeParameterNode>,
-    val members: List<TypeNode>,
+    val members: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
@@ -214,7 +214,7 @@ data class UnionNode(
 interface FunctionNode : Node {
     val typeParameters: List<TypeParameterNode>
     val arguments: List<ArgumentNode>
-    val returnType: TypeNode?
+    val returnType: StaticNode?
     val effects: List<VariableReferenceNode>
     val body: FunctionBody
 }
@@ -239,7 +239,7 @@ sealed class FunctionBody {
 data class FunctionExpressionNode(
     override val typeParameters: List<TypeParameterNode>,
     override val arguments: List<ArgumentNode>,
-    override val returnType: TypeNode?,
+    override val returnType: StaticNode?,
     override val effects: List<VariableReferenceNode>,
     override val body: FunctionBody,
     override val source: Source,
@@ -257,7 +257,7 @@ data class FunctionDeclarationNode(
     override val name: String,
     override val typeParameters: List<TypeParameterNode>,
     override val arguments: List<ArgumentNode>,
-    override val returnType: TypeNode,
+    override val returnType: StaticNode,
     override val effects: List<VariableReferenceNode>,
     override val body: FunctionBody.Statements,
     override val source: Source,
@@ -286,7 +286,7 @@ data class TypeParameterNode(
 
 data class ArgumentNode(
     override val name: String,
-    val type: TypeNode,
+    val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode, Node {
@@ -476,7 +476,7 @@ data class BinaryOperationNode(
 
 data class IsNode(
     val expression: ExpressionNode,
-    val type: TypeNode,
+    val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
@@ -490,7 +490,7 @@ data class IsNode(
 
 data class CallNode(
     val receiver: ExpressionNode,
-    val typeArguments: List<TypeNode>,
+    val typeArguments: List<StaticNode>,
     val positionalArguments: List<ExpressionNode>,
     val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,

@@ -367,11 +367,11 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
     return functionType
 }
 
-private fun typeCheck(type: TypeNode, context: TypeContext) {
+private fun typeCheck(type: StaticNode, context: TypeContext) {
     evalType(type, context)
 }
 
-internal fun evalType(type: TypeNode, context: TypeContext): Type {
+internal fun evalType(type: StaticNode, context: TypeContext): Type {
     val staticValue = evalStatic(type, context)
     return when (staticValue) {
         is MetaType -> staticValue.type
@@ -383,9 +383,9 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
     }
 }
 
-private fun evalStatic(node: TypeNode, context: TypeContext): Type {
-    return node.accept(object : TypeNode.Visitor<Type> {
-        override fun visit(node: TypeReferenceNode): Type {
+private fun evalStatic(node: StaticNode, context: TypeContext): Type {
+    return node.accept(object : StaticNode.Visitor<Type> {
+        override fun visit(node: StaticReferenceNode): Type {
             return context.typeOf(node)
         }
 
@@ -399,7 +399,7 @@ private fun evalStatic(node: TypeNode, context: TypeContext): Type {
             }
         }
 
-        override fun visit(node: TypeApplicationNode): Type {
+        override fun visit(node: StaticApplicationNode): Type {
             val receiver = evalType(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalType(argument, context) })
             if (receiver is TypeFunction) {
@@ -633,7 +633,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
 
         private fun checkArgumentTypes(
             typeParameters: List<TypeParameter>,
-            typeArguments: List<TypeNode>,
+            typeArguments: List<StaticNode>,
             arguments: List<Pair<ExpressionNode, Type>>,
             source: Source
         ): Map<TypeParameter, Type> {

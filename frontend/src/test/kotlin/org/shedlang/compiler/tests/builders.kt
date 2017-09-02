@@ -49,7 +49,7 @@ fun binaryOperation(
 
 fun isOperation(
     expression: ExpressionNode,
-    type: TypeNode
+    type: StaticNode
 ) = IsNode(
     expression = expression,
     type = type,
@@ -60,7 +60,7 @@ fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<CallNamedArgumentNode> = listOf(),
-    typeArguments: List<TypeNode> = listOf()
+    typeArguments: List<StaticNode> = listOf()
 ) = CallNode(
     receiver = receiver,
     typeArguments = typeArguments,
@@ -92,7 +92,7 @@ fun function(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
     effects: List<VariableReferenceNode> = listOf(),
-    returnType: TypeNode = typeReference("Unit"),
+    returnType: StaticNode = typeReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = name,
@@ -108,7 +108,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
     effects: List<VariableReferenceNode> = listOf(),
-    returnType: TypeNode = typeReference("Unit"),
+    returnType: StaticNode = typeReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionExpressionNode(
     typeParameters = typeParameters,
@@ -123,7 +123,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
     effects: List<VariableReferenceNode> = listOf(),
-    returnType: TypeNode? = typeReference("Unit"),
+    returnType: StaticNode? = typeReference("Unit"),
     body: ExpressionNode
 ) = FunctionExpressionNode(
     typeParameters = typeParameters,
@@ -147,7 +147,7 @@ fun shape(
 
 fun shapeField(
     name: String = "field",
-    type: TypeNode
+    type: StaticNode
 ) = ShapeFieldNode(
     name = name,
     type = type,
@@ -156,7 +156,7 @@ fun shapeField(
 
 fun union(
     name: String = "Union",
-    members: List<TypeNode>,
+    members: List<StaticNode>,
     typeParameters: List<TypeParameterNode> = listOf()
 ) = UnionNode(
     name = name,
@@ -176,7 +176,7 @@ fun typeParameter(
 
 fun argument(
     name: String = "x",
-    type: TypeNode = typeReference("Int")
+    type: StaticNode = typeReference("Int")
 ) = ArgumentNode(
     name = name,
     type = type,
@@ -195,9 +195,9 @@ fun module(
 
 fun import(path: ImportPath) = ImportNode(path = path, source = anySource())
 
-fun typeReference(name: String) = TypeReferenceNode(name, anySource())
+fun typeReference(name: String) = StaticReferenceNode(name, anySource())
 fun staticFieldAccess(
-    receiver: TypeNode,
+    receiver: StaticNode,
     fieldName: String
 ) = StaticFieldAccessNode(
     receiver = receiver,
@@ -205,16 +205,16 @@ fun staticFieldAccess(
     source = anySource()
 )
 fun typeApplication(
-    receiver: TypeNode,
-    arguments: List<TypeNode>
-) = TypeApplicationNode(
+    receiver: StaticNode,
+    arguments: List<StaticNode>
+) = StaticApplicationNode(
     receiver = receiver,
     arguments = arguments,
     source = anySource()
 )
 fun functionType(
-    arguments: List<TypeNode> = listOf(),
-    returnType: TypeNode
+    arguments: List<StaticNode> = listOf(),
+    returnType: StaticNode
 ) = FunctionTypeNode(
     arguments = arguments,
     returnType = returnType,

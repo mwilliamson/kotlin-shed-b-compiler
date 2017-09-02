@@ -194,7 +194,7 @@ private data class FunctionSignature(
     val typeParameters: List<TypeParameterNode>,
     val arguments: List<ArgumentNode>,
     val effects: List<VariableReferenceNode>,
-    val returnType: TypeNode?
+    val returnType: StaticNode?
 )
 
 private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
@@ -290,7 +290,7 @@ private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>
     return ArgumentNode(name, type, source)
 }
 
-private fun parseTypeSpec(tokens: TokenIterator<TokenType>): TypeNode {
+private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
     tokens.skip(TokenType.SYMBOL_COLON)
     return parseType(tokens)
 }
@@ -483,7 +483,7 @@ private object CallParser : OperationParser {
 
 private fun parseCallFromParens(
     left: ExpressionNode,
-    typeArguments: List<TypeNode>,
+    typeArguments: List<StaticNode>,
     tokens: TokenIterator<TokenType>
 ): CallNode {
     val (positionalArguments, namedArguments) = parseCallArguments(tokens)
@@ -685,15 +685,15 @@ private fun escapeSequence(code: String, source: Source): Char {
     }
 }
 
-internal fun parseType(tokens: TokenIterator<TokenType>) : TypeNode {
+internal fun parseType(tokens: TokenIterator<TokenType>) : StaticNode {
     return parseType(tokens = tokens, precedence = Int.MIN_VALUE)
 }
 
 private fun parseType(
     tokens: TokenIterator<TokenType>,
     precedence: Int
-) : TypeNode {
-    var left: TypeNode = ::parsePrimaryStaticExpression.parse(tokens = tokens)
+) : StaticNode {
+    var left: StaticNode = ::parsePrimaryStaticExpression.parse(tokens = tokens)
     while (true) {
         val next = tokens.peek()
         val operationParser = StaticOperationParser.lookup(next.tokenType)
@@ -709,16 +709,16 @@ private fun parseType(
 private fun parsePrimaryStaticExpression(
     source: Source,
     tokens: TokenIterator<TokenType>
-): TypeNode {
+): StaticNode {
     if (tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
         return parseFunctionType(source, tokens)
     } else {
         val name = parseIdentifier(tokens)
-        return TypeReferenceNode(name, source)
+        return StaticReferenceNode(name, source)
     }
 }
 
-private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>): TypeNode {
+private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>): StaticNode {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseMany(
         parseElement = { tokens -> parseType(tokens) },
@@ -740,7 +740,7 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
     )
 }
 
-private interface StaticOperationParser: ExpressionParser<TypeNode> {
+private interface StaticOperationParser: ExpressionParser<StaticNode> {
     companion object {
         private val parsers = listOf(
             TypeApplicationParser,
@@ -764,7 +764,7 @@ private object TypeApplicationParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
-    override fun parse(left: TypeNode, tokens: TokenIterator<TokenType>): TypeNode {
+    override fun parse(left: StaticNode, tokens: TokenIterator<TokenType>): StaticNode {
         val arguments = parseMany(
             parseElement = { tokens -> parseType(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
@@ -774,7 +774,7 @@ private object TypeApplicationParser : StaticOperationParser {
             tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        return TypeApplicationNode(receiver = left, arguments = arguments, source = left.source)
+        return StaticApplicationNode(receiver = left, arguments = arguments, source = left.source)
     }
 
     override val precedence: Int
@@ -785,7 +785,7 @@ private object StaticFieldAccessParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_DOT
 
-    override fun parse(left: TypeNode, tokens: TokenIterator<TokenType>): TypeNode {
+    override fun parse(left: StaticNode, tokens: TokenIterator<TokenType>): StaticNode {
         val fieldName = parseIdentifier(tokens)
         return StaticFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
     }

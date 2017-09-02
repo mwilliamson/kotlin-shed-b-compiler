@@ -22,7 +22,7 @@ class ParseFunctionTests {
             has(FunctionNode::typeParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::returnType, present(cast(
-                has(TypeReferenceNode::name, equalTo("Unit"))
+                has(StaticReferenceNode::name, equalTo("Unit"))
             )))
         ))
     }
@@ -120,7 +120,7 @@ class ParseFunctionTests {
             has(FunctionNode::typeParameters, isSequence()),
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::returnType, present(cast(
-                has(TypeReferenceNode::name, equalTo("Unit"))
+                has(StaticReferenceNode::name, equalTo("Unit"))
             )))
         )))
     }
@@ -151,7 +151,7 @@ class ParseFunctionTests {
         return allOf(
             has(ArgumentNode::name, equalTo(name)),
             has(ArgumentNode::type, cast(
-                has(TypeReferenceNode::name, equalTo(typeReference))
+                has(StaticReferenceNode::name, equalTo(typeReference))
             ))
         )
     }

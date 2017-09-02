@@ -357,10 +357,10 @@ private fun generateCode(operator: Operator): PythonOperator {
     }
 }
 
-private fun generateCode(node: TypeNode, context: CodeGenerationContext): PythonExpressionNode {
+private fun generateCode(node: StaticNode, context: CodeGenerationContext): PythonExpressionNode {
     // TODO: test code gen for types
-    return node.accept(object : TypeNode.Visitor<PythonExpressionNode> {
-        override fun visit(node: TypeReferenceNode): PythonExpressionNode {
+    return node.accept(object : StaticNode.Visitor<PythonExpressionNode> {
+        override fun visit(node: StaticReferenceNode): PythonExpressionNode {
             // TODO: test renaming
             return PythonVariableReferenceNode(context.name(node), NodeSource(node))
         }
@@ -369,7 +369,7 @@ private fun generateCode(node: TypeNode, context: CodeGenerationContext): Python
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: TypeApplicationNode): PythonExpressionNode {
+        override fun visit(node: StaticApplicationNode): PythonExpressionNode {
             return generateCode(node.receiver, context)
         }
 

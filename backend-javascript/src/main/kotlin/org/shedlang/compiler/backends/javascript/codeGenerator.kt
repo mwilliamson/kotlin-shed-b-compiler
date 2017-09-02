@@ -230,10 +230,10 @@ private fun generateCode(operator: Operator): JavascriptOperator {
     }
 }
 
-private fun generateCode(node: TypeNode): JavascriptExpressionNode {
+private fun generateCode(node: StaticNode): JavascriptExpressionNode {
     // TODO: test this
-    return node.accept(object : TypeNode.Visitor<JavascriptExpressionNode> {
-        override fun visit(node: TypeReferenceNode): JavascriptExpressionNode {
+    return node.accept(object : StaticNode.Visitor<JavascriptExpressionNode> {
+        override fun visit(node: StaticReferenceNode): JavascriptExpressionNode {
             return generateCodeForReferenceNode(node)
         }
 
@@ -241,7 +241,7 @@ private fun generateCode(node: TypeNode): JavascriptExpressionNode {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: TypeApplicationNode): JavascriptExpressionNode {
+        override fun visit(node: StaticApplicationNode): JavascriptExpressionNode {
             return generateCode(node.receiver)
         }
 
