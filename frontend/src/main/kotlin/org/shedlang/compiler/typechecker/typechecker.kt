@@ -623,8 +623,35 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             arguments: List<Pair<ExpressionNode, Type>>,
             source: Source
         ): Map<TypeParameter, Type> {
-            val constraints = if (typeArguments.isEmpty()) {
-                TypeConstraintSolver(parameters = typeParameters.toMutableSet())
+            if (typeArguments.isEmpty()) {
+                val constraints = TypeConstraintSolver(parameters = typeParameters.toMutableSet())
+
+                for (argument in arguments) {
+                    val actualType = inferType(argument.first, context)
+                    val formalType = argument.second
+                    if (!constraints.coerce(from = actualType, to = formalType)) {
+                        throw UnexpectedTypeError(
+                            expected = formalType,
+                            actual = actualType,
+                            source = argument.first.source
+                        )
+                    }
+                }
+                return typeParameters.associate({ parameter ->
+                    val boundType = constraints.bindings[parameter]
+                    parameter to if (boundType != null) {
+                        boundType
+                    } else if (parameter.variance == Variance.COVARIANT) {
+                        NothingType
+                    } else if (parameter.variance == Variance.CONTRAVARIANT) {
+                        AnyType
+                    } else {
+                        throw CouldNotInferTypeParameterError(
+                            parameter = parameter,
+                            source = source
+                        )
+                    }
+                })
             } else {
                 if (typeArguments.size != typeParameters.size) {
                     throw WrongNumberOfTypeArgumentsError(
@@ -634,41 +661,21 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                     )
                 }
 
-                TypeConstraintSolver(
-                    parameters = setOf(),
-                    bindings = typeParameters.zip(typeArguments, { typeParameter, typeArgument ->
-                        typeParameter to evalType(typeArgument, context)
-                    }).toMap().toMutableMap(),
-                    closed = typeParameters.toMutableSet()
-                )
-            }
+                val typeMap = typeParameters.zip(typeArguments, { typeParameter, typeArgument ->
+                    typeParameter to evalType(typeArgument, context)
+                }).toMap()
 
-            for (argument in arguments) {
-                val actualType = inferType(argument.first, context)
-                val formalType = argument.second
-                if (!constraints.coerce(from = actualType, to = formalType)) {
-                    throw UnexpectedTypeError(
-                        expected = formalType,
-                        actual = actualType,
-                        source = argument.first.source
-                    )
-                }
+                checkArgumentTypes(
+                    typeParameters = listOf(),
+                    typeArguments = listOf(),
+                    arguments = arguments.map({ (expression, type) ->
+                        expression to replaceTypes(type, typeMap)
+                    }),
+                    source = source
+                )
+
+                return typeMap
             }
-            return typeParameters.associate({ parameter ->
-                val boundType = constraints.bindings[parameter]
-                parameter to if (boundType != null) {
-                    boundType
-                } else if (parameter.variance == Variance.COVARIANT) {
-                    NothingType
-                } else if (parameter.variance == Variance.CONTRAVARIANT) {
-                    AnyType
-                } else {
-                    throw CouldNotInferTypeParameterError(
-                        parameter = parameter,
-                        source = source
-                    )
-                }
-            })
         }
 
         override fun visit(node: FieldAccessNode): Type {
