@@ -590,26 +590,6 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             positionalParameters: List<Type>,
             namedParameters: Map<String, Type>
         ): Map<TypeParameter, Type> {
-            val constraints = if (call.typeArguments.isEmpty()) {
-                TypeConstraintSolver(parameters = typeParameters.toMutableSet())
-            } else {
-                if (call.typeArguments.size != typeParameters.size) {
-                    throw WrongNumberOfTypeArgumentsError(
-                        expected = typeParameters.size,
-                        actual = call.typeArguments.size,
-                        source = call.source
-                    )
-                }
-
-                TypeConstraintSolver(
-                    parameters = setOf(),
-                    bindings = typeParameters.zip(call.typeArguments, { typeParameter, typeArgument ->
-                        typeParameter to evalType(typeArgument, context)
-                    }).toMap().toMutableMap(),
-                    closed = typeParameters.toMutableSet()
-                )
-            }
-
             val positionalArguments = call.positionalArguments.zip(positionalParameters)
             if (positionalParameters.size != call.positionalArguments.size) {
                 throw WrongNumberOfArgumentsError(
@@ -634,6 +614,34 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
             }
 
             val arguments = positionalArguments + namedArguments
+            return checkArgumentTypes(typeParameters, call.typeArguments, arguments, call.source)
+        }
+
+        private fun checkArgumentTypes(
+            typeParameters: List<TypeParameter>,
+            typeArguments: List<TypeNode>,
+            arguments: List<Pair<ExpressionNode, Type>>,
+            source: Source
+        ): Map<TypeParameter, Type> {
+            val constraints = if (typeArguments.isEmpty()) {
+                TypeConstraintSolver(parameters = typeParameters.toMutableSet())
+            } else {
+                if (typeArguments.size != typeParameters.size) {
+                    throw WrongNumberOfTypeArgumentsError(
+                        expected = typeParameters.size,
+                        actual = typeArguments.size,
+                        source = source
+                    )
+                }
+
+                TypeConstraintSolver(
+                    parameters = setOf(),
+                    bindings = typeParameters.zip(typeArguments, { typeParameter, typeArgument ->
+                        typeParameter to evalType(typeArgument, context)
+                    }).toMap().toMutableMap(),
+                    closed = typeParameters.toMutableSet()
+                )
+            }
 
             for (argument in arguments) {
                 val actualType = inferType(argument.first, context)
@@ -657,7 +665,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
                 } else {
                     throw CouldNotInferTypeParameterError(
                         parameter = parameter,
-                        source = call.source
+                        source = source
                     )
                 }
             })
