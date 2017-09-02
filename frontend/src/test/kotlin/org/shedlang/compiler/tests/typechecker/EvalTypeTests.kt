@@ -89,6 +89,23 @@ class EvalTypeTests {
     }
 
     @Test
+    fun staticFieldAccessHasTypeOfField() {
+        val moduleReference = typeReference("M")
+        val moduleType = ModuleType(fields = mapOf(
+            "T" to MetaType(IntType)
+        ))
+
+        val application = staticFieldAccess(moduleReference, "T")
+
+        val context = typeContext(referenceTypes = mapOf(
+            moduleReference to moduleType
+        ))
+        val type = evalType(application, context)
+
+        assertThat(type, isIntType)
+    }
+
+    @Test
     fun canEvaluateFunctionTypeNode() {
         val intReference = typeReference("Int")
         val boolReference = typeReference("Bool")

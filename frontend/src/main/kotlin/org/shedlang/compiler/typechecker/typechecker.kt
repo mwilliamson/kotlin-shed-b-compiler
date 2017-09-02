@@ -372,28 +372,38 @@ private fun typeCheck(type: TypeNode, context: TypeContext) {
 }
 
 internal fun evalType(type: TypeNode, context: TypeContext): Type {
-    return type.accept(object : TypeNode.Visitor<Type> {
+    val staticValue = evalStatic(type, context)
+    return when (staticValue) {
+        is MetaType -> staticValue.type
+        else -> throw UnexpectedTypeError(
+            expected = MetaType(AnyType),
+            actual = staticValue,
+            source = type.source
+        )
+    }
+}
+
+private fun evalStatic(node: TypeNode, context: TypeContext): Type {
+    return node.accept(object : TypeNode.Visitor<Type> {
         override fun visit(node: TypeReferenceNode): Type {
-            val metaType = context.typeOf(node)
-            return when (metaType) {
-                is MetaType -> metaType.type
-                else -> throw UnexpectedTypeError(
-                    expected = MetaType(AnyType),
-                    actual = metaType,
-                    source = node.source
-                )
-            }
+            return context.typeOf(node)
         }
 
         override fun visit(node: StaticFieldAccessNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            val staticValue = evalStatic(node.receiver, context)
+            // TODO: handle not a module
+            // TODO: handle missing field
+            return when (staticValue) {
+                is ModuleType -> staticValue.fields[node.fieldName]!!
+                else -> throw CompilerError("TODO", source = node.source)
+            }
         }
 
         override fun visit(node: TypeApplicationNode): Type {
             val receiver = evalType(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalType(argument, context) })
             if (receiver is TypeFunction) {
-                return applyType(receiver, arguments)
+                return MetaType(applyType(receiver, arguments))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.source)
@@ -409,7 +419,7 @@ internal fun evalType(type: TypeNode, context: TypeContext): Type {
                 effects = setOf()
             )
             checkType(type, source = node.source)
-            return type
+            return MetaType(type)
         }
     })
 }

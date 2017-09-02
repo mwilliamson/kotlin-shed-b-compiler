@@ -196,6 +196,14 @@ fun module(
 fun import(path: ImportPath) = ImportNode(path = path, source = anySource())
 
 fun typeReference(name: String) = TypeReferenceNode(name, anySource())
+fun staticFieldAccess(
+    receiver: TypeNode,
+    fieldName: String
+) = StaticFieldAccessNode(
+    receiver = receiver,
+    fieldName = fieldName,
+    source = anySource()
+)
 fun typeApplication(
     receiver: TypeNode,
     arguments: List<TypeNode>
