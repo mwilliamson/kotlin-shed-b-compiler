@@ -141,7 +141,7 @@ private fun checkArgumentTypes(
 
         val constraints = TypeConstraintSolver(
             // TODO: need to regenerate effect parameters in the same way as type parameters
-            parameters = (inferredTypeArguments + staticParameters.filterIsInstance<EffectParameter>()).toMutableSet()
+            parameters = (inferredTypeArguments + staticParameters.filterIsInstance<EffectParameter>()).toSet()
         )
         for (argument in arguments) {
             val actualType = inferType(argument.first, context)

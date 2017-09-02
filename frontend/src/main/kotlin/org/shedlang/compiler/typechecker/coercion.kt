@@ -39,11 +39,12 @@ internal sealed class CoercionResult {
 }
 
 internal class TypeConstraintSolver(
-    private val parameters: Set<StaticParameter>,
-    internal val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf(),
-    internal val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf(),
-    private val closed: MutableSet<TypeParameter> = mutableSetOf()
+    private val parameters: Set<StaticParameter>
 ) {
+    internal val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf()
+    internal val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
+    private val closed: MutableSet<TypeParameter> = mutableSetOf()
+
     fun coerce(from: Type, to: Type): Boolean {
         if (from == to || to == AnyType || from == NothingType) {
             return true
