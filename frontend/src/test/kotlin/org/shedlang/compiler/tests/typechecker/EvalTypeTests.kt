@@ -109,9 +109,11 @@ class EvalTypeTests {
     fun canEvaluateFunctionTypeNode() {
         val intReference = staticReference("Int")
         val boolReference = staticReference("Bool")
+        val effectReference = staticReference("Io")
 
         val node = functionTypeNode(
             arguments = listOf(intReference),
+            effects = listOf(effectReference),
             returnType = boolReference
         )
 
@@ -119,11 +121,13 @@ class EvalTypeTests {
             node,
             typeContext(referenceTypes = mapOf(
                 intReference to MetaType(IntType),
-                boolReference to MetaType(BoolType)
+                boolReference to MetaType(BoolType),
+                effectReference to EffectType(IoEffect)
             ))
         )
         assertThat(type, isFunctionType(
             arguments = isSequence(isIntType),
+            effects = equalTo(setOf(IoEffect)),
             returnType = isBoolType
         ))
     }

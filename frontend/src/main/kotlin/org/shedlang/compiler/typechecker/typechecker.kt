@@ -287,7 +287,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
                 positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
                 namedArguments = mapOf(),
                 returns = evalType(node.returnType, context),
-                effects = setOf()
+                effects = node.effects.map({ effect -> evalEffect(effect, context) }).toSet()
             )
             checkType(type, source = node.source)
             return MetaType(type)
