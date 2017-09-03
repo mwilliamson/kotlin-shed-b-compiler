@@ -29,7 +29,10 @@ fun valStatement(
 
 fun expression() = literalString("<expression>")
 fun literalUnit() = UnitLiteralNode(anySource())
-fun literalBool(value: Boolean = false) = BooleanLiteralNode(value, anySource())
+fun literalBool(
+    value: Boolean = false,
+    source: Source = anySource()
+) = BooleanLiteralNode(value, source = source)
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
 fun variableReference(name: String) = VariableReferenceNode(name, anySource())

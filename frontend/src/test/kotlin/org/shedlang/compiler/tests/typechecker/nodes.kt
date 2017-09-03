@@ -67,10 +67,15 @@ fun throwsUnexpectedType(expected: Matcher<Type>, actual: Type): Matcher<() -> U
     ))
 }
 
-fun throwsUnexpectedType(expected: Matcher<Type>, actual: Matcher<Type>): Matcher<() -> Unit> {
+fun throwsUnexpectedType(
+    expected: Matcher<Type>,
+    actual: Matcher<Type>,
+    source: Matcher<Source> = anything
+): Matcher<() -> Unit> {
     return throws(allOf(
         has(UnexpectedTypeError::expected, expected),
-        has(UnexpectedTypeError::actual, actual)
+        has(UnexpectedTypeError::actual, actual),
+        has(UnexpectedTypeError::source, source)
     ))
 }
 

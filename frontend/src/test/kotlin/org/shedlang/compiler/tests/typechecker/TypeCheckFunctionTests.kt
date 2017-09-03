@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 import org.shedlang.compiler.typechecker.UnhandledEffectError
@@ -346,6 +347,37 @@ class TypeCheckFunctionTests {
         assertThat(
             { inferType(node, typeContext) },
             throwsException(has(MissingReturnTypeError::message, equalTo("Could not infer return type for function")))
+        )
+    }
+
+    @Test
+    fun whenExplicitReturnTypeIsMissingThenReturnTypeCanBeInferredFromContext() {
+        val source = object: Source {
+            override fun describe(): String {
+                return "return value source"
+            }
+        }
+        val returnValue = literalBool(source = source)
+        val node = functionExpression(
+            returnType = null,
+            body = listOf(returns(returnValue))
+        )
+        val functionReference = variableReference("f")
+        val call = call(
+            receiver = functionReference,
+            positionalArguments = listOf(node)
+        )
+        val receiverType = functionType(
+            positionalArguments = listOf(
+                functionType(returns = IntType)
+            )
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to receiverType)
+        )
+        assertThat(
+            { inferType(call, typeContext); typeContext.undefer() },
+            throwsUnexpectedType(expected = isIntType, actual = isBoolType, source = equalTo(source))
         )
     }
 }

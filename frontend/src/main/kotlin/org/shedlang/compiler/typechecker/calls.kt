@@ -144,7 +144,6 @@ private fun checkArgumentTypes(
             parameters = (inferredTypeArguments + staticParameters.filterIsInstance<EffectParameter>()).toSet()
         )
         for (argument in arguments) {
-            val actualType = inferType(argument.first, context)
             val formalType = replaceTypes(
                 argument.second,
                 StaticBindings(
@@ -152,6 +151,7 @@ private fun checkArgumentTypes(
                     effects = mapOf()
                 )
             )
+            val actualType = inferType(argument.first, context, hint = formalType)
             if (!constraints.coerce(from = actualType, to = formalType)) {
                 throw UnexpectedTypeError(
                     expected = formalType,

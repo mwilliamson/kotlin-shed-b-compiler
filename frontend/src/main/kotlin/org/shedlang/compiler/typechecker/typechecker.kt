@@ -175,7 +175,7 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
     context.addType(import, context.moduleType(import.path))
 }
 
-internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Type {
+internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): Type {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
     val argumentTypes = function.arguments.map(
@@ -209,19 +209,24 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
             explicitReturnType ?: expressionType
         }
         is FunctionBody.Statements -> {
-            if (explicitReturnType == null) {
-                throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
+            val returnType = if (explicitReturnType == null) {
+                if (hint != null && hint is FunctionType) {
+                    hint.returns
+                } else {
+                    throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
+                }
             } else {
-                context.defer({
-                    val bodyContext = context.enterFunction(
-                        returnType = explicitReturnType,
-                        effects = effects
-                    )
-                    typeCheck(body.nodes, bodyContext)
-                })
-
                 explicitReturnType
             }
+            context.defer({
+                val bodyContext = context.enterFunction(
+                    returnType = returnType,
+                    effects = effects
+                )
+                typeCheck(body.nodes, bodyContext)
+            })
+
+            returnType
         }
     }
 

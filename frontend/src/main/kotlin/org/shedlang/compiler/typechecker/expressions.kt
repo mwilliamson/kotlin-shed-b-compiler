@@ -14,7 +14,7 @@ internal fun verifyType(expression: ExpressionNode, context: TypeContext, expect
     verifyType(expected = expected, actual = type, source = expression.source)
 }
 
-internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type {
+internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: Type? = null) : Type {
     return expression.accept(object : ExpressionNode.Visitor<Type> {
         override fun visit(node: UnitLiteralNode) = UnitType
         override fun visit(node: BooleanLiteralNode) = BoolType
@@ -79,7 +79,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext) : Type 
         }
 
         override fun visit(node: FunctionExpressionNode): Type {
-            return typeCheckFunction(node, context)
+            return typeCheckFunction(node, context, hint = hint)
         }
     })
 }
