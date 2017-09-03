@@ -238,7 +238,11 @@ private fun generateCode(node: StaticNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: StaticFieldAccessNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return JavascriptPropertyAccessNode(
+                generateCode(node.receiver),
+                node.fieldName,
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: StaticApplicationNode): JavascriptExpressionNode {

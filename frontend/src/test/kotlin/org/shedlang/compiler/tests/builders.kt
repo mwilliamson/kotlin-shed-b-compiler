@@ -108,7 +108,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
     effects: List<StaticNode> = listOf(),
-    returnType: StaticNode = staticReference("Unit"),
+    returnType: StaticNode? = null,
     body: List<StatementNode> = listOf()
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,

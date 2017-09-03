@@ -210,7 +210,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext): Ty
         }
         is FunctionBody.Statements -> {
             if (explicitReturnType == null) {
-                throw UnsupportedOperationException("TODO")
+                throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
             } else {
                 context.defer({
                     val bodyContext = context.enterFunction(
