@@ -21,5 +21,7 @@ When a value could be coerced to either member type,
 the compiler requires the value to be explicitly coerced to a member type.
 For instance, to coerce `Bottom` to `T`, it must first be coerced to either `Int` or `String`.
 
-Some work is needed to support this properly in the backends,
-since generics are erased.
+At the moment,
+unions are implemented in the backends by inspecting runtime types of values.
+However, due to generic type erasure,
+unions will need to implemented as discriminated unions at least some of the time.
