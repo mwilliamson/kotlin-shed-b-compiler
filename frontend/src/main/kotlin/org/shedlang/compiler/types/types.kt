@@ -234,10 +234,18 @@ object ListConstructorType : Type {
     override val shortDescription: String
         get() = "ListConstructor"
 }
-class ListType(val elementType: Type): Type {
-    override val shortDescription: String
-        get() = "List[${elementType.shortDescription}]"
-}
+val listTypeParameter = TypeParameter("T", variance = Variance.COVARIANT)
+val listTypeShapeId = freshShapeId()
+val ListType = TypeFunction(
+    parameters = listOf(listTypeParameter),
+    type = LazyShapeType(
+        shapeId = listTypeShapeId,
+        name = "List",
+        typeParameters = listOf(listTypeParameter),
+        typeArguments = listOf(listTypeParameter),
+        getFields = lazy({ mapOf<String, Type>() })
+    )
+)
 
 fun functionType(
     staticParameters: List<StaticParameter> = listOf(),

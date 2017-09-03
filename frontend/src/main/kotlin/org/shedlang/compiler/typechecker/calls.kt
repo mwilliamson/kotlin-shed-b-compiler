@@ -223,5 +223,5 @@ private fun inferListCall(node: CallNode, context: TypeContext): Type {
         val argumentType = inferType(argument, context)
         constraints.coerce(argumentType, typeParameter)
     }
-    return ListType(constraints.boundTypeFor(typeParameter)!!)
+    return applyType(ListType, listOf(constraints.boundTypeFor(typeParameter)!!))
 }

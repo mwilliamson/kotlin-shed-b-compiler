@@ -72,10 +72,12 @@ internal fun isFunctionType(
 
 internal fun isShapeType(
     name: Matcher<String> = anything,
-    typeArguments: Matcher<List<Type>>
+    typeArguments: Matcher<List<Type>> = anything,
+    shapeId: Matcher<Int> = anything
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),
-    has(ShapeType::typeArguments, typeArguments)
+    has(ShapeType::typeArguments, typeArguments),
+    has(ShapeType::shapeId, shapeId)
 ))
 
 internal fun isShapeType(
@@ -108,8 +110,10 @@ internal val isStringType: Matcher<Type> = cast(equalTo(StringType))
 internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))
 internal fun isEffectType(effect: Matcher<Effect>): Matcher<Type> = cast(has(EffectType::effect, effect))
 
-internal fun isListType(elementType: Matcher<Type>): Matcher<Type>
-    = cast(has(ListType::elementType, elementType))
+internal fun isListType(elementType: Matcher<Type>): Matcher<Type> = isShapeType(
+    shapeId = equalTo(listTypeShapeId),
+    typeArguments = isSequence(elementType)
+)
 
 internal fun isTypeFunction(
     parameters: Matcher<List<TypeParameter>>,
