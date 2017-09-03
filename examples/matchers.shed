@@ -2,7 +2,6 @@
 // stdout:
 //   expected world
 //   but was hello
-module example;
 
 fun main() !io -> Unit {
     val result = assertThat("hello", isString("world"));

@@ -4,8 +4,6 @@
 //   2
 //   3
 
-module example;
-
 union List = Cons | Unit;
 shape Cons {
     head: Int,

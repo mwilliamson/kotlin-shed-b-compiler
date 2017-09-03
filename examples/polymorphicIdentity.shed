@@ -2,8 +2,6 @@
 // stdout:
 //   Hello, world
 
-module example;
-
 fun identity[T](value: T) -> T {
     return value;
 }

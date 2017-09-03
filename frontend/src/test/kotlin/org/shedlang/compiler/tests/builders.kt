@@ -194,7 +194,6 @@ fun module(
     body: List<ModuleStatementNode> = listOf(),
     imports: List<ImportNode> = listOf()
 ) = ModuleNode(
-    path = listOf(),
     imports = imports,
     body = body,
     source = anySource()

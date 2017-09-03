@@ -2,8 +2,6 @@
 // stdout:
 //   8
 
-module example;
-
 fun fibonacci(n: Int) -> Int {
     return fibonacci2(n).second;
 }

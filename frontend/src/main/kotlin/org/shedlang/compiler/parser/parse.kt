@@ -40,7 +40,6 @@ internal fun <T> ((Source, TokenIterator<TokenType>) -> T).parse(tokens: TokenIt
 }
 
 internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): ModuleNode {
-    val moduleName = parseModuleNameDeclaration(tokens)
     val imports = parseZeroOrMore(
         parseElement = { tokens -> ::parseImport.parse(tokens) },
         isEnd = { tokens -> !tokens.isNext(TokenType.KEYWORD_IMPORT) },
@@ -52,18 +51,10 @@ internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): Modu
         tokens = tokens
     )
     return ModuleNode(
-        path = moduleName.split("."),
         imports = imports,
         body = body,
         source = source
     )
-}
-
-private fun parseModuleNameDeclaration(tokens: TokenIterator<TokenType>): String {
-    tokens.skip(TokenType.KEYWORD_MODULE)
-    val moduleName = parseModuleName(tokens)
-    tokens.skip(TokenType.SYMBOL_SEMICOLON)
-    return moduleName
 }
 
 internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {

@@ -4,8 +4,6 @@
 //   2
 //   3
 
-module example;
-
 union List[T] = Cons[T] | Unit;
 shape Cons[T] {
     head: T,

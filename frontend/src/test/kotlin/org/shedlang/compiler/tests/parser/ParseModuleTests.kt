@@ -12,30 +12,12 @@ import org.shedlang.compiler.tests.isSequence
 
 class ParseModuleTests {
     @Test
-    fun minimalModuleHasModuleDeclaration() {
-        val source = """
-            module abc;
-        """.trimIndent()
+    fun minimalModuleIsEmptyString() {
+        val source = "".trimIndent()
 
         val node = parse("<string>", source)
 
         assertThat(node, allOf(
-            has(ModuleNode::path, equalTo(listOf("abc"))),
-            has(ModuleNode::imports, equalTo(listOf())),
-            has(ModuleNode::body, equalTo(listOf()))
-        ))
-    }
-
-    @Test
-    fun modulePathIsSplitByDots() {
-        val source = """
-            module abc.def.ghi;
-        """.trimIndent()
-
-        val node = parse("<string>", source)
-
-        assertThat(node, allOf(
-            has(ModuleNode::path, equalTo(listOf("abc", "def", "ghi"))),
             has(ModuleNode::imports, equalTo(listOf())),
             has(ModuleNode::body, equalTo(listOf()))
         ))
@@ -44,8 +26,6 @@ class ParseModuleTests {
     @Test
     fun moduleCanHaveImports() {
         val source = """
-            module abc;
-
             import .x.y;
         """.trimIndent()
 
@@ -59,8 +39,6 @@ class ParseModuleTests {
     @Test
     fun moduleCanHaveStatements() {
         val source = """
-            module abc;
-
             fun f() -> Unit {
             }
 

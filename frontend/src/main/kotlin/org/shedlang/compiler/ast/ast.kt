@@ -127,7 +127,6 @@ data class FunctionTypeNode(
 }
 
 data class ModuleNode(
-    val path: List<String>,
     val imports: List<ImportNode>,
     val body: List<ModuleStatementNode>,
     override val source: Source,

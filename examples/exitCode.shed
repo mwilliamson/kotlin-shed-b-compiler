@@ -1,8 +1,6 @@
 // name: exitCode
 // exitCode: 42
 
-module example;
-
 fun main() -> Int {
     return 42;
 }
