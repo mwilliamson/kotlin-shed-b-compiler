@@ -43,7 +43,12 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
 private fun compileModule(module: Module, writer: Writer) {
     val generateCode = generateCode(module.node, module.references)
     val stdlib = """
+        from __future__ import print_function
+
         int_to_string = str
+        _print = print
+        def print(value):
+            _print(value, end="")
     """.trimIndent()
     val contents = stdlib + "\n" + serialise(generateCode) + "\n"
     writer.write(contents)

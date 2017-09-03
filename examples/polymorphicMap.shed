@@ -21,7 +21,7 @@ fun printInts(list: List[Int]) !io -> Unit {
 
 fun printStrings(list: List[String]) !io -> Unit {
     if (list is Cons[String]) {
-        print(list.head);
+        print(list.head + "\n");
         printStrings(list.tail);
     }
 }

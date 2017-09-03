@@ -15,7 +15,9 @@ class UnknownTypeError(val name: String, source: Source)
 class NotFunctionTypeError(val actual: Type, source: Source)
     : TypeCheckError("expected function type but was ${actual}", source)
 
-open class TypeCheckError(message: String?, val source: Source) : Exception(message)
+open class SourceError(message: String?, val source: Source): Exception(message)
+
+open class TypeCheckError(message: String?, source: Source) : SourceError(message, source)
 internal class BadStatementError(source: Source)
     : TypeCheckError("Bad statement", source)
 class UnresolvedReferenceError(val name: String, source: Source)

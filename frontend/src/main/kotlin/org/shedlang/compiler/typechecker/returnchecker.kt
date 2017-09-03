@@ -4,7 +4,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.UnitType
 
-open class ReturnCheckError(message: String?, val source: Source) : Exception(message)
+open class ReturnCheckError(message: String?, source: Source) : SourceError(message, source)
 
 internal fun checkReturns(node: FunctionNode, type: FunctionType) {
     if (type.returns != UnitType && !alwaysReturns(node.body)) {

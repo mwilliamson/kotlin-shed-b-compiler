@@ -7,5 +7,5 @@ fun identity[T](value: T) -> T {
 }
 
 fun main() !io -> Unit {
-    print(identity("Hello, world"));
+    print(identity("Hello, world\n"));
 }

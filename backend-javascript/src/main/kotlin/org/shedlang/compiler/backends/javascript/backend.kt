@@ -54,7 +54,19 @@ private val stdlib = """
     }
 
     function print(value) {
-        console.log(value);
+        process.stdout.write(value);
+    }
+
+    function list() {
+        return Array.prototype.slice.call(arguments);
+    }
+
+    function map(func, list) {
+        return list.map(func);
+    }
+
+    function forEach(func, list) {
+        return list.forEach(func);
     }
 
     function declareShape(name) {

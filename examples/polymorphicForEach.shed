@@ -19,7 +19,7 @@ fun printInts(list: List[Int]) !io -> Unit {
 }
 
 fun printInt(value: Int) !io -> Unit {
-    print(intToString(value));
+    print(intToString(value) + "\n");
 }
 
 fun forEach[T, !E](func: (T) !E -> Unit, list: List[T]) !E -> Unit {

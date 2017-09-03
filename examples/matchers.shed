@@ -6,7 +6,7 @@
 fun main() !io -> Unit {
     val result = assertThat("hello", isString("world"));
     if (result is Failure) {
-        print(result.message);
+        print(result.message + "\n");
     }
 }
 

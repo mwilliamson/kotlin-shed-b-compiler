@@ -16,7 +16,7 @@ fun cons[T](head: T, tail: List[T]) -> List[T] {
 
 fun printInts(list: List[Int]) !io -> Unit {
     if (list is Cons[Int]) {
-        print(intToString(list.head));
+        print(intToString(list.head) + "\n");
         printInts(list.tail);
     }
 }

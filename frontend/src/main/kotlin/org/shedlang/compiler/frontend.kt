@@ -64,12 +64,46 @@ private data class Builtin(
     val nodeId = freshNodeId()
 }
 
+private val mapFromType = TypeParameter("T", variance = Variance.INVARIANT)
+private val mapToType = TypeParameter("R", variance = Variance.INVARIANT)
+private val mapEffectParameter = EffectParameter("E")
+private val mapType = functionType(
+    staticParameters = listOf(mapFromType, mapToType, mapEffectParameter),
+    positionalArguments = listOf(
+        functionType(
+            positionalArguments = listOf(mapFromType),
+            effects = setOf(mapEffectParameter),
+            returns = mapToType
+        ),
+        applyType(ListType, listOf(mapFromType))
+    ),
+    effects = setOf(mapEffectParameter),
+    returns = applyType(ListType, listOf(mapToType))
+)
+
+private val forEachTypeParameter = TypeParameter("T", variance = Variance.INVARIANT)
+private val forEachEffectParameter = EffectParameter("E")
+private val forEachType = functionType(
+    staticParameters = listOf(forEachTypeParameter, forEachEffectParameter),
+    positionalArguments = listOf(
+        functionType(
+            positionalArguments = listOf(forEachTypeParameter),
+            effects = setOf(forEachEffectParameter),
+            returns = UnitType
+        ),
+        applyType(ListType, listOf(forEachTypeParameter))
+    ),
+    effects = setOf(forEachEffectParameter),
+    returns = UnitType
+)
+
 private val builtins = listOf(
     Builtin("Any", MetaType(AnyType)),
     Builtin("Unit", MetaType(UnitType)),
     Builtin("Int", MetaType(IntType)),
     Builtin("String", MetaType(StringType)),
     Builtin("Bool", MetaType(BoolType)),
+    Builtin("List", MetaType(ListType)),
 
     Builtin("!io", EffectType(IoEffect)),
 
@@ -81,7 +115,9 @@ private val builtins = listOf(
         returns = UnitType
     )),
     Builtin("intToString", positionalFunctionType(listOf(IntType), StringType)),
-    Builtin("list", ListConstructorType)
+    Builtin("list", ListConstructorType),
+    Builtin("map", mapType),
+    Builtin("forEach", forEachType)
 )
 
 private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {

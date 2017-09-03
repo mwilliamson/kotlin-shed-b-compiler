@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.identifyModule
 import org.shedlang.compiler.read
-import org.shedlang.compiler.typechecker.TypeCheckError
+import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
     @TestFactory
@@ -30,7 +30,7 @@ class ExecutionTests {
                     )
                     assertThat(result, equalTo(testProgram.expectedResult))
                 }
-            } catch (error: TypeCheckError) {
+            } catch (error: SourceError) {
                 print(error.source.describe())
                 throw error
             }
