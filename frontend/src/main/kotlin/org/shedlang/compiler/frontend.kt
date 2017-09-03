@@ -80,7 +80,8 @@ private val builtins = listOf(
         effects = setOf(IoEffect),
         returns = UnitType
     )),
-    Builtin("intToString", positionalFunctionType(listOf(IntType), StringType))
+    Builtin("intToString", positionalFunctionType(listOf(IntType), StringType)),
+    Builtin("list", ListConstructorType)
 )
 
 private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
