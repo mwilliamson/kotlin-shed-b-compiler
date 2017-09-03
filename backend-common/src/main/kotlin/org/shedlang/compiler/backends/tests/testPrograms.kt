@@ -15,6 +15,7 @@ data class TestProgram(
 )
 
 private data class TestProgramFiles(val base: Path, val main: Path)
+private val disabled = setOf("options")
 
 fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(file): TestProgram {
@@ -50,17 +51,21 @@ fun testPrograms(): List<TestProgram> {
 
 private fun findTestFiles(): List<TestProgramFiles> {
     val exampleDirectory = findRoot().resolve("examples")
-    return exampleDirectory.toFile().list().map(fun(name): TestProgramFiles {
-        val file = exampleDirectory.resolve(name)
-        val main = if (file.toFile().isDirectory) {
-            file.resolve("main.shed")
+    return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramFiles? {
+        if (name in disabled) {
+            return null
         } else {
-            file
+            val file = exampleDirectory.resolve(name)
+            val main = if (file.toFile().isDirectory) {
+                file.resolve("main.shed")
+            } else {
+                file
+            }
+            return TestProgramFiles(
+                base = exampleDirectory,
+                main = exampleDirectory.relativize(main)
+            )
         }
-        return TestProgramFiles(
-            base = exampleDirectory,
-            main = exampleDirectory.relativize(main)
-        )
     })
 }
 

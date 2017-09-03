@@ -1,0 +1,80 @@
+import .options;
+
+
+shape AssertionError {
+    message: String,
+}
+
+fun fail(message: String) -> AssertionResult {
+    return AssertionResult(error = options.some(AssertionError(message = message)));
+}
+
+fun assert(value: Bool) -> AssertionResult {
+    if (value) {
+        return AssertionResult(error = options.none);
+    } else {
+        return fail("value was false");
+    }
+}
+
+shape AssertionResult {
+    error: options.Option[AssertionError],
+}
+
+shape TestCase {
+    name: String,
+    run: () -> AssertionResult,
+}
+
+fun testCase(name: String, run: () -> AssertionResult) -> TestCase {
+    return TestCase(name = name, run = run);
+}
+
+shape TestResult {
+    name: String,
+    error: options.Option[AssertionError],
+}
+
+fun main() -> Int {
+    return 0;
+}
+
+val greenCode = "\u001B[32m";
+val redCode = "\u001B[31m";
+val blackCode = "\u001B[39m";
+
+fun runTests(tests: List[TestCase]) !io -> Int {
+    val results = map(runTest, tests);
+    forEach(printFailure, results);
+    return 0;
+}
+
+fun printFailure(result: TestResult) !io -> Unit {
+    val error = result.error;
+    if (error is options.Some[AssertionError]) {
+        print(redCode);
+        print(result.name);
+        print(": ");
+        print(error.value.message);
+        print(blackCode);
+        print("\n");
+    }
+}
+
+fun runTest(test: TestCase) !io -> TestResult {
+    val result = test.run();
+    val error = result.error;
+
+    if (error is options.Some[AssertionError]) {
+        print(redCode);
+        print("✖ ");
+    } else {
+        print(greenCode);
+        print("✔ ");
+    }
+    print(test.name);
+    print(blackCode);
+    print("\n");
+
+    return TestResult(name = test.name, error = result.error);
+}

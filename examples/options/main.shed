@@ -1,0 +1,11 @@
+// name: options
+// stdout:
+//   Hello, world!
+
+import .options;
+import .optionsTests;
+import .tests;
+
+fun main() !io -> Int {
+    return tests.runTests(optionsTests.testCases);
+}
