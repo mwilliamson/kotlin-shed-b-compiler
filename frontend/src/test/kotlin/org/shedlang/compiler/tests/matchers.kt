@@ -108,6 +108,9 @@ internal val isStringType: Matcher<Type> = cast(equalTo(StringType))
 internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))
 internal fun isEffectType(effect: Matcher<Effect>): Matcher<Type> = cast(has(EffectType::effect, effect))
 
+internal fun isListType(elementType: Matcher<Type>): Matcher<Type>
+    = cast(has(ListType::elementType, elementType))
+
 internal fun isTypeFunction(
     parameters: Matcher<List<TypeParameter>>,
     type: Matcher<Type> = anything

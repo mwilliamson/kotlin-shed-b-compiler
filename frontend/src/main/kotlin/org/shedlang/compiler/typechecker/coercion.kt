@@ -45,6 +45,19 @@ internal class TypeConstraintSolver(
     internal val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
     private val closed: MutableSet<TypeParameter> = mutableSetOf()
 
+    fun boundTypeFor(parameter: TypeParameter): Type? {
+        val boundType = typeBindings[parameter]
+        return if (boundType != null) {
+            boundType
+        } else if (parameter.variance == Variance.COVARIANT) {
+            NothingType
+        } else if (parameter.variance == Variance.CONTRAVARIANT) {
+            AnyType
+        } else {
+            null
+        }
+    }
+
     fun coerce(from: Type, to: Type): Boolean {
         if (from == to || to == AnyType || from == NothingType) {
             return true

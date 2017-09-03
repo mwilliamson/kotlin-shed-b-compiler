@@ -612,4 +612,57 @@ class TypeCheckFunctionCallTests {
             throwsException(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
     }
+
+    @Test
+    fun listCallOfZeroElementsReturnsListOfNothing() {
+        val listReference = variableReference("list")
+        val node = call(receiver = listReference)
+
+        val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isListType(isNothingType))
+    }
+
+    @Test
+    fun listCallOfSingleElementReturnsListOfElementType() {
+        val listReference = variableReference("list")
+        val node = call(
+            receiver = listReference,
+            positionalArguments = listOf(literalInt())
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isListType(isIntType))
+    }
+
+    @Test
+    fun listCallOfElementsOfSameTypeReturnsListOfElementType() {
+        val listReference = variableReference("list")
+        val node = call(
+            receiver = listReference,
+            positionalArguments = listOf(literalInt(), literalInt())
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isListType(isIntType))
+    }
+
+    @Test
+    fun listCallOfElementsOfDifferentTypeReturnsListOfUnionOfElementTypes() {
+        val listReference = variableReference("list")
+        val node = call(
+            receiver = listReference,
+            positionalArguments = listOf(literalInt(), literalString())
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isListType(isUnionType(members = isSequence(isIntType, isStringType))))
+    }
 }

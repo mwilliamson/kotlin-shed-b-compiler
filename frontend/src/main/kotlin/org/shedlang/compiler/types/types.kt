@@ -230,6 +230,15 @@ data class LazyUnionType(
     override val members: List<Type> by getMembers
 }
 
+object ListConstructorType : Type {
+    override val shortDescription: String
+        get() = "ListConstructor"
+}
+class ListType(val elementType: Type): Type {
+    override val shortDescription: String
+        get() = "List[${elementType.shortDescription}]"
+}
+
 fun functionType(
     staticParameters: List<StaticParameter> = listOf(),
     positionalArguments: List<Type> = listOf(),

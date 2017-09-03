@@ -19,6 +19,8 @@ internal fun inferType(node: CallNode, context: TypeContext): Type {
         return inferConstructorCallType(node, null, shapeType, context)
     } else if (receiverType is MetaType && receiverType.type is TypeFunction && receiverType.type.type is ShapeType) {
         return inferConstructorCallType(node, receiverType.type, receiverType.type.type, context)
+    } else if (receiverType is ListConstructorType) {
+        return inferListCall(node, context)
     } else {
         val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
         throw UnexpectedTypeError(
@@ -162,18 +164,14 @@ private fun checkArgumentTypes(
         }
         val typeMap = typeParameters.zip(inferredTypeArguments)
             .associate({ (parameter, inferredArgument) ->
-                val boundType = constraints.typeBindings[inferredArgument]
-                parameter to if (boundType != null) {
-                    boundType
-                } else if (parameter.variance == Variance.COVARIANT) {
-                    NothingType
-                } else if (parameter.variance == Variance.CONTRAVARIANT) {
-                    AnyType
-                } else {
+                val boundType = constraints.boundTypeFor(inferredArgument)
+                if (boundType == null) {
                     throw CouldNotInferTypeParameterError(
                         parameter = parameter,
                         source = source
                     )
+                } else {
+                    parameter to boundType
                 }
             })
         // TODO: handle unbound effects
@@ -216,4 +214,14 @@ private fun checkArgumentTypes(
 
         return bindings
     }
+}
+
+private fun inferListCall(node: CallNode, context: TypeContext): Type {
+    val typeParameter = TypeParameter("T", variance = Variance.COVARIANT)
+    val constraints = TypeConstraintSolver(parameters = setOf(typeParameter))
+    for (argument in node.positionalArguments) {
+        val argumentType = inferType(argument, context)
+        constraints.coerce(argumentType, typeParameter)
+    }
+    return ListType(constraints.boundTypeFor(typeParameter)!!)
 }
