@@ -72,12 +72,12 @@ private val mapType = functionType(
     positionalArguments = listOf(
         functionType(
             positionalArguments = listOf(mapFromType),
-            effects = setOf(mapEffectParameter),
+            effect = mapEffectParameter,
             returns = mapToType
         ),
         applyType(ListType, listOf(mapFromType))
     ),
-    effects = setOf(mapEffectParameter),
+    effect = mapEffectParameter,
     returns = applyType(ListType, listOf(mapToType))
 )
 
@@ -88,12 +88,12 @@ private val forEachType = functionType(
     positionalArguments = listOf(
         functionType(
             positionalArguments = listOf(forEachTypeParameter),
-            effects = setOf(forEachEffectParameter),
+            effect = forEachEffectParameter,
             returns = UnitType
         ),
         applyType(ListType, listOf(forEachTypeParameter))
     ),
-    effects = setOf(forEachEffectParameter),
+    effect = forEachEffectParameter,
     returns = UnitType
 )
 
@@ -111,7 +111,7 @@ private val builtins = listOf(
         staticParameters = listOf(),
         positionalArguments = listOf(StringType),
         namedArguments = mapOf(),
-        effects = setOf(IoEffect),
+        effect = IoEffect,
         returns = UnitType
     )),
     Builtin("intToString", positionalFunctionType(listOf(IntType), StringType)),

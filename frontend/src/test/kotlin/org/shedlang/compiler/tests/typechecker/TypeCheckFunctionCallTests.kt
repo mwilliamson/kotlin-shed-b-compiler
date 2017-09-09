@@ -322,7 +322,7 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
-    fun whenInvariantTypeParameterIsNotConstraintedThenErrorIsThrown() {
+    fun whenInvariantTypeParameterIsNotConstrainedThenErrorIsThrown() {
         val shapeReference = variableReference("Thing")
 
         val typeParameter = invariantTypeParameter("T")
@@ -342,7 +342,7 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
-    fun whenCovariantTypeParameterIsNotConstraintedThenTypeParameterIsNothing() {
+    fun whenCovariantTypeParameterIsNotConstrainedThenTypeParameterIsNothing() {
         val shapeReference = variableReference("Thing")
 
         val typeParameter = covariantTypeParameter("T")
@@ -362,7 +362,7 @@ class TypeCheckFunctionCallTests {
     }
 
     @Test
-    fun whenContravariantTypeParameterIsNotConstraintedThenTypeParameterIsAny() {
+    fun whenContravariantTypeParameterIsNotConstrainedThenTypeParameterIsAny() {
         val shapeReference = variableReference("Thing")
 
         val typeParameter = contravariantTypeParameter("T")
@@ -379,6 +379,27 @@ class TypeCheckFunctionCallTests {
         assertThat(type, isShapeType(
             typeArguments = isSequence(isAnyType)
         ))
+    }
+
+    @Test
+    fun whenEffectParameterIsNotConstrainedThenEffectParameterIsEmptyEffect() {
+        val functionReference = variableReference("f")
+
+        val effectParameter = effectParameter("!E")
+        val functionType = functionType(
+            staticParameters = listOf(effectParameter),
+            effect = effectParameter,
+            returns = UnitType
+        )
+        val node = call(receiver = functionReference)
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            effect = EmptyEffect
+        )
+
+        val type = inferType(node, typeContext)
+        assertThat(type, isUnitType)
     }
 
     @Test
@@ -471,13 +492,29 @@ class TypeCheckFunctionCallTests {
         val functionReference = variableReference("f")
         val node = call(receiver = functionReference)
         val functionType = functionType(
-            effects = setOf(IoEffect),
+            effect = IoEffect,
             returns = UnitType
         )
 
         val typeContext = typeContext(
             referenceTypes = mapOf(functionReference to functionType),
-            effects = setOf(IoEffect)
+            effect = IoEffect
+        )
+        inferType(node, typeContext)
+    }
+
+    @Test
+    fun whenEffectIsInScopeThenCanCallFunctionWithNoEffects() {
+        val functionReference = variableReference("f")
+        val node = call(receiver = functionReference)
+        val functionType = functionType(
+            effect = EmptyEffect,
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            effect = IoEffect
         )
         inferType(node, typeContext)
     }
@@ -487,16 +524,16 @@ class TypeCheckFunctionCallTests {
         val functionReference = variableReference("f")
         val node = call(receiver = functionReference)
         val functionType = functionType(
-            effects = setOf(IoEffect),
+            effect = IoEffect,
             returns = UnitType
         )
 
         val typeContext = typeContext(
             referenceTypes = mapOf(functionReference to functionType),
-            effects = setOf(object : Effect {
+            effect = object : Effect {
                 override val shortDescription: String
                     get() = "async"
-            })
+            }
         )
         assertThat(
             { inferType(node, typeContext) },
@@ -517,7 +554,7 @@ class TypeCheckFunctionCallTests {
         )
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
-            effects = setOf(effectParameter),
+            effect = effectParameter,
             returns = UnitType
         )
 
@@ -526,7 +563,7 @@ class TypeCheckFunctionCallTests {
                 functionReference to functionType,
                 effectReference to EffectType(IoEffect)
             ),
-            effects = setOf()
+            effect = EmptyEffect
         )
         assertThat(
             { inferType(node, typeContext) },
@@ -550,10 +587,10 @@ class TypeCheckFunctionCallTests {
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
             positionalArguments = listOf(functionType(
-                effects = setOf(effectParameter),
+                effect = effectParameter,
                 returns = UnitType
             )),
-            effects = setOf(effectParameter),
+            effect = effectParameter,
             returns = UnitType
         )
 
@@ -561,12 +598,12 @@ class TypeCheckFunctionCallTests {
             referenceTypes = mapOf(
                 functionReference to functionType,
                 otherFunctionReference to functionType(
-                    effects = setOf(IoEffect),
+                    effect = IoEffect,
                     returns = UnitType
                 ),
                 effectReference to EffectType(IoEffect)
             ),
-            effects = setOf()
+            effect = EmptyEffect
         )
         assertThat(
             { inferType(node, typeContext) },
@@ -589,10 +626,10 @@ class TypeCheckFunctionCallTests {
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
             positionalArguments = listOf(functionType(
-                effects = setOf(effectParameter),
+                effect = effectParameter,
                 returns = UnitType
             )),
-            effects = setOf(effectParameter),
+            effect = effectParameter,
             returns = UnitType
         )
 
@@ -600,12 +637,12 @@ class TypeCheckFunctionCallTests {
             referenceTypes = mapOf(
                 functionReference to functionType,
                 otherFunctionReference to functionType(
-                    effects = setOf(IoEffect),
+                    effect = IoEffect,
                     returns = UnitType
                 ),
                 effectReference to EffectType(IoEffect)
             ),
-            effects = setOf()
+            effect = EmptyEffect
         )
         assertThat(
             { inferType(node, typeContext) },

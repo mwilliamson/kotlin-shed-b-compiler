@@ -4,6 +4,11 @@ import org.shedlang.compiler.all
 import org.shedlang.compiler.types.*
 import org.shedlang.compiler.zip3
 
+internal fun isSubEffect(subEffect: Effect, superEffect: Effect): Boolean {
+    val solver = TypeConstraintSolver(parameters = setOf())
+    return solver.coerceEffect(from = subEffect, to = superEffect)
+}
+
 internal fun canCoerce(from: Type, to: Type): Boolean {
     return coerce(from = from, to = to) is CoercionResult.Success
 }
@@ -58,6 +63,10 @@ internal class TypeConstraintSolver(
         }
     }
 
+    fun boundEffectFor(parameter: EffectParameter): Effect {
+        return effectBindings[parameter] ?: EmptyEffect
+    }
+
     fun coerce(from: Type, to: Type): Boolean {
         if (from == to || to == AnyType || from == NothingType) {
             return true
@@ -79,8 +88,7 @@ internal class TypeConstraintSolver(
                     from.positionalArguments.zip(to.positionalArguments, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
                     from.namedArguments.keys == to.namedArguments.keys &&
                     from.namedArguments.all({ fromArg -> coerce(from = to.namedArguments[fromArg.key]!!, to = fromArg.value) }) &&
-                    from.effects.size == to.effects.size &&
-                    from.effects.zip(to.effects, { fromEffect, toEffect -> coerceEffect(from = fromEffect, to = toEffect)}).all() &&
+                    coerceEffect(from = from.effect, to = to.effect) &&
                     coerce(from = from.returns, to = to.returns)
                 )
         }
@@ -127,6 +135,10 @@ internal class TypeConstraintSolver(
 
     fun coerceEffect(from: Effect, to: Effect): Boolean {
         if (from == to) {
+            return true
+        }
+
+        if (from == EmptyEffect) {
             return true
         }
 

@@ -62,12 +62,12 @@ internal fun isFunctionType(
     arguments: Matcher<List<Type>> = anything,
     returnType: Matcher<Type> = anything,
     namedArguments: Matcher<Map<String, Type>> = anything,
-    effects: Matcher<Iterable<Effect>> = anything
+    effect: Matcher<Effect> = anything
 ): Matcher<Type> = cast(allOf(
     has(FunctionType::positionalArguments, arguments),
     has(FunctionType::namedArguments, namedArguments),
     has(FunctionType::returns, returnType),
-    has(FunctionType::effects, effects)
+    has(FunctionType::effect, effect)
 ))
 
 internal fun isShapeType(

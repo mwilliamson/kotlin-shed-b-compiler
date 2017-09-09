@@ -54,14 +54,13 @@ class FunctionTypeTests {
     }
 
     @Test
-    fun effectsAreIncludedInShortDescriptionInAlphabeticalOrder() {
-        val readEffect = SimpleEffect("!read")
+    fun effectsAreIncludedInShortDescription() {
         val writeEffect = SimpleEffect("!write")
         val functionType = functionType(
-            effects = setOf(writeEffect, readEffect),
+            effect = writeEffect,
             returns = UnitType
         )
-        assertThat(functionType.shortDescription, equalTo("() !read, !write -> Unit"))
+        assertThat(functionType.shortDescription, equalTo("() !write -> Unit"))
     }
 
     private class SimpleEffect(private val name: String): Effect {

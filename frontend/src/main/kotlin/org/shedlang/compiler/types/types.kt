@@ -6,6 +6,12 @@ import org.shedlang.compiler.typechecker.canCoerce
 interface Effect {
     val shortDescription: String
 }
+
+object EmptyEffect : Effect {
+    override val shortDescription: String
+        get() = "!Empty"
+}
+
 object IoEffect : Effect {
     override val shortDescription: String
         get() = "!Io"
@@ -132,7 +138,7 @@ data class FunctionType(
     val positionalArguments: List<Type>,
     val namedArguments: Map<String, Type>,
     val returns: Type,
-    val effects: Set<Effect>
+    val effect: Effect
 ): Type {
     override val shortDescription: String
         get() {
@@ -154,12 +160,13 @@ data class FunctionType(
             val arguments = (positionalArgumentStrings + namedArgumentStrings)
                 .joinToString(", ")
 
-            val effects = effects
-                .sortedBy({ effect -> effect.shortDescription })
-                .map({ effect -> " " + effect.shortDescription })
-                .joinToString(",")
+            val effect = if (effect == EmptyEffect) {
+                ""
+            } else {
+                " " + effect.shortDescription
+            }
 
-            return "${typeParameters}(${arguments})${effects} -> ${returns.shortDescription}"
+            return "${typeParameters}(${arguments})${effect} -> ${returns.shortDescription}"
         }
 }
 
@@ -252,13 +259,13 @@ fun functionType(
     positionalArguments: List<Type> = listOf(),
     namedArguments: Map<String, Type> = mapOf(),
     returns: Type = UnitType,
-    effects: Set<Effect> = setOf()
+    effect: Effect = EmptyEffect
 ) = FunctionType(
     staticParameters = staticParameters,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
     returns = returns,
-    effects = effects
+    effect = effect
 )
 
 fun positionalFunctionType(arguments: List<Type>, returns: Type)
@@ -320,7 +327,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
         return FunctionType(
             positionalArguments = type.positionalArguments.map({ argument -> replaceTypes(argument, bindings) }),
             namedArguments = type.namedArguments.mapValues({ argument -> replaceTypes(argument.value, bindings) }),
-            effects = type.effects.map({ effect -> replaceEffects(effect, bindings) }).toSet(),
+            effect = replaceEffects(type.effect, bindings),
             returns = replaceTypes(type.returns, bindings),
             staticParameters = type.staticParameters
         )

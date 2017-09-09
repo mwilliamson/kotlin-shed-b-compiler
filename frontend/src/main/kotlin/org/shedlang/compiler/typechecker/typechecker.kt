@@ -12,7 +12,7 @@ fun newTypeContext(
 ): TypeContext {
     return TypeContext(
         returnType = null,
-        effects = setOf(),
+        effect = EmptyEffect,
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -22,7 +22,7 @@ fun newTypeContext(
 
 class TypeContext(
     val returnType: Type?,
-    val effects: Set<Effect>,
+    val effect: Effect,
     private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleType,
@@ -72,10 +72,10 @@ class TypeContext(
         nodeTypes[targetNodeId] = type
     }
 
-    fun enterFunction(returnType: Type?, effects: Set<Effect>): TypeContext {
+    fun enterFunction(returnType: Type?, effect: Effect): TypeContext {
         return TypeContext(
             returnType = returnType,
-            effects = effects,
+            effect = effect,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
@@ -86,7 +86,7 @@ class TypeContext(
     fun enterScope(): TypeContext {
         return TypeContext(
             returnType = returnType,
-            effects = effects,
+            effect = effect,
             nodeTypes = HashMap(nodeTypes),
             resolvedReferences = resolvedReferences,
             getModule = getModule,
@@ -185,7 +185,8 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
         argumentTypes,
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
-    val effects = function.effects.map({ effect -> evalEffect(effect, context) }).toSet()
+
+    val effect = evalEffects(function.effects, context)
 
     val body = function.body
     val returnTypeNode = function.returnType
@@ -199,7 +200,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
         is FunctionBody.Expression -> {
             val bodyContext = context.enterFunction(
                 returnType = null,
-                effects = effects
+                effect = effect
             )
             val expressionType = inferType(body.expression, bodyContext)
 
@@ -221,7 +222,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
             context.defer({
                 val bodyContext = context.enterFunction(
                     returnType = returnType,
-                    effects = effects
+                    effect = effect
                 )
                 typeCheck(body.nodes, bodyContext)
             })
@@ -234,13 +235,25 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
         staticParameters = staticParameters,
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
-        effects = effects,
+        effect = effect,
         returns = returnType
     )
 
     checkReturns(function, functionType)
 
     return functionType
+}
+
+private fun evalEffects(effectNodes: List<StaticNode>, context: TypeContext): Effect {
+    val effects = effectNodes.map({ effect -> evalEffect(effect, context) }).toSet()
+    val effect = if (effects.size == 0) {
+        EmptyEffect
+    } else if (effects.size == 1) {
+        effects.single()
+    } else {
+        throw NotImplementedError()
+    }
+    return effect
 }
 
 private fun typeCheck(type: StaticNode, context: TypeContext) {
@@ -292,7 +305,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
                 positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
                 namedArguments = mapOf(),
                 returns = evalType(node.returnType, context),
-                effects = node.effects.map({ effect -> evalEffect(effect, context) }).toSet()
+                effect = evalEffects(node.effects, context)
             )
             checkType(type, source = node.source)
             return MetaType(type)

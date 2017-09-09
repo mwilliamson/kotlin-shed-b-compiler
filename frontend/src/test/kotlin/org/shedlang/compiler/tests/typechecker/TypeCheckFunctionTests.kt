@@ -173,7 +173,7 @@ class TypeCheckFunctionTests {
         assertThat(typeContext.typeOf(node), isFunctionType(
             arguments = anything,
             returnType = anything,
-            effects = isSequence(cast(equalTo(IoEffect)))
+            effect = cast(equalTo(IoEffect))
         ))
     }
 
@@ -192,7 +192,7 @@ class TypeCheckFunctionTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                effects = setOf(IoEffect),
+                effect = IoEffect,
                 returns = UnitType
             ),
             unitType to MetaType(UnitType),
@@ -217,7 +217,7 @@ class TypeCheckFunctionTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 functionReference to functionType(
-                    effects = setOf(IoEffect),
+                    effect = IoEffect,
                     returns = UnitType
                 ),
                 unitType to MetaType(UnitType)
@@ -246,12 +246,12 @@ class TypeCheckFunctionTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 functionReference to functionType(
-                    effects = setOf(IoEffect),
+                    effect = IoEffect,
                     returns = UnitType
                 ),
                 unitType to MetaType(UnitType)
             ),
-            effects = setOf(IoEffect)
+            effect = IoEffect
         )
         assertThat(
             {
@@ -274,12 +274,12 @@ class TypeCheckFunctionTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 functionReference to functionType(
-                    effects = setOf(IoEffect),
+                    effect = IoEffect,
                     returns = UnitType
                 ),
                 unitType to MetaType(UnitType)
             ),
-            effects = setOf(IoEffect)
+            effect = IoEffect
         )
         assertThat(
             {

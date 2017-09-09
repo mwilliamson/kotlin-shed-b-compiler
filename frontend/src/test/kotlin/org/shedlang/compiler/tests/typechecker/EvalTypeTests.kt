@@ -127,7 +127,7 @@ class EvalTypeTests {
         )
         assertThat(type, isFunctionType(
             arguments = isSequence(isIntType),
-            effects = equalTo(setOf(IoEffect)),
+            effect = equalTo(IoEffect),
             returnType = isBoolType
         ))
     }

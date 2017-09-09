@@ -7,6 +7,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.canCoerce
 import org.shedlang.compiler.typechecker.coerce
+import org.shedlang.compiler.typechecker.isSubEffect
 import org.shedlang.compiler.types.*
 
 class CoercionTests {
@@ -140,10 +141,19 @@ class CoercionTests {
 
     @Test
     fun functionTypeEffectsMustMatch() {
+        val readEffect = object: Effect {
+            override val shortDescription: String
+                get() = "!Read"
+        }
+        val writeEffect = object: Effect {
+            override val shortDescription: String
+                get() = "!Write"
+        }
+
         assertThat(
             canCoerce(
-                from = functionType(effects = setOf()),
-                to = functionType(effects = setOf(IoEffect))
+                from = functionType(effect = readEffect),
+                to = functionType(effect = writeEffect)
             ),
             equalTo(false)
         )
@@ -321,6 +331,30 @@ class CoercionTests {
             parameters = setOf(typeParameter)
         )
         assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(isIntType, isBoolType))))
+    }
+
+    @Test
+    fun effectIsSubEffectOfItself() {
+        assertThat(
+            isSubEffect(subEffect = IoEffect, superEffect = IoEffect),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun emptyEffectIsSubEffectOfOtherEffects() {
+        assertThat(
+            isSubEffect(subEffect = EmptyEffect, superEffect = IoEffect),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun emptyEffectIsNotSuperEffectOfOtherEffects() {
+        assertThat(
+            isSubEffect(subEffect = IoEffect, superEffect = EmptyEffect),
+            equalTo(false)
+        )
     }
 
     private fun isSuccess(vararg bindings: Pair<TypeParameter, Matcher<Type>>): Matcher<CoercionResult> {

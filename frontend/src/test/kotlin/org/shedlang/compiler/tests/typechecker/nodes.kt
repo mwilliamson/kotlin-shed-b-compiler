@@ -6,6 +6,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.Effect
+import org.shedlang.compiler.types.EmptyEffect
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
 import java.util.*
@@ -17,7 +18,7 @@ fun emptyTypeContext(): TypeContext {
 
 fun typeContext(
     returnType: Type? = null,
-    effects: Set<Effect> = setOf(),
+    effect: Effect = EmptyEffect,
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     types: Map<VariableBindingNode, Type> = mapOf(),
@@ -34,7 +35,7 @@ fun typeContext(
 
     return TypeContext(
         returnType = returnType,
-        effects = effects,
+        effect = effect,
         nodeTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = mutableListOf(),
