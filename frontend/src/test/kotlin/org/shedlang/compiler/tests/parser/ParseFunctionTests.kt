@@ -7,9 +7,9 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.parser.parseFunctionDeclaration
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.testing.allOf
+import org.shedlang.compiler.testing.isSequence
 import org.shedlang.compiler.tests.isInvariant
-import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 
 class ParseFunctionTests {

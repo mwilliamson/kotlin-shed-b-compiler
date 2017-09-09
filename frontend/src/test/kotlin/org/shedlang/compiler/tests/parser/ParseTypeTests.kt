@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.parseType
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.testing.isSequence
 
 class ParseTypeTests {
     @Test

@@ -10,7 +10,7 @@ import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.testing.*
 
 class CodeGeneratorTests {
     @Test
@@ -327,10 +327,10 @@ class CodeGeneratorTests {
         body: Matcher<List<JavascriptStatementNode>> = anything
     ) : Matcher<JavascriptStatementNode>
         = cast(allOf(
-            has(JavascriptFunctionDeclarationNode::name, name),
-            has(JavascriptFunctionDeclarationNode::arguments, arguments),
-            has(JavascriptFunctionDeclarationNode::body, body)
-        ))
+        has(JavascriptFunctionDeclarationNode::name, name),
+        has(JavascriptFunctionDeclarationNode::arguments, arguments),
+        has(JavascriptFunctionDeclarationNode::body, body)
+    ))
 
     private fun isJavascriptFunctionExpression(
         arguments: Matcher<List<String>> = anything,

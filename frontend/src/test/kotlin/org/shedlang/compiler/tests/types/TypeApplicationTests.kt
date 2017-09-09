@@ -4,6 +4,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.testing.isMap
+import org.shedlang.compiler.testing.isSequence
+import org.shedlang.compiler.testing.parametrizedShapeType
+import org.shedlang.compiler.testing.parametrizedUnionType
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
@@ -163,7 +167,7 @@ class TypeApplicationTests {
 
             assertThat(
                 replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
-                isFunctionType(returnType= isIntType)
+                isFunctionType(returnType = isIntType)
             )
         }
     }

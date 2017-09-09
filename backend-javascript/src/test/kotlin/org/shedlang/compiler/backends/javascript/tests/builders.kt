@@ -1,7 +1,7 @@
 package org.shedlang.compiler.backends.javascript.tests
 
 import org.shedlang.compiler.backends.javascript.ast.*
-import org.shedlang.compiler.tests.anySource
+import org.shedlang.compiler.testing.anySource
 
 fun jsLiteralNull() = JavascriptNullLiteralNode(
     source = anySource()

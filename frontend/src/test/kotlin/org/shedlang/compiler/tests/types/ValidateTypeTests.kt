@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.shapeType
+import org.shedlang.compiler.testing.isSequence
+import org.shedlang.compiler.testing.shapeType
 import org.shedlang.compiler.types.*
 
 class ValidateTypeTests {

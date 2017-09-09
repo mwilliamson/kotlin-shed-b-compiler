@@ -6,10 +6,10 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.testing.isMap
+import org.shedlang.compiler.testing.parametrizedShapeType
+import org.shedlang.compiler.testing.unionType
 import org.shedlang.compiler.tests.isEquivalentType
-import org.shedlang.compiler.tests.isMap
-import org.shedlang.compiler.tests.parametrizedShapeType
-import org.shedlang.compiler.tests.unionType
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.coerce
 import org.shedlang.compiler.types.*

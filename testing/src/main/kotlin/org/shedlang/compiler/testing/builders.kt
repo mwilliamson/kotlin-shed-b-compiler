@@ -1,4 +1,4 @@
-package org.shedlang.compiler.tests
+package org.shedlang.compiler.testing
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*

@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.python.CodeGenerationContext
 import org.shedlang.compiler.backends.python.GeneratedCode
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.testing.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
 class CodeGeneratorTests {

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.testing.isSequence
 
 class ParseCallTests {
     @Test

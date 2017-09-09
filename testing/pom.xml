@@ -9,26 +9,20 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>shed-compiler-backend-python</artifactId>
+    <artifactId>shed-compiler-testing</artifactId>
     <packaging>jar</packaging>
 
-    <name>org.shedlang shed-compiler-backend-python</name>
+    <name>org.shedlang shed-compiler-testing</name>
     <dependencies>
-        <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-backend-common</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-        </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
             <artifactId>shed-compiler-frontend</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-testing</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <scope>test</scope>
+            <groupId>com.natpryce</groupId>
+            <artifactId>hamkrest</artifactId>
+            <version>1.2.3.0</version>
         </dependency>
     </dependencies>
 

@@ -8,6 +8,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.testing.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -124,21 +125,21 @@ class TypeCheckExpressionTests {
     fun stringEqualityOperationReturnsBoolean() {
         val node = binaryOperation(Operator.EQUALS, literalString(), literalString())
         val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(isBoolType))
+        assertThat(type, isBoolType)
     }
 
     @Test
     fun stringAdditionOperationReturnsString() {
         val node = binaryOperation(Operator.ADD, literalString(), literalString())
         val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(isStringType))
+        assertThat(type, isStringType)
     }
 
     @Test
     fun booleanEqualityOperationReturnsBoolean() {
         val node = binaryOperation(Operator.EQUALS, literalBool(), literalBool())
         val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(isBoolType))
+        assertThat(type, isBoolType)
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Source
+import org.shedlang.compiler.testing.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 import org.shedlang.compiler.typechecker.UnhandledEffectError

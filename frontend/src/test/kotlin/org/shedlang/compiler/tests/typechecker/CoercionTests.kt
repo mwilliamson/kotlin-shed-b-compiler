@@ -3,7 +3,10 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.testing.*
+import org.shedlang.compiler.tests.isBoolType
+import org.shedlang.compiler.tests.isIntType
+import org.shedlang.compiler.tests.isUnionType
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.canCoerce
 import org.shedlang.compiler.typechecker.coerce

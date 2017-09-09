@@ -5,9 +5,9 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.tests.import
-import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.testing.import
 import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.ModuleType
 
 class TypeCheckImportTests {
     @Test

@@ -5,14 +5,14 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.fieldAccess
+import org.shedlang.compiler.testing.fieldAccess
+import org.shedlang.compiler.testing.shapeType
+import org.shedlang.compiler.testing.variableReference
 import org.shedlang.compiler.tests.isIntType
-import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.tests.variableReference
-import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.typechecker.NoSuchFieldError
-import org.shedlang.compiler.types.UnitType
 import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.UnitType
 
 class TypeCheckFieldAccessTests {
     @Test

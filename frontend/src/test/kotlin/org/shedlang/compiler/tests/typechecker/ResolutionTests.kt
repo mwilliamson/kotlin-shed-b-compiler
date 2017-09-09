@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.VariableReferenceNode
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.testing.*
 import org.shedlang.compiler.typechecker.*
 import java.util.*
 

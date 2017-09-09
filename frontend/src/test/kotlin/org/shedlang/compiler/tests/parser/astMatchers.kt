@@ -2,7 +2,7 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.testing.allOf
 import org.shedlang.compiler.types.Variance
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)

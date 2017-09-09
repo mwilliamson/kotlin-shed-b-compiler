@@ -2,7 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.staticReference
+import org.shedlang.compiler.testing.staticReference
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
 class VariableReferencesMapTests {

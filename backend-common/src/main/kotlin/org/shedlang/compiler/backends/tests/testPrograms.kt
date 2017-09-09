@@ -15,7 +15,7 @@ data class TestProgram(
 )
 
 private data class TestProgramFiles(val base: Path, val main: Path)
-private val disabled = setOf("options")
+private val disabled = setOf("aoptions")
 
 fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(file): TestProgram {

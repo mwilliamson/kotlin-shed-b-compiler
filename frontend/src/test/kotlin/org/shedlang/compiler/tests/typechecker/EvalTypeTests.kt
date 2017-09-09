@@ -4,7 +4,11 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.testing.*
+import org.shedlang.compiler.tests.isBoolType
+import org.shedlang.compiler.tests.isFunctionType
+import org.shedlang.compiler.tests.isIntType
+import org.shedlang.compiler.tests.isShapeType
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.evalType

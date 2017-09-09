@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.parse
-import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.testing.allOf
+import org.shedlang.compiler.testing.isSequence
 
 class ParseModuleTests {
     @Test

@@ -11,7 +11,7 @@ import org.shedlang.compiler.ast.StringSource
 import org.shedlang.compiler.parser.Token
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.UnexpectedTokenException
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.testing.allOf
 
 class TokenIteratorTests {
     enum class TokenType {

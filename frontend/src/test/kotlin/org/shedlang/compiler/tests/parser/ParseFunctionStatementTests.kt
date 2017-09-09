@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseFunctionStatement
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.testing.allOf
 
 class ParseFunctionStatementTests {
     @Test

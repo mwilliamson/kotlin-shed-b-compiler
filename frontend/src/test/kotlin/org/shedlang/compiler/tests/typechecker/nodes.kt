@@ -3,7 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.testing.allOf
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.ModuleType

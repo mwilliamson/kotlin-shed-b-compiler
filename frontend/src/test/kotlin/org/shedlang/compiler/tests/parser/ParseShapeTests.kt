@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseShape
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.testing.isSequence
 
 class ParseShapeTests {
     @Test

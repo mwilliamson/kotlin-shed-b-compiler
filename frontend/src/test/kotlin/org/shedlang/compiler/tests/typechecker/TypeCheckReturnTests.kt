@@ -3,12 +3,12 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.literalInt
-import org.shedlang.compiler.tests.returns
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.testing.literalInt
+import org.shedlang.compiler.testing.returns
 import org.shedlang.compiler.typechecker.ReturnOutsideOfFunctionError
 import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
 
 class TypeCheckReturnTests {
     @Test

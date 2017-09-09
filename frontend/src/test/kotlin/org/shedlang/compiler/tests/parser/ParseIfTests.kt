@@ -6,8 +6,8 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.IfStatementNode
 import org.shedlang.compiler.parser.parseFunctionStatement
-import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.testing.allOf
+import org.shedlang.compiler.testing.isSequence
 
 class ParseIfTests {
     @Test
