@@ -734,7 +734,7 @@ private fun parsePrimaryStaticExpression(
     source: Source,
     tokens: TokenIterator<TokenType>
 ): StaticNode {
-    if (tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
+    if (tokens.isNext(TokenType.SYMBOL_OPEN_SQUARE_BRACKET) || tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
         return parseFunctionType(source, tokens)
     } else {
         val name = parseIdentifier(tokens)
@@ -743,6 +743,8 @@ private fun parsePrimaryStaticExpression(
 }
 
 private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>): StaticNode {
+    val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
+
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseMany(
         parseElement = { tokens -> parseType(tokens) },
@@ -757,6 +759,7 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = parseType(tokens)
     return FunctionTypeNode(
+        staticParameters = staticParameters,
         arguments = arguments,
         returnType = returnType,
         effects = effects,

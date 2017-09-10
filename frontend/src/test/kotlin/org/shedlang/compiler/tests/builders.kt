@@ -222,10 +222,12 @@ fun staticApplication(
     source = anySource()
 )
 fun functionTypeNode(
+    staticParameters: List<StaticParameterNode> = listOf(),
     arguments: List<StaticNode> = listOf(),
     returnType: StaticNode,
     effects: List<StaticNode> = listOf()
 ) = FunctionTypeNode(
+    staticParameters = staticParameters,
     arguments = arguments,
     returnType = returnType,
     effects = effects,

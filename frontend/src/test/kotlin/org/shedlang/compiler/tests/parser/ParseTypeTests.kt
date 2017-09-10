@@ -58,4 +58,18 @@ class ParseTypeTests {
             effects = isSequence(isStaticReference("!E"))
         ))
     }
+
+    @Test
+    fun functionTypeStaticParametersAreRepresentedBySquareBrackets() {
+        val source = "[T, U](T, U) -> R"
+        val node = parseString(::parseType, source)
+        assertThat(node, isFunctionType(
+
+            arguments = isSequence(
+                isStaticReference(name = "T"),
+                isStaticReference(name = "U")
+            ),
+            returnType = isStaticReference(name = "R")
+        ))
+    }
 }
