@@ -12,10 +12,22 @@ internal class UnrecognisedEscapeSequenceError(
 ) : Exception("Unrecognised escape sequence")
 
 internal fun parse(filename: String, input: String): ModuleNode {
+    return parse(
+        filename = filename,
+        input = input,
+        rule = { tokens -> ::parseModule.parse(tokens) }
+    )
+}
+
+internal fun <T> parse(
+    filename: String,
+    input: String,
+    rule: (TokenIterator<TokenType>) -> T
+): T {
     val tokenIterator = parserTokenise(filename, input)
-    val module = ::parseModule.parse(tokenIterator)
+    val node = rule(tokenIterator)
     tokenIterator.skip(TokenType.END)
-    return module
+    return node
 }
 
 internal fun parserTokenise(filename: String, input: String): TokenIterator<TokenType> {
