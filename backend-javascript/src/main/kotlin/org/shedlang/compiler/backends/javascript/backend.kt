@@ -61,6 +61,15 @@ private val stdlib = """
         return Array.prototype.slice.call(arguments);
     }
 
+    function all(list) {
+        for (var index = 0; index < list.length; index++) {
+            if (!list[index]) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function map(func, list) {
         return list.map(func);
     }

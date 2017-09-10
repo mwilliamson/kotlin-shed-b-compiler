@@ -46,7 +46,15 @@ val blackCode = "\u001B[39m";
 fun runTests(tests: List[TestCase]) !io -> Int {
     val results = map(runTest, tests);
     forEach(printFailure, results);
-    return 0;
+    val isSuccess = all(map(
+        fun (result: TestResult) => result.error is options.None,
+        results
+    ));
+    if (isSuccess) {
+        return 0;
+    } else {
+        return 1;
+    }
 }
 
 fun printFailure(result: TestResult) !io -> Unit {
