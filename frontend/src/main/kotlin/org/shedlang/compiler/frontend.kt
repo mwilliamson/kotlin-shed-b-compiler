@@ -60,8 +60,6 @@ private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
     return FrontEndResult(modules = modules.values.toList())
 }
 
-
-
 private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
     val path = base.resolve(relativePath)
     val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
