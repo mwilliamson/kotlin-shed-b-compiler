@@ -302,12 +302,16 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
         }
 
         override fun visit(node: FunctionTypeNode): Type {
+            val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
+            val positionalArguments = node.arguments.map({ argument -> evalType(argument, context) })
+            val effect = evalEffects(node.effects, context)
+            val returnType = evalType(node.returnType, context)
             val type = FunctionType(
-                staticParameters = listOf(),
-                positionalArguments = node.arguments.map({ argument -> evalType(argument, context) }),
+                staticParameters = staticParameters,
+                positionalArguments = positionalArguments,
                 namedArguments = mapOf(),
-                returns = evalType(node.returnType, context),
-                effect = evalEffects(node.effects, context)
+                returns = returnType,
+                effect = effect
             )
             checkType(type, source = node.source)
             return MetaType(type)

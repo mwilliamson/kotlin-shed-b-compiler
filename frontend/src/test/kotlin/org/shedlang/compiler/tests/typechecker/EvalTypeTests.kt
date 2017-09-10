@@ -107,26 +107,30 @@ class EvalTypeTests {
 
     @Test
     fun canEvaluateFunctionTypeNode() {
-        val intReference = staticReference("Int")
+        val typeParameter = typeParameter("T")
+        val typeParameterReference = staticReference("T")
         val boolReference = staticReference("Bool")
         val effectReference = staticReference("Io")
 
         val node = functionTypeNode(
-            arguments = listOf(intReference),
+            staticParameters = listOf(typeParameter),
+            arguments = listOf(typeParameterReference),
             effects = listOf(effectReference),
             returnType = boolReference
         )
 
         val type = evalType(
             node,
-            typeContext(referenceTypes = mapOf(
-                intReference to MetaType(IntType),
-                boolReference to MetaType(BoolType),
-                effectReference to EffectType(IoEffect)
-            ))
+            typeContext(
+                referenceTypes = mapOf(
+                    boolReference to MetaType(BoolType),
+                    effectReference to EffectType(IoEffect)
+                ),
+                references = mapOf(typeParameterReference to typeParameter)
+            )
         )
         assertThat(type, isFunctionType(
-            arguments = isSequence(isIntType),
+            arguments = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
             effect = equalTo(IoEffect),
             returnType = isBoolType
         ))
