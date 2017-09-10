@@ -20,7 +20,9 @@ private val coreBuiltins = listOf(
     Builtin("Int", MetaType(IntType)),
     Builtin("String", MetaType(StringType)),
     Builtin("Bool", MetaType(BoolType)),
-    Builtin("List", MetaType(ListType))
+    Builtin("List", MetaType(ListType)),
+    
+    Builtin("!io", EffectType(IoEffect))
 )
 
 fun parseType(string: String): Type {
@@ -47,16 +49,8 @@ private val mapType = parseType("[T, R, !E]((T) !E -> T, List[T]) !E -> List[R]"
 private val forEachType = parseType("[T, !E]((T) !E -> Unit, List[T]) !E -> Unit")
 
 internal val builtins = coreBuiltins + listOf(
-    Builtin("!io", EffectType(IoEffect)),
-
-    Builtin("print", FunctionType(
-        staticParameters = listOf(),
-        positionalArguments = listOf(StringType),
-        namedArguments = mapOf(),
-        effect = IoEffect,
-        returns = UnitType
-    )),
-    Builtin("intToString", positionalFunctionType(listOf(IntType), StringType)),
+    Builtin("print", parseType("(String) !io -> Unit")),
+    Builtin("intToString", parseType("(Int) -> String")),
     Builtin("list", ListConstructorType),
     Builtin("map", mapType),
     Builtin("forEach", forEachType)
