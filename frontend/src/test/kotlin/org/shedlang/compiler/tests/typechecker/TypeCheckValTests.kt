@@ -11,7 +11,10 @@ import org.shedlang.compiler.tests.call
 import org.shedlang.compiler.tests.literalInt
 import org.shedlang.compiler.tests.valStatement
 import org.shedlang.compiler.tests.variableReference
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.typechecker.UnexpectedTypeError
+import org.shedlang.compiler.typechecker.newTypeContext
+import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
@@ -30,13 +33,12 @@ class TypeCheckValTests {
     @Test
     fun valTakesTypeOfExpression() {
         val node = valStatement(name = "x", expression = literalInt())
-        val variables = mutableMapOf<Int, Type>()
         val typeContext = newTypeContext(
-            nodeTypes = variables,
+            nodeTypes = mapOf(),
             resolvedReferences = ResolvedReferencesMap(mapOf()),
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
         typeCheck(node as StatementNode, typeContext)
-        assertThat(variables[node.nodeId]!!, cast(equalTo(IntType)))
+        assertThat(typeContext.typeOf(node), cast(equalTo(IntType)))
     }
 }

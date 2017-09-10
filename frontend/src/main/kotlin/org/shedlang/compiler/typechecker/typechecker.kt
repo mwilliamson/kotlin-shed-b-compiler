@@ -6,14 +6,14 @@ import typeCheckStaticParameters
 import java.util.*
 
 fun newTypeContext(
-    nodeTypes: MutableMap<Int, Type> = mutableMapOf(),
+    nodeTypes: Map<Int, Type> = mapOf(),
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleType
 ): TypeContext {
     return TypeContext(
         returnType = null,
         effect = EmptyEffect,
-        nodeTypes = nodeTypes,
+        nodeTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
         deferred = mutableListOf()
@@ -28,6 +28,9 @@ class TypeContext(
     private val getModule: (ImportPath) -> ModuleType,
     private val deferred: MutableList<() -> Unit>
 ) {
+    internal fun getNodeTypes(): NodeTypesMap {
+        return NodeTypesMap(nodeTypes)
+    }
 
     fun moduleType(path: ImportPath): ModuleType {
         return getModule(path)
@@ -134,15 +137,14 @@ internal fun typeCheck(
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleType
 ): TypeCheckResult {
-    val mutableNodeTypes = HashMap(nodeTypes)
     val typeContext = newTypeContext(
-        nodeTypes = mutableNodeTypes,
+        nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule
     )
     val moduleType = typeCheck(module, typeContext)
     return TypeCheckResult(
-        types = NodeTypesMap(mutableNodeTypes),
+        types = typeContext.getNodeTypes(),
         moduleType = moduleType
     )
 }
