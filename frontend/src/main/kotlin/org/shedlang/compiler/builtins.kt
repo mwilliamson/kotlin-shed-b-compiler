@@ -1,3 +1,5 @@
+package org.shedlang.compiler
+
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.types.*
 

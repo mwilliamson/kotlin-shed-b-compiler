@@ -1,6 +1,5 @@
 package org.shedlang.compiler
 
-import builtins
 import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ImportPathBase
