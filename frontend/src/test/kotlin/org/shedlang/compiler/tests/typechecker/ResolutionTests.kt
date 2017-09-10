@@ -116,7 +116,7 @@ class ResolutionTests {
     }
 
     @Test
-    fun functionTypeParametersAreAddedToScope() {
+    fun staticParametersInFunctionDeclarationAreAddedToScope() {
         val reference = staticReference("T")
         val typeParameter = typeParameter("T")
         val node = function(
@@ -148,6 +148,21 @@ class ResolutionTests {
         ))
 
         assertThat(references[effect], equalTo(effectNodeId))
+    }
+
+    @Test
+    fun staticParametersInFunctionTypeAreAddedToScope() {
+        val reference = staticReference("T")
+        val typeParameter = typeParameter("T")
+        val node = functionTypeNode(
+            staticParameters = listOf(typeParameter),
+            arguments = listOf(reference),
+            returnType = staticReference("T")
+        )
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[reference], equalTo(typeParameter.nodeId))
     }
 
     @Test

@@ -106,6 +106,8 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is FunctionExpressionNode -> resolveFunction(node, context)
 
+        is FunctionTypeNode -> resolveFunctionType(node, context)
+
         is ShapeNode -> {
             context.defer(node, {
                 resolveScope(
@@ -163,6 +165,14 @@ private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
         body = node.body.nodes,
         binders = node.arguments,
         context = bodyContext
+    )
+}
+
+private fun resolveFunctionType(node: FunctionTypeNode, context: ResolutionContext) {
+    resolveScope(
+        binders = node.staticParameters,
+        body = node.arguments + node.effects + listOf(node.returnType),
+        context = context
     )
 }
 
