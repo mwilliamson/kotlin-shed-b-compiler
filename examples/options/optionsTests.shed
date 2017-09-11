@@ -6,7 +6,7 @@ fun addOne(value: Int) -> Int {
 }
 
 val testCases = list(
-    tests.testCase("none.map(f) is none", fun () {
+    tests.testCase("map(f, none) is none", fun () {
         return tests.assert(options.map(addOne, options.none) is options.None);
     }),
     tests.testCase("failure", fun () {

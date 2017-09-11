@@ -4,11 +4,13 @@
 //   2
 //   3
 
-union List = Cons | Unit;
-shape Cons {
+union List tagged = Cons | Nil;
+shape Cons tag-value-for List {
     head: Int,
     tail: List,
 }
+shape Nil tag-value-for List { }
+val nil = Nil();
 
 fun cons(head: Int, tail: List) -> List {
     return Cons(head=head, tail=tail);
@@ -22,6 +24,6 @@ fun printInts(list: List) !io -> Unit {
 }
 
 fun main() !io -> Unit {
-    val list = cons(1, cons(2, cons(3, unit)));
+    val list = cons(1, cons(2, cons(3, nil)));
     printInts(list);
 }
