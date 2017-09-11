@@ -82,6 +82,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     context.addType(node, MetaType(type))
     context.defer({
         members.value
+        // TODO: check type
     })
 }
 

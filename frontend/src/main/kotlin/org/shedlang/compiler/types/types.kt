@@ -393,6 +393,7 @@ internal fun validateType(type: Type): ValidateTypeResult {
             }
         }))
     } else if (type is UnionType) {
+        // TODO: members should have all have values for the same tag
         return ValidateTypeResult.success
     } else if (type is TypeFunction) {
         return validateType(type.type)
