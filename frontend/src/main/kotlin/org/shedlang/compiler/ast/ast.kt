@@ -1,5 +1,6 @@
 package org.shedlang.compiler.ast
 
+import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Variance
 
 interface Node {
@@ -174,12 +175,13 @@ interface ModuleStatementNode: Node {
 data class ShapeNode(
     override val name: String,
     val typeParameters: List<TypeParameterNode>,
+    val tag: StaticNode?,
     val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = typeParameters + fields
+        get() = typeParameters + tag.nullableToList() + fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

@@ -8,6 +8,14 @@ fun <T: Any?> T?.orElseThrow(exception: Exception): T {
     }
 }
 
+fun <T: Any?> T?.nullableToList(): List<T> {
+    if (this == null) {
+        return listOf()
+    } else {
+        return listOf(this)
+    }
+}
+
 internal fun Iterable<Boolean>.all(): Boolean {
     for (element in this) {
         if (!element) {
