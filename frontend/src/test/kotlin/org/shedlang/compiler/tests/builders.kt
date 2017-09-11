@@ -287,10 +287,16 @@ fun parametrizedUnionType(
 
 fun unionType(
     name: String,
-    members: List<Type>
+    members: List<Type> = listOf(),
+    hasTag: Boolean = false
 ) = LazyUnionType(
     name = name,
     getMembers = lazy { members },
-    tag = null,
+    // TODO: extract tag generation code
+    tag = if (hasTag) {
+        Tag(name)
+    } else {
+        null
+    },
     typeArguments = listOf()
 )

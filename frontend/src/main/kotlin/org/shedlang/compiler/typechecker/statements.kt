@@ -34,7 +34,19 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         typeParameters = typeParameters,
         typeArguments = typeParameters,
         tag = generateTag(node),
-        getHasValueForTag = lazy { null }
+        getHasValueForTag = lazy {
+            if (node.hasTagValueFor == null) {
+                null
+            } else {
+                val type = evalType(node.hasTagValueFor, context)
+                if (type is MayHaveTag && type.tag != null) {
+                    type.tag
+                } else {
+                    // TODO: throw a better exception
+                    throw Exception("TODO")
+                }
+            }
+        }
     )
     val type = if (node.typeParameters.isEmpty()) {
         shapeType

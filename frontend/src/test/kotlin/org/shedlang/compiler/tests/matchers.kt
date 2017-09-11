@@ -80,12 +80,14 @@ internal fun isShapeType(
     name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>> = anything,
     shapeId: Matcher<Int> = anything,
-    tag: Matcher<Tag?> = anythingOrNull
+    tag: Matcher<Tag?> = anythingOrNull,
+    hasValueForTag: Matcher<Tag?> = anythingOrNull
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),
     has(ShapeType::typeArguments, typeArguments),
     has(ShapeType::shapeId, shapeId),
-    has(ShapeType::tag, tag)
+    has(ShapeType::tag, tag),
+    has(ShapeType::hasValueForTag, hasValueForTag)
 ))
 
 internal fun isShapeType(

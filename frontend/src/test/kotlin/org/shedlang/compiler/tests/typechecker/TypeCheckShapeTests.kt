@@ -138,4 +138,32 @@ class TypeCheckShapeTests {
             tag = present(isTag(name = equalTo("X"), tagId = equalTo(node.nodeId)))
         )))
     }
+
+    @Test
+    fun whenShapeNodeHasNoTagValueThenTypeHasNoTagValue() {
+        val node = shape("X", hasTagValueFor = null)
+
+        val typeContext = typeContext()
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+            hasValueForTag = absent()
+        )))
+    }
+
+    @Test
+    fun whenShapeNodeHasTagValueThenTypeHasTagValue() {
+        val taggedReference = staticReference("T")
+        val taggedType = unionType("T", hasTag = true)
+
+        val node = shape("X", hasTagValueFor = taggedReference)
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(taggedReference to MetaType(taggedType))
+        )
+        typeCheck(node, typeContext)
+
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+            hasValueForTag = present(equalTo(taggedType.tag))
+        )))
+    }
 }
