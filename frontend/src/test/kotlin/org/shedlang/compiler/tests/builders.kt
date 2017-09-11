@@ -262,7 +262,7 @@ fun shapeType(
     shapeId = freshShapeId(),
     typeParameters = typeParameters,
     typeArguments = typeArguments,
-    tag = tag
+    getTag = lazy { tag }
 )
 
 

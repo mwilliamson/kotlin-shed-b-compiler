@@ -195,7 +195,7 @@ data class LazyShapeType(
     override val shapeId: Int = freshShapeId(),
     override val typeParameters: List<TypeParameter>,
     override val typeArguments: List<Type>,
-    override val tag: Tag?
+    private val getTag: Lazy<Tag?>
 ): ShapeType {
     override val shortDescription: String
         get() = if (typeArguments.isEmpty()) {
@@ -204,6 +204,7 @@ data class LazyShapeType(
             appliedTypeShortDescription(name, typeArguments)
         }
     override val fields: Map<String, Type> by getFields
+    override val tag: Tag? by getTag
 }
 
 interface UnionType: Type, MayHaveTag {
@@ -258,7 +259,7 @@ val ListType = TypeFunction(
         typeParameters = listOf(listTypeParameter),
         typeArguments = listOf(listTypeParameter),
         getFields = lazy({ mapOf<String, Type>() }),
-        tag = null
+        getTag = lazy { null }
     )
 )
 
@@ -331,7 +332,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
             shapeId = type.shapeId,
             typeParameters = type.typeParameters,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
-            tag = null
+            getTag = lazy { null }
         )
     } else if (type is FunctionType) {
         return FunctionType(

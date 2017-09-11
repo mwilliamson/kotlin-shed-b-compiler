@@ -33,7 +33,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         getFields = fields,
         typeParameters = typeParameters,
         typeArguments = typeParameters,
-        tag = null
+        getTag = lazy { null }
     )
     val type = if (node.typeParameters.isEmpty()) {
         shapeType
