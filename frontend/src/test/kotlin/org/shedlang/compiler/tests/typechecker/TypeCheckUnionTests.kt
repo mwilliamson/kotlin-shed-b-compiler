@@ -1,11 +1,10 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.absent
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
@@ -75,5 +74,22 @@ class TypeCheckUnionTests {
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             tag = present(isTag(name = equalTo("X"), tagId = equalTo(node.nodeId)))
         )))
+    }
+
+    @Test
+    fun typeOfUnionIsValidated() {
+        val memberReference = staticReference("Member")
+        val memberType = shapeType("Member", tagValueFor = null)
+        val node = union("U", members = listOf(memberReference))
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(memberReference to MetaType(memberType))
+        )
+
+        // TODO: use more specific exception
+        assertThat(
+            { typeCheck(node, typeContext); typeContext.undefer() },
+            throws(has(TypeCheckError::message, equalTo("union members must have tag values")))
+        )
     }
 }

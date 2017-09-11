@@ -259,7 +259,8 @@ fun shapeType(
     fields: Map<String, Type> = mapOf(),
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf(),
-    tag: Tag? = null
+    tag: Tag? = null,
+    tagValueFor: Tag? = null
 ) = LazyShapeType(
     name = name,
     getFields = lazy { fields },
@@ -267,26 +268,27 @@ fun shapeType(
     typeParameters = typeParameters,
     typeArguments = typeArguments,
     tag = tag,
-    getHasValueForTag = lazy { tag }
+    getHasValueForTag = lazy { tagValueFor }
 )
 
 
 fun parametrizedUnionType(
     name: String,
-    parameters: List<TypeParameter>,
-    members: List<Type>
+    parameters: List<TypeParameter> = listOf(TypeParameter("T", variance = Variance.INVARIANT)),
+    members: List<Type> = listOf(),
+    tag: Tag? = null
 ) = TypeFunction(
     type = LazyUnionType(
         name = name,
         getMembers = lazy { members },
-        tag = null,
+        tag = tag,
         typeArguments = parameters
     ),
     parameters = parameters
 )
 
 fun unionType(
-    name: String,
+    name: String = "Union",
     members: List<Type> = listOf(),
     hasTag: Boolean = false
 ) = LazyUnionType(

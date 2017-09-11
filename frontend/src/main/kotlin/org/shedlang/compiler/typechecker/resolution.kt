@@ -1,6 +1,7 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.nullableToList
 import java.util.*
 
 interface ResolvedReferences {
@@ -112,7 +113,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             context.defer(node, {
                 resolveScope(
                     binders = node.typeParameters,
-                    body = node.fields,
+                    body = node.hasTagValueFor.nullableToList() + node.fields,
                     context = context
                 )
             })

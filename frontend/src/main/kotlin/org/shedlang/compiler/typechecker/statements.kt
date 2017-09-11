@@ -39,7 +39,9 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
                 null
             } else {
                 val type = evalType(node.hasTagValueFor, context)
-                if (type is MayHaveTag && type.tag != null) {
+                if (type is TypeFunction && type.type is MayHaveTag && type.type.tag != null) {
+                    type.type.tag
+                } else if (type is MayHaveTag && type.tag != null) {
                     type.tag
                 } else {
                     // TODO: throw a better exception
@@ -82,7 +84,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     context.addType(node, MetaType(type))
     context.defer({
         members.value
-        // TODO: check type
+        checkType(type, source = node.source)
     })
 }
 

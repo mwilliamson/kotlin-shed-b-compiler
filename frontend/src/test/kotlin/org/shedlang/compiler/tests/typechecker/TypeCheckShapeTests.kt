@@ -94,30 +94,6 @@ class TypeCheckShapeTests {
     }
 
     @Test
-    fun typeOfShapeIsValidated() {
-        val typeParameterDeclaration = typeParameter("T", variance = Variance.CONTRAVARIANT)
-        val typeParameterReference = staticReference("T")
-        val unitReference = staticReference("Unit")
-        val node = shape(
-            "Box",
-            typeParameters = listOf(typeParameterDeclaration),
-            fields = listOf(
-                shapeField(type = typeParameterReference)
-            )
-        )
-
-        val typeContext = typeContext(
-            references = mapOf(typeParameterReference to typeParameterDeclaration),
-            referenceTypes = mapOf(unitReference to MetaType(UnitType))
-        )
-        // TODO: use more specific exception
-        assertThat(
-            { typeCheck(node, typeContext); typeContext.undefer() },
-            throws(has(TypeCheckError::message, equalTo("field type cannot be contravariant")))
-        )
-    }
-
-    @Test
     fun whenShapeNodeHasNoTagThenTypeHasNoTag() {
         val node = shape("X", tag = false)
 
@@ -165,5 +141,47 @@ class TypeCheckShapeTests {
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             hasValueForTag = present(equalTo(taggedType.tag))
         )))
+    }
+
+    @Test
+    fun tagValueCanReferToTypeFunction() {
+        val taggedReference = staticReference("T")
+        val tag = Tag("T")
+        val taggedType = parametrizedUnionType("T", tag = tag)
+
+        val node = shape("X", hasTagValueFor = taggedReference)
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(taggedReference to MetaType(taggedType))
+        )
+        typeCheck(node, typeContext)
+
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+            hasValueForTag = present(equalTo(tag))
+        )))
+    }
+
+    @Test
+    fun typeOfShapeIsValidated() {
+        val typeParameterDeclaration = typeParameter("T", variance = Variance.CONTRAVARIANT)
+        val typeParameterReference = staticReference("T")
+        val unitReference = staticReference("Unit")
+        val node = shape(
+            "Box",
+            typeParameters = listOf(typeParameterDeclaration),
+            fields = listOf(
+                shapeField(type = typeParameterReference)
+            )
+        )
+
+        val typeContext = typeContext(
+            references = mapOf(typeParameterReference to typeParameterDeclaration),
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        )
+        // TODO: use more specific exception
+        assertThat(
+            { typeCheck(node, typeContext); typeContext.undefer() },
+            throws(has(TypeCheckError::message, equalTo("field type cannot be contravariant")))
+        )
     }
 }

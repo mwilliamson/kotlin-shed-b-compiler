@@ -56,12 +56,12 @@ shape Matcher[-T] {
     match: (T) -> Result,
 }
 
-union Result = Success | Failure;
-shape Success { }
-val success = Success();
-shape Failure {
+union Result tagged = Success | Failure;
+shape Success tag-value-for Result { }
+shape Failure tag-value-for Result {
     message: String,
 }
+val success = Success();
 fun failure(message: String) -> Failure {
     return Failure(message=message);
 }

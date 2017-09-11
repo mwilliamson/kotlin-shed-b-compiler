@@ -4,11 +4,13 @@
 //   2
 //   3
 
-union List[T] = Cons[T] | Unit;
-shape Cons[T] {
+union List[T] tagged = Cons[T] | Nil;
+shape Cons[T] tag-value-for List {
     head: T,
     tail: List[T],
 }
+shape Nil tag-value-for List {}
+val nil = Nil();
 
 fun cons[T](head: T, tail: List[T]) -> List[T] {
     return Cons(head=head, tail=tail);
@@ -30,11 +32,11 @@ fun map[T, R, !E](func: (T) !E -> R, list: List[T]) !E -> List[R] {
     if (list is Cons[T]) {
         return cons(func(list.head), map(func, list.tail));
     } else {
-        return unit;
+        return nil;
     }
 }
 
 fun main() !io -> Unit {
-    val list = cons(1, cons(2, cons(3, unit)));
+    val list = cons(1, cons(2, cons(3, nil)));
     printInts(list);
 }

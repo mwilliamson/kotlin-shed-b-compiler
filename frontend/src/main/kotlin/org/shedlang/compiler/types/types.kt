@@ -323,7 +323,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
                 type.members.map({ memberType -> replaceTypes(memberType, bindings) })
             }),
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
-            tag = null
+            tag = type.tag
         )
     } else if (type is ShapeType) {
         return LazyShapeType(
@@ -334,8 +334,8 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
             shapeId = type.shapeId,
             typeParameters = type.typeParameters,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
-            tag = null,
-            getHasValueForTag = lazy { null }
+            tag = type.tag,
+            getHasValueForTag = lazy { type.hasValueForTag }
         )
     } else if (type is FunctionType) {
         return FunctionType(
@@ -393,8 +393,23 @@ internal fun validateType(type: Type): ValidateTypeResult {
             }
         }))
     } else if (type is UnionType) {
-        // TODO: members should have all have values for the same tag
-        return ValidateTypeResult.success
+        val tagValues = type.members.map({ member ->
+            if (member is ShapeType && member.hasValueForTag != null) {
+                member.hasValueForTag
+            } else {
+                null
+            }
+        })
+
+        // TODO: check uniqueness of tag values (which also means assigning static tag values)
+
+        if (tagValues.any({ value -> value == null })) {
+            return ValidateTypeResult(listOf("union members must have tag values"))
+        } else if (tagValues.toSet().size > 1) {
+            return ValidateTypeResult(listOf("union members must have values for same tag"))
+        } else {
+            return ValidateTypeResult.success
+        }
     } else if (type is TypeFunction) {
         return validateType(type.type)
     } else {
