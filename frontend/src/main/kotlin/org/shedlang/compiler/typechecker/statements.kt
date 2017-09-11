@@ -33,7 +33,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         getFields = fields,
         typeParameters = typeParameters,
         typeArguments = typeParameters,
-        getTag = lazy { null },
+        tag = null,
         getHasValueForTag = lazy { null }
     )
     val type = if (node.typeParameters.isEmpty()) {
@@ -59,12 +59,10 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         getMembers = members,
         typeArguments = typeParameters,
-        getTag = lazy {
-            if (node.tag) {
-                Tag(name = node.name, tagId = node.nodeId)
-            } else {
-                null
-            }
+        tag = if (node.tag) {
+            Tag(name = node.name, tagId = node.nodeId)
+        } else {
+            null
         }
     )
     val type = if (node.typeParameters.isEmpty()) {
