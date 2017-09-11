@@ -62,6 +62,14 @@ fun freshAnonymousTypeId() = nextAnonymousTypeId++
 private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
+private var nextTagId = 0
+fun freshTagId() = nextTagId++
+
+data class Tag(
+    val name: String,
+    val tagId: Int = freshTagId()
+)
+
 interface StaticParameter {
     val name: String
     val shortDescription: String
@@ -175,6 +183,7 @@ interface ShapeType: HasFieldsType {
     val shapeId: Int
     val typeParameters: List<TypeParameter>
     val typeArguments: List<Type>
+    val tag: Tag?
 }
 
 data class LazyShapeType(
@@ -182,7 +191,8 @@ data class LazyShapeType(
     val getFields: Lazy<Map<String, Type>>,
     override val shapeId: Int = freshShapeId(),
     override val typeParameters: List<TypeParameter>,
-    override val typeArguments: List<Type>
+    override val typeArguments: List<Type>,
+    override val tag: Tag?
 ): ShapeType {
     override val shortDescription: String
         get() = if (typeArguments.isEmpty()) {
@@ -250,7 +260,8 @@ val ListType = TypeFunction(
         name = "List",
         typeParameters = listOf(listTypeParameter),
         typeArguments = listOf(listTypeParameter),
-        getFields = lazy({ mapOf<String, Type>() })
+        getFields = lazy({ mapOf<String, Type>() }),
+        tag = null
     )
 )
 
@@ -321,7 +332,8 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
             }),
             shapeId = type.shapeId,
             typeParameters = type.typeParameters,
-            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) })
+            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
+            tag = null
         )
     } else if (type is FunctionType) {
         return FunctionType(

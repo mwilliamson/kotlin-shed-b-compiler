@@ -239,28 +239,29 @@ fun parametrizedShapeType(
     parameters: List<TypeParameter>,
     fields: Map<String, Type> = mapOf()
 ) = TypeFunction(
-    type = object: ShapeType {
-        override val name = name
-        override val fields = fields
-        override val shapeId = freshShapeId()
-        override val typeParameters = parameters
-        override val typeArguments = parameters
-
-        override val shortDescription = name
-    },
+    type = shapeType(
+        name = name,
+        fields = fields,
+        typeParameters = parameters,
+        typeArguments = parameters
+    ),
     parameters = parameters
 )
 
-fun shapeType(name: String = "Shape", fields: Map<String, Type> = mapOf()) = object: ShapeType {
-    override val name = name
-    override val fields = fields
-    override val shapeId = freshShapeId()
-    override val typeParameters: List<TypeParameter> = listOf()
-    override val typeArguments: List<Type> = listOf()
-
-    override val shortDescription: String
-        get() = name
-}
+fun shapeType(
+    name: String = "Shape",
+    fields: Map<String, Type> = mapOf(),
+    typeParameters: List<TypeParameter> = listOf(),
+    typeArguments: List<Type> = listOf(),
+    tag: Tag? = null
+) = LazyShapeType(
+    name = name,
+    getFields = lazy { fields },
+    shapeId = freshShapeId(),
+    typeParameters = typeParameters,
+    typeArguments = typeArguments,
+    tag = tag
+)
 
 
 fun parametrizedUnionType(
