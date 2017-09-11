@@ -166,6 +166,7 @@ fun union(
 ) = UnionNode(
     name = name,
     typeParameters = typeParameters,
+    tag = false,
     members = members,
     source = anySource()
 )

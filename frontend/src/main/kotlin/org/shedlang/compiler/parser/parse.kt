@@ -168,6 +168,7 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     return UnionNode(
         name = name,
         typeParameters = typeParameters,
+        tag = false,
         members = members,
         source = source
     )
