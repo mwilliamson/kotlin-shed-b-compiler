@@ -263,7 +263,7 @@ fun shapeType(
     typeParameters = typeParameters,
     typeArguments = typeArguments,
     getTag = lazy { tag },
-    getTagValue = lazy { tag }
+    getHasValueForTag = lazy { tag }
 )
 
 
