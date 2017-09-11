@@ -42,4 +42,22 @@ class ParseUnionTests {
             members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
+
+    @Test
+    fun unionHasNoTagByDefault() {
+        val source = "union X = Y | Z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            tag = equalTo(false)
+        ))
+    }
+
+    @Test
+    fun whenTaggedKeywordIsPresentThenUnionHasTag() {
+        val source = "union X tagged = Y | Z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            tag = equalTo(true)
+        ))
+    }
 }

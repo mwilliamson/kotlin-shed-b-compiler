@@ -154,6 +154,8 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     val name = parseIdentifier(tokens)
     val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
 
+    val tagged = tokens.trySkip(TokenType.KEYWORD_TAGGED)
+
     tokens.skip(TokenType.SYMBOL_EQUALS)
 
     val members = parseMany(
@@ -169,7 +171,7 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     return UnionNode(
         name = name,
         typeParameters = typeParameters,
-        tag = false,
+        tag = tagged,
         members = members,
         source = source
     )
