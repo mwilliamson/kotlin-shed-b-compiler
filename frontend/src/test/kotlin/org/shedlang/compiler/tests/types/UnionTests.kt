@@ -5,12 +5,15 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.StringType
+import org.shedlang.compiler.types.union
 
 class UnionTests {
     @Test
     fun unionIsLeftWhenRightCanBeCoercedToLeft() {
-        val left = SimpleUnionType("T", listOf(IntType, StringType))
+        val left = unionType("T", listOf(IntType, StringType))
         val right = IntType
         val union = union(left, right)
         assertThat(union, cast(equalTo(left)))
@@ -19,7 +22,7 @@ class UnionTests {
     @Test
     fun unionIsRightWhenLeftCanBeCoercedToRight() {
         val left = IntType
-        val right = SimpleUnionType("T", listOf(IntType, StringType))
+        val right = unionType("T", listOf(IntType, StringType))
         val union = union(left, right)
         assertThat(union, cast(equalTo(right)))
     }

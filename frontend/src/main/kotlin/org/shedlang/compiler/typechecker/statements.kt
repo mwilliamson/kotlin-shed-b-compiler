@@ -57,7 +57,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     val unionType = LazyUnionType(
         name = node.name,
         getMembers = members,
-        typeArguments = typeParameters
+        typeArguments = typeParameters,
+        getTag = lazy { null }
     )
     val type = if (node.typeParameters.isEmpty()) {
         unionType

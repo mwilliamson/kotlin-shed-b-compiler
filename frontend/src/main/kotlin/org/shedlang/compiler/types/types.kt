@@ -178,12 +178,15 @@ data class FunctionType(
         }
 }
 
-interface ShapeType: HasFieldsType {
+interface MayHaveTag {
+    val tag: Tag?
+}
+
+interface ShapeType: HasFieldsType, MayHaveTag {
     val name: String
     val shapeId: Int
     val typeParameters: List<TypeParameter>
     val typeArguments: List<Type>
-    val tag: Tag?
 }
 
 data class LazyShapeType(
@@ -203,21 +206,10 @@ data class LazyShapeType(
     override val fields: Map<String, Type> by getFields
 }
 
-interface UnionType: Type {
+interface UnionType: Type, MayHaveTag {
     val name: String
     val members: List<Type>
     val typeArguments: List<Type>
-}
-
-data class SimpleUnionType(
-    override val name: String,
-    override val members: List<Type>
-): UnionType {
-    override val shortDescription: String
-        get() = name
-
-    override val typeArguments: List<Type>
-        get() = listOf()
 }
 
 
@@ -225,6 +217,9 @@ data class AnonymousUnionType(
     override val name: String = "_Union" + freshAnonymousTypeId(),
     override val members: List<Type>
 ): UnionType {
+    override val tag: Tag?
+        get() = null
+
     override val typeArguments: List<Type>
         get() = listOf()
 
@@ -235,6 +230,7 @@ data class AnonymousUnionType(
 data class LazyUnionType(
     override val name: String,
     private val getMembers: Lazy<List<Type>>,
+    private val getTag: Lazy<Tag?>,
     override val typeArguments: List<Type>
 ): UnionType {
     override val shortDescription: String
@@ -245,6 +241,7 @@ data class LazyUnionType(
         }
 
     override val members: List<Type> by getMembers
+    override val tag: Tag? by getTag
 }
 
 object ListConstructorType : Type {
@@ -322,7 +319,8 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
             lazy({
                 type.members.map({ memberType -> replaceTypes(memberType, bindings) })
             }),
-            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) })
+            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
+            getTag = lazy<Tag?> { null }
         )
     } else if (type is ShapeType) {
         return LazyShapeType(

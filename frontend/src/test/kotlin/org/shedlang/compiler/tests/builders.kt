@@ -271,14 +271,21 @@ fun parametrizedUnionType(
     parameters: List<TypeParameter>,
     members: List<Type>
 ) = TypeFunction(
-    type = object: UnionType {
-        override val name = name
-        override val members = members
-        override val typeArguments = parameters
-
-        override val shortDescription = name
-    },
+    type = LazyUnionType(
+        name = name,
+        getMembers = lazy { members },
+        getTag = lazy { null },
+        typeArguments = parameters
+    ),
     parameters = parameters
 )
 
-fun unionType(name: String, members: List<Type>) = SimpleUnionType(name = name, members = members)
+fun unionType(
+    name: String,
+    members: List<Type>
+) = LazyUnionType(
+    name = name,
+    getMembers = lazy { members },
+    getTag = lazy { null },
+    typeArguments = listOf()
+)
