@@ -85,4 +85,22 @@ class ParseShapeTests {
             fields = isSequence()
         ))
     }
+
+    @Test
+    fun shapeHasNoTagByDefault() {
+        val source = "shape X {}"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            tag = equalTo(false)
+        ))
+    }
+
+    @Test
+    fun shapeTaggedKeywordIsPresentThenShapeHasTag() {
+        val source = "shape X tagged {}"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            tag = equalTo(true)
+        ))
+    }
 }
