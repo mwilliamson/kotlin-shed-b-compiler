@@ -59,7 +59,13 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         getMembers = members,
         typeArguments = typeParameters,
-        getTag = lazy { null }
+        getTag = lazy {
+            if (node.tag) {
+                Tag(name = node.name, tagId = node.nodeId)
+            } else {
+                null
+            }
+        }
     )
     val type = if (node.typeParameters.isEmpty()) {
         unionType

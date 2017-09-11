@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
@@ -50,6 +52,28 @@ class TypeCheckUnionTests {
                 name = equalTo("X"),
                 members = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant))
             )
+        )))
+    }
+
+    @Test
+    fun whenUnionNodeHasNoTagThenTypeHasNoTag() {
+        val node = union("X", tag = false)
+
+        val typeContext = typeContext()
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
+            tag = absent()
+        )))
+    }
+
+    @Test
+    fun whenUnionNodeHasTagThenTypeHasTag() {
+        val node = union("X", tag = true)
+
+        val typeContext = typeContext()
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
+            tag = present(isTag(name = equalTo("X"), tagId = equalTo(node.nodeId)))
         )))
     }
 }

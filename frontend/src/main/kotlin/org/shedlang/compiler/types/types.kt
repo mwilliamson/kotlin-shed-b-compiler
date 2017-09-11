@@ -1,5 +1,6 @@
 package org.shedlang.compiler.types
 
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.typechecker.canCoerce
 
 
@@ -62,8 +63,7 @@ fun freshAnonymousTypeId() = nextAnonymousTypeId++
 private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
-private var nextTagId = 0
-fun freshTagId() = nextTagId++
+fun freshTagId() = freshNodeId()
 
 data class Tag(
     val name: String,

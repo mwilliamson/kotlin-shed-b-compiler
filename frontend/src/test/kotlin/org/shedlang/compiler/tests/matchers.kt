@@ -4,6 +4,12 @@ import com.natpryce.hamkrest.*
 import org.shedlang.compiler.types.*
 
 
+val anythingOrNull = object : Matcher<Any?> {
+    override fun invoke(actual: Any?): MatchResult = MatchResult.Match
+    override val description: String get() = "anything"
+    override val negatedDescription: String get() = "nothing"
+}
+
 fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
     return matchers.reduce { first, second -> first and second }
 }
@@ -93,11 +99,13 @@ internal fun isShapeType(
 internal fun isUnionType(
     name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>> = anything,
-    members: Matcher<List<Type>> = anything
+    members: Matcher<List<Type>> = anything,
+    tag: Matcher<Tag?> = anythingOrNull
 ): Matcher<Type> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::typeArguments, typeArguments),
-    has(UnionType::members, members)
+    has(UnionType::members, members),
+    has(UnionType::tag, tag)
 ))
 
 internal val isAnyType: Matcher<Type> = cast(equalTo(AnyType))
@@ -149,6 +157,14 @@ internal fun isEquivalentType(type: Type): Matcher<Type> {
             get() = "is equivalent to " + type
 
     }
+}
+
+fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<Tag> {
+    return allOf(
+        has(Tag::name, name),
+        has(Tag::tagId, tagId)
+    )
+
 }
 
 inline fun <reified T : Throwable> throwsException(exceptionCriteria: Matcher<T>? = null): Matcher<() -> Unit> {
