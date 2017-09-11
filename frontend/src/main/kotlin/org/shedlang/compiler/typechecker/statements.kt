@@ -33,7 +33,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         getFields = fields,
         typeParameters = typeParameters,
         typeArguments = typeParameters,
-        tag = null,
+        tag = generateTag(node),
         getHasValueForTag = lazy { null }
     )
     val type = if (node.typeParameters.isEmpty()) {
@@ -59,11 +59,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         getMembers = members,
         typeArguments = typeParameters,
-        tag = if (node.tag) {
-            Tag(name = node.name, tagId = node.nodeId)
-        } else {
-            null
-        }
+        tag = generateTag(node)
     )
     val type = if (node.typeParameters.isEmpty()) {
         unionType
@@ -75,6 +71,14 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     context.defer({
         members.value
     })
+}
+
+private fun generateTag(node: MayHaveTagNode): Tag? {
+    return if (node.tag) {
+        Tag(name = node.name, tagId = node.nodeId)
+    } else {
+        null
+    }
 }
 
 private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
