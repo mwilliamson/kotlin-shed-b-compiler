@@ -120,6 +120,11 @@ internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): Shape
     val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
 
     val tagged = tokens.trySkip(TokenType.KEYWORD_TAGGED)
+    val tagValueFor = if (tokens.trySkip(TokenType.KEYWORD_TAG_VALUE_FOR)) {
+        parseType(tokens)
+    } else {
+        null
+    }
 
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
@@ -136,7 +141,7 @@ internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): Shape
         name = name,
         typeParameters = typeParameters,
         tag = tagged,
-        hasTagValueFor = null,
+        hasTagValueFor = tagValueFor,
         fields = fields,
         source = source
     )

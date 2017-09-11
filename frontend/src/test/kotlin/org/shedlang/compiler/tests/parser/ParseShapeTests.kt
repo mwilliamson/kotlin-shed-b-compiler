@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.parser
 
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.UnexpectedTokenException
@@ -101,6 +103,24 @@ class ParseShapeTests {
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
             tag = equalTo(true)
+        ))
+    }
+
+    @Test
+    fun shapeHasNoTagValueByDefault() {
+        val source = "shape X {}"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            hasValueForTag = absent()
+        ))
+    }
+
+    @Test
+    fun whenShapeHasTagValueKeywordThenShapeHasTagValue() {
+        val source = "shape X tag-value-for Y  {}"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            hasValueForTag = present(isStaticReference("Y"))
         ))
     }
 }

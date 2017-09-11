@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.anythingOrNull
 import org.shedlang.compiler.types.Variance
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
@@ -33,13 +34,15 @@ internal fun isShape(
     name: Matcher<String> = anything,
     typeParameters: Matcher<List<TypeParameterNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything,
-    tag: Matcher<Boolean> = anything
+    tag: Matcher<Boolean> = anything,
+    hasValueForTag: Matcher<StaticNode?> = anythingOrNull
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(ShapeNode::name, name),
         has(ShapeNode::typeParameters, typeParameters),
         has(ShapeNode::fields, fields),
-        has(ShapeNode::tag, tag)
+        has(ShapeNode::tag, tag),
+        has(ShapeNode::hasTagValueFor, hasValueForTag)
     ))
 }
 
