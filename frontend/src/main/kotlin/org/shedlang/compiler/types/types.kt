@@ -191,7 +191,7 @@ interface ShapeType: HasFieldsType, MayHaveTag {
 
 data class LazyShapeType(
     override val name: String,
-    val getFields: Lazy<Map<String, Type>>,
+    private val getFields: Lazy<Map<String, Type>>,
     override val shapeId: Int = freshShapeId(),
     override val typeParameters: List<TypeParameter>,
     override val typeArguments: List<Type>,
