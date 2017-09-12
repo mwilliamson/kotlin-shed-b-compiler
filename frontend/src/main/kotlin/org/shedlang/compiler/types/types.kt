@@ -1,6 +1,7 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.isUnique
 import org.shedlang.compiler.typechecker.canCoerce
 
 
@@ -398,14 +399,15 @@ internal fun validateType(type: Type): ValidateTypeResult {
             }
         }))
     } else if (type is UnionType) {
-        val tags = type.members.map({ member ->
-            val tagValue = if (member is ShapeType) {
+        val tagValues = type.members.map({ member ->
+            if (member is ShapeType) {
                 member.tagValue
             } else {
                 null
             }
-            tagValue?.tag
         })
+        val tags = tagValues.map({ tagValue -> tagValue?.tag })
+        val tagValueIds = tagValues.map({ tagValue -> tagValue?.tagValueId })
 
         // TODO: check uniqueness of tag values (which also means assigning static tag values)
 
@@ -413,6 +415,8 @@ internal fun validateType(type: Type): ValidateTypeResult {
             return ValidateTypeResult(listOf("union members must have tag values"))
         } else if (tags.toSet().size > 1) {
             return ValidateTypeResult(listOf("union members must have values for same tag"))
+        } else if (!tagValueIds.isUnique()) {
+            return ValidateTypeResult(listOf("union members must have distinct tag values"))
         } else {
             return ValidateTypeResult.success
         }

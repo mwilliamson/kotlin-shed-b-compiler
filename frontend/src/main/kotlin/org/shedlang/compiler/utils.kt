@@ -25,6 +25,11 @@ internal fun Iterable<Boolean>.all(): Boolean {
     return true
 }
 
+internal fun <T> Iterable<T>.isUnique(): Boolean {
+    val list = toList()
+    return list.toSet().size == list.size
+}
+
 internal fun <T1, T2, T3, R> zip3(
     iterable1: Iterable<T1>,
     iterable2: Iterable<T2>,

@@ -56,14 +56,13 @@ class ValidateTypeTests {
     }
 
     @Test
-    fun whenUnionMembersHaveValueForDifferentTagsThenUnionIsInValid() {
-        val tag1 = Tag("Tagged1")
-        val tag2 = Tag("Tagged2")
-        val member1 = shapeType("Member1", tagValue = TagValue(tag1, 1))
-        val member2 = shapeType("Member2", tagValue = TagValue(tag2, 2))
+    fun whenUnionMembersHaveSameTagValueThenUnionIsInValid() {
+        val tag = Tag("Tagged1")
+        val member1 = shapeType("Member1", tagValue = TagValue(tag, 1))
+        val member2 = shapeType("Member2", tagValue = TagValue(tag, 1))
         val type = unionType(members = listOf(member1, member2))
 
-        assertThat(validateType(type = type), isFailure("union members must have values for same tag"))
+        assertThat(validateType(type = type), isFailure("union members must have distinct tag values"))
     }
 
     @Test
@@ -72,6 +71,17 @@ class ValidateTypeTests {
         val type = unionType(members = listOf(member))
 
         assertThat(validateType(type = type), isFailure("union members must have tag values"))
+    }
+
+    @Test
+    fun whenUnionMembersHaveTheSameTagValuesThenUnionIsInvalid() {
+        val tag1 = Tag("Tagged1")
+        val tag2 = Tag("Tagged2")
+        val member1 = shapeType("Member1", tagValue = TagValue(tag1, 1))
+        val member2 = shapeType("Member2", tagValue = TagValue(tag2, 2))
+        val type = unionType(members = listOf(member1, member2))
+
+        assertThat(validateType(type = type), isFailure("union members must have values for same tag"))
     }
 
     private val isSuccess = equalTo(ValidateTypeResult.success)
