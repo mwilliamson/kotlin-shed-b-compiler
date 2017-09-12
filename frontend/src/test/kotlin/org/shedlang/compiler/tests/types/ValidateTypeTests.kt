@@ -49,7 +49,6 @@ class ValidateTypeTests {
     @Test
     fun whenUnionMembersHaveValueForSameTagThenUnionIsValid() {
         val tag = Tag("Tagged")
-        val taggedType = shapeType(tag = tag)
         val member1 = shapeType("Member1", tagValue = TagValue(tag, 1))
         val member2 = shapeType("Member2", tagValue = TagValue(tag, 2))
         val type = unionType(members = listOf(member1, member2))
@@ -60,8 +59,6 @@ class ValidateTypeTests {
     fun whenUnionMembersHaveValueForDifferentTagsThenUnionIsInValid() {
         val tag1 = Tag("Tagged1")
         val tag2 = Tag("Tagged2")
-        val taggedType1 = shapeType(tag = tag1)
-        val taggedType2 = shapeType(tag = tag2)
         val member1 = shapeType("Member1", tagValue = TagValue(tag1, 1))
         val member2 = shapeType("Member2", tagValue = TagValue(tag2, 2))
         val type = unionType(members = listOf(member1, member2))
