@@ -260,7 +260,7 @@ fun shapeType(
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf(),
     tag: Tag? = null,
-    tagValueFor: Tag? = null
+    tagValue: TagValue? = null
 ) = LazyShapeType(
     name = name,
     getFields = lazy { fields },
@@ -268,7 +268,7 @@ fun shapeType(
     typeParameters = typeParameters,
     typeArguments = typeArguments,
     tag = tag,
-    getHasValueForTag = lazy { tagValueFor }
+    getTagValue = lazy { tagValue }
 )
 
 

@@ -81,13 +81,13 @@ internal fun isShapeType(
     typeArguments: Matcher<List<Type>> = anything,
     shapeId: Matcher<Int> = anything,
     tag: Matcher<Tag?> = anythingOrNull,
-    hasValueForTag: Matcher<Tag?> = anythingOrNull
+    tagValue: Matcher<TagValue?> = anythingOrNull
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),
     has(ShapeType::typeArguments, typeArguments),
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::tag, tag),
-    has(ShapeType::hasValueForTag, hasValueForTag)
+    has(ShapeType::tagValue, tagValue)
 ))
 
 internal fun isShapeType(
@@ -168,7 +168,13 @@ fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<Tag> {
         has(Tag::name, name),
         has(Tag::tagId, tagId)
     )
+}
 
+fun isTagValue(tag: Matcher<Tag>, tagValueId: Matcher<Int>): Matcher<TagValue> {
+    return allOf(
+        has(TagValue::tag, tag),
+        has(TagValue::tagValueId, tagValueId)
+    )
 }
 
 inline fun <reified T : Throwable> throwsException(exceptionCriteria: Matcher<T>? = null): Matcher<() -> Unit> {

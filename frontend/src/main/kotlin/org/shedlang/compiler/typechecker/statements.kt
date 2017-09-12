@@ -34,18 +34,16 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         typeParameters = typeParameters,
         typeArguments = typeParameters,
         tag = generateTag(node),
-        getHasValueForTag = lazy {
+        getTagValue = lazy {
             if (node.hasTagValueFor == null) {
                 null
             } else {
                 val type = evalType(node.hasTagValueFor, context)
-                if (type is TypeFunction && type.type is MayHaveTag && type.type.tag != null) {
-                    type.type.tag
-                } else if (type is MayHaveTag && type.tag != null) {
-                    type.tag
+                val tag = getTag(type)
+                if (tag == null) {
+                    null
                 } else {
-                    // TODO: throw a better exception
-                    throw Exception("TODO")
+                    TagValue(tag = tag, tagValueId = node.nodeId)
                 }
             }
         }
@@ -60,6 +58,17 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         fields.value
         checkType(type, source = node.source)
     })
+}
+
+private fun getTag(type: Type): Tag? {
+    return if (type is TypeFunction && type.type is MayHaveTag && type.type.tag != null) {
+        type.type.tag
+    } else if (type is MayHaveTag && type.tag != null) {
+        type.tag
+    } else {
+        // TODO: throw a better exception
+        throw Exception("TODO")
+    }
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {

@@ -79,7 +79,7 @@ class TypeCheckUnionTests {
     @Test
     fun typeOfUnionIsValidated() {
         val memberReference = staticReference("Member")
-        val memberType = shapeType("Member", tagValueFor = null)
+        val memberType = shapeType("Member", tagValue = null)
         val node = union("U", members = listOf(memberReference))
 
         val typeContext = typeContext(

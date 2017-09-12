@@ -122,7 +122,7 @@ class TypeCheckShapeTests {
         val typeContext = typeContext()
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            hasValueForTag = absent()
+            tagValue = absent()
         )))
     }
 
@@ -139,7 +139,10 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
 
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            hasValueForTag = present(equalTo(taggedType.tag))
+            tagValue = present(isTagValue(
+                tag = equalTo(taggedType.tag),
+                tagValueId = equalTo(node.nodeId)
+            ))
         )))
     }
 
@@ -157,7 +160,10 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
 
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            hasValueForTag = present(equalTo(tag))
+            tagValue = present(isTagValue(
+                tag = equalTo(tag),
+                tagValueId = equalTo(node.nodeId)
+            ))
         )))
     }
 

@@ -70,6 +70,11 @@ data class Tag(
     val tagId: Int = freshTagId()
 )
 
+data class TagValue(
+    val tag: Tag,
+    val tagValueId: Int
+)
+
 interface StaticParameter {
     val name: String
     val shortDescription: String
@@ -187,7 +192,7 @@ interface ShapeType: HasFieldsType, MayHaveTag {
     val shapeId: Int
     val typeParameters: List<TypeParameter>
     val typeArguments: List<Type>
-    val hasValueForTag: Tag?
+    val tagValue: TagValue?
 }
 
 data class LazyShapeType(
@@ -197,7 +202,7 @@ data class LazyShapeType(
     override val typeParameters: List<TypeParameter>,
     override val typeArguments: List<Type>,
     override val tag: Tag?,
-    private val getHasValueForTag: Lazy<Tag?>
+    private val getTagValue: Lazy<TagValue?>
 ): ShapeType {
     override val shortDescription: String
         get() = if (typeArguments.isEmpty()) {
@@ -206,7 +211,7 @@ data class LazyShapeType(
             appliedTypeShortDescription(name, typeArguments)
         }
     override val fields: Map<String, Type> by getFields
-    override val hasValueForTag: Tag? by getHasValueForTag
+    override val tagValue: TagValue? by getTagValue
 }
 
 interface UnionType: Type, MayHaveTag {
@@ -261,7 +266,7 @@ val ListType = TypeFunction(
         typeArguments = listOf(listTypeParameter),
         getFields = lazy({ mapOf<String, Type>() }),
         tag = null,
-        getHasValueForTag = lazy { null }
+        getTagValue = lazy { null }
     )
 )
 
@@ -335,7 +340,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
             typeParameters = type.typeParameters,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
             tag = type.tag,
-            getHasValueForTag = lazy { type.hasValueForTag }
+            getTagValue = lazy { type.tagValue }
         )
     } else if (type is FunctionType) {
         return FunctionType(
@@ -393,19 +398,20 @@ internal fun validateType(type: Type): ValidateTypeResult {
             }
         }))
     } else if (type is UnionType) {
-        val tagValues = type.members.map({ member ->
-            if (member is ShapeType && member.hasValueForTag != null) {
-                member.hasValueForTag
+        val tags = type.members.map({ member ->
+            val tagValue = if (member is ShapeType) {
+                member.tagValue
             } else {
                 null
             }
+            tagValue?.tag
         })
 
         // TODO: check uniqueness of tag values (which also means assigning static tag values)
 
-        if (tagValues.any({ value -> value == null })) {
+        if (tags.any({ value -> value == null })) {
             return ValidateTypeResult(listOf("union members must have tag values"))
-        } else if (tagValues.toSet().size > 1) {
+        } else if (tags.toSet().size > 1) {
             return ValidateTypeResult(listOf("union members must have values for same tag"))
         } else {
             return ValidateTypeResult.success
