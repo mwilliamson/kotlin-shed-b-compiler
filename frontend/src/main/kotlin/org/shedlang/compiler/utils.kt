@@ -1,5 +1,7 @@
 package org.shedlang.compiler
 
+import java.nio.file.Path
+
 fun <T: Any?> T?.orElseThrow(exception: Exception): T {
     if (this == null) {
         throw exception
@@ -51,3 +53,24 @@ internal fun <T1, T2, T3, R> zip3(
 }
 
 private fun <T> Iterable<T>.collectionSizeOrDefault(default: Int): Int = if (this is Collection<*>) this.size else default
+
+
+internal fun Path.parents(): Iterable<Path> {
+    return object: Iterable<Path> {
+        override fun iterator(): Iterator<Path> {
+            return ParentPathsIterator(this@parents);
+        }
+    }
+}
+
+private class ParentPathsIterator(var path: Path) : Iterator<Path> {
+    override fun hasNext(): Boolean {
+        return path.parent != null
+    }
+
+    override fun next(): Path {
+        path = path.parent
+        System.out.println(path)
+        return path
+    }
+}
