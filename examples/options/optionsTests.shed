@@ -1,5 +1,5 @@
-import .options;
-import .tests;
+import stdlib.options;
+import stdlib.tests;
 
 fun addOne(value: Int) -> Int {
     return value + 1;

@@ -2,9 +2,10 @@
 // stdout:
 //   Hello, world!
 
-import .options;
+import stdlib.options;
+import stdlib.tests;
+
 import .optionsTests;
-import .tests;
 
 fun main() !io -> Int {
     return tests.runTests(optionsTests.testCases);
