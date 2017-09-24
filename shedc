@@ -1,0 +1,5 @@
+#/usr/bin/env sh
+
+set -e
+
+java -cp cli/target/shed-compiler-cli-0.1.0-SNAPSHOT.jar org.shedlang.compiler.cli.ShedcCli "$@"

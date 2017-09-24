@@ -26,6 +26,14 @@ val backend = object: Backend {
             }
         })
     }
+
+    override fun run(path: Path, module: List<String>): Int {
+        val process = ProcessBuilder("python", module.joinToString("/") + ".py")
+            .inheritIO()
+            .directory(path.toFile())
+            .start()
+        return process.waitFor()
+    }
 }
 
 fun compile(frontendResult: FrontEndResult, target: Path) {

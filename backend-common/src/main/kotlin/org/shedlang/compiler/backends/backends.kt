@@ -5,4 +5,5 @@ import java.nio.file.Path
 
 interface Backend {
     fun compile(frontEndResult: FrontEndResult, target: Path): Unit
+    fun run(path: Path, module: List<String>): Int
 }

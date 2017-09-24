@@ -101,7 +101,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>org.shedlang.compiler.cli.Cli</mainClass>
+                            <mainClass>org.shedlang.compiler.cli.ShedcCli</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
