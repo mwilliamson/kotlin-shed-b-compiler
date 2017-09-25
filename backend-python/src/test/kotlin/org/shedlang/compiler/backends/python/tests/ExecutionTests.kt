@@ -23,7 +23,7 @@ class ExecutionTests {
                         path = testProgram.main
                     )
                     compile(frontendResult, target = temporaryDirectory.file.toPath())
-                    val mainModule = identifyModule(testProgram.main).joinToString(".")
+                    val mainModule = identifyModule(testProgram.base, testProgram.main).joinToString(".")
                     val result = run(
                         listOf("python", "-m", mainModule),
                         workingDirectory = temporaryDirectory.file

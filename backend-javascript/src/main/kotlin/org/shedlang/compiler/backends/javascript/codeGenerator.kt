@@ -17,11 +17,10 @@ internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
 private fun generateCode(import: ImportNode): JavascriptStatementNode {
     val source = NodeSource(import)
 
-    val base = when (import.path.base) {
-        ImportPathBase.Relative -> "./"
+    val importPath = when (import.path.base) {
+        ImportPathBase.Relative -> "./" + import.path.parts.joinToString("/")
         ImportPathBase.Absolute -> throw UnsupportedOperationException()
     }
-    val importPath = base + import.path.parts.joinToString("/")
 
     return JavascriptConstNode(
         name = import.name,

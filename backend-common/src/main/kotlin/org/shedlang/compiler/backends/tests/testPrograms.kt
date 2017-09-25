@@ -63,7 +63,7 @@ private fun findTestFiles(): List<TestProgramFiles> {
             }
             return TestProgramFiles(
                 base = exampleDirectory,
-                main = exampleDirectory.relativize(main)
+                main = main
             )
         }
     })

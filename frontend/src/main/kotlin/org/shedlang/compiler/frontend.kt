@@ -1,5 +1,6 @@
 package org.shedlang.compiler
 
+import com.moandjiezana.toml.Toml
 import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ImportPathBase
@@ -11,6 +12,7 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.ModuleType
 import java.io.File
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.*
 
 
@@ -40,9 +42,9 @@ fun readDirectory(base: Path): FrontEndResult {
         val paths = base.toFile()
             .walk()
             .filter({ file -> file.path.endsWith(".shed") })
-            .map({ file -> base.relativize(file.toPath()) })
+            .map({ file -> file.toPath() })
 
-        return readAll(base, paths = paths.asIterable())
+        return readAll(base = base, paths = paths.asIterable())
     }
 }
 
@@ -51,7 +53,7 @@ private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
 
     fun getModule(path: Path): Module {
         return modules.computeIfAbsent(path, { path ->
-            readModule(base = base, relativePath = path, getModule = ::getModule)
+            readModule(base = base, path = path, getModule = ::getModule)
         })
     }
 
@@ -60,8 +62,7 @@ private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
     return FrontEndResult(modules = modules.values.toList())
 }
 
-private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Module): Module {
-    val path = base.resolve(relativePath)
+private fun readModule(base: Path, path: Path, getModule: (Path) -> Module): Module {
     val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
 
     val resolvedReferences = resolve(
@@ -74,30 +75,75 @@ private fun readModule(base: Path, relativePath: Path, getModule: (Path) -> Modu
         nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type}),
         resolvedReferences = resolvedReferences,
         getModule = { importPath ->
-            val result = getModule(resolveModule(relativePath, importPath))
+            val result = getModule(resolveModule(path, importPath))
             result.type
         }
     )
 
     return Module(
-        path = identifyModule(relativePath),
+        path = identifyModule(base = base, path = path),
         node = moduleNode,
         type = typeCheckResult.moduleType,
         references = resolvedReferences
     )
 }
 
-fun identifyModule(path: Path): List<String> {
-    val pathParts = path.map(Path::toString)
+fun identifyModule(base: Path, path: Path): List<String> {
+    val targetPath = if (path.startsWith(base)) {
+        base.relativize(path)
+    } else {
+        val packageConfig = readPackageConfig(path)
+        // TODO: throw a better error
+        val name = packageConfig.name()
+        // TODO: handle packages with the same name
+        Paths.get("dependencies").resolve(name).resolve(packageConfig.packagePath.relativize(path))
+    }
+    val pathParts = targetPath.map(Path::toString)
     return pathParts.take(pathParts.size - 1) + pathParts.last().removeSuffix(".shed")
 }
 
-fun resolveModule(path: Path, importPath: ImportPath): Path {
+fun resolveModule(modulePath: Path, importPath: ImportPath): Path {
     // TODO: test this properly
-    val base = when (importPath.base) {
-        ImportPathBase.Absolute -> throw UnsupportedOperationException()
-        is ImportPathBase.Relative -> path
+    when (importPath.base) {
+        is ImportPathBase.Absolute -> {
+            val packageName = importPath.parts[0]
+            val config = readPackageConfig(path = modulePath)
+            val packagePath = config.resolveDependency(packageName = packageName)
+            return packagePath.resolve(importPath.parts.drop(1).joinToString(File.separator) + ".shed")
+        }
+        is ImportPathBase.Relative -> {
+            return modulePath.resolveSibling(importPath.parts.joinToString(File.separator) + ".shed")
+        }
+    }
+}
+
+private fun readPackageConfig(path: Path): PackageConfig {
+    for (parent in path.parents()) {
+        val configPath = parent.resolve("shed.toml")
+        if (configPath.toFile().exists()) {
+            return PackageConfig(
+                packagePath = parent,
+                config = Toml().read(configPath.toFile())
+            )
+        }
+    }
+    // TODO: throw a better error
+    throw Exception("Could not read config for " + path)
+}
+
+private class PackageConfig(val packagePath: Path, private val config: Toml) {
+    fun name(): String {
+        // TODO: throw a better error
+        return config.getString("package.name").orElseThrow(Exception("Package is missing name"))
     }
 
-    return base.resolveSibling(importPath.parts.joinToString(File.separator) + ".shed")
+    fun resolveDependency(packageName: String): Path {
+        val dependencyPath = config.getString("dependencies." + packageName)
+        if (dependencyPath == null) {
+            // TODO: throw a better error
+            throw Exception("Could not find package: " + packageName)
+        } else {
+            return packagePath.resolve(dependencyPath).toAbsolutePath().normalize()
+        }
+    }
 }

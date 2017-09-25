@@ -70,7 +70,6 @@ private class ParentPathsIterator(var path: Path) : Iterator<Path> {
 
     override fun next(): Path {
         path = path.parent
-        System.out.println(path)
         return path
     }
 }

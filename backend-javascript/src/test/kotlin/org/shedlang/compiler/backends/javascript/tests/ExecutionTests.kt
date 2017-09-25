@@ -23,7 +23,7 @@ class ExecutionTests {
                         path = testProgram.main
                     )
                     compile(frontendResult, target = temporaryDirectory.file.toPath())
-                    val mainJsModule = "./" + identifyModule(testProgram.main).joinToString("/") + ".js"
+                    val mainJsModule = "./" + identifyModule(base = testProgram.base, path = testProgram.main).joinToString("/") + ".js"
                     val result = run(
                         listOf("node", mainJsModule),
                         workingDirectory = temporaryDirectory.file
