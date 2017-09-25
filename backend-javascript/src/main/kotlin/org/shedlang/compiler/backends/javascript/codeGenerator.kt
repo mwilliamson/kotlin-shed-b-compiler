@@ -1,10 +1,14 @@
 package org.shedlang.compiler.backends.javascript
 
+import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
+import org.shedlang.compiler.resolveModule
+import java.nio.file.Path
 
-internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
-    val imports = node.imports.map(::generateCode)
+internal fun generateCode(module: Module, importPaths: Map<Path, List<String>>): JavascriptModuleNode {
+    val node = module.node
+    val imports = node.imports.map({ importNode -> generateCode(module, importNode, importPaths) })
     val body = node.body.flatMap(::generateCode)
     val exports = node.body.filterIsInstance<VariableBindingNode>()
         .map(::generateExport)
@@ -14,12 +18,15 @@ internal fun generateCode(node: ModuleNode): JavascriptModuleNode {
     )
 }
 
-private fun generateCode(import: ImportNode): JavascriptStatementNode {
+private fun generateCode(module: Module, import: ImportNode, importPaths: Map<Path, List<String>>): JavascriptStatementNode {
     val source = NodeSource(import)
 
     val importPath = when (import.path.base) {
         ImportPathBase.Relative -> "./" + import.path.parts.joinToString("/")
-        ImportPathBase.Absolute -> throw UnsupportedOperationException()
+        ImportPathBase.Absolute -> {
+            val pathToRoot = "./" + "../".repeat(module.destinationPath.size - 1)
+            pathToRoot + importPaths[resolveModule(modulePath = module.sourcePath, importPath = import.path)]!!.joinToString("/")
+        }
     }
 
     return JavascriptConstNode(

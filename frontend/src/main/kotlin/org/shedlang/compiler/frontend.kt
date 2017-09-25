@@ -21,7 +21,8 @@ class FrontEndResult(
 )
 
 class Module(
-    val path: List<String>,
+    val sourcePath: Path,
+    val destinationPath: List<String>,
     val node: ModuleNode,
     val type: ModuleType,
     val references: ResolvedReferences
@@ -81,7 +82,8 @@ private fun readModule(base: Path, path: Path, getModule: (Path) -> Module): Mod
     )
 
     return Module(
-        path = identifyModule(base = base, path = path),
+        sourcePath = path,
+        destinationPath = identifyModule(base = base, path = path),
         node = moduleNode,
         type = typeCheckResult.moduleType,
         references = resolvedReferences

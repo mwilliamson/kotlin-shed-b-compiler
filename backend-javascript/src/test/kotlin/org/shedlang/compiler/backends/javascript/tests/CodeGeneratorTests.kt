@@ -5,28 +5,35 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.ImportPath
+import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.types.ModuleType
+import java.nio.file.Paths
 
 class CodeGeneratorTests {
     @Test
     fun emptyModuleGeneratesEmptyModule() {
-        val shed = module(body = listOf())
+        val shed = stubbedModule(
+            node = module(body = listOf())
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, mapOf())
 
         assertThat(node, isJavascriptModule(equalTo(listOf())))
     }
 
     @Test
     fun moduleImportsGenerateJavascriptImports() {
-        val shed = module(imports = listOf(import(ImportPath.relative(listOf("x")))))
+        val shed = stubbedModule(node = module(imports = listOf(import(ImportPath.relative(listOf("x"))))))
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, mapOf())
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
@@ -43,9 +50,9 @@ class CodeGeneratorTests {
 
     @Test
     fun moduleIncludesBodyAndExports() {
-        val shed = module(body = listOf(function(name = "f")))
+        val shed = stubbedModule(node = module(body = listOf(function(name = "f"))))
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, mapOf())
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
@@ -59,6 +66,16 @@ class CodeGeneratorTests {
                 )
             )
         ))
+    }
+
+    private fun stubbedModule(node: ModuleNode): Module {
+        return Module(
+            sourcePath = Paths.get("source.shed"),
+            destinationPath = listOf("destination"),
+            type = ModuleType(mapOf()),
+            references = ResolvedReferencesMap(mapOf()),
+            node = node
+        )
     }
 
     @Test

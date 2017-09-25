@@ -11,7 +11,7 @@ import java.nio.file.Path
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
         frontEndResult.modules.forEach({ module ->
-            val moduleName = module.path
+            val moduleName = module.destinationPath
             val modulePath = moduleName.joinToString(File.separator) + ".py"
             val destination = target.resolve(modulePath)
             val pythonPackage = destination.parent
