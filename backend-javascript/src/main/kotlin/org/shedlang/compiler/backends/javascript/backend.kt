@@ -10,11 +10,6 @@ import java.nio.file.Path
 
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
-        val importPaths = frontEndResult.modules.associateBy(
-            keySelector = { module -> module.sourcePath },
-            valueTransform = { module -> module.destinationPath }
-        )
-
         frontEndResult.modules.forEach({ module ->
             val modulePath = modulePath(module.destinationPath)
             val destination = target.resolve(modulePath)
@@ -23,7 +18,7 @@ val backend = object: Backend {
                 compileModule(
                     module = module,
                     writer = writer,
-                    importPaths = importPaths
+                    modules = frontEndResult
                 )
             }
         })
@@ -44,8 +39,8 @@ fun compile(frontendResult: FrontEndResult, target: Path) {
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
 
-private fun compileModule(module: Module, writer: Writer, importPaths: Map<Path, List<String>>) {
-    val generateCode = generateCode(module = module, importPaths = importPaths)
+private fun compileModule(module: Module, writer: Writer, modules: FrontEndResult) {
+    val generateCode = generateCode(module = module, modules = modules)
     val contents = stdlib + serialise(generateCode) + "\n"
     writer.write(contents)
     if (module.hasMain()) {

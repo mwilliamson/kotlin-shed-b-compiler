@@ -1,14 +1,13 @@
 package org.shedlang.compiler.backends.javascript
 
+import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
-import org.shedlang.compiler.resolveModule
-import java.nio.file.Path
 
-internal fun generateCode(module: Module, importPaths: Map<Path, List<String>>): JavascriptModuleNode {
+internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptModuleNode {
     val node = module.node
-    val imports = node.imports.map({ importNode -> generateCode(module, importNode, importPaths) })
+    val imports = node.imports.map({ importNode -> generateCode(module, importNode, modules) })
     val body = node.body.flatMap(::generateCode)
     val exports = node.body.filterIsInstance<VariableBindingNode>()
         .map(::generateExport)
@@ -18,14 +17,14 @@ internal fun generateCode(module: Module, importPaths: Map<Path, List<String>>):
     )
 }
 
-private fun generateCode(module: Module, import: ImportNode, importPaths: Map<Path, List<String>>): JavascriptStatementNode {
+private fun generateCode(module: Module, import: ImportNode, modules: FrontEndResult): JavascriptStatementNode {
     val source = NodeSource(import)
 
     val importPath = when (import.path.base) {
         ImportPathBase.Relative -> "./" + import.path.parts.joinToString("/")
         ImportPathBase.Absolute -> {
             val pathToRoot = "./" + "../".repeat(module.destinationPath.size - 1)
-            pathToRoot + importPaths[resolveModule(modulePath = module.sourcePath, importPath = import.path)]!!.joinToString("/")
+            pathToRoot + modules.importToModule(module.sourcePath, import.path).destinationPath.joinToString("/")
         }
     }
 

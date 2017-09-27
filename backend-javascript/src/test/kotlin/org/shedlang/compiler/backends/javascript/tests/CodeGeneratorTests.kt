@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ModuleNode
@@ -15,16 +16,25 @@ import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.ModuleType
+import java.nio.file.Path
 import java.nio.file.Paths
 
 class CodeGeneratorTests {
+    private class EmptyModules: FrontEndResult {
+        override val modules: List<Module>
+            get() = listOf()
+
+        override fun importToModule(modulePath: Path, importPath: ImportPath): Module {
+            throw UnsupportedOperationException("not implemented")
+        }
+    }
+
     @Test
     fun emptyModuleGeneratesEmptyModule() {
         val shed = stubbedModule(
             node = module(body = listOf())
         )
-
-        val node = generateCode(shed, mapOf())
+        val node = generateCode(shed, EmptyModules())
 
         assertThat(node, isJavascriptModule(equalTo(listOf())))
     }
@@ -33,7 +43,7 @@ class CodeGeneratorTests {
     fun moduleImportsGenerateJavascriptImports() {
         val shed = stubbedModule(node = module(imports = listOf(import(ImportPath.relative(listOf("x"))))))
 
-        val node = generateCode(shed, mapOf())
+        val node = generateCode(shed, EmptyModules())
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
@@ -52,7 +62,7 @@ class CodeGeneratorTests {
     fun moduleIncludesBodyAndExports() {
         val shed = stubbedModule(node = module(body = listOf(function(name = "f"))))
 
-        val node = generateCode(shed, mapOf())
+        val node = generateCode(shed, EmptyModules())
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
