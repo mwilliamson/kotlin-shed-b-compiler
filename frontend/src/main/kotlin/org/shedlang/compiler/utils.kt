@@ -73,3 +73,21 @@ private class ParentPathsIterator(var path: Path) : Iterator<Path> {
         return path
     }
 }
+
+internal class LazyMap<K, V>(private val compute: (K) -> V) {
+    private val map = HashMap<K, V>()
+
+    internal fun get(key: K): V {
+        val storedValue = map[key]
+        if (storedValue == null) {
+            val value = compute(key)
+            map.put(key, value)
+            return value
+        } else {
+            return storedValue
+        }
+    }
+
+    internal val values: Collection<V>
+        get() = map.values
+}

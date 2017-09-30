@@ -56,16 +56,20 @@ private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
 }
 
 private class Modules(private val base: Path): FrontEndResult {
-    private val pathToModule = HashMap<Path, Module>()
-    private val imports = HashMap<Pair<Path, ImportPath>, Path>()
+    private val pathToModule = LazyMap<Path, Module>(this::pathToModuleUncached)
+    private val imports = LazyMap<Pair<Path, ImportPath>, Path>({ (modulePath, importPath) ->
+        resolveModuleUncached(modulePath, importPath)
+    })
 
     override val modules: List<Module>
         get() = pathToModule.values.toList()
 
     fun pathToModule(path: Path): Module {
-        return pathToModule.computeIfAbsent(path, { path ->
-            readModule(base = base, path = path, importToModule = this::importToModule)
-        })
+        return pathToModule.get(path)
+    }
+
+    private fun pathToModuleUncached(path: Path): Module {
+        return readModule(base = base, path = path, importToModule = this::importToModule)
     }
 
     override fun importToModule(modulePath: Path, importPath: ImportPath): Module {
@@ -73,20 +77,22 @@ private class Modules(private val base: Path): FrontEndResult {
     }
 
     fun resolveModule(modulePath: Path, importPath: ImportPath): Path {
-        return imports.computeIfAbsent(Pair(modulePath, importPath), { (modulePath, importPath) ->
-            // TODO: test this properly
-            when (importPath.base) {
-                is ImportPathBase.Absolute -> {
-                    val packageName = importPath.parts[0]
-                    val config = readPackageConfig(path = modulePath)
-                    val packagePath = config.resolveDependency(packageName = packageName)
-                    packagePath.resolve(importPath.parts.drop(1).joinToString(File.separator) + ".shed")
-                }
-                is ImportPathBase.Relative -> {
-                    modulePath.resolveSibling(importPath.parts.joinToString(File.separator) + ".shed")
-                }
+        return imports.get(Pair(modulePath, importPath))
+    }
+
+    private fun resolveModuleUncached(modulePath: Path, importPath: ImportPath): Path {
+        // TODO: test this properly
+        return when (importPath.base) {
+            is ImportPathBase.Absolute -> {
+                val packageName = importPath.parts[0]
+                val config = readPackageConfig(path = modulePath)
+                val packagePath = config.resolveDependency(packageName = packageName)
+                packagePath.resolve(importPath.parts.drop(1).joinToString(File.separator) + ".shed")
             }
-        })
+            is ImportPathBase.Relative -> {
+                modulePath.resolveSibling(importPath.parts.joinToString(File.separator) + ".shed")
+            }
+        }
     }
 }
 
