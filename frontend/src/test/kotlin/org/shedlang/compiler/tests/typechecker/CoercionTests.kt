@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.canCoerce
@@ -324,13 +325,17 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceTypeParameterToSupertypeOfMultipleTypes() {
+    fun canCoerceTypeParameterToSupertypeOfMultipleTypesWithSameTag() {
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
-            constraints = listOf(IntType to typeParameter, BoolType to typeParameter),
+            constraints = listOf(member1 to typeParameter, member2 to typeParameter),
             parameters = setOf(typeParameter)
         )
-        assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(isIntType, isBoolType))))
+        assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(cast(sameInstance(member1)), cast(sameInstance(member2))))))
     }
 
     @Test

@@ -51,6 +51,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             typeCheck(node.expression, context)
             evalType(node.type, context)
 
+            // TODO: for this to be valid, the type must have a tag value
+
             return BoolType
         }
 

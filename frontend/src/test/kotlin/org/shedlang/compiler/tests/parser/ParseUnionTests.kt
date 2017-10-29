@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isSequence
@@ -44,20 +45,20 @@ class ParseUnionTests {
     }
 
     @Test
-    fun unionHasNoTagByDefault() {
+    fun unionHasTagByDefault() {
         val source = "union X = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            tag = equalTo(false)
+            explicitTag = equalTo(null)
         ))
     }
 
     @Test
     fun whenTaggedKeywordIsPresentThenUnionHasTag() {
-        val source = "union X tagged = Y | Z;"
+        val source = "union X <: Base = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            tag = equalTo(true)
+            explicitTag = present(isStaticReference(name = "Base"))
         ))
     }
 }

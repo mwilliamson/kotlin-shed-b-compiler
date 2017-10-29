@@ -129,7 +129,7 @@ class TypeCheckShapeTests {
     @Test
     fun whenShapeNodeHasTagValueThenTypeHasTagValue() {
         val taggedReference = staticReference("T")
-        val taggedType = unionType("T", hasTag = true)
+        val taggedType = unionType("T")
 
         val node = shape("X", hasTagValueFor = taggedReference)
 

@@ -28,12 +28,17 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         node.fields.associate({ field -> field.name to evalType(field.type, context) })
     })
 
+    val tag = if (node.tag) {
+        generateTag(node)
+    } else {
+        null
+    }
     val shapeType = LazyShapeType(
         name = node.name,
         getFields = fields,
         typeParameters = typeParameters,
         typeArguments = typeParameters,
-        tag = generateTag(node),
+        tag = tag,
         getTagValue = lazy {
             if (node.hasTagValueFor == null) {
                 null
@@ -78,11 +83,22 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
     val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
+    val tag = if (node.explicitTag == null) {
+        generateTag(node)
+    } else {
+        val base = evalType(node.explicitTag, context)
+        if (base is MayHaveTag && base.tag != null) {
+            base.tag!!
+        } else {
+            // TODO: throw an appropriate error
+            throw UnsupportedOperationException()
+        }
+    }
     val unionType = LazyUnionType(
         name = node.name,
         getMembers = members,
         typeArguments = typeParameters,
-        tag = generateTag(node)
+        tag = tag
     )
     val type = if (node.typeParameters.isEmpty()) {
         unionType
@@ -97,12 +113,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     })
 }
 
-private fun generateTag(node: MayHaveTagNode): Tag? {
-    return if (node.tag) {
-        Tag(name = node.name, tagId = node.nodeId)
-    } else {
-        null
-    }
+private fun generateTag(node: VariableBindingNode): Tag {
+    return Tag(name = node.name, tagId = node.nodeId)
 }
 
 private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {

@@ -104,7 +104,7 @@ internal fun isUnionType(
     name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>> = anything,
     members: Matcher<List<Type>> = anything,
-    tag: Matcher<Tag?> = anythingOrNull
+    tag: Matcher<Tag> = anything
 ): Matcher<Type> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::typeArguments, typeArguments),

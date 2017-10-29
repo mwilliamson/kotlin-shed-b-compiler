@@ -162,7 +162,11 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     val name = parseIdentifier(tokens)
     val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
 
-    val tagged = tokens.trySkip(TokenType.KEYWORD_TAGGED)
+    val explicitTag = if (tokens.trySkip(TokenType.SYMBOL_SUBTYPE)) {
+         ::parseStaticReference.parse(tokens)
+    } else {
+        null
+    }
 
     tokens.skip(TokenType.SYMBOL_EQUALS)
 
@@ -179,7 +183,7 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     return UnionNode(
         name = name,
         typeParameters = typeParameters,
-        tag = tagged,
+        explicitTag = explicitTag,
         members = members,
         source = source
     )
@@ -750,9 +754,13 @@ private fun parsePrimaryStaticExpression(
     if (tokens.isNext(TokenType.SYMBOL_OPEN_SQUARE_BRACKET) || tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
         return parseFunctionType(source, tokens)
     } else {
-        val name = parseIdentifier(tokens)
-        return StaticReferenceNode(name, source)
+        return parseStaticReference(source, tokens)
     }
+}
+
+private fun parseStaticReference(source: Source, tokens: TokenIterator<TokenType>): StaticReferenceNode {
+    val name = parseIdentifier(tokens)
+    return StaticReferenceNode(name, source)
 }
 
 private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>): StaticNode {
