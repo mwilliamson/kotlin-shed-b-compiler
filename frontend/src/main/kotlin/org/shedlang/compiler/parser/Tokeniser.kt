@@ -31,6 +31,7 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
 
     symbol(TokenType.SYMBOL_ARROW, "->"),
     symbol(TokenType.SYMBOL_FAT_ARROW, "=>"),
+    symbol(TokenType.SYMBOL_SUBTYPE, "<:"),
     symbol(TokenType.SYMBOL_DOT, "."),
     symbol(TokenType.SYMBOL_COMMA, ","),
     symbol(TokenType.SYMBOL_COLON, ":"),
@@ -82,6 +83,7 @@ internal enum class TokenType {
 
     SYMBOL_ARROW,
     SYMBOL_FAT_ARROW,
+    SYMBOL_SUBTYPE,
     SYMBOL_DOT,
     SYMBOL_COMMA,
     SYMBOL_COLON,
