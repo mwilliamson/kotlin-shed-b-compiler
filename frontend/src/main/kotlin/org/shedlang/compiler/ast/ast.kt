@@ -208,7 +208,7 @@ data class UnionNode(
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = typeParameters + members
+        get() = typeParameters + explicitTag.nullableToList() + members
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
