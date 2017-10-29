@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
@@ -145,10 +146,16 @@ class TypeCheckFunctionCallTests {
 
     @Test
     fun typeParameterTakesUnionTypeWhenUsedWithMultipleTypes() {
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+
         val functionReference = variableReference("f")
+        val member1Reference = variableReference("member1")
+        val member2Reference = variableReference("member2")
         val node = call(
             receiver = functionReference,
-            positionalArguments = listOf(literalInt(), literalString())
+            positionalArguments = listOf(member1Reference, member2Reference)
         )
 
         val typeParameter = invariantTypeParameter(name = "T")
@@ -157,10 +164,16 @@ class TypeCheckFunctionCallTests {
             positionalArguments = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
-        val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType,
+                member1Reference to member1,
+                member2Reference to member2
+            )
+        )
         val type = inferType(node, typeContext)
 
-        assertThat(type, isUnionType(members = isSequence(isIntType, isStringType)))
+        assertThat(type, isUnionType(members = isSequence(isType(member1), isType(member2))))
     }
 
     @Test
@@ -691,15 +704,28 @@ class TypeCheckFunctionCallTests {
 
     @Test
     fun listCallOfElementsOfDifferentTypeReturnsListOfUnionOfElementTypes() {
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+
+        val member1Reference = variableReference("member1")
+        val member2Reference = variableReference("member2")
+
         val listReference = variableReference("list")
         val node = call(
             receiver = listReference,
-            positionalArguments = listOf(literalInt(), literalString())
+            positionalArguments = listOf(member1Reference, member2Reference)
         )
 
-        val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                listReference to ListConstructorType,
+                member1Reference to member1,
+                member2Reference to member2
+            )
+        )
         val type = inferType(node, typeContext)
 
-        assertThat(type, isListType(isUnionType(members = isSequence(isIntType, isStringType))))
+        assertThat(type, isListType(isUnionType(members = isSequence(isType(member1), isType(member2)))))
     }
 }

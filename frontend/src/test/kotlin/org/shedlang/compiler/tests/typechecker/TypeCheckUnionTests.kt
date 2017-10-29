@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.TypeCheckError
@@ -9,6 +11,7 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.Tag
 
 class TypeCheckUnionTests {
     @Test
@@ -55,24 +58,32 @@ class TypeCheckUnionTests {
     }
 
     @Test
-    fun whenUnionNodeHasNoTagThenTypeHasNoTag() {
-        val node = union("X", tag = false)
+    fun whenUnionNodeHasNoExplicitTagThenTypeHasNewTag() {
+        val node = union("X", explicitTag = null)
 
         val typeContext = typeContext()
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            tag = absent()
+            tag = isTag(name = equalTo("X"), tagId = equalTo(node.nodeId))
         )))
     }
 
     @Test
-    fun whenUnionNodeHasTagThenTypeHasTag() {
-        val node = union("X", tag = true)
+    fun whenUnionNodeHasExplicitTagThenTypeHasTag() {
+        val baseReference = staticReference("Base")
+        val tag = Tag("BaseTag")
+        val baseType = shapeType(tag = tag)
 
-        val typeContext = typeContext()
+        val node = union("X", explicitTag = baseReference)
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                baseReference to MetaType(baseType)
+            )
+        )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            tag = present(isTag(name = equalTo("X"), tagId = equalTo(node.nodeId)))
+            tag = isTag(name = equalTo("BaseTag"), tagId = equalTo(tag.tagId))
         )))
     }
 
@@ -89,7 +100,7 @@ class TypeCheckUnionTests {
         // TODO: use more specific exception
         assertThat(
             { typeCheck(node, typeContext); typeContext.undefer() },
-            throws(has(TypeCheckError::message, equalTo("union members must have tag values")))
+            throws(has(TypeCheckError::message, equalTo("union member did not have tag value for U")))
         )
     }
 }

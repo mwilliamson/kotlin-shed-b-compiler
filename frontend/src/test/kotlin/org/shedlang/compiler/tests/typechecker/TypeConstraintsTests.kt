@@ -6,10 +6,8 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.isEquivalentType
-import org.shedlang.compiler.tests.isMap
-import org.shedlang.compiler.tests.parametrizedShapeType
-import org.shedlang.compiler.tests.unionType
+import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.coerce
 import org.shedlang.compiler.types.*
@@ -103,13 +101,17 @@ class TypeConstraintsTests {
 
     @Test
     fun coercingMultipleTypesToTypeParameterBindsTypeParameterToUnionOfTypes() {
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+
         val typeParameter = invariantTypeParameter("T")
         assertThat(
             coerce(
-                listOf(StringType to typeParameter, IntType to typeParameter),
+                listOf(member1 to typeParameter, member2 to typeParameter),
                 parameters = setOf(typeParameter)
             ),
-            isSuccess(typeParameter to union(StringType, IntType))
+            isSuccess(typeParameter to union(member1, member2))
         )
     }
 

@@ -165,11 +165,11 @@ fun union(
     name: String = "Union",
     members: List<StaticNode> = listOf(),
     typeParameters: List<TypeParameterNode> = listOf(),
-    tag: Boolean = false
+    explicitTag: StaticReferenceNode? = null
 ) = UnionNode(
     name = name,
     typeParameters = typeParameters,
-    tag = tag,
+    explicitTag = explicitTag,
     members = members,
     source = anySource()
 )
@@ -276,7 +276,7 @@ fun parametrizedUnionType(
     name: String,
     parameters: List<TypeParameter> = listOf(TypeParameter("T", variance = Variance.INVARIANT)),
     members: List<Type> = listOf(),
-    tag: Tag? = null
+    tag: Tag = Tag(name)
 ) = TypeFunction(
     type = LazyUnionType(
         name = name,
@@ -290,15 +290,10 @@ fun parametrizedUnionType(
 fun unionType(
     name: String = "Union",
     members: List<Type> = listOf(),
-    hasTag: Boolean = false
+    tag: Tag = Tag(name)
 ) = LazyUnionType(
     name = name,
     getMembers = lazy { members },
-    // TODO: extract tag generation code
-    tag = if (hasTag) {
-        Tag(name)
-    } else {
-        null
-    },
+    tag = tag,
     typeArguments = listOf()
 )

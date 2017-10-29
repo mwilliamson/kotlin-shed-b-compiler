@@ -1,7 +1,6 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.isUnique
 import org.shedlang.compiler.typechecker.canCoerce
 
 
@@ -219,16 +218,15 @@ interface UnionType: Type, MayHaveTag {
     val name: String
     val members: List<Type>
     val typeArguments: List<Type>
+    override val tag: Tag
 }
 
 
 data class AnonymousUnionType(
     override val name: String = "_Union" + freshAnonymousTypeId(),
-    override val members: List<Type>
+    override val members: List<Type>,
+    override val tag: Tag
 ): UnionType {
-    override val tag: Tag?
-        get() = null
-
     override val typeArguments: List<Type>
         get() = listOf()
 
@@ -239,7 +237,7 @@ data class AnonymousUnionType(
 data class LazyUnionType(
     override val name: String,
     private val getMembers: Lazy<List<Type>>,
-    override val tag: Tag?,
+    override val tag: Tag,
     override val typeArguments: List<Type>
 ): UnionType {
     override val shortDescription: String
@@ -300,11 +298,21 @@ fun union(left: Type, right: Type): Type {
     } else if (canCoerce(from = left, to = right)) {
         return right
     } else if (left is AnonymousUnionType) {
-        return AnonymousUnionType(members = left.members + right)
+        // TODO: check tag of right
+        return AnonymousUnionType(members = left.members + right, tag = left.tag)
     } else if (right is AnonymousUnionType) {
-        return AnonymousUnionType(members = listOf(left) + right.members)
+        // TODO: check tag of left
+        return AnonymousUnionType(members = listOf(left) + right.members, tag = right.tag)
     } else {
-        return AnonymousUnionType(members = listOf(left, right))
+        // TODO: check consistent tags
+        // TODO: handle missing tags
+        if (left is ShapeType) {
+            val tagValue = left.tagValue
+            if (tagValue != null) {
+                return AnonymousUnionType(members = listOf(left, right), tag = tagValue.tag)
+            }
+        }
+        throw UnsupportedOperationException()
     }
 }
 
@@ -399,30 +407,25 @@ internal fun validateType(type: Type): ValidateTypeResult {
             }
         }))
     } else if (type is UnionType) {
-        val tagValues = type.members.map({ member ->
-            if (member is ShapeType) {
-                member.tagValue
-            } else {
-                null
+        for (member in type.members) {
+            if (!hasTagValueFor(member, type.tag)) {
+                return ValidateTypeResult(listOf("union member did not have tag value for " + type.tag.name))
             }
-        })
-        val tags = tagValues.map({ tagValue -> tagValue?.tag })
-        val tagValueIds = tagValues.map({ tagValue -> tagValue?.tagValueId })
-
-        // TODO: check uniqueness of tag values (which also means assigning static tag values)
-
-        if (tags.any({ value -> value == null })) {
-            return ValidateTypeResult(listOf("union members must have tag values"))
-        } else if (tags.toSet().size > 1) {
-            return ValidateTypeResult(listOf("union members must have values for same tag"))
-        } else if (!tagValueIds.isUnique()) {
-            return ValidateTypeResult(listOf("union members must have distinct tag values"))
-        } else {
-            return ValidateTypeResult.success
         }
+        return ValidateTypeResult.success
     } else if (type is TypeFunction) {
         return validateType(type.type)
     } else {
         throw NotImplementedError("not implemented for type: ${type.shortDescription}")
+    }
+}
+
+fun hasTagValueFor(type: Type, tag: Tag): Boolean {
+    // TODO: handle unions
+    if (type is ShapeType) {
+        val tagValue = type.tagValue
+        return tagValue != null && return tagValue.tag == tag
+    } else {
+        return false
     }
 }

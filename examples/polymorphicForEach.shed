@@ -4,7 +4,7 @@
 //   2
 //   3
 
-union List[T] tagged = Cons[T] | Nil;
+union List[T] = Cons[T] | Nil;
 shape Cons[T] tag-value-for List {
     head: T,
     tail: List[T],

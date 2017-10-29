@@ -172,19 +172,15 @@ interface ModuleStatementNode: Node {
     fun <T> accept(visitor: Visitor<T>): T
 }
 
-interface MayHaveTagNode: Node, VariableBindingNode {
-    val tag: Boolean
-}
-
 data class ShapeNode(
     override val name: String,
     val typeParameters: List<TypeParameterNode>,
-    override val tag: Boolean,
+    val tag: Boolean,
     val hasTagValueFor: StaticNode?,
     val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): TypeDeclarationNode, ModuleStatementNode, MayHaveTagNode {
+): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
         get() = typeParameters + hasTagValueFor.nullableToList() + fields
 
@@ -206,11 +202,11 @@ data class ShapeFieldNode(
 data class UnionNode(
     override val name: String,
     val typeParameters: List<TypeParameterNode>,
-    override val tag: Boolean,
+    val explicitTag: StaticReferenceNode?,
     val members: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): TypeDeclarationNode, ModuleStatementNode, MayHaveTagNode {
+): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
         get() = typeParameters + members
 

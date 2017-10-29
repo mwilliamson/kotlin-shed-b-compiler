@@ -4,11 +4,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StringType
-import org.shedlang.compiler.types.union
+import org.shedlang.compiler.types.*
 
 class UnionTests {
     @Test
@@ -29,21 +27,42 @@ class UnionTests {
 
     @Test
     fun unionIsUnionWhenLeftAndRightCannotBeCoercedToEachOther() {
-        val left = IntType
-        val right = StringType
-        val union = union(left, right)
-        assertThat(union, isUnionType(members = isSequence(isIntType, isStringType)))
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+
+        val union = union(member1, member2)
+        assertThat(union, isUnionType(
+            members = isSequence(isType(member1), isType(member2)),
+            tag = equalTo(tag)
+        ))
     }
 
     @Test
     fun repeatedUnionsFromLeftProduceSingleUnion() {
-        val union = union(union(IntType, StringType), BoolType)
-        assertThat(union, isUnionType(members = isSequence(isIntType, isStringType, isBoolType)))
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+        val member3 = shapeType(name = "Member3", tagValue = TagValue(tag, freshNodeId()))
+
+        val union = union(union(member1, member2), member3)
+        assertThat(union, isUnionType(
+            members = isSequence(isType(member1), isType(member2), isType(member3)),
+            tag = equalTo(tag)
+        ))
     }
 
     @Test
     fun repeatedUnionsFromRightProduceSingleUnion() {
-        val union = union(IntType, union(StringType, BoolType))
-        assertThat(union, isUnionType(members = isSequence(isIntType, isStringType, isBoolType)))
+        val tag = Tag("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+        val member3 = shapeType(name = "Member3", tagValue = TagValue(tag, freshNodeId()))
+
+        val union = union(member1, union(member2, member3))
+        assertThat(union, isUnionType(
+            members = isSequence(isType(member1), isType(member2), isType(member3)),
+            tag = equalTo(tag)
+        ))
     }
 }

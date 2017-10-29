@@ -64,6 +64,8 @@ private fun indent(value: String): String {
     return indentation + value.replace("\n", "\n" + indentation + " ".repeat(indexWidth))
 }
 
+internal fun isType(type: Type): Matcher<Type> = equalTo(type)
+
 internal fun isFunctionType(
     arguments: Matcher<List<Type>> = anything,
     returnType: Matcher<Type> = anything,
@@ -104,7 +106,7 @@ internal fun isUnionType(
     name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>> = anything,
     members: Matcher<List<Type>> = anything,
-    tag: Matcher<Tag?> = anythingOrNull
+    tag: Matcher<Tag> = anything
 ): Matcher<Type> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::typeArguments, typeArguments),

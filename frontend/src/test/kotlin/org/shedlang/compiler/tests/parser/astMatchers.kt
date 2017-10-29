@@ -58,13 +58,13 @@ internal fun isUnion(
     name: Matcher<String> = anything,
     typeParameters: Matcher<List<TypeParameterNode>> = anything,
     members: Matcher<List<StaticNode>> = anything,
-    tag: Matcher<Boolean> = anything
+    explicitTag: Matcher<StaticReferenceNode?> = anythingOrNull
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(UnionNode::name, name),
         has(UnionNode::typeParameters, typeParameters),
         has(UnionNode::members, members),
-        has(UnionNode::tag, tag)
+        has(UnionNode::explicitTag, explicitTag)
     ))
 }
 

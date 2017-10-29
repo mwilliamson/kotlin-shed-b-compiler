@@ -4,7 +4,7 @@
 //   2
 //   3
 
-union List tagged = Cons | Nil;
+union List = Cons | Nil;
 shape Cons tag-value-for List {
     head: Int,
     tail: List,
