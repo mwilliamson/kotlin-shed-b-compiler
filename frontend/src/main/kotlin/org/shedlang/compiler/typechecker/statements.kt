@@ -66,8 +66,8 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 }
 
 private fun getTagField(type: Type): TagField? {
-    return if (type is TypeFunction && type.type is MayHaveTagField && type.type.tagField != null) {
-        type.type.tagField
+    return if (type is TypeFunction) {
+        getTagField(type.type)
     } else if (type is MayHaveTagField && type.tagField != null) {
         type.tagField
     } else {
