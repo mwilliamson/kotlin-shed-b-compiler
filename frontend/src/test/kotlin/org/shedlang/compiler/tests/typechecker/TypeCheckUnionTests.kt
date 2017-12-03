@@ -59,7 +59,7 @@ class TypeCheckUnionTests {
 
     @Test
     fun whenUnionNodeHasNoExplicitTagThenTypeHasNewTag() {
-        val node = union("X", explicitTag = null)
+        val node = union("X", superType = null)
 
         val typeContext = typeContext()
         typeCheck(node, typeContext)
@@ -74,7 +74,7 @@ class TypeCheckUnionTests {
         val tag = Tag("BaseTag")
         val baseType = shapeType(tag = tag)
 
-        val node = union("X", explicitTag = baseReference)
+        val node = union("X", superType = baseReference)
 
         val typeContext = typeContext(
             referenceTypes = mapOf(
