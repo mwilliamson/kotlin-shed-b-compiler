@@ -27,20 +27,20 @@ class UnionTests {
 
     @Test
     fun unionIsUnionWhenLeftAndRightCannotBeCoercedToEachOther() {
-        val tag = Tag("Tag")
+        val tag = TagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
 
         val union = union(member1, member2)
         assertThat(union, isUnionType(
             members = isSequence(isType(member1), isType(member2)),
-            tag = equalTo(tag)
+            tagField = equalTo(tag)
         ))
     }
 
     @Test
     fun repeatedUnionsFromLeftProduceSingleUnion() {
-        val tag = Tag("Tag")
+        val tag = TagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
         val member3 = shapeType(name = "Member3", tagValue = TagValue(tag, freshNodeId()))
@@ -48,13 +48,13 @@ class UnionTests {
         val union = union(union(member1, member2), member3)
         assertThat(union, isUnionType(
             members = isSequence(isType(member1), isType(member2), isType(member3)),
-            tag = equalTo(tag)
+            tagField = equalTo(tag)
         ))
     }
 
     @Test
     fun repeatedUnionsFromRightProduceSingleUnion() {
-        val tag = Tag("Tag")
+        val tag = TagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
         val member3 = shapeType(name = "Member3", tagValue = TagValue(tag, freshNodeId()))
@@ -62,7 +62,7 @@ class UnionTests {
         val union = union(member1, union(member2, member3))
         assertThat(union, isUnionType(
             members = isSequence(isType(member1), isType(member2), isType(member3)),
-            tag = equalTo(tag)
+            tagField = equalTo(tag)
         ))
     }
 }

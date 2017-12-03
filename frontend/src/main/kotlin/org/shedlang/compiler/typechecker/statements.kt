@@ -38,17 +38,17 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         getFields = fields,
         typeParameters = typeParameters,
         typeArguments = typeParameters,
-        tag = tag,
+        tagField = tag,
         getTagValue = lazy {
             if (node.hasTagValueFor == null) {
                 null
             } else {
                 val type = evalType(node.hasTagValueFor, context)
-                val tag = getTag(type)
+                val tag = getTagField(type)
                 if (tag == null) {
                     null
                 } else {
-                    TagValue(tag = tag, tagValueId = node.nodeId)
+                    TagValue(tagField = tag, tagValueId = node.nodeId)
                 }
             }
         }
@@ -65,11 +65,11 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     })
 }
 
-private fun getTag(type: Type): Tag? {
-    return if (type is TypeFunction && type.type is MayHaveTag && type.type.tag != null) {
-        type.type.tag
-    } else if (type is MayHaveTag && type.tag != null) {
-        type.tag
+private fun getTagField(type: Type): TagField? {
+    return if (type is TypeFunction && type.type is MayHaveTagField && type.type.tagField != null) {
+        type.type.tagField
+    } else if (type is MayHaveTagField && type.tagField != null) {
+        type.tagField
     } else {
         // TODO: throw a better exception
         throw Exception("TODO")
@@ -88,8 +88,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         generateTag(node)
     } else if (node.superType != null) {
         val base = evalType(node.superType, context)
-        if (base is MayHaveTag && base.tag != null) {
-            base.tag!!
+        if (base is MayHaveTagField && base.tagField != null) {
+            base.tagField!!
         } else {
             // TODO: throw an appropriate error
             throw UnsupportedOperationException()
@@ -101,7 +101,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         getMembers = members,
         typeArguments = typeParameters,
-        tag = tag
+        tagField = tag
     )
     val type = if (node.typeParameters.isEmpty()) {
         unionType
@@ -116,8 +116,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     })
 }
 
-private fun generateTag(node: VariableBindingNode): Tag {
-    return Tag(name = node.name, tagId = node.nodeId)
+private fun generateTag(node: VariableBindingNode): TagField {
+    return TagField(name = node.name, tagFieldId = node.nodeId)
 }
 
 private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {

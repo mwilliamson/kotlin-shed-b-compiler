@@ -11,7 +11,7 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.Tag
+import org.shedlang.compiler.types.TagField
 
 class TypeCheckUnionTests {
     @Test
@@ -64,7 +64,7 @@ class TypeCheckUnionTests {
         val typeContext = typeContext()
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            tag = isTag(name = equalTo("X"), tagId = equalTo(node.nodeId))
+            tagField = isTag(name = equalTo("X"), tagId = equalTo(node.nodeId))
         )))
     }
 
@@ -82,8 +82,8 @@ class TypeCheckUnionTests {
     @Test
     fun whenUnionNodeHasTaggedSuperTypeThenTypeHasTag() {
         val baseReference = staticReference("Base")
-        val tag = Tag("BaseTag")
-        val baseType = shapeType(tag = tag)
+        val tag = TagField("BaseTag")
+        val baseType = shapeType(tagField = tag)
 
         val node = union("X", tagged = false, superType = baseReference)
 
@@ -94,7 +94,7 @@ class TypeCheckUnionTests {
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            tag = isTag(name = equalTo("BaseTag"), tagId = equalTo(tag.tagId))
+            tagField = isTag(name = equalTo("BaseTag"), tagId = equalTo(tag.tagFieldId))
         )))
     }
 

@@ -82,13 +82,13 @@ internal fun isShapeType(
     name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>> = anything,
     shapeId: Matcher<Int> = anything,
-    tag: Matcher<Tag?> = anythingOrNull,
+    tagField: Matcher<TagField?> = anythingOrNull,
     tagValue: Matcher<TagValue?> = anythingOrNull
 ): Matcher<Type> = cast(allOf(
     has(ShapeType::name, name),
     has(ShapeType::typeArguments, typeArguments),
     has(ShapeType::shapeId, shapeId),
-    has(ShapeType::tag, tag),
+    has(ShapeType::tagField, tagField),
     has(ShapeType::tagValue, tagValue)
 ))
 
@@ -106,12 +106,12 @@ internal fun isUnionType(
     name: Matcher<String> = anything,
     typeArguments: Matcher<List<Type>> = anything,
     members: Matcher<List<Type>> = anything,
-    tag: Matcher<Tag> = anything
+    tagField: Matcher<TagField> = anything
 ): Matcher<Type> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::typeArguments, typeArguments),
     has(UnionType::members, members),
-    has(UnionType::tag, tag)
+    has(UnionType::tagField, tagField)
 ))
 
 internal val isAnyType: Matcher<Type> = cast(equalTo(AnyType))
@@ -165,16 +165,16 @@ internal fun isEquivalentType(type: Type): Matcher<Type> {
     }
 }
 
-fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<Tag> {
+fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<TagField> {
     return allOf(
-        has(Tag::name, name),
-        has(Tag::tagId, tagId)
+        has(TagField::name, name),
+        has(TagField::tagFieldId, tagId)
     )
 }
 
-fun isTagValue(tag: Matcher<Tag>, tagValueId: Matcher<Int>): Matcher<TagValue> {
+fun isTagValue(tagField: Matcher<TagField>, tagValueId: Matcher<Int>): Matcher<TagValue> {
     return allOf(
-        has(TagValue::tag, tag),
+        has(TagValue::tagField, tagField),
         has(TagValue::tagValueId, tagValueId)
     )
 }

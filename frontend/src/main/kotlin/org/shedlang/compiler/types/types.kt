@@ -63,15 +63,15 @@ fun freshAnonymousTypeId() = nextAnonymousTypeId++
 private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
-fun freshTagId() = freshNodeId()
+fun freshTagFieldId() = freshNodeId()
 
-data class Tag(
+data class TagField(
     val name: String,
-    val tagId: Int = freshTagId()
+    val tagFieldId: Int = freshTagFieldId()
 )
 
 data class TagValue(
-    val tag: Tag,
+    val tagField: TagField,
     val tagValueId: Int
 )
 
@@ -183,11 +183,11 @@ data class FunctionType(
         }
 }
 
-interface MayHaveTag {
-    val tag: Tag?
+interface MayHaveTagField {
+    val tagField: TagField?
 }
 
-interface ShapeType: HasFieldsType, MayHaveTag {
+interface ShapeType: HasFieldsType, MayHaveTagField {
     val name: String
     val shapeId: Int
     val typeParameters: List<TypeParameter>
@@ -201,7 +201,7 @@ data class LazyShapeType(
     override val shapeId: Int = freshShapeId(),
     override val typeParameters: List<TypeParameter>,
     override val typeArguments: List<Type>,
-    override val tag: Tag?,
+    override val tagField: TagField?,
     private val getTagValue: Lazy<TagValue?>
 ): ShapeType {
     override val shortDescription: String
@@ -214,18 +214,18 @@ data class LazyShapeType(
     override val tagValue: TagValue? by getTagValue
 }
 
-interface UnionType: Type, MayHaveTag {
+interface UnionType: Type, MayHaveTagField {
     val name: String
     val members: List<Type>
     val typeArguments: List<Type>
-    override val tag: Tag
+    override val tagField: TagField
 }
 
 
 data class AnonymousUnionType(
     override val name: String = "_Union" + freshAnonymousTypeId(),
     override val members: List<Type>,
-    override val tag: Tag
+    override val tagField: TagField
 ): UnionType {
     override val typeArguments: List<Type>
         get() = listOf()
@@ -237,7 +237,7 @@ data class AnonymousUnionType(
 data class LazyUnionType(
     override val name: String,
     private val getMembers: Lazy<List<Type>>,
-    override val tag: Tag,
+    override val tagField: TagField,
     override val typeArguments: List<Type>
 ): UnionType {
     override val shortDescription: String
@@ -264,7 +264,7 @@ val ListType = TypeFunction(
         typeParameters = listOf(listTypeParameter),
         typeArguments = listOf(listTypeParameter),
         getFields = lazy({ mapOf<String, Type>() }),
-        tag = null,
+        tagField = null,
         getTagValue = lazy { null }
     )
 )
@@ -299,17 +299,17 @@ fun union(left: Type, right: Type): Type {
         return right
     } else if (left is AnonymousUnionType) {
         // TODO: check tag of right
-        return AnonymousUnionType(members = left.members + right, tag = left.tag)
+        return AnonymousUnionType(members = left.members + right, tagField = left.tagField)
     } else if (right is AnonymousUnionType) {
         // TODO: check tag of left
-        return AnonymousUnionType(members = listOf(left) + right.members, tag = right.tag)
+        return AnonymousUnionType(members = listOf(left) + right.members, tagField = right.tagField)
     } else {
         // TODO: check consistent tags
         // TODO: handle missing tags
         if (left is ShapeType) {
             val tagValue = left.tagValue
             if (tagValue != null) {
-                return AnonymousUnionType(members = listOf(left, right), tag = tagValue.tag)
+                return AnonymousUnionType(members = listOf(left, right), tagField = tagValue.tagField)
             }
         }
         throw UnsupportedOperationException()
@@ -337,7 +337,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
                 type.members.map({ memberType -> replaceTypes(memberType, bindings) })
             }),
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
-            tag = type.tag
+            tagField = type.tagField
         )
     } else if (type is ShapeType) {
         return LazyShapeType(
@@ -348,7 +348,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
             shapeId = type.shapeId,
             typeParameters = type.typeParameters,
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
-            tag = type.tag,
+            tagField = type.tagField,
             getTagValue = lazy { type.tagValue }
         )
     } else if (type is FunctionType) {
@@ -408,8 +408,8 @@ internal fun validateType(type: Type): ValidateTypeResult {
         }))
     } else if (type is UnionType) {
         for (member in type.members) {
-            if (!hasTagValueFor(member, type.tag)) {
-                return ValidateTypeResult(listOf("union member did not have tag value for " + type.tag.name))
+            if (!hasTagValueFor(member, type.tagField)) {
+                return ValidateTypeResult(listOf("union member did not have tag value for " + type.tagField.name))
             }
         }
         return ValidateTypeResult.success
@@ -420,11 +420,11 @@ internal fun validateType(type: Type): ValidateTypeResult {
     }
 }
 
-fun hasTagValueFor(type: Type, tag: Tag): Boolean {
+fun hasTagValueFor(type: Type, tagField: TagField): Boolean {
     // TODO: handle unions
     if (type is ShapeType) {
         val tagValue = type.tagValue
-        return tagValue != null && return tagValue.tag == tag
+        return tagValue != null && return tagValue.tagField == tagField
     } else {
         return false
     }

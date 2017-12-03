@@ -48,30 +48,30 @@ class ValidateTypeTests {
 
     @Test
     fun whenUnionMembersHaveValueForTagOfUnionThenUnionIsValid() {
-        val tag = Tag("Tagged")
+        val tag = TagField("Tagged")
         val member1 = shapeType("Member1", tagValue = TagValue(tag, 1))
         val member2 = shapeType("Member2", tagValue = TagValue(tag, 2))
-        val type = unionType(members = listOf(member1, member2), tag = tag)
+        val type = unionType(members = listOf(member1, member2), tagField = tag)
         assertThat(validateType(type = type), isSuccess)
     }
 
     @Test
     fun whenUnionMembersDontHaveTagValueThenUnionIsInvalid() {
-        val tag = Tag("Tagged")
+        val tag = TagField("Tagged")
         val member = shapeType("Member1", tagValue = null)
-        val type = unionType(members = listOf(member), tag = tag)
+        val type = unionType(members = listOf(member), tagField = tag)
 
         assertThat(validateType(type = type), isFailure("union member did not have tag value for Tagged"))
     }
 
     @Test
     fun whenUnionMembersHaveTagValuesForWrongTagThenUnionIsInvalid() {
-        val tag = Tag("Tagged")
-        val tag1 = Tag("Tagged1")
-        val tag2 = Tag("Tagged2")
+        val tag = TagField("Tagged")
+        val tag1 = TagField("Tagged1")
+        val tag2 = TagField("Tagged2")
         val member1 = shapeType("Member1", tagValue = TagValue(tag1, 1))
         val member2 = shapeType("Member2", tagValue = TagValue(tag2, 2))
-        val type = unionType(members = listOf(member1, member2), tag = tag)
+        val type = unionType(members = listOf(member1, member2), tagField = tag)
 
         assertThat(validateType(type = type), isFailure("union member did not have tag value for Tagged"))
     }

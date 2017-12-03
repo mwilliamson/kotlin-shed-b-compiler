@@ -326,7 +326,7 @@ class CoercionTests {
 
     @Test
     fun canCoerceTypeParameterToSupertypeOfMultipleTypesWithSameTag() {
-        val tag = Tag("Tag")
+        val tag = TagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
 
