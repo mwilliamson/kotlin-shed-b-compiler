@@ -123,7 +123,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             context.defer(node, {
                 resolveScope(
                     binders = node.typeParameters,
-                    body = node.explicitTag.nullableToList() + node.members,
+                    body = node.superType.nullableToList() + node.members,
                     context = context
                 )
             })

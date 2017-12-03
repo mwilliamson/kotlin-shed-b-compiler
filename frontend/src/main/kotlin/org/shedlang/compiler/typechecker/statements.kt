@@ -83,10 +83,10 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
     val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
-    val tag = if (node.explicitTag == null) {
+    val tag = if (node.superType == null) {
         generateTag(node)
     } else {
-        val base = evalType(node.explicitTag, context)
+        val base = evalType(node.superType, context)
         if (base is MayHaveTag && base.tag != null) {
             base.tag!!
         } else {

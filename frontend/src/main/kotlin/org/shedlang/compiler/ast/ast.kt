@@ -202,13 +202,13 @@ data class ShapeFieldNode(
 data class UnionNode(
     override val name: String,
     val typeParameters: List<TypeParameterNode>,
-    val explicitTag: StaticReferenceNode?,
+    val superType: StaticReferenceNode?,
     val members: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = typeParameters + explicitTag.nullableToList() + members
+        get() = typeParameters + superType.nullableToList() + members
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

@@ -45,20 +45,20 @@ class ParseUnionTests {
     }
 
     @Test
-    fun unionHasTagByDefault() {
+    fun unionHasNoSuperTypeByDefault() {
         val source = "union X = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            explicitTag = equalTo(null)
+            superType = equalTo(null)
         ))
     }
 
     @Test
-    fun whenTaggedKeywordIsPresentThenUnionHasTag() {
+    fun subTypeSymbolIsUsedToIndicateSuperTypeOfUnion() {
         val source = "union X <: Base = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            explicitTag = present(isStaticReference(name = "Base"))
+            superType = present(isStaticReference(name = "Base"))
         ))
     }
 }
