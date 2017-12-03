@@ -80,12 +80,13 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check for duplicates in members
     // TODO: check for circularity
     // TODO: test laziness
+    // TODO: check members satisfy subtype relation
     val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
     val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
-    val tag = if (node.superType == null) {
+    val tag = if (node.tagged) {
         generateTag(node)
-    } else {
+    } else if (node.superType != null) {
         val base = evalType(node.superType, context)
         if (base is MayHaveTag && base.tag != null) {
             base.tag!!
@@ -93,6 +94,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
             // TODO: throw an appropriate error
             throw UnsupportedOperationException()
         }
+    } else {
+        throw TypeCheckError("Union is missing tag", source = node.source)
     }
     val unionType = LazyUnionType(
         name = node.name,

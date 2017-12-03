@@ -58,8 +58,8 @@ class TypeCheckUnionTests {
     }
 
     @Test
-    fun whenUnionNodeHasNoExplicitTagThenTypeHasNewTag() {
-        val node = union("X", superType = null)
+    fun whenUnionNodeIsTaggedThenTypeHasNewTag() {
+        val node = union("X", tagged = true, superType = null)
 
         val typeContext = typeContext()
         typeCheck(node, typeContext)
@@ -69,12 +69,23 @@ class TypeCheckUnionTests {
     }
 
     @Test
-    fun whenUnionNodeHasExplicitTagThenTypeHasTag() {
+    fun whenUnionNodeHasNoSuperTagAndIsNotTaggedThenErrorIsThrown() {
+        val node = union("X", tagged = false, superType = null)
+
+        val typeContext = typeContext()
+        assertThat(
+            { typeCheck(node, typeContext) },
+            throws(has(TypeCheckError::message, equalTo("Union is missing tag")))
+        )
+    }
+
+    @Test
+    fun whenUnionNodeHasTaggedSuperTypeThenTypeHasTag() {
         val baseReference = staticReference("Base")
         val tag = Tag("BaseTag")
         val baseType = shapeType(tag = tag)
 
-        val node = union("X", superType = baseReference)
+        val node = union("X", tagged = false, superType = baseReference)
 
         val typeContext = typeContext(
             referenceTypes = mapOf(

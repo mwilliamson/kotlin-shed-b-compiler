@@ -165,7 +165,7 @@ fun union(
     name: String = "Union",
     members: List<StaticNode> = listOf(),
     typeParameters: List<TypeParameterNode> = listOf(),
-    tagged: Boolean = false,
+    tagged: Boolean = true,
     superType: StaticReferenceNode? = null
 ) = UnionNode(
     name = name,

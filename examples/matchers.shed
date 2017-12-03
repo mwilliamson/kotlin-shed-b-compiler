@@ -56,7 +56,7 @@ shape Matcher[-T] {
     match: (T) -> Result,
 }
 
-union Result = Success | Failure;
+union Result tagged = Success | Failure;
 shape Success tag Result { }
 shape Failure tag Result {
     message: String,
