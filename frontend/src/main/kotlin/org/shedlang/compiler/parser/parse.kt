@@ -140,7 +140,7 @@ internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): Shape
     return ShapeNode(
         name = name,
         typeParameters = typeParameters,
-        tag = tagged,
+        tagged = tagged,
         hasTagValueFor = tagValueFor,
         fields = fields,
         source = source

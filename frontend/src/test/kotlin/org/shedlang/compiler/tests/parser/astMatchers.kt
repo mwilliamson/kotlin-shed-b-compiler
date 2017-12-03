@@ -34,14 +34,14 @@ internal fun isShape(
     name: Matcher<String> = anything,
     typeParameters: Matcher<List<TypeParameterNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything,
-    tag: Matcher<Boolean> = anything,
+    tagged: Matcher<Boolean> = anything,
     hasValueForTag: Matcher<StaticNode?> = anythingOrNull
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(ShapeNode::name, name),
         has(ShapeNode::typeParameters, typeParameters),
         has(ShapeNode::fields, fields),
-        has(ShapeNode::tag, tag),
+        has(ShapeNode::tagged, tagged),
         has(ShapeNode::hasTagValueFor, hasValueForTag)
     ))
 }

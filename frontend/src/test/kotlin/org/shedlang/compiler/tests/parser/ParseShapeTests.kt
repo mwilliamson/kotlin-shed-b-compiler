@@ -93,7 +93,7 @@ class ParseShapeTests {
         val source = "shape X {}"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
-            tag = equalTo(false)
+            tagged = equalTo(false)
         ))
     }
 
@@ -102,7 +102,7 @@ class ParseShapeTests {
         val source = "shape X tagged {}"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
-            tag = equalTo(true)
+            tagged = equalTo(true)
         ))
     }
 

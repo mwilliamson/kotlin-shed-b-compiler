@@ -175,7 +175,7 @@ interface ModuleStatementNode: Node {
 data class ShapeNode(
     override val name: String,
     val typeParameters: List<TypeParameterNode>,
-    val tag: Boolean,
+    val tagged: Boolean,
     val hasTagValueFor: StaticNode?,
     val fields: List<ShapeFieldNode>,
     override val source: Source,

@@ -28,7 +28,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         node.fields.associate({ field -> field.name to evalType(field.type, context) })
     })
 
-    val tag = if (node.tag) {
+    val tag = if (node.tagged) {
         generateTag(node)
     } else {
         null

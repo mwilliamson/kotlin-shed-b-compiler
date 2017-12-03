@@ -146,7 +146,7 @@ fun shape(
 ) = ShapeNode(
     name = name,
     typeParameters = typeParameters,
-    tag = tag,
+    tagged = tag,
     hasTagValueFor = hasTagValueFor,
     fields = fields,
     source = anySource()
