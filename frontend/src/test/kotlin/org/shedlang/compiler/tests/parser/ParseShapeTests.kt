@@ -117,7 +117,7 @@ class ParseShapeTests {
 
     @Test
     fun whenShapeHasTagValueKeywordThenShapeHasTagValue() {
-        val source = "shape X tag-value-for Y  {}"
+        val source = "shape X tag Y  {}"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
             hasValueForTag = present(isStaticReference("Y"))

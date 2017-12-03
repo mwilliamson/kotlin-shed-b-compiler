@@ -1,8 +1,8 @@
 union Option[+T] tagged = Some[T] | None;
-shape Some[+T] tag-value-for Option {
+shape Some[+T] tag Option {
     value: T,
 }
-shape None tag-value-for Option {
+shape None tag Option {
 }
 
 fun some[T](value: T) -> Option[T] {

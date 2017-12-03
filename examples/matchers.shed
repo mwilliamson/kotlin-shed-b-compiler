@@ -57,8 +57,8 @@ shape Matcher[-T] {
 }
 
 union Result = Success | Failure;
-shape Success tag-value-for Result { }
-shape Failure tag-value-for Result {
+shape Success tag Result { }
+shape Failure tag Result {
     message: String,
 }
 val success = Success();

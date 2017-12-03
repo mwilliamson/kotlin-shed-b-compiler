@@ -5,11 +5,11 @@
 //   3
 
 union List = Cons | Nil;
-shape Cons tag-value-for List {
+shape Cons tag List {
     head: Int,
     tail: List,
 }
-shape Nil tag-value-for List { }
+shape Nil tag List { }
 val nil = Nil();
 
 fun cons(head: Int, tail: List) -> List {
