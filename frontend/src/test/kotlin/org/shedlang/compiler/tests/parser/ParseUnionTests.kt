@@ -45,6 +45,24 @@ class ParseUnionTests {
     }
 
     @Test
+    fun unionIsNotTaggedByDefault() {
+        val source = "union X = Y | Z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            tagged = equalTo(false)
+        ))
+    }
+
+    @Test
+    fun unionIsTaggedUsingTaggedKeyword() {
+        val source = "union X tagged = Y | Z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            tagged = equalTo(true)
+        ))
+    }
+
+    @Test
     fun unionHasNoSuperTypeByDefault() {
         val source = "union X = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
