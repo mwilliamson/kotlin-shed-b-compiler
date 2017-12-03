@@ -83,13 +83,19 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check members satisfy subtype relation
     val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
+    val superType = if (node.superType == null) {
+        null
+    } else {
+        evalType(node.superType, context)
+    }
+
     val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
     val tag = if (node.tagged) {
         generateTag(node)
-    } else if (node.superType != null) {
-        val base = evalType(node.superType, context)
-        if (base is MayDeclareTagField && base.declaredTagField != null) {
-            base.declaredTagField!!
+    } else if (superType != null) {
+        // TODO: handle transitivity (super type of superType may declare tag field)
+        if (superType is MayDeclareTagField && superType.declaredTagField != null) {
+            superType.declaredTagField!!
         } else {
             // TODO: throw an appropriate error
             throw UnsupportedOperationException()
