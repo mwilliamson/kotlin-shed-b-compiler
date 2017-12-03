@@ -88,7 +88,7 @@ internal fun isShapeType(
     has(ShapeType::name, name),
     has(ShapeType::typeArguments, typeArguments),
     has(ShapeType::shapeId, shapeId),
-    has(ShapeType::tagField, tagField),
+    has(ShapeType::declaredTagField, tagField),
     has(ShapeType::tagValue, tagValue)
 ))
 
@@ -111,7 +111,7 @@ internal fun isUnionType(
     has(UnionType::name, name),
     has(UnionType::typeArguments, typeArguments),
     has(UnionType::members, members),
-    has(UnionType::tagField, tagField)
+    has(UnionType::declaredTagField, tagField)
 ))
 
 internal val isAnyType: Matcher<Type> = cast(equalTo(AnyType))

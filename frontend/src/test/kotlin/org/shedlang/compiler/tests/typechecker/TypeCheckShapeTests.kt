@@ -140,7 +140,7 @@ class TypeCheckShapeTests {
 
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             tagValue = present(isTagValue(
-                tagField = equalTo(taggedType.tagField),
+                tagField = equalTo(taggedType.declaredTagField),
                 tagValueId = equalTo(node.nodeId)
             ))
         )))

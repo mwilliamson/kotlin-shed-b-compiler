@@ -38,13 +38,13 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         getFields = fields,
         typeParameters = typeParameters,
         typeArguments = typeParameters,
-        tagField = tag,
+        declaredTagField = tag,
         getTagValue = lazy {
             if (node.hasTagValueFor == null) {
                 null
             } else {
                 val type = evalType(node.hasTagValueFor, context)
-                val tag = getTagField(type)
+                val tag = getDeclaredTagField(type)
                 if (tag == null) {
                     null
                 } else {
@@ -65,11 +65,11 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     })
 }
 
-private fun getTagField(type: Type): TagField? {
+private fun getDeclaredTagField(type: Type): TagField? {
     return if (type is TypeFunction) {
-        getTagField(type.type)
-    } else if (type is MayHaveTagField && type.tagField != null) {
-        type.tagField
+        getDeclaredTagField(type.type)
+    } else if (type is MayDeclareTagField && type.declaredTagField != null) {
+        type.declaredTagField
     } else {
         // TODO: throw a better exception
         throw Exception("TODO")
@@ -88,8 +88,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         generateTag(node)
     } else if (node.superType != null) {
         val base = evalType(node.superType, context)
-        if (base is MayHaveTagField && base.tagField != null) {
-            base.tagField!!
+        if (base is MayDeclareTagField && base.declaredTagField != null) {
+            base.declaredTagField!!
         } else {
             // TODO: throw an appropriate error
             throw UnsupportedOperationException()
@@ -101,7 +101,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         getMembers = members,
         typeArguments = typeParameters,
-        tagField = tag
+        declaredTagField = tag
     )
     val type = if (node.typeParameters.isEmpty()) {
         unionType

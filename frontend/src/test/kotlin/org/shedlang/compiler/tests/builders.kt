@@ -269,7 +269,7 @@ fun shapeType(
     shapeId = freshShapeId(),
     typeParameters = typeParameters,
     typeArguments = typeArguments,
-    tagField = tagField,
+    declaredTagField = tagField,
     getTagValue = lazy { tagValue }
 )
 
@@ -283,7 +283,7 @@ fun parametrizedUnionType(
     type = LazyUnionType(
         name = name,
         getMembers = lazy { members },
-        tagField = tagField,
+        declaredTagField = tagField,
         typeArguments = parameters
     ),
     parameters = parameters
@@ -296,6 +296,6 @@ fun unionType(
 ) = LazyUnionType(
     name = name,
     getMembers = lazy { members },
-    tagField = tagField,
+    declaredTagField = tagField,
     typeArguments = listOf()
 )
