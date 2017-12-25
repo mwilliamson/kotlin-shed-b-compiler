@@ -170,15 +170,19 @@ class CodeGeneratorTests {
         val node = generateCode(shed)
 
         assertThat(node, isSequence(
-            cast(allOf(
-                has(PythonIfStatementNode::condition, isPythonIntegerLiteral(42)),
-                has(PythonIfStatementNode::trueBranch, isSequence(
-                    isPythonReturn(isPythonIntegerLiteral(0))
-                )),
-                has(PythonIfStatementNode::falseBranch, isSequence(
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        condition = isPythonIntegerLiteral(42),
+                        body = isSequence(
+                            isPythonReturn(isPythonIntegerLiteral(0))
+                        )
+                    )
+                ),
+                falseBranch = isSequence(
                     isPythonReturn(isPythonIntegerLiteral(1))
-                ))
-            ))
+                )
+            )
         ))
     }
 
@@ -218,17 +222,21 @@ class CodeGeneratorTests {
 
         assertThat(nodes, isSequence(
             isPythonAssignment(target = isPythonVariableReference("x")),
-            cast(allOf(
-                has(PythonIfStatementNode::trueBranch, isSequence(
-                    isPythonAssignment(target = isPythonVariableReference("x_1")),
-                    isPythonReturn(isPythonVariableReference("x")),
-                    isPythonReturn(isPythonVariableReference("x_1"))
-                )),
-                has(PythonIfStatementNode::falseBranch, isSequence(
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        body = isSequence(
+                            isPythonAssignment(target = isPythonVariableReference("x_1")),
+                            isPythonReturn(isPythonVariableReference("x")),
+                            isPythonReturn(isPythonVariableReference("x_1"))
+                        )
+                    )
+                ),
+                falseBranch = isSequence(
                     isPythonAssignment(target = isPythonVariableReference("x_2")),
                     isPythonReturn(isPythonVariableReference("x_2"))
-                ))
-            ))
+                )
+            )
         ))
     }
 
@@ -445,6 +453,22 @@ class CodeGeneratorTests {
         has(PythonLambdaNode::arguments, arguments),
         has(PythonLambdaNode::body, body)
     ))
+
+    private fun isPythonIfStatement(
+        conditionalBranches: Matcher<List<PythonConditionalBranchNode>>,
+        falseBranch: Matcher<List<PythonStatementNode>>
+    ) : Matcher<PythonStatementNode> = cast(allOf(
+        has(PythonIfStatementNode::conditionalBranches, conditionalBranches),
+        has(PythonIfStatementNode::falseBranch, falseBranch)
+    ))
+
+    private fun isPythonConditionalBranch(
+        condition: Matcher<PythonExpressionNode> = anything,
+        body: Matcher<List<PythonStatementNode>>
+    ) : Matcher<PythonConditionalBranchNode> = allOf(
+        has(PythonConditionalBranchNode::condition, condition),
+        has(PythonConditionalBranchNode::body, body)
+    )
 
     private fun isPythonReturn(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>

@@ -86,8 +86,7 @@ data class PythonReturnNode(
 }
 
 data class PythonIfStatementNode(
-    val condition: PythonExpressionNode,
-    val trueBranch: List<PythonStatementNode>,
+    val conditionalBranches: List<PythonConditionalBranchNode>,
     val falseBranch: List<PythonStatementNode>,
     override val source: Source
 ) : PythonStatementNode {
@@ -95,6 +94,12 @@ data class PythonIfStatementNode(
         return visitor.visit(this)
     }
 }
+
+data class PythonConditionalBranchNode(
+    val condition: PythonExpressionNode,
+    val body: List<PythonStatementNode>,
+    override val source: Source
+): PythonNode
 
 data class PythonPassNode(
     override val source: Source

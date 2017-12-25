@@ -40,8 +40,13 @@ fun pythonIf(
     trueBranch: List<PythonStatementNode>,
     falseBranch: List<PythonStatementNode> = listOf()
 ) = PythonIfStatementNode(
-    condition = condition,
-    trueBranch = trueBranch,
+    conditionalBranches = listOf(
+        PythonConditionalBranchNode(
+            condition = condition,
+            body = trueBranch,
+            source = anySource()
+        )
+    ),
     falseBranch = falseBranch,
     source = anySource()
 )

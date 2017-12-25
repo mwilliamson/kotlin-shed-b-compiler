@@ -147,19 +147,24 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
         }
 
         override fun visit(node: IfStatementNode): List<PythonStatementNode> {
-            // TODO: handle multiple conditions
-            val condition = generateCode(node.conditionalBranches.single().condition, context)
-            val trueBranch = generateCode(node.conditionalBranches.single().body, context)
+            val conditionalBranches = GeneratedCode.combine(node.conditionalBranches.map { branch ->
+                generateCode(branch.condition, context).map { condition ->
+                    PythonConditionalBranchNode(
+                        condition = condition,
+                        body = generateCode(branch.body, context),
+                        source = NodeSource(branch)
+                    )
+                }
+            })
             val falseBranch = generateCode(node.falseBranch, context)
 
             val ifStatement = PythonIfStatementNode(
-                condition = condition.value,
-                trueBranch = trueBranch,
+                conditionalBranches = conditionalBranches.value,
                 falseBranch = falseBranch,
                 source = NodeSource(node)
             )
 
-            return condition.functions + listOf(ifStatement)
+            return conditionalBranches.functions + listOf(ifStatement)
         }
 
         override fun visit(node: ExpressionStatementNode): List<PythonStatementNode> {
@@ -189,7 +194,17 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
 internal data class GeneratedCode<T>(
     val value: T,
     val functions: List<PythonFunctionNode>
-)
+) {
+    fun <R> map(func: (T) -> R) = GeneratedCode(func(value), functions)
+
+    companion object {
+        fun <T> combine(codes: List<GeneratedCode<T>>): GeneratedCode<List<T>> {
+            val values = codes.map { code -> code.value }
+            val functions = codes.flatMap { code -> code.functions }
+            return GeneratedCode(values, functions)
+        }
+    }
+}
 
 private typealias GeneratedExpression = GeneratedCode<PythonExpressionNode>
 private typealias GeneratedExpressions = GeneratedCode<List<PythonExpressionNode>>

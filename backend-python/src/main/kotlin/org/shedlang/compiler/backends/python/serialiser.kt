@@ -39,8 +39,9 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         }
 
         override fun visit(node: PythonIfStatementNode): String {
-            val condition = line("if " + serialise(node.condition) + ":")
-            val trueBranch = serialiseBlock(node, node.trueBranch, indentation)
+            // TODO: handle multiple branches
+            val condition = line("if " + serialise(node.conditionalBranches.single().condition) + ":")
+            val trueBranch = serialiseBlock(node, node.conditionalBranches.single().body, indentation)
             val falseBranch = if (node.falseBranch.isEmpty()) {
                 ""
             } else {
