@@ -146,7 +146,7 @@ class SerialiserTests {
     }
 
     @Test
-    fun serialisingIfStatementWithBothBranches() {
+    fun serialisingIfStatementWithSingleConditionalBranchAndElseBranch() {
         assertThat(
             indentedSerialise(
                 pythonIf(
@@ -177,6 +177,39 @@ class SerialiserTests {
             equalTo(listOf(
                 "    if True:",
                 "        return 0",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun additionalConditionalBranchesAreSerialisedUsingElif() {
+        assertThat(
+            indentedSerialise(
+                pythonIf(
+                    listOf(
+                        pythonConditionalBranch(
+                            pythonVariableReference("x"),
+                            listOf(pythonReturn(pythonLiteralInt(0)))
+                        ),
+                        pythonConditionalBranch(
+                            pythonVariableReference("y"),
+                            listOf(pythonReturn(pythonLiteralInt(1)))
+                        ),
+                        pythonConditionalBranch(
+                            pythonVariableReference("z"),
+                            listOf(pythonReturn(pythonLiteralInt(2)))
+                        )
+                    )
+                )
+            ),
+            equalTo(listOf(
+                "    if x:",
+                "        return 0",
+                "    elif y:",
+                "        return 1",
+                "    elif z:",
+                "        return 2",
                 ""
             ).joinToString("\n"))
         )

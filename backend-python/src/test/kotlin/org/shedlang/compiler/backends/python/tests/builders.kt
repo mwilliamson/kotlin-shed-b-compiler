@@ -39,15 +39,28 @@ fun pythonIf(
     condition: PythonExpressionNode,
     trueBranch: List<PythonStatementNode>,
     falseBranch: List<PythonStatementNode> = listOf()
-) = PythonIfStatementNode(
+) = pythonIf(
     conditionalBranches = listOf(
-        PythonConditionalBranchNode(
-            condition = condition,
-            body = trueBranch,
-            source = anySource()
-        )
+        pythonConditionalBranch(condition = condition, body = trueBranch)
     ),
+    falseBranch = falseBranch
+)
+
+fun pythonIf(
+    conditionalBranches: List<PythonConditionalBranchNode>,
+    falseBranch: List<PythonStatementNode> = listOf()
+) = PythonIfStatementNode(
+    conditionalBranches = conditionalBranches,
     falseBranch = falseBranch,
+    source = anySource()
+)
+
+fun pythonConditionalBranch(
+    condition: PythonExpressionNode,
+    body: List<PythonStatementNode>
+) = PythonConditionalBranchNode(
+    condition = condition,
+    body = body,
     source = anySource()
 )
 
