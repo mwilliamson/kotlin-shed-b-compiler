@@ -274,7 +274,7 @@ class ResolutionTests {
                 trueVal,
                 expressionStatement(trueReference)
             ),
-            falseBranch = listOf(
+            elseBranch = listOf(
                 falseVal,
                 expressionStatement(falseReference)
             )

@@ -41,11 +41,11 @@ fun jsBinaryOperation(
 fun jsIfStatement(
     condition: JavascriptExpressionNode,
     trueBranch: List<JavascriptStatementNode>,
-    falseBranch: List<JavascriptStatementNode> = listOf()
+    elseBranch: List<JavascriptStatementNode> = listOf()
 ) = JavascriptIfStatementNode(
     condition = condition,
     trueBranch = trueBranch,
-    falseBranch = falseBranch,
+    elseBranch = elseBranch,
     source = anySource()
 )
 

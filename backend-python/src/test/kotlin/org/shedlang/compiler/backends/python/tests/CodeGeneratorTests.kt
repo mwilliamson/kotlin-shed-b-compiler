@@ -179,7 +179,7 @@ class CodeGeneratorTests {
                         )
                     )
                 ),
-                falseBranch = isSequence(
+                elseBranch = isSequence(
                     isPythonReturn(isPythonIntegerLiteral(1))
                 )
             )
@@ -232,7 +232,7 @@ class CodeGeneratorTests {
                         )
                     )
                 ),
-                falseBranch = isSequence(
+                elseBranch = isSequence(
                     isPythonAssignment(target = isPythonVariableReference("x_2")),
                     isPythonReturn(isPythonVariableReference("x_2"))
                 )
@@ -456,10 +456,10 @@ class CodeGeneratorTests {
 
     private fun isPythonIfStatement(
         conditionalBranches: Matcher<List<PythonConditionalBranchNode>>,
-        falseBranch: Matcher<List<PythonStatementNode>>
+        elseBranch: Matcher<List<PythonStatementNode>>
     ) : Matcher<PythonStatementNode> = cast(allOf(
         has(PythonIfStatementNode::conditionalBranches, conditionalBranches),
-        has(PythonIfStatementNode::falseBranch, falseBranch)
+        has(PythonIfStatementNode::elseBranch, elseBranch)
     ))
 
     private fun isPythonConditionalBranch(

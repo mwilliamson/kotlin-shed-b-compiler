@@ -10,7 +10,7 @@ fun anySource(): Source {
 fun ifStatement(
     condition: ExpressionNode = literalBool(true),
     trueBranch: List<StatementNode> = listOf(),
-    falseBranch: List<StatementNode> = listOf()
+    elseBranch: List<StatementNode> = listOf()
 ): IfStatementNode {
     return IfStatementNode(
         conditionalBranches = listOf(
@@ -20,7 +20,7 @@ fun ifStatement(
                 source = anySource()
             )
         ),
-        falseBranch = falseBranch,
+        elseBranch = elseBranch,
         source = anySource()
     )
 }

@@ -385,7 +385,7 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
     val trueBranch = parseFunctionStatements(tokens)
 
 
-    val falseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
+    val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
         parseFunctionStatements(tokens)
     } else {
         listOf()
@@ -401,7 +401,7 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
                 source = source
             )
         ),
-        falseBranch = falseBranch,
+        elseBranch = elseBranch,
         source = source
     )
 }

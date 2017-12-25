@@ -147,7 +147,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
                 resolve(conditionalBranch.condition, context)
                 resolveScope(body = conditionalBranch.body, context = context)
             }
-            resolveScope(body = node.falseBranch, context = context)
+            resolveScope(body = node.elseBranch, context = context)
         }
 
         else -> {

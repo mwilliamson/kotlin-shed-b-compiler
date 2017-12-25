@@ -38,20 +38,20 @@ fun pythonExpressionStatement(expression: PythonExpressionNode)
 fun pythonIf(
     condition: PythonExpressionNode,
     trueBranch: List<PythonStatementNode>,
-    falseBranch: List<PythonStatementNode> = listOf()
+    elseBranch: List<PythonStatementNode> = listOf()
 ) = pythonIf(
     conditionalBranches = listOf(
         pythonConditionalBranch(condition = condition, body = trueBranch)
     ),
-    falseBranch = falseBranch
+    elseBranch = elseBranch
 )
 
 fun pythonIf(
     conditionalBranches: List<PythonConditionalBranchNode>,
-    falseBranch: List<PythonStatementNode> = listOf()
+    elseBranch: List<PythonStatementNode> = listOf()
 ) = PythonIfStatementNode(
     conditionalBranches = conditionalBranches,
-    falseBranch = falseBranch,
+    elseBranch = elseBranch,
     source = anySource()
 )
 

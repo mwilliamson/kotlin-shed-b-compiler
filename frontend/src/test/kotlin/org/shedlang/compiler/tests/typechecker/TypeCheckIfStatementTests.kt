@@ -25,8 +25,8 @@ class TypeCheckIfStatementTests {
     }
 
     @Test
-    fun falseBranchIsTypeChecked() {
-        assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(falseBranch = listOf(badStatement)) }
+    fun elseBranchIsTypeChecked() {
+        assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(elseBranch = listOf(badStatement)) }
     }
 
     // TODO: Test that refined type is only in true branch (not false branch, nor following statements)

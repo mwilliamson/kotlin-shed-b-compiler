@@ -156,11 +156,11 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
                     )
                 }
             })
-            val falseBranch = generateCode(node.falseBranch, context)
+            val elseBranch = generateCode(node.elseBranch, context)
 
             val ifStatement = PythonIfStatementNode(
                 conditionalBranches = conditionalBranches.value,
-                falseBranch = falseBranch,
+                elseBranch = elseBranch,
                 source = NodeSource(node)
             )
 

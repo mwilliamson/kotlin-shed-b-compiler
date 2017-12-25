@@ -154,7 +154,7 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
 
                 typeCheck(conditionalBranch.body, trueContext)
             }
-            typeCheck(node.falseBranch, context)
+            typeCheck(node.elseBranch, context)
         }
 
         override fun visit(node: ReturnNode): Unit {

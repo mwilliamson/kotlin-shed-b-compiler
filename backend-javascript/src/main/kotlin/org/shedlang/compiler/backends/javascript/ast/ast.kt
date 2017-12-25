@@ -35,7 +35,7 @@ data class JavascriptReturnNode(
 data class JavascriptIfStatementNode(
     val condition: JavascriptExpressionNode,
     val trueBranch: List<JavascriptStatementNode>,
-    val falseBranch: List<JavascriptStatementNode>,
+    val elseBranch: List<JavascriptStatementNode>,
     override val source: Source
 ) : JavascriptStatementNode {
     override fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T {

@@ -87,7 +87,7 @@ data class PythonReturnNode(
 
 data class PythonIfStatementNode(
     val conditionalBranches: List<PythonConditionalBranchNode>,
-    val falseBranch: List<PythonStatementNode>,
+    val elseBranch: List<PythonStatementNode>,
     override val source: Source
 ) : PythonStatementNode {
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {

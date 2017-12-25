@@ -45,12 +45,12 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
                 val body = serialiseBlock(node, branch.body, indentation)
                 condition + body
             }
-            val falseBranch = if (node.falseBranch.isEmpty()) {
+            val elseBranch = if (node.elseBranch.isEmpty()) {
                 ""
             } else {
-                line("else:") + serialiseBlock(node, node.falseBranch, indentation)
+                line("else:") + serialiseBlock(node, node.elseBranch, indentation)
             }
-            return conditionalBranches.joinToString("") + falseBranch
+            return conditionalBranches.joinToString("") + elseBranch
         }
 
         override fun visit(node: PythonPassNode): String {

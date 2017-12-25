@@ -366,12 +366,12 @@ data class ReturnNode(
 
 data class IfStatementNode(
     val conditionalBranches: List<ConditionalBranchNode>,
-    val falseBranch: List<StatementNode>,
+    val elseBranch: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : StatementNode {
     override val children: List<Node>
-        get() = conditionalBranches + falseBranch
+        get() = conditionalBranches + elseBranch
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)

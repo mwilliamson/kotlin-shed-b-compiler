@@ -19,7 +19,7 @@ class ParseIfTests {
                     )
                 )
             ),
-            falseBranch = isSequence(
+            elseBranch = isSequence(
                 isReturn(isVariableReference("z"))
             )
         ))
@@ -38,7 +38,7 @@ class ParseIfTests {
                     )
                 )
             ),
-            falseBranch = isSequence()
+            elseBranch = isSequence()
         ))
     }
 }

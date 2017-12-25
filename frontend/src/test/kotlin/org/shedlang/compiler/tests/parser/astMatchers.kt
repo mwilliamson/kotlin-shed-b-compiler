@@ -10,10 +10,10 @@ internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
 internal fun isIfStatement(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
-    falseBranch: Matcher<List<StatementNode>>
+    elseBranch: Matcher<List<StatementNode>>
 ): Matcher<StatementNode> = cast(allOf(
     has(IfStatementNode::conditionalBranches, conditionalBranches),
-    has(IfStatementNode::falseBranch, falseBranch)
+    has(IfStatementNode::elseBranch, elseBranch)
 ))
 
 internal fun isConditionalBranch(

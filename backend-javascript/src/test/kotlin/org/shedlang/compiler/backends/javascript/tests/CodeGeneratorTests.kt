@@ -186,7 +186,7 @@ class CodeGeneratorTests {
             has(JavascriptIfStatementNode::trueBranch, isSequence(
                 isJavascriptReturn(isJavascriptIntegerLiteral(0))
             )),
-            has(JavascriptIfStatementNode::falseBranch, isSequence(
+            has(JavascriptIfStatementNode::elseBranch, isSequence(
                 isJavascriptReturn(isJavascriptIntegerLiteral(1))
             ))
         )))

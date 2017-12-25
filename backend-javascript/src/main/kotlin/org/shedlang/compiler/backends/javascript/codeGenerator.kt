@@ -119,7 +119,7 @@ internal fun generateCode(node: StatementNode): JavascriptStatementNode {
             return JavascriptIfStatementNode(
                 condition = generateCode(node.conditionalBranches.single().condition),
                 trueBranch = node.conditionalBranches.single().body.map(::generateCode),
-                falseBranch = node.falseBranch.map(::generateCode),
+                elseBranch = node.elseBranch.map(::generateCode),
                 source = NodeSource(node)
             )
         }

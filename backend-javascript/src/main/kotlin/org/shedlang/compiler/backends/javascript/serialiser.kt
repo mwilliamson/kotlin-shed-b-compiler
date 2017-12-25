@@ -30,12 +30,12 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
             val condition = serialise(node.condition, indentation = indentation)
             val ifLine = line("if (" + condition + ") {")
             val trueBranch = serialiseBlock(node.trueBranch, indentation)
-            val falseBranch = if (node.falseBranch.isEmpty()) {
+            val elseBranch = if (node.elseBranch.isEmpty()) {
                 line("}")
             } else {
-                line("} else {") + serialiseBlock(node.falseBranch, indentation) + line("}")
+                line("} else {") + serialiseBlock(node.elseBranch, indentation) + line("}")
             }
-            return ifLine + trueBranch + falseBranch
+            return ifLine + trueBranch + elseBranch
         }
 
         override fun visit(node: JavascriptExpressionStatementNode): String {
