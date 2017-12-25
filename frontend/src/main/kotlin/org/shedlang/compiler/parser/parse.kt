@@ -377,13 +377,7 @@ private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : Retu
 }
 
 private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfStatementNode {
-    tokens.skip(TokenType.KEYWORD_IF)
-    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-    val condition = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
-
-    val trueBranch = parseFunctionStatements(tokens)
-
+    val conditionalBranches = parseConditionalBranches(tokens, source)
 
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
         parseFunctionStatements(tokens)
@@ -391,19 +385,57 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
         listOf()
     }
 
-    // TODO: support multiple conditions
-
     return IfStatementNode(
-        conditionalBranches = listOf(
-            ConditionalBranchNode(
-                condition = condition,
-                body = trueBranch,
-                source = source
-            )
-        ),
+        conditionalBranches = conditionalBranches,
         elseBranch = elseBranch,
         source = source
     )
+}
+
+private fun parseConditionalBranches(tokens: TokenIterator<TokenType>, source: Source): List<ConditionalBranchNode> {
+    tokens.skip(TokenType.KEYWORD_IF)
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+    val condition = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+    val trueBranch = parseFunctionStatements(tokens)
+
+    return listOf(ConditionalBranchNode(
+        condition = condition,
+        body = trueBranch,
+        source = source
+    )) + parseAdditionalConditionalBranches(tokens)
+}
+
+private fun parseAdditionalConditionalBranches(tokens: TokenIterator<TokenType>): List<ConditionalBranchNode> {
+    val branches = mutableListOf<ConditionalBranchNode>()
+
+    while (true) {
+        val branch = ::tryParseAdditionalConditionalBranch.parse(tokens)
+        if (branch == null) {
+            return branches
+        } else {
+            branches.add(branch)
+        }
+    }
+}
+
+private fun tryParseAdditionalConditionalBranch(
+    source: Source,
+    tokens: TokenIterator<TokenType>
+): ConditionalBranchNode? {
+    if (tokens.trySkip(listOf(TokenType.KEYWORD_ELSE, TokenType.KEYWORD_IF))) {
+        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+        val condition = parseExpression(tokens)
+        tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+        val body = parseFunctionStatements(tokens)
+        return ConditionalBranchNode(
+            condition = condition,
+            body = body,
+            source = source
+        )
+    } else {
+        return null
+    }
 }
 
 private fun parseVal(source: Source, tokens: TokenIterator<TokenType>): ValNode {

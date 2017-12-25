@@ -27,6 +27,15 @@ internal fun Iterable<Boolean>.all(): Boolean {
     return true
 }
 
+internal fun <T> Iterable<T>.allIndexed(predicate: (Int, T) -> Boolean): Boolean {
+    this.forEachIndexed { index, element ->
+        if (!predicate(index, element)) {
+            return false
+        }
+    }
+    return true
+}
+
 internal fun <T> Iterable<T>.isUnique(): Boolean {
     val list = toList()
     return list.toSet().size == list.size

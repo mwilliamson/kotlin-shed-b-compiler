@@ -1,5 +1,6 @@
 package org.shedlang.compiler.parser
 
+import org.shedlang.compiler.allIndexed
 import org.shedlang.compiler.ast.StringSource
 
 internal class UnexpectedTokenException(
@@ -26,6 +27,16 @@ internal class TokenIterator<T>(
         val isNext = isNext(tokenType)
         if (isNext) {
             index++
+        }
+        return isNext
+    }
+
+    fun trySkip(tokenTypes: List<T>): Boolean {
+        val isNext = tokenTypes.allIndexed { index, tokenType ->
+            isNext(tokenType, skip = index)
+        }
+        if (isNext) {
+            index += tokenTypes.size
         }
         return isNext
     }
