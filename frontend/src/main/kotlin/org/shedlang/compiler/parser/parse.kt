@@ -391,9 +391,16 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
         listOf()
     }
 
+    // TODO: support multiple conditions
+
     return IfStatementNode(
-        condition = condition,
-        trueBranch = trueBranch,
+        conditionalBranches = listOf(
+            ConditionalBranchNode(
+                condition = condition,
+                body = trueBranch,
+                source = source
+            )
+        ),
         falseBranch = falseBranch,
         source = source
     )

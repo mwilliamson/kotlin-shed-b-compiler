@@ -147,8 +147,9 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
         }
 
         override fun visit(node: IfStatementNode): List<PythonStatementNode> {
-            val condition = generateCode(node.condition, context)
-            val trueBranch = generateCode(node.trueBranch, context)
+            // TODO: handle multiple conditions
+            val condition = generateCode(node.conditionalBranches.single().condition, context)
+            val trueBranch = generateCode(node.conditionalBranches.single().body, context)
             val falseBranch = generateCode(node.falseBranch, context)
 
             val ifStatement = PythonIfStatementNode(

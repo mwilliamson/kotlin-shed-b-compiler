@@ -365,18 +365,27 @@ data class ReturnNode(
 }
 
 data class IfStatementNode(
-    val condition: ExpressionNode,
-    val trueBranch: List<StatementNode>,
+    val conditionalBranches: List<ConditionalBranchNode>,
     val falseBranch: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : StatementNode {
     override val children: List<Node>
-        get() = listOf(condition) + trueBranch + falseBranch
+        get() = conditionalBranches + falseBranch
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class ConditionalBranchNode(
+    val condition: ExpressionNode,
+    val body: List<StatementNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : Node {
+    override val children: List<Node>
+        get() = listOf(condition) + body
 }
 
 data class ExpressionStatementNode(

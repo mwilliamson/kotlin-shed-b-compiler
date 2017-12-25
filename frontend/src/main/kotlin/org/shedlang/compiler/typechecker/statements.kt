@@ -139,15 +139,21 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
         }
 
         override fun visit(node: IfStatementNode) {
-            verifyType(node.condition, context, expected = BoolType)
+            for (conditionalBranch in node.conditionalBranches) {
+                verifyType(conditionalBranch.condition, context, expected = BoolType)
 
-            val trueContext = context.enterScope()
+                val trueContext = context.enterScope()
 
-            if (node.condition is IsNode && node.condition.expression is VariableReferenceNode) {
-                trueContext.addType(node.condition.expression, evalType(node.condition.type, context))
+                if (
+                    conditionalBranch.condition is IsNode &&
+                    conditionalBranch.condition.expression is VariableReferenceNode
+                ) {
+                    val conditionType = evalType(conditionalBranch.condition.type, context)
+                    trueContext.addType(conditionalBranch.condition.expression, conditionType)
+                }
+
+                typeCheck(conditionalBranch.body, trueContext)
             }
-
-            typeCheck(node.trueBranch, trueContext)
             typeCheck(node.falseBranch, context)
         }
 

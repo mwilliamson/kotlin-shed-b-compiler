@@ -12,7 +12,17 @@ fun ifStatement(
     trueBranch: List<StatementNode> = listOf(),
     falseBranch: List<StatementNode> = listOf()
 ): IfStatementNode {
-    return IfStatementNode(condition, trueBranch, falseBranch, anySource())
+    return IfStatementNode(
+        conditionalBranches = listOf(
+            ConditionalBranchNode(
+                condition = condition,
+                body = trueBranch,
+                source = anySource()
+            )
+        ),
+        falseBranch = falseBranch,
+        source = anySource()
+    )
 }
 
 fun expressionStatement(expression: ExpressionNode = expression())

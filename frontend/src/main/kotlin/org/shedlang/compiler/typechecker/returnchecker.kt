@@ -22,7 +22,7 @@ internal fun alwaysReturns(node: StatementNode): Boolean {
         }
 
         override fun visit(node: IfStatementNode): Boolean {
-            return alwaysReturns(node.trueBranch) && alwaysReturns(node.falseBranch)
+            return node.conditionalBranches.all({ branch -> alwaysReturns(branch.body) }) && alwaysReturns(node.falseBranch)
         }
 
         override fun visit(node: ExpressionStatementNode): Boolean {
