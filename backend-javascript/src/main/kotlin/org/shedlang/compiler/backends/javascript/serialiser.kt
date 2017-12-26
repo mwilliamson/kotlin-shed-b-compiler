@@ -27,15 +27,20 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         }
 
         override fun visit(node: JavascriptIfStatementNode): String {
-            val condition = serialise(node.conditionalBranches.single().condition, indentation = indentation)
-            val ifLine = line("if (" + condition + ") {")
-            val trueBranch = serialiseBlock(node.conditionalBranches.single().body, indentation)
+            val conditionalBranches = node.conditionalBranches.mapIndexed { branchIndex, branch ->
+                val keyword = if (branchIndex == 0) { "if" } else { "} else if" }
+                val condition = serialise(branch.condition, indentation = indentation)
+                val ifLine = line(keyword + " (" + condition + ") {")
+                val body = serialiseBlock(branch.body, indentation)
+                ifLine + body
+            }
+
             val elseBranch = if (node.elseBranch.isEmpty()) {
                 line("}")
             } else {
                 line("} else {") + serialiseBlock(node.elseBranch, indentation) + line("}")
             }
-            return ifLine + trueBranch + elseBranch
+            return conditionalBranches.joinToString("") + elseBranch
         }
 
         override fun visit(node: JavascriptExpressionStatementNode): String {

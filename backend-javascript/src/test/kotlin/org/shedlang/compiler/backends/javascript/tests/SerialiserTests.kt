@@ -102,7 +102,7 @@ class SerialiserTests {
     }
 
     @Test
-    fun serialisingIfStatementWithBothBranches() {
+    fun serialisingIfStatementWithSingleConditionalBranchAndElseBranch() {
         assertThat(
             indentedSerialise(
                 jsIfStatement(
@@ -134,6 +134,40 @@ class SerialiserTests {
             equalTo(listOf(
                 "    if (true) {",
                 "        return 0;",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
+    fun additionalConditionalBranchesAreSerialisedUsingElseIf() {
+        assertThat(
+            indentedSerialise(
+                jsIfStatement(
+                    conditionalBranches = listOf(
+                        jsConditionalBranch(
+                            condition = jsVariableReference("x"),
+                            body = listOf(jsReturn(jsLiteralInt(0)))
+                        ),
+                        jsConditionalBranch(
+                            condition = jsVariableReference("y"),
+                            body = listOf(jsReturn(jsLiteralInt(1)))
+                        ),
+                        jsConditionalBranch(
+                            condition = jsVariableReference("z"),
+                            body = listOf(jsReturn(jsLiteralInt(2)))
+                        )
+                    )
+                )
+            ),
+            equalTo(listOf(
+                "    if (x) {",
+                "        return 0;",
+                "    } else if (y) {",
+                "        return 1;",
+                "    } else if (z) {",
+                "        return 2;",
                 "    }",
                 ""
             ).joinToString("\n"))
