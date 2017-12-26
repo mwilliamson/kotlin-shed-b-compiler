@@ -33,8 +33,7 @@ data class JavascriptReturnNode(
 }
 
 data class JavascriptIfStatementNode(
-    val condition: JavascriptExpressionNode,
-    val trueBranch: List<JavascriptStatementNode>,
+    val conditionalBranches: List<JavascriptConditionalBranchNode>,
     val elseBranch: List<JavascriptStatementNode>,
     override val source: Source
 ) : JavascriptStatementNode {
@@ -42,6 +41,12 @@ data class JavascriptIfStatementNode(
         return visitor.visit(this)
     }
 }
+
+data class JavascriptConditionalBranchNode(
+    val condition: JavascriptExpressionNode,
+    val body: List<JavascriptStatementNode>,
+    override val source: Source
+) : JavascriptNode
 
 data class JavascriptExpressionStatementNode(
     val expression: JavascriptExpressionNode,

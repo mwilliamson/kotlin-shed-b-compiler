@@ -115,10 +115,14 @@ internal fun generateCode(node: StatementNode): JavascriptStatementNode {
         }
 
         override fun visit(node: IfStatementNode): JavascriptStatementNode {
-            // TODO: handle multiple conditions
             return JavascriptIfStatementNode(
-                condition = generateCode(node.conditionalBranches.single().condition),
-                trueBranch = node.conditionalBranches.single().body.map(::generateCode),
+                conditionalBranches = node.conditionalBranches.map { branch ->
+                    JavascriptConditionalBranchNode(
+                        condition = generateCode(branch.condition),
+                        body = branch.body.map(::generateCode),
+                        source = NodeSource(branch)
+                    )
+                },
                 elseBranch = node.elseBranch.map(::generateCode),
                 source = NodeSource(node)
             )

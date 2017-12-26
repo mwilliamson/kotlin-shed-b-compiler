@@ -42,10 +42,28 @@ fun jsIfStatement(
     condition: JavascriptExpressionNode,
     trueBranch: List<JavascriptStatementNode>,
     elseBranch: List<JavascriptStatementNode> = listOf()
+) = jsIfStatement(
+    conditionalBranches = listOf(
+        jsConditionalBranch(condition = condition, body = trueBranch)
+    ),
+    elseBranch = elseBranch
+)
+
+fun jsIfStatement(
+    conditionalBranches: List<JavascriptConditionalBranchNode>,
+    elseBranch: List<JavascriptStatementNode> = listOf()
 ) = JavascriptIfStatementNode(
-    condition = condition,
-    trueBranch = trueBranch,
+    conditionalBranches = conditionalBranches,
     elseBranch = elseBranch,
+    source = anySource()
+)
+
+fun jsConditionalBranch(
+    condition: JavascriptExpressionNode,
+    body: List<JavascriptStatementNode>
+) = JavascriptConditionalBranchNode(
+    condition = condition,
+    body = body,
     source = anySource()
 )
 

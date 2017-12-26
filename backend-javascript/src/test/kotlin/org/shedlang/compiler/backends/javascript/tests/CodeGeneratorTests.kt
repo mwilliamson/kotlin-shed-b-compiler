@@ -181,15 +181,19 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, cast(allOf(
-            has(JavascriptIfStatementNode::condition, isJavascriptIntegerLiteral(42)),
-            has(JavascriptIfStatementNode::trueBranch, isSequence(
-                isJavascriptReturn(isJavascriptIntegerLiteral(0))
-            )),
-            has(JavascriptIfStatementNode::elseBranch, isSequence(
+        assertThat(node, isJavascriptIfStatement(
+            conditionalBranches = isSequence(
+                isJavascriptConditionalBranch(
+                    condition = isJavascriptIntegerLiteral(42),
+                    body = isSequence(
+                        isJavascriptReturn(isJavascriptIntegerLiteral(0))
+                    )
+                )
+            ),
+            elseBranch = isSequence(
                 isJavascriptReturn(isJavascriptIntegerLiteral(1))
-            ))
-        )))
+            )
+        ))
     }
 
     @Test
@@ -375,6 +379,26 @@ class CodeGeneratorTests {
         has(JavascriptConstNode::name, name),
         has(JavascriptConstNode::expression, expression)
     ))
+
+    private fun isJavascriptIfStatement(
+        conditionalBranches: Matcher<List<JavascriptConditionalBranchNode>>,
+        elseBranch: Matcher<List<JavascriptStatementNode>>
+    ): Matcher<JavascriptStatementNode> {
+        return cast(allOf(
+            has(JavascriptIfStatementNode::conditionalBranches, conditionalBranches),
+            has(JavascriptIfStatementNode::elseBranch, elseBranch)
+        ))
+    }
+
+    private fun isJavascriptConditionalBranch(
+        condition: Matcher<JavascriptExpressionNode>,
+        body: Matcher<List<JavascriptStatementNode>>
+    ): Matcher<JavascriptConditionalBranchNode> {
+        return allOf(
+            has(JavascriptConditionalBranchNode::condition, condition),
+            has(JavascriptConditionalBranchNode::body, body)
+        )
+    }
 
     private fun isJavascriptReturn(expression: Matcher<JavascriptExpressionNode>)
         : Matcher<JavascriptStatementNode>
