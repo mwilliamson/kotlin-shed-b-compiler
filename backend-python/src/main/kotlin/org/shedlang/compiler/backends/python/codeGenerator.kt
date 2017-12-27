@@ -136,40 +136,25 @@ private fun generateArguments(arguments: List<ArgumentNode>, context: CodeGenera
     arguments.map({ argument -> context.name(argument) })
 
 internal fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<PythonStatementNode> {
-    return statements.flatMap({ statement -> generateCode(statement, context) })
+    if (statements.isEmpty()) {
+        return listOf()
+    } else {
+        return statements.dropLast(1).flatMap { statement ->
+            generateCode(statement, context, isLast = false)
+        } + generateCode(statements.last(), context, isLast = true)
+    }
 }
 
-internal fun generateCode(node: StatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
+internal fun generateCode(node: StatementNode, context: CodeGenerationContext, isLast: Boolean): List<PythonStatementNode> {
     return node.accept(object : StatementNode.Visitor<List<PythonStatementNode>> {
-        override fun visit(node: ReturnNode): List<PythonStatementNode> {
-            val expression = generateCode(node.expression, context)
-            return expression.functions + listOf(PythonReturnNode(expression.value, NodeSource(node)))
-        }
-
-        override fun visit(node: IfNode): List<PythonStatementNode> {
-            val conditionalBranches = GeneratedCode.combine(node.conditionalBranches.map { branch ->
-                generateCode(branch.condition, context).map { condition ->
-                    PythonConditionalBranchNode(
-                        condition = condition,
-                        body = generateCode(branch.body, context),
-                        source = NodeSource(branch)
-                    )
-                }
-            })
-            val elseBranch = generateCode(node.elseBranch, context)
-
-            val ifStatement = PythonIfStatementNode(
-                conditionalBranches = conditionalBranches.value,
-                elseBranch = elseBranch,
-                source = NodeSource(node)
-            )
-
-            return conditionalBranches.functions + listOf(ifStatement)
-        }
-
         override fun visit(node: ExpressionStatementNode): List<PythonStatementNode> {
             val expression = generateCode(node.expression, context)
-            val statement = PythonExpressionStatementNode(expression.value, NodeSource(node))
+            val source = NodeSource(node)
+            val statement = if (isLast) {
+                PythonReturnNode(expression.value, source)
+            } else {
+                PythonExpressionStatementNode(expression.value, source)
+            }
             return expression.functions + listOf(statement)
         }
 
@@ -196,6 +181,13 @@ internal data class GeneratedCode<T>(
     val functions: List<PythonFunctionNode>
 ) {
     fun <R> map(func: (T) -> R) = GeneratedCode(func(value), functions)
+    fun <R> flatMap(func: (T) -> GeneratedCode<R>): GeneratedCode<R> {
+        val result = func(value)
+        return GeneratedCode(
+            result.value,
+            functions + result.functions
+        )
+    }
 
     companion object {
         fun <T> combine(codes: List<GeneratedCode<T>>): GeneratedCode<List<T>> {
@@ -335,7 +327,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             }
 
             val statement = node.body.statements.singleOrNull()
-            if (statement != null && statement is ReturnNode) {
+            if (statement != null && statement is ExpressionStatementNode) {
                 val expression = generateCode(statement.expression, context)
                 if (expression.functions.isEmpty()) {
                     return GeneratedExpression(
@@ -359,6 +351,43 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 PythonVariableReferenceNode(auxiliaryFunction.name, source = node.source),
                 functions = listOf(auxiliaryFunction)
             )
+        }
+
+        override fun visit(node: IfNode): GeneratedExpression {
+            return GeneratedCode.combine(node.conditionalBranches.map { branch ->
+                generateCode(branch.condition, context).map { condition ->
+                    PythonConditionalBranchNode(
+                        condition = condition,
+                        body = generateCode(branch.body, context),
+                        source = NodeSource(branch)
+                    )
+                }
+            }).flatMap { conditionalBranches ->
+                val elseBranch = generateCode(node.elseBranch, context)
+
+                val auxiliaryFunction = PythonFunctionNode(
+                    name = context.freshName(),
+                    arguments = listOf(),
+                    body = listOf(
+                        PythonIfStatementNode(
+                            conditionalBranches = conditionalBranches,
+                            elseBranch = elseBranch,
+                            source = NodeSource(node)
+                        )
+                    ),
+                    source = NodeSource(node)
+                )
+                val callNode: PythonExpressionNode = PythonFunctionCallNode(
+                    function = PythonVariableReferenceNode(auxiliaryFunction.name, source = NodeSource(node)),
+                    arguments = listOf(),
+                    keywordArguments = listOf(),
+                    source = NodeSource(node)
+                )
+                GeneratedCode(
+                    callNode,
+                    functions = listOf(auxiliaryFunction)
+                )
+            }
         }
     })
 }

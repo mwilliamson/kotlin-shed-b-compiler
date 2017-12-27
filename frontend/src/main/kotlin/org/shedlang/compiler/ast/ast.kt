@@ -236,7 +236,7 @@ sealed class FunctionBody {
             get() = listOf(expression)
 
         override val statements: List<StatementNode>
-            get() = listOf(ReturnNode(expression, source = expression.source))
+            get() = listOf(ExpressionStatementNode(expression, source = expression.source))
     }
 }
 
@@ -329,8 +329,6 @@ interface StatementNode : Node {
         fun visit(node: BadStatementNode): T {
             throw UnsupportedOperationException("not implemented")
         }
-        fun visit(node: ReturnNode): T
-        fun visit(node: IfNode): T
         fun visit(node: ExpressionStatementNode): T
         fun visit(node: ValNode): T
     }
@@ -350,29 +348,16 @@ data class BadStatementNode(
     }
 }
 
-data class ReturnNode(
-    val expression: ExpressionNode,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-) : StatementNode {
-    override val children: List<Node>
-        get() = listOf(expression)
-
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
-        return visitor.visit(this)
-    }
-}
-
 data class IfNode(
     val conditionalBranches: List<ConditionalBranchNode>,
     val elseBranch: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : StatementNode {
+) : ExpressionNode {
     override val children: List<Node>
         get() = conditionalBranches + elseBranch
 
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -429,6 +414,7 @@ interface ExpressionNode : Node {
         fun visit(node: CallNode): T
         fun visit(node: FieldAccessNode): T
         fun visit(node: FunctionExpressionNode): T
+        fun visit(node: IfNode): T
     }
 
     fun <T> accept(visitor: ExpressionNode.Visitor<T>): T

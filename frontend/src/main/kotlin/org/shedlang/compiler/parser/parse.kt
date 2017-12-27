@@ -339,8 +339,6 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
     val token = tokens.peek()
     when (token.tokenType) {
-        TokenType.KEYWORD_RETURN -> return ::parseReturn.parse(tokens)
-        TokenType.KEYWORD_IF -> return ::parseIfStatement.parse(tokens)
         TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
         else -> {
             val expressionStatement = ::tryParseExpressionStatement.parse(tokens)
@@ -365,13 +363,6 @@ private fun tryParseExpressionStatement(source: Source, tokens: TokenIterator<To
         tokens.skip(TokenType.SYMBOL_SEMICOLON)
         return ExpressionStatementNode(expression, source)
     }
-}
-
-private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
-    tokens.skip(TokenType.KEYWORD_RETURN)
-    val expression = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL_SEMICOLON)
-    return ReturnNode(expression, source)
 }
 
 private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfNode {
@@ -693,6 +684,9 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             val expression = parseExpression(tokens)
             tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
             return expression
+        }
+        TokenType.KEYWORD_IF -> {
+            return ::parseIfStatement.parse(tokens)
         }
         TokenType.KEYWORD_FUN -> {
             tokens.skip()

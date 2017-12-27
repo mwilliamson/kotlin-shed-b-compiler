@@ -34,7 +34,6 @@ fun typeContext(
     )
 
     return TypeContext(
-        returnType = returnType,
         effect = effect,
         nodeTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),

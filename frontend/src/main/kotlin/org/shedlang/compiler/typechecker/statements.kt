@@ -122,45 +122,19 @@ private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
 }
 
 
-internal fun typeCheck(statement: StatementNode, context: TypeContext) {
-    statement.accept(object : StatementNode.Visitor<Unit> {
-        override fun visit(node: BadStatementNode) {
+internal fun typeCheck(statement: StatementNode, context: TypeContext): Type {
+    return statement.accept(object : StatementNode.Visitor<Type> {
+        override fun visit(node: BadStatementNode): Type {
             throw BadStatementError(node.source)
         }
 
-        override fun visit(node: IfNode) {
-            for (conditionalBranch in node.conditionalBranches) {
-                verifyType(conditionalBranch.condition, context, expected = BoolType)
-
-                val trueContext = context.enterScope()
-
-                if (
-                    conditionalBranch.condition is IsNode &&
-                    conditionalBranch.condition.expression is VariableReferenceNode
-                ) {
-                    val conditionType = evalType(conditionalBranch.condition.type, context)
-                    trueContext.addType(conditionalBranch.condition.expression, conditionType)
-                }
-
-                typeCheck(conditionalBranch.body, trueContext)
-            }
-            typeCheck(node.elseBranch, context)
+        override fun visit(node: ExpressionStatementNode): Type {
+            return inferType(node.expression, context)
         }
 
-        override fun visit(node: ReturnNode): Unit {
-            if (context.returnType == null) {
-                throw ReturnOutsideOfFunctionError(node.source)
-            } else {
-                verifyType(node.expression, context, expected = context.returnType)
-            }
-        }
-
-        override fun visit(node: ExpressionStatementNode) {
-            typeCheck(node.expression, context)
-        }
-
-        override fun visit(node: ValNode) {
+        override fun visit(node: ValNode): Type {
             typeCheck(node, context)
+            return UnitType
         }
     })
 }
@@ -170,8 +144,12 @@ private fun typeCheck(node: ValNode, context: TypeContext) {
     context.addType(node, type)
 }
 
-internal fun typeCheck(statements: List<StatementNode>, context: TypeContext) {
+internal fun typeCheck(statements: List<StatementNode>, context: TypeContext): Type {
+    var type: Type = UnitType
+
     for (statement in statements) {
-        typeCheck(statement, context)
+        type = typeCheck(statement, context)
     }
+
+    return type
 }

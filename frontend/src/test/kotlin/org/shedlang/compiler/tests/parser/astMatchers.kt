@@ -8,10 +8,10 @@ import org.shedlang.compiler.types.Variance
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
-internal fun isIfStatement(
+internal fun isIf(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
     elseBranch: Matcher<List<StatementNode>>
-): Matcher<StatementNode> = cast(allOf(
+): Matcher<ExpressionNode> = cast(allOf(
     has(IfNode::conditionalBranches, conditionalBranches),
     has(IfNode::elseBranch, elseBranch)
 ))
@@ -23,12 +23,6 @@ internal fun isConditionalBranch(
     has(ConditionalBranchNode::condition, condition),
     has(ConditionalBranchNode::body, body)
 ))
-
-inline internal fun <reified T: ExpressionNode> isReturn(
-    expression: Matcher<T>
-): Matcher<StatementNode> {
-    return cast(has(ReturnNode::expression, cast(expression)))
-}
 
 inline internal fun <reified T: ExpressionNode> isExpressionStatement(
     expression: Matcher<T>
