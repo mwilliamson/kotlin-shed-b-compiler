@@ -76,7 +76,7 @@ class ReturnCheckTests {
     }
 
     @Test
-    fun ifStatementWhenelseBranchDoesNotReturnThenStatementDoesNotReturn() {
+    fun ifStatementWhenElseBranchDoesNotReturnThenStatementDoesNotReturn() {
         val node = ifStatement(
             condition = variableReference("x"),
             trueBranch = listOf(returns()),
