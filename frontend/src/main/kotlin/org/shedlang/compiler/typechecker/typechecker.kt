@@ -113,6 +113,10 @@ class TypeContext(
 
 interface NodeTypes {
     fun typeOf(node: VariableBindingNode): Type
+
+    companion object {
+        val empty: NodeTypes = NodeTypesMap(mapOf())
+    }
 }
 
 internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
@@ -241,7 +245,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
         returns = returnType
     )
 
-    checkReturns(function, functionType)
+    context.defer { checkReturns(function, functionType, nodeTypes = context.getNodeTypes()) }
 
     return functionType
 }

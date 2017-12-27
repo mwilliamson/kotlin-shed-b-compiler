@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.NodeTypes
 import org.shedlang.compiler.typechecker.ReturnCheckError
 import org.shedlang.compiler.typechecker.alwaysReturns
 import org.shedlang.compiler.typechecker.typeCheck
@@ -51,7 +52,7 @@ class ReturnCheckTests {
     @Test
     fun returnStatementAlwaysReturns() {
         val node = returns()
-        assertThat(alwaysReturns(node), equalTo(true))
+        assertThat(alwaysReturns(node, nodeTypes = NodeTypes.empty), equalTo(true))
     }
 
     @Test
@@ -61,7 +62,7 @@ class ReturnCheckTests {
             trueBranch = listOf(returns()),
             elseBranch = listOf(returns())
         )
-        assertThat(alwaysReturns(node), equalTo(true))
+        assertThat(alwaysReturns(node, nodeTypes = NodeTypes.empty), equalTo(true))
     }
 
     @Test
@@ -71,7 +72,7 @@ class ReturnCheckTests {
             trueBranch = listOf(),
             elseBranch = listOf(returns())
         )
-        assertThat(alwaysReturns(node), equalTo(false))
+        assertThat(alwaysReturns(node, nodeTypes = NodeTypes.empty), equalTo(false))
     }
 
     @Test
@@ -81,18 +82,18 @@ class ReturnCheckTests {
             trueBranch = listOf(returns()),
             elseBranch = listOf()
         )
-        assertThat(alwaysReturns(node), equalTo(false))
+        assertThat(alwaysReturns(node, nodeTypes = NodeTypes.empty), equalTo(false))
     }
 
     @Test
     fun expressionStatementNeverReturns() {
         val node = expressionStatement()
-        assertThat(alwaysReturns(node), equalTo(false))
+        assertThat(alwaysReturns(node, nodeTypes = NodeTypes.empty), equalTo(false))
     }
 
     @Test
     fun valStatementNeverReturns() {
         val node = valStatement()
-        assertThat(alwaysReturns(node), equalTo(false))
+        assertThat(alwaysReturns(node, nodeTypes = NodeTypes.empty), equalTo(false))
     }
 }
