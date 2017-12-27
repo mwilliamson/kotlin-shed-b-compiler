@@ -16,7 +16,7 @@ fun newTypeContext(
         nodeTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
-        deferred = mutableListOf()
+        deferred = LinkedList()
     )
 }
 
@@ -26,7 +26,7 @@ class TypeContext(
     private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleType,
-    private val deferred: MutableList<() -> Unit>
+    private val deferred: Queue<() -> Unit>
 ) {
     internal fun getNodeTypes(): NodeTypesMap {
         return NodeTypesMap(nodeTypes)
@@ -103,9 +103,7 @@ class TypeContext(
 
     fun undefer() {
         while (this.deferred.isNotEmpty()) {
-            val index = this.deferred.size - 1
-            val deferred = this.deferred[index]
-            this.deferred.removeAt(index)
+            val deferred = this.deferred.poll()
             deferred()
         }
     }

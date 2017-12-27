@@ -38,7 +38,7 @@ fun typeContext(
         effect = effect,
         nodeTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
-        deferred = mutableListOf(),
+        deferred = LinkedList(),
         getModule = { moduleName -> modules[moduleName]!! }
     )
 }
