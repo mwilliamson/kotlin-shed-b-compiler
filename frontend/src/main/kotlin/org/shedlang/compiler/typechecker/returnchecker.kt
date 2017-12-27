@@ -21,7 +21,7 @@ internal fun alwaysReturns(node: StatementNode, nodeTypes: NodeTypes): Boolean {
             return true
         }
 
-        override fun visit(node: IfStatementNode): Boolean {
+        override fun visit(node: IfNode): Boolean {
             return node.conditionalBranches.all({ branch ->
                 alwaysReturns(branch.body, nodeTypes = nodeTypes)
             }) && alwaysReturns(node.elseBranch, nodeTypes = nodeTypes)

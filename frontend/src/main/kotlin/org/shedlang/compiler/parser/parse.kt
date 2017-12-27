@@ -374,7 +374,7 @@ private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : Retu
     return ReturnNode(expression, source)
 }
 
-private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfStatementNode {
+private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfNode {
     val conditionalBranches = parseConditionalBranches(tokens, source)
 
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
@@ -383,7 +383,7 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
         listOf()
     }
 
-    return IfStatementNode(
+    return IfNode(
         conditionalBranches = conditionalBranches,
         elseBranch = elseBranch,
         source = source

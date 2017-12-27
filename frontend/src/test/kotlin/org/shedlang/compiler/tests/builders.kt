@@ -11,8 +11,8 @@ fun ifStatement(
     condition: ExpressionNode = literalBool(true),
     trueBranch: List<StatementNode> = listOf(),
     elseBranch: List<StatementNode> = listOf()
-): IfStatementNode {
-    return IfStatementNode(
+): IfNode {
+    return IfNode(
         conditionalBranches = listOf(
             ConditionalBranchNode(
                 condition = condition,

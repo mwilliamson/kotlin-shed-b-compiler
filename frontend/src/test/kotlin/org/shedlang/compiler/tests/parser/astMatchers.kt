@@ -12,8 +12,8 @@ internal fun isIfStatement(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
     elseBranch: Matcher<List<StatementNode>>
 ): Matcher<StatementNode> = cast(allOf(
-    has(IfStatementNode::conditionalBranches, conditionalBranches),
-    has(IfStatementNode::elseBranch, elseBranch)
+    has(IfNode::conditionalBranches, conditionalBranches),
+    has(IfNode::elseBranch, elseBranch)
 ))
 
 internal fun isConditionalBranch(

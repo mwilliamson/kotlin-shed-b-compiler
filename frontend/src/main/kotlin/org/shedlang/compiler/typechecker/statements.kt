@@ -128,7 +128,7 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext) {
             throw BadStatementError(node.source)
         }
 
-        override fun visit(node: IfStatementNode) {
+        override fun visit(node: IfNode) {
             for (conditionalBranch in node.conditionalBranches) {
                 verifyType(conditionalBranch.condition, context, expected = BoolType)
 

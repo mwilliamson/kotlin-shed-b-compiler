@@ -146,7 +146,7 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
             return expression.functions + listOf(PythonReturnNode(expression.value, NodeSource(node)))
         }
 
-        override fun visit(node: IfStatementNode): List<PythonStatementNode> {
+        override fun visit(node: IfNode): List<PythonStatementNode> {
             val conditionalBranches = GeneratedCode.combine(node.conditionalBranches.map { branch ->
                 generateCode(branch.condition, context).map { condition ->
                     PythonConditionalBranchNode(

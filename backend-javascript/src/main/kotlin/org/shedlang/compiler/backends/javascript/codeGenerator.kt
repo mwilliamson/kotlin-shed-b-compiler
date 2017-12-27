@@ -114,7 +114,7 @@ internal fun generateCode(node: StatementNode): JavascriptStatementNode {
             return JavascriptReturnNode(generateCode(node.expression), NodeSource(node))
         }
 
-        override fun visit(node: IfStatementNode): JavascriptStatementNode {
+        override fun visit(node: IfNode): JavascriptStatementNode {
             return JavascriptIfStatementNode(
                 conditionalBranches = node.conditionalBranches.map { branch ->
                     JavascriptConditionalBranchNode(

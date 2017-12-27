@@ -330,7 +330,7 @@ interface StatementNode : Node {
             throw UnsupportedOperationException("not implemented")
         }
         fun visit(node: ReturnNode): T
-        fun visit(node: IfStatementNode): T
+        fun visit(node: IfNode): T
         fun visit(node: ExpressionStatementNode): T
         fun visit(node: ValNode): T
     }
@@ -363,7 +363,7 @@ data class ReturnNode(
     }
 }
 
-data class IfStatementNode(
+data class IfNode(
     val conditionalBranches: List<ConditionalBranchNode>,
     val elseBranch: List<StatementNode>,
     override val source: Source,
