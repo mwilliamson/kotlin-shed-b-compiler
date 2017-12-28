@@ -94,7 +94,7 @@ class CodeGeneratorTests {
         assertThat(node, isPythonFunction(
             name = equalTo("f"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isPythonReturn(isPythonIntegerLiteral(42)))
+            body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
         ))
     }
 
@@ -146,16 +146,16 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun nonLastExpressionStatementGeneratesExpressionStatement() {
-        val shed = expressionStatement(literalInt(42))
-        val node = generateCode(shed, isLast = false)
+    fun nonReturningExpressionStatementGeneratesExpressionStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = false)
+        val node = generateCode(shed)
         assertThat(node, isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42))))
     }
 
     @Test
-    fun lastExpressionStatementGeneratesReturnStatement() {
-        val shed = expressionStatement(literalInt(42))
-        val node = generateCode(shed, isLast = true)
+    fun returningExpressionStatementGeneratesReturnStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = true)
+        val node = generateCode(shed)
         assertThat(node, isSequence(isPythonReturn(isPythonIntegerLiteral(42))))
     }
 
@@ -182,12 +182,12 @@ class CodeGeneratorTests {
                         isPythonConditionalBranch(
                             condition = isPythonIntegerLiteral(42),
                             body = isSequence(
-                                isPythonReturn(isPythonIntegerLiteral(0))
+                                isPythonExpressionStatement(isPythonIntegerLiteral(0))
                             )
                         )
                     ),
                     elseBranch = isSequence(
-                        isPythonReturn(isPythonIntegerLiteral(1))
+                        isPythonExpressionStatement(isPythonIntegerLiteral(1))
                     )
                 )
             )
@@ -232,13 +232,13 @@ class CodeGeneratorTests {
                     isPythonConditionalBranch(
                         body = isSequence(
                             isPythonAssignment(target = isPythonVariableReference("x")),
-                            isPythonReturn(isPythonVariableReference("x"))
+                            isPythonExpressionStatement(isPythonVariableReference("x"))
                         )
                     )
                 ),
                 elseBranch = isSequence(
                     isPythonAssignment(target = isPythonVariableReference("x_1")),
-                    isPythonReturn(isPythonVariableReference("x_1"))
+                    isPythonExpressionStatement(isPythonVariableReference("x_1"))
                 )
             )
         ))
@@ -410,7 +410,7 @@ class CodeGeneratorTests {
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
-    private fun generateCode(node: StatementNode, isLast: Boolean = false) = generateCode(node, context(), isLast = isLast)
+    private fun generateCode(node: StatementNode) = generateCode(node, context())
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
     private fun context(

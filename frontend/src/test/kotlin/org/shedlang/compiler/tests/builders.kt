@@ -18,6 +18,7 @@ fun ifStatement(
             trueBranch = trueBranch,
             elseBranch = elseBranch
         ),
+        isReturn = false,
         source = anySource()
     )
 }
@@ -60,8 +61,9 @@ fun conditionalBranch(
 
 fun expressionStatement(
     expression: ExpressionNode = expression(),
+    isReturn: Boolean = false,
     source: Source = anySource()
-) = ExpressionStatementNode(expression, source = source)
+) = ExpressionStatementNode(expression, isReturn = isReturn, source = source)
 
 fun valStatement(
     name: String = "<val name>",

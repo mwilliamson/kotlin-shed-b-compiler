@@ -136,21 +136,15 @@ private fun generateArguments(arguments: List<ArgumentNode>, context: CodeGenera
     arguments.map({ argument -> context.name(argument) })
 
 internal fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<PythonStatementNode> {
-    if (statements.isEmpty()) {
-        return listOf()
-    } else {
-        return statements.dropLast(1).flatMap { statement ->
-            generateCode(statement, context, isLast = false)
-        } + generateCode(statements.last(), context, isLast = true)
-    }
+    return statements.flatMap { statement -> generateCode(statement, context) }
 }
 
-internal fun generateCode(node: StatementNode, context: CodeGenerationContext, isLast: Boolean): List<PythonStatementNode> {
+internal fun generateCode(node: StatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
     return node.accept(object : StatementNode.Visitor<List<PythonStatementNode>> {
         override fun visit(node: ExpressionStatementNode): List<PythonStatementNode> {
             val expression = generateCode(node.expression, context)
             val source = NodeSource(node)
-            val statement = if (isLast) {
+            val statement = if (node.isReturn) {
                 PythonReturnNode(expression.value, source)
             } else {
                 PythonExpressionStatementNode(expression.value, source)

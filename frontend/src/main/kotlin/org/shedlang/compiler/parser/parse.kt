@@ -297,11 +297,11 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val statements = mutableListOf<StatementNode>()
-    var lastStatement: ParsedFunctionStatement? = null
+    var lastStatement: StatementNode? = null
 
     while (!(tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || (lastStatement != null && lastStatement.isReturn))) {
         lastStatement = parseFunctionStatement(tokens)
-        statements.add(lastStatement.node)
+        statements.add(lastStatement)
     }
 
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
@@ -340,18 +340,10 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
     return parseType(tokens)
 }
 
-internal class ParsedFunctionStatement(
-    val node: StatementNode,
-    val isReturn: Boolean
-)
-
-internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : ParsedFunctionStatement {
+internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
     val token = tokens.peek()
     when (token.tokenType) {
-        TokenType.KEYWORD_VAL -> {
-            val node = ::parseVal.parse(tokens)
-            return ParsedFunctionStatement(node = node, isReturn = false)
-        }
+        TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
         else -> {
             val expression = tryParseExpression(tokens)
             if (expression == null) {
@@ -362,9 +354,10 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : ParsedFu
                 )
             } else {
                 val isReturn = !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
-                return ParsedFunctionStatement(
-                    node = ExpressionStatementNode(expression, source = expression.source),
-                    isReturn = isReturn
+                return ExpressionStatementNode(
+                    expression,
+                    isReturn = isReturn,
+                    source = expression.source
                 )
             }
         }

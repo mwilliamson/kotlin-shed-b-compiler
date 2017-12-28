@@ -236,7 +236,7 @@ sealed class FunctionBody {
             get() = listOf(expression)
 
         override val statements: List<StatementNode>
-            get() = listOf(ExpressionStatementNode(expression, source = expression.source))
+            get() = listOf(ExpressionStatementNode(expression, isReturn = true, source = expression.source))
     }
 }
 
@@ -333,6 +333,7 @@ interface StatementNode : Node {
         fun visit(node: ValNode): T
     }
 
+    val isReturn: Boolean
     fun <T> accept(visitor: StatementNode.Visitor<T>): T
 }
 
@@ -342,6 +343,9 @@ data class BadStatementNode(
 ) : StatementNode {
     override val children: List<Node>
         get() = listOf()
+
+    override val isReturn: Boolean
+        get() = false
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -374,6 +378,7 @@ data class ConditionalBranchNode(
 
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
+    override val isReturn: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StatementNode {
@@ -393,6 +398,9 @@ data class ValNode(
 ): VariableBindingNode, StatementNode, ModuleStatementNode {
     override val children: List<Node>
         get() = listOf(expression)
+
+    override val isReturn: Boolean
+        get() = false
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)

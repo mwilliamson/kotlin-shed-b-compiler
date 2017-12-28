@@ -9,16 +9,14 @@ class ParseExpressionStatementTests {
     @Test
     fun expressionWithTrailingSemiColonIsReadAsNonReturningExpressionStatement() {
         val source = "4;"
-        val parsedStatement = parseString(::parseFunctionStatement, source)
-        assertThat(parsedStatement.node, isExpressionStatement(isIntLiteral(4)))
-        assertThat(parsedStatement.isReturn, equalTo(false))
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node, isExpressionStatement(isIntLiteral(4), isReturn = equalTo(false)))
     }
 
     @Test
     fun expressionWithoutTrailingSemiColonIsReadAsReturningExpressionStatement() {
         val source = "4"
-        val parsedStatement = parseString(::parseFunctionStatement, source)
-        assertThat(parsedStatement.node, isExpressionStatement(isIntLiteral(4)))
-        assertThat(parsedStatement.isReturn, equalTo(true))
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node, isExpressionStatement(isIntLiteral(4), isReturn = equalTo(true)))
     }
 }

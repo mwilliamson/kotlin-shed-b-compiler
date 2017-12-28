@@ -110,21 +110,15 @@ private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
 }
 
 private fun generateCode(statements: List<StatementNode>): List<JavascriptStatementNode> {
-    return if (statements.isEmpty()) {
-        listOf()
-    } else {
-        statements.dropLast(1).map { statement ->
-            generateCode(statement, isLast = false)
-        } + listOf(generateCode(statements.last(), isLast = true))
-    }
+    return statements.map(::generateCode)
 }
 
-internal fun generateCode(node: StatementNode, isLast: Boolean): JavascriptStatementNode {
+internal fun generateCode(node: StatementNode): JavascriptStatementNode {
     return node.accept(object : StatementNode.Visitor<JavascriptStatementNode> {
         override fun visit(node: ExpressionStatementNode): JavascriptStatementNode {
             val expression = generateCode(node.expression)
             val source = NodeSource(node)
-            return if (isLast) {
+            return if (node.isReturn) {
                 JavascriptReturnNode(expression, source)
             } else {
                 JavascriptExpressionStatementNode(expression, source)

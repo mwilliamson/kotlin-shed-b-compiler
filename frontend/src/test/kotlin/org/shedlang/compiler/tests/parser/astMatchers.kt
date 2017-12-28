@@ -25,9 +25,13 @@ internal fun isConditionalBranch(
 ))
 
 inline internal fun <reified T: ExpressionNode> isExpressionStatement(
-    expression: Matcher<T>
+    expression: Matcher<T>,
+    isReturn: Matcher<Boolean>
 ): Matcher<StatementNode> {
-    return cast(has(ExpressionStatementNode::expression, cast(expression)))
+    return cast(allOf(
+        has(ExpressionStatementNode::expression, cast(expression)),
+        has(ExpressionStatementNode::isReturn, isReturn)
+    ))
 }
 
 inline internal fun <reified T: ExpressionNode> isVal(

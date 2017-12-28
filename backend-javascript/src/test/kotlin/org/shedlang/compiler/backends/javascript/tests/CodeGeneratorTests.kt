@@ -128,7 +128,7 @@ class CodeGeneratorTests {
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))
+            body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
         ))
     }
 
@@ -143,15 +143,15 @@ class CodeGeneratorTests {
 
         assertThat(node, isJavascriptFunctionExpression(
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))
+            body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
         ))
     }
 
     @Test
-    fun nonLastExpressionStatementGeneratesExpressionStatement() {
-        val shed = expressionStatement(literalInt(42))
+    fun nonReturningExpressionStatementGeneratesExpressionStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = false)
 
-        val node = generateCode(shed, isLast = false)
+        val node = generateCode(shed)
 
         assertThat(node, cast(has(
             JavascriptExpressionStatementNode::expression,
@@ -160,10 +160,10 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun lastExpressionStatementGeneratesReturnStatement() {
-        val shed = expressionStatement(literalInt(42))
+    fun returningExpressionStatementGeneratesReturnStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = true)
 
-        val node = generateCode(shed, isLast = true)
+        val node = generateCode(shed)
 
         assertThat(node, cast(has(
             JavascriptReturnNode::expression,
@@ -190,12 +190,12 @@ class CodeGeneratorTests {
                             isJavascriptConditionalBranch(
                                 condition = isJavascriptIntegerLiteral(42),
                                 body = isSequence(
-                                    isJavascriptReturn(isJavascriptIntegerLiteral(0))
+                                    isJavascriptExpressionStatement(isJavascriptIntegerLiteral(0))
                                 )
                             )
                         ),
                         elseBranch = isSequence(
-                            isJavascriptReturn(isJavascriptIntegerLiteral(1))
+                            isJavascriptExpressionStatement(isJavascriptIntegerLiteral(1))
                         )
                     )
                 )
@@ -208,7 +208,7 @@ class CodeGeneratorTests {
     fun valGeneratesConst() {
         val shed = valStatement(name = "x", expression = literalBool(true))
 
-        val node = generateCode(shed as StatementNode, isLast = false)
+        val node = generateCode(shed as StatementNode)
 
         assertThat(node, isJavascriptConst(equalTo("x"), isJavascriptBooleanLiteral(true)))
     }
