@@ -3,7 +3,7 @@
 //   Hello, world
 
 fun identity[T](value: T) -> T {
-    value;
+    value
 }
 
 fun main() !io -> Unit {

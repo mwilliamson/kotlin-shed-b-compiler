@@ -13,14 +13,14 @@ shape Nil memberOf List { }
 val nil = Nil();
 
 fun cons(head: Int, tail: List) -> List {
-    Cons(head=head, tail=tail);
+    Cons(head=head, tail=tail)
 }
 
 fun printInts(list: List) !io -> Unit {
     if (list is Cons) {
         print(intToString(list.head) + "\n");
         printInts(list.tail);
-    };
+    }
 }
 
 fun main() !io -> Unit {

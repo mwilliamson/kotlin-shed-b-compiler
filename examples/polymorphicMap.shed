@@ -13,7 +13,7 @@ shape Nil memberOf List {}
 val nil = Nil();
 
 fun cons[T](head: T, tail: List[T]) -> List[T] {
-    Cons(head=head, tail=tail);
+    Cons(head=head, tail=tail)
 }
 
 fun printInts(list: List[Int]) !io -> Unit {
@@ -25,15 +25,15 @@ fun printStrings(list: List[String]) !io -> Unit {
     if (list is Cons[String]) {
         print(list.head + "\n");
         printStrings(list.tail);
-    };
+    }
 }
 
 fun map[T, R, !E](func: (T) !E -> R, list: List[T]) !E -> List[R] {
     if (list is Cons[T]) {
-        cons(func(list.head), map(func, list.tail));
+        cons(func(list.head), map(func, list.tail))
     } else {
-        nil;
-    };
+        nil
+    }
 }
 
 fun main() !io -> Unit {

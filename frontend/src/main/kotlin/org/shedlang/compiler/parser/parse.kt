@@ -295,13 +295,17 @@ private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
-    val body = parseZeroOrMore(
-        parseElement = ::parseFunctionStatement,
-        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
-        tokens = tokens
-    )
+
+    val statements = mutableListOf<StatementNode>()
+    var lastStatement: ParsedFunctionStatement? = null
+
+    while (!(tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || (lastStatement != null && lastStatement.isReturn))) {
+        lastStatement = parseFunctionStatement(tokens)
+        statements.add(lastStatement.node)
+    }
+
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-    return body
+    return statements
 }
 
 private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): StaticParameterNode {
@@ -336,32 +340,34 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
     return parseType(tokens)
 }
 
-internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
+internal class ParsedFunctionStatement(
+    val node: StatementNode,
+    val isReturn: Boolean
+)
+
+internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : ParsedFunctionStatement {
     val token = tokens.peek()
     when (token.tokenType) {
-        TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
+        TokenType.KEYWORD_VAL -> {
+            val node = ::parseVal.parse(tokens)
+            return ParsedFunctionStatement(node = node, isReturn = false)
+        }
         else -> {
-            val expressionStatement = ::tryParseExpressionStatement.parse(tokens)
-            if (expressionStatement == null) {
+            val expression = tryParseExpression(tokens)
+            if (expression == null) {
                 throw UnexpectedTokenException(
                     location = tokens.location(),
                     expected = "function statement",
                     actual = token.describe()
                 )
             } else {
-                return expressionStatement
+                val isReturn = !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
+                return ParsedFunctionStatement(
+                    node = ExpressionStatementNode(expression, source = expression.source),
+                    isReturn = isReturn
+                )
             }
         }
-    }
-}
-
-private fun tryParseExpressionStatement(source: Source, tokens: TokenIterator<TokenType>) : ExpressionStatementNode? {
-    val expression = tryParseExpression(tokens)
-    if (expression == null) {
-        return null
-    } else {
-        tokens.skip(TokenType.SYMBOL_SEMICOLON)
-        return ExpressionStatementNode(expression, source)
     }
 }
 

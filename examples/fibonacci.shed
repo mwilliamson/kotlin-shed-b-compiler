@@ -3,7 +3,7 @@
 //   8
 
 fun fibonacci(n: Int) -> Int {
-    fibonacci2(n).second;
+    fibonacci2(n).second
 }
 
 shape FibonacciPair {
@@ -16,14 +16,14 @@ fun fibonacci2(n: Int) -> FibonacciPair {
         FibonacciPair(
             first = 1,
             second = 0
-        );
+        )
     } else {
         val previous = fibonacci2(n - 1);
         FibonacciPair(
             first = previous.second,
             second = previous.first + previous.second
-        );
-    };
+        )
+    }
 }
 
 fun main() !io -> Unit {

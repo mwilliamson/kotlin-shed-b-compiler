@@ -12,7 +12,7 @@ class ParseValTests {
     @Test
     fun valIsValidFunctionStatement() {
         val source = "val x = 4;"
-        val node = parseString(::parseFunctionStatement, source)
+        val node = parseString(::parseFunctionStatement, source).node
         assertThat(node, isVal(
             name = equalTo("x"),
             expression = has(IntegerLiteralNode::value, equalTo(4))
