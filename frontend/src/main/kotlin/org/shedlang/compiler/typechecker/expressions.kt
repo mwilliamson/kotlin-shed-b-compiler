@@ -52,6 +52,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             evalType(node.type, context)
 
             // TODO: for this to be valid, the type must have a tag value
+            // TODO: given generics are erased, when node.type is generic we
+            // should make sure no other instantiations of that generic type
+            // are possible e.g. if the expression has type Cons[T] | Nil,
+            // then checking the type to be Cons[U] is valid iff T <: U
 
             return BoolType
         }
