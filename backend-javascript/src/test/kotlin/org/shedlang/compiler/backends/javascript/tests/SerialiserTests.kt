@@ -75,8 +75,8 @@ class SerialiserTests {
                 body = listOf()
             )),
             equalTo(listOf(
-                "function () {",
-                "    }"
+                "(function () {",
+                "    })"
             ).joinToString("\n"))
         )
     }

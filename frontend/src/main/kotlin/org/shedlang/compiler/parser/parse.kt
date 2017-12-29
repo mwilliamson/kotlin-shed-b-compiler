@@ -353,7 +353,13 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
                     actual = token.describe()
                 )
             } else {
-                val isReturn = !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
+                val isReturn = if (expression is IfNode) {
+                    expression.branchBodies.map { body ->
+                        body.any(StatementNode::isReturn)
+                    }.toSet().single()
+                } else {
+                    !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
+                }
                 return ExpressionStatementNode(
                     expression,
                     isReturn = isReturn,

@@ -364,6 +364,9 @@ data class IfNode(
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    val branchBodies: Iterable<List<StatementNode>>
+        get() = conditionalBranches.map { branch -> branch.body } + listOf(elseBranch)
 }
 
 data class ConditionalBranchNode(
