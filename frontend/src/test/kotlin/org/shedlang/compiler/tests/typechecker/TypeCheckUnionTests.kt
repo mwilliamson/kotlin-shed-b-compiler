@@ -11,7 +11,6 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.TagField
 
 class TypeCheckUnionTests {
     @Test
@@ -58,43 +57,13 @@ class TypeCheckUnionTests {
     }
 
     @Test
-    fun whenUnionNodeIsTaggedThenTypeHasNewTag() {
-        val node = union("X", tagged = true, superType = null)
+    fun tagIsGenerated() {
+        val node = union("X")
 
         val typeContext = typeContext()
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             tagField = isTag(name = equalTo("X"), tagId = equalTo(node.nodeId))
-        )))
-    }
-
-    @Test
-    fun whenUnionNodeHasNoSuperTagAndIsNotTaggedThenErrorIsThrown() {
-        val node = union("X", tagged = false, superType = null)
-
-        val typeContext = typeContext()
-        assertThat(
-            { typeCheck(node, typeContext) },
-            throws(has(TypeCheckError::message, equalTo("Union is missing tag")))
-        )
-    }
-
-    @Test
-    fun whenUnionNodeHasTaggedSuperTypeThenTypeHasTag() {
-        val baseReference = staticReference("Base")
-        val tag = TagField("BaseTag")
-        val baseType = shapeType(tagField = tag)
-
-        val node = union("X", tagged = false, superType = baseReference)
-
-        val typeContext = typeContext(
-            referenceTypes = mapOf(
-                baseReference to MetaType(baseType)
-            )
-        )
-        typeCheck(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            tagField = isTag(name = equalTo("BaseTag"), tagId = equalTo(tag.tagFieldId))
         )))
     }
 

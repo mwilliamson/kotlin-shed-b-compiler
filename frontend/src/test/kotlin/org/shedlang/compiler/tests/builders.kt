@@ -175,12 +175,10 @@ fun union(
     name: String = "Union",
     members: List<StaticNode> = listOf(),
     typeParameters: List<TypeParameterNode> = listOf(),
-    tagged: Boolean = true,
     superType: StaticReferenceNode? = null
 ) = UnionNode(
     name = name,
     typeParameters = typeParameters,
-    tagged = tagged,
     superType = superType,
     members = members,
     source = anySource()

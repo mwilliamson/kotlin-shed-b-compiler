@@ -161,7 +161,6 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     tokens.skip(TokenType.KEYWORD_UNION)
     val name = parseIdentifier(tokens)
     val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
-    val tagged = tokens.trySkip(TokenType.KEYWORD_TAGGED)
 
     val explicitTag = if (tokens.trySkip(TokenType.SYMBOL_SUBTYPE)) {
          ::parseStaticReference.parse(tokens)
@@ -184,7 +183,6 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
     return UnionNode(
         name = name,
         typeParameters = typeParameters,
-        tagged = tagged,
         superType = explicitTag,
         members = members,
         source = source

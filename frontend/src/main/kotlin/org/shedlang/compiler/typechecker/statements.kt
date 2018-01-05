@@ -89,20 +89,10 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         evalType(node.superType, context)
     }
 
+    // TODO: check members conform to supertype
+
     val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
-    val tag = if (node.tagged) {
-        generateTag(node)
-    } else if (superType != null) {
-        // TODO: handle transitivity (super type of superType may declare tag field)
-        if (superType is MayDeclareTagField && superType.declaredTagField != null) {
-            superType.declaredTagField!!
-        } else {
-            // TODO: throw an appropriate error
-            throw UnsupportedOperationException()
-        }
-    } else {
-        throw TypeCheckError("Union is missing tag", source = node.source)
-    }
+    val tag = generateTag(node)
     val unionType = LazyUnionType(
         name = node.name,
         getMembers = members,
