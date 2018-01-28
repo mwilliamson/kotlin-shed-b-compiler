@@ -159,7 +159,7 @@ class TypeCheckFunctionTests {
     @Test
     fun effectsAreIncludedInSignature() {
         val unitType = staticReference("Unit")
-        val effect = staticReference("!io")
+        val effect = staticReference("!Io")
 
         val node = function(
             returnType = unitType,
@@ -180,7 +180,7 @@ class TypeCheckFunctionTests {
     @Test
     fun effectsAreAddedToBodyContext() {
         val unitType = staticReference("Unit")
-        val effect = staticReference("!io")
+        val effect = staticReference("!Io")
         val functionReference = variableReference("f")
 
         val node = function(

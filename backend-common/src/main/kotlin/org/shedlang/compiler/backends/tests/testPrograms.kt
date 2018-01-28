@@ -1,5 +1,9 @@
 package org.shedlang.compiler.backends.tests
 
+import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.installDependencies
+import org.shedlang.compiler.readPackage
+import org.shedlang.compiler.readStandalone
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -9,19 +13,38 @@ import java.nio.file.Paths
 
 data class TestProgram(
     val name: String,
-    val base: Path,
-    val main: Path,
+    private val source: TestProgramSource,
     val expectedResult: ExecutionResult
-)
+) {
+    fun load(): FrontEndResult {
+        return when (source) {
+            is TestProgramSource.File -> {
+                readStandalone(source.path)
+            }
+            is TestProgramSource.Directory -> {
+                installDependencies(source.path)
+                readPackage(source.path, listOf("main"))
+            }
+        }
+    }
+}
 
-private data class TestProgramFiles(val base: Path, val main: Path)
+sealed class TestProgramSource {
+    abstract val path: Path
+
+    class File(override val path: Path): TestProgramSource()
+    class Directory(override val path: Path, val mainPath: Path): TestProgramSource()
+}
+
 private val disabled = setOf("options")
 
 fun testPrograms(): List<TestProgram> {
-    return findTestFiles().map(fun(file): TestProgram {
-        val text = file.base.resolve(file.main).toFile().readText()
-
-        val name = Regex("^// name:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)!!.groupValues[1]
+    return findTestFiles().map(fun(source): TestProgram {
+        val mainPath = when (source) {
+            is TestProgramSource.File -> source.path
+            is TestProgramSource.Directory -> source.mainPath
+        }
+        val text = mainPath.toFile().readText()
 
         val exitCodeMatch = Regex("^// exitCode:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)
         val exitCode = if (exitCodeMatch == null) {
@@ -41,30 +64,25 @@ fun testPrograms(): List<TestProgram> {
         }
 
         return TestProgram(
-            name = name,
-            base = file.base,
-            main = file.main,
+            name = source.path.fileName.toString(),
+            source = source,
             expectedResult = ExecutionResult(stdout = stdout, exitCode = exitCode)
         )
     })
 }
 
-private fun findTestFiles(): List<TestProgramFiles> {
+private fun findTestFiles(): List<TestProgramSource> {
     val exampleDirectory = findRoot().resolve("examples")
-    return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramFiles? {
+    return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramSource? {
         if (name in disabled) {
             return null
         } else {
             val file = exampleDirectory.resolve(name)
-            val main = if (file.toFile().isDirectory) {
-                file.resolve("main.shed")
+            if (file.toFile().isDirectory) {
+                return TestProgramSource.Directory(file, file.resolve("src/main.shed"))
             } else {
-                file
+                return TestProgramSource.File(file)
             }
-            return TestProgramFiles(
-                base = exampleDirectory,
-                main = main
-            )
         }
     })
 }

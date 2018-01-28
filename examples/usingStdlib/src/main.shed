@@ -1,0 +1,18 @@
+// stdout:
+//   Some 4
+//   None
+
+import stdlib.options;
+
+fun main() !Io -> Unit {
+    print(optionToString(options.some(4)) + "\n");
+    print(optionToString(options.none) + "\n");
+}
+
+fun optionToString(option: options.Option[Int]) -> String {
+    if (option is options.Some[Int]) {
+        "Some " + intToString(option.value)
+    } else {
+        "None"
+    }
+}

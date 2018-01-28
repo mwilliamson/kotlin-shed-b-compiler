@@ -8,8 +8,6 @@ import org.shedlang.compiler.backends.javascript.compile
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.identifyModule
-import org.shedlang.compiler.read
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
@@ -18,12 +16,8 @@ class ExecutionTests {
         return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
-                    val frontendResult = read(
-                        base = testProgram.base,
-                        path = testProgram.main
-                    )
-                    compile(frontendResult, target = temporaryDirectory.file.toPath())
-                    val mainJsModule = "./" + identifyModule(base = testProgram.base, path = testProgram.main).joinToString("/") + ".js"
+                    compile(testProgram.load(), target = temporaryDirectory.file.toPath())
+                    val mainJsModule = "./main.js"
                     val result = run(
                         listOf("node", mainJsModule),
                         workingDirectory = temporaryDirectory.file

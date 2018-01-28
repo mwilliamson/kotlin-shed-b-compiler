@@ -1,9 +1,8 @@
-// name: local import
 // stdout:
 //   Hello, world!
 
-import .messages;
+import messages;
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     print(messages.message() + "\n");
 }

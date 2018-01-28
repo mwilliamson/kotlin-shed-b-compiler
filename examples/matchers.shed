@@ -1,9 +1,8 @@
-// name: matchers
 // stdout:
 //   expected world
 //   but was hello
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     val result = assertThat("hello", isString("world"));
     if (result is Failure) {
         print(result.message + "\n");

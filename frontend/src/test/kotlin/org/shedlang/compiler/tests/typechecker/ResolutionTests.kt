@@ -133,7 +133,7 @@ class ResolutionTests {
 
     @Test
     fun functionEffectsAreResolved() {
-        val effect = staticReference("!io")
+        val effect = staticReference("!Io")
         val node = function(
             effects = listOf(effect),
             returnType = staticReference("Int"),
@@ -144,7 +144,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf(
             "Int" to freshNodeId(),
-            "!io" to effectNodeId
+            "!Io" to effectNodeId
         ))
 
         assertThat(references[effect], equalTo(effectNodeId))

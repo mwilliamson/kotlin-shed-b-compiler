@@ -1,4 +1,3 @@
-// name: options
 // stdout:
 //   Hello, world!
 
@@ -7,6 +6,6 @@ import stdlib.tests;
 
 import .optionsTests;
 
-fun main() !io -> Int {
-    return tests.runTests(optionsTests.testCases);
+fun main() !Io -> Int {
+    tests.runTests(optionsTests.testCases)
 }

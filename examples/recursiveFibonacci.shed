@@ -1,4 +1,3 @@
-// name: recursive fibonacci
 // stdout:
 //   8
 
@@ -26,6 +25,6 @@ fun fibonacci2(n: Int) -> FibonacciPair {
     }
 }
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     print(intToString(fibonacci(6)) + "\n");
 }

@@ -43,7 +43,7 @@ val greenCode = "\u001B[32m";
 val redCode = "\u001B[31m";
 val blackCode = "\u001B[39m";
 
-fun runTests(tests: List[TestCase]) !io -> Int {
+fun runTests(tests: List[TestCase]) !Io -> Int {
     val results = map(runTest, tests);
     forEach(printFailure, results);
     val isSuccess = all(map(
@@ -57,7 +57,7 @@ fun runTests(tests: List[TestCase]) !io -> Int {
     }
 }
 
-fun printFailure(result: TestResult) !io -> Unit {
+fun printFailure(result: TestResult) !Io -> Unit {
     val error = result.error;
     if (error is options.Some[AssertionError]) {
         print(redCode);
@@ -69,7 +69,7 @@ fun printFailure(result: TestResult) !io -> Unit {
     }
 }
 
-fun runTest(test: TestCase) !io -> TestResult {
+fun runTest(test: TestCase) !Io -> TestResult {
     val result = test.run();
     val error = result.error;
 

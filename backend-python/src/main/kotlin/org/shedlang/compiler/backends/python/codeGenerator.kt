@@ -38,11 +38,16 @@ internal class CodeGenerationContext(
     private fun generateName(originalName: String): String {
         var index = 0
         var name = generateBaseName(originalName)
-        while (namesInScope.contains(name)) {
+        while (namesInScope.contains(name) || isReserved(name)) {
             index++
             name = originalName + "_" + index
         }
         return name
+    }
+
+    private fun isReserved(name: String): Boolean {
+        // TODO: test reserved names
+        return name == "None"
     }
 
     private fun generateBaseName(originalName: String): String {
@@ -72,15 +77,17 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
     // TODO: assign names properly using context
     val source = NodeSource(node)
 
-    if (node.path.base == ImportPathBase.Relative) {
-        return PythonImportFromNode(
-            module = "." + node.path.parts.take(node.path.parts.size - 1).joinToString("."),
-            names = listOf(node.path.parts.last()),
-            source = source
-        )
-    } else {
-        throw UnsupportedOperationException()
+    val pythonPackageName = node.path.parts.take(node.path.parts.size - 1)
+    val module = when (node.path.base) {
+        ImportPathBase.Relative -> "." + pythonPackageName.joinToString(".")
+        ImportPathBase.Absolute -> (listOf(topLevelPythonPackageName) + pythonPackageName).joinToString(".")
     }
+
+    return PythonImportFromNode(
+        module = module,
+        names = listOf(node.path.parts.last()),
+        source = source
+    )
 }
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
@@ -405,7 +412,8 @@ private fun generateCode(node: StaticNode, context: CodeGenerationContext): Pyth
         }
 
         override fun visit(node: StaticFieldAccessNode): PythonExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            // TODO: test this
+            return PythonAttributeAccessNode(generateCode(node.receiver, context), node.fieldName, NodeSource(node))
         }
 
         override fun visit(node: StaticApplicationNode): PythonExpressionNode {

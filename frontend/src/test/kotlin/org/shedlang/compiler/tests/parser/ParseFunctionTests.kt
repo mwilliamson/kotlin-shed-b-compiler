@@ -97,20 +97,20 @@ class ParseFunctionTests {
 
     @Test
     fun canReadFunctionWithOneEffect() {
-        val source = "fun f() !io -> Unit { }"
+        val source = "fun f() !Io -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
-            isStaticReference("!io")
+            isStaticReference("!Io")
         )))
     }
 
     @Test
     fun canReadFunctionWithMultipleEffects() {
-        val source = "fun f() !a, !b -> Unit { }"
+        val source = "fun f() !A, !B -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
-            isStaticReference("!a"),
-            isStaticReference("!b")
+            isStaticReference("!A"),
+            isStaticReference("!B")
         )))
     }
 

@@ -1,4 +1,3 @@
-// name: polymorphic cons
 // stdout:
 //   1
 //   2
@@ -16,14 +15,14 @@ fun cons[T](head: T, tail: List[T]) -> List[T] {
     Cons(head=head, tail=tail)
 }
 
-fun printInts(list: List[Int]) !io -> Unit {
+fun printInts(list: List[Int]) !Io -> Unit {
     if (list is Cons[Int]) {
         print(intToString(list.head) + "\n");
         printInts(list.tail);
     }
 }
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     val list = cons(1, cons(2, cons(3, nil)));
     printInts(list);
 }

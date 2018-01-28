@@ -1,4 +1,3 @@
-// name: forEach
 // stdout:
 //   1
 //   2
@@ -16,11 +15,11 @@ fun cons[T](head: T, tail: List[T]) -> List[T] {
     Cons(head=head, tail=tail)
 }
 
-fun printInts(list: List[Int]) !io -> Unit {
+fun printInts(list: List[Int]) !Io -> Unit {
     forEach(printInt, list);
 }
 
-fun printInt(value: Int) !io -> Unit {
+fun printInt(value: Int) !Io -> Unit {
     print(intToString(value) + "\n");
 }
 
@@ -31,7 +30,7 @@ fun forEach[T, !E](func: (T) !E -> Unit, list: List[T]) !E -> Unit {
     }
 }
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     val list = cons(1, cons(2, cons(3, nil)));
     printInts(list);
 }

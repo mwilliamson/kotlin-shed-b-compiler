@@ -16,25 +16,17 @@ import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.ModuleType
-import java.nio.file.Path
 import java.nio.file.Paths
 
 class CodeGeneratorTests {
-    private class EmptyModules: FrontEndResult {
-        override val modules: List<Module>
-            get() = listOf()
-
-        override fun importToModule(modulePath: Path, importPath: ImportPath): Module {
-            throw UnsupportedOperationException("not implemented")
-        }
-    }
+    private val emptyModules = FrontEndResult(modules = listOf())
 
     @Test
     fun emptyModuleGeneratesEmptyModule() {
         val shed = stubbedModule(
             node = module(body = listOf())
         )
-        val node = generateCode(shed, EmptyModules())
+        val node = generateCode(shed, emptyModules)
 
         assertThat(node, isJavascriptModule(equalTo(listOf())))
     }
@@ -43,7 +35,7 @@ class CodeGeneratorTests {
     fun moduleImportsGenerateJavascriptImports() {
         val shed = stubbedModule(node = module(imports = listOf(import(ImportPath.relative(listOf("x"))))))
 
-        val node = generateCode(shed, EmptyModules())
+        val node = generateCode(shed, emptyModules)
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
@@ -62,7 +54,7 @@ class CodeGeneratorTests {
     fun moduleIncludesBodyAndExports() {
         val shed = stubbedModule(node = module(body = listOf(function(name = "f"))))
 
-        val node = generateCode(shed, EmptyModules())
+        val node = generateCode(shed, emptyModules)
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
@@ -80,8 +72,8 @@ class CodeGeneratorTests {
 
     private fun stubbedModule(node: ModuleNode): Module {
         return Module(
-            sourcePath = Paths.get("source.shed"),
-            destinationPath = listOf("destination"),
+            name = listOf("Module"),
+            sourcePath = Paths.get("Module.shed"),
             type = ModuleType(mapOf()),
             references = ResolvedReferencesMap(mapOf()),
             node = node
