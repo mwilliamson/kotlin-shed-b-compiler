@@ -10,6 +10,6 @@ fun fact(n: Int) -> Int {
     }
 }
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     print(intToString(fact(5)) + "\n");
 }

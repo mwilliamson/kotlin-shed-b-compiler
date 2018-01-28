@@ -6,6 +6,6 @@ fun identity[T](value: T) -> T {
     return value;
 }
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     print(identity("Hello, world\n"));
 }

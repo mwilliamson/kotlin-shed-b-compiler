@@ -4,6 +4,6 @@
 
 import .messages;
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     print(messages.message() + "\n");
 }

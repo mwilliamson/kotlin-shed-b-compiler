@@ -22,7 +22,7 @@ private val coreBuiltins = listOf(
     Builtin("Bool", MetaType(BoolType)),
     Builtin("List", MetaType(ListType)),
 
-    Builtin("!io", EffectType(IoEffect))
+    Builtin("!Io", EffectType(IoEffect))
 )
 
 fun parseType(string: String): Type {
@@ -46,7 +46,7 @@ fun parseType(string: String): Type {
 }
 
 internal val builtins = coreBuiltins + listOf(
-    Builtin("print", parseType("(String) !io -> Unit")),
+    Builtin("print", parseType("(String) !Io -> Unit")),
     Builtin("intToString", parseType("(Int) -> String")),
     Builtin("list", ListConstructorType),
 

@@ -7,6 +7,6 @@ import stdlib.tests;
 
 import .optionsTests;
 
-fun main() !io -> Int {
+fun main() !Io -> Int {
     return tests.runTests(optionsTests.testCases);
 }

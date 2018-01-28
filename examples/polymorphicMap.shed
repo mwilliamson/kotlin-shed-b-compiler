@@ -16,12 +16,12 @@ fun cons[T](head: T, tail: List[T]) -> List[T] {
     return Cons(head=head, tail=tail);
 }
 
-fun printInts(list: List[Int]) !io -> Unit {
+fun printInts(list: List[Int]) !Io -> Unit {
     val strings = map(intToString, list);
     printStrings(strings);
 }
 
-fun printStrings(list: List[String]) !io -> Unit {
+fun printStrings(list: List[String]) !Io -> Unit {
     if (list is Cons[String]) {
         print(list.head + "\n");
         printStrings(list.tail);
@@ -36,7 +36,7 @@ fun map[T, R, !E](func: (T) !E -> R, list: List[T]) !E -> List[R] {
     }
 }
 
-fun main() !io -> Unit {
+fun main() !Io -> Unit {
     val list = cons(1, cons(2, cons(3, nil)));
     printInts(list);
 }
