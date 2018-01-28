@@ -45,7 +45,7 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
     var currentPackage = pythonPackage
     while (base != currentPackage) {
         currentPackage.resolve("__init__.py").toFile().createNewFile()
-        currentPackage = pythonPackage.parent
+        currentPackage = currentPackage.parent
     }
 }
 

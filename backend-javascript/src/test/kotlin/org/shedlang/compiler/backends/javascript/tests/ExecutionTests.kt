@@ -16,7 +16,7 @@ class ExecutionTests {
         return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
-                    compile(testProgram.frontEndResult, target = temporaryDirectory.file.toPath())
+                    compile(testProgram.load(), target = temporaryDirectory.file.toPath())
                     val mainJsModule = "./main.js"
                     val result = run(
                         listOf("node", mainJsModule),

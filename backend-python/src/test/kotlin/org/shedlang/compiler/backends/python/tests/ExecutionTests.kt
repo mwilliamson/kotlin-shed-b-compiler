@@ -17,7 +17,7 @@ class ExecutionTests {
         return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
-                    compile(testProgram.frontEndResult, target = temporaryDirectory.file.toPath())
+                    compile(testProgram.load(), target = temporaryDirectory.file.toPath())
                     val result = run(
                         listOf("python", "-m", topLevelPythonPackageName + ".main"),
                         workingDirectory = temporaryDirectory.file

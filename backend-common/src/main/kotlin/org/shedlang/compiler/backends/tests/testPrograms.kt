@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.tests
 
 import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.installDependencies
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.readStandalone
 import java.io.Closeable
@@ -15,11 +16,17 @@ data class TestProgram(
     private val source: TestProgramSource,
     val expectedResult: ExecutionResult
 ) {
-    val frontEndResult: FrontEndResult
-        get() = when (source) {
-            is TestProgramSource.File -> readStandalone(source.path)
-            is TestProgramSource.Directory -> readPackage(source.path, listOf("main"))
+    fun load(): FrontEndResult {
+        return when (source) {
+            is TestProgramSource.File -> {
+                readStandalone(source.path)
+            }
+            is TestProgramSource.Directory -> {
+                installDependencies(source.path)
+                readPackage(source.path, listOf("main"))
+            }
         }
+    }
 }
 
 sealed class TestProgramSource {

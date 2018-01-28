@@ -10,7 +10,9 @@ import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.ModuleType
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 
 
 class FrontEndResult(val modules: Collection<Module>)
@@ -90,7 +92,7 @@ private class ModuleReader(private val root: Path) {
         get() = modulesByName.values
 
     private fun readModuleInPackage(name: List<String>): Module {
-        val dependencyDirectories = root.resolve("shedDependencies").toFile().listFiles() ?: arrayOf<File>()
+        val dependencyDirectories = root.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
         val sourceDirectoryName = "src"
         val dependencies = dependencyDirectories
             .map({ file -> file.resolve(sourceDirectoryName) })
@@ -100,14 +102,20 @@ private class ModuleReader(private val root: Path) {
         val possiblePaths = bases.map({ base ->
             pathAppend(name.fold(base, { path, part -> path.resolve(part) }), ".shed")
         })
-        val path = possiblePaths.filter({ path -> path.toFile().exists() }).single()
-        return readModule(
-            path = path,
-            name = name,
-            getModule = { name ->
-                modulesByName.get(name)
-            }
-        )
+        val matchingPaths = possiblePaths.filter({ path -> path.toFile().exists() })
+        if (matchingPaths.size == 0) {
+            throw Exception("Could not find module: " + name.joinToString("."))
+        } else if (matchingPaths.size > 1) {
+            throw Exception("Multiple matches for module: " + name.joinToString("."))
+        } else {
+            return readModule(
+                path = matchingPaths.single(),
+                name = name,
+                getModule = { name ->
+                    modulesByName.get(name)
+                }
+            )
+        }
     }
 }
 
@@ -119,33 +127,74 @@ private fun resolveName(base: List<String>, name: List<String>): List<String> {
     return base.dropLast(1) + name
 }
 
-private fun readPackageConfig(path: Path): PackageConfig {
-    for (parent in path.parents()) {
-        val configPath = parent.resolve("shed.toml")
-        if (configPath.toFile().exists()) {
-            return PackageConfig(
-                packagePath = parent,
-                config = Toml().read(configPath.toFile())
-            )
-        }
-    }
-    // TODO: throw a better error
-    throw Exception("Could not read config for " + path)
+fun installDependencies(path: Path) {
+    val packageConfig = readPackageConfig(path)
+    packageConfig.dependencies().forEach({ dependency ->
+        installDependency(path, dependency)
+    })
 }
 
-private class PackageConfig(val packagePath: Path, private val config: Toml) {
-    fun name(): String {
+private fun installDependency(root: Path, dependency: Dependency) {
+    val dependencySourcePath = root.resolve(dependency.source)
+    val sourceName = readPackageConfig(dependencySourcePath).name()
+    if (sourceName != dependency.name) {
+        throw Exception("Dependency name mismatch: expected " + dependency.name + " but was " + sourceName)
+    }
+
+    val dependenciesDirectory = root.resolve(dependenciesDirectoryName)
+    dependenciesDirectory.toFile().mkdirs()
+    val dependencyDestinationPath = dependenciesDirectory.resolve(dependency.name)
+    if (dependencyDestinationPath.toFile().exists()) {
+        dependencyDestinationPath.toFile().delete()
+    }
+    Files.createSymbolicLink(dependencyDestinationPath, Paths.get("../").resolve(dependency.source))
+}
+
+private val dependenciesDirectoryName = "shedDependencies"
+
+private fun readPackageConfig(path: Path): PackageConfig {
+    val configPath = path.resolve("shed.toml")
+    if (configPath.toFile().exists()) {
+        return TomlPackageConfig(
+            config = Toml().read(configPath.toFile())
+        )
+    } else {
+        return EmptyPackageConfig
+    }
+}
+
+private interface PackageConfig {
+    fun name(): String?
+    fun dependencies(): List<Dependency>
+}
+
+private object EmptyPackageConfig : PackageConfig{
+    override fun name(): String? {
+        return null
+    }
+
+    override fun dependencies(): List<Dependency> {
+        return listOf()
+    }
+}
+
+private class TomlPackageConfig(private val config: Toml) : PackageConfig {
+    override fun name(): String {
         // TODO: throw a better error
         return config.getString("package.name").orElseThrow(Exception("Package is missing name"))
     }
 
-    fun resolveDependency(packageName: String): Path {
-        val dependencyPath = config.getString("dependencies." + packageName)
-        if (dependencyPath == null) {
-            // TODO: throw a better error
-            throw Exception("Could not find package: " + packageName)
+    override fun dependencies(): List<Dependency> {
+        val dependenciesConfig = config.getTable("dependencies")
+
+        return if (dependenciesConfig == null) {
+            listOf()
         } else {
-            return packagePath.resolve(dependencyPath).toAbsolutePath().normalize()
+            dependenciesConfig.entrySet().map({ (name, source) ->
+                Dependency(name, source as String)
+            })
         }
     }
 }
+
+private class Dependency(val name: String, val source: String)
