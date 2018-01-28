@@ -129,7 +129,12 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext): Type {
         }
 
         override fun visit(node: ExpressionStatementNode): Type {
-            return inferType(node.expression, context)
+            val type = inferType(node.expression, context)
+            return if (node.isReturn) {
+                type
+            } else {
+                UnitType
+            }
         }
 
         override fun visit(node: ValNode): Type {

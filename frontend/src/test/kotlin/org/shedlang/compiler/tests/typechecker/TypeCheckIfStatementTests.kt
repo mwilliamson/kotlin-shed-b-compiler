@@ -39,8 +39,8 @@ class TypeCheckIfStatementTests {
         val reference2 = variableReference("member2")
 
         val expression = ifExpression(
-            trueBranch = listOf(expressionStatement(reference1)),
-            elseBranch = listOf(expressionStatement(reference2))
+            trueBranch = listOf(expressionStatement(reference1, isReturn = true)),
+            elseBranch = listOf(expressionStatement(reference2, isReturn = true))
         )
         val context = typeContext(
             referenceTypes = mapOf(

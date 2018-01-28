@@ -105,7 +105,7 @@ class TypeCheckFunctionTests {
         val typeContext = typeContext(referenceTypes = mapOf(intType to MetaType(IntType)))
         val node = function(
             returnType = intType,
-            body = listOf(expressionStatement(literalBool(true)))
+            body = listOf(expressionStatement(literalBool(true), isReturn = true))
         )
         typeCheck(node, typeContext)
 
@@ -123,7 +123,7 @@ class TypeCheckFunctionTests {
         val node = function(
             arguments = listOf(argument),
             returnType = intType,
-            body = listOf(expressionStatement(argumentReference))
+            body = listOf(expressionStatement(argumentReference, isReturn = true))
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(intType to MetaType(IntType)),
@@ -360,7 +360,7 @@ class TypeCheckFunctionTests {
         val returnValue = literalBool()
         val node = functionExpression(
             returnType = null,
-            body = listOf(expressionStatement(returnValue, source = source))
+            body = listOf(expressionStatement(returnValue, isReturn = true, source = source))
         )
         val functionReference = variableReference("f")
         val call = call(
