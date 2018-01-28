@@ -72,15 +72,19 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
     // TODO: assign names properly using context
     val source = NodeSource(node)
 
-    if (node.path.base == ImportPathBase.Relative) {
-        return PythonImportFromNode(
-            module = "." + node.path.parts.take(node.path.parts.size - 1).joinToString("."),
-            names = listOf(node.path.parts.last()),
-            source = source
-        )
-    } else {
-        throw UnsupportedOperationException()
+    val pythonPackageName = node.path.parts.take(node.path.parts.size - 1)
+    val module = when (node.path.base) {
+        ImportPathBase.Relative -> "." + pythonPackageName.joinToString(".")
+        // TODO extract constant
+        // TODO: test absolute case
+        ImportPathBase.Absolute -> (listOf("shed") + pythonPackageName).joinToString(".")
     }
+
+    return PythonImportFromNode(
+        module = module,
+        names = listOf(node.path.parts.last()),
+        source = source
+    )
 }
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {

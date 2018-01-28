@@ -2,7 +2,6 @@ package org.shedlang.compiler
 
 import com.moandjiezana.toml.Toml
 import org.shedlang.compiler.ast.FunctionDeclarationNode
-import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.parse
@@ -12,17 +11,13 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.ModuleType
 import java.io.File
 import java.nio.file.Path
-import java.nio.file.Paths
 
 
-interface FrontEndResult {
-    val modules: List<Module>
-    fun importToModule(modulePath: Path, importPath: ImportPath): Module
-}
+class FrontEndResult(val modules: Collection<Module>)
 
 class Module(
+    val name: List<String>,
     val sourcePath: Path,
-    val destinationPath: List<String>,
     val node: ModuleNode,
     val type: ModuleType,
     val references: ResolvedReferences
@@ -32,109 +27,96 @@ class Module(
     })
 }
 
-fun read(base: Path, path: Path): FrontEndResult {
-    return readAll(base, listOf(path))
+fun readStandalone(path: Path): FrontEndResult {
+    val module = readModule(
+        path = path,
+        name = listOf("main"),
+        getModule = { throw UnsupportedOperationException("Standalone programs cannot import") }
+    )
+
+    return FrontEndResult(listOf(module))
 }
 
-fun readDirectory(base: Path): FrontEndResult {
-    if (base.toFile().isFile) {
-        return read(base = base.parent, path = base.fileName)
-    } else {
-        val paths = base.toFile()
-            .walk()
-            .filter({ file -> file.path.endsWith(".shed") })
-            .map({ file -> file.toPath() })
-
-        return readAll(base = base, paths = paths.asIterable())
-    }
+fun readPackage(base: Path, name: List<String>): FrontEndResult {
+    val reader = ModuleReader(root = base)
+    reader.load(name)
+    return FrontEndResult(reader.modules)
 }
 
-private fun readAll(base: Path, paths: Iterable<Path>): FrontEndResult {
-    val modules = Modules(base = base)
-    paths.forEach({ path -> modules.pathToModule(path) })
-    return modules
-}
-
-private class Modules(private val base: Path): FrontEndResult {
-    private val pathToModule = LazyMap<Path, Module>(this::pathToModuleUncached)
-    private val imports = LazyMap<Pair<Path, ImportPath>, Path>({ (modulePath, importPath) ->
-        resolveModuleUncached(modulePath, importPath)
-    })
-
-    override val modules: List<Module>
-        get() = pathToModule.values.toList()
-
-    fun pathToModule(path: Path): Module {
-        return pathToModule.get(path)
-    }
-
-    private fun pathToModuleUncached(path: Path): Module {
-        return readModule(base = base, path = path, importToModule = this::importToModule)
-    }
-
-    override fun importToModule(modulePath: Path, importPath: ImportPath): Module {
-        return pathToModule(resolveModule(modulePath, importPath))
-    }
-
-    fun resolveModule(modulePath: Path, importPath: ImportPath): Path {
-        return imports.get(Pair(modulePath, importPath))
-    }
-
-    private fun resolveModuleUncached(modulePath: Path, importPath: ImportPath): Path {
-        // TODO: test this properly
-        return when (importPath.base) {
-            is ImportPathBase.Absolute -> {
-                val packageName = importPath.parts[0]
-                val config = readPackageConfig(path = modulePath)
-                val packagePath = config.resolveDependency(packageName = packageName)
-                packagePath.resolve(importPath.parts.drop(1).joinToString(File.separator) + ".shed")
-            }
-            is ImportPathBase.Relative -> {
-                modulePath.resolveSibling(importPath.parts.joinToString(File.separator) + ".shed")
-            }
-        }
-    }
-}
-
-private fun readModule(base: Path, path: Path, importToModule: (Path, ImportPath) -> Module): Module {
+private fun readModule(path: Path, name: List<String>, getModule: (List<String>) -> Module): Module {
     val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
 
     val resolvedReferences = resolve(
         moduleNode,
-        builtins.associate({ builtin -> builtin.name to builtin.nodeId})
+        builtins.associate({ builtin -> builtin.name to builtin.nodeId })
     )
 
     val typeCheckResult = typeCheck(
         moduleNode,
-        nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type}),
+        nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type }),
         resolvedReferences = resolvedReferences,
         getModule = { importPath ->
-            val result = importToModule(path, importPath)
-            result.type
+            when (importPath.base) {
+                ImportPathBase.Relative -> {
+                    val name = resolveName(name, importPath.parts)
+                    getModule(name).type
+                }
+                ImportPathBase.Absolute ->  {
+                    getModule(importPath.parts).type
+                }
+            }
         }
     )
 
     return Module(
+        name = name,
         sourcePath = path,
-        destinationPath = identifyModule(base = base, path = path),
         node = moduleNode,
         type = typeCheckResult.moduleType,
         references = resolvedReferences
     )
 }
 
-fun identifyModule(base: Path, path: Path): List<String> {
-    val targetPath = if (path.startsWith(base)) {
-        base.relativize(path)
-    } else {
-        val packageConfig = readPackageConfig(path)
-        // TODO: throw a better error
-        val name = packageConfig.name()
-        // TODO: handle packages with the same name
-        Paths.get("dependencies").resolve(name).resolve(packageConfig.packagePath.relativize(path))
+private class ModuleReader(private val root: Path) {
+    private val modulesByName = LazyMap<List<String>, Module>({ name ->
+        readModuleInPackage(name = name)
+    })
+
+    internal fun load(name: List<String>) {
+        modulesByName.get(name)
     }
-    val pathParts = targetPath.map(Path::toString)
-    return pathParts.take(pathParts.size - 1) + pathParts.last().removeSuffix(".shed")
+
+    internal val modules: Collection<Module>
+        get() = modulesByName.values
+
+    private fun readModuleInPackage(name: List<String>): Module {
+        val dependencyDirectories = root.resolve("shedDependencies").toFile().listFiles() ?: arrayOf<File>()
+        val sourceDirectoryName = "src"
+        val dependencies = dependencyDirectories
+            .map({ file -> file.resolve(sourceDirectoryName) })
+            .filter({ file -> file.exists() && file.isDirectory })
+            .map({ file -> file.toPath() })
+        val bases = listOf(root.resolve(sourceDirectoryName)) + dependencies
+        val possiblePaths = bases.map({ base ->
+            pathAppend(name.fold(base, { path, part -> path.resolve(part) }), ".shed")
+        })
+        val path = possiblePaths.filter({ path -> path.toFile().exists() }).single()
+        return readModule(
+            path = path,
+            name = name,
+            getModule = { name ->
+                modulesByName.get(name)
+            }
+        )
+    }
+}
+
+private fun pathAppend(path: Path, suffix: String): Path {
+    return path.resolveSibling(path.fileName.toString() + suffix)
+}
+
+private fun resolveName(base: List<String>, name: List<String>): List<String> {
+    return base.dropLast(1) + name
 }
 
 private fun readPackageConfig(path: Path): PackageConfig {

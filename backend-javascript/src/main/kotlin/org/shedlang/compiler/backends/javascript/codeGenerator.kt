@@ -20,13 +20,12 @@ internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptMo
 private fun generateCode(module: Module, import: ImportNode, modules: FrontEndResult): JavascriptStatementNode {
     val source = NodeSource(import)
 
-    val importPath = when (import.path.base) {
-        ImportPathBase.Relative -> "./" + import.path.parts.joinToString("/")
-        ImportPathBase.Absolute -> {
-            val pathToRoot = "./" + "../".repeat(module.destinationPath.size - 1)
-            pathToRoot + modules.importToModule(module.sourcePath, import.path).destinationPath.joinToString("/")
-        }
+    val importBase = when (import.path.base) {
+        ImportPathBase.Relative -> "./"
+        ImportPathBase.Absolute -> "./" + "../".repeat(module.name.size - 1)
     }
+
+    val importPath = importBase + import.path.parts.joinToString("/")
 
     return JavascriptConstNode(
         name = import.name,

@@ -11,7 +11,7 @@ import java.nio.file.Path
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
         frontEndResult.modules.forEach({ module ->
-            val modulePath = modulePath(module.destinationPath)
+            val modulePath = modulePath(module.name)
             val destination = target.resolve(modulePath)
             destination.parent.toFile().mkdirs()
             destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->

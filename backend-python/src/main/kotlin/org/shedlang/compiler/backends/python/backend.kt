@@ -8,12 +8,13 @@ import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
+val topLevelPythonPackageName = "shed"
+
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
         frontEndResult.modules.forEach({ module ->
-            val moduleName = module.destinationPath
-            val modulePath = moduleName.joinToString(File.separator) + ".py"
-            val destination = target.resolve(modulePath)
+            val modulePath = module.name.joinToString(File.separator) + ".py"
+            val destination = target.resolve(topLevelPythonPackageName).resolve(modulePath)
             val pythonPackage = destination.parent
             pythonPackage.toFile().mkdirs()
             addInitFiles(target, pythonPackage)
