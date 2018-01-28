@@ -24,7 +24,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun moduleImportsGeneratePythonImports() {
+    fun relativeModuleImportsGeneratePythonImports() {
         val shed = module(imports = listOf(import(ImportPath.relative(listOf("x", "y")))))
 
         val node = generateCode(shed)
@@ -33,6 +33,22 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonImportFrom(
                     module = equalTo(".x"),
+                    names = isSequence(equalTo("y"))
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun absoluteModuleImportsGeneratePythonImports() {
+        val shed = module(imports = listOf(import(ImportPath.absolute(listOf("x", "y")))))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonModule(
+            body = isSequence(
+                isPythonImportFrom(
+                    module = equalTo("shed.x"),
                     names = isSequence(equalTo("y"))
                 )
             )
