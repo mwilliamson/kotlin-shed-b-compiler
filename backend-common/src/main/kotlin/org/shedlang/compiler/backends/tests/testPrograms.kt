@@ -12,9 +12,15 @@ import java.nio.file.Paths
 
 data class TestProgram(
     val name: String,
-    val frontEndResult: FrontEndResult,
+    private val source: TestProgramSource,
     val expectedResult: ExecutionResult
-)
+) {
+    val frontEndResult: FrontEndResult
+        get() = when (source) {
+            is TestProgramSource.File -> readStandalone(source.path)
+            is TestProgramSource.Directory -> readPackage(source.path, listOf("main"))
+        }
+}
 
 sealed class TestProgramSource {
     abstract val path: Path
@@ -50,14 +56,9 @@ fun testPrograms(): List<TestProgram> {
                 .trimMargin("//   ") + "\n"
         }
 
-        val frontEndResult = when (source) {
-            is TestProgramSource.File -> readStandalone(source.path)
-            is TestProgramSource.Directory -> readPackage(source.path, listOf("main"))
-        }
-
         return TestProgram(
             name = source.path.fileName.toString(),
-            frontEndResult = frontEndResult,
+            source = source,
             expectedResult = ExecutionResult(stdout = stdout, exitCode = exitCode)
         )
     })
