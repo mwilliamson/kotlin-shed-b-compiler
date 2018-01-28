@@ -75,9 +75,8 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
     val pythonPackageName = node.path.parts.take(node.path.parts.size - 1)
     val module = when (node.path.base) {
         ImportPathBase.Relative -> "." + pythonPackageName.joinToString(".")
-        // TODO extract constant
         // TODO: test absolute case
-        ImportPathBase.Absolute -> (listOf("shed") + pythonPackageName).joinToString(".")
+        ImportPathBase.Absolute -> (listOf(topLevelPythonPackageName) + pythonPackageName).joinToString(".")
     }
 
     return PythonImportFromNode(
