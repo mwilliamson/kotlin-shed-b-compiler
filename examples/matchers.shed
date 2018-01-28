@@ -1,4 +1,3 @@
-// name: matchers
 // stdout:
 //   expected world
 //   but was hello

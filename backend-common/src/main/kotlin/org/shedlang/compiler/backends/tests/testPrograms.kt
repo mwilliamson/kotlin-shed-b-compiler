@@ -14,14 +14,17 @@ data class TestProgram(
     val expectedResult: ExecutionResult
 )
 
-private data class TestProgramFiles(val base: Path, val main: Path)
+private data class TestProgramFiles(val path: Path, val isDirectory: Boolean)
 private val disabled = setOf("options")
 
 fun testPrograms(): List<TestProgram> {
-    return findTestFiles().map(fun(file): TestProgram {
-        val text = file.base.resolve(file.main).toFile().readText()
-
-        val name = Regex("^// name:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)!!.groupValues[1]
+    return findTestFiles().map(fun(testProgram): TestProgram {
+        val mainPath = if (testProgram.isDirectory) {
+            testProgram.path.resolve("src/main.shed")
+        } else {
+            testProgram.path
+        }
+        val text = mainPath.toFile().readText()
 
         val exitCodeMatch = Regex("^// exitCode:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)
         val exitCode = if (exitCodeMatch == null) {
@@ -41,9 +44,9 @@ fun testPrograms(): List<TestProgram> {
         }
 
         return TestProgram(
-            name = name,
-            base = file.base,
-            main = file.main,
+            name = testProgram.path.fileName.toString(),
+            base = testProgram.path,
+            main = mainPath,
             expectedResult = ExecutionResult(stdout = stdout, exitCode = exitCode)
         )
     })
@@ -56,15 +59,7 @@ private fun findTestFiles(): List<TestProgramFiles> {
             return null
         } else {
             val file = exampleDirectory.resolve(name)
-            val main = if (file.toFile().isDirectory) {
-                file.resolve("main.shed")
-            } else {
-                file
-            }
-            return TestProgramFiles(
-                base = exampleDirectory,
-                main = main
-            )
+            return TestProgramFiles(path = file, isDirectory = file.toFile().isDirectory)
         }
     })
 }
