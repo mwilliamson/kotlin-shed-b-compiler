@@ -1,3 +1,4 @@
+import .matchers;
 import .options;
 
 
@@ -14,6 +15,18 @@ fun assert(value: Bool) -> AssertionResult {
         return AssertionResult(error = options.none);
     } else {
         return fail("value was false");
+    }
+}
+
+fun assertThat[T](value: T, matcher: matchers.Matcher[T]) -> AssertionResult {
+    val result = matcher.match(value);
+    if (result is matchers.Failure) {
+        val message = "expected " + matcher.description + "\nbut " + result.message;
+        val error = AssertionError(message = message);
+        return AssertionResult(error = options.some(error));
+    } else {
+        // TODO: check type of result
+        return AssertionResult(error = options.none);
     }
 }
 
@@ -60,9 +73,10 @@ fun runTests(tests: List[TestCase]) !Io -> Int {
 fun printFailure(result: TestResult) !Io -> Unit {
     val error = result.error;
     if (error is options.Some[AssertionError]) {
+        print("\n");
         print(redCode);
         print(result.name);
-        print(": ");
+        print(":\n");
         print(error.value.message);
         print(blackCode);
         print("\n");

@@ -47,7 +47,7 @@ internal class CodeGenerationContext(
 
     private fun isReserved(name: String): Boolean {
         // TODO: test reserved names
-        return name == "None"
+        return name == "None" || name == "assert"
     }
 
     private fun generateBaseName(originalName: String): String {

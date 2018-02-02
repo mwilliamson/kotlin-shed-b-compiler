@@ -1,0 +1,23 @@
+import stdlib.matchers;
+import stdlib.options;
+import stdlib.tests;
+
+fun addOne(value: Int) -> Int {
+    return value + 1;
+}
+
+val testCases = list(
+    tests.testCase("map(f, none) is none", fun () {
+        // TODO: remove need for explicit type arguments
+        return tests.assertThat[options.Option[Int]](options.map(addOne, options.none), matchers.isNone());
+    }),
+
+    tests.testCase("map(f, some(x)) is some(f(x))", fun () {
+        // TODO: remove need for explicit type arguments
+        return tests.assertThat[options.Option[Int]](
+            options.map(addOne, options.some(42)),
+            matchers.isSome(matchers.isInteger(43))
+        );
+    }),
+);
+
