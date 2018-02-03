@@ -38,7 +38,7 @@ internal class CodeGenerationContext(
     private fun generateName(originalName: String): String {
         var index = 0
         var name = generateBaseName(originalName)
-        while (namesInScope.contains(name) || isReserved(name)) {
+        while (namesInScope.contains(name)) {
             index++
             name = originalName + "_" + index
         }
@@ -51,10 +51,15 @@ internal class CodeGenerationContext(
     }
 
     private fun generateBaseName(originalName: String): String {
-        if (originalName[0].isUpperCase()) {
-            return originalName
+        val casedName = if (originalName[0].isUpperCase()) {
+            originalName
         } else {
-            return camelCaseToSnakeCase(originalName)
+            camelCaseToSnakeCase(originalName)
+        }
+        return if (isReserved(casedName)) {
+            casedName + "_"
+        } else {
+            casedName
         }
     }
 
@@ -432,7 +437,9 @@ private val pythonKeywords = setOf(
     "not",
     "or",
     "pass",
-    "print",
+    // We add a __future__ statement for print functions, so we don't need to
+    // consider print a keyword in any version of Python
+    // "print",
     "raise",
     "return",
     "try",
