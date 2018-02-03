@@ -46,7 +46,6 @@ internal class CodeGenerationContext(
     }
 
     private fun isReserved(name: String): Boolean {
-        // TODO: test reserved names
         return pythonKeywords.contains(name)
     }
 

@@ -419,6 +419,18 @@ class CodeGeneratorTests {
         )
     }
 
+    @Test
+    fun namesThatMatchPythonKeywordsHaveUnderscoreAppended() {
+        assertThat(
+            generateCode(valStatement(name = "assert")),
+            isSequence(
+                isPythonAssignment(
+                    target = isPythonVariableReference("assert_")
+                )
+            )
+        )
+    }
+
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
