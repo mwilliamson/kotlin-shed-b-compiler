@@ -47,7 +47,7 @@ internal class CodeGenerationContext(
 
     private fun isReserved(name: String): Boolean {
         // TODO: test reserved names
-        return name == "None" || name == "assert"
+        return pythonKeywords.contains(name)
     }
 
     private fun generateBaseName(originalName: String): String {
@@ -402,3 +402,41 @@ private fun generateCode(node: StaticNode, context: CodeGenerationContext): Pyth
         }
     })
 }
+
+private val pythonKeywords = setOf(
+    "False",
+    "None",
+    "True",
+    "and",
+    "as",
+    "assert",
+    "break",
+    "class",
+    "continue",
+    "def",
+    "del",
+    "elif",
+    "else",
+    "except",
+    "exec",
+    "finally",
+    "for",
+    "from",
+    "global",
+    "if",
+    "import",
+    "in",
+    "is",
+    "lambda",
+    "nonlocal",
+    "not",
+    "or",
+    "pass",
+    "print",
+    "raise",
+    "return",
+    "try",
+    "while",
+    "with",
+    "yield"
+)
