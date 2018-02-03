@@ -45,7 +45,7 @@ internal class CodeGenerationContext(
         return name
     }
 
-    private fun isReserved(name: String): Boolean {
+    private fun isKeyword(name: String): Boolean {
         return pythonKeywords.contains(name)
     }
 
@@ -55,7 +55,7 @@ internal class CodeGenerationContext(
         } else {
             camelCaseToSnakeCase(originalName)
         }
-        return if (isReserved(casedName)) {
+        return if (isKeyword(casedName)) {
             casedName + "_"
         } else {
             casedName
