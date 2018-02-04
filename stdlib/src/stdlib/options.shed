@@ -6,14 +6,14 @@ shape None memberOf Option {
 }
 
 fun some[T](value: T) -> Option[T] {
-    return Some(value = value);
+    Some(value = value)
 }
 val none = None();
 
 fun map[T, R](func: (T) -> R, option: Option[T]) -> Option[R] {
     if (option is Some[T]) {
-        return some(func(option.value));
+        some(func(option.value))
     } else {
-        return none;
+        none
     }
 }

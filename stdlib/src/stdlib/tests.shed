@@ -7,14 +7,14 @@ shape AssertionError {
 }
 
 fun fail(message: String) -> AssertionResult {
-    return AssertionResult(error = options.some(AssertionError(message = message)));
+    AssertionResult(error = options.some(AssertionError(message = message)))
 }
 
 fun assert(value: Bool) -> AssertionResult {
     if (value) {
-        return AssertionResult(error = options.none);
+        AssertionResult(error = options.none)
     } else {
-        return fail("value was false");
+        fail("value was false")
     }
 }
 
@@ -23,10 +23,10 @@ fun assertThat[T](value: T, matcher: matchers.Matcher[T]) -> AssertionResult {
     if (result is matchers.Failure) {
         val message = "expected " + matcher.description + "\nbut " + result.message;
         val error = AssertionError(message = message);
-        return AssertionResult(error = options.some(error));
+        AssertionResult(error = options.some(error))
     } else {
         // TODO: check type of result
-        return AssertionResult(error = options.none);
+        AssertionResult(error = options.none)
     }
 }
 
@@ -40,7 +40,7 @@ shape TestCase {
 }
 
 fun testCase(name: String, run: () -> AssertionResult) -> TestCase {
-    return TestCase(name = name, run = run);
+    TestCase(name = name, run = run)
 }
 
 shape TestResult {
@@ -49,7 +49,7 @@ shape TestResult {
 }
 
 fun main() -> Int {
-    return 0;
+    0
 }
 
 val greenCode = "\u001B[32m";
@@ -64,9 +64,9 @@ fun runTests(tests: List[TestCase]) !Io -> Int {
         results
     ));
     if (isSuccess) {
-        return 0;
+        0
     } else {
-        return 1;
+        1
     }
 }
 
@@ -98,5 +98,5 @@ fun runTest(test: TestCase) !Io -> TestResult {
     print(blackCode);
     print("\n");
 
-    return TestResult(name = test.name, error = result.error);
+    TestResult(name = test.name, error = result.error)
 }

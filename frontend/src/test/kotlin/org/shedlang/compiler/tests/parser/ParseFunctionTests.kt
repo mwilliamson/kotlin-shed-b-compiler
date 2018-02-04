@@ -80,11 +80,11 @@ class ParseFunctionTests {
 
     @Test
     fun canReadBody() {
-        val source = "fun f() -> Int { return 1; return 2; }"
+        val source = "fun f() -> Int { 1; 2; }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionDeclarationNode::bodyStatements, isSequence(
-            cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(1))))),
-            cast(has(ReturnNode::expression, cast(has(IntegerLiteralNode::value, equalTo(2)))))
+            isExpressionStatement(isIntLiteral(equalTo(1))),
+            isExpressionStatement(isIntLiteral(equalTo(2)))
         )))
     }
 

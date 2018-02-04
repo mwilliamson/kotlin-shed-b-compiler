@@ -142,7 +142,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             context.initialise(node)
         }
 
-        is IfStatementNode -> {
+        is IfNode -> {
             for (conditionalBranch in node.conditionalBranches) {
                 resolve(conditionalBranch.condition, context)
                 resolveScope(body = conditionalBranch.body, context = context)

@@ -144,7 +144,7 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         }
 
         override fun visit(node: JavascriptFunctionExpressionNode): String {
-            return serialiseFunction(name = null, node = node, indentation = indentation)
+            return "(" + serialiseFunction(name = null, node = node, indentation = indentation) + ")"
         }
     })
 }

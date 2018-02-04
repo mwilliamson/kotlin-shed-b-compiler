@@ -1,13 +1,14 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.*
 
 class TypeCheckIfStatementTests {
     @Test
@@ -29,6 +30,30 @@ class TypeCheckIfStatementTests {
         assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(elseBranch = listOf(badStatement)) }
     }
 
+    @Test
+    fun typeOfIfNodeIsUnionOfBranchTypes() {
+        val tag = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+        val reference1 = variableReference("member1")
+        val reference2 = variableReference("member2")
+
+        val expression = ifExpression(
+            trueBranch = listOf(expressionStatement(reference1, isReturn = true)),
+            elseBranch = listOf(expressionStatement(reference2, isReturn = true))
+        )
+        val context = typeContext(
+            referenceTypes = mapOf(
+                reference1 to member1,
+                reference2 to member2
+            )
+        )
+        assertThat(inferType(expression, context), isUnionType(members = isSequence(
+            cast(equalTo(member1)),
+            cast(equalTo(member2))
+        )))
+    }
+
     // TODO: Test that refined type is only in true branch (not false branch, nor following statements)
     @Test
     fun whenConditionIsIsOperationThenTypeIsRefinedInTrueBranch() {
@@ -39,7 +64,8 @@ class TypeCheckIfStatementTests {
         val statement = ifStatement(
             condition = isOperation(variableReference, intType),
             trueBranch = listOf(
-                returns(variableReference)
+                expressionStatement(variableReference),
+                expressionStatement(literalUnit())
             )
         )
 

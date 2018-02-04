@@ -100,12 +100,12 @@ class TypeCheckFunctionTests {
     }
 
     @Test
-    fun returnStatementsInBodyMustReturnCorrectType() {
+    fun finalStatementInBodyMustReturnCorrectType() {
         val intType = staticReference("Int")
         val typeContext = typeContext(referenceTypes = mapOf(intType to MetaType(IntType)))
         val node = function(
             returnType = intType,
-            body = listOf(returns(literalBool(true)))
+            body = listOf(expressionStatement(literalBool(true), isReturn = true))
         )
         typeCheck(node, typeContext)
 
@@ -123,7 +123,7 @@ class TypeCheckFunctionTests {
         val node = function(
             arguments = listOf(argument),
             returnType = intType,
-            body = listOf(returns(argumentReference))
+            body = listOf(expressionStatement(argumentReference, isReturn = true))
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(intType to MetaType(IntType)),
@@ -143,7 +143,7 @@ class TypeCheckFunctionTests {
                 argument(name = "y", type = boolType)
             ),
             returnType = intType,
-            body = listOf(returns(literalInt()))
+            body = listOf(expressionStatement(literalInt()))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             intType to MetaType(IntType),
@@ -341,7 +341,7 @@ class TypeCheckFunctionTests {
     fun whenExplicitReturnTypeIsMissingAndReturnTypeCannotBeInferredThenErrorIsThrown() {
         val node = functionExpression(
             returnType = null,
-            body = listOf(returns(literalBool()))
+            body = listOf(expressionStatement(literalBool()))
         )
         val typeContext = typeContext()
         assertThat(
@@ -357,10 +357,10 @@ class TypeCheckFunctionTests {
                 return "return value source"
             }
         }
-        val returnValue = literalBool(source = source)
+        val returnValue = literalBool()
         val node = functionExpression(
             returnType = null,
-            body = listOf(returns(returnValue))
+            body = listOf(expressionStatement(returnValue, isReturn = true, source = source))
         )
         val functionReference = variableReference("f")
         val call = call(

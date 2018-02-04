@@ -11,8 +11,8 @@ fun main() !Io -> Unit {
 
 fun optionToString(option: options.Option[Int]) -> String {
     if (option is options.Some[Int]) {
-        return "Some " + intToString(option.value);
+        "Some " + intToString(option.value)
     } else {
-        return "None";
+        "None"
     }
 }

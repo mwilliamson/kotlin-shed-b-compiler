@@ -1,54 +1,54 @@
 import .options;
 
 fun anything() -> Matcher[Any] {
-    return Matcher(
+    Matcher(
         description = "anything",
         match = fun (x: Any) => success,
-    );
+    )
 }
 
 fun isInteger(value: Int) -> Matcher[Int] {
-    return describingMatcher(
+    describingMatcher(
         value,
         fun (integer: Int) => intToString(integer),
         fun (actual: Int) => actual == value,
-    );
+    )
 }
 
 fun isString(value: String) -> Matcher[String] {
-    return describingMatcher(
+    describingMatcher(
         value,
         fun (string: String) => string,
         fun (actual: String) => actual == value,
-    );
+    )
 }
 
 fun isNone() -> Matcher[options.Option[Any]] {
     // TODO: remove need for explicit type arguments
-    return Matcher[options.Option[Any]](
+    Matcher[options.Option[Any]](
         description = "none",
         match = fun (actual: options.Option[Any]) -> Result {
             if (actual is options.None) {
-                return success;
+                success
             } else {
-                return failure("was some()");
+                failure("was some()")
             }
         }
-    );
+    )
 }
 
 fun isSome[T](matcher: Matcher[T]) -> Matcher[options.Option[T]] {
     // TODO: remove need for explicit type arguments
-    return Matcher[options.Option[T]](
+    Matcher[options.Option[T]](
         description = "option with value " + matcher.description,
         match = fun (actual: options.Option[T]) -> Result {
             if (actual is options.Some[T]) {
-                return matcher.match(actual.value);
+                matcher.match(actual.value)
             } else {
-                return failure("was none");
+                failure("was none")
             }
         }
-    );
+    )
 }
 
 fun describingMatcher[T](
@@ -56,16 +56,16 @@ fun describingMatcher[T](
     toString: (T) -> String,
     match: (T) -> Bool
 ) -> Matcher[T] {
-    return Matcher(
+    Matcher(
         description = toString(value),
         match = fun (actual: T) -> Result {
             if (match(actual)) {
-                return success;
+                success
             } else {
-                return failure("was " + toString(actual));
+                failure("was " + toString(actual))
             }
         },
-    );
+    )
 }
 
 shape Matcher[-T] {
@@ -80,5 +80,5 @@ shape Failure memberOf Result {
 }
 val success = Success();
 fun failure(message: String) -> Failure {
-    return Failure(message=message);
+    Failure(message=message)
 }

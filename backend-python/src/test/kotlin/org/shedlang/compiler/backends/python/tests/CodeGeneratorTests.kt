@@ -102,7 +102,7 @@ class CodeGeneratorTests {
         val shed = function(
             name = "f",
             arguments = listOf(argument("x"), argument("y")),
-            body = listOf(returns(literalInt(42)))
+            body = listOf(expressionStatement(literalInt(42)))
         )
 
         val node = generateCode(shed).single()
@@ -110,7 +110,7 @@ class CodeGeneratorTests {
         assertThat(node, isPythonFunction(
             name = equalTo("f"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isPythonReturn(isPythonIntegerLiteral(42)))
+            body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
         ))
     }
 
@@ -130,10 +130,10 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionExpressionWithSingleReturnStatementGeneratesLambda() {
+    fun functionExpressionWithSingleExpressionStatementGeneratesLambda() {
         val shed = functionExpression(
             arguments = listOf(argument("x"), argument("y")),
-            body = listOf(returns(literalInt(42)))
+            body = listOf(expressionStatement(literalInt(42)))
         )
 
         val node = generateCode(shed)
@@ -148,109 +148,113 @@ class CodeGeneratorTests {
     fun functionExpressionWithNonEmptyBodyThatIsntSingleReturnGeneratesAuxiliaryFunction() {
         val shed = functionExpression(
             arguments = listOf(argument("x"), argument("y")),
-            body = listOf(expressionStatement(literalInt(42)))
+            body = listOf(valStatement("z", literalInt(42)))
         )
 
         val node = generateCode(shed)
         val auxiliaryFunction = node.functions.single()
         assertThat(auxiliaryFunction, isPythonFunction(
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
+            body = isSequence(isPythonAssignment(isPythonVariableReference("z"), isPythonIntegerLiteral(42)))
         ))
 
         assertThat(node.value, isPythonVariableReference(auxiliaryFunction.name))
     }
 
     @Test
-    fun expressionStatementGeneratesExpressionStatement() {
-        val shed = expressionStatement(literalInt(42))
+    fun nonReturningExpressionStatementGeneratesExpressionStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = false)
         val node = generateCode(shed)
         assertThat(node, isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42))))
     }
 
     @Test
-    fun returnStatementGeneratesReturnStatement() {
-        val shed = returns(literalInt(42))
+    fun returningExpressionStatementGeneratesReturnStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = true)
         val node = generateCode(shed)
         assertThat(node, isSequence(isPythonReturn(isPythonIntegerLiteral(42))))
     }
 
     @Test
-    fun ifStatementGeneratesIfStatement() {
-        val shed = ifStatement(
-            literalInt(42),
-            listOf(returns(literalInt(0))),
-            listOf(returns(literalInt(1)))
+    fun ifExpressionGeneratesCallToFunctionContainingIf() {
+        val shed = ifExpression(
+            conditionalBranches = listOf(
+                conditionalBranch(
+                    condition = literalInt(42),
+                    body = listOf(expressionStatement(literalInt(0)))
+                )
+            ),
+            elseBranch = listOf(expressionStatement(literalInt(1)))
         )
 
-        val node = generateCode(shed)
+        val generatedExpression = generateCode(shed)
 
-        assertThat(node, isSequence(
-            isPythonIfStatement(
-                conditionalBranches = isSequence(
-                    isPythonConditionalBranch(
-                        condition = isPythonIntegerLiteral(42),
-                        body = isSequence(
-                            isPythonReturn(isPythonIntegerLiteral(0))
+        val function = generatedExpression.functions.single()
+        assertThat(function, isPythonFunction(
+            arguments = isSequence(),
+            body = isSequence(
+                isPythonIfStatement(
+                    conditionalBranches = isSequence(
+                        isPythonConditionalBranch(
+                            condition = isPythonIntegerLiteral(42),
+                            body = isSequence(
+                                isPythonExpressionStatement(isPythonIntegerLiteral(0))
+                            )
                         )
+                    ),
+                    elseBranch = isSequence(
+                        isPythonExpressionStatement(isPythonIntegerLiteral(1))
                     )
-                ),
-                elseBranch = isSequence(
-                    isPythonReturn(isPythonIntegerLiteral(1))
                 )
             )
+        ))
+        assertThat(generatedExpression.value, isPythonFunctionCall(
+            function = isPythonVariableReference(name = function.name),
+            arguments = isSequence(),
+            keywordArguments = isSequence()
         ))
     }
 
     @Test
     fun whenSeparateScopesHaveSameNameInSamePythonScopeThenVariablesAreRenamed() {
-        val outerVal = valStatement(name = "x")
         val trueVal = valStatement(name = "x")
         val falseVal = valStatement(name = "x")
 
-        val outerReference = variableReference("x")
         val trueReference = variableReference("x")
         val falseReference = variableReference("x")
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
-            outerReference to outerVal,
             trueReference to trueVal,
             falseReference to falseVal
         )
 
-        val shed = listOf(
-            outerVal,
-            ifStatement(
-                literalBool(),
-                listOf(
-                    trueVal,
-                    returns(outerReference),
-                    returns(trueReference)
-                ),
-                listOf(
-                    falseVal,
-                    returns(falseReference)
-                )
+        val shed = ifExpression(
+            literalBool(),
+            listOf(
+                trueVal,
+                expressionStatement(trueReference)
+            ),
+            listOf(
+                falseVal,
+                expressionStatement(falseReference)
             )
         )
 
-        val nodes = generateCode(shed, context(references))
+        val generatedCode = generateCode(shed, context(references))
 
-        assertThat(nodes, isSequence(
-            isPythonAssignment(target = isPythonVariableReference("x")),
+        assertThat(generatedCode.functions.single().body, isSequence(
             isPythonIfStatement(
                 conditionalBranches = isSequence(
                     isPythonConditionalBranch(
                         body = isSequence(
-                            isPythonAssignment(target = isPythonVariableReference("x_1")),
-                            isPythonReturn(isPythonVariableReference("x")),
-                            isPythonReturn(isPythonVariableReference("x_1"))
+                            isPythonAssignment(target = isPythonVariableReference("x")),
+                            isPythonExpressionStatement(isPythonVariableReference("x"))
                         )
                     )
                 ),
                 elseBranch = isSequence(
-                    isPythonAssignment(target = isPythonVariableReference("x_2")),
-                    isPythonReturn(isPythonVariableReference("x_2"))
+                    isPythonAssignment(target = isPythonVariableReference("x_1")),
+                    isPythonExpressionStatement(isPythonVariableReference("x_1"))
                 )
             )
         ))

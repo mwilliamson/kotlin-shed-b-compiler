@@ -8,12 +8,12 @@ import org.shedlang.compiler.types.Variance
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
-internal fun isIfStatement(
+internal fun isIf(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
     elseBranch: Matcher<List<StatementNode>>
-): Matcher<StatementNode> = cast(allOf(
-    has(IfStatementNode::conditionalBranches, conditionalBranches),
-    has(IfStatementNode::elseBranch, elseBranch)
+): Matcher<ExpressionNode> = cast(allOf(
+    has(IfNode::conditionalBranches, conditionalBranches),
+    has(IfNode::elseBranch, elseBranch)
 ))
 
 internal fun isConditionalBranch(
@@ -24,16 +24,14 @@ internal fun isConditionalBranch(
     has(ConditionalBranchNode::body, body)
 ))
 
-inline internal fun <reified T: ExpressionNode> isReturn(
-    expression: Matcher<T>
+internal fun isExpressionStatement(
+    expression: Matcher<ExpressionNode> = anything,
+    isReturn: Matcher<Boolean> = anything
 ): Matcher<StatementNode> {
-    return cast(has(ReturnNode::expression, cast(expression)))
-}
-
-inline internal fun <reified T: ExpressionNode> isExpressionStatement(
-    expression: Matcher<T>
-): Matcher<StatementNode> {
-    return cast(has(ExpressionStatementNode::expression, cast(expression)))
+    return cast(allOf(
+        has(ExpressionStatementNode::expression, expression),
+        has(ExpressionStatementNode::isReturn, isReturn)
+    ))
 }
 
 inline internal fun <reified T: ExpressionNode> isVal(
@@ -191,3 +189,5 @@ internal fun isFunctionType(
 
 internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
     = cast(has(IntegerLiteralNode::value, value))
+
+internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))

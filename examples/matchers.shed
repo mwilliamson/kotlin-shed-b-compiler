@@ -12,25 +12,25 @@ fun main() !Io -> Unit {
 fun assertThat[T](value: T, matcher: Matcher[T]) -> Result {
     val result = matcher.match(value);
     if (result is Failure) {
-        return Failure(message = "expected " + matcher.description + "\nbut " + result.message);
+        Failure(message = "expected " + matcher.description + "\nbut " + result.message)
     } else {
-        return result;
+        result
     }
 }
 
 fun anything() -> Matcher[Any] {
-    return Matcher(
+    Matcher(
         description = "anything",
         match = fun (x: Any) => success,
-    );
+    )
 }
 
 fun isString(value: String) -> Matcher[String] {
-    return describingMatcher(
+    describingMatcher(
         value,
         fun (string: String) => string,
         fun (actual: String) => actual == value,
-    );
+    )
 }
 
 fun describingMatcher[T](
@@ -38,16 +38,16 @@ fun describingMatcher[T](
     toString: (T) -> String,
     match: (T) -> Bool
 ) -> Matcher[T] {
-    return Matcher(
+    Matcher(
         description = toString(value),
         match = fun (actual: T) -> Result {
             if (match(actual)) {
-                return success;
+                success
             } else {
-                return failure("was " + toString(actual));
+                failure("was " + toString(actual))
             }
         },
-    );
+    )
 }
 
 shape Matcher[-T] {
@@ -62,5 +62,5 @@ shape Failure memberOf Result {
 }
 val success = Success();
 fun failure(message: String) -> Failure {
-    return Failure(message=message);
+    Failure(message=message)
 }

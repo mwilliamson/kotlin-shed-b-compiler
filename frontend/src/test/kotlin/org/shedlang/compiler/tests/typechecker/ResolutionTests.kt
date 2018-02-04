@@ -74,7 +74,7 @@ class ResolutionTests {
         val node = function(
             arguments = listOf(argument),
             returnType = staticReference("Int"),
-            body = listOf(returns(reference))
+            body = listOf(expressionStatement(reference))
         )
 
         val references = resolve(node, globals = mapOf("Int" to -1))
@@ -89,7 +89,7 @@ class ResolutionTests {
         val node = functionExpression(
             arguments = listOf(argument),
             returnType = staticReference("Int"),
-            body = listOf(returns(reference))
+            body = listOf(expressionStatement(reference))
         )
 
         val references = resolve(node, globals = mapOf("Int" to -1))
@@ -104,7 +104,7 @@ class ResolutionTests {
         val node = function(
             arguments = listOf(argument),
             returnType = staticReference("Int"),
-            body = listOf(returns(reference))
+            body = listOf(expressionStatement(reference))
         )
 
         val references = resolve(node, globals = mapOf(
@@ -174,7 +174,7 @@ class ResolutionTests {
             returnType = staticReference("Int"),
             body = listOf(
                 valStatement,
-                returns(reference)
+                expressionStatement(reference)
             )
         )
 
@@ -237,7 +237,7 @@ class ResolutionTests {
         val function = function(
             name = "f",
             returnType = staticReference("Int"),
-            body = listOf(returns(variableReference("x")))
+            body = listOf(expressionStatement(variableReference("x")))
         )
 
         val node = module(body = listOf(

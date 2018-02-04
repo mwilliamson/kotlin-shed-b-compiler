@@ -52,6 +52,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             evalType(node.type, context)
 
             // TODO: for this to be valid, the type must have a tag value
+            // TODO: given generics are erased, when node.type is generic we
+            // should make sure no other instantiations of that generic type
+            // are possible e.g. if the expression has type Cons[T] | Nil,
+            // then checking the type to be Cons[U] is valid iff T <: U
 
             return BoolType
         }
@@ -82,6 +86,28 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
 
         override fun visit(node: FunctionExpressionNode): Type {
             return typeCheckFunction(node, context, hint = hint)
+        }
+
+        override fun visit(node: IfNode): Type {
+            val conditionalBranchTypes = node.conditionalBranches.map { branch ->
+                verifyType(branch.condition, context, expected = BoolType)
+
+                val trueContext = context.enterScope()
+
+                if (
+                    branch.condition is IsNode &&
+                    branch.condition.expression is VariableReferenceNode
+                ) {
+                    val conditionType = evalType(branch.condition.type, context)
+                    trueContext.addType(branch.condition.expression, conditionType)
+                }
+
+                typeCheck(branch.body, trueContext)
+            }
+            val elseBranchType = typeCheck(node.elseBranch, context)
+            val branchTypes = conditionalBranchTypes + listOf(elseBranchType)
+
+            return branchTypes.reduce(::union)
         }
     })
 }

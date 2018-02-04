@@ -236,7 +236,7 @@ sealed class FunctionBody {
             get() = listOf(expression)
 
         override val statements: List<StatementNode>
-            get() = listOf(ReturnNode(expression, source = expression.source))
+            get() = listOf(ExpressionStatementNode(expression, isReturn = true, source = expression.source))
     }
 }
 
@@ -329,12 +329,11 @@ interface StatementNode : Node {
         fun visit(node: BadStatementNode): T {
             throw UnsupportedOperationException("not implemented")
         }
-        fun visit(node: ReturnNode): T
-        fun visit(node: IfStatementNode): T
         fun visit(node: ExpressionStatementNode): T
         fun visit(node: ValNode): T
     }
 
+    val isReturn: Boolean
     fun <T> accept(visitor: StatementNode.Visitor<T>): T
 }
 
@@ -345,36 +344,29 @@ data class BadStatementNode(
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
-        return visitor.visit(this)
-    }
-}
-
-data class ReturnNode(
-    val expression: ExpressionNode,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-) : StatementNode {
-    override val children: List<Node>
-        get() = listOf(expression)
+    override val isReturn: Boolean
+        get() = false
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-data class IfStatementNode(
+data class IfNode(
     val conditionalBranches: List<ConditionalBranchNode>,
     val elseBranch: List<StatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : StatementNode {
+) : ExpressionNode {
     override val children: List<Node>
         get() = conditionalBranches + elseBranch
 
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    val branchBodies: Iterable<List<StatementNode>>
+        get() = conditionalBranches.map { branch -> branch.body } + listOf(elseBranch)
 }
 
 data class ConditionalBranchNode(
@@ -389,6 +381,7 @@ data class ConditionalBranchNode(
 
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
+    override val isReturn: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StatementNode {
@@ -408,6 +401,9 @@ data class ValNode(
 ): VariableBindingNode, StatementNode, ModuleStatementNode {
     override val children: List<Node>
         get() = listOf(expression)
+
+    override val isReturn: Boolean
+        get() = false
 
     override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -429,6 +425,7 @@ interface ExpressionNode : Node {
         fun visit(node: CallNode): T
         fun visit(node: FieldAccessNode): T
         fun visit(node: FunctionExpressionNode): T
+        fun visit(node: IfNode): T
     }
 
     fun <T> accept(visitor: ExpressionNode.Visitor<T>): T

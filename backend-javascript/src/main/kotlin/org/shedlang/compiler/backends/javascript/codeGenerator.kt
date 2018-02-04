@@ -99,7 +99,8 @@ private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionDecla
 
 private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
     val arguments = node.arguments.map(ArgumentNode::name)
-    val body = node.body.statements.map(::generateCode)
+    val statements = node.body.statements
+    val body = generateCode(statements)
 
     return object: JavascriptFunctionNode {
         override val arguments = arguments
@@ -107,28 +108,20 @@ private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
     }
 }
 
+private fun generateCode(statements: List<StatementNode>): List<JavascriptStatementNode> {
+    return statements.map(::generateCode)
+}
+
 internal fun generateCode(node: StatementNode): JavascriptStatementNode {
     return node.accept(object : StatementNode.Visitor<JavascriptStatementNode> {
-        override fun visit(node: ReturnNode): JavascriptStatementNode {
-            return JavascriptReturnNode(generateCode(node.expression), NodeSource(node))
-        }
-
-        override fun visit(node: IfStatementNode): JavascriptStatementNode {
-            return JavascriptIfStatementNode(
-                conditionalBranches = node.conditionalBranches.map { branch ->
-                    JavascriptConditionalBranchNode(
-                        condition = generateCode(branch.condition),
-                        body = branch.body.map(::generateCode),
-                        source = NodeSource(branch)
-                    )
-                },
-                elseBranch = node.elseBranch.map(::generateCode),
-                source = NodeSource(node)
-            )
-        }
-
         override fun visit(node: ExpressionStatementNode): JavascriptStatementNode {
-            return JavascriptExpressionStatementNode(generateCode(node.expression), NodeSource(node))
+            val expression = generateCode(node.expression)
+            val source = NodeSource(node)
+            return if (node.isReturn) {
+                JavascriptReturnNode(expression, source)
+            } else {
+                JavascriptExpressionStatementNode(expression, source)
+            }
         }
 
         override fun visit(node: ValNode): JavascriptStatementNode {
@@ -224,6 +217,34 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                 arguments = javascriptFunction.arguments,
                 body = javascriptFunction.body,
                 source = node.source
+            )
+        }
+
+        override fun visit(node: IfNode): JavascriptExpressionNode {
+            val source = NodeSource(node)
+
+            val function = JavascriptFunctionExpressionNode(
+                arguments = listOf(),
+                body = listOf(
+                    JavascriptIfStatementNode(
+                        conditionalBranches = node.conditionalBranches.map { branch ->
+                            JavascriptConditionalBranchNode(
+                                condition = generateCode(branch.condition),
+                                body = generateCode(branch.body),
+                                source = NodeSource(branch)
+                            )
+                        },
+                        elseBranch = generateCode(node.elseBranch),
+                        source = NodeSource(node)
+                    )
+                ),
+                source = source
+            )
+
+            return JavascriptFunctionCallNode(
+                function = function,
+                arguments = listOf(),
+                source = source
             )
         }
     })

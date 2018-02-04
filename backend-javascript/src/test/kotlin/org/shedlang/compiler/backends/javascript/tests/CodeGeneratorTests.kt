@@ -112,7 +112,7 @@ class CodeGeneratorTests {
         val shed = function(
             name = "f",
             arguments = listOf(argument("x"), argument("y")),
-            body = listOf(returns(literalInt(42)))
+            body = listOf(expressionStatement(literalInt(42)))
         )
 
         val node = generateCode(shed)
@@ -120,7 +120,7 @@ class CodeGeneratorTests {
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))
+            body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
         ))
     }
 
@@ -128,20 +128,20 @@ class CodeGeneratorTests {
     fun functionExpressionGeneratesFunctionExpression() {
         val shed = functionExpression(
             arguments = listOf(argument("x"), argument("y")),
-            body = listOf(returns(literalInt(42)))
+            body = listOf(expressionStatement(literalInt(42)))
         )
 
         val node = generateCode(shed)
 
         assertThat(node, isJavascriptFunctionExpression(
             arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isJavascriptReturn(isJavascriptIntegerLiteral(42)))
+            body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
         ))
     }
 
     @Test
-    fun expressionStatementGeneratesExpressionStatement() {
-        val shed = expressionStatement(literalInt(42))
+    fun nonReturningExpressionStatementGeneratesExpressionStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = false)
 
         val node = generateCode(shed)
 
@@ -152,8 +152,8 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun returnStatementGeneratesReturnStatement() {
-        val shed = returns(literalInt(42))
+    fun returningExpressionStatementGeneratesReturnStatement() {
+        val shed = expressionStatement(literalInt(42), isReturn = true)
 
         val node = generateCode(shed)
 
@@ -164,27 +164,35 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun ifStatementGeneratesIfStatement() {
-        val shed = ifStatement(
+    fun ifExpressionGeneratesImmediatelyEvaluatedIfStatement() {
+        val shed = ifExpression(
             literalInt(42),
-            listOf(returns(literalInt(0))),
-            listOf(returns(literalInt(1)))
+            listOf(expressionStatement(literalInt(0))),
+            listOf(expressionStatement(literalInt(1)))
         )
 
         val node = generateCode(shed)
 
-        assertThat(node, isJavascriptIfStatement(
-            conditionalBranches = isSequence(
-                isJavascriptConditionalBranch(
-                    condition = isJavascriptIntegerLiteral(42),
-                    body = isSequence(
-                        isJavascriptReturn(isJavascriptIntegerLiteral(0))
+        assertThat(node, isJavascriptFunctionCall(
+            function = isJavascriptFunctionExpression(
+                arguments = isSequence(),
+                body = isSequence(
+                    isJavascriptIfStatement(
+                        conditionalBranches = isSequence(
+                            isJavascriptConditionalBranch(
+                                condition = isJavascriptIntegerLiteral(42),
+                                body = isSequence(
+                                    isJavascriptExpressionStatement(isJavascriptIntegerLiteral(0))
+                                )
+                            )
+                        ),
+                        elseBranch = isSequence(
+                            isJavascriptExpressionStatement(isJavascriptIntegerLiteral(1))
+                        )
                     )
                 )
             ),
-            elseBranch = isSequence(
-                isJavascriptReturn(isJavascriptIntegerLiteral(1))
-            )
+            arguments = isSequence()
         ))
     }
 

@@ -4,5 +4,5 @@ import stdlib.tests;
 import .optionsTests;
 
 fun main() !Io -> Int {
-    return tests.runTests(optionsTests.testCases);
+    tests.runTests(optionsTests.testCases)
 }

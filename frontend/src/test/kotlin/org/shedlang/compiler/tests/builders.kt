@@ -11,22 +11,59 @@ fun ifStatement(
     condition: ExpressionNode = literalBool(true),
     trueBranch: List<StatementNode> = listOf(),
     elseBranch: List<StatementNode> = listOf()
-): IfStatementNode {
-    return IfStatementNode(
+): StatementNode {
+    return ExpressionStatementNode(
+        expression = ifExpression(
+            condition = condition,
+            trueBranch = trueBranch,
+            elseBranch = elseBranch
+        ),
+        isReturn = false,
+        source = anySource()
+    )
+}
+
+fun ifExpression(
+    condition: ExpressionNode = literalBool(true),
+    trueBranch: List<StatementNode> = listOf(),
+    elseBranch: List<StatementNode> = listOf()
+): IfNode {
+    return ifExpression(
         conditionalBranches = listOf(
-            ConditionalBranchNode(
+            conditionalBranch(
                 condition = condition,
-                body = trueBranch,
-                source = anySource()
+                body = trueBranch
             )
         ),
+        elseBranch = elseBranch
+    )
+}
+
+fun ifExpression(
+    conditionalBranches: List<ConditionalBranchNode>,
+    elseBranch: List<StatementNode> = listOf()
+): IfNode {
+    return IfNode(
+        conditionalBranches = conditionalBranches,
         elseBranch = elseBranch,
         source = anySource()
     )
 }
 
-fun expressionStatement(expression: ExpressionNode = expression())
-    = ExpressionStatementNode(expression, anySource())
+fun conditionalBranch(
+    condition: ExpressionNode,
+    body: List<StatementNode>
+) = ConditionalBranchNode(
+    condition = condition,
+    body = body,
+    source = anySource()
+)
+
+fun expressionStatement(
+    expression: ExpressionNode = expression(),
+    isReturn: Boolean = false,
+    source: Source = anySource()
+) = ExpressionStatementNode(expression, isReturn = isReturn, source = source)
 
 fun valStatement(
     name: String = "<val name>",
@@ -46,8 +83,6 @@ fun literalBool(
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
 fun variableReference(name: String) = VariableReferenceNode(name, anySource())
-fun returns(expression: ExpressionNode = expression())
-    = ReturnNode(expression, anySource())
 
 fun binaryOperation(
     operator: Operator,

@@ -11,7 +11,6 @@ fun newTypeContext(
     getModule: (ImportPath) -> ModuleType
 ): TypeContext {
     return TypeContext(
-        returnType = null,
         effect = EmptyEffect,
         nodeTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
@@ -21,7 +20,6 @@ fun newTypeContext(
 }
 
 class TypeContext(
-    val returnType: Type?,
     val effect: Effect,
     private val nodeTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
@@ -77,7 +75,6 @@ class TypeContext(
 
     fun enterFunction(returnType: Type?, effect: Effect): TypeContext {
         return TypeContext(
-            returnType = returnType,
             effect = effect,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
@@ -88,7 +85,6 @@ class TypeContext(
 
     fun enterScope(): TypeContext {
         return TypeContext(
-            returnType = returnType,
             effect = effect,
             nodeTypes = HashMap(nodeTypes),
             resolvedReferences = resolvedReferences,
@@ -228,24 +224,22 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
                     returnType = returnType,
                     effect = effect
                 )
-                typeCheck(body.nodes, bodyContext)
+                val actualReturnType = typeCheck(body.nodes, bodyContext)
+                val returnSource = (body.statements.lastOrNull() ?: function).source
+                verifyType(expected = returnType, actual = actualReturnType, source = returnSource)
             })
 
             returnType
         }
     }
 
-    val functionType = FunctionType(
+    return FunctionType(
         staticParameters = staticParameters,
         positionalArguments = argumentTypes,
         namedArguments = mapOf(),
         effect = effect,
         returns = returnType
     )
-
-    context.defer { checkReturns(function, functionType, nodeTypes = context.getNodeTypes()) }
-
-    return functionType
 }
 
 private fun evalEffects(effectNodes: List<StaticNode>, context: TypeContext): Effect {

@@ -1,5 +1,5 @@
 // exitCode: 42
 
 fun main() -> Int {
-    return 42;
+    42
 }

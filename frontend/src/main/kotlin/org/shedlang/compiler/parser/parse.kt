@@ -295,13 +295,17 @@ private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
-    val body = parseZeroOrMore(
-        parseElement = ::parseFunctionStatement,
-        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
-        tokens = tokens
-    )
+
+    val statements = mutableListOf<StatementNode>()
+    var lastStatement: StatementNode? = null
+
+    while (!(tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || (lastStatement != null && lastStatement.isReturn))) {
+        lastStatement = parseFunctionStatement(tokens)
+        statements.add(lastStatement)
+    }
+
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-    return body
+    return statements
 }
 
 private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): StaticParameterNode {
@@ -339,42 +343,34 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
     val token = tokens.peek()
     when (token.tokenType) {
-        TokenType.KEYWORD_RETURN -> return ::parseReturn.parse(tokens)
-        TokenType.KEYWORD_IF -> return ::parseIfStatement.parse(tokens)
         TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
         else -> {
-            val expressionStatement = ::tryParseExpressionStatement.parse(tokens)
-            if (expressionStatement == null) {
+            val expression = tryParseExpression(tokens)
+            if (expression == null) {
                 throw UnexpectedTokenException(
                     location = tokens.location(),
                     expected = "function statement",
                     actual = token.describe()
                 )
             } else {
-                return expressionStatement
+                val isReturn = if (expression is IfNode) {
+                    expression.branchBodies.map { body ->
+                        body.any(StatementNode::isReturn)
+                    }.toSet().single()
+                } else {
+                    !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
+                }
+                return ExpressionStatementNode(
+                    expression,
+                    isReturn = isReturn,
+                    source = expression.source
+                )
             }
         }
     }
 }
 
-private fun tryParseExpressionStatement(source: Source, tokens: TokenIterator<TokenType>) : ExpressionStatementNode? {
-    val expression = tryParseExpression(tokens)
-    if (expression == null) {
-        return null
-    } else {
-        tokens.skip(TokenType.SYMBOL_SEMICOLON)
-        return ExpressionStatementNode(expression, source)
-    }
-}
-
-private fun parseReturn(source: Source, tokens: TokenIterator<TokenType>) : ReturnNode {
-    tokens.skip(TokenType.KEYWORD_RETURN)
-    val expression = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL_SEMICOLON)
-    return ReturnNode(expression, source)
-}
-
-private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfStatementNode {
+private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfNode {
     val conditionalBranches = parseConditionalBranches(tokens, source)
 
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
@@ -383,7 +379,7 @@ private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) :
         listOf()
     }
 
-    return IfStatementNode(
+    return IfNode(
         conditionalBranches = conditionalBranches,
         elseBranch = elseBranch,
         source = source
@@ -693,6 +689,9 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             val expression = parseExpression(tokens)
             tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
             return expression
+        }
+        TokenType.KEYWORD_IF -> {
+            return ::parseIfStatement.parse(tokens)
         }
         TokenType.KEYWORD_FUN -> {
             tokens.skip()
