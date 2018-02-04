@@ -58,6 +58,7 @@ val blackCode = "\u001B[39m";
 
 fun runTests(tests: List[TestCase]) !Io -> Int {
     val results = map(runTest, tests);
+    print("\n");
     forEach(printFailure, results);
     val isSuccess = all(map(
         fun (result: TestResult) => result.error is options.None,
@@ -75,11 +76,12 @@ fun printFailure(result: TestResult) !Io -> Unit {
     if (error is options.Some[AssertionError]) {
         print("\n");
         print(redCode);
+        print("✖ ");
         print(result.name);
         print(":\n");
         print(error.value.message);
         print(blackCode);
-        print("\n");
+        print("\n\n");
     }
 }
 
@@ -89,14 +91,12 @@ fun runTest(test: TestCase) !Io -> TestResult {
 
     if (error is options.Some[AssertionError]) {
         print(redCode);
-        print("✖ ");
+        print("✖");
     } else {
         print(greenCode);
-        print("✔ ");
+        print("✔");
     }
-    print(test.name);
     print(blackCode);
-    print("\n");
 
     TestResult(name = test.name, error = result.error)
 }
