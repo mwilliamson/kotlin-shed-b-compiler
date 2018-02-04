@@ -70,7 +70,7 @@ class CodeGeneratorTests {
     @Test
     fun shapeGeneratesClass() {
         val shed = shape(
-            name = "X",
+            name = "OneTwoThree",
             fields = listOf(
                 shapeField("a", staticReference("Int"))
             )
@@ -79,7 +79,7 @@ class CodeGeneratorTests {
         val node = generateCode(shed).single()
 
         assertThat(node, isPythonClass(
-            name = equalTo("X"),
+            name = equalTo("OneTwoThree"),
             body = isSequence(
                 isPythonFunction(
                     name = equalTo("__init__"),
@@ -99,9 +99,9 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionDeclarationGeneratesFunction() {
+    fun functionDeclarationGeneratesFunctionWithPythonisedName() {
         val shed = function(
-            name = "f",
+            name = "oneTwoThree",
             arguments = listOf(argument("x"), argument("y")),
             body = listOf(expressionStatement(literalInt(42)))
         )
@@ -109,7 +109,7 @@ class CodeGeneratorTests {
         val node = generateCode(shed).single()
 
         assertThat(node, isPythonFunction(
-            name = equalTo("f"),
+            name = equalTo("one_two_three"),
             arguments = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
         ))
@@ -263,14 +263,14 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun valGeneratesAssignment() {
-        val shed = valStatement(name = "x", expression = literalInt(42))
+    fun valGeneratesAssignmentWithPythonisedName() {
+        val shed = valStatement(name = "oneTwoThree", expression = literalInt(42))
 
         val node = generateCode(shed)
 
         assertThat(node, isSequence(
             isPythonAssignment(
-                target = isPythonVariableReference("x"),
+                target = isPythonVariableReference("one_two_three"),
                 expression = isPythonIntegerLiteral(42)
             )
         ))
@@ -441,42 +441,6 @@ class CodeGeneratorTests {
             receiver = isPythonVariableReference("x"),
             attributeName = equalTo("some_value")
         ))
-    }
-
-    @Test
-    fun namesHavePep8Casing() {
-        assertThat(
-            generateCode(valStatement(name = "oneTwoThree")),
-            isSequence(
-                isPythonAssignment(
-                    target = isPythonVariableReference("one_two_three")
-                )
-            )
-        )
-        assertThat(
-            generateCode(function(name = "oneTwoThree")),
-            isSequence(
-                isPythonFunction(name = equalTo("one_two_three"))
-            )
-        )
-        assertThat(
-            generateCode(shape(name = "OneTwoThree")),
-            isSequence(
-                isPythonClass(name = equalTo("OneTwoThree"))
-            )
-        )
-    }
-
-    @Test
-    fun namesThatMatchPythonKeywordsHaveUnderscoreAppended() {
-        assertThat(
-            generateCode(valStatement(name = "assert")),
-            isSequence(
-                isPythonAssignment(
-                    target = isPythonVariableReference("assert_")
-                )
-            )
-        )
     }
 
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
