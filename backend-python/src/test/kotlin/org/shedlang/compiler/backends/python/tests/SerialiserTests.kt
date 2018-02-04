@@ -30,11 +30,11 @@ class SerialiserTests {
     fun importFromSerialisation() {
         val node = pythonImportFrom(
             module = "a.b.c",
-            names = listOf("d", "e")
+            names = listOf("d" to "d", "e" to "f")
         )
         assertThat(
             serialise(node),
-            equalTo("from a.b.c import d, e\n")
+            equalTo("from a.b.c import d, e as f\n")
         )
     }
 

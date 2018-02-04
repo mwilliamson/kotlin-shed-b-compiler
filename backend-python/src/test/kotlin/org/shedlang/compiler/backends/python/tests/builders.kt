@@ -6,7 +6,7 @@ import org.shedlang.compiler.tests.anySource
 fun pythonModule(body: List<PythonStatementNode>)
     = PythonModuleNode(body = body, source = anySource())
 
-fun pythonImportFrom(module: String, names: List<String>)
+fun pythonImportFrom(module: String, names: List<Pair<String, String>>)
     = PythonImportFromNode(module = module, names = names, source = anySource())
 
 fun pythonClass(

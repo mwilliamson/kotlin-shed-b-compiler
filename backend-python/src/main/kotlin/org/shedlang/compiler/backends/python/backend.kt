@@ -63,6 +63,18 @@ private fun compileModule(module: Module, writer: Writer) {
         _print = print
         def print(value):
             _print(value, end="")
+
+        def for_each(func, elements):
+            for element in elements:
+                func(element)
+
+        _map = map
+        def map(func, elements):
+            result = []
+            for element in elements:
+                result.append(func(element))
+            return result
+
     """.trimIndent()
     val contents = stdlib + "\n" + serialise(generateCode) + "\n"
     writer.write(contents)
