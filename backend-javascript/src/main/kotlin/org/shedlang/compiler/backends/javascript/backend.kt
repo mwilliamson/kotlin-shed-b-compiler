@@ -4,24 +4,29 @@ import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.backends.Backend
 import java.io.File
-import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
         frontEndResult.modules.forEach({ module ->
-            val modulePath = modulePath(module.name)
-            val destination = target.resolve(modulePath)
-            destination.parent.toFile().mkdirs()
-            destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
-                compileModule(
-                    module = module,
-                    writer = writer,
-                    modules = frontEndResult
-                )
-            }
+            val javascriptModule = compileModule(
+                module = module,
+                modules = frontEndResult
+            )
+            writeModule(target, javascriptModule)
         })
+
+        writeModule(target, builtinModule)
+    }
+
+    private fun writeModule(target: Path, javascriptModule: JavascriptModule) {
+        val modulePath = modulePath(javascriptModule.name)
+        val destination = target.resolve(modulePath)
+        destination.parent.toFile().mkdirs()
+        destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
+            writer.write(javascriptModule.source)
+        }
     }
 
     override fun run(path: Path, module: List<String>): Int {
@@ -39,12 +44,16 @@ fun compile(frontendResult: FrontEndResult, target: Path) {
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
 
-private fun compileModule(module: Module, writer: Writer, modules: FrontEndResult) {
+private fun compileModule(module: Module, modules: FrontEndResult): JavascriptModule {
     val generateCode = generateCode(module = module, modules = modules)
-    val contents = stdlib + serialise(generateCode) + "\n"
-    writer.write(contents)
-    if (module.hasMain()) {
-        writer.write("""
+
+    // TODO: remove duplication with import code in codeGenerator
+    val builtinsPath = "./" + "../".repeat(module.name.size - 1) + "builtins"
+    val builtins = "const \$shed = require(\"$builtinsPath\");\n" + builtinNames.map { builtinName ->
+        "const ${builtinName} = \$shed.${builtinName};\n"
+    }.joinToString("")
+    val main = if (module.hasMain()) {
+        """
             if (require.main === module) {
                 (function() {
                     const exitCode = main();
@@ -53,67 +62,95 @@ private fun compileModule(module: Module, writer: Writer, modules: FrontEndResul
                     }
                 })();
             }
-        """.trimIndent())
+        """.trimIndent()
+    } else {
+        ""
     }
+    val contents = builtins + "(function() {\n" + serialise(generateCode) + main + "})();\n"
+    return JavascriptModule(
+        name = module.name,
+        source = contents
+    )
 }
 
-private val stdlib = """
-    function intToString(value) {
-        return value.toString();
-    }
+private class JavascriptModule(val name: List<String>, val source: String)
 
-    function print(value) {
-        process.stdout.write(value);
-    }
-
-    function list() {
-        return Array.prototype.slice.call(arguments);
-    }
-
-    function all(list) {
-        for (var index = 0; index < list.length; index++) {
-            if (!list[index]) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    function map(func, list) {
-        return list.map(func);
-    }
-
-    function forEach(func, list) {
-        return list.forEach(func);
-    }
-
-    function declareShape(name) {
-        const typeId = freshTypeId();
-
-        function shape(fields) {
-            if (fields === undefined) {
-                fields = {};
-            }
-            fields.${"$"}shedType = shape;
-            return fields;
+private val builtinModule = JavascriptModule(
+    name = listOf("builtins"),
+    source = """
+        function intToString(value) {
+            return value.toString();
         }
 
-        shape.typeId = typeId;
+        function print(value) {
+            process.stdout.write(value);
+        }
 
-        return shape;
-    }
+        function list() {
+            return Array.prototype.slice.call(arguments);
+        }
 
-    var nextTypeId = 1;
-    function freshTypeId() {
-        return nextTypeId++;
-    }
+        function all(list) {
+            for (var index = 0; index < list.length; index++) {
+                if (!list[index]) {
+                    return false;
+                }
+            }
+            return true;
+        }
 
-    function isType(value, type) {
-        return value != null && value.${"$"}shedType === type;
-    }
+        function map(func, list) {
+            return list.map(func);
+        }
 
-    var ${"$"}shed = {
-        declareShape: declareShape,
-        isType: isType
-    };
-""".trimIndent()
+        function forEach(func, list) {
+            return list.forEach(func);
+        }
+
+        function declareShape(name) {
+            const typeId = freshTypeId();
+
+            function shape(fields) {
+                if (fields === undefined) {
+                    fields = {};
+                }
+                fields.${"$"}shedType = shape;
+                return fields;
+            }
+
+            shape.typeId = typeId;
+
+            return shape;
+        }
+
+        var nextTypeId = 1;
+        function freshTypeId() {
+            return nextTypeId++;
+        }
+
+        function isType(value, type) {
+            return value != null && value.${"$"}shedType === type;
+        }
+
+        module.exports = {
+            declareShape: declareShape,
+            isType: isType,
+
+            all: all,
+            forEach: forEach,
+            intToString: intToString,
+            list: list,
+            map: map,
+            print: print,
+        };
+    """.trimIndent()
+)
+
+val builtinNames = listOf(
+    "all",
+    "forEach",
+    "intToString",
+    "list",
+    "map",
+    "print"
+);
