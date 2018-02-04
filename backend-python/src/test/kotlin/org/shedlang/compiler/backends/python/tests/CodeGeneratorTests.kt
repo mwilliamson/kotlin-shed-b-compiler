@@ -416,6 +416,34 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun staticFieldAccessGeneratesAttributeAccess() {
+        val declaration = argument("x")
+        val receiver = staticReference("x")
+        val shed = staticFieldAccess(receiver, "y")
+
+        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+
+        assertThat(node, isPythonAttributeAccess(
+            receiver = isPythonVariableReference("x"),
+            attributeName = equalTo("y")
+        ))
+    }
+
+    @Test
+    fun staticFieldAccessFieldNamesArePythonised() {
+        val declaration = argument("x")
+        val receiver = staticReference("x")
+        val shed = staticFieldAccess(receiver, "someValue")
+
+        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+
+        assertThat(node, isPythonAttributeAccess(
+            receiver = isPythonVariableReference("x"),
+            attributeName = equalTo("some_value")
+        ))
+    }
+
+    @Test
     fun namesHavePep8Casing() {
         assertThat(
             generateCode(valStatement(name = "oneTwoThree")),

@@ -386,7 +386,7 @@ private fun generateCode(operator: Operator): PythonOperator {
     }
 }
 
-private fun generateCode(node: StaticNode, context: CodeGenerationContext): PythonExpressionNode {
+internal fun generateCode(node: StaticNode, context: CodeGenerationContext): PythonExpressionNode {
     // TODO: test code gen for types
     return node.accept(object : StaticNode.Visitor<PythonExpressionNode> {
         override fun visit(node: StaticReferenceNode): PythonExpressionNode {
@@ -395,8 +395,11 @@ private fun generateCode(node: StaticNode, context: CodeGenerationContext): Pyth
         }
 
         override fun visit(node: StaticFieldAccessNode): PythonExpressionNode {
-            // TODO: test this
-            return PythonAttributeAccessNode(generateCode(node.receiver, context), node.fieldName, NodeSource(node))
+            return PythonAttributeAccessNode(
+                generateCode(node.receiver, context),
+                pythoniseName(node.fieldName),
+                NodeSource(node)
+            )
         }
 
         override fun visit(node: StaticApplicationNode): PythonExpressionNode {
