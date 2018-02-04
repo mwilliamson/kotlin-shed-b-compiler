@@ -55,6 +55,11 @@ private fun compileModule(module: Module, writer: Writer) {
         from __future__ import print_function
 
         int_to_string = str
+
+        _list = list
+        def list(*args):
+            return _list(args)
+
         _print = print
         def print(value):
             _print(value, end="")
