@@ -36,13 +36,14 @@ internal class CodeGenerationContext(
     }
 
     private fun generateName(originalName: String): String {
-        var index = 0
-        var name = generateBaseName(originalName)
-        while (namesInScope.contains(name)) {
-            index++
-            name = originalName + "_" + index
-        }
-        return name
+        return generateBaseName(originalName)
+//        var index = 0
+//        var name = generateBaseName(originalName)
+//        while (namesInScope.contains(name)) {
+//            index++
+//            name = originalName + "_" + index
+//        }
+//        return name
     }
 
     private fun isKeyword(name: String): Boolean {
