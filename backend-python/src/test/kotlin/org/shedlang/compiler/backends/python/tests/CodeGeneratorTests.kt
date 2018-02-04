@@ -402,6 +402,20 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun fieldAccessFieldNamesArePythonised() {
+        val declaration = argument("x")
+        val receiver = variableReference("x")
+        val shed = fieldAccess(receiver, "someValue")
+
+        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+
+        assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
+            receiver = isPythonVariableReference("x"),
+            attributeName = equalTo("some_value")
+        )))
+    }
+
+    @Test
     fun namesHavePep8Casing() {
         assertThat(
             generateCode(valStatement(name = "oneTwoThree")),

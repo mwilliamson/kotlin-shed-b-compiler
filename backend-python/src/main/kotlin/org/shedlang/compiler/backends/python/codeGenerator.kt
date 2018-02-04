@@ -36,7 +36,7 @@ internal class CodeGenerationContext(
     }
 
     private fun generateName(originalName: String): String {
-        return generateBaseName(originalName)
+        return pythoniseName(originalName)
 //        var index = 0
 //        var name = generateBaseName(originalName)
 //        while (namesInScope.contains(name)) {
@@ -45,28 +45,6 @@ internal class CodeGenerationContext(
 //        }
 //        return name
     }
-
-    private fun isKeyword(name: String): Boolean {
-        return pythonKeywords.contains(name)
-    }
-
-    private fun generateBaseName(originalName: String): String {
-        val casedName = if (originalName[0].isUpperCase()) {
-            originalName
-        } else {
-            camelCaseToSnakeCase(originalName)
-        }
-        return if (isKeyword(casedName)) {
-            casedName + "_"
-        } else {
-            casedName
-        }
-    }
-
-    private fun camelCaseToSnakeCase(name: String): String {
-        return Regex("\\p{javaUpperCase}").replace(name, { char -> "_" + char.value.toLowerCase() })
-    }
-
 }
 
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
@@ -313,7 +291,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return GeneratedExpression(
                 PythonAttributeAccessNode(
                     receiver.value,
-                    node.fieldName,
+                    pythoniseName(node.fieldName),
                     source = NodeSource(node)
                 ),
                 functions = receiver.functions
@@ -429,6 +407,27 @@ private fun generateCode(node: StaticNode, context: CodeGenerationContext): Pyth
             throw UnsupportedOperationException("not implemented")
         }
     })
+}
+
+private fun pythoniseName(originalName: String): String {
+    val casedName = if (originalName[0].isUpperCase()) {
+        originalName
+    } else {
+        camelCaseToSnakeCase(originalName)
+    }
+    return if (isKeyword(casedName)) {
+        casedName + "_"
+    } else {
+        casedName
+    }
+}
+
+private fun camelCaseToSnakeCase(name: String): String {
+    return Regex("\\p{javaUpperCase}").replace(name, { char -> "_" + char.value.toLowerCase() })
+}
+
+private fun isKeyword(name: String): Boolean {
+    return pythonKeywords.contains(name)
 }
 
 private val pythonKeywords = setOf(
