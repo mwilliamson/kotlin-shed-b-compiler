@@ -54,7 +54,7 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
 
 private fun compileModule(module: Module): PythonModule {
     val generateCode = generateCode(module.node, module.references)
-    val stdlib = """
+    val builtins = """
         from __future__ import print_function
 
         from shed.builtins import (
@@ -65,7 +65,7 @@ private fun compileModule(module: Module): PythonModule {
             map,
         )
     """.trimIndent()
-    val contents = stdlib + "\n" + serialise(generateCode) + "\n"
+    val contents = builtins + "\n" + serialise(generateCode) + "\n"
     val main = if (module.hasMain()) {
         // TODO: avoid _shed_main collision
         """
