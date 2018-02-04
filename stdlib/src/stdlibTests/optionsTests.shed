@@ -6,7 +6,7 @@ fun addOne(value: Int) -> Int {
     value + 1
 }
 
-val testCases = list(
+val testCases = tests.suite("optionsTests", list(
     tests.testCase("map(f, none) is none", fun () {
         // TODO: remove need for explicit type arguments
         tests.assertThat[options.Option[Int]](options.map(addOne, options.none), matchers.isNone())
@@ -19,5 +19,5 @@ val testCases = list(
             matchers.isSome(matchers.isInteger(43))
         )
     }),
-);
+));
 

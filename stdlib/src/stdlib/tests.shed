@@ -48,6 +48,13 @@ shape TestResult {
     error: options.Option[AssertionError],
 }
 
+fun suite(name: String, testCases: List[TestCase]) -> List[TestCase] {
+    map(
+        fun(testCase: TestCase) => TestCase(name = name + ": " + testCase.name, run = testCase.run),
+        testCases
+    )
+}
+
 fun main() -> Int {
     0
 }
