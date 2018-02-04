@@ -4,7 +4,6 @@ import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.backends.Backend
 import java.io.File
-import java.io.Writer
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
@@ -12,20 +11,24 @@ val topLevelPythonPackageName = "shed"
 
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
-        frontEndResult.modules.forEach({ module ->
-            val modulePath = module.name.joinToString(File.separator) + ".py"
-            val destination = target.resolve(topLevelPythonPackageName).resolve(modulePath)
-            val pythonPackage = destination.parent
-            pythonPackage.toFile().mkdirs()
-            addInitFiles(target, pythonPackage)
+        val pythonModules = frontEndResult.modules.map(::compileModule)
 
-            destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
-                compileModule(
-                    module = module,
-                    writer = writer
-                )
-            }
+        pythonModules.forEach({ module ->
+            writeModule(target, module)
         })
+        writeModule(target, builtinModule)
+    }
+
+    private fun writeModule(target: Path, module: PythonModule) {
+        val modulePath = module.name.joinToString(File.separator) + ".py"
+        val destination = target.resolve(modulePath)
+        val pythonPackage = destination.parent
+        pythonPackage.toFile().mkdirs()
+        addInitFiles(target, pythonPackage)
+
+        destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
+            writer.write(module.source)
+        }
     }
 
     override fun run(path: Path, module: List<String>): Int {
@@ -49,38 +52,23 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
     }
 }
 
-private fun compileModule(module: Module, writer: Writer) {
+private fun compileModule(module: Module): PythonModule {
     val generateCode = generateCode(module.node, module.references)
     val stdlib = """
         from __future__ import print_function
 
-        int_to_string = str
-
-        _list = list
-        def list(*args):
-            return _list(args)
-
-        _print = print
-        def print(value):
-            _print(value, end="")
-
-        def for_each(func, elements):
-            for element in elements:
-                func(element)
-
-        _map = map
-        def map(func, elements):
-            result = []
-            for element in elements:
-                result.append(func(element))
-            return result
-
+        from shed.builtins import (
+            int_to_string,
+            list,
+            print,
+            for_each,
+            map,
+        )
     """.trimIndent()
     val contents = stdlib + "\n" + serialise(generateCode) + "\n"
-    writer.write(contents)
-    if (module.hasMain()) {
+    val main = if (module.hasMain()) {
         // TODO: avoid _shed_main collision
-        writer.write("""
+        """
             def _shed_main():
                 import sys as sys
                 exit_code = main()
@@ -89,6 +77,42 @@ private fun compileModule(module: Module, writer: Writer) {
 
             if __name__ == "__main__":
                 _shed_main()
-        """.trimIndent())
+        """.trimIndent()
+    } else {
+        ""
     }
+    return PythonModule(
+        name = listOf(topLevelPythonPackageName) + module.name,
+        source = contents + main
+    )
 }
+
+private class PythonModule(val name: List<String>, val source: String)
+
+private val builtinModule = PythonModule(
+    name = listOf("shed", "builtins"),
+    source = """
+         from __future__ import print_function
+
+         int_to_string = str
+
+         _list = list
+         def list(*args):
+             return _list(args)
+
+         _print = print
+         def print(value):
+             _print(value, end="")
+
+         def for_each(func, elements):
+             for element in elements:
+                 func(element)
+
+         def map(func, elements):
+             result = []
+             for element in elements:
+                 result.append(func(element))
+             return result
+
+    """.trimIndent()
+)
