@@ -25,25 +25,38 @@ class TypeConstraintsTests {
 
     @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
-        val union = unionType("X", listOf(UnitType, IntType))
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
 
-        assertThat(coerce(from = UnitType, to = union), isSuccess())
-        assertThat(coerce(from = IntType, to = union), isSuccess())
+        assertThat(coerce(from = member1, to = union), isSuccess())
+        assertThat(coerce(from = member2, to = union), isSuccess())
         assertThat(coerce(from = StringType, to = union), isFailure)
     }
 
     @Test
     fun canCoerceUnionToSupersetUnion() {
-        val union = unionType("X", listOf(UnitType, IntType))
-        val supersetUnion = unionType("Y", listOf(UnitType, IntType, StringType))
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
+
+        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
+        val supersetUnion = unionType("SupersetUnion", members = listOf(member1, member2, member3), tagField = tagField)
 
         assertThat(coerce(from = union, to = supersetUnion), isSuccess())
     }
 
     @Test
     fun cannotCoerceUnionToSubsetUnion() {
-        val union = unionType("X", listOf(UnitType, IntType, StringType))
-        val subsetUnion = unionType("Y", listOf(UnitType, IntType))
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
+
+        val union = unionType("Union", members = listOf(member1, member2, member3), tagField = tagField)
+        val subsetUnion = unionType("SubsetUnion", members = listOf(member1, member2), tagField = tagField)
 
         assertThat(coerce(from = union, to = subsetUnion), isFailure)
     }
