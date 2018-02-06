@@ -320,7 +320,7 @@ fun shapeType(
 fun parametrizedUnionType(
     name: String,
     parameters: List<TypeParameter> = listOf(TypeParameter("T", variance = Variance.INVARIANT)),
-    members: List<Type> = listOf(),
+    members: List<ShapeType> = listOf(),
     tagField: TagField = TagField(name)
 ) = TypeFunction(
     type = LazyUnionType(
@@ -334,7 +334,7 @@ fun parametrizedUnionType(
 
 fun unionType(
     name: String = "Union",
-    members: List<Type> = listOf(),
+    members: List<ShapeType> = listOf(),
     tagField: TagField = TagField(name)
 ) = LazyUnionType(
     name = name,

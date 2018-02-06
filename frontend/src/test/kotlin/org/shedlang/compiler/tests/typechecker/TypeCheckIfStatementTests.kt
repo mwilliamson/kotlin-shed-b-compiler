@@ -60,25 +60,32 @@ class TypeCheckIfStatementTests {
         val argument = argument("x")
 
         val variableReference = variableReference("x")
-        val intType = staticReference("Int")
+        val receiverReference = variableReference("f")
+
+        val member1Reference = staticReference("Member1")
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
         val statement = ifStatement(
-            condition = isOperation(variableReference, intType),
+            condition = isOperation(variableReference, member1Reference),
             trueBranch = listOf(
-                expressionStatement(variableReference),
+                expressionStatement(call(receiverReference, listOf(variableReference))),
                 expressionStatement(literalUnit())
             )
         )
 
         val typeContext = typeContext(
-            returnType = IntType,
+            returnType = member1,
             referenceTypes = mapOf(
-                intType to MetaType(IntType)
+                member1Reference to MetaType(member1),
+                receiverReference to functionType(positionalArguments = listOf(member1))
             ),
             references = mapOf(
                 variableReference to argument
             ),
             types = mapOf(
-                argument to unionType("X", listOf(IntType, UnitType))
+                argument to union
             )
         )
 

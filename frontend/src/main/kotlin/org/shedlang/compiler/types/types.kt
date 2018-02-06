@@ -218,7 +218,7 @@ data class LazyShapeType(
 
 interface UnionType: Type, MayDeclareTagField {
     val name: String
-    val members: List<Type>
+    val members: List<ShapeType>
     val typeArguments: List<Type>
     override val declaredTagField: TagField
 }
@@ -226,7 +226,7 @@ interface UnionType: Type, MayDeclareTagField {
 
 data class AnonymousUnionType(
     override val name: String = "_Union" + freshAnonymousTypeId(),
-    override val members: List<Type>,
+    override val members: List<ShapeType>,
     override val declaredTagField: TagField
 ): UnionType {
     override val typeArguments: List<Type>
@@ -238,7 +238,7 @@ data class AnonymousUnionType(
 
 data class LazyUnionType(
     override val name: String,
-    private val getMembers: Lazy<List<Type>>,
+    private val getMembers: Lazy<List<ShapeType>>,
     override val declaredTagField: TagField,
     override val typeArguments: List<Type>
 ): UnionType {
@@ -249,7 +249,7 @@ data class LazyUnionType(
             appliedTypeShortDescription(name, typeArguments)
         }
 
-    override val members: List<Type> by getMembers
+    override val members: List<ShapeType> by getMembers
 }
 
 object ListConstructorType : Type {
@@ -301,11 +301,11 @@ fun union(left: Type, right: Type): Type {
         return right
     } else {
         // TODO: should be list of shape types
-        fun findMembers(type: Type): Pair<List<Type>, TagField?> {
+        fun findMembers(type: Type): Pair<List<ShapeType>, TagField?> {
             return when (type) {
                 is UnionType -> Pair(type.members, type.declaredTagField)
                 is ShapeType -> Pair(listOf(type), type.tagValue?.tagField)
-                else -> Pair(listOf(type), null)
+                else -> Pair(listOf(), null)
             }
         }
 
@@ -338,7 +338,7 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
         return LazyUnionType(
             type.name,
             lazy({
-                type.members.map({ memberType -> replaceTypes(memberType, bindings) })
+                type.members.map({ memberType -> replaceTypes(memberType, bindings) as ShapeType })
             }),
             typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
             declaredTagField = type.declaredTagField

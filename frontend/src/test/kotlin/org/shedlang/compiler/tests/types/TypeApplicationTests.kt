@@ -9,7 +9,7 @@ import org.shedlang.compiler.types.*
 
 class TypeApplicationTests {
     @Test
-    fun applyingTypeToShapeUpdatesTypeArguments() {
+    fun applyingTypeToShapeReplaceTypeParametersInTypeArguments() {
         val typeParameter1 = invariantTypeParameter("T")
         val typeParameter2 = invariantTypeParameter("U")
         val shape = parametrizedShapeType(
@@ -27,7 +27,7 @@ class TypeApplicationTests {
     }
 
     @Test
-    fun applyingTypeToShapeReplacesTypeParameters() {
+    fun applyingTypeToShapeReplacesFieldTypes() {
         val typeParameter1 = invariantTypeParameter("T")
         val typeParameter2 = invariantTypeParameter("U")
         val shape = parametrizedShapeType(
@@ -43,6 +43,30 @@ class TypeApplicationTests {
             isShapeType(fields = listOf(
                 "first" to isBoolType,
                 "second" to isIntType
+            ))
+        )
+    }
+
+    @Test
+    fun applyingTypeToShapeReplacesTypeParametersInFields() {
+        val innerShapeTypeParameter = invariantTypeParameter("T")
+        val innerShapeType = parametrizedShapeType(
+            "InnerShapeType",
+            parameters = listOf(innerShapeTypeParameter),
+            fields = mapOf("field" to innerShapeTypeParameter)
+        )
+
+        val shapeTypeParameter = invariantTypeParameter("U")
+        val shapeType = parametrizedShapeType(
+            "Shape",
+            parameters = listOf(shapeTypeParameter),
+            fields = mapOf("value" to applyType(innerShapeType, listOf(shapeTypeParameter)))
+        )
+
+        assertThat(
+            applyType(shapeType, listOf(BoolType)),
+            isShapeType(fields = listOf(
+                "value" to isEquivalentType(applyType(innerShapeType, listOf(BoolType)))
             ))
         )
     }
@@ -66,63 +90,25 @@ class TypeApplicationTests {
     }
 
     @Test
-    fun applyingTypeToUnionReplacesTypeParameters() {
-        val typeParameter1 = invariantTypeParameter("T")
-        val typeParameter2 = invariantTypeParameter("U")
-        val union = parametrizedUnionType(
-            "Either",
-            parameters = listOf(typeParameter1, typeParameter2),
-            members = listOf(typeParameter1, typeParameter2)
-        )
-        assertThat(
-            applyType(union, listOf(BoolType, IntType)),
-            isUnionType(members = isSequence(isBoolType, isIntType))
-        )
-    }
-
-    @Test
     fun applyingTypeToUnionReplacesTypeParametersInMembers() {
         val shapeTypeParameter = invariantTypeParameter("U")
         val shapeType = parametrizedShapeType(
             "Shape",
-            listOf(shapeTypeParameter)
+            listOf(shapeTypeParameter),
+            fields = mapOf("value" to shapeTypeParameter)
         )
 
         val unionTypeParameter = invariantTypeParameter("T")
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
-            members = listOf(applyType(shapeType, listOf(unionTypeParameter)))
+            members = listOf(applyType(shapeType, listOf(unionTypeParameter)) as ShapeType)
         )
 
         assertThat(
             applyType(union, listOf(BoolType)),
             isUnionType(members = isSequence(
                 isEquivalentType(applyType(shapeType, listOf(BoolType)))
-            ))
-        )
-    }
-
-    @Test
-    fun applyingTypeToShapeReplacesTypeParametersInFields() {
-        val unionTypeParameter = invariantTypeParameter("T")
-        val union = parametrizedUnionType(
-            "Union",
-            parameters = listOf(unionTypeParameter),
-            members = listOf(unionTypeParameter)
-        )
-
-        val shapeTypeParameter = invariantTypeParameter("U")
-        val shapeType = parametrizedShapeType(
-            "Shape",
-            parameters = listOf(shapeTypeParameter),
-            fields = mapOf("value" to applyType(union, listOf(shapeTypeParameter)))
-        )
-
-        assertThat(
-            applyType(shapeType, listOf(BoolType)),
-            isShapeType(fields = listOf(
-                "value" to isEquivalentType(applyType(union, listOf(BoolType)))
             ))
         )
     }

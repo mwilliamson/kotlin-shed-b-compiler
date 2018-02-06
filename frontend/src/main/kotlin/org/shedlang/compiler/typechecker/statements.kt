@@ -91,7 +91,17 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     // TODO: check members conform to supertype
 
-    val members = lazy({ node.members.map({ member -> evalType(member, context) }) })
+    val members = lazy({
+        node.members.map({ member ->
+            val memberType = evalType(member, context)
+            if (memberType is ShapeType) {
+                memberType
+            } else {
+                // TODO: test this, throw a sensible exception
+                throw UnsupportedOperationException()
+            }
+        })
+    })
     val tag = generateTag(node)
     val unionType = LazyUnionType(
         name = node.name,

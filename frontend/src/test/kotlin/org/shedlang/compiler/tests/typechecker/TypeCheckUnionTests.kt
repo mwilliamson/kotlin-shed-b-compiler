@@ -5,31 +5,37 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.TagField
+import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.invariantTypeParameter
 
 class TypeCheckUnionTests {
     @Test
     fun unionDeclaresType() {
-        val intType = staticReference("Int")
-        val boolType = staticReference("Bool")
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val member1Reference = staticReference("Member1")
+        val member2Reference = staticReference("Member2")
         val node = union("X", listOf(
-            intType,
-            boolType
+            member1Reference,
+            member2Reference
         ))
 
+
         val typeContext = typeContext(referenceTypes = mapOf(
-            intType to MetaType(IntType),
-            boolType to MetaType(BoolType)
+            member1Reference to MetaType(member1),
+            member2Reference to MetaType(member2)
         ))
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             name = equalTo("X"),
-            members = isSequence(isIntType, isBoolType)
+            members = isSequence(isType(member1), isType(member2))
         )))
     }
 
@@ -37,21 +43,29 @@ class TypeCheckUnionTests {
     fun unionWithTypeParametersDeclaresTypeFunction() {
         val typeParameterDeclaration = typeParameter("T")
         val typeParameterReference = staticReference("T")
+
+        val shapeTypeTypeParameter = invariantTypeParameter("U")
+        val shapeType = parametrizedShapeType("ParametrizedShapeType", parameters = listOf(shapeTypeTypeParameter))
+        val shapeTypeReference = staticReference("ParametrizedShapeType")
+
         val node = union(
-            "X",
+            "Union",
             typeParameters = listOf(typeParameterDeclaration),
-            members = listOf(typeParameterReference)
+            members = listOf(staticApplication(shapeTypeReference, listOf(typeParameterReference)))
         )
 
         val typeContext = typeContext(
-            references = mapOf(typeParameterReference to typeParameterDeclaration)
+            references = mapOf(typeParameterReference to typeParameterDeclaration),
+            referenceTypes = mapOf(shapeTypeReference to MetaType(shapeType))
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
             parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
             type = isUnionType(
-                name = equalTo("X"),
-                members = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant))
+                name = equalTo("Union"),
+                members = isSequence(
+                    isShapeType(typeArguments = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)))
+                )
             )
         )))
     }
