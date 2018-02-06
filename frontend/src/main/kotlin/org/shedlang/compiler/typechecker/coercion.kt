@@ -72,6 +72,30 @@ internal class TypeConstraintSolver(
             return true
         }
 
+        if (to is TypeParameter && to in parameters) {
+            val boundType = typeBindings[to]
+            if (boundType == null) {
+                typeBindings[to] = from
+                return true
+            } else if (to in closed) {
+                return coerce(from = from, to = boundType)
+            } else {
+                typeBindings[to] = union(boundType, from)
+                return true
+            }
+        }
+
+        if (from is TypeParameter && from in parameters) {
+            val boundType = typeBindings[from]
+            if (boundType == null) {
+                typeBindings[from] = to
+                closed.add(from)
+                return true
+            } else {
+                return coerce(from = boundType, to = to)
+            }
+        }
+
         // TODO: deal with type parameters
         if (from is UnionType) {
             return from.members.all({ member -> coerce(from = member, to = to) })
@@ -104,30 +128,6 @@ internal class TypeConstraintSolver(
                     Variance.CONTRAVARIANT -> coerce(from = toArg, to = fromArg)
                 }}
             ).all()
-        }
-
-        if (to is TypeParameter && to in parameters) {
-            val boundType = typeBindings[to]
-            if (boundType == null) {
-                typeBindings[to] = from
-                return true
-            } else if (to in closed) {
-                return coerce(from = from, to = boundType)
-            } else {
-                typeBindings[to] = union(boundType, from)
-                return true
-            }
-        }
-
-        if (from is TypeParameter && from in parameters) {
-            val boundType = typeBindings[from]
-            if (boundType == null) {
-                typeBindings[from] = to
-                closed.add(from)
-                return true
-            } else {
-                return coerce(from = boundType, to = to)
-            }
         }
 
         return false

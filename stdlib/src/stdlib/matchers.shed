@@ -24,8 +24,7 @@ fun isString(value: String) -> Matcher[String] {
 }
 
 fun isNone() -> Matcher[options.Option[Any]] {
-    // TODO: remove need for explicit type arguments
-    Matcher[options.Option[Any]](
+    Matcher(
         description = "none",
         match = fun (actual: options.Option[Any]) -> Result {
             if (actual is options.None) {
@@ -38,8 +37,7 @@ fun isNone() -> Matcher[options.Option[Any]] {
 }
 
 fun isSome[T](matcher: Matcher[T]) -> Matcher[options.Option[T]] {
-    // TODO: remove need for explicit type arguments
-    Matcher[options.Option[T]](
+    Matcher(
         description = "option with value " + matcher.description,
         match = fun (actual: options.Option[T]) -> Result {
             if (actual is options.Some[T]) {

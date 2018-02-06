@@ -141,6 +141,43 @@ class TypeConstraintsTests {
     }
 
     @Test
+    fun whenUnionIsCoercedToTypeParameterThenTypeParameterIsBoundToUnion() {
+        val typeParameter = invariantTypeParameter("T")
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
+
+        val subType = functionType(positionalArguments = listOf(union))
+        val superType = functionType(positionalArguments = listOf(typeParameter))
+
+        assertThat(
+            coerce(
+                listOf(subType to superType),
+                parameters = setOf(typeParameter)
+            ),
+            isSuccess(typeParameter to union)
+        )
+    }
+
+    @Test
+    fun whenTypeParameterIsBoundToUnionThenTypeParameterCanBeCoercedToUnion() {
+        val typeParameter = invariantTypeParameter("T")
+        val tagField = TagField("Tag")
+        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
+        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
+        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
+
+        assertThat(
+            coerce(
+                listOf(union to typeParameter, typeParameter to union),
+                parameters = setOf(typeParameter)
+            ),
+            isSuccess(typeParameter to union)
+        )
+    }
+
+    @Test
     fun whenTypeParameterIsCoercedToTypeThanCanCoerceTypeParameterToSameType() {
         val typeParameter = invariantTypeParameter("T")
         assertThat(
