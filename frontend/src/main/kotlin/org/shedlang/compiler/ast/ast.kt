@@ -23,6 +23,13 @@ interface Source {
     fun describe(): String
 }
 
+// TODO: find and remove usages
+object UnknownSource : Source {
+    override fun describe(): String {
+        return "Unknown"
+    }
+}
+
 data class StringSource(
     val filename: String,
     val contents: String,

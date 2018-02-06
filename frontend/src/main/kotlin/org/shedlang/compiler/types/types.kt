@@ -1,6 +1,8 @@
 package org.shedlang.compiler.types
 
+import org.shedlang.compiler.ast.UnknownSource
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.canCoerce
 
 
@@ -297,22 +299,24 @@ fun union(left: Type, right: Type): Type {
         return left
     } else if (canCoerce(from = left, to = right)) {
         return right
-    } else if (left is AnonymousUnionType) {
-        // TODO: check tag of right
-        return AnonymousUnionType(members = left.members + right, declaredTagField = left.declaredTagField)
-    } else if (right is AnonymousUnionType) {
-        // TODO: check tag of left
-        return AnonymousUnionType(members = listOf(left) + right.members, declaredTagField = right.declaredTagField)
     } else {
-        // TODO: check consistent tags
-        // TODO: handle missing tags
-        if (left is ShapeType) {
-            val tagValue = left.tagValue
-            if (tagValue != null) {
-                return AnonymousUnionType(members = listOf(left, right), declaredTagField = tagValue.tagField)
+        // TODO: should be list of shape types
+        fun findMembers(type: Type): Pair<List<Type>, TagField?> {
+            return when (type) {
+                is UnionType -> Pair(type.members, type.declaredTagField)
+                is ShapeType -> Pair(listOf(type), type.tagValue?.tagField)
+                else -> Pair(listOf(type), null)
             }
         }
-        throw UnsupportedOperationException()
+
+        val (leftMembers, leftTagField) = findMembers(left)
+        val (rightMembers, rightTagField) = findMembers(right)
+
+        if (leftTagField == null || rightTagField == null || leftTagField != rightTagField) {
+            throw TypeCheckError("Cannot union types with different tag fields", source = UnknownSource)
+        } else {
+            return AnonymousUnionType(members = (leftMembers + rightMembers).distinct(), declaredTagField = leftTagField)
+        }
     }
 }
 
