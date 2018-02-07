@@ -27,6 +27,7 @@ val backend = object: Backend {
         addInitFiles(target, pythonPackage)
 
         destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
+            writer.write("# encoding=utf-8\n")
             writer.write(module.source)
         }
     }

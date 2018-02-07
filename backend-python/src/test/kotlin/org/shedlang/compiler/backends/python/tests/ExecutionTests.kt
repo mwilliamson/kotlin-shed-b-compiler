@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.python.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.backends.python.compile
@@ -19,10 +18,10 @@ class ExecutionTests {
                 temporaryDirectory().use { temporaryDirectory ->
                     compile(testProgram.load(), target = temporaryDirectory.file.toPath())
                     val result = run(
-                        listOf("python", "-m", topLevelPythonPackageName + ".main"),
+                        listOf("python", "-m", topLevelPythonPackageName + "." + testProgram.mainModule.joinToString(".")),
                         workingDirectory = temporaryDirectory.file
                     )
-                    assertThat(result, equalTo(testProgram.expectedResult))
+                    assertThat(result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
                 print(error.source.describe())

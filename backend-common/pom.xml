@@ -26,6 +26,11 @@
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.natpryce</groupId>
+            <artifactId>hamkrest</artifactId>
+            <version>1.2.3.0</version>
+        </dependency>
     </dependencies>
 
     <properties>

@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.javascript.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.backends.javascript.compile
@@ -17,12 +16,12 @@ class ExecutionTests {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     compile(testProgram.load(), target = temporaryDirectory.file.toPath())
-                    val mainJsModule = "./main.js"
+                    val mainJsModule = "./" + testProgram.mainModule.joinToString("/") + ".js"
                     val result = run(
                         listOf("node", mainJsModule),
                         workingDirectory = temporaryDirectory.file
                     )
-                    assertThat(result, equalTo(testProgram.expectedResult))
+                    assertThat(result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
                 print(error.source.describe())

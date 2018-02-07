@@ -1,5 +1,8 @@
 package org.shedlang.compiler.backends.tests
 
+import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.installDependencies
 import org.shedlang.compiler.readPackage
@@ -14,7 +17,7 @@ import java.nio.file.Paths
 data class TestProgram(
     val name: String,
     private val source: TestProgramSource,
-    val expectedResult: ExecutionResult
+    val expectedResult: Matcher<ExecutionResult>
 ) {
     fun load(): FrontEndResult {
         return when (source) {
@@ -23,24 +26,40 @@ data class TestProgram(
             }
             is TestProgramSource.Directory -> {
                 installDependencies(source.path)
-                readPackage(source.path, listOf("main"))
+                readPackage(source.path, source.mainModule)
             }
         }
     }
+
+    val mainModule: List<String>
+        get() = source.mainModule
 }
 
 sealed class TestProgramSource {
     abstract val path: Path
+    abstract val mainModule: List<String>
+    abstract val expectedResult: Matcher<ExecutionResult>?
 
-    class File(override val path: Path): TestProgramSource()
-    class Directory(override val path: Path, val mainPath: Path): TestProgramSource()
+    class File(
+        override val path: Path,
+        override val expectedResult: Matcher<ExecutionResult>?
+    ): TestProgramSource() {
+        override val mainModule: List<String>
+            get() = listOf("main")
+    }
+
+    class Directory(
+        override val path: Path,
+        override val mainModule: List<String>,
+        override val expectedResult: Matcher<ExecutionResult>?
+    ): TestProgramSource()
 }
 
 fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(source): TestProgram {
         val mainPath = when (source) {
             is TestProgramSource.File -> source.path
-            is TestProgramSource.Directory -> source.mainPath
+            is TestProgramSource.Directory -> source.path.resolve("src").resolve(source.mainModule.joinToString("/") + ".shed")
         }
         val text = mainPath.toFile().readText()
 
@@ -64,21 +83,27 @@ fun testPrograms(): List<TestProgram> {
         return TestProgram(
             name = source.path.fileName.toString(),
             source = source,
-            expectedResult = ExecutionResult(stdout = stdout, exitCode = exitCode)
+            expectedResult = source.expectedResult ?: equalTo(ExecutionResult(stdout = stdout, exitCode = exitCode))
         )
     })
 }
 
 private fun findTestFiles(): List<TestProgramSource> {
-    val exampleDirectory = findRoot().resolve("examples")
+    val root = findRoot()
+    val exampleDirectory = root.resolve("examples")
+    val stdlibTestsSource = TestProgramSource.Directory(
+        root.resolve("stdlib"),
+        listOf("stdlibTests", "main"),
+        has(ExecutionResult::exitCode, equalTo(0))
+    )
     return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramSource? {
         val file = exampleDirectory.resolve(name)
         if (file.toFile().isDirectory) {
-            return TestProgramSource.Directory(file, file.resolve("src/main.shed"))
+            return TestProgramSource.Directory(file, listOf("main"), null)
         } else {
-            return TestProgramSource.File(file)
+            return TestProgramSource.File(file, null)
         }
-    })
+    }) + listOf(stdlibTestsSource)
 }
 
 private fun findRoot(): Path {
