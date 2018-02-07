@@ -36,8 +36,6 @@ sealed class TestProgramSource {
     class Directory(override val path: Path, val mainPath: Path): TestProgramSource()
 }
 
-private val disabled = setOf("options")
-
 fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(source): TestProgram {
         val mainPath = when (source) {
@@ -74,15 +72,11 @@ fun testPrograms(): List<TestProgram> {
 private fun findTestFiles(): List<TestProgramSource> {
     val exampleDirectory = findRoot().resolve("examples")
     return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramSource? {
-        if (name in disabled) {
-            return null
+        val file = exampleDirectory.resolve(name)
+        if (file.toFile().isDirectory) {
+            return TestProgramSource.Directory(file, file.resolve("src/main.shed"))
         } else {
-            val file = exampleDirectory.resolve(name)
-            if (file.toFile().isDirectory) {
-                return TestProgramSource.Directory(file, file.resolve("src/main.shed"))
-            } else {
-                return TestProgramSource.File(file)
-            }
+            return TestProgramSource.File(file)
         }
     })
 }
