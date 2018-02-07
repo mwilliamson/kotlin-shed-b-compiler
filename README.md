@@ -2,26 +2,20 @@
 
 ## TODO
 
-Ensure that unions have distinct members.
-For instance, the following would not be allowed:
+* Use ranges for sources
 
-    union T = Int | Any
+* Add source to types
 
-since the expression
+* Produce better explanations of mismatched types
 
-    4: T
-    
-is ambiguous.
+* Change modules to UpperCamelCase
 
-However, the following is fine:
+* Support backend-specific code
 
-    union T = Int | String
+* Move lists into a module
 
-When a value could be coerced to either member type,
-the compiler requires the value to be explicitly coerced to a member type.
-For instance, to coerce `Bottom` to `T`, it must first be coerced to either `Int` or `String`.
+* Create an exception for input errors, catch that rather than TypeCheckError in
+  CLI
 
-At the moment,
-unions are implemented in the backends by inspecting runtime types of values.
-However, due to generic type erasure,
-unions will need to implemented as discriminated unions at least some of the time.
+* Remove location from message in UnexpectedTokenException (or make
+  TypeCheckError consistent).
