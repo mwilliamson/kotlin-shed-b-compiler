@@ -432,6 +432,40 @@ private fun tryParseAdditionalConditionalBranch(
     }
 }
 
+private fun parseWhen(source: Source, tokens: TokenIterator<TokenType>): WhenNode {
+    tokens.skip(TokenType.KEYWORD_WHEN)
+
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+    val expression = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+
+    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
+    val branches = parseMany(
+        parseElement = { tokens -> ::parseWhenBranch.parse(tokens) },
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        tokens = tokens,
+        allowZero = true
+    )
+    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
+
+    return WhenNode(
+        expression = expression,
+        branches = branches,
+        source = source
+    )
+}
+
+private fun parseWhenBranch(source: Source, tokens: TokenIterator<TokenType>): WhenBranchNode {
+    tokens.skip(TokenType.KEYWORD_IS)
+    val type = parseType(tokens)
+    val body = parseFunctionStatements(tokens)
+    return WhenBranchNode(
+        type = type,
+        body = body,
+        source = source
+    )
+}
+
 private fun parseVal(source: Source, tokens: TokenIterator<TokenType>): ValNode {
     tokens.skip(TokenType.KEYWORD_VAL)
     val name = parseIdentifier(tokens)
@@ -692,6 +726,9 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
         }
         TokenType.KEYWORD_IF -> {
             return ::parseIfStatement.parse(tokens)
+        }
+        TokenType.KEYWORD_WHEN -> {
+            return ::parseWhen.parse(tokens)
         }
         TokenType.KEYWORD_FUN -> {
             tokens.skip()

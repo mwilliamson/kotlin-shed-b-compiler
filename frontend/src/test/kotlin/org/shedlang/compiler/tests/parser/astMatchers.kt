@@ -24,6 +24,22 @@ internal fun isConditionalBranch(
     has(ConditionalBranchNode::body, body)
 ))
 
+internal fun isWhen(
+    expression: Matcher<ExpressionNode>,
+    branches: Matcher<List<WhenBranchNode>>
+): Matcher<ExpressionNode> = cast(allOf(
+    has(WhenNode::expression, expression),
+    has(WhenNode::branches, branches)
+))
+
+internal fun isWhenBranch(
+    type: Matcher<StaticNode>,
+    body: Matcher<List<StatementNode>>
+): Matcher<WhenBranchNode> = allOf(
+    has(WhenBranchNode::type, type),
+    has(WhenBranchNode::body, body)
+)
+
 internal fun isExpressionStatement(
     expression: Matcher<ExpressionNode> = anything,
     isReturn: Matcher<Boolean> = anything

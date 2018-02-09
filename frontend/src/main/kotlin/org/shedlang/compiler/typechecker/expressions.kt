@@ -109,5 +109,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
 
             return branchTypes.reduce(::union)
         }
+
+        override fun visit(node: WhenNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }

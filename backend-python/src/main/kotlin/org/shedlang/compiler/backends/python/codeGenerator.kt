@@ -375,6 +375,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
             }
         }
+
+        override fun visit(node: WhenNode): GeneratedExpression {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

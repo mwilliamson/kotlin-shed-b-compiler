@@ -386,6 +386,30 @@ data class ConditionalBranchNode(
         get() = listOf(condition) + body
 }
 
+data class WhenNode(
+    val expression: ExpressionNode,
+    val branches: List<WhenBranchNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ExpressionNode {
+    override val children: List<Node>
+        get() = listOf(expression) + branches
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class WhenBranchNode(
+    val type: StaticNode,
+    val body: List<StatementNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : Node {
+    override val children: List<Node>
+        get() = listOf(type) + body
+}
+
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
     override val isReturn: Boolean,
@@ -433,6 +457,7 @@ interface ExpressionNode : Node {
         fun visit(node: FieldAccessNode): T
         fun visit(node: FunctionExpressionNode): T
         fun visit(node: IfNode): T
+        fun visit(node: WhenNode): T
     }
 
     fun <T> accept(visitor: ExpressionNode.Visitor<T>): T
