@@ -29,7 +29,7 @@ fun parseType(string: String): Type {
     val node = parse(
         filename = "<string>",
         input = string,
-        rule = { tokens -> org.shedlang.compiler.parser.parseType(tokens) }
+        rule = { tokens -> org.shedlang.compiler.parser.parseStaticExpression(tokens) }
     )
     val resolvedReferences = resolve(
         node,
