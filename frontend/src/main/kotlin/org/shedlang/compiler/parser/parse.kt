@@ -370,7 +370,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
     }
 }
 
-private fun parseIfStatement(source: Source, tokens: TokenIterator<TokenType>) : IfNode {
+private fun parseIf(source: Source, tokens: TokenIterator<TokenType>) : IfNode {
     val conditionalBranches = parseConditionalBranches(tokens, source)
 
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
@@ -725,7 +725,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             return expression
         }
         TokenType.KEYWORD_IF -> {
-            return ::parseIfStatement.parse(tokens)
+            return ::parseIf.parse(tokens)
         }
         TokenType.KEYWORD_WHEN -> {
             return ::parseWhen.parse(tokens)

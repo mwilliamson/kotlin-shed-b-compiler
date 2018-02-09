@@ -10,10 +10,10 @@ import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
 
-class TypeCheckIfStatementTests {
+class TypeCheckIfTests {
     @Test
-    fun whenConditionIsNotBooleanThenIfStatementDoesNotTypeCheck() {
-        val statement = ifStatement(condition = literalInt(1))
+    fun whenConditionIsNotBooleanThenIfExpressionDoesNotTypeCheck() {
+        val statement = ifExpression(condition = literalInt(1))
         assertThat(
             { typeCheck(statement, emptyTypeContext()) },
             throwsUnexpectedType(expected = BoolType, actual = IntType)
@@ -21,13 +21,19 @@ class TypeCheckIfStatementTests {
     }
 
     @Test
-    fun trueBranchIsTypeChecked() {
-        assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(trueBranch = listOf(badStatement)) }
+    fun conditionalBranchIsTypeChecked() {
+        assertStatementIsTypeChecked { badStatement -> typeCheck(
+            ifExpression(trueBranch = listOf(badStatement)),
+            typeContext()
+        ) }
     }
 
     @Test
     fun elseBranchIsTypeChecked() {
-        assertStatementInStatementIsTypeChecked { badStatement -> ifStatement(elseBranch = listOf(badStatement)) }
+        assertStatementIsTypeChecked { badStatement -> typeCheck(
+            ifExpression(elseBranch = listOf(badStatement)),
+            typeContext()
+        ) }
     }
 
     @Test
@@ -67,7 +73,7 @@ class TypeCheckIfStatementTests {
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
-        val statement = ifStatement(
+        val statement = ifExpression(
             condition = isOperation(variableReference, member1Reference),
             trueBranch = listOf(
                 expressionStatement(call(receiverReference, listOf(variableReference))),
