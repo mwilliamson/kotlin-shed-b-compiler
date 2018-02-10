@@ -170,15 +170,9 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: IsNode): JavascriptExpressionNode {
-            return JavascriptFunctionCallNode(
-                JavascriptVariableReferenceNode(
-                    name = "\$shed.isType",
-                    source = NodeSource(node)
-                ),
-                listOf(
-                    generateCode(node.expression),
-                    generateCode(node.type)
-                ),
+            return generateTypeCondition(
+                expression = generateCode(node.expression),
+                type = node.type,
                 source = NodeSource(node)
             )
         }
@@ -245,20 +239,11 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
             val temporaryName = "\$shed_tmp"
 
             val branches = node.branches.map { branch ->
-                val condition = JavascriptFunctionCallNode(
-                    JavascriptVariableReferenceNode(
-                        name = "\$shed.isType",
-                        source = NodeSource(branch)
-                    ),
-                    listOf(
-                        JavascriptVariableReferenceNode(
-                            name = temporaryName,
-                            source = NodeSource(branch)
-                        ),
-                        generateCode(branch.type)
-                    ),
-                    source = NodeSource(branch)
-                )
+                val expression = NodeSource(branch)
+                val condition = generateTypeCondition(JavascriptVariableReferenceNode(
+                    name = temporaryName,
+                    source = expression
+                ), branch.type, NodeSource(branch))
                 JavascriptConditionalBranchNode(
                     condition = condition,
                     body = generateCode(branch.body),
@@ -278,6 +263,24 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                         elseBranch = listOf(),
                         source = source
                     )
+                ),
+                source = source
+            )
+        }
+
+        private fun generateTypeCondition(
+            expression: JavascriptExpressionNode,
+            type: StaticNode,
+            source: NodeSource
+        ): JavascriptFunctionCallNode {
+            return JavascriptFunctionCallNode(
+                JavascriptVariableReferenceNode(
+                    name = "\$shed.isType",
+                    source = source
+                ),
+                listOf(
+                    expression,
+                    generateCode(type)
                 ),
                 source = source
             )

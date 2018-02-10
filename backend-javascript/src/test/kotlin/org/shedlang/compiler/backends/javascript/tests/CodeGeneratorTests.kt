@@ -217,7 +217,7 @@ class CodeGeneratorTests {
                 isJavascriptIfStatement(
                     conditionalBranches = isSequence(
                         isJavascriptConditionalBranch(
-                            condition = isJavascriptTypeCheck(
+                            condition = isJavascriptTypeCondition(
                                 expression = isJavascriptVariableReference("\$shed_tmp"),
                                 type = isJavascriptVariableReference("T")
                             ),
@@ -320,7 +320,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isJavascriptTypeCheck(isJavascriptVariableReference("x"), isJavascriptVariableReference("X")))
+        assertThat(node, isJavascriptTypeCondition(isJavascriptVariableReference("x"), isJavascriptVariableReference("X")))
     }
 
     @Test
@@ -508,7 +508,7 @@ class CodeGeneratorTests {
         isJavascriptAssignment(target = target, expression = expression)
     )
 
-    private fun isJavascriptTypeCheck(
+    private fun isJavascriptTypeCondition(
         expression: Matcher<JavascriptExpressionNode>,
         type: Matcher<JavascriptExpressionNode>
     ): Matcher<JavascriptExpressionNode> {
