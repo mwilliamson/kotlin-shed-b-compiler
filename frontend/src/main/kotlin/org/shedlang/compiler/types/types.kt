@@ -20,8 +20,16 @@ object IoEffect : Effect {
         get() = "!Io"
 }
 
-interface Type {
+interface TypeGroup {
     val shortDescription: String
+}
+
+object UnionTypeGroup: TypeGroup {
+    override val shortDescription: String
+        get() = "union"
+}
+
+interface Type: TypeGroup {
 }
 
 interface BasicType : Type

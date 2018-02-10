@@ -114,12 +114,12 @@ internal fun isUnionType(
     has(UnionType::declaredTagField, tagField)
 ))
 
-internal val isAnyType: Matcher<Type> = cast(equalTo(AnyType))
-internal val isNothingType: Matcher<Type> = cast(equalTo(NothingType))
-internal val isUnitType: Matcher<Type> = cast(equalTo(UnitType))
-internal val isIntType: Matcher<Type> = cast(equalTo(IntType))
-internal val isBoolType: Matcher<Type> = cast(equalTo(BoolType))
-internal val isStringType: Matcher<Type> = cast(equalTo(StringType))
+internal val isAnyType: Matcher<TypeGroup> = cast(equalTo(AnyType))
+internal val isNothingType: Matcher<TypeGroup> = cast(equalTo(NothingType))
+internal val isUnitType: Matcher<TypeGroup> = cast(equalTo(UnitType))
+internal val isIntType: Matcher<TypeGroup> = cast(equalTo(IntType))
+internal val isBoolType: Matcher<TypeGroup> = cast(equalTo(BoolType))
+internal val isStringType: Matcher<TypeGroup> = cast(equalTo(StringType))
 
 internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))
 internal fun isEffectType(effect: Matcher<Effect>): Matcher<Type> = cast(has(EffectType::effect, effect))
@@ -164,6 +164,8 @@ internal fun isEquivalentType(type: Type): Matcher<Type> {
 
     }
 }
+
+internal val isUnionTypeGroup: Matcher<TypeGroup> = equalTo(UnionTypeGroup)
 
 fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<TagField> {
     return allOf(

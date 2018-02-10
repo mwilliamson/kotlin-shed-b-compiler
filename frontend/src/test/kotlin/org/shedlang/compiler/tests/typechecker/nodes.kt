@@ -5,10 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.Effect
-import org.shedlang.compiler.types.EmptyEffect
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.*
 import java.util.*
 
 
@@ -56,11 +53,11 @@ fun assertStatementIsTypeChecked(typeCheck: (StatementNode) -> Unit) {
 
 
 
-fun throwsUnexpectedType(expected: Type, actual: Type): Matcher<() -> Unit> {
+fun throwsUnexpectedType(expected: TypeGroup, actual: Type): Matcher<() -> Unit> {
     return throwsUnexpectedType(equalTo(expected), actual)
 }
 
-fun throwsUnexpectedType(expected: Matcher<Type>, actual: Type): Matcher<() -> Unit> {
+fun throwsUnexpectedType(expected: Matcher<TypeGroup>, actual: Type): Matcher<() -> Unit> {
     return throws(allOf(
         has(UnexpectedTypeError::expected, expected),
         has(UnexpectedTypeError::actual, cast(equalTo(actual)))
@@ -68,7 +65,7 @@ fun throwsUnexpectedType(expected: Matcher<Type>, actual: Type): Matcher<() -> U
 }
 
 fun throwsUnexpectedType(
-    expected: Matcher<Type>,
+    expected: Matcher<TypeGroup>,
     actual: Matcher<Type>,
     source: Matcher<Source> = anything
 ): Matcher<() -> Unit> {

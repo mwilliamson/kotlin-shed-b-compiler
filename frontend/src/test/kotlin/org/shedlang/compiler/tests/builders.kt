@@ -59,6 +59,11 @@ fun conditionalBranch(
     source = anySource()
 )
 
+fun whenExpression(
+    expression: ExpressionNode,
+    branches: List<WhenBranchNode> = listOf()
+) = WhenNode(expression = expression, branches = branches, source = anySource())
+
 fun expressionStatement(
     expression: ExpressionNode = expression(),
     isReturn: Boolean = false,

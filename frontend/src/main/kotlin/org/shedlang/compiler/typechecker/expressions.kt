@@ -111,7 +111,15 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: WhenNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            val expressionType = inferType(node.expression, context)
+            if (expressionType !is UnionType) {
+                throw UnexpectedTypeError(
+                    expected = UnionTypeGroup,
+                    actual = expressionType,
+                    source = node.expression.source
+                )
+            }
+            throw UnsupportedOperationException()
         }
     })
 }

@@ -152,7 +152,7 @@ class EvalTypeTests {
         )
     }
 
-    private fun isMetaType(type: Type): Matcher<Type> {
+    private fun isMetaType(type: Type): Matcher<TypeGroup> {
         return cast(
             has(MetaType::type, equalTo(type))
         )

@@ -4,6 +4,7 @@ import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.TypeGroup
 import org.shedlang.compiler.types.TypeParameter
 
 /**
@@ -26,7 +27,7 @@ class UninitialisedVariableError(val name: String, source: Source)
     : TypeCheckError("Uninitialised variable: " + name, source)
 class RedeclarationError(val name: String, source: Source)
     : TypeCheckError("Variable with name ${name} has already been declared", source)
-class UnexpectedTypeError(val expected: Type, val actual: Type, source: Source)
+class UnexpectedTypeError(val expected: TypeGroup, val actual: Type, source: Source)
     : TypeCheckError("Expected type ${expected.shortDescription} but was ${actual.shortDescription}", source)
 class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: Source)
     : TypeCheckError("Expected $expected arguments, but got $actual", source)
