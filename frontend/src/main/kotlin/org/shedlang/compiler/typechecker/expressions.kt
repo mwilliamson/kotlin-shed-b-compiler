@@ -48,7 +48,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: IsNode): Type {
             // TODO: test expression and type checking
 
-            typeCheck(node.expression, context)
+            val expressionType = inferType(node.expression, context)
+            checkTypePredicateOperand(node.expression, expressionType)
             evalType(node.type, context)
 
             // TODO: for this to be valid, the type must have a tag value
@@ -112,14 +113,18 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
 
         override fun visit(node: WhenNode): Type {
             val expressionType = inferType(node.expression, context)
+            checkTypePredicateOperand(node.expression, expressionType)
+            throw UnsupportedOperationException()
+        }
+
+        private fun checkTypePredicateOperand(expression: ExpressionNode, expressionType: Type) {
             if (expressionType !is UnionType) {
                 throw UnexpectedTypeError(
                     expected = UnionTypeGroup,
                     actual = expressionType,
-                    source = node.expression.source
+                    source = expression.source
                 )
             }
-            throw UnsupportedOperationException()
         }
     })
 }
