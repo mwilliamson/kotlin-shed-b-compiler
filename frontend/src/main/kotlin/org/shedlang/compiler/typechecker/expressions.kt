@@ -114,7 +114,16 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: WhenNode): Type {
             val expressionType = inferType(node.expression, context)
             checkTypePredicateOperand(node.expression, expressionType)
-            throw UnsupportedOperationException()
+
+            val branchTypes = node.branches.map { branch ->
+                val conditionType = evalType(branch.type, context)
+                val branchContext = context.enterScope()
+                if (node.expression is VariableReferenceNode) {
+                    branchContext.addType(node.expression, conditionType)
+                }
+                typeCheck(branch.body, branchContext)
+            }
+            return branchTypes.reduce(::union)
         }
 
         private fun checkTypePredicateOperand(expression: ExpressionNode, expressionType: Type) {

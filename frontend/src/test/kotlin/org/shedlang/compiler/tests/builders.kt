@@ -64,6 +64,15 @@ fun whenExpression(
     branches: List<WhenBranchNode> = listOf()
 ) = WhenNode(expression = expression, branches = branches, source = anySource())
 
+fun whenBranch(
+    type: StaticNode,
+    body: List<StatementNode>
+) = WhenBranchNode(
+    type = type,
+    body = body,
+    source = anySource()
+)
+
 fun expressionStatement(
     expression: ExpressionNode = expression(),
     isReturn: Boolean = false,
