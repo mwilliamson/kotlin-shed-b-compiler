@@ -346,9 +346,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             }).flatMap { conditionalBranches ->
                 val elseBranch = generateCode(node.elseBranch, context)
 
-                val auxiliaryFunction = PythonFunctionNode(
-                    name = context.freshName(),
-                    arguments = listOf(),
+                generateScopedExpression(
                     body = listOf(
                         PythonIfStatementNode(
                             conditionalBranches = conditionalBranches,
@@ -356,17 +354,8 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                             source = NodeSource(node)
                         )
                     ),
-                    source = NodeSource(node)
-                )
-                val callNode: PythonExpressionNode = PythonFunctionCallNode(
-                    function = PythonVariableReferenceNode(auxiliaryFunction.name, source = NodeSource(node)),
-                    arguments = listOf(),
-                    keywordArguments = listOf(),
-                    source = NodeSource(node)
-                )
-                GeneratedCode(
-                    callNode,
-                    functions = listOf(auxiliaryFunction)
+                    source = NodeSource(node),
+                    context = context
                 )
             }
         }
@@ -388,6 +377,29 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
     })
+}
+
+private fun generateScopedExpression(
+    body: List<PythonStatementNode>,
+    source: Source,
+    context: CodeGenerationContext
+): GeneratedExpression {
+    val auxiliaryFunction = PythonFunctionNode(
+        name = context.freshName(),
+        arguments = listOf(),
+        body = body,
+        source = source
+    )
+    val callNode: PythonExpressionNode = PythonFunctionCallNode(
+        function = PythonVariableReferenceNode(auxiliaryFunction.name, source = source),
+        arguments = listOf(),
+        keywordArguments = listOf(),
+        source = source
+    )
+    return GeneratedCode(
+        callNode,
+        functions = listOf(auxiliaryFunction)
+    )
 }
 
 private fun generateCode(operator: Operator): PythonOperator {
