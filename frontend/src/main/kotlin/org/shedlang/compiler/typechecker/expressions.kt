@@ -115,6 +115,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             val expressionType = inferType(node.expression, context)
             checkTypePredicateOperand(node.expression, expressionType)
 
+            // TODO: check exhaustiveness
+
             val branchTypes = node.branches.map { branch ->
                 val conditionType = evalType(branch.type, context)
                 val branchContext = context.enterScope()
