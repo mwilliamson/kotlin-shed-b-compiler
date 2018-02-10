@@ -263,7 +263,7 @@ internal fun evalType(type: StaticNode, context: TypeContext): Type {
     return when (staticValue) {
         is MetaType -> staticValue.type
         else -> throw UnexpectedTypeError(
-            expected = MetaType(AnyType),
+            expected = MetaTypeGroup,
             actual = staticValue,
             source = type.source
         )

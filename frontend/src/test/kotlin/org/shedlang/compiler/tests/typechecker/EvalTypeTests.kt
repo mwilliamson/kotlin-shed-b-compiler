@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
@@ -21,9 +23,8 @@ class EvalTypeTests {
                 reference,
                 typeContext(referenceTypes = mapOf(reference to IntType))
             ) },
-            // TODO: should be more like MetaType(Hole)
             throwsUnexpectedType(
-                expected = isMetaType(AnyType),
+                expected = isMetaTypeGroup,
                 actual = IntType
             )
         )
@@ -149,12 +150,6 @@ class EvalTypeTests {
         assertThat(
             { evalType(node, typeContext) },
             throws(has(TypeCheckError::message, equalTo("return type cannot be contravariant")))
-        )
-    }
-
-    private fun isMetaType(type: Type): Matcher<TypeGroup> {
-        return cast(
-            has(MetaType::type, equalTo(type))
         )
     }
 }

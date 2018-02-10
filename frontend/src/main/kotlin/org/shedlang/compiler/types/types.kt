@@ -29,6 +29,11 @@ object UnionTypeGroup: TypeGroup {
         get() = "union"
 }
 
+object MetaTypeGroup: TypeGroup {
+    override val shortDescription: String
+        get() = "meta-type"
+}
+
 interface Type: TypeGroup {
 }
 

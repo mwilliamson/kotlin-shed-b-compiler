@@ -166,6 +166,7 @@ internal fun isEquivalentType(type: Type): Matcher<Type> {
 }
 
 internal val isUnionTypeGroup: Matcher<TypeGroup> = equalTo(UnionTypeGroup)
+internal val isMetaTypeGroup: Matcher<TypeGroup> = equalTo(MetaTypeGroup)
 
 fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<TagField> {
     return allOf(
