@@ -357,6 +357,10 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
                     expression.branchBodies.map { body ->
                         body.any(StatementNode::isReturn)
                     }.toSet().single()
+                } else if (expression is WhenNode) {
+                    expression.branches.map { branch ->
+                        branch.body.any(StatementNode::isReturn)
+                    }.toSet().single()
                 } else {
                     !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
                 }

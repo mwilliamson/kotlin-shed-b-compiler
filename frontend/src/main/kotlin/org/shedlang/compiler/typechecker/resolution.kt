@@ -150,6 +150,14 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             resolveScope(body = node.elseBranch, context = context)
         }
 
+        is WhenNode -> {
+            resolve(node.expression, context)
+            for (branch in node.branches) {
+                resolve(branch.type, context)
+                resolveScope(branch.body, context = context)
+            }
+        }
+
         else -> {
             for (child in node.children) {
                 resolve(child, context)
