@@ -242,6 +242,7 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
 
         override fun visit(node: WhenNode): JavascriptExpressionNode {
             val source = NodeSource(node)
+            val temporaryName = "\$shed_tmp"
 
             val branches = node.branches.map { branch ->
                 val condition = JavascriptFunctionCallNode(
@@ -250,7 +251,10 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                         source = NodeSource(branch)
                     ),
                     listOf(
-                        generateCode(node.expression),
+                        JavascriptVariableReferenceNode(
+                            name = temporaryName,
+                            source = NodeSource(branch)
+                        ),
                         generateCode(branch.type)
                     ),
                     source = NodeSource(branch)
@@ -264,6 +268,11 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
 
             return immediatelyInvokedFunction(
                 body = listOf(
+                    JavascriptConstNode(
+                        name = temporaryName,
+                        expression = generateCode(node.expression),
+                        source = source
+                    ),
                     JavascriptIfStatementNode(
                         conditionalBranches = branches,
                         elseBranch = listOf(),

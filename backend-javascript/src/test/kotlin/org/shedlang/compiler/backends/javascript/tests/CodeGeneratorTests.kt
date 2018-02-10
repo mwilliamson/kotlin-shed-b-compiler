@@ -194,7 +194,6 @@ class CodeGeneratorTests {
 
     @Test
     fun whenExpressionGeneratesImmediatelyEvaluatedIfStatement() {
-        // TODO: stash expression to avoid multiple evaluations
         val shed = whenExpression(
             variableReference("x"),
             listOf(
@@ -211,11 +210,15 @@ class CodeGeneratorTests {
 
         assertThat(node, isJavascriptImmediatelyInvokedFunction(
             body = isSequence(
+                isJavascriptConst(
+                    name = equalTo("\$shed_tmp"),
+                    expression = isJavascriptVariableReference("x")
+                ),
                 isJavascriptIfStatement(
                     conditionalBranches = isSequence(
                         isJavascriptConditionalBranch(
                             condition = isJavascriptTypeCheck(
-                                expression = isJavascriptVariableReference("x"),
+                                expression = isJavascriptVariableReference("\$shed_tmp"),
                                 type = isJavascriptVariableReference("T")
                             ),
                             body = isSequence(
