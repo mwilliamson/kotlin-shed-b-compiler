@@ -66,7 +66,7 @@ fun whenExpression(
 
 fun whenBranch(
     type: StaticNode,
-    body: List<StatementNode>
+    body: List<StatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,
     body = body,

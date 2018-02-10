@@ -297,6 +297,21 @@ class ResolutionTests {
     }
 
     @Test
+    fun typesInWhenBranchesAreResolved() {
+        val typeReference = staticReference("T")
+        val node = whenExpression(
+            expression = literalInt(),
+            branches = listOf(
+                whenBranch(type = typeReference)
+            )
+        )
+
+        val references = resolve(node, globals = mapOf("T" to 42))
+
+        assertThat(references[typeReference], equalTo(42))
+    }
+
+    @Test
     fun whenSameNameIsIntroducedTwiceInSameScopeThenErrorIsThrown() {
         val node = module(body = listOf(
             function(name = "f", body = listOf(
