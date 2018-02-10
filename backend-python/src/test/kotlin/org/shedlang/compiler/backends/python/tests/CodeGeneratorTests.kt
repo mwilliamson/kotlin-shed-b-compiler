@@ -378,10 +378,7 @@ class CodeGeneratorTests {
         ))
         val node = generateCode(shed, context)
 
-        assertThat(node, isGeneratedExpression(isPythonFunctionCall(
-            isPythonVariableReference("isinstance"),
-            isSequence(isPythonVariableReference("x"), isPythonVariableReference("X"))
-        )))
+        assertThat(node, isGeneratedExpression(isPythonTypeCondition(isPythonVariableReference("x"), isPythonVariableReference("X"))))
     }
 
     @Test
@@ -594,6 +591,16 @@ class CodeGeneratorTests {
         has(PythonAttributeAccessNode::receiver, receiver),
         has(PythonAttributeAccessNode::attributeName, attributeName)
     ))
+
+    private fun isPythonTypeCondition(
+        expression: Matcher<PythonExpressionNode>,
+        type: Matcher<PythonExpressionNode>
+    ): Matcher<PythonExpressionNode> {
+        return isPythonFunctionCall(
+            isPythonVariableReference("isinstance"),
+            isSequence(expression, type)
+        )
+    }
 
     private fun isGeneratedExpression(value: Matcher<PythonExpressionNode>) = allOf(
         has(GeneratedCode<PythonExpressionNode>::value, value),
