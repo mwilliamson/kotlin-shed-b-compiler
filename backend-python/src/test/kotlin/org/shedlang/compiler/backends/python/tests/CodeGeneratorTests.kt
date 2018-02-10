@@ -233,6 +233,62 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun whenExpressionGeneratesCallToFunctionContainingIf() {
+        val variableDeclaration = valStatement("x")
+        val variableReference = variableReference("x")
+        val typeDeclaration = typeParameter("T")
+        val typeReference = staticReference("T")
+        val shed = whenExpression(
+            variableReference,
+            listOf(
+                whenBranch(
+                    typeReference,
+                    listOf(
+                        expressionStatement(literalInt(42), isReturn = true)
+                    )
+                )
+            )
+        )
+
+        val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
+            variableReference to variableDeclaration,
+            typeReference to typeDeclaration
+        )
+
+        val generatedExpression = generateCode(shed, context(references = references))
+
+        val function = generatedExpression.functions.single()
+        assertThat(function, isPythonFunction(
+            arguments = isSequence(),
+            body = isSequence(
+                isPythonAssignment(
+                    target = isPythonVariableReference("anonymous"),
+                    expression = isPythonVariableReference("x")
+                ),
+                isPythonIfStatement(
+                    conditionalBranches = isSequence(
+                        isPythonConditionalBranch(
+                            condition = isPythonTypeCondition(
+                                expression = isPythonVariableReference("anonymous"),
+                                type = isPythonVariableReference("T")
+                            ),
+                            body = isSequence(
+                                isPythonReturn(isPythonIntegerLiteral(42))
+                            )
+                        )
+                    ),
+                    elseBranch = isSequence()
+                )
+            )
+        ))
+        assertThat(generatedExpression.value, isPythonFunctionCall(
+            function = isPythonVariableReference(name = function.name),
+            arguments = isSequence(),
+            keywordArguments = isSequence()
+        ))
+    }
+
+    @Test
     @Disabled("TODO: work out what to do with this test")
     fun whenSeparateScopesHaveSameNameInSamePythonScopeThenVariablesAreRenamed() {
         val trueVal = valStatement(name = "x")

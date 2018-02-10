@@ -361,7 +361,43 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: WhenNode): GeneratedExpression {
-            throw UnsupportedOperationException("not implemented")
+            val temporaryName = context.freshName()
+            val expressionCode = generateCode(node.expression, context)
+            val branches = node.branches.map { branch ->
+                PythonConditionalBranchNode(
+                    condition = generateTypeCondition(
+                        expression = PythonVariableReferenceNode(
+                            name = temporaryName,
+                            source = NodeSource(branch)
+                        ),
+                        type = branch.type,
+                        source = NodeSource(branch)
+                    ),
+                    body = generateCode(branch.body, context),
+                    source = NodeSource(branch)
+                )
+            }
+            return expressionCode.flatMap { expression ->
+                generateScopedExpression(
+                    body = listOf(
+                        PythonAssignmentNode(
+                            target = PythonVariableReferenceNode(
+                                temporaryName,
+                                source = NodeSource(node)
+                            ),
+                            expression = expression,
+                            source = NodeSource(node)
+                        ),
+                        PythonIfStatementNode(
+                            conditionalBranches = branches,
+                            elseBranch = listOf(),
+                            source = NodeSource(node)
+                        )
+                    ),
+                    source = NodeSource(node),
+                    context = context
+                )
+            }
         }
 
         private fun generateTypeCondition(
