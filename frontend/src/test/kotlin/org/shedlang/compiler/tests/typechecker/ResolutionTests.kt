@@ -287,6 +287,16 @@ class ResolutionTests {
     }
 
     @Test
+    fun expressionOfWhenExpressionIsResolved() {
+        val reference = variableReference("x")
+        val node = whenExpression(expression = reference)
+
+        val references = resolve(node, globals = mapOf("x" to 42))
+
+        assertThat(references[reference], equalTo(42))
+    }
+
+    @Test
     fun whenSameNameIsIntroducedTwiceInSameScopeThenErrorIsThrown() {
         val node = module(body = listOf(
             function(name = "f", body = listOf(
