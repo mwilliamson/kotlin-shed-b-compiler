@@ -173,26 +173,59 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isJavascriptFunctionCall(
-            function = isJavascriptFunctionExpression(
-                arguments = isSequence(),
-                body = isSequence(
-                    isJavascriptIfStatement(
-                        conditionalBranches = isSequence(
-                            isJavascriptConditionalBranch(
-                                condition = isJavascriptIntegerLiteral(42),
-                                body = isSequence(
-                                    isJavascriptExpressionStatement(isJavascriptIntegerLiteral(0))
-                                )
+        assertThat(node, isJavascriptImmediatelyInvokedFunction(
+            body = isSequence(
+                isJavascriptIfStatement(
+                    conditionalBranches = isSequence(
+                        isJavascriptConditionalBranch(
+                            condition = isJavascriptIntegerLiteral(42),
+                            body = isSequence(
+                                isJavascriptExpressionStatement(isJavascriptIntegerLiteral(0))
                             )
-                        ),
-                        elseBranch = isSequence(
-                            isJavascriptExpressionStatement(isJavascriptIntegerLiteral(1))
                         )
+                    ),
+                    elseBranch = isSequence(
+                        isJavascriptExpressionStatement(isJavascriptIntegerLiteral(1))
                     )
                 )
-            ),
-            arguments = isSequence()
+            )
+        ))
+    }
+
+    @Test
+    fun whenExpressionGeneratesImmediatelyEvaluatedIfStatement() {
+        // TODO: stash expression to avoid multiple evaluations
+        val shed = whenExpression(
+            variableReference("x"),
+            listOf(
+                whenBranch(
+                    staticReference("T"),
+                    listOf(
+                        expressionStatement(literalInt(42), isReturn = true)
+                    )
+                )
+            )
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptImmediatelyInvokedFunction(
+            body = isSequence(
+                isJavascriptIfStatement(
+                    conditionalBranches = isSequence(
+                        isJavascriptConditionalBranch(
+                            condition = isJavascriptTypeCheck(
+                                expression = isJavascriptVariableReference("x"),
+                                type = isJavascriptVariableReference("T")
+                            ),
+                            body = isSequence(
+                                isJavascriptReturn(isJavascriptIntegerLiteral(42))
+                            )
+                        )
+                    ),
+                    elseBranch = isSequence()
+                )
+            )
         ))
     }
 
@@ -284,11 +317,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node, isJavascriptFunctionCall(
-            // TODO: should be a field access
-            isJavascriptVariableReference("\$shed.isType"),
-            isSequence(isJavascriptVariableReference("x"), isJavascriptVariableReference("X"))
-        ))
+        assertThat(node, isJavascriptTypeCheck(isJavascriptVariableReference("x"), isJavascriptVariableReference("X")))
     }
 
     @Test
@@ -475,4 +504,27 @@ class CodeGeneratorTests {
     ) = isJavascriptExpressionStatement(
         isJavascriptAssignment(target = target, expression = expression)
     )
+
+    private fun isJavascriptTypeCheck(
+        expression: Matcher<JavascriptExpressionNode>,
+        type: Matcher<JavascriptExpressionNode>
+    ): Matcher<JavascriptExpressionNode> {
+        return isJavascriptFunctionCall(
+            // TODO: should be a field access
+            isJavascriptVariableReference("\$shed.isType"),
+            isSequence(expression, type)
+        )
+    }
+
+    private fun isJavascriptImmediatelyInvokedFunction(
+        body: Matcher<List<JavascriptStatementNode>>
+    ): Matcher<JavascriptExpressionNode> {
+        return isJavascriptFunctionCall(
+            function = isJavascriptFunctionExpression(
+                arguments = isSequence(),
+                body = body
+            ),
+            arguments = isSequence()
+        )
+    }
 }

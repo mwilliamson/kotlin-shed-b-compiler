@@ -223,35 +223,74 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         override fun visit(node: IfNode): JavascriptExpressionNode {
             val source = NodeSource(node)
 
-            val function = JavascriptFunctionExpressionNode(
-                arguments = listOf(),
+            val body = listOf(
+                JavascriptIfStatementNode(
+                    conditionalBranches = node.conditionalBranches.map { branch ->
+                        JavascriptConditionalBranchNode(
+                            condition = generateCode(branch.condition),
+                            body = generateCode(branch.body),
+                            source = NodeSource(branch)
+                        )
+                    },
+                    elseBranch = generateCode(node.elseBranch),
+                    source = source
+                )
+            )
+
+            return immediatelyInvokedFunction(body = body, source = source)
+        }
+
+        override fun visit(node: WhenNode): JavascriptExpressionNode {
+            val source = NodeSource(node)
+
+            val branches = node.branches.map { branch ->
+                val condition = JavascriptFunctionCallNode(
+                    JavascriptVariableReferenceNode(
+                        name = "\$shed.isType",
+                        source = NodeSource(branch)
+                    ),
+                    listOf(
+                        generateCode(node.expression),
+                        generateCode(branch.type)
+                    ),
+                    source = NodeSource(branch)
+                )
+                JavascriptConditionalBranchNode(
+                    condition = condition,
+                    body = generateCode(branch.body),
+                    source = NodeSource(branch)
+                )
+            }
+
+            return immediatelyInvokedFunction(
                 body = listOf(
                     JavascriptIfStatementNode(
-                        conditionalBranches = node.conditionalBranches.map { branch ->
-                            JavascriptConditionalBranchNode(
-                                condition = generateCode(branch.condition),
-                                body = generateCode(branch.body),
-                                source = NodeSource(branch)
-                            )
-                        },
-                        elseBranch = generateCode(node.elseBranch),
-                        source = NodeSource(node)
+                        conditionalBranches = branches,
+                        elseBranch = listOf(),
+                        source = source
                     )
                 ),
                 source = source
             )
-
-            return JavascriptFunctionCallNode(
-                function = function,
-                arguments = listOf(),
-                source = source
-            )
-        }
-
-        override fun visit(node: WhenNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
         }
     })
+}
+
+private fun immediatelyInvokedFunction(
+    body: List<JavascriptStatementNode>,
+    source: Source
+): JavascriptExpressionNode {
+    val function = JavascriptFunctionExpressionNode(
+        arguments = listOf(),
+        body = body,
+        source = source
+    )
+    return JavascriptFunctionCallNode(
+        function = function,
+        arguments = listOf(),
+        source = source
+    )
+
 }
 
 private fun generateCode(operator: Operator): JavascriptOperator {
