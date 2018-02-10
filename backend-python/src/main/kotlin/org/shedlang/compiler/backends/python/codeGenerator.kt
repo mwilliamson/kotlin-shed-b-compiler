@@ -243,12 +243,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             val expression = generateCode(node.expression, context)
 
             return GeneratedExpression(
-                PythonFunctionCallNode(
-                    function = PythonVariableReferenceNode("isinstance", source = node.source),
-                    arguments = listOf(expression.value, generateCode(node.type, context)),
-                    keywordArguments = listOf(),
-                    source = node.source
-                ),
+                generateTypeCondition(expression.value, node.type, NodeSource(node)),
                 functions = expression.functions
             )
         }
@@ -378,6 +373,19 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
         override fun visit(node: WhenNode): GeneratedExpression {
             throw UnsupportedOperationException("not implemented")
+        }
+
+        private fun generateTypeCondition(
+            expression: PythonExpressionNode,
+            type: StaticNode,
+            source: Source
+        ): PythonFunctionCallNode {
+            return PythonFunctionCallNode(
+                function = PythonVariableReferenceNode("isinstance", source = source),
+                arguments = listOf(expression, generateCode(type, context)),
+                keywordArguments = listOf(),
+                source = source
+            )
         }
     })
 }
