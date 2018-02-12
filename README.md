@@ -13,6 +13,3 @@
 * Support backend-specific code
 
 * Move lists into a module
-
-* Create an exception for input errors, catch that rather than TypeCheckError in
-  CLI
