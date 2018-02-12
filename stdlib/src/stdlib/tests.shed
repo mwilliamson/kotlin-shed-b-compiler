@@ -36,25 +36,35 @@ shape AssertionResult {
     error: options.Option[AssertionError],
 }
 
-shape TestCase {
+union Test = TestCase | TestSuite;
+union TestResult = TestCaseResult | TestSuiteResult;
+
+shape TestCase memberOf Test {
     name: String,
     run: () -> AssertionResult,
+}
+
+shape TestCaseResult memberOf TestResult {
+    name: String,
+    error: options.Option[AssertionError],
 }
 
 fun testCase(name: String, run: () -> AssertionResult) -> TestCase {
     TestCase(name = name, run = run)
 }
 
-shape TestResult {
+shape TestSuite memberOf Test {
     name: String,
-    error: options.Option[AssertionError],
+    tests: List[Test],
 }
 
-fun suite(name: String, testCases: List[TestCase]) -> List[TestCase] {
-    map(
-        fun(testCase: TestCase) => TestCase(name = name + ": " + testCase.name, run = testCase.run),
-        testCases
-    )
+shape TestSuiteResult memberOf TestResult {
+    name: String,
+    results: List[TestResult],
+}
+
+fun suite(name: String, tests: List[Test]) -> Test {
+    TestSuite(name = name, tests = tests)
 }
 
 fun main() -> Int {
@@ -65,50 +75,78 @@ val greenCode = "\u001B[32m";
 val redCode = "\u001B[31m";
 val blackCode = "\u001B[39m";
 
-fun runTests(tests: List[TestCase]) !Io -> Int {
-    val results = map(runTest, tests);
+fun runTests(tests: List[Test]) !Io -> Int {
+    val results = map(runTest ~ (depth = 0), tests);
     print("\n");
-    forEach(printFailure, results);
-    val isSuccess = all(map(
-        fun (result: TestResult) => result.error is options.None,
-        results
-    ));
-    if (isSuccess) {
+    forEach(printFailures, results);
+    if (isAllSuccess(results)) {
         0
     } else {
         1
     }
 }
 
-fun printFailure(result: TestResult) !Io -> Unit {
-    val error = result.error;
-    if (error is options.Some[AssertionError]) {
-        print("\n");
-        print(redCode);
-        print("✖ ");
-        print(result.name);
-        print(":\n");
-        print(error.value.message);
-        print(blackCode);
-        print("\n\n");
+fun isAllSuccess(results: List[TestResult]) -> Bool {
+    all(map(isSuccess, results))
+}
+
+fun isSuccess(result: TestResult) -> Bool {
+    when (result) {
+        is TestCaseResult {
+            result.error is options.None
+        }
+        is TestSuiteResult {
+            isAllSuccess(result.results)
+        }
     }
 }
 
-fun runTest(test: TestCase) !Io -> TestResult {
-    val result = test.run();
-    val error = result.error;
-
-    when (error) {
-        is options.Some[AssertionError] {
-            print(redCode);
-            print("✖");
+fun printFailures(result: TestResult) !Io -> Unit {
+    // TODO: formatting of suites
+    when (result) {
+        is TestCaseResult {
+            val error = result.error;
+            if (error is options.Some[AssertionError]) {
+                print("\n");
+                print(redCode);
+                print("✖ ");
+                print(result.name);
+                print(":\n");
+                print(error.value.message);
+                print(blackCode);
+                print("\n\n");
+            }
         }
-        is options.None {
-            print(greenCode);
-            print("✔");
+        is TestSuiteResult {
+            forEach(printFailures, result.results);
         }
     }
-    print(blackCode);
+}
 
-    TestResult(name = test.name, error = result.error)
+fun runTest(test: Test, *, depth: Int) !Io -> TestResult {
+    when (test) {
+        is TestCase {
+            val result = test.run();
+            val error = result.error;
+
+            when (error) {
+                is options.Some[AssertionError] {
+                    print(redCode);
+                    print("✖");
+                }
+                is options.None {
+                    print(greenCode);
+                    print("✔");
+                }
+            }
+            print(blackCode);
+            TestCaseResult(name = test.name, error = result.error)
+        }
+        is TestSuite {
+            // TODO: printing of suite names
+            // TODO: indentation
+            val results = map(runTest ~ (depth = depth + 1), test.tests);
+            TestSuiteResult(name = test.name, results = results)
+        }
+    }
 }

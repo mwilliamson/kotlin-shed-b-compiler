@@ -64,6 +64,7 @@ private fun compileModule(module: Module): PythonModule {
             print,
             for_each,
             map,
+            partial as _partial,
         )
     """.trimIndent()
     val contents = builtins + "\n" + serialise(generateCode) + "\n"
@@ -94,6 +95,8 @@ private val builtinModule = PythonModule(
     name = listOf("shed", "builtins"),
     source = """
          from __future__ import print_function
+
+         from functools import partial
 
          int_to_string = str
 

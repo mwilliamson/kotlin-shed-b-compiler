@@ -118,7 +118,8 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
         // TODO: test renaming
         name = name,
         // TODO: test renaming
-        arguments = generateArguments(node.arguments, context),
+        // TODO: test named parameters
+        arguments = generateArguments(node.arguments, context) + generateArguments(node.namedParameters, context),
         body = generateCode(node.body.statements, context),
         source = NodeSource(node)
     )
@@ -265,10 +266,24 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: PartialCallNode): GeneratedExpression {
-            throw UnsupportedOperationException("not implemented")
+            // TODO: test this
+            val receiver = generateCode(node.receiver, context)
+            val positionalArguments = generatePositionalArguments(node)
+            val namedArguments = generateNamedArguments(node)
+
+            return GeneratedExpression(
+                PythonFunctionCallNode(
+                    // TODO: better handling of builtin
+                    PythonVariableReferenceNode("_partial", source = NodeSource(node)),
+                    listOf(receiver.value) + positionalArguments.value,
+                    namedArguments.value,
+                    source = NodeSource(node)
+                ),
+                functions = receiver.functions + positionalArguments.functions + namedArguments.functions
+            )
         }
 
-        private fun generatePositionalArguments(node: CallNode): GeneratedExpressions {
+        private fun generatePositionalArguments(node: CallBaseNode): GeneratedExpressions {
             val results = node.positionalArguments.map({ argument -> generateCode(argument, context) })
             return GeneratedExpressions(
                 value = results.map({ result -> result.value }),
@@ -276,7 +291,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
 
-        private fun generateNamedArguments(node: CallNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
+        private fun generateNamedArguments(node: CallBaseNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
             val results = node.namedArguments.map({ argument ->
                 argument.name to generateCode(argument.expression, context)
             })
