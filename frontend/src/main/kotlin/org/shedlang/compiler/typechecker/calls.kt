@@ -6,12 +6,6 @@ import org.shedlang.compiler.types.*
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
     val receiverType = inferType(node.receiver, context)
 
-    for ((name, arguments) in node.namedArguments.groupBy(CallNamedArgumentNode::name)) {
-        if (arguments.size > 1) {
-            throw ArgumentAlreadyPassedError(name, source = arguments[1].source)
-        }
-    }
-
     if (receiverType is FunctionType) {
         return inferFunctionCallType(node, receiverType, context)
     } else if (receiverType is MetaType && receiverType.type is ShapeType) {
@@ -127,6 +121,12 @@ private fun checkArguments(
             actual = call.positionalArguments.size,
             source = call.source
         )
+    }
+
+    for ((name, arguments) in call.namedArguments.groupBy(CallNamedArgumentNode::name)) {
+        if (arguments.size > 1) {
+            throw ArgumentAlreadyPassedError(name, source = arguments[1].source)
+        }
     }
 
     val namedArguments = call.namedArguments.map({ argument ->
