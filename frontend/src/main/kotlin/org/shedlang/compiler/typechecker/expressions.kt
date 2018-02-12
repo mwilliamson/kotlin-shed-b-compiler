@@ -62,11 +62,11 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: CallNode): Type {
-            return inferType(node, context)
+            return inferCallType(node, context)
         }
 
         override fun visit(node: PartialCallNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return inferPartialCallType(node, context)
         }
 
         override fun visit(node: FieldAccessNode): Type {

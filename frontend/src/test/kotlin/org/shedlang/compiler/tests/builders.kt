@@ -131,6 +131,19 @@ fun call(
     source = anySource()
 )
 
+fun partialCall(
+    receiver: ExpressionNode,
+    positionalArguments: List<ExpressionNode> = listOf(),
+    namedArguments: List<CallNamedArgumentNode> = listOf(),
+    staticArguments: List<StaticNode> = listOf()
+) = PartialCallNode(
+    receiver = receiver,
+    staticArguments = staticArguments,
+    positionalArguments = positionalArguments,
+    namedArguments = namedArguments,
+    source = anySource()
+)
+
 fun callNamedArgument(
     name: String,
     expression: ExpressionNode

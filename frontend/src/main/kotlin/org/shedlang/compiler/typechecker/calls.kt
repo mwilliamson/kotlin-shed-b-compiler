@@ -3,7 +3,7 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
-internal fun inferType(node: CallNode, context: TypeContext): Type {
+internal fun inferCallType(node: CallNode, context: TypeContext): Type {
     val receiverType = inferType(node.receiver, context)
 
     for ((name, arguments) in node.namedArguments.groupBy(CallNamedArgumentNode::name)) {
@@ -47,7 +47,8 @@ private fun inferFunctionCallType(
         staticParameters = receiverType.staticParameters,
         positionalParameters = receiverType.positionalArguments,
         namedParameters = receiverType.namedArguments,
-        context = context
+        context = context,
+        allowMissing = false
     )
 
     val effect = replaceEffects(receiverType.effect, bindings)
@@ -74,7 +75,8 @@ private fun inferConstructorCallType(
         staticParameters = typeFunction?.parameters ?: listOf(),
         positionalParameters = listOf(),
         namedParameters = shapeType.fields,
-        context = context
+        context = context,
+        allowMissing = false
     )
 
     if (typeFunction == null) {
@@ -86,15 +88,37 @@ private fun inferConstructorCallType(
     }
 }
 
+internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): Type {
+    val receiverType = inferType(node.receiver, context)
+
+    if (receiverType is FunctionType) {
+        val bindings = checkArguments(
+            call = node,
+            staticParameters = receiverType.staticParameters,
+            positionalParameters = receiverType.positionalArguments,
+            namedParameters = receiverType.namedArguments,
+            context = context,
+            allowMissing = true
+        )
+        // TODO: handle bindings
+        return receiverType.copy(
+            positionalArguments = receiverType.positionalArguments.drop(node.positionalArguments.size)
+        )
+    } else {
+        throw NotImplementedError()
+    }
+}
+
 private fun checkArguments(
-    call: CallNode,
+    call: CallBaseNode,
     staticParameters: List<StaticParameter>,
     positionalParameters: List<Type>,
     namedParameters: Map<String, Type>,
-    context: TypeContext
+    context: TypeContext,
+    allowMissing: Boolean
 ): StaticBindings {
     val positionalArguments = call.positionalArguments.zip(positionalParameters)
-    if (positionalParameters.size != call.positionalArguments.size) {
+    if ((!allowMissing && call.positionalArguments.size < positionalParameters.size) || call.positionalArguments.size > positionalParameters.size) {
         throw WrongNumberOfArgumentsError(
             expected = positionalParameters.size,
             actual = call.positionalArguments.size,

@@ -8,6 +8,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 import org.shedlang.compiler.typechecker.UnhandledEffectError
 import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.typechecker.inferCallType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
 
@@ -376,7 +377,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(functionReference to receiverType)
         )
         assertThat(
-            { inferType(call, typeContext); typeContext.undefer() },
+            { inferCallType(call, typeContext); typeContext.undefer() },
             throwsUnexpectedType(expected = isIntType, actual = isBoolType, source = equalTo(source))
         )
     }

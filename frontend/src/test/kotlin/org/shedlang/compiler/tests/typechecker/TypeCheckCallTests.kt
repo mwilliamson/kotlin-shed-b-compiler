@@ -18,7 +18,7 @@ class TypeCheckCallTests {
         val node = call(receiver = functionReference)
 
         val typeContext = typeContext(referenceTypes = mapOf(functionReference to positionalFunctionType(listOf(), IntType)))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(IntType)))
     }
@@ -41,7 +41,7 @@ class TypeCheckCallTests {
         )
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throwsUnexpectedType(expected = BoolType, actual = UnitType)
         )
     }
@@ -69,7 +69,7 @@ class TypeCheckCallTests {
             intReference to MetaType(IntType),
             unitReference to MetaType(UnitType)
         ))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(UnitType)))
     }
@@ -96,7 +96,7 @@ class TypeCheckCallTests {
         ))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(allOf(
                 has(WrongNumberOfStaticArgumentsError::expected, equalTo(1)),
                 has(WrongNumberOfStaticArgumentsError::actual, equalTo(2))
@@ -119,7 +119,7 @@ class TypeCheckCallTests {
             returns = typeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(IntType)))
     }
@@ -139,7 +139,7 @@ class TypeCheckCallTests {
             returns = typeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(IntType)))
     }
@@ -171,7 +171,7 @@ class TypeCheckCallTests {
                 member2Reference to member2
             )
         )
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isUnionType(members = isSequence(isType(member1), isType(member2))))
     }
@@ -195,7 +195,7 @@ class TypeCheckCallTests {
             argReference to typeParameter,
             functionReference to functionType
         ))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(typeParameter)))
     }
@@ -208,7 +208,7 @@ class TypeCheckCallTests {
             positionalArguments = listOf(literalInt(1), literalBool(true))
         )
         assertThat(
-            { inferType(node, typeContext(referenceTypes = mapOf(functionReference to IntType))) },
+            { inferCallType(node, typeContext(referenceTypes = mapOf(functionReference to IntType))) },
             throwsUnexpectedType(expected = positionalFunctionType(listOf(IntType, BoolType), AnyType), actual = IntType)
         )
     }
@@ -224,7 +224,7 @@ class TypeCheckCallTests {
             functionReference to positionalFunctionType(listOf(BoolType), IntType)
         ))
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throwsUnexpectedType(expected = BoolType, actual = IntType)
         )
     }
@@ -240,7 +240,7 @@ class TypeCheckCallTests {
             functionReference to positionalFunctionType(listOf(), IntType)
         ))
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(allOf(
                 has(WrongNumberOfArgumentsError::expected, equalTo(0)),
                 has(WrongNumberOfArgumentsError::actual, equalTo(1))
@@ -259,7 +259,7 @@ class TypeCheckCallTests {
             functionReference to positionalFunctionType(listOf(IntType), IntType)
         ))
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(allOf(
                 has(WrongNumberOfArgumentsError::expected, equalTo(1)),
                 has(WrongNumberOfArgumentsError::actual, equalTo(0))
@@ -274,7 +274,7 @@ class TypeCheckCallTests {
 
         val shapeType = shapeType(name = "X")
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(shapeType)))
     }
@@ -296,7 +296,7 @@ class TypeCheckCallTests {
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
             name = equalTo("Box"),
@@ -326,7 +326,7 @@ class TypeCheckCallTests {
             shapeReference to MetaType(shapeType),
             argumentReference to functionType(positionalArguments = listOf(IntType), returns = UnitType)
         ))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
             name = equalTo("Sink"),
@@ -349,7 +349,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws<CouldNotInferTypeParameterError>()
         )
     }
@@ -368,7 +368,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
             typeArguments = isSequence(isNothingType)
         ))
@@ -388,7 +388,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
             typeArguments = isSequence(isAnyType)
         ))
@@ -411,7 +411,7 @@ class TypeCheckCallTests {
             effect = EmptyEffect
         )
 
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
         assertThat(type, isUnitType)
     }
 
@@ -427,7 +427,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws<PositionalArgumentPassedToShapeConstructorError>()
         )
     }
@@ -441,7 +441,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(has(MissingArgumentError::argumentName, equalTo("a")))
         )
     }
@@ -458,7 +458,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throwsUnexpectedType(expected = BoolType, actual = IntType)
         )
     }
@@ -475,7 +475,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(has(ExtraArgumentError::argumentName, equalTo("a")))
         )
     }
@@ -495,7 +495,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(has(ArgumentAlreadyPassedError::argumentName, equalTo("a")))
         )
     }
@@ -513,7 +513,7 @@ class TypeCheckCallTests {
             referenceTypes = mapOf(functionReference to functionType),
             effect = IoEffect
         )
-        inferType(node, typeContext)
+        inferCallType(node, typeContext)
     }
 
     @Test
@@ -529,7 +529,7 @@ class TypeCheckCallTests {
             referenceTypes = mapOf(functionReference to functionType),
             effect = IoEffect
         )
-        inferType(node, typeContext)
+        inferCallType(node, typeContext)
     }
 
     @Test
@@ -549,7 +549,7 @@ class TypeCheckCallTests {
             }
         )
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
     }
@@ -579,7 +579,7 @@ class TypeCheckCallTests {
             effect = EmptyEffect
         )
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
     }
@@ -619,7 +619,7 @@ class TypeCheckCallTests {
             effect = EmptyEffect
         )
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
     }
@@ -658,7 +658,7 @@ class TypeCheckCallTests {
             effect = EmptyEffect
         )
         assertThat(
-            { inferType(node, typeContext) },
+            { inferCallType(node, typeContext) },
             throwsException(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
     }
@@ -669,7 +669,7 @@ class TypeCheckCallTests {
         val node = call(receiver = listReference)
 
         val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isListType(isNothingType))
     }
@@ -683,7 +683,7 @@ class TypeCheckCallTests {
         )
 
         val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isListType(isIntType))
     }
@@ -697,7 +697,7 @@ class TypeCheckCallTests {
         )
 
         val typeContext = typeContext(referenceTypes = mapOf(listReference to ListConstructorType))
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isListType(isIntType))
     }
@@ -724,7 +724,7 @@ class TypeCheckCallTests {
                 member2Reference to member2
             )
         )
-        val type = inferType(node, typeContext)
+        val type = inferCallType(node, typeContext)
 
         assertThat(type, isListType(isUnionType(members = isSequence(isType(member1), isType(member2)))))
     }

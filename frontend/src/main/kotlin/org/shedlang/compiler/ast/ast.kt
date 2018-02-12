@@ -557,14 +557,21 @@ data class IsNode(
     }
 }
 
+interface CallBaseNode: Node {
+    val receiver: ExpressionNode
+    val staticArguments: List<StaticNode>
+    val positionalArguments: List<ExpressionNode>
+    val namedArguments: List<CallNamedArgumentNode>
+}
+
 data class CallNode(
-    val receiver: ExpressionNode,
-    val staticArguments: List<StaticNode>,
-    val positionalArguments: List<ExpressionNode>,
-    val namedArguments: List<CallNamedArgumentNode>,
+    override val receiver: ExpressionNode,
+    override val staticArguments: List<StaticNode>,
+    override val positionalArguments: List<ExpressionNode>,
+    override val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ExpressionNode {
+) : CallBaseNode, ExpressionNode {
     override val children: List<Node>
         get() = listOf(receiver) + staticArguments + positionalArguments + namedArguments
 
@@ -574,13 +581,13 @@ data class CallNode(
 }
 
 data class PartialCallNode(
-    val receiver: ExpressionNode,
-    val staticArguments: List<StaticNode>,
-    val positionalArguments: List<ExpressionNode>,
-    val namedArguments: List<CallNamedArgumentNode>,
+    override val receiver: ExpressionNode,
+    override val staticArguments: List<StaticNode>,
+    override val positionalArguments: List<ExpressionNode>,
+    override val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ExpressionNode {
+) : CallBaseNode, ExpressionNode {
     override val children: List<Node>
         get() = listOf(receiver) + staticArguments + positionalArguments + namedArguments
 
