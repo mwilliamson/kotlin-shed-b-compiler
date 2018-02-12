@@ -11,7 +11,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
 
-class TypeCheckFunctionCallTests {
+class TypeCheckCallTests {
     @Test
     fun functionCallTypeIsReturnTypeOfFunction() {
         val functionReference = variableReference("f")
