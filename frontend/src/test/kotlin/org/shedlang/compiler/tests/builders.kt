@@ -166,6 +166,7 @@ fun function(
     name: String = "f",
     staticParameters: List<StaticParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
+    namedParameters: List<ArgumentNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
@@ -173,6 +174,7 @@ fun function(
     name = name,
     staticParameters = staticParameters,
     arguments = arguments,
+    namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
     body = FunctionBody.Statements(body),
@@ -182,12 +184,14 @@ fun function(
 fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
+    namedParameters: List<ArgumentNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode? = null,
     body: List<StatementNode> = listOf()
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
     arguments = arguments,
+    namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
     body = FunctionBody.Statements(body),
@@ -197,12 +201,14 @@ fun functionExpression(
 fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     arguments: List<ArgumentNode> = listOf(),
+    namedParameters: List<ArgumentNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode? = staticReference("Unit"),
     body: ExpressionNode
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
     arguments = arguments,
+    namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
     body = FunctionBody.Expression(body),

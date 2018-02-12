@@ -202,6 +202,7 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
             name = name,
             staticParameters = signature.staticParameters,
             arguments = signature.arguments,
+            namedParameters = signature.namedParameters,
             returnType = signature.returnType,
             effects = signature.effects,
             body = FunctionBody.Statements(body),
@@ -213,6 +214,7 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
 private data class FunctionSignature(
     val staticParameters: List<StaticParameterNode>,
     val arguments: List<ArgumentNode>,
+    val namedParameters: List<ArgumentNode>,
     val effects: List<StaticNode>,
     val returnType: StaticNode?
 )
@@ -224,9 +226,22 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     val arguments = parseZeroOrMoreNodes(
         parseElement = ::parseFormalArgument,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) || tokens.isNext(TokenType.SYMBOL_ASTERISK) },
         tokens = tokens
     )
+
+    val namedParameters = if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
+        tokens.skip(TokenType.SYMBOL_COMMA)
+        parseZeroOrMoreNodes(
+            parseElement = ::parseFormalArgument,
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+            tokens = tokens
+        )
+    } else {
+        listOf()
+    }
+
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
     // TODO: allow trailing commas?
@@ -241,6 +256,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     return FunctionSignature(
         staticParameters = staticParameters,
         arguments = arguments,
+        namedParameters = namedParameters,
         effects = effects,
         returnType = returnType
     )
@@ -768,6 +784,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             return FunctionExpressionNode(
                 staticParameters = signature.staticParameters,
                 arguments = signature.arguments,
+                namedParameters = signature.namedParameters,
                 returnType = signature.returnType,
                 effects = signature.effects,
                 body = body,

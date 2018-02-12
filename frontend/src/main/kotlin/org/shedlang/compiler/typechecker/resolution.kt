@@ -167,14 +167,15 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 }
 
 private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
+    // TODO: test namedParameters resolution
     val bodyContext = resolveScope(
         binders = node.staticParameters,
-        body = node.effects + listOf(node.returnType).filterNotNull() + node.arguments,
+        body = node.effects + listOf(node.returnType).filterNotNull() + node.arguments + node.namedParameters,
         context = context
     )
     resolveScope(
         body = node.body.nodes,
-        binders = node.arguments,
+        binders = node.arguments + node.namedParameters,
         context = bodyContext
     )
 }

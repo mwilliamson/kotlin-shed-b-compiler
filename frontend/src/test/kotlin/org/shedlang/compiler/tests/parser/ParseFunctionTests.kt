@@ -47,6 +47,16 @@ class ParseFunctionTests {
     }
 
     @Test
+    fun canReadNamedParameters() {
+        val source = "fun f(*, x: Int) -> Unit { }"
+        val function = parseString(::parseFunctionDeclaration, source)
+        assertThat(function, allOf(
+            has(FunctionNode::arguments, isSequence()),
+            has(FunctionNode::namedParameters, isSequence(isArgument("x", "Int")))
+        ))
+    }
+
+    @Test
     fun canReadTypeParameters() {
         val source = "fun f[T, U](t: T) -> U { }"
         val function = parseString(::parseFunctionDeclaration, source)

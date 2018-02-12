@@ -225,6 +225,7 @@ data class UnionNode(
 interface FunctionNode : Node {
     val staticParameters: List<StaticParameterNode>
     val arguments: List<ArgumentNode>
+    val namedParameters: List<ArgumentNode>
     val returnType: StaticNode?
     val effects: List<StaticNode>
     val body: FunctionBody
@@ -250,6 +251,7 @@ sealed class FunctionBody {
 data class FunctionExpressionNode(
     override val staticParameters: List<StaticParameterNode>,
     override val arguments: List<ArgumentNode>,
+    override val namedParameters: List<ArgumentNode>,
     override val returnType: StaticNode?,
     override val effects: List<StaticNode>,
     override val body: FunctionBody,
@@ -257,7 +259,7 @@ data class FunctionExpressionNode(
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, ExpressionNode {
     override val children: List<Node>
-        get() = arguments + effects + listOfNotNull(returnType) + body.nodes
+        get() = arguments + namedParameters + effects + listOfNotNull(returnType) + body.nodes
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -268,6 +270,7 @@ data class FunctionDeclarationNode(
     override val name: String,
     override val staticParameters: List<StaticParameterNode>,
     override val arguments: List<ArgumentNode>,
+    override val namedParameters: List<ArgumentNode>,
     override val returnType: StaticNode,
     override val effects: List<StaticNode>,
     override val body: FunctionBody.Statements,
@@ -275,7 +278,7 @@ data class FunctionDeclarationNode(
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, VariableBindingNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = arguments + effects + returnType + body.nodes
+        get() = arguments + namedParameters + effects + returnType + body.nodes
 
     val bodyStatements: List<StatementNode>
         get() = body.nodes

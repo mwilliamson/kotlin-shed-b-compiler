@@ -13,5 +13,3 @@
 * Support backend-specific code
 
 * Move lists into a module
-
-* Add syntax for named parameters
