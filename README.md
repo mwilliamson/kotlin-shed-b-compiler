@@ -16,6 +16,3 @@
 
 * Create an exception for input errors, catch that rather than TypeCheckError in
   CLI
-
-* Remove location from message in UnexpectedTokenException (or make
-  TypeCheckError consistent).
