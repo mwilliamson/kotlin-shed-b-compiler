@@ -223,23 +223,23 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-    val arguments = parseZeroOrMoreNodes(
+    val parameters = parseZeroOrMoreNodes(
         parseElement = ::parseFormalArgument,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) || tokens.isNext(TokenType.SYMBOL_ASTERISK) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         tokens = tokens
     )
 
-    val namedParameters = if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
-        tokens.skip(TokenType.SYMBOL_COMMA)
-        parseZeroOrMoreNodes(
-            parseElement = ::parseFormalArgument,
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-            tokens = tokens
-        )
+    // TODO: make sure there's only one start of named parameters
+
+    val namedStartIndex = parameters.indexOfFirst { argument ->
+        argument == FormalArgument.StartOfNamedArguments
+    }
+
+    val (positionalParameters, namedParameters) = if (namedStartIndex == -1) {
+        Pair(parameters, listOf<ArgumentNode>())
     } else {
-        listOf()
+        Pair(parameters.take(namedStartIndex), parameters.drop(namedStartIndex + 1))
     }
 
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
@@ -255,8 +255,8 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     return FunctionSignature(
         staticParameters = staticParameters,
-        arguments = arguments,
-        namedParameters = namedParameters,
+        arguments = positionalParameters.map { parameter -> (parameter as FormalArgument.Parameter).parameter },
+        namedParameters = namedParameters.map { parameter -> (parameter as FormalArgument.Parameter).parameter },
         effects = effects,
         returnType = returnType
     )
@@ -345,10 +345,19 @@ private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, 
     }
 }
 
-private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : ArgumentNode {
-    val name = parseIdentifier(tokens)
-    val type = parseTypeSpec(tokens)
-    return ArgumentNode(name, type, source)
+private sealed class FormalArgument {
+    class Parameter(val parameter: ArgumentNode): FormalArgument()
+    object StartOfNamedArguments : FormalArgument()
+}
+
+private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : FormalArgument {
+    if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
+        return FormalArgument.StartOfNamedArguments
+    } else {
+        val name = parseIdentifier(tokens)
+        val type = parseTypeSpec(tokens)
+        return FormalArgument.Parameter(ArgumentNode(name, type, source))
+    }
 }
 
 private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {

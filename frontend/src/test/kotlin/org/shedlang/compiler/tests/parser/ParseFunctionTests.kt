@@ -47,12 +47,22 @@ class ParseFunctionTests {
     }
 
     @Test
-    fun canReadNamedParameters() {
+    fun canReadNamedParametersWithNoPositionalArguments() {
         val source = "fun f(*, x: Int) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::arguments, isSequence()),
             has(FunctionNode::namedParameters, isSequence(isArgument("x", "Int")))
+        ))
+    }
+
+    @Test
+    fun canReadNamedParametersAfterPositionalArguments() {
+        val source = "fun f(x: Int, *, y: Int) -> Unit { }"
+        val function = parseString(::parseFunctionDeclaration, source)
+        assertThat(function, allOf(
+            has(FunctionNode::arguments, isSequence(isArgument("x", "Int"))),
+            has(FunctionNode::namedParameters, isSequence(isArgument("y", "Int")))
         ))
     }
 
