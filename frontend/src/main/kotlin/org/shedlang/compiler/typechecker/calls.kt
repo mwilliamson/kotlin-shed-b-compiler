@@ -102,7 +102,10 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
         )
         // TODO: handle bindings
         return receiverType.copy(
-            positionalArguments = receiverType.positionalArguments.drop(node.positionalArguments.size)
+            positionalArguments = receiverType.positionalArguments.drop(node.positionalArguments.size),
+            namedArguments = receiverType.namedArguments.filterKeys { name ->
+                !node.namedArguments.any { argument -> argument.name == name }
+            }
         )
     } else {
         throw NotImplementedError()
@@ -135,9 +138,11 @@ private fun checkArguments(
         }
     })
 
-    val missingNamedArguments = namedParameters.keys - call.namedArguments.map({ argument -> argument.name })
-    for (missingNamedArgument in missingNamedArguments) {
-        throw MissingArgumentError(missingNamedArgument, source = call.source)
+    if (!allowMissing) {
+        val missingNamedArguments = namedParameters.keys - call.namedArguments.map({ argument -> argument.name })
+        for (missingNamedArgument in missingNamedArguments) {
+            throw MissingArgumentError(missingNamedArgument, source = call.source)
+        }
     }
 
     val arguments = positionalArguments + namedArguments

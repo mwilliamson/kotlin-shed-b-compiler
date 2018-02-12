@@ -34,4 +34,32 @@ class TypeCheckPartialCallTests {
             returnType = isUnitType
         ))
     }
+
+    @Test
+    fun partialCallWithNamedArgumentReturnsFunction() {
+        val functionReference = variableReference("f")
+        val node = partialCall(
+            receiver = functionReference,
+            namedArguments = listOf(
+                callNamedArgument("arg0", literalInt())
+            )
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(
+                positionalArguments = listOf(BoolType),
+                namedArguments = mapOf("arg0" to IntType, "arg1" to StringType),
+                effect = IoEffect,
+                returns = UnitType
+            )
+        ))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isFunctionType(
+            arguments = isSequence(isBoolType),
+            namedArguments = isMap("arg1" to isStringType),
+            effect = equalTo(IoEffect),
+            returnType = isUnitType
+        ))
+    }
 }
