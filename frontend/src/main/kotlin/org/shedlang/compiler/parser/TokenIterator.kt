@@ -8,7 +8,7 @@ internal class UnexpectedTokenException(
     val expected: String,
     val actual: String
 ) : ParseError(
-    "Error at ${location.describe()}\nExpected: $expected\nBut got: $actual",
+    "Expected: $expected\nBut got: $actual",
     location
 )
 

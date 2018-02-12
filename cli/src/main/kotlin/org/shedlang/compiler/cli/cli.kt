@@ -4,7 +4,7 @@ import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.mainBody
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.readPackage
-import org.shedlang.compiler.typechecker.TypeCheckError
+import org.shedlang.compiler.typechecker.SourceError
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
@@ -81,7 +81,7 @@ private fun compile(base: Path, mainName: String, backend: Backend, target: Path
     try {
         val result = readPackage(base, mainName.split("."))
         backend.compile(result, target = target)
-    } catch (error: TypeCheckError) {
+    } catch (error: SourceError) {
         System.err.println("Error: " + error.message)
         System.err.println(error.source.describe())
         exitProcess(2)
