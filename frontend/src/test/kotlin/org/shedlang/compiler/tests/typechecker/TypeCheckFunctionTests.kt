@@ -5,11 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.MissingReturnTypeError
-import org.shedlang.compiler.typechecker.UnhandledEffectError
-import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.typechecker.inferCallType
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
 
 class TypeCheckFunctionTests {
@@ -117,12 +113,30 @@ class TypeCheckFunctionTests {
     }
 
     @Test
-    fun functionArgumentsAreTyped() {
+    fun positionalParametersAreTyped() {
         val intType = staticReference("Int")
         val argument = argument(name = "x", type = intType)
         val argumentReference = variableReference("x")
         val node = function(
             arguments = listOf(argument),
+            returnType = intType,
+            body = listOf(expressionStatement(argumentReference, isReturn = true))
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to MetaType(IntType)),
+            references = mapOf(argumentReference to argument)
+        )
+        typeCheck(node, typeContext)
+        typeContext.undefer()
+    }
+
+    @Test
+    fun namedParametersAreTyped() {
+        val intType = staticReference("Int")
+        val argument = argument(name = "x", type = intType)
+        val argumentReference = variableReference("x")
+        val node = function(
+            namedParameters = listOf(argument),
             returnType = intType,
             body = listOf(expressionStatement(argumentReference, isReturn = true))
         )

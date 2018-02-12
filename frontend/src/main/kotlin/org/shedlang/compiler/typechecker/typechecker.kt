@@ -178,11 +178,14 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
 internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): Type {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
-    val argumentTypes = function.arguments.map(
+    val positionalParameterTypes = function.arguments.map(
         { argument -> evalType(argument.type, context) }
     )
-    context.addTypes(function.arguments.zip(
-        argumentTypes,
+    val namedParameterTypes = function.namedParameters.map(
+        { argument -> evalType(argument.type, context) }
+    )
+    context.addTypes((function.arguments + function.namedParameters).zip(
+        positionalParameterTypes + namedParameterTypes,
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
 
@@ -235,7 +238,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
 
     return FunctionType(
         staticParameters = staticParameters,
-        positionalArguments = argumentTypes,
+        positionalArguments = positionalParameterTypes,
         namedArguments = mapOf(),
         effect = effect,
         returns = returnType
