@@ -92,4 +92,22 @@ class ParseCallTests {
             throws<UnexpectedTokenException>()
         )
     }
+
+    @Test
+    fun canParsePartialCall() {
+        val source = "f ~ (x, y = z)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isPartialCall(
+            receiver = isVariableReference("f"),
+            positionalArguments = isSequence(
+                isVariableReference("x")
+            ),
+            namedArguments = isSequence(
+                isCallNamedArgument(
+                    name = equalTo("y"),
+                    expression = isVariableReference("z")
+                )
+            )
+        ))
+    }
 }

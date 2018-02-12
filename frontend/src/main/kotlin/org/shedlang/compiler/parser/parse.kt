@@ -533,6 +533,7 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
             InfixOperationParser(Operator.MULTIPLY, TokenType.SYMBOL_ASTERISK, 12),
             CallWithExplicitTypeArgumentsParser,
             CallParser,
+            PartialCallParser,
             FieldAccessParser,
             IsParser
         ).associateBy({parser -> parser.operatorToken})
@@ -588,6 +589,26 @@ private object CallParser : OperationParser {
             left = left,
             typeArguments = listOf(),
             tokens = tokens
+        )
+    }
+
+    override val precedence: Int
+        get() = 14
+}
+
+private object PartialCallParser : OperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_TILDE
+
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+        val (positionalArguments, namedArguments) = parseCallArguments(tokens)
+        return PartialCallNode(
+            receiver = left,
+            staticArguments = listOf(),
+            positionalArguments = positionalArguments,
+            namedArguments = namedArguments,
+            source = left.source
         )
     }
 

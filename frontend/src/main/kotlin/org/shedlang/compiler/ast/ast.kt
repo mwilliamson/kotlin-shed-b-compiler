@@ -454,6 +454,7 @@ interface ExpressionNode : Node {
         fun visit(node: BinaryOperationNode): T
         fun visit(node: IsNode): T
         fun visit(node: CallNode): T
+        fun visit(node: PartialCallNode): T
         fun visit(node: FieldAccessNode): T
         fun visit(node: FunctionExpressionNode): T
         fun visit(node: IfNode): T
@@ -557,6 +558,22 @@ data class IsNode(
 }
 
 data class CallNode(
+    val receiver: ExpressionNode,
+    val staticArguments: List<StaticNode>,
+    val positionalArguments: List<ExpressionNode>,
+    val namedArguments: List<CallNamedArgumentNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ExpressionNode {
+    override val children: List<Node>
+        get() = listOf(receiver) + staticArguments + positionalArguments + namedArguments
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PartialCallNode(
     val receiver: ExpressionNode,
     val staticArguments: List<StaticNode>,
     val positionalArguments: List<ExpressionNode>,

@@ -65,6 +65,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             return inferType(node, context)
         }
 
+        override fun visit(node: PartialCallNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: FieldAccessNode): Type {
             val receiverType = inferType(node.receiver, context)
             if (receiverType is HasFieldsType) {

@@ -154,6 +154,20 @@ internal fun isCall(
     ))
 }
 
+internal fun isPartialCall(
+    receiver: Matcher<ExpressionNode> = anything,
+    positionalArguments: Matcher<List<ExpressionNode>> = anything,
+    namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
+    typeArguments: Matcher<List<StaticNode>> = anything
+) : Matcher<ExpressionNode> {
+    return cast(allOf(
+        has(PartialCallNode::receiver, receiver),
+        has(PartialCallNode::staticArguments, typeArguments),
+        has(PartialCallNode::positionalArguments, positionalArguments),
+        has(PartialCallNode::namedArguments, namedArguments)
+    ))
+}
+
 internal fun isCallNamedArgument(
     name: Matcher<String>,
     expression: Matcher<ExpressionNode>

@@ -264,6 +264,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
 
+        override fun visit(node: PartialCallNode): GeneratedExpression {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         private fun generatePositionalArguments(node: CallNode): GeneratedExpressions {
             val results = node.positionalArguments.map({ argument -> generateCode(argument, context) })
             return GeneratedExpressions(
