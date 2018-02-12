@@ -239,7 +239,9 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
     return FunctionType(
         staticParameters = staticParameters,
         positionalArguments = positionalParameterTypes,
-        namedArguments = mapOf(),
+        namedArguments = function.namedParameters.zip(namedParameterTypes, { parameter, type ->
+            parameter.name to type
+        }).toMap(),
         effect = effect,
         returns = returnType
     )

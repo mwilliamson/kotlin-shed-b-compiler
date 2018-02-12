@@ -128,6 +128,14 @@ class TypeCheckFunctionTests {
         )
         typeCheck(node, typeContext)
         typeContext.undefer()
+
+        assertThat(
+            typeContext.typeOf(node),
+            isFunctionType(
+                arguments = isSequence(isIntType),
+                namedArguments = isMap()
+            )
+        )
     }
 
     @Test
@@ -146,6 +154,14 @@ class TypeCheckFunctionTests {
         )
         typeCheck(node, typeContext)
         typeContext.undefer()
+
+        assertThat(
+            typeContext.typeOf(node),
+            isFunctionType(
+                arguments = isSequence(),
+                namedArguments = isMap("x" to isIntType)
+            )
+        )
     }
 
     @Test
