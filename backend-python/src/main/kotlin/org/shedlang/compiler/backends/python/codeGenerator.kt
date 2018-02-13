@@ -118,14 +118,15 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
         // TODO: test renaming
         name = name,
         // TODO: test renaming
-        arguments = generateArguments(node.arguments, context),
+        arguments = generateArguments(node, context),
         body = generateCode(node.body.statements, context),
         source = NodeSource(node)
     )
 }
 
-private fun generateArguments(arguments: List<ArgumentNode>, context: CodeGenerationContext) =
-    arguments.map({ argument -> context.name(argument) })
+private fun generateArguments(function: FunctionNode, context: CodeGenerationContext) =
+    function.arguments.map({ argument -> context.name(argument) }) +
+        function.namedParameters.map({ argument -> context.name(argument) })
 
 internal fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<PythonStatementNode> {
     return statements.flatMap { statement -> generateCode(statement, context) }
@@ -303,7 +304,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             if (node.body.statements.isEmpty()) {
                 return GeneratedExpression(
                     PythonLambdaNode(
-                        arguments = generateArguments(node.arguments, context),
+                        arguments = generateArguments(node, context),
                         body = PythonNoneLiteralNode(source = NodeSource(node)),
                         source = NodeSource(node)
                     ),
@@ -317,7 +318,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 if (expression.functions.isEmpty()) {
                     return GeneratedExpression(
                         PythonLambdaNode(
-                            arguments = generateArguments(node.arguments, context),
+                            arguments = generateArguments(node, context),
                             body = expression.value,
                             source = NodeSource(node)
                         ),

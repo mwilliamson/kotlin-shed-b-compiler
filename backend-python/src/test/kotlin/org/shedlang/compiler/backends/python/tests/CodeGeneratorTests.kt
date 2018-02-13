@@ -119,6 +119,7 @@ class CodeGeneratorTests {
         val shed = function(
             name = "oneTwoThree",
             arguments = listOf(argument("x"), argument("y")),
+            namedParameters = listOf(argument("z")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
@@ -126,7 +127,7 @@ class CodeGeneratorTests {
 
         assertThat(node, isPythonFunction(
             name = equalTo("one_two_three"),
-            arguments = isSequence(equalTo("x"), equalTo("y")),
+            arguments = isSequence(equalTo("x"), equalTo("y"), equalTo("z")),
             body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
         ))
     }
@@ -135,13 +136,14 @@ class CodeGeneratorTests {
     fun functionExpressionWithNoStatementsGeneratesLambda() {
         val shed = functionExpression(
             arguments = listOf(argument("x"), argument("y")),
+            namedParameters = listOf(argument("z")),
             body = listOf()
         )
 
         val node = generateCode(shed)
 
         assertThat(node, isGeneratedExpression(isPythonLambda(
-            arguments = isSequence(equalTo("x"), equalTo("y")),
+            arguments = isSequence(equalTo("x"), equalTo("y"), equalTo("z")),
             body = isPythonNone()
         )))
     }
