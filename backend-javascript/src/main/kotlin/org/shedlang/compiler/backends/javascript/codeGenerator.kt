@@ -98,12 +98,31 @@ private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionDecla
 }
 
 private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
-    val arguments = node.arguments.map(ArgumentNode::name)
-    val statements = node.body.statements
-    val body = generateCode(statements)
+    val positionalParameters = node.arguments.map(ArgumentNode::name)
+    val namedParameterName = "\$named"
+    val namedParameters = if (node.namedParameters.isEmpty()) {
+        listOf()
+    } else {
+        listOf(namedParameterName)
+    }
+    val namedParameterAssignments = node.namedParameters.map { parameter ->
+        JavascriptConstNode(
+            name = parameter.name,
+            expression = JavascriptPropertyAccessNode(
+                receiver = JavascriptVariableReferenceNode(
+                    name = namedParameterName,
+                    source = NodeSource(parameter)
+                ),
+                propertyName = parameter.name,
+                source = NodeSource(parameter)
+            ),
+            source = NodeSource(parameter)
+        )
+    }
+    val body = namedParameterAssignments + generateCode(node.body.statements)
 
     return object: JavascriptFunctionNode {
-        override val arguments = arguments
+        override val arguments = positionalParameters + namedParameters
         override val body = body
     }
 }

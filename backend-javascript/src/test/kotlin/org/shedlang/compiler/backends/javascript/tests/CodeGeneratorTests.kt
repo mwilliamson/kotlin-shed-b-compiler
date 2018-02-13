@@ -112,6 +112,7 @@ class CodeGeneratorTests {
         val shed = function(
             name = "f",
             arguments = listOf(argument("x"), argument("y")),
+            namedParameters = listOf(argument("z")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
@@ -119,8 +120,17 @@ class CodeGeneratorTests {
 
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
-            arguments = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
+            arguments = isSequence(equalTo("x"), equalTo("y"), equalTo("\$named")),
+            body = isSequence(
+                isJavascriptConst(
+                    name = equalTo("z"),
+                    expression = isJavascriptPropertyAccess(
+                        receiver = isJavascriptVariableReference("\$named"),
+                        propertyName = equalTo("z")
+                    )
+                ),
+                isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42))
+            )
         ))
     }
 
