@@ -459,6 +459,25 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun partialFunctionCallGeneratesPartialFunctionCall() {
+        val declaration = argument("f")
+        val function = variableReference("f")
+        val shed = partialCall(
+            function,
+            positionalArguments = listOf(literalInt(42)),
+            namedArguments = listOf(callNamedArgument("x", literalBool(true)))
+        )
+
+        val node = generateCode(shed, context(mapOf(function to declaration)))
+
+        assertThat(node, isGeneratedExpression(isPythonFunctionCall(
+            isPythonVariableReference("_partial"),
+            isSequence(isPythonVariableReference("f"), isPythonIntegerLiteral(42)),
+            isSequence(isPair(equalTo("x"), isPythonBooleanLiteral(true)))
+        )))
+    }
+
+    @Test
     fun fieldAccessGeneratesAttributeAccess() {
         val declaration = argument("x")
         val receiver = variableReference("x")
