@@ -121,6 +121,10 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
             return receiver + "." + node.propertyName
         }
 
+        override fun visit(node: JavascriptArrayLiteralNode): String {
+            return "[" + node.elements.map { element -> serialise(element, indentation = indentation) }.joinToString(", ") + "]"
+        }
+
         override fun visit(node: JavascriptObjectLiteralNode): String {
             if (node.properties.isEmpty()) {
                 return "{}"
@@ -174,7 +178,12 @@ private fun serialise(operator: JavascriptOperator) = when(operator) {
 
 private fun precedence(node: JavascriptExpressionNode): Int {
     return node.accept(object : JavascriptExpressionNode.Visitor<Int> {
+
         override fun visit(node: JavascriptNullLiteralNode): Int {
+            return 21
+        }
+
+        override fun visit(node: JavascriptArrayLiteralNode): Int {
             return 21
         }
 

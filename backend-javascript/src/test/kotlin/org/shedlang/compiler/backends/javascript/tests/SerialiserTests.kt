@@ -383,6 +383,27 @@ class SerialiserTests {
     }
 
     @Test
+    fun emptyArraySerialisation() {
+        val node = jsArray(listOf())
+        val output = serialise(node)
+        assertThat(output, equalTo("[]"))
+    }
+
+    @Test
+    fun singletonArraySerialisation() {
+        val node = jsArray(listOf(jsLiteralBool(true)))
+        val output = serialise(node)
+        assertThat(output, equalTo("[true]"))
+    }
+
+    @Test
+    fun multipleElementArraySerialisation() {
+        val node = jsArray(listOf(jsLiteralBool(true), jsLiteralBool(false)))
+        val output = serialise(node)
+        assertThat(output, equalTo("[true, false]"))
+    }
+
+    @Test
     fun emptyObjectLiteralSerialisation() {
         val node = jsObject(mapOf())
         val output = serialise(node)

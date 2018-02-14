@@ -95,6 +95,11 @@ fun jsPropertyAccess(
     source = anySource()
 )
 
+fun jsArray(elements: List<JavascriptExpressionNode>) = JavascriptArrayLiteralNode(
+    elements = elements,
+    source = anySource()
+)
+
 fun jsObject(
     properties: Map<String, JavascriptExpressionNode>
 ) = JavascriptObjectLiteralNode(
