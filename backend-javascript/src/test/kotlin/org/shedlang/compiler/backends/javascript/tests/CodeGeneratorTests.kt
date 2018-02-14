@@ -380,6 +380,45 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun partialFunctionCallWithPositionalArgumentsGeneratesCallToPartial() {
+        val shed = partialCall(variableReference("f"), listOf(literalInt(42)))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptFunctionCall(
+            // TODO: should be a field access
+            function = isJavascriptVariableReference("\$shed.partial"),
+            arguments = isSequence(
+                isJavascriptVariableReference("f"),
+                isJavascriptArray(isSequence(isJavascriptIntegerLiteral(42))),
+                isJavascriptNull()
+            )
+        ))
+    }
+
+    @Test
+    fun partialFunctionCallWithNamedArgumentsGeneratesCallToPartial() {
+        val shed = partialCall(
+            variableReference("f"),
+            namedArguments = listOf(
+                callNamedArgument(name = "x", expression = literalInt(42))
+            )
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptFunctionCall(
+            // TODO: should be a field access
+            function = isJavascriptVariableReference("\$shed.partial"),
+            arguments = isSequence(
+                isJavascriptVariableReference("f"),
+                isJavascriptArray(isSequence()),
+                isJavascriptObject(isMap("x" to isJavascriptIntegerLiteral(42)))
+            )
+        ))
+    }
+
+    @Test
     fun fieldAccessGeneratesPropertyAccess() {
         val shed = fieldAccess(variableReference("x"), "y")
 
@@ -496,6 +535,12 @@ class CodeGeneratorTests {
         has(JavascriptPropertyAccessNode::receiver, receiver),
         has(JavascriptPropertyAccessNode::propertyName, propertyName)
     ))
+
+    private fun isJavascriptArray(
+        elements: Matcher<List<JavascriptExpressionNode>>
+    ): Matcher<JavascriptExpressionNode> = cast(
+        has(JavascriptArrayLiteralNode::elements, elements)
+    )
 
     private fun isJavascriptObject(
         properties: Matcher<Map<String, JavascriptExpressionNode>>

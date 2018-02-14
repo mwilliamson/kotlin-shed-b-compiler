@@ -217,7 +217,27 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         }
 
         override fun visit(node: PartialCallNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            val receiver = generateCode(node.receiver)
+            val positionalArguments = JavascriptArrayLiteralNode(
+                elements = node.positionalArguments.map(::generateCode),
+                source = NodeSource(node)
+            )
+            val namedArguments = if (node.namedArguments.isEmpty()) {
+                JavascriptNullLiteralNode(source = NodeSource(node))
+            } else {
+                JavascriptObjectLiteralNode(
+                    node.namedArguments.associate({ argument ->
+                        argument.name to generateCode(argument.expression)
+                    }),
+                    source = NodeSource(node)
+                )
+            }
+
+            return JavascriptFunctionCallNode(
+                JavascriptVariableReferenceNode("\$shed.partial", source = NodeSource(node)),
+                listOf(receiver, positionalArguments, namedArguments),
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
