@@ -15,6 +15,7 @@ import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.typechecker.emptyExpressionTypes
 import org.shedlang.compiler.types.ModuleType
 import java.nio.file.Paths
 
@@ -75,6 +76,7 @@ class CodeGeneratorTests {
             name = listOf("Module"),
             sourcePath = Paths.get("Module.shed"),
             type = ModuleType(mapOf()),
+            expressionTypes = emptyExpressionTypes,
             references = ResolvedReferencesMap(mapOf()),
             node = node
         )

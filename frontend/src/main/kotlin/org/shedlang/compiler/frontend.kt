@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.parse
+import org.shedlang.compiler.typechecker.ExpressionTypes
 import org.shedlang.compiler.typechecker.ResolvedReferences
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.typechecker.typeCheck
@@ -22,6 +23,7 @@ class Module(
     val sourcePath: Path,
     val node: ModuleNode,
     val type: ModuleType,
+    val expressionTypes: ExpressionTypes,
     val references: ResolvedReferences
 ) {
     fun hasMain() = node.body.any({ node ->
@@ -75,6 +77,7 @@ private fun readModule(path: Path, name: List<String>, getModule: (List<String>)
         sourcePath = path,
         node = moduleNode,
         type = typeCheckResult.moduleType,
+        expressionTypes = typeCheckResult.expressionTypes,
         references = resolvedReferences
     )
 }

@@ -7,12 +7,13 @@ import java.util.*
 
 fun newTypeContext(
     nodeTypes: Map<Int, Type> = mapOf(),
+    expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleType
 ): TypeContext {
     return TypeContext(
         effect = EmptyEffect,
-        expressionTypes = mutableMapOf(),
+        expressionTypes = expressionTypes,
         variableTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -119,8 +120,21 @@ internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
     }
 }
 
+interface ExpressionTypes {
+    fun typeOf(node: ExpressionNode): Type
+}
+
+val emptyExpressionTypes: ExpressionTypes = ExpressionTypesMap(mapOf())
+
+internal class ExpressionTypesMap(private val types: Map<Int, Type>) : ExpressionTypes {
+    override fun typeOf(node: ExpressionNode): Type {
+        return types[node.nodeId]!!
+    }
+}
+
 data class TypeCheckResult(
-    val moduleType: ModuleType
+    val moduleType: ModuleType,
+    val expressionTypes: ExpressionTypes
 )
 
 internal fun typeCheck(
@@ -129,14 +143,17 @@ internal fun typeCheck(
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleType
 ): TypeCheckResult {
+    val expressionTypes = mutableMapOf<Int, Type>()
     val typeContext = newTypeContext(
         nodeTypes = nodeTypes,
+        expressionTypes = expressionTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule
     )
     val moduleType = typeCheck(module, typeContext)
     return TypeCheckResult(
-        moduleType = moduleType
+        moduleType = moduleType,
+        expressionTypes = ExpressionTypesMap(expressionTypes)
     )
 }
 
