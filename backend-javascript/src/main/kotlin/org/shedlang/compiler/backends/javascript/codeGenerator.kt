@@ -7,7 +7,7 @@ import org.shedlang.compiler.backends.javascript.ast.*
 
 internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptModuleNode {
     val node = module.node
-    val imports = node.imports.map({ importNode -> generateCode(module, importNode, modules) })
+    val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
     val body = node.body.flatMap(::generateCode)
     val exports = node.body.filterIsInstance<VariableBindingNode>()
         .map(::generateExport)
@@ -17,7 +17,7 @@ internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptMo
     )
 }
 
-private fun generateCode(module: Module, import: ImportNode, modules: FrontEndResult): JavascriptStatementNode {
+private fun generateCode(module: Module, import: ImportNode): JavascriptStatementNode {
     val source = NodeSource(import)
 
     val importBase = when (import.path.base) {
