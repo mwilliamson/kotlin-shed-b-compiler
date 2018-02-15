@@ -12,9 +12,10 @@ import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.ExpressionTypesMap
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.emptyExpressionTypes
-import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.*
 
 class CodeGeneratorTests {
     private val emptyModules = FrontEndResult(modules = listOf())
@@ -378,40 +379,121 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun partialFunctionCallWithPositionalArgumentsGeneratesCallToPartial() {
-        val shed = partialCall(variableReference("f"), listOf(literalInt(42)))
+    fun partialFunctionCallWithPositionalArgumentsGeneratesNewFunction() {
+        val reference = variableReference("f")
+        val shed = partialCall(reference, listOf(literalInt(42), literalBool(false)))
 
-        val node = generateCode(shed)
+        val referenceTypes = listOf(reference to functionType(positionalArguments = listOf(IntType, BoolType, IntType, IntType)))
+        val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(
-            // TODO: should be a field access
-            function = isJavascriptVariableReference("\$shed.partial"),
+            function = isJavascriptFunctionExpression(
+                arguments = isSequence(equalTo("\$func"), equalTo("\$arg0"), equalTo("\$arg1")),
+                body = isSequence(
+                    isJavascriptReturn(
+                        isJavascriptFunctionExpression(
+                            arguments = isSequence(equalTo("\$arg2"), equalTo("\$arg3")),
+                            body = isSequence(
+                                isJavascriptReturn(
+                                    isJavascriptFunctionCall(
+                                        function = isJavascriptVariableReference("\$func"),
+                                        arguments = isSequence(
+                                            isJavascriptVariableReference("\$arg0"),
+                                            isJavascriptVariableReference("\$arg1"),
+                                            isJavascriptVariableReference("\$arg2"),
+                                            isJavascriptVariableReference("\$arg3")
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
             arguments = isSequence(
                 isJavascriptVariableReference("f"),
-                isJavascriptArray(isSequence(isJavascriptIntegerLiteral(42))),
-                isJavascriptNull()
+                isJavascriptIntegerLiteral(42),
+                isJavascriptBooleanLiteral(false)
             )
         ))
     }
 
     @Test
-    fun partialFunctionCallWithNamedArgumentsGeneratesCallToPartial() {
-        val shed = partialCall(
-            variableReference("f"),
-            namedArguments = listOf(
-                callNamedArgument(name = "x", expression = literalInt(42))
-            )
-        )
+    fun whenAllPartialArgumentsAreSuppliedThenGeneratedFunctionHasNoNamedArgument() {
+        val reference = variableReference("f")
+        val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val node = generateCode(shed)
+        val referenceTypes = listOf(reference to functionType(namedArguments = mapOf("x" to IntType)))
+        val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(
-            // TODO: should be a field access
-            function = isJavascriptVariableReference("\$shed.partial"),
+            function = isJavascriptFunctionExpression(
+                arguments = isSequence(equalTo("\$func"), equalTo("x")),
+                body = isSequence(
+                    isJavascriptReturn(
+                        isJavascriptFunctionExpression(
+                            arguments = isSequence(),
+                            body = isSequence(
+                                isJavascriptReturn(
+                                    isJavascriptFunctionCall(
+                                        function = isJavascriptVariableReference("\$func"),
+                                        arguments = isSequence(
+                                            isJavascriptObject(isMap(
+                                                "x" to isJavascriptVariableReference("x")
+                                            ))
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
             arguments = isSequence(
                 isJavascriptVariableReference("f"),
-                isJavascriptArray(isSequence()),
-                isJavascriptObject(isMap("x" to isJavascriptIntegerLiteral(42)))
+                isJavascriptIntegerLiteral(42)
+            )
+        ))
+    }
+
+    @Test
+    fun whenNotAllPartialArgumentsAreSuppliedThenGeneratedFunctionHasNamedArgument() {
+        val reference = variableReference("f")
+        val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
+
+        val referenceTypes = listOf(reference to functionType(namedArguments = mapOf("x" to IntType, "y" to IntType)))
+        val node = generateCode(shed, context(referenceTypes = referenceTypes))
+
+        assertThat(node, isJavascriptFunctionCall(
+            function = isJavascriptFunctionExpression(
+                arguments = isSequence(equalTo("\$func"), equalTo("x")),
+                body = isSequence(
+                    isJavascriptReturn(
+                        isJavascriptFunctionExpression(
+                            arguments = isSequence(equalTo("\$named")),
+                            body = isSequence(
+                                isJavascriptReturn(
+                                    isJavascriptFunctionCall(
+                                        function = isJavascriptVariableReference("\$func"),
+                                        arguments = isSequence(
+                                            isJavascriptObject(isMap(
+                                                "x" to isJavascriptVariableReference("x"),
+                                                "y" to isJavascriptPropertyAccess(
+                                                    receiver = isJavascriptVariableReference("\$named"),
+                                                    propertyName = equalTo("y")
+                                                )
+                                            ))
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            ),
+            arguments = isSequence(
+                isJavascriptVariableReference("f"),
+                isJavascriptIntegerLiteral(42)
             )
         ))
     }
@@ -432,8 +514,14 @@ class CodeGeneratorTests {
     private fun generateCode(node: StatementNode) = generateCode(node, context())
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
-    private fun context(): CodeGenerationContext {
-        return CodeGenerationContext()
+    private fun context(
+        referenceTypes: List<Pair<ReferenceNode, Type>> = listOf()
+    ): CodeGenerationContext {
+        val expressionTypes = ExpressionTypesMap(referenceTypes.associateBy(
+            { entry -> entry.first.nodeId },
+            { entry -> entry.second }
+        ))
+        return CodeGenerationContext(expressionTypes = expressionTypes)
     }
 
     private fun isJavascriptModule(body: Matcher<List<JavascriptStatementNode>>)

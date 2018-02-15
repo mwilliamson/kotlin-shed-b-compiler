@@ -132,26 +132,9 @@ private val builtinModule = JavascriptModule(
             return value != null && value.${"$"}shedType === type;
         }
 
-        function partial(receiver, positional, named) {
-            // TODO: doesn't work if two sets of named arguments are passed
-            // (e.g. (x ~ (y = 1))(z = 2)
-            // Probably need to generate the function at code-gen, when we can
-            // use the type of the function to work out whether we expect more
-            // named arguments
-            return function() {
-                var args = positional.slice();
-                for (var argumentIndex = 0; argumentIndex < arguments.length; argumentIndex++) {
-                    args.push(arguments[argumentIndex]);
-                }
-                args.push(named);
-                return receiver.apply(null, args);
-            };
-        }
-
         module.exports = {
             declareShape: declareShape,
             isType: isType,
-            partial: partial,
 
             all: all,
             forEach: forEach,

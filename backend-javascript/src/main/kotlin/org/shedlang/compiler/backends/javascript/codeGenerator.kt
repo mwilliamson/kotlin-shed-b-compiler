@@ -4,9 +4,12 @@ import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
+import org.shedlang.compiler.typechecker.ExpressionTypes
+import org.shedlang.compiler.types.FunctionType
+import org.shedlang.compiler.types.Type
 
 internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptModuleNode {
-    val context = CodeGenerationContext()
+    val context = CodeGenerationContext(expressionTypes = module.expressionTypes)
 
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
@@ -19,8 +22,10 @@ internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptMo
     )
 }
 
-internal class CodeGenerationContext {
-
+internal class CodeGenerationContext(private val expressionTypes: ExpressionTypes) {
+    fun typeOfExpression(node: ExpressionNode): Type {
+        return expressionTypes.typeOf(node)
+    }
 }
 
 private fun generateCode(module: Module, import: ImportNode): JavascriptStatementNode {
@@ -226,24 +231,91 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
         override fun visit(node: PartialCallNode): JavascriptExpressionNode {
             val receiver = generateCode(node.receiver, context)
-            val positionalArguments = JavascriptArrayLiteralNode(
-                elements = node.positionalArguments.map { argument -> generateCode(argument, context) },
-                source = NodeSource(node)
-            )
-            val namedArguments = if (node.namedArguments.isEmpty()) {
-                JavascriptNullLiteralNode(source = NodeSource(node))
+            val positionalArguments = node.positionalArguments.map { argument ->
+                generateCode(argument, context)
+            }
+            val namedArguments = node.namedArguments
+                .sortedBy { argument -> argument.name }
+                .map { argument -> argument.name to generateCode(argument.expression, context) }
+
+            val functionType = context.typeOfExpression(node.receiver) as FunctionType
+
+            val partialArguments = listOf(receiver) +
+                positionalArguments +
+                namedArguments.map { argument -> argument.second }
+
+            val partialParameters = listOf("\$func") +
+                positionalArguments.indices.map { index -> "\$arg" + index } +
+                namedArguments.map { argument -> argument.first }
+
+            val remainingPositionalParameters = (positionalArguments.size..functionType.positionalArguments.size - 1)
+                .map { index -> "\$arg" + index }
+            val remainingNamedParameters = functionType.namedArguments.keys - node.namedArguments.map { argument -> argument.name }
+            val remainingParameters = remainingPositionalParameters + if (remainingNamedParameters.isEmpty()) {
+                listOf()
             } else {
-                JavascriptObjectLiteralNode(
-                    node.namedArguments.associate({ argument ->
-                        argument.name to generateCode(argument.expression, context)
-                    }),
-                    source = NodeSource(node)
-                )
+                listOf("\$named")
             }
 
+            val finalNamedArgument = if (functionType.namedArguments.isEmpty()) {
+                listOf()
+            } else {
+                listOf(JavascriptObjectLiteralNode(
+                    properties = functionType.namedArguments
+                        .keys
+                        .sorted()
+                        .associateBy(
+                            { parameter -> parameter },
+                            { parameter ->
+                                if (node.namedArguments.any { argument -> argument.name == parameter }) {
+                                    JavascriptVariableReferenceNode(parameter, source = NodeSource(node))
+                                } else {
+                                    JavascriptPropertyAccessNode(
+                                        receiver = JavascriptVariableReferenceNode(
+                                            "\$named",
+                                            source = NodeSource(node)
+                                        ),
+                                        propertyName = parameter,
+                                        source = NodeSource(node)
+                                    )
+                                }
+                            }
+                        ),
+                    source = NodeSource(node)
+                ))
+            }
+            val fullArguments = functionType.positionalArguments.indices.map { index ->
+                JavascriptVariableReferenceNode("\$arg" + index, source = NodeSource(node))
+            } + finalNamedArgument
+
             return JavascriptFunctionCallNode(
-                JavascriptVariableReferenceNode("\$shed.partial", source = NodeSource(node)),
-                listOf(receiver, positionalArguments, namedArguments),
+                function = JavascriptFunctionExpressionNode(
+                    arguments = partialParameters,
+                    body = listOf(
+                        JavascriptReturnNode(
+                            expression = JavascriptFunctionExpressionNode(
+                                arguments = remainingParameters,
+                                body = listOf(
+                                    JavascriptReturnNode(
+                                        expression = JavascriptFunctionCallNode(
+                                            function = JavascriptVariableReferenceNode(
+                                                name = "\$func",
+                                                source = NodeSource(node)
+                                            ),
+                                            arguments = fullArguments,
+                                            source = NodeSource(node)
+                                        ),
+                                        source = NodeSource(node)
+                                    )
+                                ),
+                                source = NodeSource(node)
+                            ),
+                            source = NodeSource(node)
+                        )
+                    ),
+                    source = NodeSource(node)
+                ),
+                arguments = partialArguments,
                 source = NodeSource(node)
             )
         }

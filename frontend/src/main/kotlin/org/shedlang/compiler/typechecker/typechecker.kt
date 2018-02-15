@@ -126,7 +126,7 @@ interface ExpressionTypes {
 
 val emptyExpressionTypes: ExpressionTypes = ExpressionTypesMap(mapOf())
 
-internal class ExpressionTypesMap(private val types: Map<Int, Type>) : ExpressionTypes {
+class ExpressionTypesMap(private val types: Map<Int, Type>) : ExpressionTypes {
     override fun typeOf(node: ExpressionNode): Type {
         return types[node.nodeId]!!
     }
