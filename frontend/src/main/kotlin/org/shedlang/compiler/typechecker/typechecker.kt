@@ -12,6 +12,7 @@ fun newTypeContext(
 ): TypeContext {
     return TypeContext(
         effect = EmptyEffect,
+        expressionTypes = mutableMapOf(),
         variableTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -22,6 +23,7 @@ fun newTypeContext(
 class TypeContext(
     val effect: Effect,
     private val variableTypes: MutableMap<Int, Type>,
+    private val expressionTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleType,
     private val deferred: Queue<() -> Unit>
@@ -60,9 +62,14 @@ class TypeContext(
         variableTypes[targetNode.nodeId] = type
     }
 
+    fun addExpressionType(node: ExpressionNode, type: Type) {
+        expressionTypes[node.nodeId] = type
+    }
+
     fun enterFunction(effect: Effect): TypeContext {
         return TypeContext(
             effect = effect,
+            expressionTypes = expressionTypes,
             variableTypes = variableTypes,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
@@ -73,6 +80,7 @@ class TypeContext(
     fun enterScope(): TypeContext {
         return TypeContext(
             effect = effect,
+            expressionTypes = expressionTypes,
             variableTypes = HashMap(variableTypes),
             resolvedReferences = resolvedReferences,
             getModule = getModule,

@@ -15,7 +15,7 @@ internal fun verifyType(expression: ExpressionNode, context: TypeContext, expect
 }
 
 internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: Type? = null) : Type {
-    return expression.accept(object : ExpressionNode.Visitor<Type> {
+    val type = expression.accept(object : ExpressionNode.Visitor<Type> {
         override fun visit(node: UnitLiteralNode) = UnitType
         override fun visit(node: BooleanLiteralNode) = BoolType
         override fun visit(node: IntegerLiteralNode) = IntType
@@ -54,6 +54,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             return inferWhenExpressionType(node, context)
         }
     })
+    context.addExpressionType(expression, type)
+    return type
 }
 
 private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeContext): Type {

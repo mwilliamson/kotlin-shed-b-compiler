@@ -15,6 +15,7 @@ fun emptyTypeContext(): TypeContext {
 
 fun typeContext(
     effect: Effect = EmptyEffect,
+    expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     types: Map<VariableBindingNode, Type> = mapOf(),
@@ -34,6 +35,7 @@ fun typeContext(
 
     return TypeContext(
         effect = effect,
+        expressionTypes = expressionTypes,
         variableTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),
