@@ -5,7 +5,7 @@ import org.shedlang.compiler.types.*
 import typeCheckStaticParameters
 import java.util.*
 
-fun newTypeContext(
+internal fun newTypeContext(
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
@@ -21,7 +21,7 @@ fun newTypeContext(
     )
 }
 
-class TypeContext(
+internal class TypeContext(
     val effect: Effect,
     private val variableTypes: MutableMap<Int, Type>,
     private val expressionTypes: MutableMap<Int, Type>,
