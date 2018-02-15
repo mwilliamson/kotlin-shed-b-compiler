@@ -56,15 +56,15 @@ class TypeContext(
         }
     }
 
-    fun addTypes(types: Map<Int, Type>) {
+    fun addVariableTypes(types: Map<Int, Type>) {
         variableTypes += types
     }
 
-    fun addType(node: VariableBindingNode, type: Type) {
+    fun addVariableType(node: VariableBindingNode, type: Type) {
         variableTypes[node.nodeId] = type
     }
 
-    fun addType(node: ReferenceNode, type: Type) {
+    fun addVariableType(node: ReferenceNode, type: Type) {
         val targetNodeId = resolvedReferences[node]
         variableTypes[targetNodeId] = type
     }
@@ -166,7 +166,7 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
-    context.addType(import, context.moduleType(import.path))
+    context.addVariableType(import, context.moduleType(import.path))
 }
 
 internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): Type {
@@ -178,7 +178,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
     val namedParameterTypes = function.namedParameters.map(
         { argument -> evalType(argument.type, context) }
     )
-    context.addTypes((function.arguments + function.namedParameters).zip(
+    context.addVariableTypes((function.arguments + function.namedParameters).zip(
         positionalParameterTypes + namedParameterTypes,
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())

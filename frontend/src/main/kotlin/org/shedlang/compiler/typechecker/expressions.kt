@@ -126,7 +126,7 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
             branch.condition.expression is VariableReferenceNode
             ) {
             val conditionType = evalType(branch.condition.type, context)
-            trueContext.addType(branch.condition.expression, conditionType)
+            trueContext.addVariableType(branch.condition.expression, conditionType)
         }
 
         typeCheck(branch.body, trueContext)
@@ -147,7 +147,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         val conditionType = evalType(branch.type, context)
         val branchContext = context.enterScope()
         if (node.expression is VariableReferenceNode) {
-            branchContext.addType(node.expression, conditionType)
+            branchContext.addVariableType(node.expression, conditionType)
         }
         typeCheck(branch.body, branchContext)
     }

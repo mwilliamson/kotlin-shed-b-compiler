@@ -58,7 +58,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     } else {
         TypeFunction(typeParameters, shapeType)
     }
-    context.addType(node, MetaType(type))
+    context.addVariableType(node, MetaType(type))
     context.defer({
         fields.value
         checkType(type, source = node.source)
@@ -115,7 +115,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         TypeFunction(typeParameters, unionType)
     }
 
-    context.addType(node, MetaType(type))
+    context.addVariableType(node, MetaType(type))
     context.defer({
         members.value
         checkType(type, source = node.source)
@@ -128,7 +128,7 @@ private fun generateTag(node: VariableBindingNode): TagField {
 
 private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
     val type = typeCheckFunction(function, context)
-    context.addType(function, type)
+    context.addVariableType(function, type)
 }
 
 
@@ -156,7 +156,7 @@ internal fun typeCheck(statement: StatementNode, context: TypeContext): Type {
 
 private fun typeCheck(node: ValNode, context: TypeContext) {
     val type = inferType(node.expression, context)
-    context.addType(node, type)
+    context.addVariableType(node, type)
 }
 
 internal fun typeCheck(statements: List<StatementNode>, context: TypeContext): Type {
