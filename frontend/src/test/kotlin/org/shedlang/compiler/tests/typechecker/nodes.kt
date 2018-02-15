@@ -9,11 +9,11 @@ import org.shedlang.compiler.types.*
 import java.util.*
 
 
-fun emptyTypeContext(): TypeContext {
+internal fun emptyTypeContext(): TypeContext {
     return typeContext()
 }
 
-fun typeContext(
+internal fun typeContext(
     effect: Effect = EmptyEffect,
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
