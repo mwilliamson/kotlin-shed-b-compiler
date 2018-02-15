@@ -20,7 +20,6 @@ class FrontEndResult(val modules: Collection<Module>)
 
 class Module(
     val name: List<String>,
-    val sourcePath: Path,
     val node: ModuleNode,
     val type: ModuleType,
     val expressionTypes: ExpressionTypes,
@@ -74,7 +73,6 @@ private fun readModule(path: Path, name: List<String>, getModule: (List<String>)
 
     return Module(
         name = name,
-        sourcePath = path,
         node = moduleNode,
         type = typeCheckResult.moduleType,
         expressionTypes = typeCheckResult.expressionTypes,
