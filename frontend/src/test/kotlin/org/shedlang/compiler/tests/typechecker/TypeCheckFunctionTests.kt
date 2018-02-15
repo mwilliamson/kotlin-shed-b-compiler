@@ -15,9 +15,10 @@ class TypeCheckFunctionTests {
 
         val typeParameter = typeParameter("T")
         val typeParameterReference = staticReference("T")
+        val argument = argument(type = typeParameterReference)
         val node = function(
             staticParameters = listOf(typeParameter),
-            arguments = listOf(argument(type = typeParameterReference)),
+            arguments = listOf(argument),
             returnType = unitReference
         )
         val typeContext = typeContext(
@@ -32,8 +33,8 @@ class TypeCheckFunctionTests {
             cast(has(TypeParameter::name, equalTo("T")))
         ))
         assertThat(
-            typeContext.typeOf(typeParameterReference),
-            equalTo(typeContext.typeOf(typeParameter))
+            typeContext.typeOf(argument),
+            equalTo((typeContext.typeOf(typeParameter) as MetaType).type)
         )
         assertThat(
             typeContext.typeOf(node),
@@ -53,7 +54,8 @@ class TypeCheckFunctionTests {
         val effectParameterReference = staticReference("E")
         val node = function(
             staticParameters = listOf(effectParameter),
-            arguments = listOf(argument(type = functionTypeNode(effects = listOf(effectParameterReference), returnType = unitReference))),
+            arguments = listOf(),
+            effects = listOf(effectParameterReference),
             returnType = unitReference
         )
         val typeContext = typeContext(
@@ -68,8 +70,8 @@ class TypeCheckFunctionTests {
             cast(has(EffectParameter::name, equalTo("E")))
         ))
         assertThat(
-            typeContext.typeOf(effectParameterReference),
-            equalTo(typeContext.typeOf(effectParameter))
+            (typeContext.typeOf(node) as FunctionType).effect,
+            equalTo((typeContext.typeOf(effectParameter) as EffectType).effect)
         )
         assertThat(
             typeContext.typeOf(node),

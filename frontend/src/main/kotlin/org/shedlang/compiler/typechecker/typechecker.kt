@@ -26,6 +26,10 @@ class TypeContext(
     private val getModule: (ImportPath) -> ModuleType,
     private val deferred: Queue<() -> Unit>
 ) {
+    fun resolveReference(node: ReferenceNode): VariableBindingNode {
+        return resolvedReferences[node]
+    }
+
     fun moduleType(path: ImportPath): ModuleType {
         return getModule(path)
     }
@@ -37,19 +41,6 @@ class TypeContext(
             throw CompilerError(
                 "type of ${node.name} is unknown",
                 source = node.source
-            )
-        } else {
-            return type
-        }
-    }
-
-    fun typeOf(reference: ReferenceNode): Type {
-        val targetNode = resolvedReferences[reference]
-        val type = variableTypes[targetNode.nodeId]
-        if (type == null) {
-            throw CompilerError(
-                "type of ${reference.name} is unknown",
-                source = reference.source
             )
         } else {
             return type
@@ -270,7 +261,7 @@ internal fun evalType(type: StaticNode, context: TypeContext): Type {
 private fun evalStatic(node: StaticNode, context: TypeContext): Type {
     return node.accept(object : StaticNode.Visitor<Type> {
         override fun visit(node: StaticReferenceNode): Type {
-            return context.typeOf(node)
+            return inferReferenceType(node, context)
         }
 
         override fun visit(node: StaticFieldAccessNode): Type {
