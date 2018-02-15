@@ -243,7 +243,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             val expression = generateCode(node.expression, context)
 
             return GeneratedExpression(
-                generateTypeCondition(expression.value, node.type, NodeSource(node)),
+                generateTypeCondition(expression.value, node.type, NodeSource(node), context),
                 functions = expression.functions
             )
         }
@@ -388,7 +388,8 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                             source = NodeSource(branch)
                         ),
                         type = branch.type,
-                        source = NodeSource(branch)
+                        source = NodeSource(branch),
+                        context = context
                     ),
                     body = generateCode(branch.body, context),
                     source = NodeSource(branch)
@@ -416,20 +417,21 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
             }
         }
-
-        private fun generateTypeCondition(
-            expression: PythonExpressionNode,
-            type: StaticNode,
-            source: Source
-        ): PythonFunctionCallNode {
-            return PythonFunctionCallNode(
-                function = PythonVariableReferenceNode("isinstance", source = source),
-                arguments = listOf(expression, generateCode(type, context)),
-                keywordArguments = listOf(),
-                source = source
-            )
-        }
     })
+}
+
+private fun generateTypeCondition(
+    expression: PythonExpressionNode,
+    type: StaticNode,
+    source: Source,
+    context: CodeGenerationContext
+): PythonFunctionCallNode {
+    return PythonFunctionCallNode(
+        function = PythonVariableReferenceNode("isinstance", source = source),
+        arguments = listOf(expression, generateCode(type, context)),
+        keywordArguments = listOf(),
+        source = source
+    )
 }
 
 private fun generateScopedExpression(
