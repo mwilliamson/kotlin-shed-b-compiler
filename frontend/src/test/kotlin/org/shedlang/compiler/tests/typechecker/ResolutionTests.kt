@@ -1,29 +1,36 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
+import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.ast.VariableReferenceNode
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import java.util.*
 
 class ResolutionTests {
+    private val declaration = valStatement("declaration")
+    private var declarationIndex = 1
+    private fun anyDeclaration(): VariableBindingNode {
+        return valStatement("declaration-" + declarationIndex++)
+    }
+
     @Test
     fun variableReferencesAreResolved() {
         val node = variableReference("x")
-        val references = resolve(node, globals = mapOf("x" to 42))
-        assertThat(references[node], equalTo(42))
+        val references = resolve(node, globals = mapOf("x" to declaration))
+        assertThat(references[node], isVariableBinding(declaration))
     }
 
     @Test
     fun whenVariableIsUninitialisedThenExceptionIsThrown() {
         val node = variableReference("x")
-        val context = resolutionContext(mapOf("x" to 42))
+        val context = resolutionContext(mapOf("x" to anyDeclaration()))
 
         assertThat(
             { resolve(node, context) },
@@ -45,8 +52,8 @@ class ResolutionTests {
     @Test
     fun typeReferencesAreResolved() {
         val node = staticReference("X")
-        val references = resolve(node, globals = mapOf("X" to 42))
-        assertThat(references[node], equalTo(42))
+        val references = resolve(node, globals = mapOf("X" to declaration))
+        assertThat(references[node], isVariableBinding(declaration))
     }
 
     @Test
@@ -63,8 +70,8 @@ class ResolutionTests {
     @Test
     fun childrenAreResolved() {
         val node = VariableReferenceNode("x", anySource())
-        val references = resolve(expressionStatement(node), globals = mapOf("x" to 42))
-        assertThat(references[node], equalTo(42))
+        val references = resolve(expressionStatement(node), globals = mapOf("x" to declaration))
+        assertThat(references[node], isVariableBinding(declaration))
     }
 
     @Test
@@ -77,9 +84,9 @@ class ResolutionTests {
             body = listOf(expressionStatement(reference))
         )
 
-        val references = resolve(node, globals = mapOf("Int" to -1))
+        val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
 
-        assertThat(references[reference], equalTo(argument.nodeId))
+        assertThat(references[reference], isVariableBinding(argument))
     }
 
     @Test
@@ -92,9 +99,9 @@ class ResolutionTests {
             body = listOf(expressionStatement(reference))
         )
 
-        val references = resolve(node, globals = mapOf("Int" to -1))
+        val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
 
-        assertThat(references[reference], equalTo(argument.nodeId))
+        assertThat(references[reference], isVariableBinding(argument))
     }
 
     @Test
@@ -108,11 +115,11 @@ class ResolutionTests {
         )
 
         val references = resolve(node, globals = mapOf(
-            reference.name to freshNodeId(),
-            "Int" to -1
+            reference.name to anyDeclaration(),
+            "Int" to anyDeclaration()
         ))
 
-        assertThat(references[reference], equalTo(argument.nodeId))
+        assertThat(references[reference], isVariableBinding(argument))
     }
 
     @Test
@@ -128,7 +135,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[reference], equalTo(typeParameter.nodeId))
+        assertThat(references[reference], isVariableBinding(typeParameter))
     }
 
     @Test
@@ -140,14 +147,12 @@ class ResolutionTests {
             body = listOf()
         )
 
-        val effectNodeId = freshNodeId()
-
         val references = resolve(node, globals = mapOf(
-            "Int" to freshNodeId(),
-            "!Io" to effectNodeId
+            "Int" to anyDeclaration(),
+            "!Io" to declaration
         ))
 
-        assertThat(references[effect], equalTo(effectNodeId))
+        assertThat(references[effect], isVariableBinding(declaration))
     }
 
     @Test
@@ -162,7 +167,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[reference], equalTo(typeParameter.nodeId))
+        assertThat(references[reference], isVariableBinding(typeParameter))
     }
 
     @Test
@@ -178,8 +183,8 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(node, globals = mapOf("Int" to -1))
-        assertThat(references[reference], equalTo(valStatement.nodeId))
+        val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
+        assertThat(references[reference], isVariableBinding(valStatement))
     }
 
     @Test
@@ -187,8 +192,8 @@ class ResolutionTests {
         val reference = variableReference("x")
         val valStatement = valStatement(name = "y", expression = reference)
 
-        val references = resolve(valStatement, globals = mapOf("x" to -1))
-        assertThat(references[reference], equalTo(-1))
+        val references = resolve(valStatement, globals = mapOf("x" to declaration))
+        assertThat(references[reference], isVariableBinding(declaration))
     }
 
     @Test
@@ -205,9 +210,9 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(module, globals = mapOf("Unit" to freshNodeId()))
+        val references = resolve(module, globals = mapOf("Unit" to anyDeclaration()))
 
-        assertThat(references[reference], equalTo(import.nodeId))
+        assertThat(references[reference], isVariableBinding(import))
     }
 
     @Test
@@ -225,10 +230,10 @@ class ResolutionTests {
             definitionOfSecond
         ))
 
-        val references = resolve(node, globals = mapOf("Unit" to -1))
+        val references = resolve(node, globals = mapOf("Unit" to anyDeclaration()))
 
-        assertThat(references[referenceToFirst], equalTo(definitionOfFirst.nodeId))
-        assertThat(references[referenceToSecond], equalTo(definitionOfSecond.nodeId))
+        assertThat(references[referenceToFirst], isVariableBinding(definitionOfFirst))
+        assertThat(references[referenceToSecond], isVariableBinding(definitionOfSecond))
     }
 
     @Test
@@ -246,7 +251,7 @@ class ResolutionTests {
         ))
 
         assertThat(
-            { resolve(node, globals = mapOf("Int" to freshNodeId()))},
+            { resolve(node, globals = mapOf("Int" to anyDeclaration()))},
             throws(has(UninitialisedVariableError::name, equalTo("x")))
         )
     }
@@ -256,9 +261,9 @@ class ResolutionTests {
         val reference = variableReference("x")
         val node = ifStatement(condition = reference)
 
-        val references = resolve(node, globals = mapOf("x" to 42))
+        val references = resolve(node, globals = mapOf("x" to declaration))
 
-        assertThat(references[reference], equalTo(42))
+        assertThat(references[reference], isVariableBinding(declaration))
     }
 
     @Test
@@ -282,8 +287,8 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[trueReference], equalTo(trueVal.nodeId))
-        assertThat(references[falseReference], equalTo(falseVal.nodeId))
+        assertThat(references[trueReference], isVariableBinding(trueVal))
+        assertThat(references[falseReference], isVariableBinding(falseVal))
     }
 
     @Test
@@ -291,9 +296,9 @@ class ResolutionTests {
         val reference = variableReference("x")
         val node = whenExpression(expression = reference)
 
-        val references = resolve(node, globals = mapOf("x" to 42))
+        val references = resolve(node, globals = mapOf("x" to declaration))
 
-        assertThat(references[reference], equalTo(42))
+        assertThat(references[reference], isVariableBinding(declaration))
     }
 
     @Test
@@ -306,9 +311,9 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(node, globals = mapOf("T" to 42))
+        val references = resolve(node, globals = mapOf("T" to declaration))
 
-        assertThat(references[typeReference], equalTo(42))
+        assertThat(references[typeReference], isVariableBinding(declaration))
     }
 
     @Test
@@ -329,9 +334,9 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(node, globals = mapOf("T" to 42))
+        val references = resolve(node, globals = mapOf("T" to anyDeclaration()))
 
-        assertThat(references[variableReference], equalTo(variableDeclaration.nodeId))
+        assertThat(references[variableReference], isVariableBinding(variableDeclaration))
     }
 
     @Test
@@ -344,7 +349,7 @@ class ResolutionTests {
         ))
 
         assertThat(
-            { resolve(node, globals = mapOf("Unit" to -1)) },
+            { resolve(node, globals = mapOf("Unit" to anyDeclaration())) },
             throws(has(RedeclarationError::name, equalTo("x")))
         )
     }
@@ -361,7 +366,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[shapeReference], equalTo(shape.nodeId))
+        assertThat(references[shapeReference], isVariableBinding(shape))
     }
 
     @Test
@@ -378,7 +383,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[shapeReference], equalTo(shape.nodeId))
+        assertThat(references[shapeReference], isVariableBinding(shape))
     }
 
     @Test
@@ -392,7 +397,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[reference], equalTo(typeParameter.nodeId))
+        assertThat(references[reference], isVariableBinding(typeParameter))
     }
 
     @Test
@@ -407,7 +412,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[shapeReference], equalTo(shape.nodeId))
+        assertThat(references[shapeReference], isVariableBinding(shape))
     }
 
     @Test
@@ -421,17 +426,21 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[reference], equalTo(typeParameter.nodeId))
+        assertThat(references[reference], isVariableBinding(typeParameter))
     }
 
     private fun resolutionContext(
-        bindings: Map<String, Int> = mapOf(),
+        bindings: Map<String, VariableBindingNode> = mapOf(),
         isInitialised: Set<Int> = setOf(),
-        globals: Map<String, Int> = mapOf()
+        globals: Map<String, VariableBindingNode> = mapOf()
     ) = ResolutionContext(
         bindings = globals + bindings,
         nodes = mutableMapOf(),
-        isInitialised = HashSet(globals.values + isInitialised),
+        isInitialised = HashSet(globals.values.map({ value -> value.nodeId }) + isInitialised),
         deferred = mutableMapOf()
     )
+
+    private fun isVariableBinding(declaration: VariableBindingNode): Matcher<VariableBindingNode> {
+        return equalTo(declaration)
+    }
 }

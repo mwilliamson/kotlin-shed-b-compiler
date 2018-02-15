@@ -542,7 +542,7 @@ class CodeGeneratorTests {
     private fun context(
         references: Map<ReferenceNode, VariableBindingNode> = mapOf()
     ) = CodeGenerationContext(
-        references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value.nodeId}))
+        references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value }))
     )
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)

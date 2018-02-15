@@ -44,8 +44,8 @@ class TypeContext(
     }
 
     fun typeOf(reference: ReferenceNode): Type {
-        val targetNodeId = resolvedReferences[reference]
-        val type = variableTypes[targetNodeId]
+        val targetNode = resolvedReferences[reference]
+        val type = variableTypes[targetNode.nodeId]
         if (type == null) {
             throw CompilerError(
                 "type of ${reference.name} is unknown",
@@ -65,8 +65,8 @@ class TypeContext(
     }
 
     fun addVariableType(node: ReferenceNode, type: Type) {
-        val targetNodeId = resolvedReferences[node]
-        variableTypes[targetNodeId] = type
+        val targetNode = resolvedReferences[node]
+        variableTypes[targetNode.nodeId] = type
     }
 
     fun enterFunction(effect: Effect): TypeContext {

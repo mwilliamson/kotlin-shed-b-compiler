@@ -22,8 +22,7 @@ internal class CodeGenerationContext(
     }
 
     fun name(node: ReferenceNode): String {
-        val variableNodeId = references[node]
-        return name(variableNodeId, node.name)
+        return name(references[node])
     }
 
     private fun name(nodeId: Int, name: String): String {

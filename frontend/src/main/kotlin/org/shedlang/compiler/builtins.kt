@@ -1,28 +1,21 @@
 package org.shedlang.compiler
 
-import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.ast.BuiltinVariable
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.*
 
-internal data class Builtin(
-    val name: String,
-    val type: Type
-) {
-    val nodeId = freshNodeId()
-}
-
 private val coreBuiltins = listOf(
-    Builtin("Any", MetaType(AnyType)),
-    Builtin("Unit", MetaType(UnitType)),
-    Builtin("Int", MetaType(IntType)),
-    Builtin("String", MetaType(StringType)),
-    Builtin("Bool", MetaType(BoolType)),
-    Builtin("List", MetaType(ListType)),
+    BuiltinVariable("Any", MetaType(AnyType)),
+    BuiltinVariable("Unit", MetaType(UnitType)),
+    BuiltinVariable("Int", MetaType(IntType)),
+    BuiltinVariable("String", MetaType(StringType)),
+    BuiltinVariable("Bool", MetaType(BoolType)),
+    BuiltinVariable("List", MetaType(ListType)),
 
-    Builtin("!Io", EffectType(IoEffect))
+    BuiltinVariable("!Io", EffectType(IoEffect))
 )
 
 fun parseType(string: String): Type {
@@ -33,7 +26,7 @@ fun parseType(string: String): Type {
     )
     val resolvedReferences = resolve(
         node,
-        coreBuiltins.associate({ builtin -> builtin.name to builtin.nodeId})
+        coreBuiltins.associate({ builtin -> builtin.name to builtin})
     )
 
     val typeContext = newTypeContext(
@@ -46,12 +39,12 @@ fun parseType(string: String): Type {
 }
 
 internal val builtins = coreBuiltins + listOf(
-    Builtin("print", parseType("(String) !Io -> Unit")),
-    Builtin("intToString", parseType("(Int) -> String")),
-    Builtin("list", ListConstructorType),
+    BuiltinVariable("print", parseType("(String) !Io -> Unit")),
+    BuiltinVariable("intToString", parseType("(Int) -> String")),
+    BuiltinVariable("list", ListConstructorType),
 
-    Builtin("all", parseType("(List[Bool]) -> Bool")),
-    Builtin("any", parseType("(List[Bool]) -> Bool")),
-    Builtin("forEach", parseType("[T, !E]((T) !E -> Unit, List[T]) !E -> Unit")),
-    Builtin("map", parseType("[T, R, !E]((T) !E -> R, List[T]) !E -> List[R]"))
+    BuiltinVariable("all", parseType("(List[Bool]) -> Bool")),
+    BuiltinVariable("any", parseType("(List[Bool]) -> Bool")),
+    BuiltinVariable("forEach", parseType("[T, !E]((T) !E -> Unit, List[T]) !E -> Unit")),
+    BuiltinVariable("map", parseType("[T, R, !E]((T) !E -> R, List[T]) !E -> List[R]"))
 )

@@ -1,6 +1,7 @@
 package org.shedlang.compiler.ast
 
 import org.shedlang.compiler.nullableToList
+import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.Variance
 
 interface Node {
@@ -13,6 +14,17 @@ interface VariableBindingNode: Node {
     val name: String
 }
 
+data class BuiltinVariable(
+    override val name: String,
+    val type: Type,
+    override val nodeId: Int = freshNodeId()
+): VariableBindingNode {
+    override val source: Source
+        get() = BuiltinSource
+    override val children: List<Node>
+        get() = listOf()
+}
+
 interface TypeDeclarationNode: VariableBindingNode
 
 interface ReferenceNode: Node {
@@ -21,6 +33,12 @@ interface ReferenceNode: Node {
 
 interface Source {
     fun describe(): String
+}
+
+object BuiltinSource : Source {
+    override fun describe(): String {
+        return "builtin"
+    }
 }
 
 // TODO: find and remove usages

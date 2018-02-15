@@ -50,7 +50,7 @@ private fun readModule(path: Path, name: List<String>, getModule: (List<String>)
 
     val resolvedReferences = resolve(
         moduleNode,
-        builtins.associate({ builtin -> builtin.name to builtin.nodeId })
+        builtins.associate({ builtin -> builtin.name to builtin })
     )
 
     val typeCheckResult = typeCheck(

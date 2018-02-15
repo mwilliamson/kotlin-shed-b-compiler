@@ -5,7 +5,6 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.TypeCheckError
@@ -33,13 +32,14 @@ class EvalTypeTests {
     @Test
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
         val reference = staticReference("x")
+        val declaration = valStatement("x")
 
         assertThat(
             { evalType(
                 reference,
                 newTypeContext(
                     nodeTypes = mutableMapOf(),
-                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to freshNodeId())),
+                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
                     getModule = { moduleName -> throw UnsupportedOperationException() }
                 )
             ) },

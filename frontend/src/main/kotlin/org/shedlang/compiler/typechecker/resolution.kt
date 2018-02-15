@@ -2,34 +2,33 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.nullableToList
-import java.util.*
 
 interface ResolvedReferences {
-    operator fun get(node: ReferenceNode): Int
+    operator fun get(node: ReferenceNode): VariableBindingNode
 }
 
-class ResolvedReferencesMap(private val references: Map<Int, Int>) : ResolvedReferences {
-    override fun get(node: ReferenceNode): Int {
-        val targetNodeId = references[node.nodeId]
-        if (targetNodeId == null) {
+class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode>) : ResolvedReferences {
+    override fun get(node: ReferenceNode): VariableBindingNode {
+        val targetNode = references[node.nodeId]
+        if (targetNode == null) {
             throw CompilerError(
                 "reference ${node.name} is unresolved",
                 source = node.source
             )
         } else {
-            return targetNodeId
+            return targetNode
         }
 
     }
 }
 
 internal class ResolutionContext(
-    val bindings: Map<String, Int>,
-    val nodes: MutableMap<Int, Int>,
+    val bindings: Map<String, VariableBindingNode>,
+    val nodes: MutableMap<Int, VariableBindingNode>,
     val isInitialised: MutableSet<Int>,
     val deferred: MutableMap<Int, () -> Unit>
 ) {
-    operator fun set(node: ReferenceNode, value: Int): Unit {
+    operator fun set(node: ReferenceNode, value: VariableBindingNode): Unit {
         nodes[node.nodeId] = value
     }
 
@@ -41,15 +40,15 @@ internal class ResolutionContext(
         deferred[node.nodeId] = func
     }
 
-    fun isInitialised(nodeId: Int): Boolean {
-        if (isInitialised.contains(nodeId)) {
+    fun isInitialised(node: VariableBindingNode): Boolean {
+        if (isInitialised.contains(node.nodeId)) {
             return true
         } else {
-            val deferredInitialisation = deferred[nodeId]
+            val deferredInitialisation = deferred[node.nodeId]
             if (deferredInitialisation == null) {
                 return false
             } else {
-                undefer(nodeId, deferredInitialisation)
+                undefer(node.nodeId, deferredInitialisation)
                 return true
             }
         }
@@ -68,16 +67,16 @@ internal class ResolutionContext(
         deferredInitialisation()
     }
 
-    fun enterScope(bindings: Map<String, Int>): ResolutionContext {
+    fun enterScope(bindings: Map<String, VariableBindingNode>): ResolutionContext {
         return ResolutionContext(this.bindings + bindings, nodes, isInitialised, deferred)
     }
 }
 
-internal fun resolve(node: Node, globals: Map<String, Int>): ResolvedReferences {
+internal fun resolve(node: Node, globals: Map<String, VariableBindingNode>): ResolvedReferences {
     val context = ResolutionContext(
         globals,
         mutableMapOf(),
-        isInitialised = HashSet(globals.values),
+        isInitialised = globals.values.map(VariableBindingNode::nodeId).toMutableSet(),
         deferred = mutableMapOf()
     )
     resolve(node, context)
@@ -88,12 +87,12 @@ internal fun resolve(node: Node, globals: Map<String, Int>): ResolvedReferences 
 internal fun resolve(node: Node, context: ResolutionContext) {
     when (node) {
         is ReferenceNode -> {
-            val referentId = context.bindings[node.name]
-            if (referentId == null) {
+            val referent = context.bindings[node.name]
+            if (referent == null) {
                 throw UnresolvedReferenceError(node.name, node.source)
             } else {
-                context[node] = referentId
-                if (!context.isInitialised(referentId)) {
+                context[node] = referent
+                if (!context.isInitialised(referent)) {
                     throw UninitialisedVariableError(node.name, node.source)
                 }
             }
@@ -211,11 +210,11 @@ private fun resolveScope(
 
 private fun enterScope(binders: List<VariableBindingNode>, context: ResolutionContext): ResolutionContext {
     val bindings = binders.groupBy(VariableBindingNode::name)
-        .mapValues(fun(entry): Int {
+        .mapValues(fun(entry): VariableBindingNode {
             if (entry.value.size > 1) {
                 throw RedeclarationError(entry.key, entry.value[1].source)
             } else {
-                return entry.value[0].nodeId
+                return entry.value[0]
             }
         })
 

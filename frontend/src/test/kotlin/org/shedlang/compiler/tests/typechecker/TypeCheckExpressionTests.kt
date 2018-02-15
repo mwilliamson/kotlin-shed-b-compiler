@@ -7,7 +7,6 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -54,13 +53,14 @@ class TypeCheckExpressionTests {
     @Test
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
         val reference = variableReference("x")
+        val declaration = valStatement("x")
 
         assertThat(
             { inferType(
                 reference,
                 newTypeContext(
                     nodeTypes = mutableMapOf(),
-                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to freshNodeId())),
+                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
                     getModule = { moduleName -> throw UnsupportedOperationException() }
                 )
             ) },

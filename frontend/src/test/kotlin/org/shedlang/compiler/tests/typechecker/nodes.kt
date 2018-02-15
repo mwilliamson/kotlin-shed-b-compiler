@@ -22,11 +22,14 @@ fun typeContext(
     modules: Map<ImportPath, ModuleType> = mapOf()
 ): TypeContext {
     val finalReferences = (
-        referenceTypes.keys.associateBy(ReferenceNode::nodeId, { entry -> freshNodeId()}) +
-        references.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value.nodeId })
+        referenceTypes.entries.associateBy(
+            { entry -> entry.key.nodeId },
+            { entry -> BuiltinVariable(entry.key.name, entry.value) }
+        ) +
+        references.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value })
     )
     val finalTypes = (
-        referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!! }, { entry -> entry.value }) +
+        referenceTypes.entries.associateBy({ entry -> finalReferences[entry.key.nodeId]!!.nodeId }, { entry -> entry.value }) +
         types.entries.associateBy({ entry -> entry.key.nodeId }, { entry -> entry.value })
     )
 
