@@ -23,42 +23,11 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: VariableReferenceNode) = context.typeOf(node)
 
         override fun visit(node: BinaryOperationNode): Type {
-            val leftType = inferType(node.left, context)
-            val rightType = inferType(node.right, context)
-
-            return when (OperationType(node.operator, leftType, rightType)) {
-                OperationType(Operator.EQUALS, IntType, IntType) -> BoolType
-                OperationType(Operator.ADD, IntType, IntType) -> IntType
-                OperationType(Operator.SUBTRACT, IntType, IntType) -> IntType
-                OperationType(Operator.MULTIPLY, IntType, IntType) -> IntType
-
-                OperationType(Operator.EQUALS, StringType, StringType) -> BoolType
-                OperationType(Operator.ADD, StringType, StringType) -> StringType
-
-                OperationType(Operator.EQUALS, BoolType, BoolType) -> BoolType
-
-                else -> throw InvalidOperationError(
-                    operator = node.operator,
-                    operands = listOf(leftType, rightType),
-                    source = node.source
-                )
-            }
+            return inferBinaryOperationType(node, context)
         }
 
         override fun visit(node: IsNode): Type {
-            // TODO: test expression and type checking
-
-            val expressionType = inferType(node.expression, context)
-            checkTypePredicateOperand(node.expression, expressionType)
-            evalType(node.type, context)
-
-            // TODO: for this to be valid, the type must have a tag value
-            // TODO: given generics are erased, when node.type is generic we
-            // should make sure no other instantiations of that generic type
-            // are possible e.g. if the expression has type Cons[T] | Nil,
-            // then checking the type to be Cons[U] is valid iff T <: U
-
-            return BoolType
+            return inferIsExpressionType(node, context)
         }
 
         override fun visit(node: CallNode): Type {
@@ -70,23 +39,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: FieldAccessNode): Type {
-            val receiverType = inferType(node.receiver, context)
-            if (receiverType is HasFieldsType) {
-                val fieldType = receiverType.fields[node.fieldName]
-                if (fieldType == null) {
-                    throw NoSuchFieldError(
-                        fieldName = node.fieldName,
-                        source = node.source
-                    )
-                } else {
-                    return fieldType
-                }
-            } else {
-                throw NoSuchFieldError(
-                    fieldName = node.fieldName,
-                    source = node.source
-                )
-            }
+            return inferFieldAccessType(node, context)
         }
 
         override fun visit(node: FunctionExpressionNode): Type {
@@ -94,52 +47,119 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: IfNode): Type {
-            val conditionalBranchTypes = node.conditionalBranches.map { branch ->
-                verifyType(branch.condition, context, expected = BoolType)
-
-                val trueContext = context.enterScope()
-
-                if (
-                    branch.condition is IsNode &&
-                    branch.condition.expression is VariableReferenceNode
-                ) {
-                    val conditionType = evalType(branch.condition.type, context)
-                    trueContext.addType(branch.condition.expression, conditionType)
-                }
-
-                typeCheck(branch.body, trueContext)
-            }
-            val elseBranchType = typeCheck(node.elseBranch, context)
-            val branchTypes = conditionalBranchTypes + listOf(elseBranchType)
-
-            return branchTypes.reduce(::union)
+            return inferIfExpressionType(node, context)
         }
 
         override fun visit(node: WhenNode): Type {
-            val expressionType = inferType(node.expression, context)
-            checkTypePredicateOperand(node.expression, expressionType)
-
-            // TODO: check exhaustiveness
-
-            val branchTypes = node.branches.map { branch ->
-                val conditionType = evalType(branch.type, context)
-                val branchContext = context.enterScope()
-                if (node.expression is VariableReferenceNode) {
-                    branchContext.addType(node.expression, conditionType)
-                }
-                typeCheck(branch.body, branchContext)
-            }
-            return branchTypes.reduce(::union)
-        }
-
-        private fun checkTypePredicateOperand(expression: ExpressionNode, expressionType: Type) {
-            if (expressionType !is UnionType) {
-                throw UnexpectedTypeError(
-                    expected = UnionTypeGroup,
-                    actual = expressionType,
-                    source = expression.source
-                )
-            }
+            return inferWhenExpressionType(node, context)
         }
     })
+}
+
+private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeContext): Type {
+    val leftType = inferType(node.left, context)
+    val rightType = inferType(node.right, context)
+
+    return when (OperationType(node.operator, leftType, rightType)) {
+        OperationType(Operator.EQUALS, IntType, IntType) -> BoolType
+        OperationType(Operator.ADD, IntType, IntType) -> IntType
+        OperationType(Operator.SUBTRACT, IntType, IntType) -> IntType
+        OperationType(Operator.MULTIPLY, IntType, IntType) -> IntType
+
+        OperationType(Operator.EQUALS, StringType, StringType) -> BoolType
+        OperationType(Operator.ADD, StringType, StringType) -> StringType
+
+        OperationType(Operator.EQUALS, BoolType, BoolType) -> BoolType
+
+        else -> throw InvalidOperationError(
+            operator = node.operator,
+            operands = listOf(leftType, rightType),
+            source = node.source
+        )
+    }
+}
+
+private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType {
+    // TODO: test expression and type checking
+
+    val expressionType = inferType(node.expression, context)
+    checkTypePredicateOperand(node.expression, expressionType)
+    evalType(node.type, context)
+
+    // TODO: for this to be valid, the type must have a tag value
+    // TODO: given generics are erased, when node.type is generic we
+    // should make sure no other instantiations of that generic type
+    // are possible e.g. if the expression has type Cons[T] | Nil,
+    // then checking the type to be Cons[U] is valid iff T <: U
+
+    return BoolType
+}
+
+private fun inferFieldAccessType(node: FieldAccessNode, context: TypeContext): Type {
+    val receiverType = inferType(node.receiver, context)
+    if (receiverType is HasFieldsType) {
+        val fieldType = receiverType.fields[node.fieldName]
+        if (fieldType == null) {
+            throw NoSuchFieldError(
+                fieldName = node.fieldName,
+                source = node.source
+            )
+        } else {
+            return fieldType
+        }
+    } else {
+        throw NoSuchFieldError(
+            fieldName = node.fieldName,
+            source = node.source
+        )
+    }
+}
+
+private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
+    val conditionalBranchTypes = node.conditionalBranches.map { branch ->
+        verifyType(branch.condition, context, expected = BoolType)
+
+        val trueContext = context.enterScope()
+
+        if (
+        branch.condition is IsNode &&
+            branch.condition.expression is VariableReferenceNode
+            ) {
+            val conditionType = evalType(branch.condition.type, context)
+            trueContext.addType(branch.condition.expression, conditionType)
+        }
+
+        typeCheck(branch.body, trueContext)
+    }
+    val elseBranchType = typeCheck(node.elseBranch, context)
+    val branchTypes = conditionalBranchTypes + listOf(elseBranchType)
+
+    return branchTypes.reduce(::union)
+}
+
+private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type {
+    val expressionType = inferType(node.expression, context)
+    checkTypePredicateOperand(node.expression, expressionType)
+
+    // TODO: check exhaustiveness
+
+    val branchTypes = node.branches.map { branch ->
+        val conditionType = evalType(branch.type, context)
+        val branchContext = context.enterScope()
+        if (node.expression is VariableReferenceNode) {
+            branchContext.addType(node.expression, conditionType)
+        }
+        typeCheck(branch.body, branchContext)
+    }
+    return branchTypes.reduce(::union)
+}
+
+private fun checkTypePredicateOperand(expression: ExpressionNode, expressionType: Type) {
+    if (expressionType !is UnionType) {
+        throw UnexpectedTypeError(
+            expected = UnionTypeGroup,
+            actual = expressionType,
+            source = expression.source
+        )
+    }
 }
