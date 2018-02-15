@@ -32,7 +32,7 @@ fun typeContext(
 
     return TypeContext(
         effect = effect,
-        nodeTypes = HashMap(finalTypes),
+        variableTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),
         getModule = { moduleName -> modules[moduleName]!! }

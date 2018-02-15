@@ -12,7 +12,7 @@ fun newTypeContext(
 ): TypeContext {
     return TypeContext(
         effect = EmptyEffect,
-        nodeTypes = nodeTypes.toMutableMap(),
+        variableTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
         deferred = LinkedList()
@@ -21,21 +21,17 @@ fun newTypeContext(
 
 class TypeContext(
     val effect: Effect,
-    private val nodeTypes: MutableMap<Int, Type>,
+    private val variableTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleType,
     private val deferred: Queue<() -> Unit>
 ) {
-    internal fun getNodeTypes(): NodeTypesMap {
-        return NodeTypesMap(nodeTypes)
-    }
-
     fun moduleType(path: ImportPath): ModuleType {
         return getModule(path)
     }
 
     fun typeOf(node: VariableBindingNode): Type {
-        val type = nodeTypes[node.nodeId]
+        val type = variableTypes[node.nodeId]
         if (type == null) {
             // TODO: test this
             throw CompilerError(
@@ -49,7 +45,7 @@ class TypeContext(
 
     fun typeOf(reference: ReferenceNode): Type {
         val targetNodeId = resolvedReferences[reference]
-        val type = nodeTypes[targetNodeId]
+        val type = variableTypes[targetNodeId]
         if (type == null) {
             throw CompilerError(
                 "type of ${reference.name} is unknown",
@@ -61,22 +57,22 @@ class TypeContext(
     }
 
     fun addTypes(types: Map<Int, Type>) {
-        nodeTypes += types
+        variableTypes += types
     }
 
     fun addType(node: VariableBindingNode, type: Type) {
-        nodeTypes[node.nodeId] = type
+        variableTypes[node.nodeId] = type
     }
 
     fun addType(node: ReferenceNode, type: Type) {
         val targetNodeId = resolvedReferences[node]
-        nodeTypes[targetNodeId] = type
+        variableTypes[targetNodeId] = type
     }
 
     fun enterFunction(effect: Effect): TypeContext {
         return TypeContext(
             effect = effect,
-            nodeTypes = nodeTypes,
+            variableTypes = variableTypes,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
             deferred = deferred
@@ -86,7 +82,7 @@ class TypeContext(
     fun enterScope(): TypeContext {
         return TypeContext(
             effect = effect,
-            nodeTypes = HashMap(nodeTypes),
+            variableTypes = HashMap(variableTypes),
             resolvedReferences = resolvedReferences,
             getModule = getModule,
             deferred = deferred
@@ -125,7 +121,6 @@ internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
 }
 
 data class TypeCheckResult(
-    val types: NodeTypes,
     val moduleType: ModuleType
 )
 
@@ -142,7 +137,6 @@ internal fun typeCheck(
     )
     val moduleType = typeCheck(module, typeContext)
     return TypeCheckResult(
-        types = typeContext.getNodeTypes(),
         moduleType = moduleType
     )
 }
