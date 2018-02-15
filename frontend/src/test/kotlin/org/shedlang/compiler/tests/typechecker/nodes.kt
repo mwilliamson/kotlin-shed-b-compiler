@@ -14,7 +14,6 @@ fun emptyTypeContext(): TypeContext {
 }
 
 fun typeContext(
-    returnType: Type? = null,
     effect: Effect = EmptyEffect,
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),

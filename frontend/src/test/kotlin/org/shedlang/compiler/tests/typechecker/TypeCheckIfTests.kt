@@ -82,7 +82,6 @@ class TypeCheckIfTests {
         )
 
         val typeContext = typeContext(
-            returnType = member1,
             referenceTypes = mapOf(
                 member1Reference to MetaType(member1),
                 receiverReference to functionType(positionalArguments = listOf(member1))
