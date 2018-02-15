@@ -6,15 +6,21 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
 
 internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptModuleNode {
+    val context = CodeGenerationContext()
+
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
-    val body = node.body.flatMap(::generateCode)
+    val body = node.body.flatMap { statement -> generateCode(statement, context)  }
     val exports = node.body.filterIsInstance<VariableBindingNode>()
         .map(::generateExport)
     return JavascriptModuleNode(
         imports + body + exports,
         source = NodeSource(node)
     )
+}
+
+internal class CodeGenerationContext {
+
 }
 
 private fun generateCode(module: Module, import: ImportNode): JavascriptStatementNode {
@@ -53,12 +59,12 @@ private fun generateExport(statement: VariableBindingNode): JavascriptExpression
     )
 }
 
-internal fun generateCode(node: ModuleStatementNode): List<JavascriptStatementNode> {
+internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
-        override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node))
-        override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node))
+        override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
+        override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
     })
 }
 
@@ -87,8 +93,8 @@ private fun generateCode(node: UnionNode) : JavascriptStatementNode {
     )
 }
 
-private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionDeclarationNode {
-    val javascriptFunction = generateFunction(node)
+private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): JavascriptFunctionDeclarationNode {
+    val javascriptFunction = generateFunction(node, context)
     return JavascriptFunctionDeclarationNode(
         name = node.name,
         arguments = javascriptFunction.arguments,
@@ -97,7 +103,7 @@ private fun generateCode(node: FunctionDeclarationNode): JavascriptFunctionDecla
     )
 }
 
-private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
+private fun generateFunction(node: FunctionNode, context: CodeGenerationContext): JavascriptFunctionNode {
     val positionalParameters = node.arguments.map(ArgumentNode::name)
     val namedParameterName = "\$named"
     val namedParameters = if (node.namedParameters.isEmpty()) {
@@ -119,7 +125,7 @@ private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
             source = NodeSource(parameter)
         )
     }
-    val body = namedParameterAssignments + generateCode(node.body.statements)
+    val body = namedParameterAssignments + generateCode(node.body.statements, context)
 
     return object: JavascriptFunctionNode {
         override val arguments = positionalParameters + namedParameters
@@ -127,14 +133,14 @@ private fun generateFunction(node: FunctionNode): JavascriptFunctionNode {
     }
 }
 
-private fun generateCode(statements: List<StatementNode>): List<JavascriptStatementNode> {
-    return statements.map(::generateCode)
+private fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<JavascriptStatementNode> {
+    return statements.map { statement -> generateCode(statement, context) }
 }
 
-internal fun generateCode(node: StatementNode): JavascriptStatementNode {
+internal fun generateCode(node: StatementNode, context: CodeGenerationContext): JavascriptStatementNode {
     return node.accept(object : StatementNode.Visitor<JavascriptStatementNode> {
         override fun visit(node: ExpressionStatementNode): JavascriptStatementNode {
-            val expression = generateCode(node.expression)
+            val expression = generateCode(node.expression, context)
             val source = NodeSource(node)
             return if (node.isReturn) {
                 JavascriptReturnNode(expression, source)
@@ -144,20 +150,20 @@ internal fun generateCode(node: StatementNode): JavascriptStatementNode {
         }
 
         override fun visit(node: ValNode): JavascriptStatementNode {
-            return generateCode(node)
+            return generateCode(node, context)
         }
     })
 }
 
-private fun generateCode(node: ValNode): JavascriptConstNode {
+private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
     return JavascriptConstNode(
         name = node.name,
-        expression = generateCode(node.expression),
+        expression = generateCode(node.expression, context),
         source = NodeSource(node)
     )
 }
 
-internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
+internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext): JavascriptExpressionNode {
     return node.accept(object : ExpressionNode.Visitor<JavascriptExpressionNode> {
         override fun visit(node: UnitLiteralNode): JavascriptExpressionNode {
             return JavascriptNullLiteralNode(NodeSource(node))
@@ -182,44 +188,46 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
         override fun visit(node: BinaryOperationNode): JavascriptExpressionNode {
             return JavascriptBinaryOperationNode(
                 operator = generateCode(node.operator),
-                left = generateCode(node.left),
-                right = generateCode(node.right),
+                left = generateCode(node.left, context),
+                right = generateCode(node.right, context),
                 source = NodeSource(node)
             )
         }
 
         override fun visit(node: IsNode): JavascriptExpressionNode {
             return generateTypeCondition(
-                expression = generateCode(node.expression),
+                expression = generateCode(node.expression, context),
                 type = node.type,
                 source = NodeSource(node)
             )
         }
 
         override fun visit(node: CallNode): JavascriptExpressionNode {
-            val positionalArguments = node.positionalArguments.map(::generateCode)
+            val positionalArguments = node.positionalArguments.map { argument ->
+                generateCode(argument, context)
+            }
             val namedArguments = if (node.namedArguments.isEmpty()) {
                 listOf()
             } else {
                 listOf(JavascriptObjectLiteralNode(
                     node.namedArguments.associate({ argument ->
-                        argument.name to generateCode(argument.expression)
+                        argument.name to generateCode(argument.expression, context)
                     }),
                     source = NodeSource(node)
                 ))
             }
             val arguments = positionalArguments + namedArguments
             return JavascriptFunctionCallNode(
-                generateCode(node.receiver),
+                generateCode(node.receiver, context),
                 arguments,
                 source = NodeSource(node)
             )
         }
 
         override fun visit(node: PartialCallNode): JavascriptExpressionNode {
-            val receiver = generateCode(node.receiver)
+            val receiver = generateCode(node.receiver, context)
             val positionalArguments = JavascriptArrayLiteralNode(
-                elements = node.positionalArguments.map(::generateCode),
+                elements = node.positionalArguments.map { argument -> generateCode(argument, context) },
                 source = NodeSource(node)
             )
             val namedArguments = if (node.namedArguments.isEmpty()) {
@@ -227,7 +235,7 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
             } else {
                 JavascriptObjectLiteralNode(
                     node.namedArguments.associate({ argument ->
-                        argument.name to generateCode(argument.expression)
+                        argument.name to generateCode(argument.expression, context)
                     }),
                     source = NodeSource(node)
                 )
@@ -242,14 +250,14 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
 
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
             return JavascriptPropertyAccessNode(
-                generateCode(node.receiver),
+                generateCode(node.receiver, context),
                 node.fieldName,
                 source = NodeSource(node)
             )
         }
 
         override fun visit(node: FunctionExpressionNode): JavascriptExpressionNode {
-            val javascriptFunction = generateFunction(node)
+            val javascriptFunction = generateFunction(node, context)
             return JavascriptFunctionExpressionNode(
                 arguments = javascriptFunction.arguments,
                 body = javascriptFunction.body,
@@ -264,12 +272,12 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                 JavascriptIfStatementNode(
                     conditionalBranches = node.conditionalBranches.map { branch ->
                         JavascriptConditionalBranchNode(
-                            condition = generateCode(branch.condition),
-                            body = generateCode(branch.body),
+                            condition = generateCode(branch.condition, context),
+                            body = generateCode(branch.body, context),
                             source = NodeSource(branch)
                         )
                     },
-                    elseBranch = generateCode(node.elseBranch),
+                    elseBranch = generateCode(node.elseBranch, context),
                     source = source
                 )
             )
@@ -289,7 +297,7 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                 ), branch.type, NodeSource(branch))
                 JavascriptConditionalBranchNode(
                     condition = condition,
-                    body = generateCode(branch.body),
+                    body = generateCode(branch.body, context),
                     source = NodeSource(branch)
                 )
             }
@@ -298,7 +306,7 @@ internal fun generateCode(node: ExpressionNode): JavascriptExpressionNode {
                 body = listOf(
                     JavascriptConstNode(
                         name = temporaryName,
-                        expression = generateCode(node.expression),
+                        expression = generateCode(node.expression, context),
                         source = source
                     ),
                     JavascriptIfStatementNode(

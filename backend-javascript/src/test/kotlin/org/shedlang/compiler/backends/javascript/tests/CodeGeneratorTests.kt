@@ -7,10 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.ast.StatementNode
+import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
@@ -428,6 +426,14 @@ class CodeGeneratorTests {
             isJavascriptVariableReference("x"),
             equalTo("y")
         ))
+    }
+
+    private fun generateCode(node: ModuleStatementNode) = generateCode(node, context())
+    private fun generateCode(node: StatementNode) = generateCode(node, context())
+    private fun generateCode(node: ExpressionNode) = generateCode(node, context())
+
+    private fun context(): CodeGenerationContext {
+        return CodeGenerationContext()
     }
 
     private fun isJavascriptModule(body: Matcher<List<JavascriptStatementNode>>)
