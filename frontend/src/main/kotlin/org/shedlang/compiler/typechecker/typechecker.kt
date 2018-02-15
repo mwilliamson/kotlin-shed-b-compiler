@@ -73,7 +73,7 @@ class TypeContext(
         nodeTypes[targetNodeId] = type
     }
 
-    fun enterFunction(returnType: Type?, effect: Effect): TypeContext {
+    fun enterFunction(effect: Effect): TypeContext {
         return TypeContext(
             effect = effect,
             nodeTypes = nodeTypes,
@@ -202,7 +202,6 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
     val returnType = when (body) {
         is FunctionBody.Expression -> {
             val bodyContext = context.enterFunction(
-                returnType = null,
                 effect = effect
             )
             val expressionType = inferType(body.expression, bodyContext)
@@ -224,7 +223,6 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
             }
             context.defer({
                 val bodyContext = context.enterFunction(
-                    returnType = returnType,
                     effect = effect
                 )
                 val actualReturnType = typeCheck(body.nodes, bodyContext)
