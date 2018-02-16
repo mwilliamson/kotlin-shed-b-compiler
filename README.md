@@ -13,3 +13,5 @@
 * Support backend-specific code
 
 * Move lists into a module
+
+* Optimise directly recursive tail calls
