@@ -63,7 +63,7 @@ class TypeCheckIfTests {
     // TODO: Test that refined type is only in true branch (not false branch, nor following statements)
     @Test
     fun whenConditionIsIsOperationThenTypeIsRefinedInTrueBranch() {
-        val argument = argument("x")
+        val parameter = parameter("x")
 
         val variableReference = variableReference("x")
         val receiverReference = variableReference("f")
@@ -84,13 +84,13 @@ class TypeCheckIfTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 member1Reference to MetaType(member1),
-                receiverReference to functionType(positionalArguments = listOf(member1))
+                receiverReference to functionType(positionalParameters = listOf(member1))
             ),
             references = mapOf(
-                variableReference to argument
+                variableReference to parameter
             ),
             types = mapOf(
-                argument to union
+                parameter to union
             )
         )
 

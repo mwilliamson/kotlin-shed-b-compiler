@@ -201,7 +201,7 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
         return FunctionDeclarationNode(
             name = name,
             staticParameters = signature.staticParameters,
-            arguments = signature.arguments,
+            parameters = signature.parameters,
             namedParameters = signature.namedParameters,
             returnType = signature.returnType,
             effects = signature.effects,
@@ -213,8 +213,8 @@ internal fun parseFunctionDeclaration(source: Source, tokens: TokenIterator<Toke
 
 private data class FunctionSignature(
     val staticParameters: List<StaticParameterNode>,
-    val arguments: List<ArgumentNode>,
-    val namedParameters: List<ArgumentNode>,
+    val parameters: List<ParameterNode>,
+    val namedParameters: List<ParameterNode>,
     val effects: List<StaticNode>,
     val returnType: StaticNode?
 )
@@ -224,7 +224,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val parameters = parseZeroOrMoreNodes(
-        parseElement = ::parseFormalArgument,
+        parseElement = ::parseParameter,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         tokens = tokens
@@ -232,12 +232,12 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     // TODO: make sure there's only one start of named parameters
 
-    val namedStartIndex = parameters.indexOfFirst { argument ->
-        argument == FormalArgument.StartOfNamedArguments
+    val namedStartIndex = parameters.indexOfFirst { parameter ->
+        parameter == Parameter.StartOfNamedParameters
     }
 
     val (positionalParameters, namedParameters) = if (namedStartIndex == -1) {
-        Pair(parameters, listOf<ArgumentNode>())
+        Pair(parameters, listOf<ParameterNode>())
     } else {
         Pair(parameters.take(namedStartIndex), parameters.drop(namedStartIndex + 1))
     }
@@ -255,8 +255,8 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     return FunctionSignature(
         staticParameters = staticParameters,
-        arguments = positionalParameters.map { parameter -> (parameter as FormalArgument.Parameter).parameter },
-        namedParameters = namedParameters.map { parameter -> (parameter as FormalArgument.Parameter).parameter },
+        parameters = positionalParameters.map { parameter -> (parameter as Parameter.Node).parameter },
+        namedParameters = namedParameters.map { parameter -> (parameter as Parameter.Node).parameter },
         effects = effects,
         returnType = returnType
     )
@@ -345,18 +345,18 @@ private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, 
     }
 }
 
-private sealed class FormalArgument {
-    class Parameter(val parameter: ArgumentNode): FormalArgument()
-    object StartOfNamedArguments : FormalArgument()
+private sealed class Parameter {
+    class Node(val parameter: ParameterNode): Parameter()
+    object StartOfNamedParameters : Parameter()
 }
 
-private fun parseFormalArgument(source: Source, tokens: TokenIterator<TokenType>) : FormalArgument {
+private fun parseParameter(source: Source, tokens: TokenIterator<TokenType>) : Parameter {
     if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
-        return FormalArgument.StartOfNamedArguments
+        return Parameter.StartOfNamedParameters
     } else {
         val name = parseIdentifier(tokens)
         val type = parseTypeSpec(tokens)
-        return FormalArgument.Parameter(ArgumentNode(name, type, source))
+        return Parameter.Node(ParameterNode(name, type, source))
     }
 }
 
@@ -792,7 +792,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
 
             return FunctionExpressionNode(
                 staticParameters = signature.staticParameters,
-                arguments = signature.arguments,
+                parameters = signature.parameters,
                 namedParameters = signature.namedParameters,
                 returnType = signature.returnType,
                 effects = signature.effects,
@@ -893,7 +893,7 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-    val arguments = parseMany(
+    val parameters = parseMany(
         parseElement = { tokens -> parseStaticExpression(tokens) },
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         allowZero = true,
@@ -907,7 +907,7 @@ private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>):
     val returnType = parseStaticExpression(tokens)
     return FunctionTypeNode(
         staticParameters = staticParameters,
-        arguments = arguments,
+        positionalParameters = parameters,
         returnType = returnType,
         effects = effects,
         source = source

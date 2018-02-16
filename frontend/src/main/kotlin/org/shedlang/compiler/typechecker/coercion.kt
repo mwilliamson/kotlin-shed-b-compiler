@@ -108,10 +108,10 @@ internal class TypeConstraintSolver(
         if (from is FunctionType && to is FunctionType) {
             return (
                 from.staticParameters.isEmpty() && to.staticParameters.isEmpty() &&
-                    from.positionalArguments.size == to.positionalArguments.size &&
-                    from.positionalArguments.zip(to.positionalArguments, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
-                    from.namedArguments.keys == to.namedArguments.keys &&
-                    from.namedArguments.all({ fromArg -> coerce(from = to.namedArguments[fromArg.key]!!, to = fromArg.value) }) &&
+                    from.positionalParameters.size == to.positionalParameters.size &&
+                    from.positionalParameters.zip(to.positionalParameters, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
+                    from.namedParameters.keys == to.namedParameters.keys &&
+                    from.namedParameters.all({ fromArg -> coerce(from = to.namedParameters[fromArg.key]!!, to = fromArg.value) }) &&
                     coerceEffect(from = from.effect, to = to.effect) &&
                     coerce(from = from.returns, to = to.returns)
                 )

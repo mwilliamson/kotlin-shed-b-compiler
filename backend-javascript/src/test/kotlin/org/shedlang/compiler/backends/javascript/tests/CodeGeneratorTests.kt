@@ -110,8 +110,8 @@ class CodeGeneratorTests {
     fun functionDeclarationGeneratesFunctionDeclaration() {
         val shed = function(
             name = "f",
-            arguments = listOf(argument("x"), argument("y")),
-            namedParameters = listOf(argument("z")),
+            parameters = listOf(parameter("x"), parameter("y")),
+            namedParameters = listOf(parameter("z")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
@@ -119,7 +119,7 @@ class CodeGeneratorTests {
 
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
-            arguments = isSequence(equalTo("x"), equalTo("y"), equalTo("\$named")),
+            parameters = isSequence(equalTo("x"), equalTo("y"), equalTo("\$named")),
             body = isSequence(
                 isJavascriptConst(
                     name = equalTo("z"),
@@ -136,14 +136,14 @@ class CodeGeneratorTests {
     @Test
     fun functionExpressionGeneratesFunctionExpression() {
         val shed = functionExpression(
-            arguments = listOf(argument("x"), argument("y")),
+            parameters = listOf(parameter("x"), parameter("y")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
         val node = generateCode(shed)
 
         assertThat(node, isJavascriptFunctionExpression(
-            arguments = isSequence(equalTo("x"), equalTo("y")),
+            parameters = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
         ))
     }
@@ -383,16 +383,16 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, listOf(literalInt(42), literalBool(false)))
 
-        val referenceTypes = listOf(reference to functionType(positionalArguments = listOf(IntType, BoolType, IntType, IntType)))
+        val referenceTypes = listOf(reference to functionType(positionalParameters = listOf(IntType, BoolType, IntType, IntType)))
         val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
-                arguments = isSequence(equalTo("\$func"), equalTo("\$arg0"), equalTo("\$arg1")),
+                parameters = isSequence(equalTo("\$func"), equalTo("\$arg0"), equalTo("\$arg1")),
                 body = isSequence(
                     isJavascriptReturn(
                         isJavascriptFunctionExpression(
-                            arguments = isSequence(equalTo("\$arg2"), equalTo("\$arg3")),
+                            parameters = isSequence(equalTo("\$arg2"), equalTo("\$arg3")),
                             body = isSequence(
                                 isJavascriptReturn(
                                     isJavascriptFunctionCall(
@@ -423,16 +423,16 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val referenceTypes = listOf(reference to functionType(namedArguments = mapOf("x" to IntType)))
+        val referenceTypes = listOf(reference to functionType(namedParameters = mapOf("x" to IntType)))
         val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
-                arguments = isSequence(equalTo("\$func"), equalTo("x")),
+                parameters = isSequence(equalTo("\$func"), equalTo("x")),
                 body = isSequence(
                     isJavascriptReturn(
                         isJavascriptFunctionExpression(
-                            arguments = isSequence(),
+                            parameters = isSequence(),
                             body = isSequence(
                                 isJavascriptReturn(
                                     isJavascriptFunctionCall(
@@ -461,16 +461,16 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val referenceTypes = listOf(reference to functionType(namedArguments = mapOf("x" to IntType, "y" to IntType)))
+        val referenceTypes = listOf(reference to functionType(namedParameters = mapOf("x" to IntType, "y" to IntType)))
         val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
-                arguments = isSequence(equalTo("\$func"), equalTo("x")),
+                parameters = isSequence(equalTo("\$func"), equalTo("x")),
                 body = isSequence(
                     isJavascriptReturn(
                         isJavascriptFunctionExpression(
-                            arguments = isSequence(equalTo("\$named")),
+                            parameters = isSequence(equalTo("\$named")),
                             body = isSequence(
                                 isJavascriptReturn(
                                     isJavascriptFunctionCall(
@@ -529,21 +529,21 @@ class CodeGeneratorTests {
 
     private fun isJavascriptFunction(
         name: Matcher<String>,
-        arguments: Matcher<List<String>> = anything,
+        parameters: Matcher<List<String>> = anything,
         body: Matcher<List<JavascriptStatementNode>> = anything
     ) : Matcher<JavascriptStatementNode>
         = cast(allOf(
             has(JavascriptFunctionDeclarationNode::name, name),
-            has(JavascriptFunctionDeclarationNode::arguments, arguments),
+            has(JavascriptFunctionDeclarationNode::parameters, parameters),
             has(JavascriptFunctionDeclarationNode::body, body)
         ))
 
     private fun isJavascriptFunctionExpression(
-        arguments: Matcher<List<String>> = anything,
+        parameters: Matcher<List<String>> = anything,
         body: Matcher<List<JavascriptStatementNode>> = anything
     ) : Matcher<JavascriptExpressionNode>
         = cast(allOf(
-        has(JavascriptFunctionExpressionNode::arguments, arguments),
+        has(JavascriptFunctionExpressionNode::parameters, parameters),
         has(JavascriptFunctionExpressionNode::body, body)
     ))
 
@@ -673,7 +673,7 @@ class CodeGeneratorTests {
     ): Matcher<JavascriptExpressionNode> {
         return isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
-                arguments = isSequence(),
+                parameters = isSequence(),
                 body = body
             ),
             arguments = isSequence()

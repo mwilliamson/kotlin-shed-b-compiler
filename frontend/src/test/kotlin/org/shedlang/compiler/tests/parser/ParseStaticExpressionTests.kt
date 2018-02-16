@@ -42,7 +42,7 @@ class ParseStaticExpressionTests {
         val source = "(A, B) -> C"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
-            arguments = isSequence(
+            positionalParameters = isSequence(
                 isStaticReference(name = "A"),
                 isStaticReference(name = "B")
             ),
@@ -65,7 +65,7 @@ class ParseStaticExpressionTests {
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
 
-            arguments = isSequence(
+            positionalParameters = isSequence(
                 isStaticReference(name = "T"),
                 isStaticReference(name = "U")
             ),

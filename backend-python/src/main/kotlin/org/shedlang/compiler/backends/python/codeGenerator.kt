@@ -86,7 +86,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 private fun generateCode(node: ShapeNode, context: CodeGenerationContext): PythonClassNode {
     val init = PythonFunctionNode(
         name = "__init__",
-        arguments = listOf("self") + node.fields.map({ field -> field.name }),
+        parameters = listOf("self") + node.fields.map({ field -> field.name }),
         body = node.fields.map({ field ->
             PythonAssignmentNode(
                 target = PythonAttributeAccessNode(
@@ -117,15 +117,15 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
         // TODO: test renaming
         name = name,
         // TODO: test renaming
-        arguments = generateArguments(node, context),
+        parameters = generateParameters(node, context),
         body = generateCode(node.body.statements, context),
         source = NodeSource(node)
     )
 }
 
-private fun generateArguments(function: FunctionNode, context: CodeGenerationContext) =
-    function.arguments.map({ argument -> context.name(argument) }) +
-        function.namedParameters.map({ argument -> context.name(argument) })
+private fun generateParameters(function: FunctionNode, context: CodeGenerationContext) =
+    function.parameters.map({ parameter -> context.name(parameter) }) +
+        function.namedParameters.map({ parameter -> context.name(parameter) })
 
 internal fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<PythonStatementNode> {
     return statements.flatMap { statement -> generateCode(statement, context) }
@@ -316,7 +316,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             if (node.body.statements.isEmpty()) {
                 return GeneratedExpression(
                     PythonLambdaNode(
-                        arguments = generateArguments(node, context),
+                        parameters = generateParameters(node, context),
                         body = PythonNoneLiteralNode(source = NodeSource(node)),
                         source = NodeSource(node)
                     ),
@@ -330,7 +330,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 if (expression.functions.isEmpty()) {
                     return GeneratedExpression(
                         PythonLambdaNode(
-                            arguments = generateArguments(node, context),
+                            parameters = generateParameters(node, context),
                             body = expression.value,
                             source = NodeSource(node)
                         ),
@@ -441,7 +441,7 @@ private fun generateScopedExpression(
 ): GeneratedExpression {
     val auxiliaryFunction = PythonFunctionNode(
         name = context.freshName(),
-        arguments = listOf(),
+        parameters = listOf(),
         body = body,
         source = source
     )

@@ -148,8 +148,8 @@ class TypeConstraintsTests {
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
 
-        val subType = functionType(positionalArguments = listOf(union))
-        val superType = functionType(positionalArguments = listOf(typeParameter))
+        val subType = functionType(positionalParameters = listOf(union))
+        val superType = functionType(positionalParameters = listOf(typeParameter))
 
         assertThat(
             coerce(

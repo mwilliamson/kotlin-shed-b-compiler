@@ -48,7 +48,7 @@ data class PythonClassNode(
 
 data class PythonFunctionNode(
     val name: String,
-    val arguments: List<String>,
+    val parameters: List<String>,
     val body: List<PythonStatementNode>,
     override val source: Source
 ): PythonStatementNode {
@@ -58,7 +58,7 @@ data class PythonFunctionNode(
 }
 
 data class PythonLambdaNode(
-    val arguments: List<String>,
+    val parameters: List<String>,
     val body: PythonExpressionNode,
     override val source: Source
 ): PythonExpressionNode {

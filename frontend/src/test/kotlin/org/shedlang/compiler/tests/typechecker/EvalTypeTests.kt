@@ -115,7 +115,7 @@ class EvalTypeTests {
 
         val node = functionTypeNode(
             staticParameters = listOf(typeParameter),
-            arguments = listOf(typeParameterReference),
+            parameters = listOf(typeParameterReference),
             effects = listOf(effectReference),
             returnType = boolReference
         )
@@ -131,7 +131,7 @@ class EvalTypeTests {
             )
         )
         assertThat(type, isFunctionType(
-            arguments = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
+            positionalParameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
             effect = equalTo(IoEffect),
             returnType = isBoolType
         ))

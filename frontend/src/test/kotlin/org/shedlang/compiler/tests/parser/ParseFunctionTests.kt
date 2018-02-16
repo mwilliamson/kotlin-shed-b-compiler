@@ -20,7 +20,7 @@ class ParseFunctionTests {
         assertThat(function, allOf(
             has(FunctionDeclarationNode::name, equalTo("f")),
             has(FunctionNode::staticParameters, isSequence()),
-            has(FunctionNode::arguments, isSequence()),
+            has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::returnType, present(cast(
                 has(StaticReferenceNode::name, equalTo("Unit"))
             )))
@@ -31,7 +31,7 @@ class ParseFunctionTests {
     fun canReadOneArgumentFunctionSignature() {
         val source = "fun f(x: Int) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
-        assertThat(function, has(FunctionNode::arguments, isSequence(
+        assertThat(function, has(FunctionNode::parameters, isSequence(
             isArgument("x", "Int")
         )))
     }
@@ -40,7 +40,7 @@ class ParseFunctionTests {
     fun canReadManyArgumentFunctionSignature() {
         val source = "fun f(x: Int, y: String) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
-        assertThat(function, has(FunctionNode::arguments, isSequence(
+        assertThat(function, has(FunctionNode::parameters, isSequence(
             isArgument("x", "Int"),
             isArgument("y", "String")
         )))
@@ -51,7 +51,7 @@ class ParseFunctionTests {
         val source = "fun f(*, x: Int) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionNode::arguments, isSequence()),
+            has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::namedParameters, isSequence(isArgument("x", "Int")))
         ))
     }
@@ -61,7 +61,7 @@ class ParseFunctionTests {
         val source = "fun f(x: Int, *, y: Int) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionNode::arguments, isSequence(isArgument("x", "Int"))),
+            has(FunctionNode::parameters, isSequence(isArgument("x", "Int"))),
             has(FunctionNode::namedParameters, isSequence(isArgument("y", "Int")))
         ))
     }
@@ -149,7 +149,7 @@ class ParseFunctionTests {
         val function = parseString(::parseExpression, source)
         assertThat(function, cast(allOf(
             has(FunctionNode::staticParameters, isSequence()),
-            has(FunctionNode::arguments, isSequence()),
+            has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::returnType, present(cast(
                 has(StaticReferenceNode::name, equalTo("Unit"))
             )))
@@ -178,10 +178,10 @@ class ParseFunctionTests {
         )))
     }
 
-    private fun isArgument(name: String, typeReference: String): Matcher<ArgumentNode> {
+    private fun isArgument(name: String, typeReference: String): Matcher<ParameterNode> {
         return allOf(
-            has(ArgumentNode::name, equalTo(name)),
-            has(ArgumentNode::type, cast(
+            has(ParameterNode::name, equalTo(name)),
+            has(ParameterNode::type, cast(
                 has(StaticReferenceNode::name, equalTo(typeReference))
             ))
         )

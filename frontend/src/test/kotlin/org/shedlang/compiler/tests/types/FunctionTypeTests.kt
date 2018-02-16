@@ -15,7 +15,7 @@ class FunctionTypeTests {
     @Test
     fun shortDescriptionIncludesPositionalArgumentsBetweenParens() {
         val functionType = functionType(
-            positionalArguments = listOf(IntType, BoolType),
+            positionalParameters = listOf(IntType, BoolType),
             returns = UnitType
         )
         assertThat(functionType.shortDescription, equalTo("(Int, Bool) -> Unit"))
@@ -24,8 +24,8 @@ class FunctionTypeTests {
     @Test
     fun shortDescriptionIncludesNamedArgumentsAfterPositionalArguments() {
         val functionType = functionType(
-            positionalArguments = listOf(IntType),
-            namedArguments = mapOf("x" to BoolType),
+            positionalParameters = listOf(IntType),
+            namedParameters = mapOf("x" to BoolType),
             returns = UnitType
         )
         assertThat(functionType.shortDescription, equalTo("(Int, x: Bool) -> Unit"))
@@ -34,8 +34,8 @@ class FunctionTypeTests {
     @Test
     fun namedArgumentsAreInAlphabeticalOrder() {
         val functionType = functionType(
-            positionalArguments = listOf(),
-            namedArguments = mapOf("x" to BoolType, "a" to IntType),
+            positionalParameters = listOf(),
+            namedParameters = mapOf("x" to BoolType, "a" to IntType),
             returns = UnitType
         )
         assertThat(functionType.shortDescription, equalTo("(a: Int, x: Bool) -> Unit"))

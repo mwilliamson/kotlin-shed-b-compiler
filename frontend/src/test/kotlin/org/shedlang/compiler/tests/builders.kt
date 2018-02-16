@@ -165,15 +165,15 @@ fun fieldAccess(
 fun function(
     name: String = "f",
     staticParameters: List<StaticParameterNode> = listOf(),
-    arguments: List<ArgumentNode> = listOf(),
-    namedParameters: List<ArgumentNode> = listOf(),
+    parameters: List<ParameterNode> = listOf(),
+    namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = name,
     staticParameters = staticParameters,
-    arguments = arguments,
+    parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
@@ -183,14 +183,14 @@ fun function(
 
 fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
-    arguments: List<ArgumentNode> = listOf(),
-    namedParameters: List<ArgumentNode> = listOf(),
+    parameters: List<ParameterNode> = listOf(),
+    namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode? = null,
     body: List<StatementNode> = listOf()
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
-    arguments = arguments,
+    parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
@@ -200,14 +200,14 @@ fun functionExpression(
 
 fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
-    arguments: List<ArgumentNode> = listOf(),
-    namedParameters: List<ArgumentNode> = listOf(),
+    parameters: List<ParameterNode> = listOf(),
+    namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode? = staticReference("Unit"),
     body: ExpressionNode
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
-    arguments = arguments,
+    parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
@@ -268,10 +268,10 @@ fun effectParameterDeclaration(
     source = anySource()
 )
 
-fun argument(
+fun parameter(
     name: String = "x",
     type: StaticNode = staticReference("Int")
-) = ArgumentNode(
+) = ParameterNode(
     name = name,
     type = type,
     source = anySource()
@@ -307,12 +307,12 @@ fun staticApplication(
 )
 fun functionTypeNode(
     staticParameters: List<StaticParameterNode> = listOf(),
-    arguments: List<StaticNode> = listOf(),
+    parameters: List<StaticNode> = listOf(),
     returnType: StaticNode,
     effects: List<StaticNode> = listOf()
 ) = FunctionTypeNode(
     staticParameters = staticParameters,
-    arguments = arguments,
+    positionalParameters = parameters,
     returnType = returnType,
     effects = effects,
     source = anySource()

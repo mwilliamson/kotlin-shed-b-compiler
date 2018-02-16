@@ -15,10 +15,10 @@ class TypeCheckFunctionTests {
 
         val typeParameter = typeParameter("T")
         val typeParameterReference = staticReference("T")
-        val argument = argument(type = typeParameterReference)
+        val parameter = parameter(type = typeParameterReference)
         val node = function(
             staticParameters = listOf(typeParameter),
-            arguments = listOf(argument),
+            parameters = listOf(parameter),
             returnType = unitReference
         )
         val typeContext = typeContext(
@@ -33,7 +33,7 @@ class TypeCheckFunctionTests {
             cast(has(TypeParameter::name, equalTo("T")))
         ))
         assertThat(
-            typeContext.typeOf(argument),
+            typeContext.typeOf(parameter),
             equalTo((typeContext.typeOf(typeParameter) as MetaType).type)
         )
         assertThat(
@@ -54,7 +54,7 @@ class TypeCheckFunctionTests {
         val effectParameterReference = staticReference("E")
         val node = function(
             staticParameters = listOf(effectParameter),
-            arguments = listOf(),
+            parameters = listOf(),
             effects = listOf(effectParameterReference),
             returnType = unitReference
         )
@@ -117,16 +117,16 @@ class TypeCheckFunctionTests {
     @Test
     fun positionalParametersAreTyped() {
         val intType = staticReference("Int")
-        val argument = argument(name = "x", type = intType)
-        val argumentReference = variableReference("x")
+        val parameter = parameter(name = "x", type = intType)
+        val parameterReference = variableReference("x")
         val node = function(
-            arguments = listOf(argument),
+            parameters = listOf(parameter),
             returnType = intType,
-            body = listOf(expressionStatement(argumentReference, isReturn = true))
+            body = listOf(expressionStatement(parameterReference, isReturn = true))
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(intType to MetaType(IntType)),
-            references = mapOf(argumentReference to argument)
+            references = mapOf(parameterReference to parameter)
         )
         typeCheck(node, typeContext)
         typeContext.undefer()
@@ -134,8 +134,8 @@ class TypeCheckFunctionTests {
         assertThat(
             typeContext.typeOf(node),
             isFunctionType(
-                arguments = isSequence(isIntType),
-                namedArguments = isMap()
+                positionalParameters = isSequence(isIntType),
+                namedParameters = isMap()
             )
         )
     }
@@ -143,16 +143,16 @@ class TypeCheckFunctionTests {
     @Test
     fun namedParametersAreTyped() {
         val intType = staticReference("Int")
-        val argument = argument(name = "x", type = intType)
-        val argumentReference = variableReference("x")
+        val parameter = parameter(name = "x", type = intType)
+        val parameterReference = variableReference("x")
         val node = function(
-            namedParameters = listOf(argument),
+            namedParameters = listOf(parameter),
             returnType = intType,
-            body = listOf(expressionStatement(argumentReference, isReturn = true))
+            body = listOf(expressionStatement(parameterReference, isReturn = true))
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(intType to MetaType(IntType)),
-            references = mapOf(argumentReference to argument)
+            references = mapOf(parameterReference to parameter)
         )
         typeCheck(node, typeContext)
         typeContext.undefer()
@@ -160,8 +160,8 @@ class TypeCheckFunctionTests {
         assertThat(
             typeContext.typeOf(node),
             isFunctionType(
-                arguments = isSequence(),
-                namedArguments = isMap("x" to isIntType)
+                positionalParameters = isSequence(),
+                namedParameters = isMap("x" to isIntType)
             )
         )
     }
@@ -171,9 +171,9 @@ class TypeCheckFunctionTests {
         val intType = staticReference("Int")
         val boolType = staticReference("Bool")
         val node = function(
-            arguments = listOf(
-                argument(name = "x", type = intType),
-                argument(name = "y", type = boolType)
+            parameters = listOf(
+                parameter(name = "x", type = intType),
+                parameter(name = "y", type = boolType)
             ),
             returnType = intType,
             body = listOf(expressionStatement(literalInt()))
@@ -184,7 +184,7 @@ class TypeCheckFunctionTests {
         ))
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
-            arguments = equalTo(listOf(IntType, BoolType)),
+            positionalParameters = equalTo(listOf(IntType, BoolType)),
             returnType = equalTo(IntType)
         ))
     }
@@ -204,7 +204,7 @@ class TypeCheckFunctionTests {
         ))
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
-            arguments = anything,
+            positionalParameters = anything,
             returnType = anything,
             effect = cast(equalTo(IoEffect))
         ))
@@ -327,7 +327,7 @@ class TypeCheckFunctionTests {
     fun whenExpressionBodyDoesNotMatchReturnTypeThenErrorIsThrown() {
         val intType = staticReference("Int")
         val node = functionExpression(
-            arguments = listOf(),
+            parameters = listOf(),
             returnType = intType,
             body = literalBool()
         )
@@ -343,7 +343,7 @@ class TypeCheckFunctionTests {
     @Test
     fun whenExplicitReturnTypeIsMissingThenReturnTypeIsTypeOfExpressionBody() {
         val node = functionExpression(
-            arguments = listOf(),
+            parameters = listOf(),
             returnType = null,
             body = literalBool()
         )
@@ -357,7 +357,7 @@ class TypeCheckFunctionTests {
     fun explicitReturnTypeIsUsedAsReturnTypeInsteadOfExpressionBodyType() {
         val anyReference = staticReference("Any")
         val node = functionExpression(
-            arguments = listOf(),
+            parameters = listOf(),
             returnType = anyReference,
             body = literalBool()
         )
@@ -401,7 +401,7 @@ class TypeCheckFunctionTests {
             positionalArguments = listOf(node)
         )
         val receiverType = functionType(
-            positionalArguments = listOf(
+            positionalParameters = listOf(
                 functionType(returns = IntType)
             )
         )

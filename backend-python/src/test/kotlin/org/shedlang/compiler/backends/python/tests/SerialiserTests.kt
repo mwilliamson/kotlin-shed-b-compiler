@@ -111,10 +111,10 @@ class SerialiserTests {
     }
 
     @Test
-    fun formalFunctionArgumentsAreSeparatedByCommas() {
+    fun functionParametersAreSeparatedByCommas() {
         assertThat(
             indentedSerialise(
-                pythonFunction(name = "f", arguments = listOf("x", "y"))
+                pythonFunction(name = "f", parameters = listOf("x", "y"))
             ),
             equalTo(listOf(
                 "    def f(x, y):",
@@ -462,7 +462,7 @@ class SerialiserTests {
     @Test
     fun lambdaSerialisation() {
         val node = pythonLambda(
-            arguments = listOf("x", "y"),
+            parameters = listOf("x", "y"),
             body = pythonLiteralBoolean(true)
         )
         val output = serialise(node)

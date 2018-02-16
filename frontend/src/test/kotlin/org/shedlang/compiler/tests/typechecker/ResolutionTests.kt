@@ -77,39 +77,39 @@ class ResolutionTests {
     @Test
     fun functionDeclarationArgumentsAreAddedToScope() {
         val reference = variableReference("x")
-        val argument = argument(name = "x", type = staticReference("Int"))
+        val parameter = parameter(name = "x", type = staticReference("Int"))
         val node = function(
-            arguments = listOf(argument),
+            parameters = listOf(parameter),
             returnType = staticReference("Int"),
             body = listOf(expressionStatement(reference))
         )
 
         val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
 
-        assertThat(references[reference], isVariableBinding(argument))
+        assertThat(references[reference], isVariableBinding(parameter))
     }
 
     @Test
     fun functionExpressionArgumentsAreAddedToScope() {
         val reference = variableReference("x")
-        val argument = argument(name = "x", type = staticReference("Int"))
+        val parameter = parameter(name = "x", type = staticReference("Int"))
         val node = functionExpression(
-            arguments = listOf(argument),
+            parameters = listOf(parameter),
             returnType = staticReference("Int"),
             body = listOf(expressionStatement(reference))
         )
 
         val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
 
-        assertThat(references[reference], isVariableBinding(argument))
+        assertThat(references[reference], isVariableBinding(parameter))
     }
 
     @Test
     fun functionArgumentsCanShadowExistingVariables() {
         val reference = variableReference("x")
-        val argument = argument(name = "x", type = staticReference("Int"))
+        val parameter = parameter(name = "x", type = staticReference("Int"))
         val node = function(
-            arguments = listOf(argument),
+            parameters = listOf(parameter),
             returnType = staticReference("Int"),
             body = listOf(expressionStatement(reference))
         )
@@ -119,7 +119,7 @@ class ResolutionTests {
             "Int" to anyDeclaration()
         ))
 
-        assertThat(references[reference], isVariableBinding(argument))
+        assertThat(references[reference], isVariableBinding(parameter))
     }
 
     @Test
@@ -128,7 +128,7 @@ class ResolutionTests {
         val typeParameter = typeParameter("T")
         val node = function(
             staticParameters = listOf(typeParameter),
-            arguments = listOf(argument(type = reference)),
+            parameters = listOf(parameter(type = reference)),
             returnType = staticReference("T"),
             body = listOf()
         )
@@ -161,7 +161,7 @@ class ResolutionTests {
         val typeParameter = typeParameter("T")
         val node = functionTypeNode(
             staticParameters = listOf(typeParameter),
-            arguments = listOf(reference),
+            parameters = listOf(reference),
             returnType = staticReference("T")
         )
 
@@ -175,7 +175,7 @@ class ResolutionTests {
         val reference = variableReference("x")
         val valStatement = valStatement(name = "x", expression = literalInt())
         val node = function(
-            arguments = listOf(),
+            parameters = listOf(),
             returnType = staticReference("Int"),
             body = listOf(
                 valStatement,

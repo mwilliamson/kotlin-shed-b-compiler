@@ -163,8 +163,8 @@ data class ModuleType(
 
 data class FunctionType(
     val staticParameters: List<StaticParameter>,
-    val positionalArguments: List<Type>,
-    val namedArguments: Map<String, Type>,
+    val positionalParameters: List<Type>,
+    val namedParameters: Map<String, Type>,
     val returns: Type,
     val effect: Effect
 ): Type {
@@ -179,13 +179,13 @@ data class FunctionType(
                 "[${typeParameterStrings}]"
             }
 
-            val positionalArgumentStrings = positionalArguments
-                .map({ argument -> argument.shortDescription })
-            val namedArgumentStrings = namedArguments
+            val positionalParameterStrings = positionalParameters
+                .map({ parameter -> parameter.shortDescription })
+            val namedParameterStrings = namedParameters
                 .asIterable()
                 .sortedBy({ (name, _) -> name })
                 .map({ (name, type) -> "${name}: ${type.shortDescription}" })
-            val arguments = (positionalArgumentStrings + namedArgumentStrings)
+            val parameters = (positionalParameterStrings + namedParameterStrings)
                 .joinToString(", ")
 
             val effect = if (effect == EmptyEffect) {
@@ -194,7 +194,7 @@ data class FunctionType(
                 " " + effect.shortDescription
             }
 
-            return "${typeParameters}(${arguments})${effect} -> ${returns.shortDescription}"
+            return "${typeParameters}(${parameters})${effect} -> ${returns.shortDescription}"
         }
 }
 
@@ -286,20 +286,20 @@ val ListType = TypeFunction(
 
 fun functionType(
     staticParameters: List<StaticParameter> = listOf(),
-    positionalArguments: List<Type> = listOf(),
-    namedArguments: Map<String, Type> = mapOf(),
+    positionalParameters: List<Type> = listOf(),
+    namedParameters: Map<String, Type> = mapOf(),
     returns: Type = UnitType,
     effect: Effect = EmptyEffect
 ) = FunctionType(
     staticParameters = staticParameters,
-    positionalArguments = positionalArguments,
-    namedArguments = namedArguments,
+    positionalParameters = positionalParameters,
+    namedParameters = namedParameters,
     returns = returns,
     effect = effect
 )
 
-fun positionalFunctionType(arguments: List<Type>, returns: Type)
-    = functionType(positionalArguments = arguments, returns = returns)
+fun positionalFunctionType(parameters: List<Type>, returns: Type)
+    = functionType(positionalParameters = parameters, returns = returns)
 
 fun invariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.INVARIANT)
 fun covariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.COVARIANT)
@@ -370,8 +370,8 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
         )
     } else if (type is FunctionType) {
         return FunctionType(
-            positionalArguments = type.positionalArguments.map({ argument -> replaceTypes(argument, bindings) }),
-            namedArguments = type.namedArguments.mapValues({ argument -> replaceTypes(argument.value, bindings) }),
+            positionalParameters = type.positionalParameters.map({ parameter -> replaceTypes(parameter, bindings) }),
+            namedParameters = type.namedParameters.mapValues({ parameter -> replaceTypes(parameter.value, bindings) }),
             effect = replaceEffects(type.effect, bindings),
             returns = replaceTypes(type.returns, bindings),
             staticParameters = type.staticParameters
@@ -387,9 +387,9 @@ internal fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
     return bindings.effects[effect] ?: effect
 }
 
-private fun appliedTypeShortDescription(name: String, arguments: List<Type>): String {
-    val argumentsString = arguments.joinToString(separator = ", ", transform = { type -> type.shortDescription })
-    return name + "[" + argumentsString + "]"
+private fun appliedTypeShortDescription(name: String, parameters: List<Type>): String {
+    val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })
+    return name + "[" + parametersString + "]"
 }
 
 internal data class ValidateTypeResult(val errors: List<String>) {
@@ -405,10 +405,10 @@ internal fun validateType(type: Type): ValidateTypeResult {
         if (type.returns is TypeParameter && type.returns.variance == Variance.CONTRAVARIANT) {
             return ValidateTypeResult(listOf("return type cannot be contravariant"))
         } else {
-            val argumentTypes = type.positionalArguments + type.namedArguments.values
-            return ValidateTypeResult(argumentTypes.mapNotNull({ argumentType ->
-                if (argumentType is TypeParameter && argumentType.variance == Variance.COVARIANT) {
-                    "argument type cannot be covariant"
+            val parameterTypes = type.positionalParameters + type.namedParameters.values
+            return ValidateTypeResult(parameterTypes.mapNotNull({ parameterType ->
+                if (parameterType is TypeParameter && parameterType.variance == Variance.COVARIANT) {
+                    "parameter type cannot be covariant"
                 } else {
                     null
                 }

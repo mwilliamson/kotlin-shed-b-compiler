@@ -56,7 +56,7 @@ class TypeCheckModuleTests {
         val shape = shape(name = "X")
         val node = module(body = listOf(
             function(
-                arguments = listOf(argument(type = shapeReference)),
+                parameters = listOf(parameter(type = shapeReference)),
                 returnType = unitReference
             ),
             shape

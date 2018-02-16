@@ -34,8 +34,8 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                positionalArguments = listOf(),
-                namedArguments = mapOf("x" to BoolType),
+                positionalParameters = listOf(),
+                namedParameters = mapOf("x" to BoolType),
                 returns = IntType
             ))
         )
@@ -61,7 +61,7 @@ class TypeCheckCallTests {
         val returnTypeParameter = invariantTypeParameter(name = "R")
         val functionType = functionType(
             staticParameters = listOf(argumentTypeParameter, returnTypeParameter),
-            positionalArguments = listOf(argumentTypeParameter),
+            positionalParameters = listOf(argumentTypeParameter),
             returns = returnTypeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -87,7 +87,7 @@ class TypeCheckCallTests {
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             staticParameters = listOf(typeParameter),
-            positionalArguments = listOf(),
+            positionalParameters = listOf(),
             returns = typeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -115,7 +115,7 @@ class TypeCheckCallTests {
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             staticParameters = listOf(typeParameter),
-            positionalArguments = listOf(typeParameter),
+            positionalParameters = listOf(typeParameter),
             returns = typeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
@@ -135,7 +135,7 @@ class TypeCheckCallTests {
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             staticParameters = listOf(typeParameter),
-            positionalArguments = listOf(typeParameter, typeParameter),
+            positionalParameters = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
@@ -161,7 +161,7 @@ class TypeCheckCallTests {
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             staticParameters = listOf(typeParameter),
-            positionalArguments = listOf(typeParameter, typeParameter),
+            positionalParameters = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
         val typeContext = typeContext(
@@ -188,7 +188,7 @@ class TypeCheckCallTests {
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
             staticParameters = listOf(typeParameter),
-            positionalArguments = listOf(typeParameter),
+            positionalParameters = listOf(typeParameter),
             returns = typeParameter
         )
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -315,7 +315,7 @@ class TypeCheckCallTests {
             "Sink",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "accept" to functionType(positionalArguments = listOf(typeParameter), returns = UnitType)
+                "accept" to functionType(positionalParameters = listOf(typeParameter), returns = UnitType)
             )
         )
         val node = call(receiver = shapeReference, namedArguments = listOf(
@@ -324,7 +324,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(
             shapeReference to MetaType(shapeType),
-            argumentReference to functionType(positionalArguments = listOf(IntType), returns = UnitType)
+            argumentReference to functionType(positionalParameters = listOf(IntType), returns = UnitType)
         ))
         val type = inferCallType(node, typeContext)
 
@@ -599,7 +599,7 @@ class TypeCheckCallTests {
         )
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
-            positionalArguments = listOf(functionType(
+            positionalParameters = listOf(functionType(
                 effect = effectParameter,
                 returns = UnitType
             )),
@@ -638,7 +638,7 @@ class TypeCheckCallTests {
         )
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
-            positionalArguments = listOf(functionType(
+            positionalParameters = listOf(functionType(
                 effect = effectParameter,
                 returns = UnitType
             )),

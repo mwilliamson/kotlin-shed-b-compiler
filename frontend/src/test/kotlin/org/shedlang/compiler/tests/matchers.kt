@@ -67,13 +67,13 @@ private fun indent(value: String): String {
 internal fun isType(type: Type): Matcher<Type> = equalTo(type)
 
 internal fun isFunctionType(
-    arguments: Matcher<List<Type>> = anything,
+    positionalParameters: Matcher<List<Type>> = anything,
     returnType: Matcher<Type> = anything,
-    namedArguments: Matcher<Map<String, Type>> = anything,
+    namedParameters: Matcher<Map<String, Type>> = anything,
     effect: Matcher<Effect> = anything
 ): Matcher<Type> = cast(allOf(
-    has(FunctionType::positionalArguments, arguments),
-    has(FunctionType::namedArguments, namedArguments),
+    has(FunctionType::positionalParameters, positionalParameters),
+    has(FunctionType::namedParameters, namedParameters),
     has(FunctionType::returns, returnType),
     has(FunctionType::effect, effect)
 ))

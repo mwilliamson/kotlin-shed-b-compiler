@@ -20,8 +20,8 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
         throw UnexpectedTypeError(
             expected = FunctionType(
                 staticParameters = listOf(),
-                positionalArguments = argumentTypes,
-                namedArguments = mapOf(),
+                positionalParameters = argumentTypes,
+                namedParameters = mapOf(),
                 returns = AnyType,
                 effect = EmptyEffect
             ),
@@ -39,8 +39,8 @@ private fun inferFunctionCallType(
     val bindings = checkArguments(
         call = node,
         staticParameters = receiverType.staticParameters,
-        positionalParameters = receiverType.positionalArguments,
-        namedParameters = receiverType.namedArguments,
+        positionalParameters = receiverType.positionalParameters,
+        namedParameters = receiverType.namedParameters,
         context = context,
         allowMissing = false
     )
@@ -89,15 +89,15 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
         val bindings = checkArguments(
             call = node,
             staticParameters = receiverType.staticParameters,
-            positionalParameters = receiverType.positionalArguments,
-            namedParameters = receiverType.namedArguments,
+            positionalParameters = receiverType.positionalParameters,
+            namedParameters = receiverType.namedParameters,
             context = context,
             allowMissing = true
         )
         // TODO: handle bindings
         return receiverType.copy(
-            positionalArguments = receiverType.positionalArguments.drop(node.positionalArguments.size),
-            namedArguments = receiverType.namedArguments.filterKeys { name ->
+            positionalParameters = receiverType.positionalParameters.drop(node.positionalArguments.size),
+            namedParameters = receiverType.namedParameters.filterKeys { name ->
                 !node.namedArguments.any { argument -> argument.name == name }
             }
         )
@@ -172,22 +172,22 @@ private fun checkArgumentTypes(
         ) })
 
         val constraints = TypeConstraintSolver(
-            // TODO: need to regenerate effect parameters in the same way as type parameters
+            // TODO: need to regenerate effect parameters in the same way as type positionalParameters
             parameters = (inferredTypeArguments + effectParameters).toSet()
         )
         for (argument in arguments) {
-            val formalType = replaceTypes(
+            val parameterType = replaceTypes(
                 argument.second,
                 StaticBindings(
                     types = typeParameters.zip(inferredTypeArguments).toMap(),
                     effects = mapOf()
                 )
             )
-            val actualType = inferType(argument.first, context, hint = formalType)
-            if (!constraints.coerce(from = actualType, to = formalType)) {
+            val argumentType = inferType(argument.first, context, hint = parameterType)
+            if (!constraints.coerce(from = argumentType, to = parameterType)) {
                 throw UnexpectedTypeError(
-                    expected = formalType,
-                    actual = actualType,
+                    expected = parameterType,
+                    actual = argumentType,
                     source = argument.first.source
                 )
             }

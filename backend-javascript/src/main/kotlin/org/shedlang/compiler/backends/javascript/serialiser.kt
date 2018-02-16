@@ -66,7 +66,7 @@ private fun serialiseFunction(
 ): String {
     val signature = "function " +
         name.orEmpty() +
-        "(" + node.arguments.joinToString(", ") + ") {\n"
+        "(" + node.parameters.joinToString(", ") + ") {\n"
     val body = serialiseBlock(node.body, indentation = indentation)
     return signature + body + indent("}", indentation = indentation)
 }

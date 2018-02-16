@@ -11,15 +11,15 @@ import org.shedlang.compiler.types.*
 
 class ValidateTypeTests {
     @Test
-    fun positionalArgumentTypesCannotBeCovariant() {
-        val type = functionType(positionalArguments = listOf(covariantTypeParameter("T")))
-        assertThat(validateType(type = type), isFailure("argument type cannot be covariant"))
+    fun positionalParameterTypesCannotBeCovariant() {
+        val type = functionType(positionalParameters = listOf(covariantTypeParameter("T")))
+        assertThat(validateType(type = type), isFailure("parameter type cannot be covariant"))
     }
 
     @Test
-    fun namedArgumentTypesCannotBeCovariant() {
-        val type = functionType(namedArguments = mapOf("x" to covariantTypeParameter("T")))
-        assertThat(validateType(type = type), isFailure("argument type cannot be covariant"))
+    fun namedParameterTypesCannotBeCovariant() {
+        val type = functionType(namedParameters = mapOf("x" to covariantTypeParameter("T")))
+        assertThat(validateType(type = type), isFailure("parameter type cannot be covariant"))
     }
 
     @Test

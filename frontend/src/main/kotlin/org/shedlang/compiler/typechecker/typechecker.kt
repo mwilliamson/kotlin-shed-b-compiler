@@ -188,13 +188,13 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
 internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): Type {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
-    val positionalParameterTypes = function.arguments.map(
+    val positionalParameterTypes = function.parameters.map(
         { argument -> evalType(argument.type, context) }
     )
     val namedParameterTypes = function.namedParameters.map(
         { argument -> evalType(argument.type, context) }
     )
-    context.addVariableTypes((function.arguments + function.namedParameters).zip(
+    context.addVariableTypes((function.parameters + function.namedParameters).zip(
         positionalParameterTypes + namedParameterTypes,
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
@@ -246,8 +246,8 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
 
     return FunctionType(
         staticParameters = staticParameters,
-        positionalArguments = positionalParameterTypes,
-        namedArguments = function.namedParameters.zip(namedParameterTypes, { parameter, type ->
+        positionalParameters = positionalParameterTypes,
+        namedParameters = function.namedParameters.zip(namedParameterTypes, { parameter, type ->
             parameter.name to type
         }).toMap(),
         effect = effect,
@@ -312,13 +312,13 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
 
         override fun visit(node: FunctionTypeNode): Type {
             val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
-            val positionalArguments = node.arguments.map({ argument -> evalType(argument, context) })
+            val positionalArguments = node.positionalParameters.map({ argument -> evalType(argument, context) })
             val effect = evalEffects(node.effects, context)
             val returnType = evalType(node.returnType, context)
             val type = FunctionType(
                 staticParameters = staticParameters,
-                positionalArguments = positionalArguments,
-                namedArguments = mapOf(),
+                positionalParameters = positionalArguments,
+                namedParameters = mapOf(),
                 returns = returnType,
                 effect = effect
             )

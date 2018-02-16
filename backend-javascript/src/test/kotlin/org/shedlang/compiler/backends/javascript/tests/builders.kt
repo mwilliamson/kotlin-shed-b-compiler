@@ -109,20 +109,20 @@ fun jsObject(
 
 fun jsFunction(
     name: String,
-    arguments: List<String> = listOf(),
+    parameters: List<String> = listOf(),
     body: List<JavascriptStatementNode> = listOf()
 ) = JavascriptFunctionDeclarationNode(
     name = name,
-    arguments = arguments,
+    parameters = parameters,
     body = body,
     source = anySource()
 )
 
 fun jsFunctionExpression(
-    arguments: List<String> = listOf(),
+    parameters: List<String> = listOf(),
     body: List<JavascriptStatementNode> = listOf()
 ) = JavascriptFunctionExpressionNode(
-    arguments = arguments,
+    parameters = parameters,
     body = body,
     source = anySource()
 )

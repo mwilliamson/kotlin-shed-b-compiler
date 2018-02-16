@@ -146,7 +146,7 @@ class TypeCheckExpressionTests {
         val intReference = staticReference("Int")
         val unitReference = staticReference("Unit")
         val node = functionExpression(
-            arguments = listOf(argument(type = intReference)),
+            parameters = listOf(parameter(type = intReference)),
             returnType = unitReference
         )
 
@@ -158,7 +158,7 @@ class TypeCheckExpressionTests {
         )
         val type = inferType(node, typeContext)
         assertThat(type, isFunctionType(
-            arguments = isSequence(isIntType),
+            positionalParameters = isSequence(isIntType),
             returnType = isUnitType
         ))
     }

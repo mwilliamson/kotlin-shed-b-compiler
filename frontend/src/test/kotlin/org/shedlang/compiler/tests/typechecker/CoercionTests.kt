@@ -47,15 +47,15 @@ class CoercionTests {
     fun functionTypesAreContravariantInPositionalArgumentType() {
         assertThat(
             canCoerce(
-                from = functionType(positionalArguments = listOf(AnyType)),
-                to = functionType(positionalArguments = listOf(IntType))
+                from = functionType(positionalParameters = listOf(AnyType)),
+                to = functionType(positionalParameters = listOf(IntType))
             ),
             equalTo(true)
         )
         assertThat(
             canCoerce(
-                from = functionType(positionalArguments = listOf(IntType)),
-                to = functionType(positionalArguments = listOf(AnyType))
+                from = functionType(positionalParameters = listOf(IntType)),
+                to = functionType(positionalParameters = listOf(AnyType))
             ),
             equalTo(false)
         )
@@ -65,15 +65,15 @@ class CoercionTests {
     fun cannotCoerceFunctionTypesWithDifferentNumberOfPositionalArguments() {
         assertThat(
             canCoerce(
-                from = functionType(positionalArguments = listOf()),
-                to = functionType(positionalArguments = listOf(IntType))
+                from = functionType(positionalParameters = listOf()),
+                to = functionType(positionalParameters = listOf(IntType))
             ),
             equalTo(false)
         )
         assertThat(
             canCoerce(
-                from = functionType(positionalArguments = listOf(IntType)),
-                to = functionType(positionalArguments = listOf())
+                from = functionType(positionalParameters = listOf(IntType)),
+                to = functionType(positionalParameters = listOf())
             ),
             equalTo(false)
         )
@@ -83,15 +83,15 @@ class CoercionTests {
     fun functionTypesAreContravariantInNamedArgumentType() {
         assertThat(
             canCoerce(
-                from = functionType(namedArguments = mapOf("x" to AnyType)),
-                to = functionType(namedArguments = mapOf("x" to IntType))
+                from = functionType(namedParameters = mapOf("x" to AnyType)),
+                to = functionType(namedParameters = mapOf("x" to IntType))
             ),
             equalTo(true)
         )
         assertThat(
             canCoerce(
-                from = functionType(namedArguments = mapOf("x" to IntType)),
-                to = functionType(namedArguments = mapOf("x" to AnyType))
+                from = functionType(namedParameters = mapOf("x" to IntType)),
+                to = functionType(namedParameters = mapOf("x" to AnyType))
             ),
             equalTo(false)
         )
@@ -101,22 +101,22 @@ class CoercionTests {
     fun cannotCoerceFunctionTypesWithDifferentNamedArguments() {
         assertThat(
             canCoerce(
-                from = functionType(namedArguments = mapOf()),
-                to = functionType(namedArguments = mapOf("x" to IntType))
+                from = functionType(namedParameters = mapOf()),
+                to = functionType(namedParameters = mapOf("x" to IntType))
             ),
             equalTo(false)
         )
         assertThat(
             canCoerce(
-                from = functionType(namedArguments = mapOf("x" to IntType)),
-                to = functionType(namedArguments = mapOf())
+                from = functionType(namedParameters = mapOf("x" to IntType)),
+                to = functionType(namedParameters = mapOf())
             ),
             equalTo(false)
         )
         assertThat(
             canCoerce(
-                from = functionType(namedArguments = mapOf("x" to IntType)),
-                to = functionType(namedArguments = mapOf("y" to IntType))
+                from = functionType(namedParameters = mapOf("x" to IntType)),
+                to = functionType(namedParameters = mapOf("y" to IntType))
             ),
             equalTo(false)
         )

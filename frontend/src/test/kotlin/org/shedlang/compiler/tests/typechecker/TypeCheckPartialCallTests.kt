@@ -19,8 +19,8 @@ class TypeCheckPartialCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                positionalArguments = listOf(IntType, BoolType),
-                namedArguments = mapOf(),
+                positionalParameters = listOf(IntType, BoolType),
+                namedParameters = mapOf(),
                 effect = IoEffect,
                 returns = UnitType
             )
@@ -28,8 +28,8 @@ class TypeCheckPartialCallTests {
         val type = inferType(node, typeContext)
 
         assertThat(type, isFunctionType(
-            arguments = isSequence(isBoolType),
-            namedArguments = isMap(),
+            positionalParameters = isSequence(isBoolType),
+            namedParameters = isMap(),
             effect = equalTo(IoEffect),
             returnType = isUnitType
         ))
@@ -47,8 +47,8 @@ class TypeCheckPartialCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                positionalArguments = listOf(BoolType),
-                namedArguments = mapOf("arg0" to IntType, "arg1" to StringType),
+                positionalParameters = listOf(BoolType),
+                namedParameters = mapOf("arg0" to IntType, "arg1" to StringType),
                 effect = IoEffect,
                 returns = UnitType
             )
@@ -56,8 +56,8 @@ class TypeCheckPartialCallTests {
         val type = inferType(node, typeContext)
 
         assertThat(type, isFunctionType(
-            arguments = isSequence(isBoolType),
-            namedArguments = isMap("arg1" to isStringType),
+            positionalParameters = isSequence(isBoolType),
+            namedParameters = isMap("arg1" to isStringType),
             effect = equalTo(IoEffect),
             returnType = isUnitType
         ))

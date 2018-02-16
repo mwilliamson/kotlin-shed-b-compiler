@@ -59,7 +59,7 @@ data class JavascriptExpressionStatementNode(
 
 data class JavascriptFunctionDeclarationNode(
     val name: String,
-    override val arguments: List<String>,
+    override val parameters: List<String>,
     override val body: List<JavascriptStatementNode>,
     override val source: Source
 ) : JavascriptFunctionNode, JavascriptStatementNode {
@@ -69,7 +69,7 @@ data class JavascriptFunctionDeclarationNode(
 }
 
 data class JavascriptFunctionExpressionNode(
-    override val arguments: List<String>,
+    override val parameters: List<String>,
     override val body: List<JavascriptStatementNode>,
     override val source: Source
 ) : JavascriptFunctionNode, JavascriptExpressionNode {
@@ -79,7 +79,7 @@ data class JavascriptFunctionExpressionNode(
 }
 
 interface JavascriptFunctionNode {
-    val arguments: List<String>
+    val parameters: List<String>
     val body: List<JavascriptStatementNode>
 }
 

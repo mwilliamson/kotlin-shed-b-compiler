@@ -54,10 +54,10 @@ class SerialiserTests {
     }
 
     @Test
-    fun formalFunctionArgumentsAreSeparatedByCommas() {
+    fun functionParametersAreSeparatedByCommas() {
         assertThat(
             indentedSerialise(
-                jsFunction(name = "f", arguments = listOf("x", "y"))
+                jsFunction(name = "f", parameters = listOf("x", "y"))
             ),
             equalTo(listOf(
                 "    function f(x, y) {",
@@ -71,7 +71,7 @@ class SerialiserTests {
     fun anonymousFunctionExpressionSerialisation() {
         assertThat(
             indentedSerialise(jsFunctionExpression(
-                arguments = listOf(),
+                parameters = listOf(),
                 body = listOf()
             )),
             equalTo(listOf(

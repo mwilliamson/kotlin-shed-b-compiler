@@ -120,24 +120,24 @@ class TypeApplicationTests {
         @Test
         fun positionalArgumentsAreReplaced() {
             val functionType = functionType(
-                positionalArguments = listOf(typeParameter)
+                positionalParameters = listOf(typeParameter)
             )
 
             assertThat(
                 replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
-                isFunctionType(arguments = isSequence(isIntType))
+                isFunctionType(positionalParameters = isSequence(isIntType))
             )
         }
 
         @Test
         fun namedArgumentsAreReplaced() {
             val functionType = functionType(
-                namedArguments = mapOf("x" to typeParameter)
+                namedParameters = mapOf("x" to typeParameter)
             )
 
             assertThat(
                 replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
-                isFunctionType(namedArguments = isMap("x" to isIntType))
+                isFunctionType(namedParameters = isMap("x" to isIntType))
             )
         }
 

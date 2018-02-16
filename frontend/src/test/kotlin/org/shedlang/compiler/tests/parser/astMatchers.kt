@@ -207,12 +207,12 @@ internal fun isStaticApplication(
 ))
 internal fun isFunctionType(
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    arguments: Matcher<List<StaticNode>> = anything,
+    positionalParameters: Matcher<List<StaticNode>> = anything,
     returnType: Matcher<StaticNode> = anything,
     effects: Matcher<List<StaticNode>> = anything
 ): Matcher<StaticNode> = cast(allOf(
     has(FunctionTypeNode::staticParameters, staticParameters),
-    has(FunctionTypeNode::arguments, arguments),
+    has(FunctionTypeNode::positionalParameters, positionalParameters),
     has(FunctionTypeNode::returnType, returnType),
     has(FunctionTypeNode::effects, effects)
 ))

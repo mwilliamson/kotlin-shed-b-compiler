@@ -102,14 +102,14 @@ private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationC
     val javascriptFunction = generateFunction(node, context)
     return JavascriptFunctionDeclarationNode(
         name = node.name,
-        arguments = javascriptFunction.arguments,
+        parameters = javascriptFunction.parameters,
         body = javascriptFunction.body,
         source = NodeSource(node)
     )
 }
 
 private fun generateFunction(node: FunctionNode, context: CodeGenerationContext): JavascriptFunctionNode {
-    val positionalParameters = node.arguments.map(ArgumentNode::name)
+    val positionalParameters = node.parameters.map(ParameterNode::name)
     val namedParameterName = "\$named"
     val namedParameters = if (node.namedParameters.isEmpty()) {
         listOf()
@@ -133,7 +133,7 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
     val body = namedParameterAssignments + generateCode(node.body.statements, context)
 
     return object: JavascriptFunctionNode {
-        override val arguments = positionalParameters + namedParameters
+        override val parameters = positionalParameters + namedParameters
         override val body = body
     }
 }
@@ -248,20 +248,20 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 positionalArguments.indices.map { index -> "\$arg" + index } +
                 namedArguments.map { argument -> argument.first }
 
-            val remainingPositionalParameters = (positionalArguments.size..functionType.positionalArguments.size - 1)
+            val remainingPositionalParameters = (positionalArguments.size..functionType.positionalParameters.size - 1)
                 .map { index -> "\$arg" + index }
-            val remainingNamedParameters = functionType.namedArguments.keys - node.namedArguments.map { argument -> argument.name }
+            val remainingNamedParameters = functionType.namedParameters.keys - node.namedArguments.map { argument -> argument.name }
             val remainingParameters = remainingPositionalParameters + if (remainingNamedParameters.isEmpty()) {
                 listOf()
             } else {
                 listOf("\$named")
             }
 
-            val finalNamedArgument = if (functionType.namedArguments.isEmpty()) {
+            val finalNamedArgument = if (functionType.namedParameters.isEmpty()) {
                 listOf()
             } else {
                 listOf(JavascriptObjectLiteralNode(
-                    properties = functionType.namedArguments
+                    properties = functionType.namedParameters
                         .keys
                         .sorted()
                         .associateBy(
@@ -284,17 +284,17 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                     source = NodeSource(node)
                 ))
             }
-            val fullArguments = functionType.positionalArguments.indices.map { index ->
+            val fullArguments = functionType.positionalParameters.indices.map { index ->
                 JavascriptVariableReferenceNode("\$arg" + index, source = NodeSource(node))
             } + finalNamedArgument
 
             return JavascriptFunctionCallNode(
                 function = JavascriptFunctionExpressionNode(
-                    arguments = partialParameters,
+                    parameters = partialParameters,
                     body = listOf(
                         JavascriptReturnNode(
                             expression = JavascriptFunctionExpressionNode(
-                                arguments = remainingParameters,
+                                parameters = remainingParameters,
                                 body = listOf(
                                     JavascriptReturnNode(
                                         expression = JavascriptFunctionCallNode(
@@ -331,7 +331,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: FunctionExpressionNode): JavascriptExpressionNode {
             val javascriptFunction = generateFunction(node, context)
             return JavascriptFunctionExpressionNode(
-                arguments = javascriptFunction.arguments,
+                parameters = javascriptFunction.parameters,
                 body = javascriptFunction.body,
                 source = node.source
             )
@@ -416,7 +416,7 @@ private fun immediatelyInvokedFunction(
     source: Source
 ): JavascriptExpressionNode {
     val function = JavascriptFunctionExpressionNode(
-        arguments = listOf(),
+        parameters = listOf(),
         body = body,
         source = source
     )

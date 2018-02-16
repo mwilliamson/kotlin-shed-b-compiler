@@ -88,7 +88,7 @@ class TypeCheckWhenTests {
             referenceTypes = mapOf(
                 variableReference to inputUnion,
                 inputMember1TypeReference to MetaType(inputMember1),
-                receiverReference to functionType(positionalArguments = listOf(inputMember1))
+                receiverReference to functionType(positionalParameters = listOf(inputMember1))
             )
         )
 

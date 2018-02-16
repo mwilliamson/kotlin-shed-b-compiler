@@ -32,7 +32,7 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         }
 
         override fun visit(node: PythonFunctionNode): String {
-            val signature = line("def " + node.name + "(" + node.arguments.joinToString(", ") + "):")
+            val signature = line("def " + node.name + "(" + node.parameters.joinToString(", ") + "):")
             val body = serialiseBlock(node, node.body, indentation)
             return ensureTrailingBlankLine(signature + body)
         }
@@ -126,8 +126,8 @@ internal fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonLambdaNode): String {
-            val arguments = node.arguments.joinToString(", ")
-            return "lambda ${arguments}: ${serialise(node.body)}"
+            val parameters = node.parameters.joinToString(", ")
+            return "lambda ${parameters}: ${serialise(node.body)}"
         }
     })
 }

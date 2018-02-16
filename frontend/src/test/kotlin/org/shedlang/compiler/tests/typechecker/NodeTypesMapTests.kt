@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.tests.argument
+import org.shedlang.compiler.tests.parameter
 import org.shedlang.compiler.typechecker.NodeTypesMap
 import org.shedlang.compiler.typechecker.UnknownTypeError
 
@@ -15,7 +15,7 @@ class NodeTypesMapTests {
     fun whenTypeIsMissingThenExceptionIsThrown() {
         val types = NodeTypesMap(mapOf())
         assertThat(
-            { types.typeOf(argument("x")) },
+            { types.typeOf(parameter("x")) },
             throws(has(UnknownTypeError::name, equalTo("x")))
         )
     }

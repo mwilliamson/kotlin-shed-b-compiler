@@ -20,11 +20,11 @@ fun pythonClass(
 
 fun pythonFunction(
     name: String,
-    arguments: List<String> = listOf(),
+    parameters: List<String> = listOf(),
     body: List<PythonStatementNode> = listOf()
 ) = PythonFunctionNode(
     name = name,
-    arguments = arguments,
+    parameters = parameters,
     body = body,
     source = anySource()
 )
@@ -114,10 +114,10 @@ fun pythonAttributeAccess(
 )
 
 fun pythonLambda(
-    arguments: List<String>,
+    parameters: List<String>,
     body: PythonExpressionNode
 ) = PythonLambdaNode(
-    arguments = arguments,
+    parameters = parameters,
     body = body,
     source = anySource()
 )

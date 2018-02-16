@@ -99,7 +99,7 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonFunction(
                     name = equalTo("__init__"),
-                    arguments = isSequence(equalTo("self"), equalTo("a")),
+                    parameters = isSequence(equalTo("self"), equalTo("a")),
                     body = isSequence(
                         isPythonAssignment(
                             target = isPythonAttributeAccess(
@@ -118,8 +118,8 @@ class CodeGeneratorTests {
     fun functionDeclarationGeneratesFunctionWithPythonisedName() {
         val shed = function(
             name = "oneTwoThree",
-            arguments = listOf(argument("x"), argument("y")),
-            namedParameters = listOf(argument("z")),
+            parameters = listOf(parameter("x"), parameter("y")),
+            namedParameters = listOf(parameter("z")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
@@ -127,7 +127,7 @@ class CodeGeneratorTests {
 
         assertThat(node, isPythonFunction(
             name = equalTo("one_two_three"),
-            arguments = isSequence(equalTo("x"), equalTo("y"), equalTo("z")),
+            parameters = isSequence(equalTo("x"), equalTo("y"), equalTo("z")),
             body = isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42)))
         ))
     }
@@ -135,15 +135,15 @@ class CodeGeneratorTests {
     @Test
     fun functionExpressionWithNoStatementsGeneratesLambda() {
         val shed = functionExpression(
-            arguments = listOf(argument("x"), argument("y")),
-            namedParameters = listOf(argument("z")),
+            parameters = listOf(parameter("x"), parameter("y")),
+            namedParameters = listOf(parameter("z")),
             body = listOf()
         )
 
         val node = generateCode(shed)
 
         assertThat(node, isGeneratedExpression(isPythonLambda(
-            arguments = isSequence(equalTo("x"), equalTo("y"), equalTo("z")),
+            parameters = isSequence(equalTo("x"), equalTo("y"), equalTo("z")),
             body = isPythonNone()
         )))
     }
@@ -151,14 +151,14 @@ class CodeGeneratorTests {
     @Test
     fun functionExpressionWithSingleExpressionStatementGeneratesLambda() {
         val shed = functionExpression(
-            arguments = listOf(argument("x"), argument("y")),
+            parameters = listOf(parameter("x"), parameter("y")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
         val node = generateCode(shed)
 
         assertThat(node, isGeneratedExpression(isPythonLambda(
-            arguments = isSequence(equalTo("x"), equalTo("y")),
+            parameters = isSequence(equalTo("x"), equalTo("y")),
             body = isPythonIntegerLiteral(42)
         )))
     }
@@ -166,14 +166,14 @@ class CodeGeneratorTests {
     @Test
     fun functionExpressionWithNonEmptyBodyThatIsntSingleReturnGeneratesAuxiliaryFunction() {
         val shed = functionExpression(
-            arguments = listOf(argument("x"), argument("y")),
+            parameters = listOf(parameter("x"), parameter("y")),
             body = listOf(valStatement("z", literalInt(42)))
         )
 
         val node = generateCode(shed)
         val auxiliaryFunction = node.functions.single()
         assertThat(auxiliaryFunction, isPythonFunction(
-            arguments = isSequence(equalTo("x"), equalTo("y")),
+            parameters = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isPythonAssignment(isPythonVariableReference("z"), isPythonIntegerLiteral(42)))
         ))
 
@@ -210,7 +210,7 @@ class CodeGeneratorTests {
 
         val function = generatedExpression.functions.single()
         assertThat(function, isPythonFunction(
-            arguments = isSequence(),
+            parameters = isSequence(),
             body = isSequence(
                 isPythonIfStatement(
                     conditionalBranches = isSequence(
@@ -261,7 +261,7 @@ class CodeGeneratorTests {
 
         val function = generatedExpression.functions.single()
         assertThat(function, isPythonFunction(
-            arguments = isSequence(),
+            parameters = isSequence(),
             body = isSequence(
                 isPythonAssignment(
                     target = isPythonVariableReference("anonymous"),
@@ -384,7 +384,7 @@ class CodeGeneratorTests {
 
     @Test
     fun variableReferenceGeneratesVariableReference() {
-        val declaration = argument("x")
+        val declaration = parameter("x")
         val shed = variableReference("x")
 
         val node = generateCode(shed, context(mapOf(shed to declaration)))
@@ -420,7 +420,7 @@ class CodeGeneratorTests {
 
     @Test
     fun isOperationGeneratesIsInstanceCall() {
-        val declaration = argument("x")
+        val declaration = parameter("x")
         val reference = variableReference("x")
         val typeReference = staticReference("X")
         val typeDeclaration = shape("X", listOf())
@@ -441,7 +441,7 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val declaration = argument("f")
+        val declaration = parameter("f")
         val function = variableReference("f")
         val shed = call(
             function,
@@ -460,7 +460,7 @@ class CodeGeneratorTests {
 
     @Test
     fun partialFunctionCallGeneratesPartialFunctionCall() {
-        val declaration = argument("f")
+        val declaration = parameter("f")
         val function = variableReference("f")
         val shed = partialCall(
             function,
@@ -479,7 +479,7 @@ class CodeGeneratorTests {
 
     @Test
     fun fieldAccessGeneratesAttributeAccess() {
-        val declaration = argument("x")
+        val declaration = parameter("x")
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "y")
 
@@ -493,7 +493,7 @@ class CodeGeneratorTests {
 
     @Test
     fun fieldAccessFieldNamesArePythonised() {
-        val declaration = argument("x")
+        val declaration = parameter("x")
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "someValue")
 
@@ -507,7 +507,7 @@ class CodeGeneratorTests {
 
     @Test
     fun staticFieldAccessGeneratesAttributeAccess() {
-        val declaration = argument("x")
+        val declaration = parameter("x")
         val receiver = staticReference("x")
         val shed = staticFieldAccess(receiver, "y")
 
@@ -521,7 +521,7 @@ class CodeGeneratorTests {
 
     @Test
     fun staticFieldAccessFieldNamesArePythonised() {
-        val declaration = argument("x")
+        val declaration = parameter("x")
         val receiver = staticReference("x")
         val shed = staticFieldAccess(receiver, "someValue")
 
@@ -567,20 +567,20 @@ class CodeGeneratorTests {
 
     private fun isPythonFunction(
         name: Matcher<String> = anything,
-        arguments: Matcher<List<String>> = anything,
+        parameters: Matcher<List<String>> = anything,
         body: Matcher<List<PythonStatementNode>> = anything
     ) : Matcher<PythonStatementNode>
         = cast(allOf(
             has(PythonFunctionNode::name, name),
-            has(PythonFunctionNode::arguments, arguments),
+            has(PythonFunctionNode::parameters, parameters),
             has(PythonFunctionNode::body, body)
         ))
 
     private fun isPythonLambda(
-        arguments: Matcher<List<String>> = anything,
+        parameters: Matcher<List<String>> = anything,
         body: Matcher<PythonExpressionNode> = anything
     ): Matcher<PythonExpressionNode> = cast(allOf(
-        has(PythonLambdaNode::arguments, arguments),
+        has(PythonLambdaNode::parameters, parameters),
         has(PythonLambdaNode::body, body)
     ))
 
