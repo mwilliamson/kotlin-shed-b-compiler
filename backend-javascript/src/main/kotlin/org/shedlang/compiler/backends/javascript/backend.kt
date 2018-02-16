@@ -107,6 +107,10 @@ private val builtinModule = JavascriptModule(
             return list.forEach(func);
         }
 
+        function reduce(func, initial, list) {
+            return list.reduce(func, initial);
+        }
+
         function declareShape(name) {
             const typeId = freshTypeId();
 
@@ -142,6 +146,7 @@ private val builtinModule = JavascriptModule(
             list: list,
             map: map,
             print: print,
+            reduce: reduce,
         };
     """.trimIndent()
 )
@@ -152,5 +157,6 @@ val builtinNames = listOf(
     "intToString",
     "list",
     "map",
-    "print"
+    "print",
+    "reduce"
 );

@@ -79,26 +79,56 @@ fun runTests(tests: List[Test]) !Io -> Int {
     val results = map(runTest ~ (depth = 0), tests);
     print("\n");
     forEach(printFailures, results);
-    if (isAllSuccess(results)) {
+
+    val counts = countTestResults(results);
+
+    print(intToString(counts.successes) + " tests passed, ");
+    print(intToString(counts.failures) + " tests failed\n");
+
+    if (counts.failures == 0) {
         0
     } else {
         1
     }
 }
 
-fun isAllSuccess(results: List[TestResult]) -> Bool {
-    all(map(isSuccess, results))
+fun countTestResults(results: List[TestResult]) -> TestCounts {
+    reduce(
+        fun (counts: TestCounts, result: TestResult) =>
+            addTestCounts(counts, countTestResult(result)),
+        TestCounts(failures = 0, successes = 0),
+        results,
+    )
 }
 
-fun isSuccess(result: TestResult) -> Bool {
+fun countTestResult(result: TestResult) -> TestCounts {
     when (result) {
         is TestCaseResult {
-            result.error is options.None
+            when (result.error) {
+                is options.Some[AssertionError] {
+                    TestCounts(failures = 1, successes = 0)
+                }
+                is options.None {
+                    TestCounts(failures = 0, successes = 1)
+                }
+            }
         }
         is TestSuiteResult {
-            isAllSuccess(result.results)
+            countTestResults(result.results)
         }
     }
+}
+
+fun addTestCounts(counts1: TestCounts, counts2: TestCounts) -> TestCounts {
+    TestCounts(
+        failures = counts1.failures + counts2.failures,
+        successes = counts1.successes + counts2.successes,
+    )
+}
+
+shape TestCounts {
+    failures: Int,
+    successes: Int,
 }
 
 fun printFailures(result: TestResult) !Io -> Unit {

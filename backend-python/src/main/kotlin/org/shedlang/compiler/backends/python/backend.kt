@@ -65,6 +65,7 @@ private fun compileModule(module: Module): PythonModule {
             for_each,
             map,
             partial as _partial,
+            reduce,
         )
     """.trimIndent()
     val contents = builtins + "\n" + serialise(generateCode) + "\n"
@@ -116,6 +117,12 @@ private val builtinModule = PythonModule(
              result = []
              for element in elements:
                  result.append(func(element))
+             return result
+
+         def reduce(func, initial, elements):
+             result = initial
+             for element in elements:
+                 result = func(result, element)
              return result
 
     """.trimIndent()

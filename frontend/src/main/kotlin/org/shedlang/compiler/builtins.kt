@@ -46,5 +46,6 @@ internal val builtins = coreBuiltins + listOf(
     BuiltinVariable("all", parseType("(List[Bool]) -> Bool")),
     BuiltinVariable("any", parseType("(List[Bool]) -> Bool")),
     BuiltinVariable("forEach", parseType("[T, !E]((T) !E -> Unit, List[T]) !E -> Unit")),
-    BuiltinVariable("map", parseType("[T, R, !E]((T) !E -> R, List[T]) !E -> List[R]"))
+    BuiltinVariable("map", parseType("[T, R, !E]((T) !E -> R, List[T]) !E -> List[R]")),
+    BuiltinVariable("reduce", parseType("[T, R, !E]((R, T) !E -> R, R, List[T]) !E -> R"))
 )
