@@ -112,11 +112,13 @@ class EvalTypeTests {
         val typeParameter = typeParameter("T")
         val typeParameterReference = staticReference("T")
         val boolReference = staticReference("Bool")
+        val intReference = staticReference("Int")
         val effectReference = staticReference("Io")
 
         val node = functionTypeNode(
             staticParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameterReference),
+            namedParameters = listOf(parameter("x", intReference)),
             effects = listOf(effectReference),
             returnType = boolReference
         )
@@ -126,6 +128,7 @@ class EvalTypeTests {
             typeContext(
                 referenceTypes = mapOf(
                     boolReference to MetaType(BoolType),
+                    intReference to MetaType(IntType),
                     effectReference to EffectType(IoEffect)
                 ),
                 references = mapOf(typeParameterReference to typeParameter)
@@ -133,6 +136,7 @@ class EvalTypeTests {
         )
         assertThat(type, isFunctionType(
             positionalParameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
+            namedParameters = isMap("x" to isIntType),
             effect = equalTo(IoEffect),
             returnType = isBoolType
         ))
