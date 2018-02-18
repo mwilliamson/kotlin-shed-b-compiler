@@ -975,7 +975,6 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
         }
 
         tokens.skip(TokenType.SYMBOL_COMMA)
-        // TODO: test trailing comma
     }
 }
 

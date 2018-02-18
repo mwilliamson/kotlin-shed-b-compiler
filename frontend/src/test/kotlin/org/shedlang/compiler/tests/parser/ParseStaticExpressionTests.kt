@@ -51,6 +51,18 @@ class ParseStaticExpressionTests {
     }
 
     @Test
+    fun parametersCanHaveTrailingComma() {
+        val source = "(A,) -> C"
+        val node = parseString(::parseStaticExpression, source)
+        assertThat(node, isFunctionType(
+            positionalParameters = isSequence(
+                isStaticReference(name = "A")
+            ),
+            returnType = isStaticReference(name = "C")
+        ))
+    }
+
+    @Test
     fun functionTypeCanHaveNamedArguments() {
         val source = "(A, B, *, c: C) -> C"
         val node = parseString(::parseStaticExpression, source)
