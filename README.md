@@ -10,12 +10,6 @@
 
 * Change modules to UpperCamelCase
 
-* Support backend-specific code
-
-* Move lists into a module
-
 * Optimise directly recursive tail calls
 
 * Check number of static arguments
-
-* Add named arguments to function types
