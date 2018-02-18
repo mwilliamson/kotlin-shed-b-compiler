@@ -19,6 +19,14 @@ internal fun parse(filename: String, input: String): ModuleNode {
     )
 }
 
+internal fun parseTypesModule(filename: String, input: String): TypesModuleNode {
+    return parse(
+        filename = filename,
+        input = input,
+        rule = { tokens -> ::parseTypesModuleTokens.parse(tokens) }
+    )
+}
+
 internal fun <T> parse(
     filename: String,
     input: String,
@@ -52,11 +60,7 @@ internal fun <T> ((Source, TokenIterator<TokenType>) -> T).parse(tokens: TokenIt
 }
 
 internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): ModuleNode {
-    val imports = parseZeroOrMore(
-        parseElement = { tokens -> ::parseImport.parse(tokens) },
-        isEnd = { tokens -> !tokens.isNext(TokenType.KEYWORD_IMPORT) },
-        tokens = tokens
-    )
+    val imports = parseImports(tokens)
     val body = parseZeroOrMore(
         parseElement = ::parseModuleStatement,
         isEnd = { tokens -> tokens.isNext(TokenType.END) },
@@ -65,6 +69,42 @@ internal fun parseModule(source: Source, tokens: TokenIterator<TokenType>): Modu
     return ModuleNode(
         imports = imports,
         body = body,
+        source = source
+    )
+}
+
+internal fun parseTypesModuleTokens(source: Source, tokens: TokenIterator<TokenType>): TypesModuleNode {
+    val imports = parseImports(tokens)
+    val body = parseZeroOrMore(
+        parseElement = { tokens -> ::parseValType.parse(tokens) },
+        isEnd = { tokens -> tokens.isNext(TokenType.END) },
+        tokens = tokens
+    )
+
+    return TypesModuleNode(
+        imports = imports,
+        body = body,
+        source = source
+    )
+}
+
+private fun parseImports(tokens: TokenIterator<TokenType>): List<ImportNode> {
+    return parseZeroOrMore(
+        parseElement = { tokens -> ::parseImport.parse(tokens) },
+        isEnd = { tokens -> !tokens.isNext(TokenType.KEYWORD_IMPORT) },
+        tokens = tokens
+    )
+}
+
+private fun parseValType(source: Source, tokens: TokenIterator<TokenType>): ValTypeNode {
+    tokens.skip(TokenType.KEYWORD_VAL)
+    val name = parseIdentifier(tokens)
+    tokens.skip(TokenType.SYMBOL_COLON)
+    val type = parseStaticExpression(tokens)
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
+    return ValTypeNode(
+        name = name,
+        type = type,
         source = source
     )
 }

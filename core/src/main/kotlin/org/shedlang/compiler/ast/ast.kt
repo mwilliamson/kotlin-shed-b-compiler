@@ -163,6 +163,26 @@ data class ModuleNode(
         get() = imports + body
 }
 
+data class TypesModuleNode(
+    val imports: List<ImportNode>,
+    val body: List<ValTypeNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val children: List<Node>
+        get() = imports + body
+}
+
+data class ValTypeNode(
+    val name: String,
+    val type: StaticNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val children: List<Node>
+        get() = listOf(type)
+}
+
 data class ImportPath(val base: ImportPathBase, val parts: List<String>) {
     companion object {
         fun absolute(parts: List<String>) = ImportPath(ImportPathBase.Absolute, parts)

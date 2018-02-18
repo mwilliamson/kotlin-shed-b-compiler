@@ -60,6 +60,16 @@ inline internal fun <reified T: ExpressionNode> isVal(
     ))
 }
 
+internal fun isValType(
+    name: Matcher<String>,
+    type: Matcher<StaticNode>
+): Matcher<Node> {
+    return cast(allOf(
+        has(ValTypeNode::name, name),
+        has(ValTypeNode::type, type)
+    ))
+}
+
 internal fun isShape(
     name: Matcher<String> = anything,
     typeParameters: Matcher<List<TypeParameterNode>> = anything,
