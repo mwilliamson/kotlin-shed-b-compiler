@@ -47,7 +47,7 @@ private fun readModule(path: Path, name: List<String>, getModule: (List<String>)
         }
     }
 
-    if (path.endsWith(".types.shed")) {
+    if (path.toString().endsWith(".types.shed")) {
         val moduleNode = parseTypesModule(filename = path.toString(), input = moduleText)
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
@@ -110,8 +110,10 @@ private class ModuleReader(private val root: Path) {
             .filter({ file -> file.exists() && file.isDirectory })
             .map({ file -> file.toPath() })
         val bases = listOf(root.resolve(sourceDirectoryName)) + dependencies
-        val possiblePaths = bases.map({ base ->
-            pathAppend(name.fold(base, { path, part -> path.resolve(part) }), ".shed")
+        val possiblePaths = bases.flatMap({ base ->
+            listOf(".shed", ".types.shed").map { extension ->
+                pathAppend(name.fold(base, { path, part -> path.resolve(part) }), extension)
+            }
         })
         val matchingPaths = possiblePaths.filter({ path -> path.toFile().exists() })
         if (matchingPaths.size == 0) {
