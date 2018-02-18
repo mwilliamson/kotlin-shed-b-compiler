@@ -197,7 +197,7 @@ class ResolutionTests {
     }
 
     @Test
-    fun importIntroducesVariable() {
+    fun importInModuleIntroducesVariable() {
         val import = import(path = ImportPath.absolute(listOf("x", "y", "z")))
         val reference = variableReference("z")
         val module = module(
@@ -211,6 +211,22 @@ class ResolutionTests {
         )
 
         val references = resolve(module, globals = mapOf("Unit" to anyDeclaration()))
+
+        assertThat(references[reference], isVariableBinding(import))
+    }
+
+    @Test
+    fun importInTypesModuleIntroducesVariable() {
+        val import = import(path = ImportPath.absolute(listOf("T")))
+        val reference = staticReference("T")
+        val module = typesModule(
+            imports = listOf(import),
+            body = listOf(
+                valType(name = "value", type = reference)
+            )
+        )
+
+        val references = resolve(module, globals = mapOf())
 
         assertThat(references[reference], isVariableBinding(import))
     }

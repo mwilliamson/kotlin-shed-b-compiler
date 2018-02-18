@@ -88,6 +88,15 @@ fun valStatement(
     source = anySource()
 )
 
+fun valType(
+    name: String,
+    type: StaticNode
+) = ValTypeNode(
+    name = name,
+    type = type,
+    source = anySource()
+)
+
 fun expression() = literalString("<expression>")
 fun literalUnit() = UnitLiteralNode(anySource())
 fun literalBool(
@@ -281,6 +290,15 @@ fun module(
     body: List<ModuleStatementNode> = listOf(),
     imports: List<ImportNode> = listOf()
 ) = ModuleNode(
+    imports = imports,
+    body = body,
+    source = anySource()
+)
+
+fun typesModule(
+    imports: List<ImportNode> = listOf(),
+    body: List<ValTypeNode> = listOf()
+) = TypesModuleNode(
     imports = imports,
     body = body,
     source = anySource()
