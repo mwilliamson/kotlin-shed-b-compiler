@@ -15,7 +15,8 @@ private val coreBuiltins = listOf(
     BuiltinVariable("Bool", MetaType(BoolType)),
     BuiltinVariable("List", MetaType(ListType)),
 
-    BuiltinVariable("Io", EffectType(IoEffect))
+    BuiltinVariable("Io", EffectType(IoEffect)),
+    BuiltinVariable("Pure", EffectType(EmptyEffect))
 )
 
 fun parseType(string: String): Type {
