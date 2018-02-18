@@ -263,8 +263,8 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
     val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-    val parameters = parseZeroOrMoreNodes(
-        parseElement = ::parseParameter,
+    val parameters = parseZeroOrMore(
+        parseElement = ::parseParametersPart,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         tokens = tokens
@@ -381,14 +381,18 @@ private sealed class Parameter {
     object StartOfNamedParameters : Parameter()
 }
 
-private fun parseParameter(source: Source, tokens: TokenIterator<TokenType>) : Parameter {
+private fun parseParametersPart(tokens: TokenIterator<TokenType>) : Parameter {
     if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
         return Parameter.StartOfNamedParameters
     } else {
-        val name = parseIdentifier(tokens)
-        val type = parseTypeSpec(tokens)
-        return Parameter.Node(ParameterNode(name, type, source))
+        return Parameter.Node(::parseParameter.parse(tokens))
     }
+}
+
+private fun parseParameter(source: Source, tokens: TokenIterator<TokenType>): ParameterNode {
+    val name = parseIdentifier(tokens)
+    val type = parseTypeSpec(tokens)
+    return ParameterNode(name, type, source)
 }
 
 private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
@@ -918,27 +922,61 @@ private fun parseStaticReference(source: Source, tokens: TokenIterator<TokenType
 
 private fun parseFunctionType(source: Source, tokens: TokenIterator<TokenType>): StaticNode {
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
+    val parameters = parseFunctionTypeParameters(tokens)
 
-    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-    val parameters = parseMany(
-        parseElement = { tokens -> parseStaticExpression(tokens) },
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        allowZero = true,
-        allowTrailingSeparator = true,
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-        tokens = tokens
-    )
-    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
     val effects = parseEffects(tokens)
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = parseStaticExpression(tokens)
     return FunctionTypeNode(
         staticParameters = staticParameters,
-        positionalParameters = parameters,
+        positionalParameters = parameters.positional,
+        namedParameters = parameters.named,
         returnType = returnType,
         effects = effects,
         source = source
     )
+}
+
+private class FunctionTypeParameters(
+    val positional: List<StaticNode>,
+    val named: List<ParameterNode>
+)
+
+private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): FunctionTypeParameters {
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+
+    val positionalParameters = mutableListOf<StaticNode>()
+    val namedParameters = mutableListOf<ParameterNode>()
+    var named = false
+
+    while (true) {
+        if (tokens.trySkip(TokenType.SYMBOL_CLOSE_PAREN)) {
+            return FunctionTypeParameters(
+                positional = positionalParameters,
+                named = namedParameters
+            )
+        }
+
+        if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
+            named = true
+        } else if (named) {
+            val parameter = ::parseParameter.parse(tokens)
+            namedParameters.add(parameter)
+        } else {
+            val parameter = parseStaticExpression(tokens)
+            positionalParameters.add(parameter)
+        }
+
+        if (tokens.trySkip(TokenType.SYMBOL_CLOSE_PAREN)) {
+            return FunctionTypeParameters(
+                positional = positionalParameters,
+                named = namedParameters
+            )
+        }
+
+        tokens.skip(TokenType.SYMBOL_COMMA)
+        // TODO: test trailing comma
+    }
 }
 
 private interface StaticOperationParser: ExpressionParser<StaticNode> {

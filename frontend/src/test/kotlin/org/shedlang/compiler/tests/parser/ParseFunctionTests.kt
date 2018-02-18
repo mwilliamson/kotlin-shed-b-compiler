@@ -3,7 +3,10 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.ast.FunctionBody
+import org.shedlang.compiler.ast.FunctionDeclarationNode
+import org.shedlang.compiler.ast.FunctionNode
+import org.shedlang.compiler.ast.StaticReferenceNode
 import org.shedlang.compiler.frontend.tests.isInvariant
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
@@ -32,7 +35,7 @@ class ParseFunctionTests {
         val source = "fun f(x: Int) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
-            isArgument("x", "Int")
+            isParameter("x", "Int")
         )))
     }
 
@@ -41,8 +44,8 @@ class ParseFunctionTests {
         val source = "fun f(x: Int, y: String) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
-            isArgument("x", "Int"),
-            isArgument("y", "String")
+            isParameter("x", "Int"),
+            isParameter("y", "String")
         )))
     }
 
@@ -52,7 +55,7 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::parameters, isSequence()),
-            has(FunctionNode::namedParameters, isSequence(isArgument("x", "Int")))
+            has(FunctionNode::namedParameters, isSequence(isParameter("x", "Int")))
         ))
     }
 
@@ -61,8 +64,8 @@ class ParseFunctionTests {
         val source = "fun f(x: Int, *, y: Int) -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionNode::parameters, isSequence(isArgument("x", "Int"))),
-            has(FunctionNode::namedParameters, isSequence(isArgument("y", "Int")))
+            has(FunctionNode::parameters, isSequence(isParameter("x", "Int"))),
+            has(FunctionNode::namedParameters, isSequence(isParameter("y", "Int")))
         ))
     }
 
@@ -176,14 +179,5 @@ class ParseFunctionTests {
                 cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4))))
             )
         )))
-    }
-
-    private fun isArgument(name: String, typeReference: String): Matcher<ParameterNode> {
-        return allOf(
-            has(ParameterNode::name, equalTo(name)),
-            has(ParameterNode::type, cast(
-                has(StaticReferenceNode::name, equalTo(typeReference))
-            ))
-        )
     }
 }

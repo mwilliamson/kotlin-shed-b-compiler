@@ -128,6 +128,15 @@ internal fun isEffectParameterNode(
     return cast(has(EffectParameterNode::name, name))
 }
 
+internal fun isParameter(name: String, typeReference: String): Matcher<ParameterNode> {
+    return allOf(
+        has(ParameterNode::name, equalTo(name)),
+        has(ParameterNode::type, cast(
+            has(StaticReferenceNode::name, equalTo(typeReference))
+        ))
+    )
+}
+
 internal fun isBinaryOperation(
     operator: Operator,
     left: Matcher<ExpressionNode>,
@@ -218,11 +227,13 @@ internal fun isStaticApplication(
 internal fun isFunctionType(
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     positionalParameters: Matcher<List<StaticNode>> = anything,
+    namedParameters: Matcher<List<ParameterNode>> = anything,
     returnType: Matcher<StaticNode> = anything,
     effects: Matcher<List<StaticNode>> = anything
 ): Matcher<StaticNode> = cast(allOf(
     has(FunctionTypeNode::staticParameters, staticParameters),
     has(FunctionTypeNode::positionalParameters, positionalParameters),
+    has(FunctionTypeNode::namedParameters, namedParameters),
     has(FunctionTypeNode::returnType, returnType),
     has(FunctionTypeNode::effects, effects)
 ))

@@ -51,6 +51,22 @@ class ParseStaticExpressionTests {
     }
 
     @Test
+    fun functionTypeCanHaveNamedArguments() {
+        val source = "(A, B, *, c: C) -> C"
+        val node = parseString(::parseStaticExpression, source)
+        assertThat(node, isFunctionType(
+            positionalParameters = isSequence(
+                isStaticReference(name = "A"),
+                isStaticReference(name = "B")
+            ),
+            namedParameters = isSequence(
+                isParameter(name = "c", typeReference = "C")
+            ),
+            returnType = isStaticReference(name = "C")
+        ))
+    }
+
+    @Test
     fun functionTypeCanHaveEffects() {
         val source = "() !E -> R"
         val node = parseString(::parseStaticExpression, source)

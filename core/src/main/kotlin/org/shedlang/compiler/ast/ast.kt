@@ -140,13 +140,14 @@ data class StaticApplicationNode(
 data class FunctionTypeNode(
     val staticParameters: List<StaticParameterNode>,
     val positionalParameters: List<StaticNode>,
+    val namedParameters: List<ParameterNode>,
     val returnType: StaticNode,
     val effects: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticNode {
     override val children: List<Node>
-        get() = staticParameters + positionalParameters + effects + listOf(returnType)
+        get() = staticParameters + positionalParameters + namedParameters + effects + listOf(returnType)
 
     override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
         return visitor.visit(this)

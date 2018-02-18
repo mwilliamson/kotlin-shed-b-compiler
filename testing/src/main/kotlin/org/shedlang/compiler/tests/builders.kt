@@ -327,12 +327,14 @@ fun staticApplication(
 )
 fun functionTypeNode(
     staticParameters: List<StaticParameterNode> = listOf(),
-    parameters: List<StaticNode> = listOf(),
+    positionalParameters: List<StaticNode> = listOf(),
+    namedParameters: List<ParameterNode> = listOf(),
     returnType: StaticNode,
     effects: List<StaticNode> = listOf()
 ) = FunctionTypeNode(
     staticParameters = staticParameters,
-    positionalParameters = parameters,
+    positionalParameters = positionalParameters,
+    namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
     source = anySource()
