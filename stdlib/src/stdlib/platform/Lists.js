@@ -12,7 +12,7 @@ function listIndexToSequence(elements, index) {
             if (index < elements.length) {
                 return Options.some(Sequences.SequenceItem({
                     head: elements[index],
-                    tail: listIndexToSequence(elements[index], index + 1)
+                    tail: listIndexToSequence(elements, index + 1)
                 }));
             } else {
                 return Options.none;
