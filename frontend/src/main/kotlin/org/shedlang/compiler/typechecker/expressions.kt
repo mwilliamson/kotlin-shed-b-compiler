@@ -1,6 +1,7 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.types.*
 
 private data class OperationType(val operator: Operator, val left: Type, val right: Type)
@@ -122,13 +123,14 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
         verifyType(branch.condition, context, expected = BoolType)
 
         val trueContext = context.enterScope()
+        val condition = branch.condition
 
-        if (
-        branch.condition is IsNode &&
-            branch.condition.expression is VariableReferenceNode
-            ) {
-            val conditionType = evalType(branch.condition.type, context)
-            trueContext.addVariableType(branch.condition.expression, conditionType)
+        if (condition is IsNode) {
+            val conditionExpression = condition.expression
+            if (conditionExpression is VariableReferenceNode) {
+                val conditionType = evalType(condition.type, context)
+                trueContext.addVariableType(conditionExpression, conditionType)
+            }
         }
 
         typeCheck(branch.body, trueContext)
@@ -148,8 +150,9 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     val branchTypes = node.branches.map { branch ->
         val conditionType = evalType(branch.type, context)
         val branchContext = context.enterScope()
-        if (node.expression is VariableReferenceNode) {
-            branchContext.addVariableType(node.expression, conditionType)
+        val expression = node.expression
+        if (expression is VariableReferenceNode) {
+            branchContext.addVariableType(expression, conditionType)
         }
         typeCheck(branch.body, branchContext)
     }

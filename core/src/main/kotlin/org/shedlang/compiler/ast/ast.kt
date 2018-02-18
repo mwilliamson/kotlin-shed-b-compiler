@@ -83,7 +83,7 @@ data class NodeSource(val node: Node): Source {
 
 private var nextId = 0
 
-internal fun freshNodeId() = nextId++
+fun freshNodeId() = nextId++
 
 interface StaticNode : Node {
     interface Visitor<T> {

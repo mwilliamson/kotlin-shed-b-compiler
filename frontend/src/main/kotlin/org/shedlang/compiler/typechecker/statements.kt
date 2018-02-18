@@ -40,10 +40,11 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         typeArguments = typeParameters,
         declaredTagField = tag,
         getTagValue = lazy {
-            if (node.hasTagValueFor == null) {
+            val hasTagValueFor = node.hasTagValueFor
+            if (hasTagValueFor == null) {
                 null
             } else {
-                val type = evalType(node.hasTagValueFor, context)
+                val type = evalType(hasTagValueFor, context)
                 val tag = getDeclaredTagField(type)
                 if (tag == null) {
                     null
@@ -83,10 +84,11 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check members satisfy subtype relation
     val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
 
-    val superType = if (node.superType == null) {
+    val superTypeNode = node.superType
+    val superType = if (superTypeNode == null) {
         null
     } else {
-        evalType(node.superType, context)
+        evalType(superTypeNode, context)
     }
 
     // TODO: check members conform to supertype

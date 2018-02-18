@@ -13,6 +13,7 @@
         <module>backend-javascript</module>
         <module>backend-python</module>
         <module>cli</module>
+        <module>core</module>
         <module>frontend</module>
     </modules>
 

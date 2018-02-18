@@ -6,11 +6,11 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.types.TagField
 import org.shedlang.compiler.types.TagValue
-import org.shedlang.compiler.types.union
 
 class UnionTests {
     @Test

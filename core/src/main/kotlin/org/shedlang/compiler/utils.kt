@@ -18,7 +18,7 @@ fun <T: Any?> T?.nullableToList(): List<T> {
     }
 }
 
-internal fun Iterable<Boolean>.all(): Boolean {
+fun Iterable<Boolean>.all(): Boolean {
     for (element in this) {
         if (!element) {
             return false
@@ -27,7 +27,7 @@ internal fun Iterable<Boolean>.all(): Boolean {
     return true
 }
 
-internal fun <T> Iterable<T>.allIndexed(predicate: (Int, T) -> Boolean): Boolean {
+fun <T> Iterable<T>.allIndexed(predicate: (Int, T) -> Boolean): Boolean {
     this.forEachIndexed { index, element ->
         if (!predicate(index, element)) {
             return false
@@ -41,7 +41,7 @@ internal fun <T> Iterable<T>.isUnique(): Boolean {
     return list.toSet().size == list.size
 }
 
-internal fun <T1, T2, T3, R> zip3(
+fun <T1, T2, T3, R> zip3(
     iterable1: Iterable<T1>,
     iterable2: Iterable<T2>,
     iterable3: Iterable<T3>,
@@ -83,10 +83,10 @@ private class ParentPathsIterator(var path: Path) : Iterator<Path> {
     }
 }
 
-internal class LazyMap<K, V>(private val compute: (K) -> V) {
+class LazyMap<K, V>(private val compute: (K) -> V) {
     private val map = HashMap<K, V>()
 
-    internal fun get(key: K): V {
+    fun get(key: K): V {
         val storedValue = map[key]
         if (storedValue == null) {
             val value = compute(key)
@@ -97,6 +97,6 @@ internal class LazyMap<K, V>(private val compute: (K) -> V) {
         }
     }
 
-    internal val values: Collection<V>
+    val values: Collection<V>
         get() = map.values
 }

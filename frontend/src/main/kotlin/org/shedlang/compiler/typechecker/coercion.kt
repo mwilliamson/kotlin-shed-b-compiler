@@ -1,6 +1,7 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.all
+import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.types.*
 import org.shedlang.compiler.zip3
 

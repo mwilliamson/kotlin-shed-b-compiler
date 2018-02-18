@@ -1,21 +1,16 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.types.StaticBindings
+import org.shedlang.compiler.frontend.types.applyType
+import org.shedlang.compiler.frontend.types.replaceEffects
+import org.shedlang.compiler.frontend.types.replaceTypes
 import org.shedlang.compiler.types.*
 
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
     val receiverType = inferType(node.receiver, context)
-
-    if (receiverType is FunctionType) {
-        return inferFunctionCallType(node, receiverType, context)
-    } else if (receiverType is MetaType && receiverType.type is ShapeType) {
-        val shapeType = receiverType.type
-        return inferConstructorCallType(node, null, shapeType, context)
-    } else if (receiverType is MetaType && receiverType.type is TypeFunction && receiverType.type.type is ShapeType) {
-        return inferConstructorCallType(node, receiverType.type, receiverType.type.type, context)
-    } else if (receiverType is ListConstructorType) {
-        return inferListCall(node, context)
-    } else {
+    val type = tryInferCallType(node, receiverType, context)
+    if (type == null) {
         val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
         throw UnexpectedTypeError(
             expected = FunctionType(
@@ -28,7 +23,29 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
             actual = receiverType,
             source = node.receiver.source
         )
+    } else {
+        return type
     }
+}
+
+internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Type? {
+    if (receiverType is FunctionType) {
+        return inferFunctionCallType(node, receiverType, context)
+    } else if (receiverType is MetaType) {
+        val receiverInnerType = receiverType.type
+        if (receiverInnerType is ShapeType) {
+            return inferConstructorCallType(node, null, receiverInnerType, context)
+        } else if (receiverInnerType is TypeFunction) {
+            val typeFunctionInnerType = receiverInnerType.type
+            if (typeFunctionInnerType is ShapeType) {
+                return inferConstructorCallType(node, receiverInnerType, typeFunctionInnerType, context)
+            }
+        }
+    } else if (receiverType is ListConstructorType) {
+        return inferListCall(node, context)
+    }
+
+    return null
 }
 
 private fun inferFunctionCallType(
@@ -183,11 +200,11 @@ private fun checkArgumentTypes(
                     effects = mapOf()
                 )
             )
-            val argumentType = inferType(argument.first, context, hint = parameterType)
-            if (!constraints.coerce(from = argumentType, to = parameterType)) {
+            val actualType = inferType(argument.first, context, hint = parameterType)
+            if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
                     expected = parameterType,
-                    actual = argumentType,
+                    actual = actualType,
                     source = argument.first.source
                 )
             }

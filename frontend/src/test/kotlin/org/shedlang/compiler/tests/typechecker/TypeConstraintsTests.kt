@@ -7,6 +7,8 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.isA
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.frontend.types.applyType
+import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.coerce

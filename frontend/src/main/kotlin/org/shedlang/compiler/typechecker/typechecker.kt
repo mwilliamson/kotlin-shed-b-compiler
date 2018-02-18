@@ -1,6 +1,7 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.types.applyType
 import org.shedlang.compiler.types.*
 import typeCheckStaticParameters
 import java.util.*
