@@ -17,3 +17,5 @@
 * Optimise directly recursive tail calls
 
 * Check number of static arguments
+
+* Add named arguments to function types
