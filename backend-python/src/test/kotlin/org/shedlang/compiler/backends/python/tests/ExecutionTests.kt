@@ -8,6 +8,7 @@ import org.shedlang.compiler.backends.python.topLevelPythonPackageName
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
+import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
@@ -24,6 +25,9 @@ class ExecutionTests {
                     assertThat("stderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
+                print(error.source.describe())
+                throw error
+            } catch (error: CompilerError) {
                 print(error.source.describe())
                 throw error
             }
