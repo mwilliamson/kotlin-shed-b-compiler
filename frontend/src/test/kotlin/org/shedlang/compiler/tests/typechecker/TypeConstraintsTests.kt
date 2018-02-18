@@ -1,17 +1,18 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.isA
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isEquivalentType
 import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.frontend.types.union
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.tests.isMap
+import org.shedlang.compiler.tests.parametrizedShapeType
+import org.shedlang.compiler.tests.shapeType
+import org.shedlang.compiler.tests.unionType
 import org.shedlang.compiler.typechecker.CoercionResult
+import org.shedlang.compiler.typechecker.TypeConstraintSolver
 import org.shedlang.compiler.typechecker.coerce
 import org.shedlang.compiler.types.*
 
@@ -259,6 +260,23 @@ class TypeConstraintsTests {
             ),
             isFailure
         )
+    }
+
+    @Test
+    fun coercingEffectToEffectParameterBindsParameter() {
+        val parameter = effectParameter("E")
+        val constraints = TypeConstraintSolver(parameters = setOf(parameter))
+        assertThat(constraints.coerceEffect(from = IoEffect, to = parameter), equalTo(true))
+        assertThat(constraints.effectBindings, isMap(parameter to cast(equalTo(IoEffect))))
+    }
+
+    @Test
+    fun coercingSameEffectToEffectParameterBindsParameter() {
+        val parameter = effectParameter("E")
+        val constraints = TypeConstraintSolver(parameters = setOf(parameter))
+        assertThat(constraints.coerceEffect(from = IoEffect, to = parameter), equalTo(true))
+        assertThat(constraints.coerceEffect(from = IoEffect, to = parameter), equalTo(true))
+        assertThat(constraints.effectBindings, isMap(parameter to cast(equalTo(IoEffect))))
     }
 
     private fun isSuccess(

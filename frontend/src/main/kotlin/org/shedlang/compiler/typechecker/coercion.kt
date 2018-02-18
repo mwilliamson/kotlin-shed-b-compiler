@@ -158,6 +158,8 @@ internal class TypeConstraintSolver(
             if (boundEffect == null) {
                 effectBindings[to] = from
                 return true
+            } else {
+                return coerceEffect(from = from, to = boundEffect)
             }
         }
 
