@@ -140,7 +140,7 @@ class ResolutionTests {
 
     @Test
     fun functionEffectsAreResolved() {
-        val effect = staticReference("!Io")
+        val effect = staticReference("Io")
         val node = function(
             effects = listOf(effect),
             returnType = staticReference("Int"),
@@ -149,7 +149,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf(
             "Int" to anyDeclaration(),
-            "!Io" to declaration
+            "Io" to declaration
         ))
 
         assertThat(references[effect], isVariableBinding(declaration))

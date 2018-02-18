@@ -55,7 +55,7 @@ class ParseStaticExpressionTests {
         val source = "() !E -> R"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
-            effects = isSequence(isStaticReference("!E"))
+            effects = isSequence(isStaticReference("E"))
         ))
     }
 

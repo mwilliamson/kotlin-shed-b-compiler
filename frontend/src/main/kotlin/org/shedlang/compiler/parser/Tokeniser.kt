@@ -51,8 +51,9 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     symbol(TokenType.SYMBOL_ASTERISK, "*"),
     symbol(TokenType.SYMBOL_BAR, "|"),
     symbol(TokenType.SYMBOL_TILDE, "~"),
+    symbol(TokenType.SYMBOL_BANG, "!"),
 
-    RegexTokeniser.rule(TokenType.IDENTIFIER, "!?[A-Za-z][A-Za-z0-9]*"),
+    RegexTokeniser.rule(TokenType.IDENTIFIER, "[A-Za-z][A-Za-z0-9]*"),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
     RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
     RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+"),
@@ -106,6 +107,7 @@ internal enum class TokenType {
     SYMBOL_ASTERISK,
     SYMBOL_BAR,
     SYMBOL_TILDE,
+    SYMBOL_BANG,
 
     INTEGER,
     STRING,

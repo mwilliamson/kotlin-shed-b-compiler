@@ -4,11 +4,11 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.tests.isInvariant
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.parser.parseFunctionDeclaration
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.frontend.tests.isInvariant
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 
@@ -93,7 +93,7 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::staticParameters, isSequence(
-                isEffectParameterNode(name = equalTo("!E"))
+                isEffectParameterNode(name = equalTo("E"))
             ))
         ))
     }
@@ -120,7 +120,7 @@ class ParseFunctionTests {
         val source = "fun f() !Io -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
-            isStaticReference("!Io")
+            isStaticReference("Io")
         )))
     }
 
@@ -129,8 +129,8 @@ class ParseFunctionTests {
         val source = "fun f() !A, !B -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, has(FunctionNode::effects, isSequence(
-            isStaticReference("!A"),
-            isStaticReference("!B")
+            isStaticReference("A"),
+            isStaticReference("B")
         )))
     }
 

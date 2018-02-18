@@ -338,7 +338,7 @@ internal fun parseStaticParameters(
 
 private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
     return parseZeroOrMore(
-        parseElement = ::parseStaticExpression,
+        parseElement = ::parseEffect,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = {
             tokens.isNext(TokenType.SYMBOL_ARROW) ||
@@ -347,6 +347,11 @@ private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
         },
         tokens = tokens
     )
+}
+
+private fun parseEffect(tokens: TokenIterator<TokenType>): StaticNode {
+    tokens.skip(TokenType.SYMBOL_BANG)
+    return parseStaticExpression(tokens)
 }
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
@@ -365,7 +370,7 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
 }
 
 private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): StaticParameterNode {
-    if (tokens.isNext(TokenType.IDENTIFIER) && tokens.peek().value.startsWith("!")) {
+    if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
         return EffectParameterNode(
             name = tokens.nextValue(TokenType.IDENTIFIER),
             source = source
