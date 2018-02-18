@@ -4,9 +4,8 @@ import org.shedlang.compiler.ExpressionTypes
 import org.shedlang.compiler.ExpressionTypesMap
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.types.applyType
+import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.types.*
-import typeCheckStaticParameters
 import java.util.*
 
 internal fun newTypeContext(
@@ -343,7 +342,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
             val receiver = evalType(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalType(argument, context) })
             if (receiver is TypeFunction) {
-                return MetaType(applyType(receiver, arguments))
+                return MetaType(applyStatic(receiver, arguments))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.source)

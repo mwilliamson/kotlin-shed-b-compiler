@@ -31,46 +31,56 @@ fun union(left: Type, right: Type): Type {
     }
 }
 
-internal fun applyType(receiver: TypeFunction, arguments: List<Type>): Type {
-    val typeMap = receiver.parameters.zip(arguments).toMap()
-    return replaceTypes(receiver.type, StaticBindings(types = typeMap, effects = mapOf()))
+internal fun applyStatic(receiver: TypeFunction, arguments: List<StaticValue>): Type {
+    val bindings = receiver.parameters.zip(arguments).toMap()
+    return replaceStaticValuesInType(receiver.type, bindings = bindings)
 }
 
-internal class StaticBindings(
-    val types: Map<TypeParameter, Type>,
-    val effects: Map<EffectParameter, Effect> = mapOf()
-)
+internal typealias StaticBindings = Map<StaticParameter, StaticValue>
 
-internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
+private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): StaticValue {
+    return value.acceptStaticValueVisitor(object : StaticValue.Visitor<StaticValue> {
+        override fun visit(effect: Effect): StaticValue {
+            return replaceEffects(effect, bindings)
+        }
+
+        override fun visit(type: Type): StaticValue {
+            return replaceStaticValuesInType(type, bindings)
+        }
+    })
+}
+
+internal fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
     if (type is TypeParameter) {
-        return bindings.types.getOrElse(type, { type })
+        // TODO: handle non-type bindings
+        return bindings.getOrElse(type, { type }) as Type
     } else if (type is UnionType) {
         return LazyUnionType(
             type.name,
             lazy({
-                type.members.map({ memberType -> replaceTypes(memberType, bindings) as ShapeType })
+                type.members.map({ memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType })
             }),
-            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
+            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) }),
             declaredTagField = type.declaredTagField
         )
     } else if (type is ShapeType) {
         return LazyShapeType(
             name = type.name,
             getFields = lazy({
-                type.fields.mapValues({ field -> replaceTypes(field.value, bindings) })
+                type.fields.mapValues({ field -> replaceStaticValuesInType(field.value, bindings) })
             }),
             shapeId = type.shapeId,
-            typeParameters = type.typeParameters,
-            typeArguments = type.typeArguments.map({ typeArgument -> replaceTypes(typeArgument, bindings) }),
+            staticParameters = type.staticParameters,
+            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) }),
             declaredTagField = type.declaredTagField,
             getTagValue = lazy { type.tagValue }
         )
     } else if (type is FunctionType) {
         return FunctionType(
-            positionalParameters = type.positionalParameters.map({ parameter -> replaceTypes(parameter, bindings) }),
-            namedParameters = type.namedParameters.mapValues({ parameter -> replaceTypes(parameter.value, bindings) }),
+            positionalParameters = type.positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
+            namedParameters = type.namedParameters.mapValues({ parameter -> replaceStaticValuesInType(parameter.value, bindings) }),
             effect = replaceEffects(type.effect, bindings),
-            returns = replaceTypes(type.returns, bindings),
+            returns = replaceStaticValuesInType(type.returns, bindings),
             staticParameters = type.staticParameters
         )
     } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is AnyType) {
@@ -80,6 +90,12 @@ internal fun replaceTypes(type: Type, bindings: StaticBindings): Type {
     }
 }
 
-internal fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
-    return bindings.effects[effect] ?: effect
+internal fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
+    val effectParameter = effect as? EffectParameter
+    if (effectParameter == null) {
+        return effect
+    } else {
+        // TODO: handle non-effect bindings
+        return bindings.getOrElse(effect, { effect }) as Effect
+    }
 }

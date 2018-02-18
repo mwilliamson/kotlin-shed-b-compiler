@@ -337,7 +337,7 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             { inferType(node, typeContext) },
-            throwsUnexpectedType(expected = isIntType, actual = isBoolType)
+            throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType)
         )
     }
 
@@ -411,7 +411,7 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             { inferCallType(call, typeContext); typeContext.undefer() },
-            throwsUnexpectedType(expected = isIntType, actual = isBoolType, source = equalTo(source))
+            throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType, source = equalTo(source))
         )
     }
 }

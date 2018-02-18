@@ -120,14 +120,24 @@ internal class TypeConstraintSolver(
 
         if (from is ShapeType && to is ShapeType) {
             return from.shapeId == to.shapeId && zip3(
-                from.typeParameters,
-                from.typeArguments,
-                to.typeArguments,
-                { parameter, fromArg, toArg -> when (parameter.variance) {
-                    Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
-                    Variance.COVARIANT -> coerce(from = fromArg, to = toArg)
-                    Variance.CONTRAVARIANT -> coerce(from = toArg, to = fromArg)
-                }}
+                from.staticParameters,
+                from.staticArguments,
+                to.staticArguments,
+                { parameter, fromArg, toArg ->
+                    parameter.accept(object : StaticParameter.Visitor<Boolean> {
+                        override fun visit(parameter: TypeParameter): Boolean {
+                            return fromArg is Type && toArg is Type && when (parameter.variance) {
+                                Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
+                                Variance.COVARIANT -> coerce(from = fromArg, to = toArg)
+                                Variance.CONTRAVARIANT -> coerce(from = toArg, to = fromArg)
+                            }
+                        }
+
+                        override fun visit(parameter: EffectParameter): Boolean {
+                            return fromArg is Effect && toArg is Effect && coerceEffect(from = fromArg, to = toArg)
+                        }
+                    })
+                }
             ).all()
         }
 

@@ -407,7 +407,7 @@ class ResolutionTests {
         val reference = staticReference("T")
         val typeParameter = typeParameter("T")
         val node = shape(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             fields = listOf(shapeField(type = reference))
         )
 
@@ -436,7 +436,7 @@ class ResolutionTests {
         val reference = staticReference("T")
         val typeParameter = typeParameter("T")
         val node = union(
-            typeParameters = listOf(typeParameter),
+            staticParameters = listOf(typeParameter),
             members = listOf(reference)
         )
 

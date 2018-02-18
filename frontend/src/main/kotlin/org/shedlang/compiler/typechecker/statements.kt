@@ -2,7 +2,6 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
-import typeCheckTypeParameters
 
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
@@ -15,7 +14,7 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
 }
 
 private fun typeCheck(node: ShapeNode, context: TypeContext) {
-    val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
+    val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
         if (fields.size > 1) {
@@ -36,8 +35,8 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     val shapeType = LazyShapeType(
         name = node.name,
         getFields = fields,
-        typeParameters = typeParameters,
-        typeArguments = typeParameters,
+        staticParameters = staticParameters,
+        staticArguments = staticParameters,
         declaredTagField = tag,
         getTagValue = lazy {
             val hasTagValueFor = node.hasTagValueFor
@@ -54,10 +53,10 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
             }
         }
     )
-    val type = if (node.typeParameters.isEmpty()) {
+    val type = if (node.staticParameters.isEmpty()) {
         shapeType
     } else {
-        TypeFunction(typeParameters, shapeType)
+        TypeFunction(staticParameters, shapeType)
     }
     context.addVariableType(node, MetaType(type))
     context.defer({
@@ -82,7 +81,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check for circularity
     // TODO: test laziness
     // TODO: check members satisfy subtype relation
-    val typeParameters = typeCheckTypeParameters(node.typeParameters, context)
+    val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     val superTypeNode = node.superType
     val superType = if (superTypeNode == null) {
@@ -108,13 +107,13 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     val unionType = LazyUnionType(
         name = node.name,
         getMembers = members,
-        typeArguments = typeParameters,
+        staticArguments = staticParameters,
         declaredTagField = tag
     )
-    val type = if (node.typeParameters.isEmpty()) {
+    val type = if (node.staticParameters.isEmpty()) {
         unionType
     } else {
-        TypeFunction(typeParameters, unionType)
+        TypeFunction(staticParameters, unionType)
     }
 
     context.addVariableType(node, MetaType(type))

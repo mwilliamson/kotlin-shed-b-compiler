@@ -2,9 +2,9 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.types.StaticBindings
-import org.shedlang.compiler.frontend.types.applyType
+import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.frontend.types.replaceEffects
-import org.shedlang.compiler.frontend.types.replaceTypes
+import org.shedlang.compiler.frontend.types.replaceStaticValuesInType
 import org.shedlang.compiler.types.*
 
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
@@ -68,7 +68,7 @@ private fun inferFunctionCallType(
     }
 
     // TODO: handle unconstrained types
-    return replaceTypes(receiverType.returns, bindings)
+    return replaceStaticValuesInType(receiverType.returns, bindings)
 }
 
 private fun inferConstructorCallType(
@@ -93,8 +93,8 @@ private fun inferConstructorCallType(
     if (typeFunction == null) {
         return shapeType
     } else {
-        return applyType(typeFunction, typeFunction.parameters.map({ parameter ->
-            typeParameterBindings.types[parameter]!!
+        return applyStatic(typeFunction, typeFunction.parameters.map({ parameter ->
+            typeParameterBindings[parameter]!!
         }))
     }
 }
@@ -193,12 +193,9 @@ private fun checkArgumentTypes(
             parameters = (inferredTypeArguments + effectParameters).toSet()
         )
         for (argument in arguments) {
-            val parameterType = replaceTypes(
+            val parameterType = replaceStaticValuesInType(
                 argument.second,
-                StaticBindings(
-                    types = typeParameters.zip(inferredTypeArguments).toMap(),
-                    effects = mapOf()
-                )
+                typeParameters.zip(inferredTypeArguments).toMap()
             )
             val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
@@ -226,7 +223,7 @@ private fun checkArgumentTypes(
             parameter to constraints.boundEffectFor(parameter)
         })
         // TODO: handle unbound effects
-        return StaticBindings(types = typeMap, effects = effectMap)
+        return typeMap + effectMap
     } else {
         if (staticArguments.size != staticParameters.size) {
             throw WrongNumberOfStaticArgumentsError(
@@ -251,13 +248,13 @@ private fun checkArgumentTypes(
             })
         }
 
-        val bindings = StaticBindings(types = typeMap, effects = effectMap)
+        val bindings = typeMap + effectMap
 
         checkArgumentTypes(
             staticParameters = listOf(),
             staticArguments = listOf(),
             arguments = arguments.map({ (expression, type) ->
-                expression to replaceTypes(type, bindings)
+                expression to replaceStaticValuesInType(type, bindings)
             }),
             source = source,
             context = context
@@ -274,5 +271,5 @@ private fun inferListCall(node: CallNode, context: TypeContext): Type {
         val argumentType = inferType(argument, context)
         constraints.coerce(argumentType, typeParameter)
     }
-    return applyType(ListType, listOf(constraints.boundTypeFor(typeParameter)!!))
+    return applyStatic(ListType, listOf(constraints.boundTypeFor(typeParameter)!!))
 }

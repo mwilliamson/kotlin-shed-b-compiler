@@ -51,7 +51,7 @@ class TypeCheckUnionTests {
 
         val node = union(
             "Union",
-            typeParameters = listOf(typeParameterDeclaration),
+            staticParameters = listOf(typeParameterDeclaration),
             members = listOf(staticApplication(shapeTypeReference, listOf(typeParameterReference)))
         )
 
@@ -65,7 +65,7 @@ class TypeCheckUnionTests {
             type = isUnionType(
                 name = equalTo("Union"),
                 members = isSequence(
-                    isShapeType(typeArguments = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)))
+                    isShapeType(staticArguments = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)))
                 )
             )
         )))

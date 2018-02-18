@@ -8,7 +8,7 @@ import com.natpryce.hamkrest.isA
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isEquivalentType
-import org.shedlang.compiler.frontend.types.applyType
+import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
@@ -75,8 +75,8 @@ class TypeConstraintsTests {
             )
         )
         val result = coerce(
-            from = applyType(shapeType, listOf(BoolType)),
-            to = applyType(shapeType, listOf(BoolType))
+            from = applyStatic(shapeType, listOf(BoolType)),
+            to = applyStatic(shapeType, listOf(BoolType))
         )
         assertThat(result, isSuccess())
     }
@@ -92,8 +92,8 @@ class TypeConstraintsTests {
             )
         )
         val result = coerce(
-            from = applyType(shapeType, listOf(BoolType)),
-            to = applyType(shapeType, listOf(IntType))
+            from = applyStatic(shapeType, listOf(BoolType)),
+            to = applyStatic(shapeType, listOf(IntType))
         )
         assertThat(result, isFailure)
     }

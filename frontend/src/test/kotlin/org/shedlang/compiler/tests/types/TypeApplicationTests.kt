@@ -5,10 +5,12 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.*
-import org.shedlang.compiler.frontend.types.StaticBindings
-import org.shedlang.compiler.frontend.types.applyType
-import org.shedlang.compiler.frontend.types.replaceTypes
-import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.frontend.types.applyStatic
+import org.shedlang.compiler.frontend.types.replaceStaticValuesInType
+import org.shedlang.compiler.tests.isMap
+import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.parametrizedShapeType
+import org.shedlang.compiler.tests.parametrizedUnionType
 import org.shedlang.compiler.types.*
 
 class TypeApplicationTests {
@@ -22,10 +24,10 @@ class TypeApplicationTests {
             fields = mapOf()
         )
         assertThat(
-            applyType(shape, listOf(BoolType, IntType)),
+            applyStatic(shape, listOf(BoolType, IntType)),
             isShapeType(
                 name = equalTo("Pair"),
-                typeArguments = isSequence(isBoolType, isIntType)
+                staticArguments = isSequence(isBoolType, isIntType)
             )
         )
     }
@@ -43,7 +45,7 @@ class TypeApplicationTests {
             )
         )
         assertThat(
-            applyType(shape, listOf(BoolType, IntType)),
+            applyStatic(shape, listOf(BoolType, IntType)),
             isShapeType(fields = listOf(
                 "first" to isBoolType,
                 "second" to isIntType
@@ -64,13 +66,13 @@ class TypeApplicationTests {
         val shapeType = parametrizedShapeType(
             "Shape",
             parameters = listOf(shapeTypeParameter),
-            fields = mapOf("value" to applyType(innerShapeType, listOf(shapeTypeParameter)))
+            fields = mapOf("value" to applyStatic(innerShapeType, listOf(shapeTypeParameter)))
         )
 
         assertThat(
-            applyType(shapeType, listOf(BoolType)),
+            applyStatic(shapeType, listOf(BoolType)),
             isShapeType(fields = listOf(
-                "value" to isEquivalentType(applyType(innerShapeType, listOf(BoolType)))
+                "value" to isEquivalentType(applyStatic(innerShapeType, listOf(BoolType)))
             ))
         )
     }
@@ -85,10 +87,10 @@ class TypeApplicationTests {
             members = listOf()
         )
         assertThat(
-            applyType(union, listOf(BoolType, IntType)),
+            applyStatic(union, listOf(BoolType, IntType)),
             isUnionType(
                 name = equalTo("Either"),
-                typeArguments = isSequence(isBoolType, isIntType)
+                staticArguments = isSequence(isBoolType, isIntType)
             )
         )
     }
@@ -106,13 +108,13 @@ class TypeApplicationTests {
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
-            members = listOf(applyType(shapeType, listOf(unionTypeParameter)) as ShapeType)
+            members = listOf(applyStatic(shapeType, listOf(unionTypeParameter)) as ShapeType)
         )
 
         assertThat(
-            applyType(union, listOf(BoolType)),
+            applyStatic(union, listOf(BoolType)),
             isUnionType(members = isSequence(
-                isEquivalentType(applyType(shapeType, listOf(BoolType)))
+                isEquivalentType(applyStatic(shapeType, listOf(BoolType)))
             ))
         )
     }
@@ -128,7 +130,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
+                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
                 isFunctionType(positionalParameters = isSequence(isIntType))
             )
         }
@@ -140,7 +142,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
+                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
                 isFunctionType(namedParameters = isMap("x" to isIntType))
             )
         }
@@ -152,7 +154,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceTypes(functionType, StaticBindings(types = mapOf(typeParameter to IntType))),
+                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
                 isFunctionType(returnType= isIntType)
             )
         }

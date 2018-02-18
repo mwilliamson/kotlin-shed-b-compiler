@@ -17,7 +17,7 @@ class ParseShapeTests {
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
             name = equalTo("X"),
-            typeParameters = isSequence(),
+            staticParameters = isSequence(),
             fields = isSequence()
         ))
     }
@@ -69,7 +69,7 @@ class ParseShapeTests {
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
             name = equalTo("X"),
-            typeParameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            staticParameters = isSequence(isTypeParameter(name = equalTo("T"))),
             fields = isSequence()
         ))
     }
@@ -80,7 +80,7 @@ class ParseShapeTests {
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
             name = equalTo("X"),
-            typeParameters = isSequence(
+            staticParameters = isSequence(
                 isTypeParameter(name = equalTo("T")),
                 isTypeParameter(name = equalTo("U"))
             ),

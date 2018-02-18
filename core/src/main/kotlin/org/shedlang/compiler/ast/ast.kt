@@ -219,7 +219,7 @@ interface ModuleStatementNode: Node {
 
 data class ShapeNode(
     override val name: String,
-    val typeParameters: List<TypeParameterNode>,
+    val staticParameters: List<StaticParameterNode>,
     val tagged: Boolean,
     val hasTagValueFor: StaticNode?,
     val fields: List<ShapeFieldNode>,
@@ -227,7 +227,7 @@ data class ShapeNode(
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = typeParameters + hasTagValueFor.nullableToList() + fields
+        get() = staticParameters + hasTagValueFor.nullableToList() + fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -246,14 +246,14 @@ data class ShapeFieldNode(
 
 data class UnionNode(
     override val name: String,
-    val typeParameters: List<TypeParameterNode>,
+    val staticParameters: List<StaticParameterNode>,
     val superType: StaticReferenceNode?,
     val members: List<StaticNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = typeParameters + superType.nullableToList() + members
+        get() = staticParameters + superType.nullableToList() + members
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

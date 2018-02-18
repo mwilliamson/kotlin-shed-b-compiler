@@ -14,7 +14,7 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = equalTo("X"),
-            typeParameters = isSequence(),
+            staticParameters = isSequence(),
             members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
@@ -25,7 +25,7 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = equalTo("X"),
-            typeParameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            staticParameters = isSequence(isTypeParameter(name = equalTo("T"))),
             members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
@@ -36,7 +36,7 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = equalTo("X"),
-            typeParameters = isSequence(
+            staticParameters = isSequence(
                 isTypeParameter(name = equalTo("T")),
                 isTypeParameter(name = equalTo("U"))
             ),

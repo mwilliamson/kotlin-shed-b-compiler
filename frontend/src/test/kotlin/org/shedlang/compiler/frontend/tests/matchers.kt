@@ -23,13 +23,13 @@ internal fun isFunctionType(
 
 internal fun isShapeType(
     name: Matcher<String> = anything,
-    typeArguments: Matcher<List<Type>> = anything,
+    staticArguments: Matcher<List<StaticValue>> = anything,
     shapeId: Matcher<Int> = anything,
     tagField: Matcher<TagField?> = anythingOrNull,
     tagValue: Matcher<TagValue?> = anythingOrNull
-): Matcher<Type> = cast(allOf(
+): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::name, name),
-    has(ShapeType::typeArguments, typeArguments),
+    has(ShapeType::staticArguments, staticArguments),
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::declaredTagField, tagField),
     has(ShapeType::tagValue, tagValue)
@@ -37,43 +37,43 @@ internal fun isShapeType(
 
 internal fun isShapeType(
     name: Matcher<String> = anything,
-    typeArguments: Matcher<List<Type>> = anything,
+    staticArguments: Matcher<List<StaticValue>> = anything,
     fields: List<Pair<String, Matcher<Type>>>
-): Matcher<Type> = cast(allOf(
+): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::name, name),
-    has(ShapeType::typeArguments, typeArguments),
+    has(ShapeType::staticArguments, staticArguments),
     has(ShapeType::fields, isMap(*fields.toTypedArray()))
 ))
 
 internal fun isUnionType(
     name: Matcher<String> = anything,
-    typeArguments: Matcher<List<Type>> = anything,
+    staticArguments: Matcher<List<StaticValue>> = anything,
     members: Matcher<List<Type>> = anything,
     tagField: Matcher<TagField> = anything
-): Matcher<Type> = cast(allOf(
+): Matcher<StaticValue> = cast(allOf(
     has(UnionType::name, name),
-    has(UnionType::typeArguments, typeArguments),
+    has(UnionType::staticArguments, staticArguments),
     has(UnionType::members, members),
     has(UnionType::declaredTagField, tagField)
 ))
 
-internal val isAnyType: Matcher<TypeGroup> = cast(equalTo(AnyType))
-internal val isNothingType: Matcher<TypeGroup> = cast(equalTo(NothingType))
-internal val isUnitType: Matcher<TypeGroup> = cast(equalTo(UnitType))
-internal val isIntType: Matcher<TypeGroup> = cast(equalTo(IntType))
-internal val isBoolType: Matcher<TypeGroup> = cast(equalTo(BoolType))
-internal val isStringType: Matcher<TypeGroup> = cast(equalTo(StringType))
+internal val isAnyType: Matcher<StaticValue> = cast(equalTo(AnyType))
+internal val isNothingType: Matcher<StaticValue> = cast(equalTo(NothingType))
+internal val isUnitType: Matcher<StaticValue> = cast(equalTo(UnitType))
+internal val isIntType: Matcher<StaticValue> = cast(equalTo(IntType))
+internal val isBoolType: Matcher<StaticValue> = cast(equalTo(BoolType))
+internal val isStringType: Matcher<StaticValue> = cast(equalTo(StringType))
 
-internal fun isMetaType(type: Matcher<Type>): Matcher<Type> = cast(has(MetaType::type, type))
-internal fun isEffectType(effect: Matcher<Effect>): Matcher<Type> = cast(has(EffectType::effect, effect))
+internal fun isMetaType(type: Matcher<Type>): Matcher<StaticValue> = cast(has(MetaType::type, type))
+internal fun isEffectType(effect: Matcher<Effect>): Matcher<StaticValue> = cast(has(EffectType::effect, effect))
 
-internal fun isListType(elementType: Matcher<Type>): Matcher<Type> = isShapeType(
+internal fun isListType(elementType: Matcher<StaticValue>): Matcher<StaticValue> = isShapeType(
     shapeId = equalTo(listTypeShapeId),
-    typeArguments = isSequence(elementType)
+    staticArguments = isSequence(elementType)
 )
 
 internal fun isTypeFunction(
-    parameters: Matcher<List<TypeParameter>>,
+    parameters: Matcher<List<StaticParameter>>,
     type: Matcher<Type> = anything
 ): Matcher<Type> = cast(allOf(
     has(TypeFunction::parameters, parameters),
@@ -83,7 +83,7 @@ internal fun isTypeFunction(
 internal fun isTypeParameter(
     name: Matcher<String>,
     variance: Matcher<Variance>
-): Matcher<Type> = cast(allOf(
+): Matcher<StaticValue> = cast(allOf(
     has(TypeParameter::name, name),
     has(TypeParameter::variance, variance)
 ))

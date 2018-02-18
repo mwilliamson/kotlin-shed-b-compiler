@@ -83,7 +83,7 @@ class EvalTypeTests {
         )
         assertThat(type, isShapeType(
             name = equalTo("Box"),
-            typeArguments = isSequence(isBoolType),
+            staticArguments = isSequence(isBoolType),
             fields = listOf(
                 "value" to isBoolType
             )

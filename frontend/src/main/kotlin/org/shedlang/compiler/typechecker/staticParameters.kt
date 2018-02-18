@@ -1,8 +1,8 @@
+package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.EffectParameterNode
 import org.shedlang.compiler.ast.StaticParameterNode
 import org.shedlang.compiler.ast.TypeParameterNode
-import org.shedlang.compiler.typechecker.TypeContext
 import org.shedlang.compiler.types.*
 
 internal fun typeCheckStaticParameters(
@@ -11,12 +11,6 @@ internal fun typeCheckStaticParameters(
 ): List<StaticParameter> {
     return parameters.map({ parameter ->
         typeCheckStaticParameter(parameter, context)
-    })
-}
-
-internal fun typeCheckTypeParameters(parameters: List<TypeParameterNode>, context: TypeContext): List<TypeParameter> {
-    return parameters.map({ parameter ->
-        typeCheckTypeParameter(parameter, context)
     })
 }
 

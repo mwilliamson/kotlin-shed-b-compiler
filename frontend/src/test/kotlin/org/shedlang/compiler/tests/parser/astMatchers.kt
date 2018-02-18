@@ -72,14 +72,14 @@ internal fun isValType(
 
 internal fun isShape(
     name: Matcher<String> = anything,
-    typeParameters: Matcher<List<TypeParameterNode>> = anything,
+    staticParameters: Matcher<List<StaticParameterNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything,
     tagged: Matcher<Boolean> = anything,
     hasValueForTag: Matcher<StaticNode?> = anythingOrNull
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(ShapeNode::name, name),
-        has(ShapeNode::typeParameters, typeParameters),
+        has(ShapeNode::staticParameters, staticParameters),
         has(ShapeNode::fields, fields),
         has(ShapeNode::tagged, tagged),
         has(ShapeNode::hasTagValueFor, hasValueForTag)
@@ -96,13 +96,13 @@ internal fun isShapeField(
 
 internal fun isUnion(
     name: Matcher<String> = anything,
-    typeParameters: Matcher<List<TypeParameterNode>> = anything,
+    staticParameters: Matcher<List<StaticParameterNode>> = anything,
     members: Matcher<List<StaticNode>> = anything,
     superType: Matcher<StaticReferenceNode?> = anythingOrNull
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(UnionNode::name, name),
-        has(UnionNode::typeParameters, typeParameters),
+        has(UnionNode::staticParameters, staticParameters),
         has(UnionNode::members, members),
         has(UnionNode::superType, superType)
     ))

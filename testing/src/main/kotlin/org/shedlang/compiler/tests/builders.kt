@@ -226,13 +226,13 @@ fun functionExpression(
 
 fun shape(
     name: String = "Shape",
-    typeParameters: List<TypeParameterNode> = listOf(),
+    staticParameters: List<StaticParameterNode> = listOf(),
     tag: Boolean = false,
     hasTagValueFor: StaticNode? = null,
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
     name = name,
-    typeParameters = typeParameters,
+    staticParameters = staticParameters,
     tagged = tag,
     hasTagValueFor = hasTagValueFor,
     fields = fields,
@@ -251,11 +251,11 @@ fun shapeField(
 fun union(
     name: String = "Union",
     members: List<StaticNode> = listOf(),
-    typeParameters: List<TypeParameterNode> = listOf(),
+    staticParameters: List<StaticParameterNode> = listOf(),
     superType: StaticReferenceNode? = null
 ) = UnionNode(
     name = name,
-    typeParameters = typeParameters,
+    staticParameters = staticParameters,
     superType = superType,
     members = members,
     source = anySource()
@@ -363,8 +363,8 @@ fun shapeType(
     name = name,
     getFields = lazy { fields },
     shapeId = freshShapeId(),
-    typeParameters = typeParameters,
-    typeArguments = typeArguments,
+    staticParameters = typeParameters,
+    staticArguments = typeArguments,
     declaredTagField = tagField,
     getTagValue = lazy { tagValue }
 )
@@ -380,7 +380,7 @@ fun parametrizedUnionType(
         name = name,
         getMembers = lazy { members },
         declaredTagField = tagField,
-        typeArguments = parameters
+        staticArguments = parameters
     ),
     parameters = parameters
 )
@@ -393,5 +393,5 @@ fun unionType(
     name = name,
     getMembers = lazy { members },
     declaredTagField = tagField,
-    typeArguments = listOf()
+    staticArguments = listOf()
 )

@@ -57,7 +57,7 @@ class TypeCheckShapeTests {
         val typeParameterReference = staticReference("T")
         val node = shape(
             "X",
-            typeParameters = listOf(typeParameterDeclaration),
+            staticParameters = listOf(typeParameterDeclaration),
             fields = listOf(
                 shapeField("a", typeParameterReference)
             )
@@ -82,7 +82,7 @@ class TypeCheckShapeTests {
         val typeParameterReference = staticReference("T")
         val node = shape(
             "X",
-            typeParameters = listOf(typeParameterDeclaration)
+            staticParameters = listOf(typeParameterDeclaration)
         )
 
         val typeContext = typeContext(
@@ -175,7 +175,7 @@ class TypeCheckShapeTests {
         val unitReference = staticReference("Unit")
         val node = shape(
             "Box",
-            typeParameters = listOf(typeParameterDeclaration),
+            staticParameters = listOf(typeParameterDeclaration),
             fields = listOf(
                 shapeField(type = typeParameterReference)
             )

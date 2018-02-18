@@ -157,7 +157,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
 internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): ShapeNode {
     tokens.skip(TokenType.KEYWORD_SHAPE)
     val name = parseIdentifier(tokens)
-    val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
+    val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
     val tagged = tokens.trySkip(TokenType.KEYWORD_TAGGED)
     val tagValueFor = if (tokens.trySkip(TokenType.KEYWORD_MEMBER_OF)) {
@@ -179,7 +179,7 @@ internal fun parseShape(source: Source, tokens: TokenIterator<TokenType>): Shape
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return ShapeNode(
         name = name,
-        typeParameters = typeParameters,
+        staticParameters = staticParameters,
         tagged = tagged,
         hasTagValueFor = tagValueFor,
         fields = fields,
@@ -200,7 +200,7 @@ private fun parseShapeField(source: Source, tokens: TokenIterator<TokenType>): S
 private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionNode {
     tokens.skip(TokenType.KEYWORD_UNION)
     val name = parseIdentifier(tokens)
-    val typeParameters = parseTypeParameters(allowVariance = true, tokens = tokens)
+    val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
     val explicitTag = if (tokens.trySkip(TokenType.SYMBOL_SUBTYPE)) {
          ::parseStaticReference.parse(tokens)
@@ -222,7 +222,7 @@ private fun parseUnion(source: Source, tokens: TokenIterator<TokenType>): UnionN
 
     return UnionNode(
         name = name,
-        typeParameters = typeParameters,
+        staticParameters = staticParameters,
         superType = explicitTag,
         members = members,
         source = source
@@ -300,20 +300,6 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
         effects = effects,
         returnType = returnType
     )
-}
-
-internal fun parseTypeParameters(
-    allowVariance: Boolean,
-    tokens: TokenIterator<TokenType>
-): List<TypeParameterNode> {
-    val staticParameters = parseStaticParameters(allowVariance = allowVariance, tokens = tokens)
-    return staticParameters.map({ parameter ->
-        if (parameter is TypeParameterNode) {
-            parameter
-        } else {
-            throw UnsupportedOperationException("TODO")
-        }
-    })
 }
 
 internal fun parseStaticParameters(

@@ -108,7 +108,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is ShapeNode -> {
             context.defer(node, {
                 resolveScope(
-                    binders = node.typeParameters,
+                    binders = node.staticParameters,
                     body = node.hasTagValueFor.nullableToList() + node.fields,
                     context = context
                 )
@@ -118,7 +118,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is UnionNode -> {
             context.defer(node, {
                 resolveScope(
-                    binders = node.typeParameters,
+                    binders = node.staticParameters,
                     body = node.superType.nullableToList() + node.members,
                     context = context
                 )

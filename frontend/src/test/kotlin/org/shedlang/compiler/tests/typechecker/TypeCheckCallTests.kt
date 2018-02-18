@@ -301,7 +301,7 @@ class TypeCheckCallTests {
 
         assertThat(type, isShapeType(
             name = equalTo("Box"),
-            typeArguments = isSequence(isBoolType),
+            staticArguments = isSequence(isBoolType),
             fields = listOf("value" to isBoolType)
         ))
     }
@@ -331,7 +331,7 @@ class TypeCheckCallTests {
 
         assertThat(type, isShapeType(
             name = equalTo("Sink"),
-            typeArguments = isSequence(isIntType)
+            staticArguments = isSequence(isIntType)
         ))
     }
 
@@ -371,7 +371,7 @@ class TypeCheckCallTests {
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
-            typeArguments = isSequence(isNothingType)
+            staticArguments = isSequence(isNothingType)
         ))
     }
 
@@ -391,7 +391,7 @@ class TypeCheckCallTests {
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
-            typeArguments = isSequence(isAnyType)
+            staticArguments = isSequence(isAnyType)
         ))
     }
 

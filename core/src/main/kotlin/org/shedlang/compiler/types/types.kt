@@ -3,11 +3,23 @@ package org.shedlang.compiler.types
 import org.shedlang.compiler.ast.freshNodeId
 
 
-interface Effect {
+interface StaticValue {
     val shortDescription: String
+    fun <T> acceptStaticValueVisitor(visitor: Visitor<T>): T
+
+    interface Visitor<T> {
+        fun visit(effect: Effect): T
+        fun visit(type: Type): T
+    }
 }
 
-object EmptyEffect : Effect {
+interface Effect: StaticValue {
+    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+object EmptyEffect : Effect{
     override val shortDescription: String
         get() = "!Empty"
 }
@@ -31,7 +43,10 @@ object MetaTypeGroup: TypeGroup {
         get() = "meta-type"
 }
 
-interface Type: TypeGroup {
+interface Type: StaticValue, TypeGroup {
+    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 interface BasicType : Type
@@ -42,10 +57,10 @@ object UnitType: BasicType {
 object BoolType : BasicType {
     override val shortDescription = "Bool"
 }
-object IntType : BasicType {
+object IntType : BasicType{
     override val shortDescription = "Int"
 }
-object StringType : BasicType {
+object StringType : BasicType{
     override val shortDescription = "String"
 }
 object AnyType : Type {
@@ -87,9 +102,8 @@ data class TagValue(
     val tagValueId: Int
 )
 
-interface StaticParameter {
+interface StaticParameter: StaticValue {
     val name: String
-    val shortDescription: String
 
     fun <T> accept(visitor: Visitor<T>): T
 
@@ -138,7 +152,7 @@ enum class Variance {
 }
 
 data class TypeFunction (
-    val parameters: List<TypeParameter>,
+    val parameters: List<StaticParameter>,
     val type: Type
 ): Type {
     override val shortDescription: String
@@ -202,8 +216,8 @@ interface MayDeclareTagField {
 interface ShapeType: HasFieldsType, MayDeclareTagField {
     val name: String
     val shapeId: Int
-    val typeParameters: List<TypeParameter>
-    val typeArguments: List<Type>
+    val staticParameters: List<StaticParameter>
+    val staticArguments: List<StaticValue>
     val tagValue: TagValue?
 }
 
@@ -211,16 +225,16 @@ data class LazyShapeType(
     override val name: String,
     private val getFields: Lazy<Map<String, Type>>,
     override val shapeId: Int = freshShapeId(),
-    override val typeParameters: List<TypeParameter>,
-    override val typeArguments: List<Type>,
+    override val staticParameters: List<StaticParameter>,
+    override val staticArguments: List<StaticValue>,
     override val declaredTagField: TagField?,
     private val getTagValue: Lazy<TagValue?>
 ): ShapeType {
     override val shortDescription: String
-        get() = if (typeArguments.isEmpty()) {
+        get() = if (staticArguments.isEmpty()) {
             name
         } else {
-            appliedTypeShortDescription(name, typeArguments)
+            appliedTypeShortDescription(name, staticArguments)
         }
     override val fields: Map<String, Type> by getFields
     override val tagValue: TagValue? by getTagValue
@@ -229,7 +243,7 @@ data class LazyShapeType(
 interface UnionType: Type, MayDeclareTagField {
     val name: String
     val members: List<ShapeType>
-    val typeArguments: List<Type>
+    val staticArguments: List<StaticValue>
     override val declaredTagField: TagField
 }
 
@@ -239,7 +253,7 @@ data class AnonymousUnionType(
     override val members: List<ShapeType>,
     override val declaredTagField: TagField
 ): UnionType {
-    override val typeArguments: List<Type>
+    override val staticArguments: List<StaticValue>
         get() = listOf()
 
     override val shortDescription: String
@@ -250,13 +264,13 @@ data class LazyUnionType(
     override val name: String,
     private val getMembers: Lazy<List<ShapeType>>,
     override val declaredTagField: TagField,
-    override val typeArguments: List<Type>
+    override val staticArguments: List<StaticValue>
 ): UnionType {
     override val shortDescription: String
-        get() = if (typeArguments.isEmpty()) {
+        get() = if (staticArguments.isEmpty()) {
             name
         } else {
-            appliedTypeShortDescription(name, typeArguments)
+            appliedTypeShortDescription(name, staticArguments)
         }
 
     override val members: List<ShapeType> by getMembers
@@ -273,8 +287,8 @@ val ListType = TypeFunction(
     type = LazyShapeType(
         shapeId = listTypeShapeId,
         name = "List",
-        typeParameters = listOf(listTypeParameter),
-        typeArguments = listOf(listTypeParameter),
+        staticParameters = listOf(listTypeParameter),
+        staticArguments = listOf(listTypeParameter),
         getFields = lazy({ mapOf<String, Type>() }),
         declaredTagField = null,
         getTagValue = lazy { null }
@@ -305,7 +319,7 @@ fun contravariantTypeParameter(name: String) = TypeParameter(name, variance = Va
 fun effectParameter(name: String) = EffectParameter(name)
 
 
-private fun appliedTypeShortDescription(name: String, parameters: List<Type>): String {
+private fun appliedTypeShortDescription(name: String, parameters: List<StaticValue>): String {
     val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })
     return name + "[" + parametersString + "]"
 }
