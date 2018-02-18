@@ -157,17 +157,21 @@ class ResolutionTests {
 
     @Test
     fun staticParametersInFunctionTypeAreAddedToScope() {
-        val reference = staticReference("T")
-        val typeParameter = typeParameter("T")
+        val positionalReference = staticReference("T")
+        val positionalTypeParameter = typeParameter("T")
+        val namedReference = staticReference("U")
+        val namedTypeParameter = typeParameter("U")
         val node = functionTypeNode(
-            staticParameters = listOf(typeParameter),
-            positionalParameters = listOf(reference),
+            staticParameters = listOf(positionalTypeParameter, namedTypeParameter),
+            positionalParameters = listOf(positionalReference),
+            namedParameters = listOf(parameter(type = namedReference)),
             returnType = staticReference("T")
         )
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[reference], isVariableBinding(typeParameter))
+        assertThat(references[positionalReference], isVariableBinding(positionalTypeParameter))
+        assertThat(references[namedReference], isVariableBinding(namedTypeParameter))
     }
 
     @Test
