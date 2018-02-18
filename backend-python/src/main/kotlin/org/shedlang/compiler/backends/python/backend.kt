@@ -1,10 +1,11 @@
 package org.shedlang.compiler.backends.python
 
-import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
+import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
@@ -18,22 +19,34 @@ val backend = object: Backend {
                     val pythonModule = compileModule(module)
                     writeModule(target, pythonModule)
                 }
+                // TODO: remove duplication with JavaScript backend
+                is Module.Native -> {
+                    moduleWriter(target, shedModuleNameToPythonModuleName(module.name)).use { writer ->
+                        module.platformPath(".py").toFile().reader().use { reader ->
+                            reader.copyTo(writer)
+                        }
+                    }
+                }
             }
         }
         writeModule(target, builtinModule())
     }
 
     private fun writeModule(target: Path, module: PythonModule) {
-        val modulePath = module.name.joinToString(File.separator) + ".py"
+        moduleWriter(target, module.name).use { writer ->
+            writer.write("# encoding=utf-8\n")
+            writer.write(module.source)
+        }
+    }
+
+    private fun moduleWriter(target: Path, moduleName: List<String>): OutputStreamWriter {
+        val modulePath = moduleName.joinToString(File.separator) + ".py"
         val destination = target.resolve(modulePath)
         val pythonPackage = destination.parent
         pythonPackage.toFile().mkdirs()
         addInitFiles(target, pythonPackage)
 
-        destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
-            writer.write("# encoding=utf-8\n")
-            writer.write(module.source)
-        }
+        return destination.toFile().writer(StandardCharsets.UTF_8)
     }
 
     override fun run(path: Path, module: List<String>): Int {
@@ -89,10 +102,13 @@ private fun compileModule(module: Module.Shed): PythonModule {
         ""
     }
     return PythonModule(
-        name = listOf(topLevelPythonPackageName) + module.name,
+        name = shedModuleNameToPythonModuleName(module.name),
         source = contents + main
     )
 }
+
+internal fun shedModuleNameToPythonModuleName(moduleName: List<String>) =
+    listOf(topLevelPythonPackageName) + moduleName
 
 private class PythonModule(val name: List<String>, val source: String)
 

@@ -1,10 +1,11 @@
 package org.shedlang.compiler.backends.javascript
 
-import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
+import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
@@ -19,6 +20,13 @@ val backend = object: Backend {
                     )
                     writeModule(target, javascriptModule)
                 }
+                is Module.Native -> {
+                    moduleWriter(target, module.name).use { writer ->
+                        module.platformPath(".js").toFile().reader().use { reader ->
+                            reader.copyTo(writer)
+                        }
+                    }
+                }
             }
         }
 
@@ -26,12 +34,16 @@ val backend = object: Backend {
     }
 
     private fun writeModule(target: Path, javascriptModule: JavascriptModule) {
-        val modulePath = modulePath(javascriptModule.name)
-        val destination = target.resolve(modulePath)
-        destination.parent.toFile().mkdirs()
-        destination.toFile().writer(StandardCharsets.UTF_8).use { writer ->
+        moduleWriter(target, javascriptModule.name).use { writer ->
             writer.write(javascriptModule.source)
         }
+    }
+
+    private fun moduleWriter(target: Path, moduleName: List<String>): OutputStreamWriter {
+        val modulePath = modulePath(moduleName)
+        val destination = target.resolve(modulePath)
+        destination.parent.toFile().mkdirs()
+        return destination.toFile().writer(StandardCharsets.UTF_8)
     }
 
     override fun run(path: Path, module: List<String>): Int {

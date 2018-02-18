@@ -386,7 +386,7 @@ internal fun evalEffect(node: StaticNode, context: TypeContext): Effect {
         return effectType.effect
     } else {
         // TODO: throw a more appropriate exception
-        throw CompilerError("TODO", source = node.source)
+        throw CompilerError("Was: " + effectType, source = node.source)
     }
 }
 

@@ -10,7 +10,7 @@ fun some[T](value: T) -> Option[T] {
 }
 val none = None();
 
-fun map[T, R](func: (T) -> R, option: Option[T]) -> Option[R] {
+fun map[T, R, !E](func: (T) !E -> R, option: Option[T]) !E -> Option[R] {
     when (option) {
         is Some[T] {
             some(func(option.value))

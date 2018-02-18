@@ -1,0 +1,84 @@
+import stdlib.options;
+
+
+shape Sequence[T, !E] {
+    next: () !E -> options.Option[SequenceItem[T, E]],
+}
+
+shape SequenceItem[T, !E] {
+    head: T,
+    tail: Sequence[T, E],
+}
+
+fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
+    val item = sequence.next();
+    when (item) {
+        is options.None {
+            true
+        }
+        // TODO: allow "is options.Some" (without type arguments)
+        is options.Some[SequenceItem[Bool, E]] {
+            if (item.value.head) {
+                all(item.value.tail)
+            } else {
+                false
+            }
+        }
+    }
+}
+
+fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
+    val item = sequence.next();
+    when (item) {
+        is options.None {
+            false
+        }
+        is options.Some[SequenceItem[Bool, E]] {
+            if (item.value.head) {
+                true
+            } else {
+                any(item.value.tail)
+            }
+        }
+    }
+}
+
+fun forEach[T, !E](func: (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
+    val item = sequence.next();
+    when (item) {
+        is options.None {
+        }
+        is options.Some[SequenceItem[T, E]] {
+            func(item.value.head);
+            forEach(func, item.value.tail);
+        }
+    }
+}
+
+fun lazyMap[T, R, !E](func: (T) !E -> R, sequence: Sequence[T, E]) -> Sequence[R, E] {
+    Sequence(
+        next = fun () !E -> options.Option[SequenceItem[R, E]] {
+            options.map(
+                fun (item: SequenceItem[T, E]) !E -> SequenceItem[R, E] {
+                    SequenceItem(
+                        head = func(item.head),
+                        tail = lazyMap(func, item.tail),
+                    )
+                },
+                sequence.next()
+            )
+        }
+    )
+}
+
+fun reduce[T, R, !E](func: (R, T) !E -> R, initial: R, sequence: Sequence[T, E]) !E -> R {
+    val item = sequence.next();
+    when (item) {
+        is options.None {
+            initial
+        }
+        is options.Some[SequenceItem[T, E]] {
+            reduce(func, func(initial, item.value.head), item.value.tail)
+        }
+    }
+}

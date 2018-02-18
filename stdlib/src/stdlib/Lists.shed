@@ -1,0 +1,30 @@
+import stdlib.Sequences;
+import stdlib.platform.Lists;
+
+// TODO: use function composition
+
+fun all(elements: List[Bool]) -> Bool {
+    Sequences.all(Lists.listToSequence(elements))
+}
+
+fun any(elements: List[Bool]) -> Bool {
+    Sequences.any(Lists.listToSequence(elements))
+}
+
+fun forEach[T, !E](func: (T) !E -> Unit, elements: List[T]) !E -> Unit {
+    Sequences.forEach(func, Lists.listToSequence(elements))
+}
+
+fun map[T, R, !E](func: (T) !E -> R, elements: List[T]) !E -> List[R] {
+    Lists.sequenceToList(
+        Sequences.lazyMap(func, Lists.listToSequence(elements)),
+    )
+}
+
+fun reduce[T, R, !E](func: (R, T) !E -> R, initial: R, elements: List[T]) !E -> R {
+    Sequences.reduce(
+        func,
+        initial,
+        Lists.listToSequence(elements),
+    )
+}

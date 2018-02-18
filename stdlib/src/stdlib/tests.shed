@@ -1,3 +1,4 @@
+import .Lists;
 import .matchers;
 import .options;
 
@@ -76,9 +77,9 @@ val redCode = "\u001B[31m";
 val blackCode = "\u001B[39m";
 
 fun runTests(tests: List[Test]) !Io -> Int {
-    val results = map(runTest ~ (depth = 0), tests);
+    val results = Lists.map(runTest ~ (depth = 0), tests);
     print("\n");
-    forEach(printFailures, results);
+    Lists.forEach(printFailures, results);
 
     val counts = countTestResults(results);
 
@@ -93,7 +94,7 @@ fun runTests(tests: List[Test]) !Io -> Int {
 }
 
 fun countTestResults(results: List[TestResult]) -> TestCounts {
-    reduce(
+    Lists.reduce(
         fun (counts: TestCounts, result: TestResult) =>
             addTestCounts(counts, countTestResult(result)),
         TestCounts(failures = 0, successes = 0),
@@ -148,7 +149,7 @@ fun printFailures(result: TestResult) !Io -> Unit {
             }
         }
         is TestSuiteResult {
-            forEach(printFailures, result.results);
+            Lists.forEach(printFailures, result.results);
         }
     }
 }
@@ -175,7 +176,7 @@ fun runTest(test: Test, *, depth: Int) !Io -> TestResult {
         is TestSuite {
             // TODO: printing of suite names
             // TODO: indentation
-            val results = map(runTest ~ (depth = depth + 1), test.tests);
+            val results = Lists.map(runTest ~ (depth = depth + 1), test.tests);
             TestSuiteResult(name = test.name, results = results)
         }
     }
