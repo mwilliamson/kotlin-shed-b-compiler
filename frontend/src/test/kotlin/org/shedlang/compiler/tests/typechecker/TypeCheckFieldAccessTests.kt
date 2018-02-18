@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.fieldAccess
-import org.shedlang.compiler.tests.isIntType
+import org.shedlang.compiler.frontend.tests.isIntType
 import org.shedlang.compiler.tests.shapeType
 import org.shedlang.compiler.tests.variableReference
 import org.shedlang.compiler.types.IntType

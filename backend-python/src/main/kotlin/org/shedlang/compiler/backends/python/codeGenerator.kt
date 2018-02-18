@@ -1,8 +1,8 @@
 package org.shedlang.compiler.backends.python
 
+import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
-import org.shedlang.compiler.typechecker.ResolvedReferences
 
 internal fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
     return generateCode(node, CodeGenerationContext(references))

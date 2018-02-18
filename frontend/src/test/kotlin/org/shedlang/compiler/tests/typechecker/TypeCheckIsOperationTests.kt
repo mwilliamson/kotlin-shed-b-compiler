@@ -2,6 +2,8 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.isBoolType
+import org.shedlang.compiler.frontend.tests.isUnionTypeGroup
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck

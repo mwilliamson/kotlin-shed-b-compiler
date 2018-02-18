@@ -1,44 +1,15 @@
 package org.shedlang.compiler
 
 import com.moandjiezana.toml.Toml
-import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.ImportPathBase
-import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.parser.parse
-import org.shedlang.compiler.typechecker.ExpressionTypes
-import org.shedlang.compiler.typechecker.ResolvedReferences
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.ModuleType
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
-
-class ModuleSet(val modules: Collection<Module>)
-
-sealed class Module {
-    abstract val name: List<String>
-    abstract val type: ModuleType
-
-    class Shed(
-        override val name: List<String>,
-        val node: ModuleNode,
-        override val type: ModuleType,
-        val expressionTypes: ExpressionTypes,
-        val references: ResolvedReferences
-    ): Module() {
-        fun hasMain() = node.body.any({ node ->
-            node is FunctionDeclarationNode && node.name == "main"
-        })
-    }
-
-    class Native(
-        override val name: List<String>,
-        override val type: ModuleType
-    ): Module()
-}
 
 fun readStandalone(path: Path): ModuleSet {
     val module = readModule(

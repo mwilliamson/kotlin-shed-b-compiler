@@ -5,6 +5,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.isBoolType
+import org.shedlang.compiler.frontend.tests.isUnitType
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.typeCheck

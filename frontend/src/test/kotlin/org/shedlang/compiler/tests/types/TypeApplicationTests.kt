@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.frontend.types.StaticBindings
 import org.shedlang.compiler.frontend.types.applyType
 import org.shedlang.compiler.frontend.types.replaceTypes

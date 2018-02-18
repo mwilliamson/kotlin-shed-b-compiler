@@ -3,6 +3,9 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.frontend.tests.isType
+import org.shedlang.compiler.frontend.tests.isUnionType
+import org.shedlang.compiler.frontend.tests.isUnionTypeGroup
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck

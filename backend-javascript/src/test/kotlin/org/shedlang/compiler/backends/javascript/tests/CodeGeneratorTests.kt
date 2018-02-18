@@ -5,16 +5,16 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ExpressionTypesMap
 import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
+import org.shedlang.compiler.emptyExpressionTypes
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.ExpressionTypesMap
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
-import org.shedlang.compiler.typechecker.emptyExpressionTypes
 import org.shedlang.compiler.types.*
 
 class CodeGeneratorTests {

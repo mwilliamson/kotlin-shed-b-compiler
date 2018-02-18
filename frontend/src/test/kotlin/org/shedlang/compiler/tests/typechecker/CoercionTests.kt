@@ -4,6 +4,8 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.frontend.tests.isIntType
+import org.shedlang.compiler.frontend.tests.isUnionType
 import org.shedlang.compiler.frontend.types.applyType
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult

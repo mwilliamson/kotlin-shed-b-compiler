@@ -6,6 +6,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.frontend.tests.isType
+import org.shedlang.compiler.frontend.tests.isUnionType
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.TypeCheckError

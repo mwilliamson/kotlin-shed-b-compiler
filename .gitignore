@@ -4,6 +4,8 @@
 /backend-common/target
 /backend-javascript/target
 /backend-python/target
+/backend-testing/target
 /cli/target
 /core/target
 /frontend/target
+/testing/target

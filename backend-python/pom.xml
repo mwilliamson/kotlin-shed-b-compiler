@@ -21,14 +21,25 @@
         </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-frontend</artifactId>
+            <artifactId>shed-compiler-backend-testing</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.shedlang</groupId>
+            <artifactId>shed-compiler-core</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
             <artifactId>shed-compiler-frontend</artifactId>
             <version>0.1.0-SNAPSHOT</version>
-            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.shedlang</groupId>
+            <artifactId>shed-compiler-testing</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

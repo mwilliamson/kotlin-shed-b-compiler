@@ -12,9 +12,11 @@
         <module>backend-common</module>
         <module>backend-javascript</module>
         <module>backend-python</module>
+        <module>backend-testing</module>
         <module>cli</module>
         <module>core</module>
         <module>frontend</module>
+        <module>testing</module>
     </modules>
 
     <properties>

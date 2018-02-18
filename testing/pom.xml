@@ -9,38 +9,20 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>shed-compiler-backend-javascript</artifactId>
+    <artifactId>shed-compiler-testing</artifactId>
     <packaging>jar</packaging>
 
-    <name>org.shedlang shed-compiler-backend-javascript</name>
+    <name>org.shedlang shed-compiler-testing</name>
     <dependencies>
         <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-backend-common</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-backend-testing</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <scope>test</scope>
+            <groupId>com.natpryce</groupId>
+            <artifactId>hamkrest</artifactId>
+            <version>1.2.3.0</version>
         </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
             <artifactId>shed-compiler-core</artifactId>
             <version>0.1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-frontend</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-testing</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -70,6 +52,19 @@
                         <phase>test-compile</phase>
                         <goals>
                             <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
                         </goals>
                     </execution>
                 </executions>

@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.TokenType
 import org.shedlang.compiler.parser.parseTypeParameters
-import org.shedlang.compiler.tests.isContravariant
-import org.shedlang.compiler.tests.isCovariant
-import org.shedlang.compiler.tests.isInvariant
+import org.shedlang.compiler.frontend.tests.isContravariant
+import org.shedlang.compiler.frontend.tests.isCovariant
+import org.shedlang.compiler.frontend.tests.isInvariant
 import org.shedlang.compiler.tests.isSequence
 
 class ParseTypeParametersTests {

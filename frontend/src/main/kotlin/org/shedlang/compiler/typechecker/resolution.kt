@@ -1,11 +1,8 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.nullableToList
-
-interface ResolvedReferences {
-    operator fun get(node: ReferenceNode): VariableBindingNode
-}
 
 class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode>) : ResolvedReferences {
     override fun get(node: ReferenceNode): VariableBindingNode {

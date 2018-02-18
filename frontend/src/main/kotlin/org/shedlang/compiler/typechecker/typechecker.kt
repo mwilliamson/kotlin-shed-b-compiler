@@ -1,5 +1,8 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.ExpressionTypes
+import org.shedlang.compiler.ExpressionTypesMap
+import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.types.applyType
 import org.shedlang.compiler.types.*
@@ -118,18 +121,6 @@ internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
         } else {
             return type
         }
-    }
-}
-
-interface ExpressionTypes {
-    fun typeOf(node: ExpressionNode): Type
-}
-
-val emptyExpressionTypes: ExpressionTypes = ExpressionTypesMap(mapOf())
-
-class ExpressionTypesMap(private val types: Map<Int, Type>) : ExpressionTypes {
-    override fun typeOf(node: ExpressionNode): Type {
-        return types[node.nodeId]!!
     }
 }
 

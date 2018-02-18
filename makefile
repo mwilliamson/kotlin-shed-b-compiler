@@ -1,7 +1,7 @@
-.PHONY: package runstdlib-tests stdlib-tests test
+.PHONY: package run-stdlib-tests stdlib-tests test
 
 package:
-	mvn package
+	mvn package -Dmaven.test.skip=true
 
 stdlib-tests: package run-stdlib-tests
 
