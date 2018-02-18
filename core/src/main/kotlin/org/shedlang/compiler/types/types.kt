@@ -43,6 +43,11 @@ object MetaTypeGroup: TypeGroup {
         get() = "meta-type"
 }
 
+object StaticValueTypeGroup: TypeGroup {
+    override val shortDescription: String
+        get() = "static value"
+}
+
 interface Type: StaticValue, TypeGroup {
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)

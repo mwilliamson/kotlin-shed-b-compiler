@@ -322,6 +322,19 @@ internal fun evalType(type: StaticNode, context: TypeContext): Type {
     }
 }
 
+private fun evalStaticValue(node: StaticNode, context: TypeContext): StaticValue {
+    val static = evalStatic(node, context)
+    return when (static) {
+        is MetaType -> static.type
+        is EffectType -> static.effect
+        else -> throw UnexpectedTypeError(
+            expected = StaticValueTypeGroup,
+            actual = static,
+            source = node.source
+        )
+    }
+}
+
 private fun evalStatic(node: StaticNode, context: TypeContext): Type {
     return node.accept(object : StaticNode.Visitor<Type> {
         override fun visit(node: StaticReferenceNode): Type {
@@ -340,7 +353,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
 
         override fun visit(node: StaticApplicationNode): Type {
             val receiver = evalType(node.receiver, context)
-            val arguments = node.arguments.map({ argument -> evalType(argument, context) })
+            val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
             if (receiver is TypeFunction) {
                 return MetaType(applyStatic(receiver, arguments))
             } else {
