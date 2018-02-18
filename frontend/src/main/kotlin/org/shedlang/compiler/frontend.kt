@@ -19,10 +19,11 @@ import java.nio.file.Paths
 class FrontEndResult(val modules: Collection<Module>)
 
 sealed class Module {
+    abstract val name: List<String>
     abstract val type: ModuleType
 
     class Shed(
-        val name: List<String>,
+        override val name: List<String>,
         val node: ModuleNode,
         override val type: ModuleType,
         val expressionTypes: ExpressionTypes,
@@ -32,6 +33,11 @@ sealed class Module {
             node is FunctionDeclarationNode && node.name == "main"
         })
     }
+
+    class Native(
+        override val name: List<String>,
+        override val type: ModuleType
+    ): Module()
 }
 
 fun readStandalone(path: Path): FrontEndResult {
