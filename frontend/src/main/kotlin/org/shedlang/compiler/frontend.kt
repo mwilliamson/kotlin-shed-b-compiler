@@ -1,10 +1,14 @@
 package org.shedlang.compiler
 
 import com.moandjiezana.toml.Toml
+import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ImportPathBase
+import org.shedlang.compiler.ast.Node
 import org.shedlang.compiler.parser.parse
+import org.shedlang.compiler.parser.parseTypesModule
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.ModuleType
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -28,36 +32,61 @@ fun readPackage(base: Path, name: List<String>): ModuleSet {
 }
 
 private fun readModule(path: Path, name: List<String>, getModule: (List<String>) -> Module): Module {
-    val moduleNode = parse(filename = path.toString(), input = path.toFile().readText())
+    val moduleText = path.toFile().readText()
 
-    val resolvedReferences = resolve(
-        moduleNode,
-        builtins.associate({ builtin -> builtin.name to builtin })
-    )
-
-    val typeCheckResult = typeCheck(
-        moduleNode,
-        nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type }),
-        resolvedReferences = resolvedReferences,
-        getModule = { importPath ->
-            when (importPath.base) {
-                ImportPathBase.Relative -> {
-                    val name = resolveName(name, importPath.parts)
-                    getModule(name).type
-                }
-                ImportPathBase.Absolute ->  {
-                    getModule(importPath.parts).type
-                }
+    val nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type })
+    val importPathToModule: (ImportPath) -> ModuleType = { importPath ->
+        when (importPath.base) {
+            ImportPathBase.Relative -> {
+                val importedModuleName = resolveName(name, importPath.parts)
+                getModule(importedModuleName).type
+            }
+            ImportPathBase.Absolute -> {
+                getModule(importPath.parts).type
             }
         }
-    )
+    }
 
-    return Module.Shed(
-        name = name,
-        node = moduleNode,
-        type = typeCheckResult.moduleType,
-        expressionTypes = typeCheckResult.expressionTypes,
-        references = resolvedReferences
+    if (path.endsWith(".types.shed")) {
+        val moduleNode = parseTypesModule(filename = path.toString(), input = moduleText)
+        val resolvedReferences = resolveModuleReferences(moduleNode)
+
+        val typeCheckResult = typeCheck(
+            moduleNode,
+            nodeTypes = nodeTypes,
+            resolvedReferences = resolvedReferences,
+            getModule = importPathToModule
+        )
+
+        return Module.Native(
+            name = name,
+            type = typeCheckResult.moduleType
+        )
+    } else {
+        val moduleNode = parse(filename = path.toString(), input = moduleText)
+        val resolvedReferences = resolveModuleReferences(moduleNode)
+
+        val typeCheckResult = typeCheck(
+            moduleNode,
+            nodeTypes = nodeTypes,
+            resolvedReferences = resolvedReferences,
+            getModule = importPathToModule
+        )
+
+        return Module.Shed(
+            name = name,
+            node = moduleNode,
+            type = typeCheckResult.moduleType,
+            expressionTypes = typeCheckResult.expressionTypes,
+            references = resolvedReferences
+        )
+    }
+}
+
+private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
+    return resolve(
+        moduleNode,
+        builtins.associate({ builtin -> builtin.name to builtin })
     )
 }
 
