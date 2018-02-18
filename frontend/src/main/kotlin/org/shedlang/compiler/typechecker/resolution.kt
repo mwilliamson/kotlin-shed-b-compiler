@@ -183,7 +183,7 @@ private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
 private fun resolveFunctionType(node: FunctionTypeNode, context: ResolutionContext) {
     resolveScope(
         binders = node.staticParameters,
-        body = node.positionalParameters + node.effects + listOf(node.returnType),
+        body = node.positionalParameters + node.namedParameters + node.effects + listOf(node.returnType),
         context = context
     )
 }
