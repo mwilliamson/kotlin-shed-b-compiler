@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.javascript
 import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.readResourceText
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -17,7 +18,7 @@ val backend = object: Backend {
             writeModule(target, javascriptModule)
         })
 
-        writeModule(target, builtinModule)
+        writeModule(target, builtinModule())
     }
 
     private fun writeModule(target: Path, javascriptModule: JavascriptModule) {
@@ -75,81 +76,13 @@ private fun compileModule(module: Module, modules: FrontEndResult): JavascriptMo
 
 private class JavascriptModule(val name: List<String>, val source: String)
 
-private val builtinModule = JavascriptModule(
-    name = listOf("builtins"),
-    source = """
-        function intToString(value) {
-            return value.toString();
-        }
-
-        function print(value) {
-            process.stdout.write(value);
-        }
-
-        function list() {
-            return Array.prototype.slice.call(arguments);
-        }
-
-        function all(list) {
-            for (var index = 0; index < list.length; index++) {
-                if (!list[index]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        function map(func, list) {
-            return list.map(func);
-        }
-
-        function forEach(func, list) {
-            return list.forEach(func);
-        }
-
-        function reduce(func, initial, list) {
-            return list.reduce(func, initial);
-        }
-
-        function declareShape(name) {
-            const typeId = freshTypeId();
-
-            function shape(fields) {
-                if (fields === undefined) {
-                    fields = {};
-                }
-                fields.${"$"}shedType = shape;
-                return fields;
-            }
-
-            shape.typeId = typeId;
-
-            return shape;
-        }
-
-        var nextTypeId = 1;
-        function freshTypeId() {
-            return nextTypeId++;
-        }
-
-        function isType(value, type) {
-            return value != null && value.${"$"}shedType === type;
-        }
-
-        module.exports = {
-            declareShape: declareShape,
-            isType: isType,
-
-            all: all,
-            forEach: forEach,
-            intToString: intToString,
-            list: list,
-            map: map,
-            print: print,
-            reduce: reduce,
-        };
-    """.trimIndent()
-)
+private fun builtinModule(): JavascriptModule {
+    val contents = readResourceText("org/shedlang/compiler/backends/javascript/modules/builtins.js")
+    return JavascriptModule(
+        name = listOf("builtins"),
+        source = contents
+    )
+}
 
 val builtinNames = listOf(
     "all",

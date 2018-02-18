@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.python
 import org.shedlang.compiler.FrontEndResult
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.readResourceText
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -93,10 +94,7 @@ private fun compileModule(module: Module): PythonModule {
 private class PythonModule(val name: List<String>, val source: String)
 
 private fun builtinModule(): PythonModule {
-    val classLoader = ClassLoader.getSystemClassLoader()
-    val contents = classLoader.getResourceAsStream("org/shedlang/compiler/backends/python/modules/builtins.py").use { stream ->
-        stream.reader(Charsets.UTF_8).readText()
-    }
+    val contents = readResourceText("org/shedlang/compiler/backends/python/modules/builtins.py")
     return PythonModule(
         name = listOf("shed", "builtins"),
         source = contents
