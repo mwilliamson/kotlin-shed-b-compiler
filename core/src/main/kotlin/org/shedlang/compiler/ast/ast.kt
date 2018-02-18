@@ -174,11 +174,11 @@ data class TypesModuleNode(
 }
 
 data class ValTypeNode(
-    val name: String,
+    override val name: String,
     val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): Node {
+): VariableBindingNode {
     override val children: List<Node>
         get() = listOf(type)
 }

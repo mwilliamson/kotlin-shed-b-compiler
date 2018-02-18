@@ -135,6 +135,34 @@ internal fun typeCheck(
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleType
 ): TypeCheckResult {
+    return typeCheckModule(
+        nodeTypes = nodeTypes,
+        resolvedReferences = resolvedReferences,
+        getModule = getModule,
+        typeCheck = { context -> typeCheck(module, context)}
+    )
+}
+
+internal fun typeCheck(
+    module: TypesModuleNode,
+    nodeTypes: Map<Int, Type>,
+    resolvedReferences: ResolvedReferences,
+    getModule: (ImportPath) -> ModuleType
+): TypeCheckResult {
+    return typeCheckModule(
+        nodeTypes = nodeTypes,
+        resolvedReferences = resolvedReferences,
+        getModule = getModule,
+        typeCheck = { context -> typeCheck(module, context)}
+    )
+}
+
+private fun typeCheckModule(
+    nodeTypes: Map<Int, Type>,
+    resolvedReferences: ResolvedReferences,
+    getModule: (ImportPath) -> ModuleType,
+    typeCheck: (TypeContext) -> ModuleType
+): TypeCheckResult {
     val expressionTypes = mutableMapOf<Int, Type>()
     val typeContext = newTypeContext(
         nodeTypes = nodeTypes,
@@ -142,7 +170,7 @@ internal fun typeCheck(
         resolvedReferences = resolvedReferences,
         getModule = getModule
     )
-    val moduleType = typeCheck(module, typeContext)
+    val moduleType = typeCheck(typeContext)
     return TypeCheckResult(
         moduleType = moduleType,
         expressionTypes = ExpressionTypesMap(expressionTypes)
@@ -173,8 +201,28 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
     ))
 }
 
+internal fun typeCheck(module: TypesModuleNode, context: TypeContext): ModuleType {
+    for (import in module.imports) {
+        typeCheck(import, context)
+    }
+
+    for (statement in module.body) {
+        typeCheck(statement, context)
+    }
+
+    return ModuleType(fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
+        { statement -> statement.name },
+        { statement -> context.typeOf(statement) }
+    ))
+}
+
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
     context.addVariableType(import, context.moduleType(import.path))
+}
+
+internal fun typeCheck(valType: ValTypeNode, context: TypeContext) {
+    val type = evalType(valType.type, context)
+    context.addVariableType(valType, type)
 }
 
 internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): Type {

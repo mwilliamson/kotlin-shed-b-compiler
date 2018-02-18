@@ -89,7 +89,7 @@ fun valStatement(
 )
 
 fun valType(
-    name: String,
+    name: String = "<val name>",
     type: StaticNode
 ) = ValTypeNode(
     name = name,
@@ -304,7 +304,9 @@ fun typesModule(
     source = anySource()
 )
 
-fun import(path: ImportPath) = ImportNode(path = path, source = anySource())
+fun import(
+    path: ImportPath = ImportPath.absolute(listOf("Module"))
+) = ImportNode(path = path, source = anySource())
 
 fun staticReference(name: String) = StaticReferenceNode(name, anySource())
 fun staticFieldAccess(
