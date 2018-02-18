@@ -10,13 +10,17 @@ import java.nio.file.Path
 
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
-        frontEndResult.modules.forEach({ module ->
-            val javascriptModule = compileModule(
-                module = module,
-                modules = frontEndResult
-            )
-            writeModule(target, javascriptModule)
-        })
+        for (module in frontEndResult.modules) {
+            when (module) {
+                is Module.Shed -> {
+                    val javascriptModule = compileModule(
+                        module = module,
+                        modules = frontEndResult
+                    )
+                    writeModule(target, javascriptModule)
+                }
+            }
+        }
 
         writeModule(target, builtinModule())
     }
@@ -45,7 +49,7 @@ fun compile(frontendResult: FrontEndResult, target: Path) {
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
 
-private fun compileModule(module: Module, modules: FrontEndResult): JavascriptModule {
+private fun compileModule(module: Module.Shed, modules: FrontEndResult): JavascriptModule {
     val generateCode = generateCode(module = module, modules = modules)
 
     // TODO: remove duplication with import code in codeGenerator

@@ -18,16 +18,20 @@ import java.nio.file.Paths
 
 class FrontEndResult(val modules: Collection<Module>)
 
-class Module(
-    val name: List<String>,
-    val node: ModuleNode,
-    val type: ModuleType,
-    val expressionTypes: ExpressionTypes,
-    val references: ResolvedReferences
-) {
-    fun hasMain() = node.body.any({ node ->
-        node is FunctionDeclarationNode && node.name == "main"
-    })
+sealed class Module {
+    abstract val type: ModuleType
+
+    class Shed(
+        val name: List<String>,
+        val node: ModuleNode,
+        override val type: ModuleType,
+        val expressionTypes: ExpressionTypes,
+        val references: ResolvedReferences
+    ): Module() {
+        fun hasMain() = node.body.any({ node ->
+            node is FunctionDeclarationNode && node.name == "main"
+        })
+    }
 }
 
 fun readStandalone(path: Path): FrontEndResult {
@@ -71,7 +75,7 @@ private fun readModule(path: Path, name: List<String>, getModule: (List<String>)
         }
     )
 
-    return Module(
+    return Module.Shed(
         name = name,
         node = moduleNode,
         type = typeCheckResult.moduleType,

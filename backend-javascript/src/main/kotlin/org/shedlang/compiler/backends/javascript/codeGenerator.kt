@@ -8,7 +8,7 @@ import org.shedlang.compiler.typechecker.ExpressionTypes
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.Type
 
-internal fun generateCode(module: Module, modules: FrontEndResult): JavascriptModuleNode {
+internal fun generateCode(module: Module.Shed, modules: FrontEndResult): JavascriptModuleNode {
     val context = CodeGenerationContext(expressionTypes = module.expressionTypes)
 
     val node = module.node
@@ -28,7 +28,7 @@ internal class CodeGenerationContext(private val expressionTypes: ExpressionType
     }
 }
 
-private fun generateCode(module: Module, import: ImportNode): JavascriptStatementNode {
+private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
     val source = NodeSource(import)
 
     val importBase = when (import.path.base) {

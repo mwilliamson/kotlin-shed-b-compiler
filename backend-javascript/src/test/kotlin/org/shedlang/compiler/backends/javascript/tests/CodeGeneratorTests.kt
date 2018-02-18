@@ -69,8 +69,8 @@ class CodeGeneratorTests {
         ))
     }
 
-    private fun stubbedModule(node: ModuleNode): Module {
-        return Module(
+    private fun stubbedModule(node: ModuleNode): Module.Shed {
+        return Module.Shed(
             name = listOf("Module"),
             type = ModuleType(mapOf()),
             expressionTypes = emptyExpressionTypes,

@@ -12,11 +12,14 @@ val topLevelPythonPackageName = "shed"
 
 val backend = object: Backend {
     override fun compile(frontEndResult: FrontEndResult, target: Path) {
-        val pythonModules = frontEndResult.modules.map(::compileModule)
-
-        pythonModules.forEach({ module ->
-            writeModule(target, module)
-        })
+        for (module in frontEndResult.modules) {
+            when (module) {
+                is Module.Shed -> {
+                    val pythonModule = compileModule(module)
+                    writeModule(target, pythonModule)
+                }
+            }
+        }
         writeModule(target, builtinModule())
     }
 
@@ -54,7 +57,7 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
     }
 }
 
-private fun compileModule(module: Module): PythonModule {
+private fun compileModule(module: Module.Shed): PythonModule {
     val generateCode = generateCode(module.node, module.references)
     val builtins = """
         from __future__ import print_function
