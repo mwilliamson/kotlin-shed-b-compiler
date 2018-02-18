@@ -15,3 +15,5 @@
 * Move lists into a module
 
 * Optimise directly recursive tail calls
+
+* Check number of static arguments
