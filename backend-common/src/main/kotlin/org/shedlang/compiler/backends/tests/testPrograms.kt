@@ -3,7 +3,7 @@ package org.shedlang.compiler.backends.tests
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.installDependencies
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.readStandalone
@@ -19,7 +19,7 @@ data class TestProgram(
     private val source: TestProgramSource,
     val expectedResult: Matcher<ExecutionResult>
 ) {
-    fun load(): FrontEndResult {
+    fun load(): ModuleSet {
         return when (source) {
             is TestProgramSource.File -> {
                 readStandalone(source.path)

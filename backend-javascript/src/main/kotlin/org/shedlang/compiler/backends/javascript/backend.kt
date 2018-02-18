@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.javascript
 
-import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.readResourceText
@@ -9,13 +9,13 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 val backend = object: Backend {
-    override fun compile(frontEndResult: FrontEndResult, target: Path) {
-        for (module in frontEndResult.modules) {
+    override fun compile(moduleSet: ModuleSet, target: Path) {
+        for (module in moduleSet.modules) {
             when (module) {
                 is Module.Shed -> {
                     val javascriptModule = compileModule(
                         module = module,
-                        modules = frontEndResult
+                        modules = moduleSet
                     )
                     writeModule(target, javascriptModule)
                 }
@@ -43,13 +43,13 @@ val backend = object: Backend {
     }
 }
 
-fun compile(frontendResult: FrontEndResult, target: Path) {
+fun compile(frontendResult: ModuleSet, target: Path) {
     backend.compile(frontendResult, target = target)
 }
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
 
-private fun compileModule(module: Module.Shed, modules: FrontEndResult): JavascriptModule {
+private fun compileModule(module: Module.Shed, modules: ModuleSet): JavascriptModule {
     val generateCode = generateCode(module = module, modules = modules)
 
     // TODO: remove duplication with import code in codeGenerator

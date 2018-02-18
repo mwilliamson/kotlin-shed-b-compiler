@@ -16,7 +16,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-class FrontEndResult(val modules: Collection<Module>)
+class ModuleSet(val modules: Collection<Module>)
 
 sealed class Module {
     abstract val name: List<String>
@@ -40,20 +40,20 @@ sealed class Module {
     ): Module()
 }
 
-fun readStandalone(path: Path): FrontEndResult {
+fun readStandalone(path: Path): ModuleSet {
     val module = readModule(
         path = path,
         name = listOf("main"),
         getModule = { throw UnsupportedOperationException("Standalone programs cannot import") }
     )
 
-    return FrontEndResult(listOf(module))
+    return ModuleSet(listOf(module))
 }
 
-fun readPackage(base: Path, name: List<String>): FrontEndResult {
+fun readPackage(base: Path, name: List<String>): ModuleSet {
     val reader = ModuleReader(root = base)
     reader.load(name)
-    return FrontEndResult(reader.modules)
+    return ModuleSet(reader.modules)
 }
 
 private fun readModule(path: Path, name: List<String>, getModule: (List<String>) -> Module): Module {

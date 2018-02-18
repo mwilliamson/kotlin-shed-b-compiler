@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.python
 
-import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.readResourceText
@@ -11,8 +11,8 @@ import java.nio.file.Path
 val topLevelPythonPackageName = "shed"
 
 val backend = object: Backend {
-    override fun compile(frontEndResult: FrontEndResult, target: Path) {
-        for (module in frontEndResult.modules) {
+    override fun compile(moduleSet: ModuleSet, target: Path) {
+        for (module in moduleSet.modules) {
             when (module) {
                 is Module.Shed -> {
                     val pythonModule = compileModule(module)
@@ -45,7 +45,7 @@ val backend = object: Backend {
     }
 }
 
-fun compile(frontendResult: FrontEndResult, target: Path) {
+fun compile(frontendResult: ModuleSet, target: Path) {
     backend.compile(frontendResult, target = target)
 }
 

@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
@@ -18,7 +18,7 @@ import org.shedlang.compiler.typechecker.emptyExpressionTypes
 import org.shedlang.compiler.types.*
 
 class CodeGeneratorTests {
-    private val emptyModules = FrontEndResult(modules = listOf())
+    private val emptyModules = ModuleSet(modules = listOf())
 
     @Test
     fun emptyModuleGeneratesEmptyModule() {

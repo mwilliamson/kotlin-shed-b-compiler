@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.javascript
 
-import org.shedlang.compiler.FrontEndResult
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
@@ -8,7 +8,7 @@ import org.shedlang.compiler.typechecker.ExpressionTypes
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.Type
 
-internal fun generateCode(module: Module.Shed, modules: FrontEndResult): JavascriptModuleNode {
+internal fun generateCode(module: Module.Shed, modules: ModuleSet): JavascriptModuleNode {
     val context = CodeGenerationContext(expressionTypes = module.expressionTypes)
 
     val node = module.node
