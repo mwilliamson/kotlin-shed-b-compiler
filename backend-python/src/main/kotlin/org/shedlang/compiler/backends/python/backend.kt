@@ -50,7 +50,7 @@ val backend = object: Backend {
     }
 
     override fun run(path: Path, module: List<String>): Int {
-        val process = ProcessBuilder("python3", "-m", "shed." + module.joinToString("."))
+        val process = ProcessBuilder("python3", "-m", topLevelPythonPackageName + "." + module.joinToString("."))
             .inheritIO()
             .directory(path.toFile())
             .start()
