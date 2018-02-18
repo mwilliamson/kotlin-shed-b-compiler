@@ -840,10 +840,6 @@ private fun parseVariableReference(source: Source, tokens: TokenIterator<TokenTy
     return VariableReferenceNode(value, source)
 }
 
-private fun parseVariableReference(source: Source, token: Token<TokenType>): VariableReferenceNode {
-    return VariableReferenceNode(token.value, source)
-}
-
 private fun decodeEscapeSequence(value: String, source: Source): String {
     return decodeEscapeSequence(CharBuffer.wrap(value), source = source)
 }

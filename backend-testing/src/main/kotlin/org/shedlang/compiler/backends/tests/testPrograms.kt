@@ -115,10 +115,6 @@ private fun findRoot(): Path {
     return directory
 }
 
-fun run(arguments: List<String>): ExecutionResult {
-    return run(arguments, null)
-}
-
 fun run(arguments: List<String>, workingDirectory: File?): ExecutionResult {
     val process = ProcessBuilder(*arguments.toTypedArray())
         .directory(workingDirectory)
@@ -135,11 +131,6 @@ private fun readString(stream: InputStream): String {
 }
 
 data class ExecutionResult(val exitCode: Int = 0, val stdout: String = "", val stderr: String = "") {
-    fun assertSuccess() {
-        if (exitCode != 0) {
-            throw RuntimeException("stderr was: " + stderr)
-        }
-    }
 }
 
 fun temporaryDirectory(): TemporaryDirectory {

@@ -13,8 +13,6 @@ import org.shedlang.compiler.types.TypeParameter
 open class CompilerError(message: String, val source: Source) : Exception(message)
 class UnknownTypeError(val name: String, source: Source)
     : CompilerError("type of ${name} is unknown", source = source)
-class NotFunctionTypeError(val actual: Type, source: Source)
-    : TypeCheckError("expected function type but was ${actual}", source)
 
 open class SourceError(message: String?, val source: Source): Exception(message)
 
@@ -43,8 +41,6 @@ class PositionalArgumentPassedToShapeConstructorError(source: Source)
     : TypeCheckError("Positional arguments cannot be passed to shape constructors", source)
 class CouldNotInferTypeParameterError(parameter: TypeParameter, source: Source)
     : TypeCheckError("Could not infer type for type parameter $parameter", source)
-class ReturnOutsideOfFunctionError(source: Source)
-    : TypeCheckError("Cannot return outside of a function", source)
 class NoSuchFieldError(val fieldName: String, source: Source)
     : TypeCheckError("No such field: " + fieldName, source)
 class FieldAlreadyDeclaredError(val fieldName: String, source: Source)
