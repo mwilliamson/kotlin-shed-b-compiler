@@ -78,7 +78,7 @@ class TypeCheckWhenTests {
         val variableReference = variableReference("x")
         val refinedVariableReference = variableReference("x")
 
-        val type = captureType(
+        val types = captureTypes(
             whenExpression(
                 expression = variableReference,
                 branches = listOf(
@@ -90,7 +90,6 @@ class TypeCheckWhenTests {
                     )
                 )
             ),
-            refinedVariableReference,
             references = mapOf(
                 variableReference to declaration,
                 refinedVariableReference to declaration
@@ -101,6 +100,6 @@ class TypeCheckWhenTests {
             types = mapOf(declaration to inputUnion)
         )
 
-        assertThat(type, isType(inputMember1))
+        assertThat(types.typeOf(refinedVariableReference), isType(inputMember1))
     }
 }
