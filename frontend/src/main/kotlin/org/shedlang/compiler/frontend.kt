@@ -22,7 +22,13 @@ fun readStandalone(path: Path): ModuleSet {
         getModule = { throw UnsupportedOperationException("Standalone programs cannot import") }
     )
 
-    return ModuleSet(listOf(module))
+    if (module == null) {
+        // TODO: throw better exception
+        throw Exception("Could not find module")
+    } else {
+        return ModuleSet(listOf(module))
+    }
+
 }
 
 fun readPackage(base: Path, name: List<String>): ModuleSet {
@@ -31,18 +37,18 @@ fun readPackage(base: Path, name: List<String>): ModuleSet {
     return ModuleSet(reader.modules)
 }
 
-private fun readModule(path: Path, name: List<String>, getModule: (List<String>) -> Module): Module {
+private fun readModule(path: Path, name: List<String>, getModule: (List<String>) -> Module?): Module? {
     val moduleText = path.toFile().readText()
 
     val nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type })
-    val importPathToModule: (ImportPath) -> ModuleType = { importPath ->
+    val importPathToModule: (ImportPath) -> ModuleType? = { importPath ->
         when (importPath.base) {
             ImportPathBase.Relative -> {
                 val importedModuleName = resolveName(name, importPath.parts)
-                getModule(importedModuleName).type
+                getModule(importedModuleName)?.type
             }
             ImportPathBase.Absolute -> {
-                getModule(importPath.parts).type
+                getModule(importPath.parts)?.type
             }
         }
     }
@@ -92,7 +98,7 @@ private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
 }
 
 private class ModuleReader(private val root: Path) {
-    private val modulesByName = LazyMap<List<String>, Module>({ name ->
+    private val modulesByName = LazyMap<List<String>, Module?>({ name ->
         readModuleInPackage(name = name)
     })
 
@@ -101,9 +107,9 @@ private class ModuleReader(private val root: Path) {
     }
 
     internal val modules: Collection<Module>
-        get() = modulesByName.values
+        get() = modulesByName.values.filterNotNull()
 
-    private fun readModuleInPackage(name: List<String>): Module {
+    private fun readModuleInPackage(name: List<String>): Module? {
         val dependencyDirectories = root.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
         val sourceDirectoryName = "src"
         val dependencies = dependencyDirectories

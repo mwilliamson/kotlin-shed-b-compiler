@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.types.Effect
@@ -62,3 +63,5 @@ class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)
         ),
         source = source
     )
+class ModuleNotFoundError(val path: ImportPath, source: Source)
+    : TypeCheckError("Module not found: $path", source = source)

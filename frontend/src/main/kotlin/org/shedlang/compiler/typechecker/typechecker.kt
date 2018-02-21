@@ -12,7 +12,7 @@ internal fun newTypeContext(
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType
+    getModule: (ImportPath) -> ModuleType?
 ): TypeContext {
     return TypeContext(
         effect = EmptyEffect,
@@ -29,14 +29,14 @@ internal class TypeContext(
     private val variableTypes: MutableMap<Int, Type>,
     private val expressionTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
-    private val getModule: (ImportPath) -> ModuleType,
+    private val getModule: (ImportPath) -> ModuleType?,
     private val deferred: Queue<() -> Unit>
 ) {
     fun resolveReference(node: ReferenceNode): VariableBindingNode {
         return resolvedReferences[node]
     }
 
-    fun moduleType(path: ImportPath): ModuleType {
+    fun moduleType(path: ImportPath): ModuleType? {
         return getModule(path)
     }
 
@@ -132,7 +132,7 @@ internal fun typeCheck(
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType
+    getModule: (ImportPath) -> ModuleType?
 ): TypeCheckResult {
     return typeCheckModule(
         nodeTypes = nodeTypes,
@@ -146,7 +146,7 @@ internal fun typeCheck(
     module: TypesModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType
+    getModule: (ImportPath) -> ModuleType?
 ): TypeCheckResult {
     return typeCheckModule(
         nodeTypes = nodeTypes,
@@ -159,7 +159,7 @@ internal fun typeCheck(
 private fun typeCheckModule(
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType,
+    getModule: (ImportPath) -> ModuleType?,
     typeCheck: (TypeContext) -> ModuleType
 ): TypeCheckResult {
     val expressionTypes = mutableMapOf<Int, Type>()
@@ -216,7 +216,12 @@ internal fun typeCheck(module: TypesModuleNode, context: TypeContext): ModuleTyp
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
-    context.addVariableType(import, context.moduleType(import.path))
+    val moduleType = context.moduleType(import.path)
+    if (moduleType == null) {
+        throw ModuleNotFoundError(path = import.path, source = import.source)
+    } else {
+        context.addVariableType(import, moduleType)
+    }
 }
 
 internal fun typeCheck(valType: ValTypeNode, context: TypeContext) {

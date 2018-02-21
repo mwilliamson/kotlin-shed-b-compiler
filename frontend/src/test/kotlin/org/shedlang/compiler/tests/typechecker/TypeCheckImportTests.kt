@@ -3,20 +3,35 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.import
-import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.typechecker.ModuleNotFoundError
 import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.ModuleType
 
 class TypeCheckImportTests {
     @Test
     fun importIntroducesModuleIntoScope() {
-        val path = ImportPath.relative(listOf("messages"))
+        val path = ImportPath.relative(listOf("Messages"))
         val node = import(path)
         val moduleType = ModuleType(fields = mapOf())
         val typeContext = typeContext(modules = mapOf(path to moduleType))
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), cast(equalTo(moduleType)))
+    }
+
+    @Test
+    fun whenModuleIsNotFoundThenErrorIsThrown() {
+        val path = ImportPath.relative(listOf("Messages"))
+        val node = import(path)
+        val typeContext = typeContext(modules = mapOf(path to null))
+
+        assertThat(
+            { typeCheck(node, typeContext) },
+            throwsException(has(ModuleNotFoundError::path, equalTo(path)))
+        )
     }
 }

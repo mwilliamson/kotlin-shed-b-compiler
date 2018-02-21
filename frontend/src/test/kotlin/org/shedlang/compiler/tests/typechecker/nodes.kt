@@ -19,7 +19,7 @@ internal fun typeContext(
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     types: Map<VariableBindingNode, Type> = mapOf(),
-    modules: Map<ImportPath, ModuleType> = mapOf()
+    modules: Map<ImportPath, ModuleType?> = mapOf()
 ): TypeContext {
     val finalReferences = (
         referenceTypes.entries.associateBy(
@@ -39,7 +39,7 @@ internal fun typeContext(
         variableTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),
-        getModule = { moduleName -> modules[moduleName]!! }
+        getModule = { moduleName -> modules[moduleName] }
     )
 }
 
