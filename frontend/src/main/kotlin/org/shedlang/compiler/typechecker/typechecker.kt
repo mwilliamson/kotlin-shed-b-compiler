@@ -224,8 +224,7 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
         is ModuleResult.NotFound ->
             throw ModuleNotFoundError(name = result.name, source = import.source)
         is ModuleResult.FoundMany ->
-            // TODO: throw a different error
-            throw ModuleNotFoundError(name = result.name, source = import.source)
+            throw MultipleModulesWithSameNameFoundError(name = result.name, source = import.source)
     }
     context.addVariableType(import, type)
 }

@@ -12,6 +12,7 @@ import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.import
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.typechecker.ModuleNotFoundError
+import org.shedlang.compiler.typechecker.MultipleModulesWithSameNameFoundError
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.ModuleType
 import java.nio.file.Paths
@@ -44,6 +45,18 @@ class TypeCheckImportTests {
         assertThat(
             { typeCheck(node, typeContext) },
             throwsException(has(ModuleNotFoundError::name, isSequence(equalTo("Lib"), equalTo("Messages"))))
+        )
+    }
+
+    @Test
+    fun whenMultipleModulesAreNotFoundThenErrorIsThrown() {
+        val path = ImportPath.relative(listOf("Messages"))
+        val node = import(path)
+        val typeContext = typeContext(modules = mapOf(path to ModuleResult.FoundMany(name = listOf("Lib", "Messages"))))
+
+        assertThat(
+            { typeCheck(node, typeContext) },
+            throwsException(has(MultipleModulesWithSameNameFoundError::name, isSequence(equalTo("Lib"), equalTo("Messages"))))
         )
     }
 }

@@ -1,6 +1,5 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.types.Effect
@@ -65,3 +64,5 @@ class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)
     )
 class ModuleNotFoundError(val name: List<String>, source: Source)
     : TypeCheckError("Module not found: " + name.joinToString("."), source = source)
+class MultipleModulesWithSameNameFoundError(val name: List<String>, source: Source)
+    : TypeCheckError("More than one module with the name ${name.joinToString(".")} was found", source = source)
