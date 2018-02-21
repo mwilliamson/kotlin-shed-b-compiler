@@ -2,6 +2,9 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.ast.ReferenceNode
+import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isType
 import org.shedlang.compiler.frontend.tests.isUnionType
@@ -71,30 +74,54 @@ class TypeCheckWhenTests {
 
     @Test
     fun typeIsRefinedInBranchBodies() {
+        val declaration = variableBinder("x")
         val variableReference = variableReference("x")
-        val receiverReference = variableReference("f")
+        val refinedVariableReference = variableReference("x")
 
-        val statement = whenExpression(
-            expression = variableReference,
-            branches = listOf(
-                whenBranch(
-                    type = inputMember1TypeReference,
-                    body = listOf(
-                        expressionStatement(call(receiverReference, listOf(variableReference))),
-                        expressionStatement(literalUnit())
+        val type = captureType(
+            whenExpression(
+                expression = variableReference,
+                branches = listOf(
+                    whenBranch(
+                        type = inputMember1TypeReference,
+                        body = listOf(
+                            expressionStatement(refinedVariableReference)
+                        )
                     )
                 )
-            )
-        )
-
-        val typeContext = typeContext(
+            ),
+            refinedVariableReference,
+            references = mapOf(
+                variableReference to declaration,
+                refinedVariableReference to declaration
+            ),
             referenceTypes = mapOf(
-                variableReference to inputUnion,
-                inputMember1TypeReference to MetaType(inputMember1),
-                receiverReference to functionType(positionalParameters = listOf(inputMember1))
-            )
+                inputMember1TypeReference to MetaType(inputMember1)
+            ),
+            types = mapOf(declaration to inputUnion)
         )
 
-        typeCheck(statement, typeContext)
+        assertThat(type, isType(inputMember1))
+    }
+
+    private fun captureType(
+        expression: ExpressionNode,
+        capture: ExpressionNode,
+        references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
+        referenceTypes: Map<ReferenceNode, Type> = mapOf(),
+        types: Map<VariableBindingNode, Type> = mapOf()
+    ): Type {
+        val expressionTypes = mutableMapOf<Int, Type>()
+        val typeContext = typeContext(
+            expressionTypes = expressionTypes,
+            referenceTypes = referenceTypes,
+            references = references,
+            types = types
+        )
+
+        typeCheck(expression, typeContext)
+        typeContext.undefer()
+
+        return expressionTypes[capture.nodeId]!!
     }
 }

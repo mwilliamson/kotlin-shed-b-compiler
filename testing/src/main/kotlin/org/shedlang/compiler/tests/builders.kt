@@ -88,6 +88,10 @@ fun valStatement(
     source = anySource()
 )
 
+fun variableBinder(
+    name: String
+) = valStatement(name = name)
+
 fun valType(
     name: String = "<val name>",
     type: StaticNode
