@@ -2,10 +2,14 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Effect
+import org.shedlang.compiler.types.EmptyEffect
+import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.TypeGroup
 import java.util.*
 
 
@@ -19,7 +23,7 @@ internal fun typeContext(
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     types: Map<VariableBindingNode, Type> = mapOf(),
-    modules: Map<ImportPath, ModuleType?> = mapOf()
+    modules: Map<ImportPath, ModuleResult> = mapOf()
 ): TypeContext {
     val finalReferences = (
         referenceTypes.entries.associateBy(
@@ -39,7 +43,7 @@ internal fun typeContext(
         variableTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),
-        getModule = { moduleName -> modules[moduleName] }
+        getModule = { moduleName -> modules[moduleName]!! }
     )
 }
 

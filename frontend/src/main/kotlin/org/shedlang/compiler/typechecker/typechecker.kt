@@ -2,6 +2,7 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ExpressionTypes
 import org.shedlang.compiler.ExpressionTypesMap
+import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.types.applyStatic
@@ -12,7 +13,7 @@ internal fun newTypeContext(
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType?
+    getModule: (ImportPath) -> ModuleResult
 ): TypeContext {
     return TypeContext(
         effect = EmptyEffect,
@@ -29,14 +30,14 @@ internal class TypeContext(
     private val variableTypes: MutableMap<Int, Type>,
     private val expressionTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
-    private val getModule: (ImportPath) -> ModuleType?,
+    private val getModule: (ImportPath) -> ModuleResult,
     private val deferred: Queue<() -> Unit>
 ) {
     fun resolveReference(node: ReferenceNode): VariableBindingNode {
         return resolvedReferences[node]
     }
 
-    fun moduleType(path: ImportPath): ModuleType? {
+    fun module(path: ImportPath): ModuleResult {
         return getModule(path)
     }
 
@@ -132,7 +133,7 @@ internal fun typeCheck(
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType?
+    getModule: (ImportPath) -> ModuleResult
 ): TypeCheckResult {
     return typeCheckModule(
         nodeTypes = nodeTypes,
@@ -146,7 +147,7 @@ internal fun typeCheck(
     module: TypesModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType?
+    getModule: (ImportPath) -> ModuleResult
 ): TypeCheckResult {
     return typeCheckModule(
         nodeTypes = nodeTypes,
@@ -159,7 +160,7 @@ internal fun typeCheck(
 private fun typeCheckModule(
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
-    getModule: (ImportPath) -> ModuleType?,
+    getModule: (ImportPath) -> ModuleResult,
     typeCheck: (TypeContext) -> ModuleType
 ): TypeCheckResult {
     val expressionTypes = mutableMapOf<Int, Type>()
@@ -216,12 +217,17 @@ internal fun typeCheck(module: TypesModuleNode, context: TypeContext): ModuleTyp
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
-    val moduleType = context.moduleType(import.path)
-    if (moduleType == null) {
-        throw ModuleNotFoundError(path = import.path, source = import.source)
-    } else {
-        context.addVariableType(import, moduleType)
+    val result = context.module(import.path)
+    val type = when (result) {
+        is ModuleResult.Found ->
+            result.module.type
+        is ModuleResult.NotFound ->
+            throw ModuleNotFoundError(name = result.name, source = import.source)
+        is ModuleResult.FoundMany ->
+            // TODO: throw a different error
+            throw ModuleNotFoundError(name = result.name, source = import.source)
     }
+    context.addVariableType(import, type)
 }
 
 internal fun typeCheck(valType: ValTypeNode, context: TypeContext) {

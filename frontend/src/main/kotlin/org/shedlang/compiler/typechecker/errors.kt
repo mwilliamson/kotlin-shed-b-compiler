@@ -63,5 +63,5 @@ class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)
         ),
         source = source
     )
-class ModuleNotFoundError(val path: ImportPath, source: Source)
-    : TypeCheckError("Module not found: $path", source = source)
+class ModuleNotFoundError(val name: List<String>, source: Source)
+    : TypeCheckError("Module not found: " + name.joinToString("."), source = source)
