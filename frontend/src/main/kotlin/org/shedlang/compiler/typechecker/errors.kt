@@ -54,3 +54,11 @@ class InvalidOperationError(val operator: Operator, val operands: List<Type>, so
 )
 class MissingReturnTypeError(message: String, source: Source)
     : TypeCheckError(message, source)
+class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)
+    : TypeCheckError(
+        "when is not exhaustive, unhandled members: " + unhandledMembers.joinToString(
+            ", ",
+            transform = { member -> member.shortDescription }
+        ),
+        source = source
+    )

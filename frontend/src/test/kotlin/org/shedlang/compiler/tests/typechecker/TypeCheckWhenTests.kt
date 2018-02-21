@@ -1,12 +1,15 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isType
 import org.shedlang.compiler.frontend.tests.isUnionType
 import org.shedlang.compiler.frontend.tests.isUnionTypeGroup
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.WhenIsNotExhaustiveError
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
@@ -87,7 +90,8 @@ class TypeCheckWhenTests {
                         body = listOf(
                             expressionStatement(refinedVariableReference)
                         )
-                    )
+                    ),
+                    whenBranch(type = inputMember2TypeReference)
                 )
             ),
             references = mapOf(
@@ -95,11 +99,42 @@ class TypeCheckWhenTests {
                 refinedVariableReference to declaration
             ),
             referenceTypes = mapOf(
-                inputMember1TypeReference to MetaType(inputMember1)
+                inputMember1TypeReference to MetaType(inputMember1),
+                inputMember2TypeReference to MetaType(inputMember2)
             ),
             types = mapOf(declaration to inputUnion)
         )
 
         assertThat(types.typeOf(refinedVariableReference), isType(inputMember1))
+    }
+
+    @Test
+    fun errorIsThrownWhenCasesAreNotExhaustive() {
+        val variableReference = variableReference("x")
+
+        val statement = whenExpression(
+            expression = variableReference,
+            branches = listOf(
+                whenBranch(
+                    type = inputMember1TypeReference,
+                    body = listOf()
+                )
+            )
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                variableReference to inputUnion,
+                inputMember1TypeReference to MetaType(inputMember1)
+            )
+        )
+
+        assertThat(
+            { typeCheck(statement, typeContext) },
+            throws<WhenIsNotExhaustiveError>(has(
+                WhenIsNotExhaustiveError::unhandledMembers,
+                isSequence(isType(inputMember2))
+            ))
+        )
     }
 }

@@ -85,8 +85,7 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
 private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType {
     // TODO: test expression and type checking
 
-    val expressionType = inferType(node.expression, context)
-    checkTypePredicateOperand(node.expression, expressionType)
+    val expressionType = checkTypePredicateOperand(node.expression, context)
     evalType(node.type, context)
 
     // TODO: for this to be valid, the type must have a tag value
@@ -142,25 +141,37 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
 }
 
 private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type {
-    val expressionType = inferType(node.expression, context)
-    checkTypePredicateOperand(node.expression, expressionType)
+    val expressionType = checkTypePredicateOperand(node.expression, context)
 
-    // TODO: check exhaustiveness
-
-    val branchTypes = node.branches.map { branch ->
+    val branchResults = node.branches.map { branch ->
+        // TODO: check conditionType is a member of the union
         val conditionType = evalType(branch.type, context)
         val branchContext = context.enterScope()
         val expression = node.expression
         if (expression is VariableReferenceNode) {
             branchContext.addVariableType(expression, conditionType)
         }
-        typeCheck(branch.body, branchContext)
+        val type = typeCheck(branch.body, branchContext)
+        Pair(type, conditionType)
     }
+
+    val caseTypes = branchResults.map { result -> result.second }
+    val unhandledMembers = expressionType.members.filter { member ->
+        caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
+    }
+    if (unhandledMembers.isNotEmpty()) {
+        throw WhenIsNotExhaustiveError(unhandledMembers, source = node.source)
+    }
+
+    val branchTypes = branchResults.map { result -> result.first }
     return branchTypes.reduce(::union)
 }
 
-private fun checkTypePredicateOperand(expression: ExpressionNode, expressionType: Type) {
-    if (expressionType !is UnionType) {
+private fun checkTypePredicateOperand(expression: ExpressionNode, context: TypeContext): UnionType {
+    val expressionType = inferType(expression, context)
+    if (expressionType is UnionType) {
+        return expressionType
+    } else {
         throw UnexpectedTypeError(
             expected = UnionTypeGroup,
             actual = expressionType,
