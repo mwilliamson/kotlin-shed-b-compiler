@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.frontend.tests.isType
 import org.shedlang.compiler.frontend.tests.isUnionType
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
@@ -61,40 +62,43 @@ class TypeCheckIfTests {
         )))
     }
 
-    // TODO: Test that refined type is only in true branch (not false branch, nor following statements)
     @Test
     fun whenConditionIsIsOperationThenTypeIsRefinedInTrueBranch() {
-        val parameter = parameter("x")
-
+        val declaration = variableBinder("x")
         val variableReference = variableReference("x")
-        val receiverReference = variableReference("f")
+        val referenceInTrueBranch = variableReference("x")
+        val referenceInFalseBranch = variableReference("x")
 
         val member1Reference = staticReference("Member1")
         val tagField = TagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
-        val statement = ifExpression(
-            condition = isOperation(variableReference, member1Reference),
-            trueBranch = listOf(
-                expressionStatement(call(receiverReference, listOf(variableReference))),
-                expressionStatement(literalUnit())
-            )
-        )
 
-        val typeContext = typeContext(
+        val types = captureTypes(
+            ifExpression(
+                condition = isOperation(variableReference, member1Reference),
+                trueBranch = listOf(
+                    expressionStatement(referenceInTrueBranch)
+                ),
+                elseBranch = listOf(
+                    expressionStatement(referenceInFalseBranch)
+                )
+            ),
             referenceTypes = mapOf(
-                member1Reference to MetaType(member1),
-                receiverReference to functionType(positionalParameters = listOf(member1))
+                member1Reference to MetaType(member1)
             ),
             references = mapOf(
-                variableReference to parameter
+                variableReference to declaration,
+                referenceInTrueBranch to declaration,
+                referenceInFalseBranch to declaration
             ),
             types = mapOf(
-                parameter to union
+                declaration to union
             )
         )
 
-        typeCheck(statement, typeContext)
+        assertThat(types.typeOf(referenceInTrueBranch), isType(member1))
+        assertThat(types.typeOf(referenceInFalseBranch), isType(union))
     }
 }
