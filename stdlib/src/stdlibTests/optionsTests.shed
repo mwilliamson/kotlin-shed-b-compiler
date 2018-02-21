@@ -1,20 +1,20 @@
-import stdlib.matchers;
-import stdlib.options;
-import stdlib.tests;
+import stdlib.Matchers;
+import stdlib.Options;
+import stdlib.Tests;
 
 fun addOne(value: Int) -> Int {
     value + 1
 }
 
-val testCases = tests.suite("optionsTests", list(
-    tests.testCase("map(f, none) is none", fun () {
-        tests.assertThat(options.map(addOne, options.none), matchers.isNone())
+val testCases = Tests.suite("optionsTests", list(
+    Tests.testCase("map(f, none) is none", fun () {
+        Tests.assertThat(Options.map(addOne, Options.none), Matchers.isNone())
     }),
 
-    tests.testCase("map(f, some(x)) is some(f(x))", fun () {
-        tests.assertThat(
-            options.map(addOne, options.some(42)),
-            matchers.isSome(matchers.isInteger(43))
+    Tests.testCase("map(f, some(x)) is some(f(x))", fun () {
+        Tests.assertThat(
+            Options.map(addOne, Options.some(42)),
+            Matchers.isSome(Matchers.isInteger(43))
         )
     }),
 ));

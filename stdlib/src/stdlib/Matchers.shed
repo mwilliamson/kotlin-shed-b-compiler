@@ -1,4 +1,4 @@
-import .options;
+import .Options;
 
 fun anything() -> Matcher[Any] {
     Matcher(
@@ -23,11 +23,11 @@ fun isString(value: String) -> Matcher[String] {
     )
 }
 
-fun isNone() -> Matcher[options.Option[Any]] {
+fun isNone() -> Matcher[Options.Option[Any]] {
     Matcher(
         description = "none",
-        match = fun (actual: options.Option[Any]) -> Result {
-            if (actual is options.None) {
+        match = fun (actual: Options.Option[Any]) -> Result {
+            if (actual is Options.None) {
                 success
             } else {
                 failure("was some()")
@@ -36,11 +36,11 @@ fun isNone() -> Matcher[options.Option[Any]] {
     )
 }
 
-fun isSome[T](matcher: Matcher[T]) -> Matcher[options.Option[T]] {
+fun isSome[T](matcher: Matcher[T]) -> Matcher[Options.Option[T]] {
     Matcher(
         description = "option with value " + matcher.description,
-        match = fun (actual: options.Option[T]) -> Result {
-            if (actual is options.Some[T]) {
+        match = fun (actual: Options.Option[T]) -> Result {
+            if (actual is Options.Some[T]) {
                 matcher.match(actual.value)
             } else {
                 failure("was none")

@@ -1,8 +1,8 @@
-import stdlib.options;
+import stdlib.Options;
 
 
 shape Sequence[T, !E] {
-    next: () !E -> options.Option[SequenceItem[T, E]],
+    next: () !E -> Options.Option[SequenceItem[T, E]],
 }
 
 shape SequenceItem[T, !E] {
@@ -13,11 +13,11 @@ shape SequenceItem[T, !E] {
 fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
     val item = sequence.next();
     when (item) {
-        is options.None {
+        is Options.None {
             true
         }
         // TODO: allow "is options.Some" (without type arguments)
-        is options.Some[SequenceItem[Bool, E]] {
+        is Options.Some[SequenceItem[Bool, E]] {
             if (item.value.head) {
                 all(item.value.tail)
             } else {
@@ -30,10 +30,10 @@ fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
 fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
     val item = sequence.next();
     when (item) {
-        is options.None {
+        is Options.None {
             false
         }
-        is options.Some[SequenceItem[Bool, E]] {
+        is Options.Some[SequenceItem[Bool, E]] {
             if (item.value.head) {
                 true
             } else {
@@ -46,9 +46,9 @@ fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
 fun forEach[T, !E](func: (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
     val item = sequence.next();
     when (item) {
-        is options.None {
+        is Options.None {
         }
-        is options.Some[SequenceItem[T, E]] {
+        is Options.Some[SequenceItem[T, E]] {
             func(item.value.head);
             forEach(func, item.value.tail);
         }
@@ -57,8 +57,8 @@ fun forEach[T, !E](func: (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
 
 fun lazyMap[T, R, !E](func: (T) !E -> R, sequence: Sequence[T, E]) -> Sequence[R, E] {
     Sequence(
-        next = fun () !E -> options.Option[SequenceItem[R, E]] {
-            options.map(
+        next = fun () !E -> Options.Option[SequenceItem[R, E]] {
+            Options.map(
                 fun (item: SequenceItem[T, E]) !E -> SequenceItem[R, E] {
                     SequenceItem(
                         head = func(item.head),
@@ -74,10 +74,10 @@ fun lazyMap[T, R, !E](func: (T) !E -> R, sequence: Sequence[T, E]) -> Sequence[R
 fun reduce[T, R, !E](func: (R, T) !E -> R, initial: R, sequence: Sequence[T, E]) !E -> R {
     val item = sequence.next();
     when (item) {
-        is options.None {
+        is Options.None {
             initial
         }
-        is options.Some[SequenceItem[T, E]] {
+        is Options.Some[SequenceItem[T, E]] {
             reduce(func, func(initial, item.value.head), item.value.tail)
         }
     }

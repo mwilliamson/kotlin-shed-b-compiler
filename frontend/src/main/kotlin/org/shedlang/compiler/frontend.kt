@@ -124,7 +124,7 @@ private class ModuleReader(private val root: Path) {
         })
         val matchingPaths = possiblePaths.filter({ path -> path.toFile().exists() })
         if (matchingPaths.size == 0) {
-            throw Exception("Could not find module: " + name.joinToString("."))
+            return null
         } else if (matchingPaths.size > 1) {
             throw Exception("Multiple matches for module: " + name.joinToString("."))
         } else {

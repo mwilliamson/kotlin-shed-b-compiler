@@ -1,4 +1,4 @@
-from .. import options as Options, Sequences
+from .. import Options, Sequences
 
 
 def list_to_sequence(elements):

@@ -1,8 +1,7 @@
-import stdlib.options;
-import stdlib.tests;
+import stdlib.Tests;
 
 import .optionsTests;
 
 fun main() !Io -> Int {
-    tests.runTests(list(optionsTests.testCases))
+    Tests.runTests(list(optionsTests.testCases))
 }

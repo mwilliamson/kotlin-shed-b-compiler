@@ -1,5 +1,5 @@
 var Builtins = require("../../builtins");
-var Options = require("../options");
+var Options = require("../Options");
 var Sequences = require("../Sequences");
 
 function listToSequence(elements) {
