@@ -2,9 +2,6 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.ast.ReferenceNode
-import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isType
 import org.shedlang.compiler.frontend.tests.isUnionType
@@ -12,7 +9,10 @@ import org.shedlang.compiler.frontend.tests.isUnionTypeGroup
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.TagField
+import org.shedlang.compiler.types.TagValue
 
 class TypeCheckWhenTests {
     private val inputMember1TypeReference = staticReference("Member1")
@@ -102,26 +102,5 @@ class TypeCheckWhenTests {
         )
 
         assertThat(type, isType(inputMember1))
-    }
-
-    private fun captureType(
-        expression: ExpressionNode,
-        capture: ExpressionNode,
-        references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-        referenceTypes: Map<ReferenceNode, Type> = mapOf(),
-        types: Map<VariableBindingNode, Type> = mapOf()
-    ): Type {
-        val expressionTypes = mutableMapOf<Int, Type>()
-        val typeContext = typeContext(
-            expressionTypes = expressionTypes,
-            referenceTypes = referenceTypes,
-            references = references,
-            types = types
-        )
-
-        typeCheck(expression, typeContext)
-        typeContext.undefer()
-
-        return expressionTypes[capture.nodeId]!!
     }
 }
