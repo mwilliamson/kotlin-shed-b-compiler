@@ -13,7 +13,14 @@ internal class CodeGenerationContext(
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf()
 ) {
-    // TODO: fresh names are all the same
+    fun enterScope(): CodeGenerationContext {
+        return CodeGenerationContext(
+            references = references,
+            nodeNames = nodeNames,
+            namesInScope = namesInScope.toMutableSet()
+        )
+    }
+
     fun freshName(): String {
         return generateName("anonymous")
     }
@@ -29,21 +36,25 @@ internal class CodeGenerationContext(
     private fun name(nodeId: Int, name: String): String {
         if (!nodeNames.containsKey(nodeId)) {
             val pythonName = generateName(name)
-            namesInScope.add(pythonName)
             nodeNames[nodeId] = pythonName
         }
         return nodeNames[nodeId]!!
     }
 
     private fun generateName(originalName: String): String {
-        return pythoniseName(originalName)
-//        var index = 0
-//        var name = generateBaseName(originalName)
-//        while (namesInScope.contains(name)) {
-//            index++
-//            name = originalName + "_" + index
-//        }
-//        return name
+        var name = uniquifyName(pythoniseName(originalName))
+        namesInScope.add(name)
+        return name
+    }
+
+    private fun uniquifyName(base: String): String {
+        var index = 0
+        var name = base
+        while (namesInScope.contains(name)) {
+            index++
+            name = base + "_" + index
+        }
+        return name
     }
 }
 
@@ -114,12 +125,13 @@ private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationC
 }
 
 private fun generateFunction(name: String, node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
+    val bodyContext = context.enterScope()
     return PythonFunctionNode(
         // TODO: test renaming
         name = name,
         // TODO: test renaming
-        parameters = generateParameters(node, context),
-        body = generateCode(node.body.statements, context),
+        parameters = generateParameters(node, bodyContext),
+        body = generateCode(node.body.statements, bodyContext),
         source = NodeSource(node)
     )
 }
