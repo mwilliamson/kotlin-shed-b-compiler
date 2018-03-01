@@ -13,6 +13,7 @@ internal class CodeGenerationContext(
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf()
 ) {
+    // TODO: fresh names are all the same
     fun freshName(): String {
         return generateName("anonymous")
     }
