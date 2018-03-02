@@ -179,23 +179,23 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
 
 internal data class GeneratedCode<T>(
     val value: T,
-    val functions: List<PythonFunctionNode>
+    val statements: List<PythonStatementNode>
 ) {
-    fun <R> map(func: (T) -> R) = GeneratedCode(func(value), functions)
+    fun <R> map(func: (T) -> R) = GeneratedCode(func(value), statements)
     fun <R> flatMap(func: (T) -> GeneratedCode<R>): GeneratedCode<R> {
         val result = func(value)
         return GeneratedCode(
             result.value,
-            functions + result.functions
+            statements + result.statements
         )
     }
 
     fun toStatements(func: (T) -> PythonStatementNode): List<PythonStatementNode> {
-        return functions + listOf(func(value))
+        return statements + listOf(func(value))
     }
 
     fun <R> ifEmpty(func: (T) -> R): R? {
-        if (functions.isEmpty()) {
+        if (statements.isEmpty()) {
             return func(value)
         } else {
             return null
@@ -203,12 +203,12 @@ internal data class GeneratedCode<T>(
     }
 
     companion object {
-        fun <T> of(value: T) = GeneratedCode(value, functions = listOf())
+        fun <T> of(value: T) = GeneratedCode(value, statements = listOf())
 
         fun <T> flatten(codes: List<GeneratedCode<T>>): GeneratedCode<List<T>> {
             val values = codes.map { code -> code.value }
-            val functions = codes.flatMap { code -> code.functions }
-            return GeneratedCode(values, functions)
+            val statements = codes.flatMap { code -> code.statements }
+            return GeneratedCode(values, statements)
         }
 
         fun <T1, T2, R> map(
@@ -218,7 +218,7 @@ internal data class GeneratedCode<T>(
         ): GeneratedCode<R> {
             return GeneratedCode(
                 func(code1.value, code2.value),
-                functions = code1.functions + code2.functions
+                statements = code1.statements + code2.statements
             )
         }
 
@@ -230,7 +230,7 @@ internal data class GeneratedCode<T>(
         ): GeneratedCode<R> {
             return GeneratedCode(
                 func(code1.value, code2.value, code3.value),
-                functions = code1.functions + code2.functions + code3.functions
+                statements = code1.statements + code2.statements + code3.statements
             )
         }
     }
@@ -381,7 +381,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             return GeneratedExpression(
                 PythonVariableReferenceNode(auxiliaryFunction.name, source = node.source),
-                functions = listOf(auxiliaryFunction)
+                statements = listOf(auxiliaryFunction)
             )
         }
 
@@ -487,7 +487,7 @@ private fun generateScopedExpression(
     )
     return GeneratedCode(
         callNode,
-        functions = listOf(auxiliaryFunction)
+        statements = listOf(auxiliaryFunction)
     )
 }
 

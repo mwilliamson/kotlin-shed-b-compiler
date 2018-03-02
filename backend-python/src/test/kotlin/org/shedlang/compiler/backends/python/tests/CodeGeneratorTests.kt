@@ -171,13 +171,13 @@ class CodeGeneratorTests {
         )
 
         val node = generateCode(shed)
-        val auxiliaryFunction = node.functions.single()
+        val auxiliaryFunction = node.statements.single()
         assertThat(auxiliaryFunction, isPythonFunction(
             parameters = isSequence(equalTo("x"), equalTo("y")),
             body = isSequence(isPythonAssignment(isPythonVariableReference("z"), isPythonIntegerLiteral(42)))
         ))
 
-        assertThat(node.value, isPythonVariableReference(auxiliaryFunction.name))
+        assertThat(node.value, isPythonVariableReference((auxiliaryFunction as PythonFunctionNode).name))
     }
 
     @Test
@@ -208,7 +208,7 @@ class CodeGeneratorTests {
 
         val generatedExpression = generateCode(shed)
 
-        val function = generatedExpression.functions.single()
+        val function = generatedExpression.statements.single()
         assertThat(function, isPythonFunction(
             parameters = isSequence(),
             body = isSequence(
@@ -228,7 +228,7 @@ class CodeGeneratorTests {
             )
         ))
         assertThat(generatedExpression.value, isPythonFunctionCall(
-            function = isPythonVariableReference(name = function.name),
+            function = isPythonVariableReference(name = (function as PythonFunctionNode).name),
             arguments = isSequence(),
             keywordArguments = isSequence()
         ))
@@ -259,7 +259,7 @@ class CodeGeneratorTests {
 
         val generatedExpression = generateCode(shed, context(references = references))
 
-        val function = generatedExpression.functions.single()
+        val function = generatedExpression.statements.single()
         assertThat(function, isPythonFunction(
             parameters = isSequence(),
             body = isSequence(
@@ -284,7 +284,7 @@ class CodeGeneratorTests {
             )
         ))
         assertThat(generatedExpression.value, isPythonFunctionCall(
-            function = isPythonVariableReference(name = function.name),
+            function = isPythonVariableReference(name = (function as PythonFunctionNode).name),
             arguments = isSequence(),
             keywordArguments = isSequence()
         ))
@@ -318,7 +318,7 @@ class CodeGeneratorTests {
 
         val generatedCode = generateCode(shed, context(references))
 
-        assertThat(generatedCode.functions.single().body, isSequence(
+        assertThat((generatedCode.statements.single() as PythonFunctionNode).body, isSequence(
             isPythonIfStatement(
                 conditionalBranches = isSequence(
                     isPythonConditionalBranch(
@@ -681,6 +681,6 @@ class CodeGeneratorTests {
 
     private fun isGeneratedExpression(value: Matcher<PythonExpressionNode>) = allOf(
         has(GeneratedCode<PythonExpressionNode>::value, value),
-        has(GeneratedCode<PythonExpressionNode>::functions, isEmpty)
+        has(GeneratedCode<PythonExpressionNode>::statements, isEmpty)
     )
 }
