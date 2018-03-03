@@ -184,7 +184,15 @@ private fun generateCode(
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
 ): List<PythonStatementNode> {
     val expression = node.expression
-    if (expression is WhenNode) {
+    if (expression is IfNode) {
+        return generateIfCode(expression, context, returnValue = { returnExpression, source ->
+            if (node.isReturn) {
+                returnValue(returnExpression, source)
+            } else {
+                PythonExpressionStatementNode(returnExpression, source)
+            }
+        })
+    } else if (expression is WhenNode) {
         return generateWhenCode(expression, context, returnValue = { returnExpression, source ->
             if (node.isReturn) {
                 returnValue(returnExpression, source)
