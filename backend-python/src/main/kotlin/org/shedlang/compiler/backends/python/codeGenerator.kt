@@ -183,7 +183,7 @@ private fun generateCode(
     context: CodeGenerationContext,
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
 ): List<PythonStatementNode> {
-    return generateCode(node.expression, context).toStatements { expression ->
+    return generateExpressionCode(node.expression, context).toStatements { expression ->
         val source = NodeSource(node)
         if (node.isReturn) {
             listOf(returnValue(expression, source))
@@ -196,7 +196,7 @@ private fun generateCode(
 }
 
 private fun generateCode(node: ValNode, context: CodeGenerationContext): List<PythonStatementNode> {
-    return generateCode(node.expression, context).toStatements { expression ->
+    return generateExpressionCode(node.expression, context).toStatements { expression ->
         listOf(assign(context.name(node), expression, source = NodeSource(node)))
     }
 }
@@ -263,7 +263,7 @@ internal data class GeneratedCode<T>(
 private typealias GeneratedExpression = GeneratedCode<PythonExpressionNode>
 private typealias GeneratedExpressions = GeneratedCode<List<PythonExpressionNode>>
 
-internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext): GeneratedExpression {
+internal fun generateExpressionCode(node: ExpressionNode, context: CodeGenerationContext): GeneratedExpression {
     return node.accept(object : ExpressionNode.Visitor<GeneratedExpression> {
         override fun visit(node: UnitLiteralNode): GeneratedExpression {
             return GeneratedExpression.of(
@@ -297,8 +297,8 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
         override fun visit(node: BinaryOperationNode): GeneratedExpression {
             return GeneratedExpression.map(
-                generateCode(node.left, context),
-                generateCode(node.right, context),
+                generateExpressionCode(node.left, context),
+                generateExpressionCode(node.right, context),
                 { left, right ->
                     PythonBinaryOperationNode(
                         operator = generateCode(node.operator),
@@ -311,7 +311,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: IsNode): GeneratedExpression {
-            return generateCode(node.expression, context).map { expression ->
+            return generateExpressionCode(node.expression, context).map { expression ->
                 generateTypeCondition(expression, node.type, NodeSource(node), context)
             }
         }
@@ -326,7 +326,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
         private fun generatedCallCode(node: CallBaseNode, isPartial: Boolean): GeneratedExpression {
             return GeneratedCode.map(
-                generateCode(node.receiver, context),
+                generateExpressionCode(node.receiver, context),
                 generatePositionalArguments(node),
                 generateNamedArguments(node),
                 { receiver, positionalArguments, namedArguments ->
@@ -350,13 +350,13 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         private fun generatePositionalArguments(node: CallBaseNode): GeneratedExpressions {
-            val results = node.positionalArguments.map({ argument -> generateCode(argument, context) })
+            val results = node.positionalArguments.map({ argument -> generateExpressionCode(argument, context) })
             return GeneratedExpressions.flatten(results)
         }
 
         private fun generateNamedArguments(node: CallBaseNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
             val results = node.namedArguments.map({ argument ->
-                generateCode(argument.expression, context).map { expression ->
+                generateExpressionCode(argument.expression, context).map { expression ->
                     argument.name to expression
                 }
             })
@@ -364,7 +364,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: FieldAccessNode): GeneratedExpression {
-            return generateCode(node.receiver, context).map { receiver ->
+            return generateExpressionCode(node.receiver, context).map { receiver ->
                 PythonAttributeAccessNode(
                     receiver,
                     pythoniseName(node.fieldName),
@@ -386,7 +386,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             val statement = node.body.statements.singleOrNull()
             if (statement != null && statement is ExpressionStatementNode) {
-                val result = generateCode(statement.expression, context)
+                val result = generateExpressionCode(statement.expression, context)
                     .ifEmpty { expression -> PythonLambdaNode(
                         parameters = generateParameters(node, context),
                         body = expression,
@@ -413,7 +413,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             val targetName = context.freshName()
 
             return GeneratedCode.flatten(node.conditionalBranches.map { branch ->
-                generateCode(branch.condition, context).map { condition ->
+                generateExpressionCode(branch.condition, context).map { condition ->
                     PythonConditionalBranchNode(
                         condition = condition,
                         body = generateCode(
@@ -457,7 +457,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             val expressionName = context.freshName()
             val targetName = context.freshName()
 
-            val expressionCode = generateCode(node.expression, context)
+            val expressionCode = generateExpressionCode(node.expression, context)
             val branches = node.branches.map { branch ->
                 PythonConditionalBranchNode(
                     condition = generateTypeCondition(

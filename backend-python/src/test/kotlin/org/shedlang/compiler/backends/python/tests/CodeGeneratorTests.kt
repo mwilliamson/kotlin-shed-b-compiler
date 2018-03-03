@@ -11,6 +11,7 @@ import org.shedlang.compiler.backends.python.CodeGenerationContext
 import org.shedlang.compiler.backends.python.GeneratedCode
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
+import org.shedlang.compiler.backends.python.generateExpressionCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
@@ -258,7 +259,7 @@ class CodeGeneratorTests {
             typeReference to typeDeclaration
         )
 
-        val generatedExpression = generateCode(shed, context(references = references))
+        val generatedExpression = generateExpressionCode(shed, context(references = references))
         val reference = generatedExpression.value as PythonVariableReferenceNode
 
         assertThat(generatedExpression.statements, isSequence(
@@ -312,7 +313,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val generatedCode = generateCode(shed, context(references))
+        val generatedCode = generateExpressionCode(shed, context(references))
 
         assertThat((generatedCode.statements.single() as PythonFunctionNode).body, isSequence(
             isPythonIfStatement(
@@ -383,7 +384,7 @@ class CodeGeneratorTests {
         val declaration = parameter("x")
         val shed = variableReference("x")
 
-        val node = generateCode(shed, context(mapOf(shed to declaration)))
+        val node = generateExpressionCode(shed, context(mapOf(shed to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonVariableReference("x")))
     }
@@ -430,7 +431,7 @@ class CodeGeneratorTests {
             reference to declaration,
             typeReference to typeDeclaration
         ))
-        val node = generateCode(shed, context)
+        val node = generateExpressionCode(shed, context)
 
         assertThat(node, isGeneratedExpression(isPythonTypeCondition(isPythonVariableReference("x"), isPythonVariableReference("X"))))
     }
@@ -445,7 +446,7 @@ class CodeGeneratorTests {
             namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
-        val node = generateCode(shed, context(mapOf(function to declaration)))
+        val node = generateExpressionCode(shed, context(mapOf(function to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("f"),
@@ -464,7 +465,7 @@ class CodeGeneratorTests {
             namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
-        val node = generateCode(shed, context(mapOf(function to declaration)))
+        val node = generateExpressionCode(shed, context(mapOf(function to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("_partial"),
@@ -479,7 +480,7 @@ class CodeGeneratorTests {
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "y")
 
-        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+        val node = generateExpressionCode(shed, context(mapOf(receiver to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -493,7 +494,7 @@ class CodeGeneratorTests {
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "someValue")
 
-        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+        val node = generateExpressionCode(shed, context(mapOf(receiver to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -539,7 +540,7 @@ class CodeGeneratorTests {
             PythonReturnNode(expression, source)
         }
     )
-    private fun generateCode(node: ExpressionNode) = generateCode(node, context())
+    private fun generateCode(node: ExpressionNode) = generateExpressionCode(node, context())
 
     private fun context(
         references: Map<ReferenceNode, VariableBindingNode> = mapOf()
