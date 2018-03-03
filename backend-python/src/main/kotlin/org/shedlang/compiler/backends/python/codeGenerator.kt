@@ -183,14 +183,25 @@ private fun generateCode(
     context: CodeGenerationContext,
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
 ): List<PythonStatementNode> {
-    return generateExpressionCode(node.expression, context).toStatements { expression ->
-        val source = NodeSource(node)
-        if (node.isReturn) {
-            listOf(returnValue(expression, source))
-        } else if (expression !is PythonVariableReferenceNode) {
-            listOf(PythonExpressionStatementNode(expression, source))
-        } else {
-            listOf()
+    val expression = node.expression
+    if (expression is WhenNode) {
+        return generateWhenCode(expression, context, returnValue = { returnExpression, source ->
+            if (node.isReturn) {
+                returnValue(returnExpression, source)
+            } else {
+                PythonExpressionStatementNode(returnExpression, source)
+            }
+        })
+    } else {
+        return generateExpressionCode(expression, context).toStatements { expression ->
+            val source = NodeSource(node)
+            if (node.isReturn) {
+                listOf(returnValue(expression, source))
+            } else if (expression !is PythonVariableReferenceNode) {
+                listOf(PythonExpressionStatementNode(expression, source))
+            } else {
+                listOf()
+            }
         }
     }
 }
