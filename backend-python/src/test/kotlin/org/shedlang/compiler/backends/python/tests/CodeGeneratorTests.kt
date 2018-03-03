@@ -200,37 +200,38 @@ class CodeGeneratorTests {
             conditionalBranches = listOf(
                 conditionalBranch(
                     condition = literalInt(42),
-                    body = listOf(expressionStatement(literalInt(0)))
+                    body = listOf(
+                        expressionStatement(literalInt(0), isReturn = false),
+                        expressionStatement(literalInt(1), isReturn = true)
+                    )
                 )
             ),
-            elseBranch = listOf(expressionStatement(literalInt(1)))
+            elseBranch = listOf(expressionStatement(literalInt(2), isReturn = true))
         )
 
         val generatedExpression = generateCode(shed)
+        val reference = generatedExpression.value as PythonVariableReferenceNode
 
         val function = generatedExpression.statements.single()
-        assertThat(function, isPythonFunction(
-            parameters = isSequence(),
-            body = isSequence(
-                isPythonIfStatement(
-                    conditionalBranches = isSequence(
-                        isPythonConditionalBranch(
-                            condition = isPythonIntegerLiteral(42),
-                            body = isSequence(
-                                isPythonExpressionStatement(isPythonIntegerLiteral(0))
-                            )
+        assertThat(function, isPythonIfStatement(
+            conditionalBranches = isSequence(
+                isPythonConditionalBranch(
+                    condition = isPythonIntegerLiteral(42),
+                    body = isSequence(
+                        isPythonExpressionStatement(isPythonIntegerLiteral(0)),
+                        isPythonAssignment(
+                            isPythonVariableReference(reference.name),
+                            isPythonIntegerLiteral(1)
                         )
-                    ),
-                    elseBranch = isSequence(
-                        isPythonExpressionStatement(isPythonIntegerLiteral(1))
                     )
                 )
+            ),
+            elseBranch = isSequence(
+                isPythonAssignment(
+                    isPythonVariableReference(reference.name),
+                    isPythonIntegerLiteral(2)
+                )
             )
-        ))
-        assertThat(generatedExpression.value, isPythonFunctionCall(
-            function = isPythonVariableReference(name = (function as PythonFunctionNode).name),
-            arguments = isSequence(),
-            keywordArguments = isSequence()
         ))
     }
 
@@ -258,35 +259,30 @@ class CodeGeneratorTests {
         )
 
         val generatedExpression = generateCode(shed, context(references = references))
+        val reference = generatedExpression.value as PythonVariableReferenceNode
 
-        val function = generatedExpression.statements.single()
-        assertThat(function, isPythonFunction(
-            parameters = isSequence(),
-            body = isSequence(
-                isPythonAssignment(
-                    target = isPythonVariableReference("anonymous"),
-                    expression = isPythonVariableReference("x")
-                ),
-                isPythonIfStatement(
-                    conditionalBranches = isSequence(
-                        isPythonConditionalBranch(
-                            condition = isPythonTypeCondition(
-                                expression = isPythonVariableReference("anonymous"),
-                                type = isPythonVariableReference("T")
-                            ),
-                            body = isSequence(
-                                isPythonReturn(isPythonIntegerLiteral(42))
+        assertThat(generatedExpression.statements, isSequence(
+            isPythonAssignment(
+                target = isPythonVariableReference("anonymous"),
+                expression = isPythonVariableReference("x")
+            ),
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        condition = isPythonTypeCondition(
+                            expression = isPythonVariableReference("anonymous"),
+                            type = isPythonVariableReference("T")
+                        ),
+                        body = isSequence(
+                            isPythonAssignment(
+                                target = isPythonVariableReference(reference.name),
+                                expression = isPythonIntegerLiteral(42)
                             )
                         )
-                    ),
-                    elseBranch = isSequence()
-                )
+                    )
+                ),
+                elseBranch = isSequence()
             )
-        ))
-        assertThat(generatedExpression.value, isPythonFunctionCall(
-            function = isPythonVariableReference(name = (function as PythonFunctionNode).name),
-            arguments = isSequence(),
-            keywordArguments = isSequence()
         ))
     }
 
@@ -536,7 +532,13 @@ class CodeGeneratorTests {
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
-    private fun generateCode(node: StatementNode) = generateCode(node, context())
+    private fun generateCode(node: StatementNode) = generateCode(
+        node,
+        context(),
+        returnValue = { expression, source ->
+            PythonReturnNode(expression, source)
+        }
+    )
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
     private fun context(
