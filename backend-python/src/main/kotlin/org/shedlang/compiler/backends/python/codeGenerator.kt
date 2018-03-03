@@ -454,52 +454,63 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: WhenNode): GeneratedExpression {
-            val expressionName = context.freshName()
             val targetName = context.freshName()
 
-            val expressionCode = generateExpressionCode(node.expression, context)
-            val branches = node.branches.map { branch ->
-                PythonConditionalBranchNode(
-                    condition = generateTypeCondition(
-                        expression = PythonVariableReferenceNode(
-                            name = expressionName,
-                            source = NodeSource(branch)
-                        ),
-                        type = branch.type,
-                        source = NodeSource(branch),
-                        context = context
-                    ),
-                    body = generateCode(
-                        branch.body,
-                        context,
-                        returnValue = { expression, source ->
-                            assign(targetName, expression, source = source)
-                        }
-                    ),
-                    source = NodeSource(branch)
-                )
-            }
-
-            val reference = PythonVariableReferenceNode(
-                targetName,
-                source = NodeSource(node)
+            val statements = generateWhenCode(
+                node,
+                context,
+                returnValue = { expression, source ->
+                    assign(targetName, expression, source = source)
+                }
             )
 
-            return expressionCode.flatMap { expression ->
-                GeneratedExpression(
-                    reference,
-                    statements = listOf(
-                        assign(expressionName, expression, NodeSource(node)),
-                        PythonIfStatementNode(
-                            conditionalBranches = branches,
-                            elseBranch = listOf(),
-                            source = NodeSource(node)
-                        )
-                    )
-                )
-            }
+            val reference = PythonVariableReferenceNode(targetName, source = NodeSource(node))
+
+            return GeneratedExpression(
+                reference,
+                statements = statements
+            )
         }
     })
+}
+
+private fun generateWhenCode(
+    node: WhenNode,
+    context: CodeGenerationContext,
+    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+): List<PythonStatementNode> {
+    val expressionName = context.freshName()
+    val expressionCode = generateExpressionCode(node.expression, context)
+    val branches = node.branches.map { branch ->
+        PythonConditionalBranchNode(
+            condition = generateTypeCondition(
+                expression = PythonVariableReferenceNode(
+                    name = expressionName,
+                    source = NodeSource(branch)
+                ),
+                type = branch.type,
+                source = NodeSource(branch),
+                context = context
+            ),
+            body = generateCode(
+                branch.body,
+                context,
+                returnValue = returnValue
+            ),
+            source = NodeSource(branch)
+        )
+    }
+
+    return expressionCode.toStatements { expression ->
+        listOf(
+            assign(expressionName, expression, NodeSource(node)),
+            PythonIfStatementNode(
+                conditionalBranches = branches,
+                elseBranch = listOf(),
+                source = NodeSource(node)
+            )
+        )
+    }
 }
 
 private fun assign(

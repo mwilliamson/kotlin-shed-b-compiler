@@ -264,14 +264,14 @@ class CodeGeneratorTests {
 
         assertThat(generatedExpression.statements, isSequence(
             isPythonAssignment(
-                target = isPythonVariableReference("anonymous"),
+                target = isPythonVariableReference("anonymous_1"),
                 expression = isPythonVariableReference("x")
             ),
             isPythonIfStatement(
                 conditionalBranches = isSequence(
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
-                            expression = isPythonVariableReference("anonymous"),
+                            expression = isPythonVariableReference("anonymous_1"),
                             type = isPythonVariableReference("T")
                         ),
                         body = isSequence(
