@@ -4,6 +4,9 @@ import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
 
+// TODO: check that builtins aren't renamed
+// TODO: check imports aren't renamed
+
 internal fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
     return generateCode(node, CodeGenerationContext(references))
 }
