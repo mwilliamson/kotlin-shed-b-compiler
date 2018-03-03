@@ -423,45 +423,20 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         override fun visit(node: IfNode): GeneratedExpression {
             val targetName = context.freshName()
 
-            return GeneratedCode.flatten(node.conditionalBranches.map { branch ->
-                generateExpressionCode(branch.condition, context).map { condition ->
-                    PythonConditionalBranchNode(
-                        condition = condition,
-                        body = generateCode(
-                            branch.body,
-                            context,
-                            returnValue = { expression, source ->
-                                assign(targetName, expression, source)
-                            }
-                        ),
-                        source = NodeSource(branch)
-                    )
+            val statements = generateIfCode(
+                node,
+                context,
+                returnValue = { expression, source ->
+                    assign(targetName, expression, source = source)
                 }
-            }).flatMap { conditionalBranches ->
-                val elseBranch = generateCode(
-                    node.elseBranch,
-                    context,
-                    returnValue = { expression, source ->
-                        assign(targetName, expression, source)
-                    }
-                )
+            )
 
-                val reference = PythonVariableReferenceNode(
-                    targetName,
-                    source = NodeSource(node)
-                )
+            val reference = PythonVariableReferenceNode(targetName, source = NodeSource(node))
 
-                GeneratedExpression(
-                    reference,
-                    statements = listOf(
-                        PythonIfStatementNode(
-                            conditionalBranches = conditionalBranches,
-                            elseBranch = elseBranch,
-                            source = NodeSource(node)
-                        )
-                    )
-                )
-            }
+            return GeneratedExpression(
+                reference,
+                statements = statements
+            )
         }
 
         override fun visit(node: WhenNode): GeneratedExpression {
@@ -483,6 +458,40 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             )
         }
     })
+}
+
+private fun generateIfCode(
+    node: IfNode,
+    context: CodeGenerationContext,
+    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+): List<PythonStatementNode>{
+    return GeneratedCode.flatten(node.conditionalBranches.map { branch ->
+        generateExpressionCode(branch.condition, context).map { condition ->
+            PythonConditionalBranchNode(
+                condition = condition,
+                body = generateCode(
+                    branch.body,
+                    context,
+                    returnValue = returnValue
+                ),
+                source = NodeSource(branch)
+            )
+        }
+    }).toStatements { conditionalBranches ->
+        val elseBranch = generateCode(
+            node.elseBranch,
+            context,
+            returnValue = returnValue
+        )
+
+        listOf(
+            PythonIfStatementNode(
+                conditionalBranches = conditionalBranches,
+                elseBranch = elseBranch,
+                source = NodeSource(node)
+            )
+        )
+    }
 }
 
 private fun generateWhenCode(
