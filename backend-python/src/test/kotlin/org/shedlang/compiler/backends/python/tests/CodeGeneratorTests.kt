@@ -237,7 +237,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun whenExpressionGeneratesCallToFunctionContainingIf() {
+    fun whenExpressionGeneratesIfStatementsWithAssignmentToVariable() {
         val variableDeclaration = valStatement("x")
         val variableReference = variableReference("x")
         val typeDeclaration = typeParameter("T")
