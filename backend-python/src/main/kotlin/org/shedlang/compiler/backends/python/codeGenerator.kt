@@ -252,6 +252,16 @@ internal data class GeneratedCode<out T>(
             return GeneratedCode(values, statements, spilled = spilled)
         }
 
+        fun <T> flatten(
+            codes: List<GeneratedCode<T>>,
+            spill: (T) -> GeneratedCode<T>
+        ): GeneratedCode<List<T>> {
+            val spilled = codes.mapIndexed { index, code ->
+                handleSpillage(code, codes.drop(index + 1), spill)
+            }
+            return flatten(spilled)
+        }
+
         fun <T1, T2, R> pureMap(
             code1: GeneratedCode<T1>,
             code2: GeneratedCode<T2>,
@@ -317,7 +327,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         override fun visit(node: BinaryOperationNode): GeneratedExpression {
             val unspilledLeftCode = generateExpressionCode(node.left, context)
             val rightCode = generateExpressionCode(node.right, context)
-            val leftCode = handleSpillage(unspilledLeftCode, rightCode, { expression ->
+            val leftCode = handleSpillage(unspilledLeftCode, listOf(rightCode), { expression ->
                 spillExpression(expression, context, source = NodeSource(node))
             })
 
@@ -350,10 +360,30 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         private fun generatedCallCode(node: CallBaseNode, isPartial: Boolean): GeneratedExpression {
+            val unspilledReceiverCode = generateExpressionCode(node.receiver, context)
+            val unspilledPositionalArgumentsCode = generatePositionalArguments(node)
+            val namedArgumentsCode = generateNamedArguments(node)
+
+            val positionalArgumentsCode = handleSpillage(
+                unspilledPositionalArgumentsCode,
+                listOf(namedArgumentsCode),
+                spill = { expressions ->
+                    spillExpressions(expressions, context, source = NodeSource(node))
+                }
+            )
+
+            val receiverCode = handleSpillage(
+                unspilledReceiverCode,
+                listOf(positionalArgumentsCode, namedArgumentsCode),
+                spill = { expression ->
+                    spillExpression(expression, context, source = NodeSource(node))
+                }
+            )
+
             return GeneratedCode.pureMap(
-                generateExpressionCode(node.receiver, context),
-                generatePositionalArguments(node),
-                generateNamedArguments(node),
+                receiverCode,
+                positionalArgumentsCode,
+                namedArgumentsCode,
                 { receiver, positionalArguments, namedArguments ->
                     val partialArguments = if (isPartial) {
                         // TODO: better handling of builtin
@@ -376,7 +406,9 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
         private fun generatePositionalArguments(node: CallBaseNode): GeneratedExpressions {
             val results = node.positionalArguments.map({ argument -> generateExpressionCode(argument, context) })
-            return GeneratedExpressions.flatten(results)
+            return GeneratedExpressions.flatten(results, spill = { expression ->
+                spillExpression(expression, context, source = NodeSource(node))
+            })
         }
 
         private fun generateNamedArguments(node: CallBaseNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
@@ -385,7 +417,10 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                     argument.name to expression
                 }
             })
-            return GeneratedCode.flatten(results)
+            return GeneratedCode.flatten(results, spill = { (name, expression) ->
+                spillExpression(expression, context, source = NodeSource(node))
+                    .pureMap { expression -> name to expression }
+            })
         }
 
         override fun visit(node: FieldAccessNode): GeneratedExpression {
@@ -567,14 +602,24 @@ private fun assign(
 
 private fun <T1, T2> handleSpillage(
     leftCode: GeneratedCode<T1>,
-    rightCode: GeneratedCode<T2>,
+    rightCode: Collection<GeneratedCode<T2>>,
     spill: (T1) -> GeneratedCode<T1>
 ): GeneratedCode<T1> {
-    return if (!leftCode.spilled && rightCode.spilled) {
+    return if (!leftCode.spilled && rightCode.any { code -> code.spilled }) {
         leftCode.flatMap { left -> spill(left) }
     } else {
         leftCode
     }
+}
+
+private fun spillExpressions(
+    expressions: List<PythonExpressionNode>,
+    context: CodeGenerationContext,
+    source: Source
+): GeneratedCode<List<PythonExpressionNode>> {
+    return GeneratedCode.flatten(expressions.map { expression ->
+        spillExpression(expression, context, source = source)
+    })
 }
 
 private fun spillExpression(
@@ -582,14 +627,32 @@ private fun spillExpression(
     context: CodeGenerationContext,
     source: Source
 ): GeneratedCode<PythonExpressionNode> {
-    val name = context.freshName()
-    val assignment = assign(name, expression, source = source)
-    val reference = PythonVariableReferenceNode(name, source = source)
-    return GeneratedCode(
-        reference,
-        statements = listOf(assignment),
-        spilled = true
-    )
+    if (isScalar(expression)) {
+        return GeneratedCode.pure(expression)
+    } else {
+        val name = context.freshName()
+        val assignment = assign(name, expression, source = source)
+        val reference = PythonVariableReferenceNode(name, source = source)
+        return GeneratedCode(
+            reference,
+            statements = listOf(assignment),
+            spilled = true
+        )
+    }
+}
+
+private fun isScalar(node: PythonExpressionNode): Boolean {
+    return node.accept(object: PythonExpressionNode.Visitor<Boolean> {
+        override fun visit(node: PythonNoneLiteralNode) = true
+        override fun visit(node: PythonBooleanLiteralNode) = true
+        override fun visit(node: PythonIntegerLiteralNode) = true
+        override fun visit(node: PythonStringLiteralNode) = true
+        override fun visit(node: PythonVariableReferenceNode) = true
+        override fun visit(node: PythonBinaryOperationNode) = false
+        override fun visit(node: PythonFunctionCallNode) = false
+        override fun visit(node: PythonAttributeAccessNode) = false
+        override fun visit(node: PythonLambdaNode) = true
+    })
 }
 
 private fun generateTypeCondition(
