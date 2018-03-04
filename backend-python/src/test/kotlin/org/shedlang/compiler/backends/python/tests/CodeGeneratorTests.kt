@@ -237,6 +237,46 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun returningIfStatementGeneratesIfStatementWithReturns() {
+        val shed = expressionStatement(
+            ifExpression(
+                conditionalBranches = listOf(
+                    conditionalBranch(
+                        condition = literalInt(42),
+                        body = listOf(
+                            expressionStatement(literalInt(0), isReturn = false),
+                            expressionStatement(literalInt(1), isReturn = true)
+                        )
+                    )
+                ),
+                elseBranch = listOf(expressionStatement(literalInt(2), isReturn = true))
+            ),
+            isReturn = true
+        )
+
+        val generatedCode = generateCode(
+            shed,
+            context(),
+            returnValue = ::PythonReturnNode
+        )
+
+        assertThat(generatedCode.single(), isPythonIfStatement(
+            conditionalBranches = isSequence(
+                isPythonConditionalBranch(
+                    condition = isPythonIntegerLiteral(42),
+                    body = isSequence(
+                        isPythonExpressionStatement(isPythonIntegerLiteral(0)),
+                        isPythonReturn(isPythonIntegerLiteral(1))
+                    )
+                )
+            ),
+            elseBranch = isSequence(
+                isPythonReturn(isPythonIntegerLiteral(2))
+            )
+        ))
+    }
+
+    @Test
     fun whenExpressionGeneratesIfStatementsWithAssignmentToVariable() {
         val variableDeclaration = valStatement("x")
         val variableReference = variableReference("x")
