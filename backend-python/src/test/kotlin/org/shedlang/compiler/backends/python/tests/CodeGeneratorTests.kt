@@ -288,6 +288,60 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun returningWhenStatementGeneratesIfStatementsWithReturns() {
+        val variableDeclaration = valStatement("x")
+        val variableReference = variableReference("x")
+        val typeDeclaration = typeParameter("T")
+        val typeReference = staticReference("T")
+        val shed = expressionStatement(
+            whenExpression(
+                variableReference,
+                listOf(
+                    whenBranch(
+                        typeReference,
+                        listOf(
+                            expressionStatement(literalInt(42), isReturn = true)
+                        )
+                    )
+                )
+            ),
+            isReturn = true
+        )
+
+        val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
+            variableReference to variableDeclaration,
+            typeReference to typeDeclaration
+        )
+
+        val generatedCode = generateCode(
+            shed,
+            context(references = references),
+            returnValue = ::PythonReturnNode
+        )
+
+        assertThat(generatedCode, isSequence(
+            isPythonAssignment(
+                target = isPythonVariableReference("anonymous"),
+                expression = isPythonVariableReference("x")
+            ),
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        condition = isPythonTypeCondition(
+                            expression = isPythonVariableReference("anonymous"),
+                            type = isPythonVariableReference("T")
+                        ),
+                        body = isSequence(
+                            isPythonReturn(isPythonIntegerLiteral(42))
+                        )
+                    )
+                ),
+                elseBranch = isSequence()
+            )
+        ))
+    }
+
+    @Test
     @Disabled("TODO: work out what to do with this test")
     fun whenSeparateScopesHaveSameNameInSamePythonScopeThenVariablesAreRenamed() {
         val trueVal = valStatement(name = "x")
