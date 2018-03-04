@@ -196,7 +196,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun ifExpressionGeneratesCallToFunctionContainingIf() {
+    fun ifExpressionGeneratesIfStatementWithVariableAssignment() {
         val shed = ifExpression(
             conditionalBranches = listOf(
                 conditionalBranch(
