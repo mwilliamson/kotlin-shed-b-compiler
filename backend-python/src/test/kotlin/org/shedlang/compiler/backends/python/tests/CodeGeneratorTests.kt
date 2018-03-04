@@ -510,7 +510,6 @@ class CodeGeneratorTests {
     }
 
     @Test
-    @Disabled("WIP")
     fun whenRightOperandOfBinaryOperationSpillsThenLeftOperandIsSpilled() {
         val leftFunctionDeclaration = declaration("left")
         val rightFunctionDeclaration = declaration("right")

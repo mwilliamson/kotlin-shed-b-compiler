@@ -215,16 +215,18 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
     }
 }
 
-internal data class GeneratedCode<T>(
+internal data class GeneratedCode<out T>(
     val value: T,
-    val statements: List<PythonStatementNode>
+    val statements: List<PythonStatementNode>,
+    val spilled: Boolean
 ) {
-    fun <R> map(func: (T) -> R) = GeneratedCode(func(value), statements)
+    fun <R> pureMap(func: (T) -> R) = GeneratedCode(func(value), statements, spilled = spilled)
     fun <R> flatMap(func: (T) -> GeneratedCode<R>): GeneratedCode<R> {
         val result = func(value)
         return GeneratedCode(
             result.value,
-            statements + result.statements
+            statements + result.statements,
+            spilled = spilled || result.spilled
         )
     }
 
@@ -241,26 +243,28 @@ internal data class GeneratedCode<T>(
     }
 
     companion object {
-        fun <T> of(value: T) = GeneratedCode(value, statements = listOf())
+        fun <T> pure(value: T) = GeneratedCode(value, statements = listOf(), spilled = false)
 
         fun <T> flatten(codes: List<GeneratedCode<T>>): GeneratedCode<List<T>> {
             val values = codes.map { code -> code.value }
             val statements = codes.flatMap { code -> code.statements }
-            return GeneratedCode(values, statements)
+            val spilled = codes.any { code -> code.spilled }
+            return GeneratedCode(values, statements, spilled = spilled)
         }
 
-        fun <T1, T2, R> map(
+        fun <T1, T2, R> pureMap(
             code1: GeneratedCode<T1>,
             code2: GeneratedCode<T2>,
             func: (T1, T2) -> R
         ): GeneratedCode<R> {
             return GeneratedCode(
                 func(code1.value, code2.value),
-                statements = code1.statements + code2.statements
+                statements = code1.statements + code2.statements,
+                spilled = code1.spilled || code2.spilled
             )
         }
 
-        fun <T1, T2, T3, R> map(
+        fun <T1, T2, T3, R> pureMap(
             code1: GeneratedCode<T1>,
             code2: GeneratedCode<T2>,
             code3: GeneratedCode<T3>,
@@ -268,7 +272,8 @@ internal data class GeneratedCode<T>(
         ): GeneratedCode<R> {
             return GeneratedCode(
                 func(code1.value, code2.value, code3.value),
-                statements = code1.statements + code2.statements + code3.statements
+                statements = code1.statements + code2.statements + code3.statements,
+                spilled = code1.spilled || code2.spilled || code3.spilled
             )
         }
     }
@@ -280,39 +285,46 @@ private typealias GeneratedExpressions = GeneratedCode<List<PythonExpressionNode
 internal fun generateExpressionCode(node: ExpressionNode, context: CodeGenerationContext): GeneratedExpression {
     return node.accept(object : ExpressionNode.Visitor<GeneratedExpression> {
         override fun visit(node: UnitLiteralNode): GeneratedExpression {
-            return GeneratedExpression.of(
+            return GeneratedExpression.pure(
                 PythonNoneLiteralNode(NodeSource(node))
             )
         }
 
         override fun visit(node: BooleanLiteralNode): GeneratedExpression {
-            return GeneratedExpression.of(
+            return GeneratedExpression.pure(
                 PythonBooleanLiteralNode(node.value, NodeSource(node))
             )
         }
 
         override fun visit(node: IntegerLiteralNode): GeneratedExpression {
-            return GeneratedExpression.of(
+            return GeneratedExpression.pure(
                 PythonIntegerLiteralNode(node.value, NodeSource(node))
             )
         }
 
         override fun visit(node: StringLiteralNode): GeneratedExpression {
-            return GeneratedExpression.of(
+            return GeneratedExpression.pure(
                 PythonStringLiteralNode(node.value, NodeSource(node))
             )
         }
 
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
-            return GeneratedExpression.of(
+            return GeneratedExpression.pure(
                 PythonVariableReferenceNode(context.name(node), NodeSource(node))
             )
         }
 
         override fun visit(node: BinaryOperationNode): GeneratedExpression {
-            return GeneratedExpression.map(
-                generateExpressionCode(node.left, context),
-                generateExpressionCode(node.right, context),
+            val unspilledLeftCode = generateExpressionCode(node.left, context)
+            val rightCode = generateExpressionCode(node.right, context)
+            val leftCode = if (rightCode.spilled) {
+                spill(unspilledLeftCode, context, source = NodeSource(node))
+            } else {
+                unspilledLeftCode
+            }
+            return GeneratedExpression.pureMap(
+                leftCode,
+                rightCode,
                 { left, right ->
                     PythonBinaryOperationNode(
                         operator = generateCode(node.operator),
@@ -325,7 +337,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: IsNode): GeneratedExpression {
-            return generateExpressionCode(node.expression, context).map { expression ->
+            return generateExpressionCode(node.expression, context).pureMap { expression ->
                 generateTypeCondition(expression, node.type, NodeSource(node), context)
             }
         }
@@ -339,7 +351,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         private fun generatedCallCode(node: CallBaseNode, isPartial: Boolean): GeneratedExpression {
-            return GeneratedCode.map(
+            return GeneratedCode.pureMap(
                 generateExpressionCode(node.receiver, context),
                 generatePositionalArguments(node),
                 generateNamedArguments(node),
@@ -370,7 +382,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
         private fun generateNamedArguments(node: CallBaseNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
             val results = node.namedArguments.map({ argument ->
-                generateExpressionCode(argument.expression, context).map { expression ->
+                generateExpressionCode(argument.expression, context).pureMap { expression ->
                     argument.name to expression
                 }
             })
@@ -378,7 +390,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: FieldAccessNode): GeneratedExpression {
-            return generateExpressionCode(node.receiver, context).map { receiver ->
+            return generateExpressionCode(node.receiver, context).pureMap { receiver ->
                 PythonAttributeAccessNode(
                     receiver,
                     pythoniseName(node.fieldName),
@@ -389,7 +401,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
         override fun visit(node: FunctionExpressionNode): GeneratedExpression {
             if (node.body.statements.isEmpty()) {
-                return GeneratedExpression.of(
+                return GeneratedExpression.pure(
                     PythonLambdaNode(
                         parameters = generateParameters(node, context),
                         body = PythonNoneLiteralNode(source = NodeSource(node)),
@@ -407,7 +419,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                         source = NodeSource(node)
                     ) }
                 if (result != null) {
-                    return GeneratedExpression.of(result)
+                    return GeneratedExpression.pure(result)
                 }
             }
 
@@ -419,7 +431,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
             return GeneratedExpression(
                 PythonVariableReferenceNode(auxiliaryFunction.name, source = node.source),
-                statements = listOf(auxiliaryFunction)
+                statements = listOf(auxiliaryFunction),
+                spilled = false
             )
         }
 
@@ -438,7 +451,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
             return GeneratedExpression(
                 reference,
-                statements = statements
+                statements = statements,
+                spilled = true
             )
         }
 
@@ -457,7 +471,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
             return GeneratedExpression(
                 reference,
-                statements = statements
+                statements = statements,
+                spilled = true
             )
         }
     })
@@ -469,7 +484,7 @@ private fun generateIfCode(
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
 ): List<PythonStatementNode>{
     return GeneratedCode.flatten(node.conditionalBranches.map { branch ->
-        generateExpressionCode(branch.condition, context).map { condition ->
+        generateExpressionCode(branch.condition, context).pureMap { condition ->
             PythonConditionalBranchNode(
                 condition = condition,
                 body = generateCode(
@@ -551,6 +566,23 @@ private fun assign(
     )
 }
 
+private fun spill(
+    code: GeneratedCode<PythonExpressionNode>,
+    context: CodeGenerationContext,
+    source: Source
+): GeneratedCode<PythonExpressionNode> {
+    return code.flatMap { expression ->
+        val name = context.freshName()
+        val assignment = assign(name, expression, source = source)
+        val reference = PythonVariableReferenceNode(name, source = source)
+        GeneratedCode(
+            reference,
+            statements = listOf(assignment),
+            spilled = true
+        )
+    }
+}
+
 private fun generateTypeCondition(
     expression: PythonExpressionNode,
     type: StaticNode,
@@ -562,29 +594,6 @@ private fun generateTypeCondition(
         arguments = listOf(expression, generateCode(type, context)),
         keywordArguments = listOf(),
         source = source
-    )
-}
-
-private fun generateScopedExpression(
-    body: List<PythonStatementNode>,
-    source: Source,
-    context: CodeGenerationContext
-): GeneratedExpression {
-    val auxiliaryFunction = PythonFunctionNode(
-        name = context.freshName(),
-        parameters = listOf(),
-        body = body,
-        source = source
-    )
-    val callNode: PythonExpressionNode = PythonFunctionCallNode(
-        function = PythonVariableReferenceNode(auxiliaryFunction.name, source = source),
-        arguments = listOf(),
-        keywordArguments = listOf(),
-        source = source
-    )
-    return GeneratedCode(
-        callNode,
-        statements = listOf(auxiliaryFunction)
     )
 }
 
