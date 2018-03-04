@@ -184,32 +184,27 @@ private fun generateCode(
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
 ): List<PythonStatementNode> {
     val expression = node.expression
+
+    fun expressionReturnValue(expression: PythonExpressionNode, source: Source): PythonStatementNode {
+        if (node.isReturn) {
+            return returnValue(expression, source)
+        } else {
+            return PythonExpressionStatementNode(expression, source)
+        }
+    }
+
     if (expression is IfNode) {
         return generateIfCode(expression, context, returnValue = { returnExpression, source ->
-            if (node.isReturn) {
-                returnValue(returnExpression, source)
-            } else {
-                PythonExpressionStatementNode(returnExpression, source)
-            }
+            expressionReturnValue(returnExpression, source)
         })
     } else if (expression is WhenNode) {
         return generateWhenCode(expression, context, returnValue = { returnExpression, source ->
-            if (node.isReturn) {
-                returnValue(returnExpression, source)
-            } else {
-                PythonExpressionStatementNode(returnExpression, source)
-            }
+            expressionReturnValue(returnExpression, source)
         })
     } else {
         return generateExpressionCode(expression, context).toStatements { expression ->
             val source = NodeSource(node)
-            if (node.isReturn) {
-                listOf(returnValue(expression, source))
-            } else if (expression !is PythonVariableReferenceNode) {
-                listOf(PythonExpressionStatementNode(expression, source))
-            } else {
-                listOf()
-            }
+            listOf(expressionReturnValue(expression, source))
         }
     }
 }
