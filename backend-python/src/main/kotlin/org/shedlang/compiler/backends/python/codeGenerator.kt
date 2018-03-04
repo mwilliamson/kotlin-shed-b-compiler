@@ -317,11 +317,10 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         override fun visit(node: BinaryOperationNode): GeneratedExpression {
             val unspilledLeftCode = generateExpressionCode(node.left, context)
             val rightCode = generateExpressionCode(node.right, context)
-            val leftCode = if (rightCode.spilled) {
-                spill(unspilledLeftCode, context, source = NodeSource(node))
-            } else {
-                unspilledLeftCode
-            }
+            val leftCode = handleSpillage(unspilledLeftCode, rightCode, { expression ->
+                spillExpression(expression, context, source = NodeSource(node))
+            })
+
             return GeneratedExpression.pureMap(
                 leftCode,
                 rightCode,
@@ -566,21 +565,31 @@ private fun assign(
     )
 }
 
-private fun spill(
-    code: GeneratedCode<PythonExpressionNode>,
+private fun <T1, T2> handleSpillage(
+    leftCode: GeneratedCode<T1>,
+    rightCode: GeneratedCode<T2>,
+    spill: (T1) -> GeneratedCode<T1>
+): GeneratedCode<T1> {
+    return if (!leftCode.spilled && rightCode.spilled) {
+        leftCode.flatMap { left -> spill(left) }
+    } else {
+        leftCode
+    }
+}
+
+private fun spillExpression(
+    expression: PythonExpressionNode,
     context: CodeGenerationContext,
     source: Source
 ): GeneratedCode<PythonExpressionNode> {
-    return code.flatMap { expression ->
-        val name = context.freshName()
-        val assignment = assign(name, expression, source = source)
-        val reference = PythonVariableReferenceNode(name, source = source)
-        GeneratedCode(
-            reference,
-            statements = listOf(assignment),
-            spilled = true
-        )
-    }
+    val name = context.freshName()
+    val assignment = assign(name, expression, source = source)
+    val reference = PythonVariableReferenceNode(name, source = source)
+    return GeneratedCode(
+        reference,
+        statements = listOf(assignment),
+        spilled = true
+    )
 }
 
 private fun generateTypeCondition(
