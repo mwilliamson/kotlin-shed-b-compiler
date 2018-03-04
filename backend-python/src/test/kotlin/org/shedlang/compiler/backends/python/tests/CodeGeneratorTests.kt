@@ -510,6 +510,56 @@ class CodeGeneratorTests {
     }
 
     @Test
+    @Disabled("WIP")
+    fun whenRightOperandOfBinaryOperationSpillsThenLeftOperandIsSpilled() {
+        val leftFunctionDeclaration = declaration("left")
+        val rightFunctionDeclaration = declaration("right")
+        val leftFunctionReference = variableReference("left")
+        val rightFunctionReference = variableReference("right")
+        val shed = binaryOperation(
+            operator = Operator.ADD,
+            left = call(leftFunctionReference),
+            right = ifExpression(
+                literalBool(true),
+                listOf(expressionStatement(call(rightFunctionReference), isReturn = true)),
+                listOf(expressionStatement(call(rightFunctionReference), isReturn = true))
+            )
+        )
+
+        val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
+            leftFunctionReference to leftFunctionDeclaration,
+            rightFunctionReference to rightFunctionDeclaration
+        )
+
+        val generatedCode = generateExpressionCode(shed, context = context(references = references))
+        val node = generatedCode.value as PythonBinaryOperationNode
+        val leftReference = node.left as PythonVariableReferenceNode
+        val rightReference = node.right as PythonVariableReferenceNode
+
+        assertThat(generatedCode.statements, isSequence(
+            isPythonAssignment(leftReference.name, isPythonFunctionCall(isPythonVariableReference("left"))),
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        body = isSequence(
+                            isPythonAssignment(
+                                rightReference.name,
+                                isPythonFunctionCall(isPythonVariableReference("right"))
+                            )
+                        )
+                    )
+                ),
+                elseBranch = isSequence(
+                    isPythonAssignment(
+                        rightReference.name,
+                        isPythonFunctionCall(isPythonVariableReference("right"))
+                    )
+                )
+            )
+        ))
+    }
+
+    @Test
     fun isOperationGeneratesIsInstanceCall() {
         val declaration = parameter("x")
         val reference = variableReference("x")
@@ -704,6 +754,14 @@ class CodeGeneratorTests {
     private fun isPythonExpressionStatement(expression: Matcher<PythonExpressionNode>)
         : Matcher<PythonStatementNode>
         = cast(has(PythonExpressionStatementNode::expression, expression))
+
+    private fun isPythonAssignment(
+        target: String,
+        expression: Matcher<PythonExpressionNode>
+    ) = isPythonAssignment(
+        target = isPythonVariableReference(target),
+        expression = expression
+    )
 
     private fun isPythonAssignment(
         target: Matcher<PythonExpressionNode>,

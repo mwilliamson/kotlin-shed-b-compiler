@@ -281,6 +281,8 @@ fun effectParameterDeclaration(
     source = anySource()
 )
 
+fun declaration(name: String) = parameter(name)
+
 fun parameter(
     name: String = "x",
     type: StaticNode = staticReference("Int")
