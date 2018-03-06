@@ -134,7 +134,7 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
         name = name,
         // TODO: test renaming
         parameters = generateParameters(node, bodyContext),
-        body = generateCode(
+        body = generateBlockCode(
             node.body.statements,
             bodyContext,
             returnValue = { expression, source ->
@@ -152,17 +152,17 @@ private fun generateParameters(function: FunctionNode, context: CodeGenerationCo
     function.parameters.map({ parameter -> context.name(parameter) }) +
         function.namedParameters.map({ parameter -> context.name(parameter) })
 
-internal fun generateCode(
+private fun generateBlockCode(
     statements: List<StatementNode>,
     context: CodeGenerationContext,
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
 ): List<PythonStatementNode> {
     return statements.flatMap { statement ->
-        generateCode(statement, context, returnValue = returnValue)
+        generateStatementCode(statement, context, returnValue = returnValue)
     }
 }
 
-internal fun generateCode(
+internal fun generateStatementCode(
     node: StatementNode,
     context: CodeGenerationContext,
     returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
@@ -521,7 +521,7 @@ private fun generateIfCode(
         generateExpressionCode(branch.condition, context).pureMap { condition ->
             PythonConditionalBranchNode(
                 condition = condition,
-                body = generateCode(
+                body = generateBlockCode(
                     branch.body,
                     context,
                     returnValue = returnValue
@@ -530,7 +530,7 @@ private fun generateIfCode(
             )
         }
     }).toStatements { conditionalBranches ->
-        val elseBranch = generateCode(
+        val elseBranch = generateBlockCode(
             node.elseBranch,
             context,
             returnValue = returnValue
@@ -564,7 +564,7 @@ private fun generateWhenCode(
                 source = NodeSource(branch),
                 context = context
             ),
-            body = generateCode(
+            body = generateBlockCode(
                 branch.body,
                 context,
                 returnValue = returnValue

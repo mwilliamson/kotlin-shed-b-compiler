@@ -11,6 +11,7 @@ import org.shedlang.compiler.backends.python.CodeGenerationContext
 import org.shedlang.compiler.backends.python.GeneratedCode
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.backends.python.generateCode
+import org.shedlang.compiler.backends.python.generateStatementCode
 import org.shedlang.compiler.backends.python.generateExpressionCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -254,7 +255,7 @@ class CodeGeneratorTests {
             isReturn = true
         )
 
-        val generatedCode = generateCode(
+        val generatedCode = generateStatementCode(
             shed,
             context(),
             returnValue = ::PythonReturnNode
@@ -353,7 +354,7 @@ class CodeGeneratorTests {
             typeReference to typeDeclaration
         )
 
-        val generatedCode = generateCode(
+        val generatedCode = generateStatementCode(
             shed,
             context(references = references),
             returnValue = ::PythonReturnNode
@@ -676,7 +677,7 @@ class CodeGeneratorTests {
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
-    private fun generateCode(node: StatementNode) = generateCode(
+    private fun generateCode(node: StatementNode) = generateStatementCode(
         node,
         context(),
         returnValue = { expression, source ->
