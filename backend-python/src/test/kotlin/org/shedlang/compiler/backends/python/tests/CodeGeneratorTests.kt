@@ -7,12 +7,8 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.python.CodeGenerationContext
-import org.shedlang.compiler.backends.python.GeneratedCode
+import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
-import org.shedlang.compiler.backends.python.generateCode
-import org.shedlang.compiler.backends.python.generateStatementCode
-import org.shedlang.compiler.backends.python.generateExpressionCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
@@ -510,53 +506,56 @@ class CodeGeneratorTests {
         })
     }
 
-    @Test
-    fun whenRightOperandOfBinaryOperationSpillsThenLeftOperandIsSpilled() {
-        val leftFunctionDeclaration = declaration("left")
-        val rightFunctionDeclaration = declaration("right")
-        val leftFunctionReference = variableReference("left")
-        val rightFunctionReference = variableReference("right")
-        val shed = binaryOperation(
-            operator = Operator.ADD,
-            left = call(leftFunctionReference),
-            right = ifExpression(
-                literalBool(true),
-                listOf(expressionStatement(call(rightFunctionReference), isReturn = true)),
-                listOf(expressionStatement(call(rightFunctionReference), isReturn = true))
-            )
+    private data class SpillingOrderTestCase(
+        val name: String,
+        val generatedCode: GeneratedCode<PythonExpressionNode>
+    )
+
+    @TestFactory
+    fun spillingPreservesEvaluationOrder(): List<DynamicTest> {
+        val earlierFunctionDeclaration = declaration("earlier")
+        val laterFunctionDeclaration = declaration("later")
+        val earlierFunctionReference = variableReference("earlier")
+        val laterFunctionReference = variableReference("later")
+
+        val earlierExpression = call(earlierFunctionReference)
+        val spillingExpression = ifExpression(
+            literalBool(true),
+            listOf(expressionStatement(call(laterFunctionReference), isReturn = true)),
+            listOf(expressionStatement(call(laterFunctionReference), isReturn = true))
         )
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
-            leftFunctionReference to leftFunctionDeclaration,
-            rightFunctionReference to rightFunctionDeclaration
+            earlierFunctionReference to earlierFunctionDeclaration,
+            laterFunctionReference to laterFunctionDeclaration
+        )
+        val testCases = listOf(
+            SpillingOrderTestCase(
+                "binary operation",
+                generatedCode = run {
+                    val shed = binaryOperation(
+                        operator = Operator.ADD,
+                        left = earlierExpression,
+                        right = spillingExpression
+                    )
+                    generateExpressionCode(shed, context = context(references = references))
+                }
+            )
         )
 
-        val generatedCode = generateExpressionCode(shed, context = context(references = references))
-        val node = generatedCode.value as PythonBinaryOperationNode
-        val leftReference = node.left as PythonVariableReferenceNode
-        val rightReference = node.right as PythonVariableReferenceNode
-
-        assertThat(generatedCode.statements, isSequence(
-            isPythonAssignment(leftReference.name, isPythonFunctionCall(isPythonVariableReference("left"))),
-            isPythonIfStatement(
-                conditionalBranches = isSequence(
-                    isPythonConditionalBranch(
-                        body = isSequence(
-                            isPythonAssignment(
-                                rightReference.name,
-                                isPythonFunctionCall(isPythonVariableReference("right"))
-                            )
-                        )
-                    )
-                ),
-                elseBranch = isSequence(
-                    isPythonAssignment(
-                        rightReference.name,
-                        isPythonFunctionCall(isPythonVariableReference("right"))
-                    )
+        return testCases.map { testCase ->
+            DynamicTest.dynamicTest(testCase.name, {
+                val evaluationOrder = pythonEvaluationOrder(testCase.generatedCode)
+                val earlierIndex = evaluationOrder.firstIndex(
+                    cast(isPythonFunctionCall(isPythonVariableReference("earlier")))
                 )
-            )
-        ))
+                val laterIndex = evaluationOrder.firstIndex(
+                    cast(isPythonFunctionCall(isPythonVariableReference("later")))
+                )
+
+                assertThat(earlierIndex, lessThan(laterIndex))
+            })
+        }
     }
 
     @Test
