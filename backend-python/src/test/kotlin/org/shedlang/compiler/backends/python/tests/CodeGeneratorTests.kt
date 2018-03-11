@@ -518,8 +518,11 @@ class CodeGeneratorTests {
         val earlierFunctionReference = variableReference("earlier")
         val laterFunctionReference = variableReference("later")
 
+        val receiverDeclaration = declaration("receiver")
+        val receiverReference = variableReference("receiver")
+
         val earlierExpression = call(earlierFunctionReference)
-        val spillingExpression = ifExpression(
+        val laterExpression = ifExpression(
             literalBool(true),
             listOf(expressionStatement(call(laterFunctionReference), isReturn = true)),
             listOf(expressionStatement(call(laterFunctionReference), isReturn = true))
@@ -527,7 +530,8 @@ class CodeGeneratorTests {
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
             earlierFunctionReference to earlierFunctionDeclaration,
-            laterFunctionReference to laterFunctionDeclaration
+            laterFunctionReference to laterFunctionDeclaration,
+            receiverReference to receiverDeclaration
         )
         val testCases = listOf(
             SpillingOrderTestCase(
@@ -536,7 +540,51 @@ class CodeGeneratorTests {
                     val shed = binaryOperation(
                         operator = Operator.ADD,
                         left = earlierExpression,
-                        right = spillingExpression
+                        right = laterExpression
+                    )
+                    generateExpressionCode(shed, context = context(references = references))
+                }
+            ),
+            SpillingOrderTestCase(
+                "call: positional arguments",
+                generatedCode = run {
+                    val shed = call(
+                        receiver = receiverReference,
+                        positionalArguments = listOf(earlierExpression, laterExpression)
+                    )
+                    generateExpressionCode(shed, context = context(references = references))
+                }
+            ),
+            SpillingOrderTestCase(
+                "call: named arguments",
+                generatedCode = run {
+                    val shed = call(
+                        receiver = receiverReference,
+                        namedArguments = listOf(
+                            callNamedArgument("x", earlierExpression),
+                            callNamedArgument("y", laterExpression)
+                        )
+                    )
+                    generateExpressionCode(shed, context = context(references = references))
+                }
+            ),
+            SpillingOrderTestCase(
+                "call: receiver before positional arguments",
+                generatedCode = run {
+                    val shed = call(
+                        receiver = earlierExpression,
+                        positionalArguments = listOf(laterExpression)
+                    )
+                    generateExpressionCode(shed, context = context(references = references))
+                }
+            ),
+            SpillingOrderTestCase(
+                "call: positional arguments before named arguments",
+                generatedCode = run {
+                    val shed = call(
+                        receiver = receiverReference,
+                        positionalArguments = listOf(earlierExpression),
+                        namedArguments = listOf(callNamedArgument("x", laterExpression))
                     )
                     generateExpressionCode(shed, context = context(references = references))
                 }
