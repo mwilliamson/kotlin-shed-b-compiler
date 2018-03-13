@@ -10,6 +10,12 @@ interface Node {
     val children: List<Node>
 }
 
+fun Node.descendants(): List<Node> {
+    return this.children.flatMap { child ->
+        listOf(child) + child.descendants()
+    }
+}
+
 interface VariableBindingNode: Node {
     val name: String
 }
