@@ -12,7 +12,7 @@ internal fun generateCode(node: ModuleNode, references: ResolvedReferences): Pyt
 }
 
 internal class CodeGenerationContext(
-    private val references: ResolvedReferences,
+    val references: ResolvedReferences,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf()
 ) {
@@ -24,8 +24,8 @@ internal class CodeGenerationContext(
         )
     }
 
-    fun freshName(): String {
-        return generateName("anonymous")
+    fun freshName(name: String = "anonymous"): String {
+        return generateName(name)
     }
 
     fun name(node: VariableBindingNode): String {
@@ -127,25 +127,143 @@ private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationC
     return generateFunction(context.name(node), node, context)
 }
 
+typealias ReturnValue = (ExpressionNode, PythonExpressionNode, Source) -> List<PythonStatementNode>
+
+private class TailRecursionArgument(val name: String, val expression: ExpressionNode, val temporaryName: String)
+
 private fun generateFunction(name: String, node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
+//    val directRecursiveTailCalls = findDirectRecursiveTailCalls(node, context.references)
+
     val bodyContext = context.enterScope()
+    val parameters = generateParameters(node, bodyContext)
+
+    var isTailRecursive = false
+
+    fun returnValue(expression: ExpressionNode, pythonExpression: PythonExpressionNode, source: Source): List<PythonStatementNode> {
+//            if (expression is CallNode && directRecursiveTailCalls.contains(expression.nodeId)) {
+        // TODO: test tail-recursion
+        return if (expression is CallNode) {
+            val receiver = expression.receiver
+            if (receiver is VariableReferenceNode && context.references[receiver].nodeId == node.nodeId) {
+                isTailRecursive = true
+
+                val arguments = (node.parameters.zip(expression.positionalArguments, { parameter, argument ->
+                    TailRecursionArgument(
+                        name = parameter.name,
+                        // TODO: remove duplication
+                        temporaryName = bodyContext.freshName(parameter.name),
+                        expression = argument
+                    )
+                }) + node.namedParameters.map { parameter ->
+                    TailRecursionArgument(
+                        name = parameter.name,
+                        temporaryName = bodyContext.freshName(parameter.name),
+                        expression = expression.namedArguments.find { argument -> argument.name == parameter.name }!!.expression
+                    )
+                })
+
+                // TODO: this is unsound if one of the arguments is a function expression that references an argument
+                arguments.flatMap { argument ->
+                    generateExpressionCode(argument.expression, context).toStatements { pythonArgument ->
+                        listOf(assign(argument.temporaryName, pythonArgument, source = NodeSource(expression)))
+                    }
+                } + arguments.flatMap { argument ->
+                    generateExpressionCode(argument.expression, context).toStatements { pythonArgument ->
+                        val temporaryReference = PythonVariableReferenceNode(
+                            argument.temporaryName,
+                            source = NodeSource(expression)
+                        )
+                        listOf(assign(argument.name, temporaryReference, source = NodeSource(expression)))
+                    }
+                }
+            } else {
+                null
+            }
+        } else {
+            null
+        } ?: listOf(
+            PythonReturnNode(
+                expression = pythonExpression,
+                source = source
+            )
+        )
+    }
+
+    val bodyStatements = generateBlockCode(
+        node.body.statements,
+        bodyContext,
+        returnValue = ::returnValue
+    )
+    val body = if (isTailRecursive) {
+        listOf(
+            PythonWhileNode(
+                PythonBooleanLiteralNode(true, source = NodeSource(node)),
+                bodyStatements,
+                source = NodeSource(node)
+            )
+        )
+    } else {
+        bodyStatements
+    }
+
     return PythonFunctionNode(
         // TODO: test renaming
         name = name,
         // TODO: test renaming
-        parameters = generateParameters(node, bodyContext),
-        body = generateBlockCode(
-            node.body.statements,
-            bodyContext,
-            returnValue = { expression, source ->
-                PythonReturnNode(
-                    expression = expression,
-                    source = source
-                )
-            }
-        ),
+        parameters = parameters,
+        body = body,
         source = NodeSource(node)
     )
+}
+
+private fun findDirectRecursiveTailCalls(node: FunctionNode, references: ResolvedReferences): Set<Int> {
+    return node.body.statements.flatMap { statement ->
+        findDirectRecursiveTailCalls(node, statement, references)
+    }.toSet()
+}
+
+private fun findDirectRecursiveTailCalls(function: FunctionNode, statement: StatementNode, references: ResolvedReferences): List<Int> {
+    if (statement is ExpressionStatementNode && statement.isReturn) {
+        return findDirectRecursiveTailCalls(function, statement.expression, references)
+    } else {
+        return listOf()
+    }
+}
+
+fun findDirectRecursiveTailCalls(function: FunctionNode, expression: ExpressionNode, references: ResolvedReferences): List<Int> {
+    return expression.accept(object: ExpressionNode.Visitor<List<Int>> {
+        override fun visit(node: UnitLiteralNode): List<Int> = listOf()
+        override fun visit(node: BooleanLiteralNode): List<Int> = listOf()
+        override fun visit(node: IntegerLiteralNode): List<Int> = listOf()
+        override fun visit(node: StringLiteralNode): List<Int> = listOf()
+        override fun visit(node: VariableReferenceNode): List<Int> = listOf()
+        override fun visit(node: BinaryOperationNode): List<Int> = listOf()
+        override fun visit(node: IsNode): List<Int> = listOf()
+        override fun visit(node: PartialCallNode): List<Int> = listOf()
+        override fun visit(node: FieldAccessNode): List<Int> = listOf()
+        override fun visit(node: FunctionExpressionNode): List<Int> = listOf()
+
+        override fun visit(node: CallNode): List<Int> {
+            val receiver = node.receiver
+            if (receiver is VariableReferenceNode && references[receiver].nodeId == function.nodeId) {
+                return listOf(node.nodeId)
+            } else {
+                return listOf()
+            }
+        }
+
+        override fun visit(node: IfNode): List<Int> {
+            return node.branchBodies.flatMap { body ->
+                body.flatMap { statement -> findDirectRecursiveTailCalls(function, statement, references) }
+            }
+        }
+
+        override fun visit(node: WhenNode): List<Int> {
+            return node.branches.flatMap { branch ->
+                branch.body.flatMap { statement -> findDirectRecursiveTailCalls(function, statement, references) }
+            }
+        }
+    })
 }
 
 private fun generateParameters(function: FunctionNode, context: CodeGenerationContext) =
@@ -155,7 +273,7 @@ private fun generateParameters(function: FunctionNode, context: CodeGenerationCo
 private fun generateBlockCode(
     statements: List<StatementNode>,
     context: CodeGenerationContext,
-    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+    returnValue: ReturnValue
 ): List<PythonStatementNode> {
     return statements.flatMap { statement ->
         generateStatementCode(statement, context, returnValue = returnValue)
@@ -165,7 +283,7 @@ private fun generateBlockCode(
 internal fun generateStatementCode(
     node: StatementNode,
     context: CodeGenerationContext,
-    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+    returnValue: ReturnValue
 ): List<PythonStatementNode> {
     return node.accept(object : StatementNode.Visitor<List<PythonStatementNode>> {
         override fun visit(node: ExpressionStatementNode): List<PythonStatementNode> {
@@ -181,30 +299,32 @@ internal fun generateStatementCode(
 private fun generateCode(
     node: ExpressionStatementNode,
     context: CodeGenerationContext,
-    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+    returnValue: ReturnValue
 ): List<PythonStatementNode> {
     val expression = node.expression
 
-    fun expressionReturnValue(expression: PythonExpressionNode, source: Source): PythonStatementNode {
+    fun expressionReturnValue(expression: ExpressionNode, pythonExpression: PythonExpressionNode, source: Source): List<PythonStatementNode> {
         if (node.isReturn) {
-            return returnValue(expression, source)
+            return returnValue(expression, pythonExpression, source)
         } else {
-            return PythonExpressionStatementNode(expression, source)
+            return listOf(
+                PythonExpressionStatementNode(pythonExpression, source)
+            )
         }
     }
 
     if (expression is IfNode) {
-        return generateIfCode(expression, context, returnValue = { returnExpression, source ->
-            expressionReturnValue(returnExpression, source)
+        return generateIfCode(expression, context, returnValue = { returnExpression, pythonReturnExpression, source ->
+            expressionReturnValue(returnExpression, pythonReturnExpression, source)
         })
     } else if (expression is WhenNode) {
-        return generateWhenCode(expression, context, returnValue = { returnExpression, source ->
-            expressionReturnValue(returnExpression, source)
+        return generateWhenCode(expression, context, returnValue = { returnExpression, pythonReturnExpression, source ->
+            expressionReturnValue(returnExpression, pythonReturnExpression, source)
         })
     } else {
-        return generateExpressionCode(expression, context).toStatements { expression ->
+        return generateExpressionCode(expression, context).toStatements { pythonExpression ->
             val source = NodeSource(node)
-            listOf(expressionReturnValue(expression, source))
+            expressionReturnValue(expression, pythonExpression, source)
         }
     }
 }
@@ -476,8 +596,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             val statements = generateIfCode(
                 node,
                 context,
-                returnValue = { expression, source ->
-                    assign(targetName, expression, source = source)
+                returnValue = { expression, pythonExpression, source ->
+                    listOf(assign(targetName, pythonExpression, source = source))
                 }
             )
 
@@ -496,8 +616,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             val statements = generateWhenCode(
                 node,
                 context,
-                returnValue = { expression, source ->
-                    assign(targetName, expression, source = source)
+                returnValue = { expression, pythonExpression, source ->
+                    listOf(assign(targetName, pythonExpression, source = source))
                 }
             )
 
@@ -515,7 +635,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 private fun generateIfCode(
     node: IfNode,
     context: CodeGenerationContext,
-    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+    returnValue: ReturnValue
 ): List<PythonStatementNode>{
     return GeneratedCode.flatten(node.conditionalBranches.map { branch ->
         generateExpressionCode(branch.condition, context).pureMap { condition ->
@@ -549,7 +669,7 @@ private fun generateIfCode(
 private fun generateWhenCode(
     node: WhenNode,
     context: CodeGenerationContext,
-    returnValue: (PythonExpressionNode, Source) -> PythonStatementNode
+    returnValue: ReturnValue
 ): List<PythonStatementNode> {
     val expressionName = context.freshName()
     val expressionCode = generateExpressionCode(node.expression, context)

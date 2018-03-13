@@ -254,7 +254,9 @@ class CodeGeneratorTests {
         val generatedCode = generateStatementCode(
             shed,
             context(),
-            returnValue = ::PythonReturnNode
+            returnValue = { expression, pythonExpression, source ->
+                listOf(PythonReturnNode(pythonExpression, source))
+            }
         )
 
         assertThat(generatedCode.single(), isPythonIfStatement(
@@ -353,7 +355,9 @@ class CodeGeneratorTests {
         val generatedCode = generateStatementCode(
             shed,
             context(references = references),
-            returnValue = ::PythonReturnNode
+            returnValue = { expression, pythonExpression, source ->
+                listOf(PythonReturnNode(pythonExpression, source))
+            }
         )
 
         assertThat(generatedCode, isSequence(
@@ -727,8 +731,8 @@ class CodeGeneratorTests {
     private fun generateCode(node: StatementNode) = generateStatementCode(
         node,
         context(),
-        returnValue = { expression, source ->
-            PythonReturnNode(expression, source)
+        returnValue = { expression, pythonExpression, source ->
+            listOf(PythonReturnNode(pythonExpression, source))
         }
     )
     private fun generateCode(node: ExpressionNode) = generateExpressionCode(node, context())
