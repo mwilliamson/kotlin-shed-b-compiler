@@ -246,6 +246,19 @@ class SerialiserTests {
     }
 
     @Test
+    fun whileSerialisation() {
+        assertThat(
+            indentedSerialise(
+                pythonWhile(
+                    condition = pythonVariableReference("x"),
+                    body = listOf(pythonReturn(pythonVariableReference("y")))
+                )
+            ),
+            equalTo("    while x:\n        return y\n")
+        )
+    }
+
+    @Test
     fun noneSerialisation() {
         assertThat(
             serialise(pythonNone()),

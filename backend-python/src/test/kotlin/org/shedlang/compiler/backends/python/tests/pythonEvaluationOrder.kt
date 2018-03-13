@@ -51,6 +51,10 @@ private fun statementChildrenEvaluationOrder(statement: PythonStatementNode): Li
         override fun visit(node: PythonAssignmentNode): List<PythonNode> {
             return listOf(node.expression, node.target)
         }
+
+        override fun visit(node: PythonWhileNode): List<PythonNode> {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

@@ -67,6 +67,11 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         override fun visit(node: PythonAssignmentNode): String {
             return line("${serialise(node.target)} = ${serialise(node.expression)}")
         }
+
+        override fun visit(node: PythonWhileNode): String {
+            val body = serialiseBlock(node, node.body, indentation)
+            return line("while " + serialise(node.condition) + ":") + body
+        }
     })
 }
 

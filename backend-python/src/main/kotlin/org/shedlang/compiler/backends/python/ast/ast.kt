@@ -21,6 +21,7 @@ interface PythonStatementNode : PythonNode {
         fun visit(node: PythonIfStatementNode): T
         fun visit(node: PythonPassNode): T
         fun visit(node: PythonAssignmentNode): T
+        fun visit(node: PythonWhileNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -117,6 +118,17 @@ data class PythonAssignmentNode(
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class PythonWhileNode(
+    val condition: PythonExpressionNode,
+    val body: List<PythonStatementNode>,
+    override val source: Source
+): PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
 }
 
 interface PythonExpressionNode : PythonNode {

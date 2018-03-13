@@ -67,6 +67,9 @@ fun pythonConditionalBranch(
 fun pythonAssignment(target: PythonExpressionNode, expression: PythonExpressionNode)
     = PythonAssignmentNode(target = target, expression = expression, source = anySource())
 
+fun pythonWhile(condition: PythonExpressionNode, body: List<PythonStatementNode>)
+    = PythonWhileNode(condition = condition, body = body, source = anySource())
+
 fun pythonNone()
     = PythonNoneLiteralNode(source = anySource())
 
