@@ -303,6 +303,7 @@ private fun generateCode(
     } else {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
             val source = NodeSource(node)
+            // TODO: generated statements are included even if pythonExpression is not used
             expressionReturnValue(expression, pythonExpression, source)
         }
     }
