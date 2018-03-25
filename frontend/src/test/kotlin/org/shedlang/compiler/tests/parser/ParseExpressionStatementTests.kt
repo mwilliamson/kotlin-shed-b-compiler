@@ -58,4 +58,12 @@ class ParseExpressionStatementTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node.isReturn, equalTo(false))
     }
+
+    @Test
+    fun whenSomeBranchesOfWhenReturnThenErrorIsThrown() {
+        val source = "when (x) { is T1 { 1 } is T2 { 2; } }"
+        assertThat({
+            parseString(::parseFunctionStatement, source)
+        }, throwsException<SourceError>(has(SourceError::message, equalTo("Some branches do not provide a value"))))
+    }
 }

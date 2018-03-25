@@ -415,20 +415,9 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
                 )
             } else {
                 val isReturn = if (expression is IfNode) {
-                    val isReturns = expression.branchBodies.map { body ->
-                        body.any(StatementNode::isReturn)
-                    }.toSet()
-                    if (isReturns.size == 1) {
-                        isReturns.single()
-                    } else {
-                        // TODO: raise a more specific exception
-                        // TODO: should these checks be in the expression nodes themselves?
-                        throw SourceError("Some branches do not provide a value", source = expression.source)
-                    }
+                    branchesReturn(expression, expression.branchBodies)
                 } else if (expression is WhenNode) {
-                    expression.branches.map { branch ->
-                        branch.body.any(StatementNode::isReturn)
-                    }.toSet().single()
+                    branchesReturn(expression, expression.branches.map { branch -> branch.body })
                 } else {
                     !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
                 }
@@ -439,6 +428,19 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
                 )
             }
         }
+    }
+}
+
+private fun branchesReturn(expression: Node, branches: Iterable<List<StatementNode>>): Boolean {
+    val isReturns = branches.map { body ->
+        body.any(StatementNode::isReturn)
+    }.toSet()
+    return if (isReturns.size == 1) {
+        isReturns.single()
+    } else {
+        // TODO: raise a more specific exception
+        // TODO: should these checks be in the expression nodes themselves?
+        throw SourceError("Some branches do not provide a value", source = expression.source)
     }
 }
 
