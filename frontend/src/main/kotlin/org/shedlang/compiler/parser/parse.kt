@@ -594,13 +594,21 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
     }
 }
 
+private val EQUALS_PRECEDENCE = 8
+private val IS_PRECEDENCE = 9
+private val ADD_PRECENDECE = 11
+private val SUBTRACT_PRECEDENCE = 11
+private val MULTIPLY_PRECEDENCE = 12
+private val CALL_PRECEDENCE = 14
+private val FIELD_ACCESS_PRECEDENCE = 14
+
 private interface OperationParser: ExpressionParser<ExpressionNode> {
     companion object {
         val parsers = listOf(
-            InfixOperationParser(Operator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, 8),
-            InfixOperationParser(Operator.ADD, TokenType.SYMBOL_PLUS, 11),
-            InfixOperationParser(Operator.SUBTRACT, TokenType.SYMBOL_MINUS, 11),
-            InfixOperationParser(Operator.MULTIPLY, TokenType.SYMBOL_ASTERISK, 12),
+            InfixOperationParser(Operator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, EQUALS_PRECEDENCE),
+            InfixOperationParser(Operator.ADD, TokenType.SYMBOL_PLUS, ADD_PRECENDECE),
+            InfixOperationParser(Operator.SUBTRACT, TokenType.SYMBOL_MINUS, SUBTRACT_PRECEDENCE),
+            InfixOperationParser(Operator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
             CallWithExplicitTypeArgumentsParser,
             CallParser,
             PartialCallParser,
@@ -647,7 +655,7 @@ private object CallWithExplicitTypeArgumentsParser : OperationParser {
     }
 
     override val precedence: Int
-        get() = 14
+        get() = CALL_PRECEDENCE
 }
 
 private object CallParser : OperationParser {
@@ -663,7 +671,7 @@ private object CallParser : OperationParser {
     }
 
     override val precedence: Int
-        get() = 14
+        get() = CALL_PRECEDENCE
 }
 
 private object PartialCallParser : OperationParser {
@@ -683,7 +691,7 @@ private object PartialCallParser : OperationParser {
     }
 
     override val precedence: Int
-        get() = 14
+        get() = CALL_PRECEDENCE
 }
 
 private fun parseCallFromParens(
@@ -757,7 +765,7 @@ private object FieldAccessParser : OperationParser {
         get() = TokenType.SYMBOL_DOT
 
     override val precedence: Int
-        get() = 14
+        get() = FIELD_ACCESS_PRECEDENCE
 
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val fieldName = parseIdentifier(tokens)
@@ -774,7 +782,7 @@ private object IsParser : OperationParser {
         get() = TokenType.KEYWORD_IS
 
     override val precedence: Int
-        get() = 9
+        get() = IS_PRECEDENCE
 
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val type = parseStaticExpression(tokens)
