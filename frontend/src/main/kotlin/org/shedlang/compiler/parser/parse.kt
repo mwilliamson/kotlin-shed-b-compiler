@@ -594,6 +594,7 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
     }
 }
 
+private val PIPELINE_PRECEDENCE = 7
 private val EQUALS_PRECEDENCE = 8
 private val IS_PRECEDENCE = 9
 private val ADD_PRECENDECE = 11
@@ -612,6 +613,7 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
             CallWithExplicitTypeArgumentsParser,
             CallParser,
             PartialCallParser,
+            PipelineParser,
             FieldAccessParser,
             IsParser
         ).associateBy({parser -> parser.operatorToken})
@@ -757,6 +759,25 @@ private fun parseArgument(source: Source, tokens: TokenIterator<TokenType>): Par
     } else {
         val expression = parseExpression(tokens)
         return ParsedArgument.Positional(expression)
+    }
+}
+
+private object PipelineParser : OperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_PIPELINE
+
+    override val precedence: Int
+        get()  = PIPELINE_PRECEDENCE
+
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val right = parseExpression(tokens, precedence = precedence + 1)
+        return CallNode(
+            receiver = right,
+            positionalArguments = listOf(left),
+            namedArguments = listOf(),
+            staticArguments = listOf(),
+            source = left.source
+        )
     }
 }
 
