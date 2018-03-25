@@ -137,7 +137,6 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
     val hasFunctionExpressions = hasFunctionExpressions(node)
 
     fun returnValue(expression: ExpressionNode, pythonExpression: PythonExpressionNode, source: Source): List<PythonStatementNode> {
-        // TODO: test tail-recursion (normal case, function expression check, avoiding reassigning to same)
         val arguments = if (hasFunctionExpressions) {
             null
         } else {
