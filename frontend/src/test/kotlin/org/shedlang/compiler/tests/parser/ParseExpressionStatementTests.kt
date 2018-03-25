@@ -2,8 +2,11 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.parser.parseFunctionStatement
+import org.shedlang.compiler.typechecker.SourceError
 
 class ParseExpressionStatementTests {
     @Test
@@ -32,6 +35,14 @@ class ParseExpressionStatementTests {
         val source = "if (true) { 1; } else { 2; }"
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node.isReturn, equalTo(false))
+    }
+
+    @Test
+    fun whenSomeBranchesOfIfReturnThenErrorIsThrown() {
+        val source = "if (true) { 1 } else { 2; }"
+        assertThat({
+            parseString(::parseFunctionStatement, source)
+        }, throwsException<SourceError>(has(SourceError::message, equalTo("Some branches do not provide a value"))))
     }
 
     @Test

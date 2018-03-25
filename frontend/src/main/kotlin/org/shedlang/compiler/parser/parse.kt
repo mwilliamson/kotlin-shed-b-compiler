@@ -2,6 +2,7 @@ package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
+import org.shedlang.compiler.typechecker.SourceError
 import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
@@ -414,9 +415,16 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
                 )
             } else {
                 val isReturn = if (expression is IfNode) {
-                    expression.branchBodies.map { body ->
+                    val isReturns = expression.branchBodies.map { body ->
                         body.any(StatementNode::isReturn)
-                    }.toSet().single()
+                    }.toSet()
+                    if (isReturns.size == 1) {
+                        isReturns.single()
+                    } else {
+                        // TODO: raise a more specific exception
+                        // TODO: should these checks be in the expression nodes themselves?
+                        throw SourceError("Some branches do not provide a value", source = expression.source)
+                    }
                 } else if (expression is WhenNode) {
                     expression.branches.map { branch ->
                         branch.body.any(StatementNode::isReturn)
