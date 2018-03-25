@@ -715,8 +715,6 @@ class CodeGeneratorTests {
         assertThat(serialise(node).trim(), equalTo(expectedPython))
     }
 
-
-
     @Test
     fun directlyRecursiveFunctionsContainingFunctionExpressionsAreNotConvertedToWhileLoops() {
         val shedSource = """
@@ -749,6 +747,40 @@ class CodeGeneratorTests {
             "Int" to intBuiltin,
             "Unit" to unitBuiltin
         ))
+        val node = generateCode(shed, references = references)
+
+        assertThat(serialise(node).trim(), equalTo(expectedPython))
+    }
+
+
+
+    @Test
+    @Disabled("WIP")
+    fun directlyRecursiveFunctionsWithSpilledArgumentsDoNotDuplicateArguments() {
+        val shedSource = """
+            fun f(n: Int) -> Int {
+                f(
+                    if (n == 1) {
+                        2
+                    } else {
+                        1
+                    }
+                )
+            }
+        """.trimIndent()
+        val expectedPython = """
+            def f(n):
+                while True:
+                    if n == 1:
+                        anonymous = 2
+                    else:
+                        anonymous = 2
+                    n_1 = anonymous
+                    n = n_1
+        """.trimIndent()
+        val shed = parse("<string>", shedSource)
+        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
+        val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
         val node = generateCode(shed, references = references)
 
         assertThat(serialise(node).trim(), equalTo(expectedPython))
