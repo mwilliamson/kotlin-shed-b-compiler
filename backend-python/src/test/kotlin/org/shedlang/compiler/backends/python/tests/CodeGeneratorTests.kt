@@ -15,6 +15,7 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.UnitType
 
 class CodeGeneratorTests {
     @Test
@@ -709,6 +710,45 @@ class CodeGeneratorTests {
         val shed = parse("<string>", shedSource)
         val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
         val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
+        val node = generateCode(shed, references = references)
+
+        assertThat(serialise(node).trim(), equalTo(expectedPython))
+    }
+
+
+
+    @Test
+    fun directlyRecursiveFunctionsContainingFunctionExpressionsAreNotConvertedToWhileLoops() {
+        val shedSource = """
+            fun f(n: Int, g: () -> Unit) -> Unit {
+                if (n == 1) {
+                    g()
+                } else {
+                    f(n - 1, fun() {
+                        g();
+                        g();
+                    })
+                }
+            }
+        """.trimIndent()
+        val expectedPython = """
+            def f(n, g):
+                if n == 1:
+                    return g()
+                else:
+                    def anonymous():
+                        g()
+                        g()
+
+                    return f(n - 1, anonymous)
+        """.trimIndent()
+        val shed = parse("<string>", shedSource)
+        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
+        val unitBuiltin = BuiltinVariable("Unit", MetaType(UnitType))
+        val references = resolve(shed, globals = mapOf(
+            "Int" to intBuiltin,
+            "Unit" to unitBuiltin
+        ))
         val node = generateCode(shed, references = references)
 
         assertThat(serialise(node).trim(), equalTo(expectedPython))
