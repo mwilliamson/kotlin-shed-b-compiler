@@ -69,7 +69,7 @@ internal class ResolutionContext(
     }
 }
 
-internal fun resolve(node: Node, globals: Map<String, VariableBindingNode>): ResolvedReferences {
+fun resolve(node: Node, globals: Map<String, VariableBindingNode>): ResolvedReferences {
     val context = ResolutionContext(
         globals,
         mutableMapOf(),

@@ -9,8 +9,12 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
+import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.typechecker.resolve
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
 
 class CodeGeneratorTests {
     @Test
@@ -648,6 +652,36 @@ class CodeGeneratorTests {
             isSequence(isPythonIntegerLiteral(42)),
             isSequence(isPair(equalTo("x"), isPythonBooleanLiteral(true)))
         )))
+    }
+
+    @Test
+    fun directlyRecursiveFunctionsAreConvertedToWhileLoops() {
+        val shedSource = """
+            fun factorial(n: Int, acc: Int) -> Int {
+                if (n == 1) {
+                    acc
+                } else {
+                    factorial(n - 1, acc * n)
+                }
+            }
+        """.trimIndent()
+        val expectedPython = """
+            def factorial(n, acc):
+                while True:
+                    if n == 1:
+                        return acc
+                    else:
+                        n_1 = n - 1
+                        acc_1 = acc * n
+                        n = n_1
+                        acc = acc_1
+        """.trimIndent()
+        val shed = parse("<string>", shedSource)
+        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
+        val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
+        val node = generateCode(shed, references = references)
+
+        assertThat(serialise(node).trim(), equalTo(expectedPython))
     }
 
     @Test

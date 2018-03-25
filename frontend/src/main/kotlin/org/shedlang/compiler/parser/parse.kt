@@ -12,7 +12,7 @@ internal class UnrecognisedEscapeSequenceError(
     val source: Source
 ) : Exception("Unrecognised escape sequence")
 
-internal fun parse(filename: String, input: String): ModuleNode {
+fun parse(filename: String, input: String): ModuleNode {
     return parse(
         filename = filename,
         input = input,
