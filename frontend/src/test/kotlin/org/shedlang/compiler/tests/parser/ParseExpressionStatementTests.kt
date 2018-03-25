@@ -33,4 +33,18 @@ class ParseExpressionStatementTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node.isReturn, equalTo(false))
     }
+
+    @Test
+    fun whenAllBranchesOfWhenReturnThenWhenExpressionIsReadAsReturning() {
+        val source = "when (x) { is T1 { 1 } is T2 { 2 } }"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node.isReturn, equalTo(true))
+    }
+
+    @Test
+    fun whenAllBranchesOfWhenDoNotReturnThenWhenExpressionIsReadAsNotReturning() {
+        val source = "when (x) { is T1 { 1; } is T2 { 2; } }"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node.isReturn, equalTo(false))
+    }
 }
