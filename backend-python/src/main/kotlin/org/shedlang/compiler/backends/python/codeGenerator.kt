@@ -293,13 +293,9 @@ private fun generateCode(
     }
 
     if (expression is IfNode) {
-        return generateIfCode(expression, context, returnValue = { returnExpression, pythonReturnExpression, source ->
-            expressionReturnValue(returnExpression, pythonReturnExpression, source)
-        })
+        return generateIfCode(expression, context, returnValue = ::expressionReturnValue)
     } else if (expression is WhenNode) {
-        return generateWhenCode(expression, context, returnValue = { returnExpression, pythonReturnExpression, source ->
-            expressionReturnValue(returnExpression, pythonReturnExpression, source)
-        })
+        return generateWhenCode(expression, context, returnValue = ::expressionReturnValue)
     } else {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
             val source = NodeSource(node)
