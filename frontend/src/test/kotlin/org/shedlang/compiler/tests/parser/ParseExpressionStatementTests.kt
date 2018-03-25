@@ -19,4 +19,18 @@ class ParseExpressionStatementTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isExpressionStatement(isIntLiteral(4), isReturn = equalTo(true)))
     }
+
+    @Test
+    fun whenAllBranchesOfIfReturnThenIfExpressionIsReadAsReturning() {
+        val source = "if (true) { 1 } else { 2 }"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node.isReturn, equalTo(true))
+    }
+
+    @Test
+    fun whenAllBranchesOfIfDoNotReturnThenIfExpressionIsReadAsNotReturning() {
+        val source = "if (true) { 1; } else { 2; }"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node.isReturn, equalTo(false))
+    }
 }
