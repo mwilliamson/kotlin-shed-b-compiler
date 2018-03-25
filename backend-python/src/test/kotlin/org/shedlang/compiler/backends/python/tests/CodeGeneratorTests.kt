@@ -685,6 +685,36 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun directlyRecursiveCallsDoNotReassignArgumentsThatDoNotChange() {
+        val shedSource = """
+            fun factorial(i: Int, n: Int, acc: Int) -> Int {
+                if (i == n) {
+                    acc
+                } else {
+                    factorial(i + 1, n, acc * i)
+                }
+            }
+        """.trimIndent()
+        val expectedPython = """
+            def factorial(i, n, acc):
+                while True:
+                    if i == n:
+                        return acc
+                    else:
+                        i_1 = i + 1
+                        acc_1 = acc * i
+                        i = i_1
+                        acc = acc_1
+        """.trimIndent()
+        val shed = parse("<string>", shedSource)
+        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
+        val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
+        val node = generateCode(shed, references = references)
+
+        assertThat(serialise(node).trim(), equalTo(expectedPython))
+    }
+
+    @Test
     fun partialFunctionCallGeneratesPartialFunctionCall() {
         val declaration = parameter("f")
         val function = variableReference("f")
