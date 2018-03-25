@@ -150,7 +150,6 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
                 )
             )
         } else {
-            // TODO: this is unsound if one of the arguments is a function expression that references an argument
             isTailRecursive = true
             return reassignArguments(arguments, NodeSource(expression), bodyContext)
         }
