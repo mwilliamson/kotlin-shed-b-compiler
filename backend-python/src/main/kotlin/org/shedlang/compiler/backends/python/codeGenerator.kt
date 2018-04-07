@@ -143,7 +143,7 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
             findTailRecursionArguments(node, expression, context)
         }
         if (arguments == null) {
-            return generateExpressionCode(expression, context).toStatements { pythonExpression ->
+            return generateExpressionCode(expression, bodyContext).toStatements { pythonExpression ->
                 listOf(
                     PythonReturnNode(
                         expression = pythonExpression,
