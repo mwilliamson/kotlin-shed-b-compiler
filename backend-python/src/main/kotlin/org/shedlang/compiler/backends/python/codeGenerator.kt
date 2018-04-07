@@ -294,14 +294,12 @@ private fun generateCode(
         }
     }
 
-    val expression = node.expression
-    if (expression is IfNode) {
-        return generateIfCode(expression, context, returnValue = ::expressionReturnValue)
-    } else if (expression is WhenNode) {
-        return generateWhenCode(expression, context, returnValue = ::expressionReturnValue)
-    } else {
-        return expressionReturnValue(expression, NodeSource(node))
-    }
+    return generateStatementCodeForExpression(
+        node.expression,
+        context,
+        returnValue = ::expressionReturnValue,
+        source = NodeSource(node)
+    )
 }
 
 private fun generateCode(node: ValNode, context: CodeGenerationContext): List<PythonStatementNode> {
@@ -311,13 +309,26 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
         }
     }
 
-    val expression = node.expression
+    return generateStatementCodeForExpression(
+        node.expression,
+        context,
+        returnValue = ::expressionReturnValue,
+        source = NodeSource(node)
+    )
+}
+
+private fun generateStatementCodeForExpression(
+    expression: ExpressionNode,
+    context: CodeGenerationContext,
+    returnValue: ReturnValue,
+    source: Source
+): List<PythonStatementNode> {
     if (expression is IfNode) {
-        return generateIfCode(expression, context, returnValue = ::expressionReturnValue)
+        return generateIfCode(expression, context, returnValue = returnValue)
     } else if (expression is WhenNode) {
-        return generateWhenCode(expression, context, returnValue = ::expressionReturnValue)
+        return generateWhenCode(expression, context, returnValue = returnValue)
     } else {
-        return expressionReturnValue(expression, NodeSource(node))
+        return returnValue(expression, source)
     }
 }
 
