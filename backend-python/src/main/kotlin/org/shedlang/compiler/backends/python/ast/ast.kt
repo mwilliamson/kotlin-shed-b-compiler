@@ -138,6 +138,7 @@ interface PythonExpressionNode : PythonNode {
         fun visit(node: PythonIntegerLiteralNode): T
         fun visit(node: PythonStringLiteralNode): T
         fun visit(node: PythonVariableReferenceNode): T
+        fun visit(node: PythonTupleNode): T
         fun visit(node: PythonBinaryOperationNode): T
         fun visit(node: PythonFunctionCallNode): T
         fun visit(node: PythonAttributeAccessNode): T
@@ -184,6 +185,15 @@ data class PythonStringLiteralNode(
 
 data class PythonVariableReferenceNode(
     val name: String,
+    override val source: Source
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PythonTupleNode(
+    val members: List<PythonExpressionNode>,
     override val source: Source
 ): PythonExpressionNode {
     override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {

@@ -748,6 +748,7 @@ private fun isScalar(node: PythonExpressionNode): Boolean {
         override fun visit(node: PythonIntegerLiteralNode) = true
         override fun visit(node: PythonStringLiteralNode) = true
         override fun visit(node: PythonVariableReferenceNode) = true
+        override fun visit(node: PythonTupleNode) = throw NotImplementedError()
         override fun visit(node: PythonBinaryOperationNode) = false
         override fun visit(node: PythonFunctionCallNode) = false
         override fun visit(node: PythonAttributeAccessNode) = false

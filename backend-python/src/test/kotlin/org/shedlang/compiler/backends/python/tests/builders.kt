@@ -85,6 +85,9 @@ fun pythonLiteralString(value: String)
 fun pythonVariableReference(name: String)
     = PythonVariableReferenceNode(name, source = anySource())
 
+fun pythonTuple(vararg members: PythonExpressionNode)
+    = PythonTupleNode(members.toList(), source = anySource())
+
 fun pythonBinaryOperation(
     operator: PythonOperator,
     left: PythonExpressionNode,

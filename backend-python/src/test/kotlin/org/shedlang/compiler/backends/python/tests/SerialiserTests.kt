@@ -311,6 +311,27 @@ class SerialiserTests {
         assertThat(output, equalTo("x"))
     }
 
+    @Test
+    fun emptyTuplesAreSerialisedAsEmptyParens() {
+        val node = pythonTuple()
+        val output = serialise(node)
+        assertThat(output, equalTo("()"))
+    }
+
+    @Test
+    fun singletonTupleIsSerialisedWithTrailingComma() {
+        val node = pythonTuple(pythonLiteralInt(0))
+        val output = serialise(node)
+        assertThat(output, equalTo("(0, )"))
+    }
+
+    @Test
+    fun tuplesWithMultipleElementsSeparateElementsWithComma() {
+        val node = pythonTuple(pythonLiteralInt(0), pythonLiteralInt(1))
+        val output = serialise(node)
+        assertThat(output, equalTo("(0, 1)"))
+    }
+
     @TestFactory
     fun binaryOperationSerialisation(): List<DynamicTest> {
         return listOf(

@@ -109,6 +109,16 @@ internal fun serialise(node: PythonExpressionNode): String {
             return node.name
         }
 
+        override fun visit(node: PythonTupleNode): String {
+            val elements = node.members.map(::serialise).joinToString(", ")
+            val trailingComma = if (node.members.size == 1) {
+                ", "
+            } else {
+                ""
+            }
+            return "(" + elements + trailingComma + ")"
+        }
+
         override fun visit(node: PythonBinaryOperationNode): String {
             return serialiseSubExpression(node, node.left, associative = isLeftAssociative(node.operator)) +
                 " " +
@@ -187,6 +197,10 @@ private fun precedence(node: PythonExpressionNode): Int {
         }
 
         override fun visit(node: PythonVariableReferenceNode): Int {
+            return 18
+        }
+
+        override fun visit(node: PythonTupleNode): Int {
             return 18
         }
 
