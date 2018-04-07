@@ -240,42 +240,47 @@ class CodeGeneratorTests {
 
     @Test
     fun returningIfStatementGeneratesIfStatementWithReturns() {
-        val shed = expressionStatement(
-            ifExpression(
-                conditionalBranches = listOf(
-                    conditionalBranch(
-                        condition = literalInt(42),
-                        body = listOf(
-                            expressionStatement(literalInt(0), isReturn = false),
-                            expressionStatement(literalInt(1), isReturn = true)
-                        )
-                    )
-                ),
-                elseBranch = listOf(expressionStatement(literalInt(2), isReturn = true))
-            ),
-            isReturn = true
+        val shed = function(
+            body = listOf(
+                expressionStatement(
+                    ifExpression(
+                        conditionalBranches = listOf(
+                            conditionalBranch(
+                                condition = literalInt(42),
+                                body = listOf(
+                                    expressionStatement(literalInt(0), isReturn = false),
+                                    expressionStatement(literalInt(1), isReturn = true)
+                                )
+                            )
+                        ),
+                        elseBranch = listOf(expressionStatement(literalInt(2), isReturn = true))
+                    ),
+                    isReturn = true
+                )
+            )
         )
 
-        val generatedCode = generateStatementCode(
+        val generatedCode = generateCode(
             shed,
-            context(),
-            returnValue = { expression, pythonExpression, source ->
-                listOf(PythonReturnNode(pythonExpression, source))
-            }
+            context()
         )
 
-        assertThat(generatedCode.single(), isPythonIfStatement(
-            conditionalBranches = isSequence(
-                isPythonConditionalBranch(
-                    condition = isPythonIntegerLiteral(42),
-                    body = isSequence(
-                        isPythonExpressionStatement(isPythonIntegerLiteral(0)),
-                        isPythonReturn(isPythonIntegerLiteral(1))
+        assertThat(generatedCode.single(), isPythonFunction(
+            body = isSequence(
+                isPythonIfStatement(
+                    conditionalBranches = isSequence(
+                        isPythonConditionalBranch(
+                            condition = isPythonIntegerLiteral(42),
+                            body = isSequence(
+                                isPythonExpressionStatement(isPythonIntegerLiteral(0)),
+                                isPythonReturn(isPythonIntegerLiteral(1))
+                            )
+                        )
+                    ),
+                    elseBranch = isSequence(
+                        isPythonReturn(isPythonIntegerLiteral(2))
                     )
                 )
-            ),
-            elseBranch = isSequence(
-                isPythonReturn(isPythonIntegerLiteral(2))
             )
         ))
     }
@@ -337,19 +342,23 @@ class CodeGeneratorTests {
         val variableReference = variableReference("x")
         val typeDeclaration = typeParameter("T")
         val typeReference = staticReference("T")
-        val shed = expressionStatement(
-            whenExpression(
-                variableReference,
-                listOf(
-                    whenBranch(
-                        typeReference,
+        val shed = function(
+            body = listOf(
+                expressionStatement(
+                    whenExpression(
+                        variableReference,
                         listOf(
-                            expressionStatement(literalInt(42), isReturn = true)
+                            whenBranch(
+                                typeReference,
+                                listOf(
+                                    expressionStatement(literalInt(42), isReturn = true)
+                                )
+                            )
                         )
-                    )
+                    ),
+                    isReturn = true
                 )
-            ),
-            isReturn = true
+            )
         )
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
@@ -357,32 +366,31 @@ class CodeGeneratorTests {
             typeReference to typeDeclaration
         )
 
-        val generatedCode = generateStatementCode(
+        val generatedCode = generateCode(
             shed,
-            context(references = references),
-            returnValue = { expression, pythonExpression, source ->
-                listOf(PythonReturnNode(pythonExpression, source))
-            }
+            context(references = references)
         )
 
-        assertThat(generatedCode, isSequence(
-            isPythonAssignment(
-                target = isPythonVariableReference("anonymous"),
-                expression = isPythonVariableReference("x")
-            ),
-            isPythonIfStatement(
-                conditionalBranches = isSequence(
-                    isPythonConditionalBranch(
-                        condition = isPythonTypeCondition(
-                            expression = isPythonVariableReference("anonymous"),
-                            type = isPythonVariableReference("T")
-                        ),
-                        body = isSequence(
-                            isPythonReturn(isPythonIntegerLiteral(42))
-                        )
-                    )
+        assertThat(generatedCode.single(), isPythonFunction(
+            body = isSequence(
+                isPythonAssignment(
+                    target = isPythonVariableReference("anonymous"),
+                    expression = isPythonVariableReference("x")
                 ),
-                elseBranch = isSequence()
+                isPythonIfStatement(
+                    conditionalBranches = isSequence(
+                        isPythonConditionalBranch(
+                            condition = isPythonTypeCondition(
+                                expression = isPythonVariableReference("anonymous"),
+                                type = isPythonVariableReference("T")
+                            ),
+                            body = isSequence(
+                                isPythonReturn(isPythonIntegerLiteral(42))
+                            )
+                        )
+                    ),
+                    elseBranch = isSequence()
+                )
             )
         ))
     }
@@ -752,10 +760,7 @@ class CodeGeneratorTests {
         assertThat(serialise(node).trim(), equalTo(expectedPython))
     }
 
-
-
     @Test
-    @Disabled("WIP")
     fun directlyRecursiveFunctionsWithSpilledArgumentsDoNotDuplicateArguments() {
         val shedSource = """
             fun f(n: Int) -> Int {
@@ -774,7 +779,7 @@ class CodeGeneratorTests {
                     if n == 1:
                         anonymous = 2
                     else:
-                        anonymous = 2
+                        anonymous = 1
                     n_1 = anonymous
                     n = n_1
         """.trimIndent()
@@ -864,13 +869,18 @@ class CodeGeneratorTests {
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
     private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
-    private fun generateCode(node: StatementNode) = generateStatementCode(
-        node,
-        context(),
-        returnValue = { expression, pythonExpression, source ->
-            listOf(PythonReturnNode(pythonExpression, source))
-        }
-    )
+    private fun generateCode(node: StatementNode): List<PythonStatementNode> {
+        val context = context()
+        return generateStatementCode(
+            node,
+            context,
+            returnValue = { expression, source ->
+                generateExpressionCode(expression, context).toStatements { pythonExpression ->
+                    listOf(PythonReturnNode(pythonExpression, source))
+                }
+            }
+        )
+    }
     private fun generateCode(node: ExpressionNode) = generateExpressionCode(node, context())
 
     private fun context(
