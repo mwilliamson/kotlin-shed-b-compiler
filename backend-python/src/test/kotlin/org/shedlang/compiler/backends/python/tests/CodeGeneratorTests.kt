@@ -456,6 +456,42 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun whenValStatementHasSpillingExpressionThenTemporaryIsNotUsed() {
+        val shed = valStatement(
+            name = "x",
+            expression = ifExpression(
+                literalBool(true),
+                listOf(expressionStatement(literalInt(0), isReturn = true)),
+                listOf(expressionStatement(literalInt(1), isReturn = true))
+            )
+        )
+
+        val node = generateCode(shed)
+
+        assertThat("was: " + serialise(node), node, isSequence(
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        condition = isPythonBooleanLiteral(true),
+                        body = isSequence(
+                            isPythonAssignment(
+                                target = isPythonVariableReference("x"),
+                                expression = isPythonIntegerLiteral(0)
+                            )
+                        )
+                    )
+                ),
+                elseBranch = isSequence(
+                    isPythonAssignment(
+                        target = isPythonVariableReference("x"),
+                        expression = isPythonIntegerLiteral(1)
+                    )
+                )
+            )
+        ))
+    }
+
+    @Test
     fun unitLiteralGeneratesNone() {
         val shed = literalUnit()
         val node = generateCode(shed)
@@ -1035,4 +1071,10 @@ class CodeGeneratorTests {
         has(GeneratedCode<PythonExpressionNode>::value, value),
         has(GeneratedCode<PythonExpressionNode>::statements, isEmpty)
     )
+
+    private fun serialise(statements: List<PythonStatementNode>): String {
+        return statements.map { statement ->
+            serialise(statement, indentation = 0)
+        }.joinToString("\n")
+    }
 }
