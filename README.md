@@ -7,7 +7,7 @@ For instance:
 
 ```
 fun increment[H: Heap](x: Ref[H]) ! State[H] -> Unit {
-    x.set(x.get());
+    x.set(x.get() + 1);
 }
 ```
 
