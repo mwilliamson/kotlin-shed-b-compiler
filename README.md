@@ -12,7 +12,7 @@ fun increment[H: Heap](x: Ref[H]) ! State[H] -> Unit {
 ```
 
 If a function uses state internally but the heap is not present in any arguments or the return type,
-the effect can be dropped in the signature:
+we can use a local heap:
 
 ```
 fun fibonacci(n: Int) -> Int {
@@ -27,6 +27,25 @@ fun fibonacci(n: Int) -> Int {
     x.get()
 }
 ```
+
+Is there a way to define this without having to add heaps to the syntax? e.g.
+
+fun fibonacci(n: Int) -> Int {
+    withHeap(fun[H: Heap]() ! State[H] -> Int {
+        ...
+    });
+}
+
+The type system probably isn't expressive enough to describe withHeap without a specialised type.
+Automatically inferring effects might help, something like:
+
+fun fibonacci(n: Int) -> Int {
+    withHeap(fun[H: Heap]() !* -> Int {
+        ...
+    });
+}
+
+but is automatic inference of effects desirable?
 
 Could add some extra syntax to make gets nicer:
 
