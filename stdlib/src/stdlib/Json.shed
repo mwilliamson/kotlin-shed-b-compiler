@@ -1,0 +1,57 @@
+union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
+
+shape JsonObject memberOf JsonValue {
+
+}
+
+shape JsonArray memberOf JsonValue {
+
+}
+
+shape JsonNumber memberOf JsonValue {
+
+}
+
+shape JsonString memberOf JsonValue {
+    value: String,
+}
+
+shape JsonBoolean memberOf JsonValue {
+    value: Bool,
+}
+
+fun boolean(value: Bool) -> JsonValue {
+    JsonBoolean(value = value)
+}
+
+shape JsonNull memberOf JsonValue {
+}
+
+val null = JsonNull();
+
+fun valueToText(value: JsonValue) -> String {
+    when (value) {
+        is JsonObject {
+            ""
+        }
+        is JsonArray {
+            ""
+        }
+        is JsonNumber {
+            ""
+        }
+        is JsonString {
+            ""
+        }
+        is JsonBoolean {
+            if (value.value) {
+                "true"
+            } else {
+                "false"
+            }
+        }
+        is JsonNull {
+            "null"
+        }
+    }
+}
