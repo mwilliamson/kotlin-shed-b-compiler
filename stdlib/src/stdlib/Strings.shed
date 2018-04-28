@@ -1,0 +1,15 @@
+import stdlib.Lists;
+
+fun join(separator: String, elements: List[String]) -> String {
+    Lists.reduce(
+        fun (text: String, element: String) -> String {
+            if (text == "") {
+                element
+            } else {
+                text + separator + element
+            }
+        },
+        "",
+        elements
+    )
+}

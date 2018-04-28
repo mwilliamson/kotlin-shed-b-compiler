@@ -1,4 +1,5 @@
 import stdlib.Lists;
+import stdlib.Strings;
 
 
 union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
@@ -47,18 +48,7 @@ fun valueToText(value: JsonValue) -> String {
             ""
         }
         is JsonArray {
-            val elements = Lists.reduce(
-                fun (text: String, element: JsonValue) -> String {
-                    val elementText = valueToText(element);
-                    if (text == "") {
-                        elementText
-                    } else {
-                        text + "," + elementText
-                    }
-                },
-                "",
-                value.elements
-            );
+            val elements = Strings.join(",", Lists.map(valueToText, value.elements));
             "[" + elements +  "]"
         }
         is JsonNumber {
