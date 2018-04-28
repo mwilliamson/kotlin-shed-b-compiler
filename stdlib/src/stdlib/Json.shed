@@ -1,15 +1,27 @@
+import stdlib.Lists;
+
+
 union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
 
 shape JsonObject memberOf JsonValue {
+    properties: List[JsonProperty],
+}
 
+shape JsonProperty {
+    key: String,
+    value: JsonValue,
 }
 
 shape JsonArray memberOf JsonValue {
+    elements: List[JsonValue],
+}
 
+fun array(elements: List[JsonValue]) -> JsonValue {
+    JsonArray(elements = elements)
 }
 
 shape JsonNumber memberOf JsonValue {
-
+    value: Int,
 }
 
 shape JsonString memberOf JsonValue {
@@ -35,7 +47,19 @@ fun valueToText(value: JsonValue) -> String {
             ""
         }
         is JsonArray {
-            ""
+            val elements = Lists.reduce(
+                fun (text: String, element: JsonValue) -> String {
+                    val elementText = valueToText(element);
+                    if (text == "") {
+                        elementText
+                    } else {
+                        text + "," + elementText
+                    }
+                },
+                "",
+                value.elements
+            );
+            "[" + elements +  "]"
         }
         is JsonNumber {
             ""
