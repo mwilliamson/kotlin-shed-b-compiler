@@ -73,7 +73,7 @@ val redCode = "\u001B[31m";
 val blackCode = "\u001B[39m";
 
 fun runTests(tests: List[Test]) !Io -> Int {
-    val results = Lists.map(runTest ~ (depth = 0), tests);
+    val results = Lists.map(runTest ~ (parent = Options.none), tests);
     print("\n");
     Lists.forEach(printFailures, results);
 
@@ -150,7 +150,16 @@ fun printFailures(result: TestResult) !Io -> Unit {
     }
 }
 
-fun runTest(test: Test, *, depth: Int) !Io -> TestResult {
+fun runTest(test: Test, *, parent: Options.Option[String]) !Io -> TestResult {
+    val namePrefix = when (parent) {
+        is Options.Some[String] {
+            parent.value + ": "
+        }
+        is Options.None {
+            ""
+        }
+    };
+
     when (test) {
         is TestCase {
             val result = test.run();
@@ -167,13 +176,13 @@ fun runTest(test: Test, *, depth: Int) !Io -> TestResult {
                 }
             }
             print(blackCode);
-            TestCaseResult(name = test.name, error = result.error)
+            TestCaseResult(name = namePrefix + test.name, error = result.error)
         }
         is TestSuite {
-            // TODO: printing of suite names
             // TODO: indentation
-            val results = Lists.map(runTest ~ (depth = depth + 1), test.tests);
-            TestSuiteResult(name = test.name, results = results)
+            val name = namePrefix + test.name;
+            val results = Lists.map(runTest ~ (parent = Options.some(name)), test.tests);
+            TestSuiteResult(name = name, results = results)
         }
     }
 }
