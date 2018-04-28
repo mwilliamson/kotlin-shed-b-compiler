@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.StatementNode
 import org.shedlang.compiler.frontend.tests.isFunctionType
 import org.shedlang.compiler.tests.*
@@ -104,7 +105,7 @@ class TypeCheckModuleTests {
             referenceTypes = mapOf(unitReference to MetaType(UnitType))
         ))
         assertThat(result.fields, isMap(
-            "f" to isFunctionType(returnType = equalTo(UnitType))
+            Identifier("f") to isFunctionType(returnType = equalTo(UnitType))
         ))
     }
 }

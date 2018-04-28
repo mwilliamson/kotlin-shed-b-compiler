@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.frontend.tests.isIntType
 import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.staticReference
@@ -43,7 +44,7 @@ class TypeCheckTypesModuleTests {
             referenceTypes = mapOf(intReference to MetaType(IntType))
         ))
         assertThat(result.fields, isMap(
-            "value" to isIntType
+            Identifier("value") to isIntType
         ))
     }
 }

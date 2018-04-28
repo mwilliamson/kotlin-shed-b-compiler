@@ -1,6 +1,9 @@
 package org.shedlang.compiler
 
 import org.shedlang.compiler.ast.BuiltinVariable
+import org.shedlang.compiler.ast.builtinEffect
+import org.shedlang.compiler.ast.builtinType
+import org.shedlang.compiler.ast.builtinVariable
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
@@ -8,15 +11,15 @@ import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.*
 
 private val coreBuiltins = listOf(
-    BuiltinVariable("Any", MetaType(AnyType)),
-    BuiltinVariable("Unit", MetaType(UnitType)),
-    BuiltinVariable("Int", MetaType(IntType)),
-    BuiltinVariable("String", MetaType(StringType)),
-    BuiltinVariable("Bool", MetaType(BoolType)),
-    BuiltinVariable("List", MetaType(ListType)),
+    builtinType("Any", AnyType),
+    builtinType("Unit", UnitType),
+    builtinType("Int", IntType),
+    builtinType("String", StringType),
+    builtinType("Bool", BoolType),
+    builtinType("List", ListType),
 
-    BuiltinVariable("Io", EffectType(IoEffect)),
-    BuiltinVariable("Pure", EffectType(EmptyEffect))
+    builtinEffect("Io", IoEffect),
+    builtinEffect("Pure", EmptyEffect)
 )
 
 fun parseType(string: String): Type {
@@ -40,13 +43,13 @@ fun parseType(string: String): Type {
 }
 
 internal val builtins = coreBuiltins + listOf(
-    BuiltinVariable("print", parseType("(String) !Io -> Unit")),
-    BuiltinVariable("intToString", parseType("(Int) -> String")),
-    BuiltinVariable("list", ListConstructorType),
+    builtinVariable("print", parseType("(String) !Io -> Unit")),
+    builtinVariable("intToString", parseType("(Int) -> String")),
+    builtinVariable("list", ListConstructorType),
 
-    BuiltinVariable("all", parseType("(List[Bool]) -> Bool")),
-    BuiltinVariable("any", parseType("(List[Bool]) -> Bool")),
-    BuiltinVariable("forEach", parseType("[T, !E]((T) !E -> Unit, List[T]) !E -> Unit")),
-    BuiltinVariable("map", parseType("[T, R, !E]((T) !E -> R, List[T]) !E -> List[R]")),
-    BuiltinVariable("reduce", parseType("[T, R, !E]((R, T) !E -> R, R, List[T]) !E -> R"))
+    builtinVariable("all", parseType("(List[Bool]) -> Bool")),
+    builtinVariable("any", parseType("(List[Bool]) -> Bool")),
+    builtinVariable("forEach", parseType("[T, !E]((T) !E -> Unit, List[T]) !E -> Unit")),
+    builtinVariable("map", parseType("[T, R, !E]((T) !E -> R, List[T]) !E -> List[R]")),
+    builtinVariable("reduce", parseType("[T, R, !E]((R, T) !E -> R, R, List[T]) !E -> R"))
 )

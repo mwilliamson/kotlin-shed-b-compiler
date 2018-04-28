@@ -1,6 +1,12 @@
 package org.shedlang.compiler.backends.python
 
-internal fun pythoniseName(originalName: String): String {
+import org.shedlang.compiler.ast.Identifier
+
+internal fun pythoniseName(originalName: Identifier): String {
+    return pythoniseName(originalName.value)
+}
+
+private fun pythoniseName(originalName: String): String {
     val casedName = if (originalName[0].isUpperCase()) {
         originalName
     } else {

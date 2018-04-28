@@ -2,6 +2,7 @@ package org.shedlang.compiler.cli
 
 import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.mainBody
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.typechecker.SourceError
@@ -79,7 +80,7 @@ object ShedcCli {
 
 private fun compile(base: Path, mainName: String, backend: Backend, target: Path) {
     try {
-        val result = readPackage(base, mainName.split("."))
+        val result = readPackage(base, mainName.split(".").map(::Identifier))
         backend.compile(result, target = target)
     } catch (error: SourceError) {
         System.err.println("Error: " + error.message)

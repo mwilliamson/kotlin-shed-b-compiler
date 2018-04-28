@@ -83,7 +83,7 @@ fun valStatement(
     name: String = "<val name>",
     expression: ExpressionNode = expression()
 ) = ValNode(
-    name = name,
+    name = Identifier(name),
     expression = expression,
     source = anySource()
 )
@@ -96,7 +96,7 @@ fun valType(
     name: String = "<val name>",
     type: StaticNode
 ) = ValTypeNode(
-    name = name,
+    name = Identifier(name),
     type = type,
     source = anySource()
 )
@@ -109,7 +109,7 @@ fun literalBool(
 ) = BooleanLiteralNode(value, source = source)
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
-fun variableReference(name: String) = VariableReferenceNode(name, anySource())
+fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 
 fun binaryOperation(
     operator: Operator,
@@ -161,7 +161,7 @@ fun callNamedArgument(
     name: String,
     expression: ExpressionNode
 ) = CallNamedArgumentNode(
-    name = name,
+    name = Identifier(name),
     expression = expression,
     source = anySource()
 )
@@ -171,7 +171,7 @@ fun fieldAccess(
     fieldName: String
 ) = FieldAccessNode(
     receiver = receiver,
-    fieldName = fieldName,
+    fieldName = Identifier(fieldName),
     source = anySource()
 )
 
@@ -184,7 +184,7 @@ fun function(
     returnType: StaticNode = staticReference("Unit"),
     body: List<StatementNode> = listOf()
 ) = FunctionDeclarationNode(
-    name = name,
+    name = Identifier(name),
     staticParameters = staticParameters,
     parameters = parameters,
     namedParameters = namedParameters,
@@ -235,7 +235,7 @@ fun shape(
     hasTagValueFor: StaticNode? = null,
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
-    name = name,
+    name = Identifier(name),
     staticParameters = staticParameters,
     tagged = tag,
     hasTagValueFor = hasTagValueFor,
@@ -247,7 +247,7 @@ fun shapeField(
     name: String = "field",
     type: StaticNode
 ) = ShapeFieldNode(
-    name = name,
+    name = Identifier(name),
     type = type,
     source = anySource()
 )
@@ -258,7 +258,7 @@ fun union(
     staticParameters: List<StaticParameterNode> = listOf(),
     superType: StaticReferenceNode? = null
 ) = UnionNode(
-    name = name,
+    name = Identifier(name),
     staticParameters = staticParameters,
     superType = superType,
     members = members,
@@ -269,7 +269,7 @@ fun typeParameter(
     name: String,
     variance: Variance = Variance.INVARIANT
 ) = TypeParameterNode(
-    name = name,
+    name = Identifier(name),
     variance = variance,
     source = anySource()
 )
@@ -277,7 +277,7 @@ fun typeParameter(
 fun effectParameterDeclaration(
     name: String
 ) = EffectParameterNode(
-    name = name,
+    name = Identifier(name),
     source = anySource()
 )
 
@@ -287,7 +287,7 @@ fun parameter(
     name: String = "x",
     type: StaticNode = staticReference("Int")
 ) = ParameterNode(
-    name = name,
+    name = Identifier(name),
     type = type,
     source = anySource()
 )
@@ -314,13 +314,13 @@ fun import(
     path: ImportPath = ImportPath.absolute(listOf("Module"))
 ) = ImportNode(path = path, source = anySource())
 
-fun staticReference(name: String) = StaticReferenceNode(name, anySource())
+fun staticReference(name: String) = StaticReferenceNode(Identifier(name), anySource())
 fun staticFieldAccess(
     receiver: StaticNode,
     fieldName: String
 ) = StaticFieldAccessNode(
     receiver = receiver,
-    fieldName = fieldName,
+    fieldName = Identifier(fieldName),
     source = anySource()
 )
 fun staticApplication(
@@ -368,8 +368,8 @@ fun shapeType(
     tagField: TagField? = null,
     tagValue: TagValue? = null
 ) = LazyShapeType(
-    name = name,
-    getFields = lazy { fields },
+    name = Identifier(name),
+    getFields = lazy { fields.mapKeys { entry -> Identifier(entry.key) } },
     shapeId = freshShapeId(),
     staticParameters = typeParameters,
     staticArguments = typeArguments,
@@ -380,12 +380,12 @@ fun shapeType(
 
 fun parametrizedUnionType(
     name: String,
-    parameters: List<TypeParameter> = listOf(TypeParameter("T", variance = Variance.INVARIANT)),
+    parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
     members: List<ShapeType> = listOf(),
-    tagField: TagField = TagField(name)
+    tagField: TagField = TagField(Identifier(name))
 ) = TypeFunction(
     type = LazyUnionType(
-        name = name,
+        name = Identifier(name),
         getMembers = lazy { members },
         declaredTagField = tagField,
         staticArguments = parameters
@@ -396,10 +396,16 @@ fun parametrizedUnionType(
 fun unionType(
     name: String = "Union",
     members: List<ShapeType> = listOf(),
-    tagField: TagField = TagField(name)
+    tagField: TagField = TagField(Identifier(name))
 ) = LazyUnionType(
-    name = name,
+    name = Identifier(name),
     getMembers = lazy { members },
     declaredTagField = tagField,
     staticArguments = listOf()
 )
+
+fun moduleType(fields: Map<String, Type>) = ModuleType(
+    fields = fields.mapKeys { (name, type) -> Identifier(name) }
+)
+
+fun tagField(name: String) = TagField(Identifier(name))

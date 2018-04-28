@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.frontend.tests.isBoolType
 import org.shedlang.compiler.frontend.tests.isFunctionType
 import org.shedlang.compiler.frontend.tests.isStringType
@@ -52,7 +53,7 @@ class TypeCheckPartialCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
                 positionalParameters = listOf(BoolType),
-                namedParameters = mapOf("arg0" to IntType, "arg1" to StringType),
+                namedParameters = mapOf(Identifier("arg0") to IntType, Identifier("arg1") to StringType),
                 effect = IoEffect,
                 returns = UnitType
             )
@@ -61,7 +62,7 @@ class TypeCheckPartialCallTests {
 
         assertThat(type, isFunctionType(
             positionalParameters = isSequence(isBoolType),
-            namedParameters = isMap("arg1" to isStringType),
+            namedParameters = isMap(Identifier("arg1") to isStringType),
             effect = equalTo(IoEffect),
             returnType = isUnitType
         ))

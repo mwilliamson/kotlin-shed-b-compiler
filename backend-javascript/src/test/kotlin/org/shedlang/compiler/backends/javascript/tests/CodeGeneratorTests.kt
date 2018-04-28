@@ -71,7 +71,7 @@ class CodeGeneratorTests {
 
     private fun stubbedModule(node: ModuleNode): Module.Shed {
         return Module.Shed(
-            name = listOf("Module"),
+            name = listOf(Identifier("Module")),
             type = ModuleType(mapOf()),
             expressionTypes = emptyExpressionTypes,
             references = ResolvedReferencesMap(mapOf()),
@@ -423,7 +423,7 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val referenceTypes = listOf(reference to functionType(namedParameters = mapOf("x" to IntType)))
+        val referenceTypes = listOf(reference to functionType(namedParameters = mapOf(Identifier("x") to IntType)))
         val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(
@@ -461,7 +461,9 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val referenceTypes = listOf(reference to functionType(namedParameters = mapOf("x" to IntType, "y" to IntType)))
+        val referenceTypes = listOf(
+            reference to functionType(namedParameters = mapOf(Identifier("x") to IntType, Identifier("y") to IntType))
+        )
         val node = generateCode(shed, context(referenceTypes = referenceTypes))
 
         assertThat(node, isJavascriptFunctionCall(

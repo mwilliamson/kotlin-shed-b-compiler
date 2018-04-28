@@ -46,7 +46,7 @@ internal class TypeContext(
         if (type == null) {
             // TODO: test this
             throw CompilerError(
-                "type of ${node.name} is unknown",
+                "type of ${node.name.value} is unknown",
                 source = node.source
             )
         } else {

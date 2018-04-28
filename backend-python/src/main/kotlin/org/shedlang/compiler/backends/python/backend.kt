@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
@@ -107,8 +108,8 @@ private fun compileModule(module: Module.Shed): PythonModule {
     )
 }
 
-internal fun shedModuleNameToPythonModuleName(moduleName: List<String>) =
-    listOf(topLevelPythonPackageName) + moduleName
+internal fun shedModuleNameToPythonModuleName(moduleName: List<Identifier>) =
+    listOf(topLevelPythonPackageName) + moduleName.map(Identifier::value)
 
 private class PythonModule(val name: List<String>, val source: String)
 

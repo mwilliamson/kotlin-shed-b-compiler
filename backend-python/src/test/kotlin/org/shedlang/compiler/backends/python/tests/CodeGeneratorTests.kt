@@ -14,7 +14,6 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.UnitType
 
 class CodeGeneratorTests {
@@ -722,8 +721,8 @@ class CodeGeneratorTests {
                         acc = acc_1
         """.trimIndent()
         val shed = parse("<string>", shedSource)
-        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
-        val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
+        val intBuiltin = builtinType("Int", IntType)
+        val references = resolve(shed, globals = mapOf(Identifier("Int") to intBuiltin))
         val node = generateCode(shed, references = references)
 
         assertThat(serialise(node).trim(), equalTo(expectedPython))
@@ -752,8 +751,8 @@ class CodeGeneratorTests {
                         acc = acc_1
         """.trimIndent()
         val shed = parse("<string>", shedSource)
-        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
-        val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
+        val intBuiltin = builtinType("Int", IntType)
+        val references = resolve(shed, globals = mapOf(Identifier("Int") to intBuiltin))
         val node = generateCode(shed, references = references)
 
         assertThat(serialise(node).trim(), equalTo(expectedPython))
@@ -785,11 +784,11 @@ class CodeGeneratorTests {
                     return f(n - 1, anonymous)
         """.trimIndent()
         val shed = parse("<string>", shedSource)
-        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
-        val unitBuiltin = BuiltinVariable("Unit", MetaType(UnitType))
+        val intBuiltin = builtinType("Int", IntType)
+        val unitBuiltin = builtinType("Unit", UnitType)
         val references = resolve(shed, globals = mapOf(
-            "Int" to intBuiltin,
-            "Unit" to unitBuiltin
+            Identifier("Int") to intBuiltin,
+            Identifier("Unit") to unitBuiltin
         ))
         val node = generateCode(shed, references = references)
 
@@ -820,8 +819,8 @@ class CodeGeneratorTests {
                     n = n_1
         """.trimIndent()
         val shed = parse("<string>", shedSource)
-        val intBuiltin = BuiltinVariable("Int", MetaType(IntType))
-        val references = resolve(shed, globals = mapOf("Int" to intBuiltin))
+        val intBuiltin = builtinType("Int", IntType)
+        val references = resolve(shed, globals = mapOf(Identifier("Int") to intBuiltin))
         val node = generateCode(shed, references = references)
 
         assertThat(serialise(node).trim(), equalTo(expectedPython))

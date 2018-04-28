@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isIntType
 import org.shedlang.compiler.frontend.tests.isUnionType
@@ -86,15 +87,15 @@ class CoercionTests {
     fun functionTypesAreContravariantInNamedArgumentType() {
         assertThat(
             canCoerce(
-                from = functionType(namedParameters = mapOf("x" to AnyType)),
-                to = functionType(namedParameters = mapOf("x" to IntType))
+                from = functionType(namedParameters = mapOf(Identifier("x") to AnyType)),
+                to = functionType(namedParameters = mapOf(Identifier("x") to IntType))
             ),
             equalTo(true)
         )
         assertThat(
             canCoerce(
-                from = functionType(namedParameters = mapOf("x" to IntType)),
-                to = functionType(namedParameters = mapOf("x" to AnyType))
+                from = functionType(namedParameters = mapOf(Identifier("x") to IntType)),
+                to = functionType(namedParameters = mapOf(Identifier("x") to AnyType))
             ),
             equalTo(false)
         )
@@ -105,21 +106,21 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(namedParameters = mapOf()),
-                to = functionType(namedParameters = mapOf("x" to IntType))
+                to = functionType(namedParameters = mapOf(Identifier("x") to IntType))
             ),
             equalTo(false)
         )
         assertThat(
             canCoerce(
-                from = functionType(namedParameters = mapOf("x" to IntType)),
+                from = functionType(namedParameters = mapOf(Identifier("x") to IntType)),
                 to = functionType(namedParameters = mapOf())
             ),
             equalTo(false)
         )
         assertThat(
             canCoerce(
-                from = functionType(namedParameters = mapOf("x" to IntType)),
-                to = functionType(namedParameters = mapOf("y" to IntType))
+                from = functionType(namedParameters = mapOf(Identifier("x") to IntType)),
+                to = functionType(namedParameters = mapOf(Identifier("y") to IntType))
             ),
             equalTo(false)
         )
@@ -176,7 +177,7 @@ class CoercionTests {
 
     @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
@@ -188,7 +189,7 @@ class CoercionTests {
 
     @Test
     fun canCoerceUnionToSupersetUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
@@ -201,7 +202,7 @@ class CoercionTests {
 
     @Test
     fun cannotCoerceUnionToSubsetUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
@@ -342,7 +343,7 @@ class CoercionTests {
 
     @Test
     fun canCoerceTypeParameterToSupertypeOfMultipleTypesWithSameTag() {
-        val tag = TagField("Tag")
+        val tag = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
 

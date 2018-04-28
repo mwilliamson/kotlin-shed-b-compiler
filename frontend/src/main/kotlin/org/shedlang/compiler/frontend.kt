@@ -1,6 +1,7 @@
 package org.shedlang.compiler
 
 import com.moandjiezana.toml.Toml
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.ast.Node
@@ -17,20 +18,20 @@ import java.nio.file.Paths
 fun readStandalone(path: Path): ModuleSet {
     val module = readModule(
         path = path,
-        name = listOf("main"),
+        name = listOf(Identifier("main")),
         getModule = { throw UnsupportedOperationException("Standalone programs cannot import") }
     )
 
     return ModuleSet(listOf(module))
 }
 
-fun readPackage(base: Path, name: List<String>): ModuleSet {
+fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
     val reader = ModuleReader(root = base)
     reader.load(name)
     return ModuleSet(reader.modules)
 }
 
-private fun readModule(path: Path, name: List<String>, getModule: (List<String>) -> ModuleResult): Module {
+private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Identifier>) -> ModuleResult): Module {
     val moduleText = path.toFile().readText()
 
     val nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type })
@@ -90,18 +91,18 @@ private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
     )
 }
 
-internal sealed class ModuleResult(val name: List<String>) {
-    class NotFound(name: List<String>): ModuleResult(name)
+internal sealed class ModuleResult(val name: List<Identifier>) {
+    class NotFound(name: List<Identifier>): ModuleResult(name)
     class Found(val module: Module): ModuleResult(module.name)
-    class FoundMany(name: List<String>): ModuleResult(name)
+    class FoundMany(name: List<Identifier>): ModuleResult(name)
 }
 
 private class ModuleReader(private val root: Path) {
-    private val modulesByName = LazyMap<List<String>, ModuleResult>({ name ->
+    private val modulesByName = LazyMap<List<Identifier>, ModuleResult>({ name ->
         readModuleInPackage(name = name)
     })
 
-    internal fun load(name: List<String>) {
+    internal fun load(name: List<Identifier>) {
         modulesByName.get(name)
     }
 
@@ -114,7 +115,7 @@ private class ModuleReader(private val root: Path) {
             }
         }
 
-    private fun readModuleInPackage(name: List<String>): ModuleResult {
+    private fun readModuleInPackage(name: List<Identifier>): ModuleResult {
         val dependencyDirectories = root.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
         val sourceDirectoryName = "src"
         val dependencies = dependencyDirectories
@@ -124,7 +125,7 @@ private class ModuleReader(private val root: Path) {
         val bases = listOf(root.resolve(sourceDirectoryName)) + dependencies
         val possiblePaths = bases.flatMap({ base ->
             listOf(".shed", ".types.shed").map { extension ->
-                pathAppend(name.fold(base, { path, part -> path.resolve(part) }), extension)
+                pathAppend(name.fold(base, { path, part -> path.resolve(part.value) }), extension)
             }
         })
         val matchingPaths = possiblePaths.filter({ path -> path.toFile().exists() })
@@ -149,7 +150,7 @@ private fun pathAppend(path: Path, suffix: String): Path {
     return path.resolveSibling(path.fileName.toString() + suffix)
 }
 
-private fun resolveName(base: List<String>, name: List<String>): List<String> {
+private fun resolveName(base: List<Identifier>, name: List<Identifier>): List<Identifier> {
     return base.dropLast(1) + name
 }
 

@@ -7,10 +7,7 @@ import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isEquivalentType
 import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.frontend.types.union
-import org.shedlang.compiler.tests.isMap
-import org.shedlang.compiler.tests.parametrizedShapeType
-import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.tests.unionType
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.TypeConstraintSolver
 import org.shedlang.compiler.typechecker.coerce
@@ -29,7 +26,7 @@ class TypeConstraintsTests {
 
     @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
@@ -41,7 +38,7 @@ class TypeConstraintsTests {
 
     @Test
     fun canCoerceUnionToSupersetUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
@@ -54,7 +51,7 @@ class TypeConstraintsTests {
 
     @Test
     fun cannotCoerceUnionToSubsetUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
@@ -118,7 +115,7 @@ class TypeConstraintsTests {
 
     @Test
     fun coercingMultipleTypesToTypeParameterBindsTypeParameterToUnionOfTypes() {
-        val tag = TagField("Tag")
+        val tag = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
 
@@ -147,7 +144,7 @@ class TypeConstraintsTests {
     @Test
     fun whenUnionIsCoercedToTypeParameterThenTypeParameterIsBoundToUnion() {
         val typeParameter = invariantTypeParameter("T")
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
@@ -167,7 +164,7 @@ class TypeConstraintsTests {
     @Test
     fun whenTypeParameterIsBoundToUnionThenTypeParameterCanBeCoercedToUnion() {
         val typeParameter = invariantTypeParameter("T")
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)

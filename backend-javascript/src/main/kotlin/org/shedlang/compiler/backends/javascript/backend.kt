@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.javascript
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
@@ -21,7 +22,7 @@ val backend = object: Backend {
                     writeModule(target, javascriptModule)
                 }
                 is Module.Native -> {
-                    moduleWriter(target, module.name).use { writer ->
+                    moduleWriter(target, module.name.map(Identifier::value)).use { writer ->
                         module.platformPath(".js").toFile().reader().use { reader ->
                             reader.copyTo(writer)
                         }
@@ -85,7 +86,7 @@ private fun compileModule(module: Module.Shed, modules: ModuleSet): JavascriptMo
     }
     val contents = builtins + "(function() {\n" + serialise(generateCode) + main + "})();\n"
     return JavascriptModule(
-        name = module.name,
+        name = module.name.map(Identifier::value),
         source = contents
     )
 }

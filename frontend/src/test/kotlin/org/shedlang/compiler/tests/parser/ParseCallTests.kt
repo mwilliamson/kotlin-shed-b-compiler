@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
@@ -50,7 +51,7 @@ class ParseCallTests {
             positionalArguments = isSequence(),
             namedArguments = isSequence(
                 isCallNamedArgument(
-                    name = equalTo("y"),
+                    name = isIdentifier("y"),
                     expression = isVariableReference("z")
                 )
             )
@@ -104,7 +105,7 @@ class ParseCallTests {
             ),
             namedArguments = isSequence(
                 isCallNamedArgument(
-                    name = equalTo("y"),
+                    name = isIdentifier("y"),
                     expression = isVariableReference("z")
                 )
             )

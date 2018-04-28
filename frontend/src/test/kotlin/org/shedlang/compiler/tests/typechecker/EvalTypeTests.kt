@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -82,7 +83,7 @@ class EvalTypeTests {
             ))
         )
         assertThat(type, isShapeType(
-            name = equalTo("Box"),
+            name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
             fields = listOf(
                 "value" to isBoolType
@@ -93,7 +94,7 @@ class EvalTypeTests {
     @Test
     fun staticFieldAccessHasTypeOfField() {
         val moduleReference = staticReference("M")
-        val moduleType = ModuleType(fields = mapOf(
+        val moduleType = moduleType(fields = mapOf(
             "T" to MetaType(IntType)
         ))
 
@@ -135,8 +136,8 @@ class EvalTypeTests {
             )
         )
         assertThat(type, isFunctionType(
-            positionalParameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
-            namedParameters = isMap("x" to isIntType),
+            positionalParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
+            namedParameters = isMap(Identifier("x") to isIntType),
             effect = equalTo(IoEffect),
             returnType = isBoolType
         ))

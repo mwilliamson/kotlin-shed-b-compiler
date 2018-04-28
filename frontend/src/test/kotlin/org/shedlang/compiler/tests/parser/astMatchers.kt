@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.anythingOrNull
 import org.shedlang.compiler.types.Variance
@@ -51,7 +52,7 @@ internal fun isExpressionStatement(
 }
 
 inline internal fun <reified T: ExpressionNode> isVal(
-    name: Matcher<String>,
+    name: Matcher<Identifier>,
     expression: Matcher<T>
 ): Matcher<Node> {
     return cast(allOf(
@@ -61,7 +62,7 @@ inline internal fun <reified T: ExpressionNode> isVal(
 }
 
 internal fun isValType(
-    name: Matcher<String>,
+    name: Matcher<Identifier>,
     type: Matcher<StaticNode>
 ): Matcher<Node> {
     return cast(allOf(
@@ -71,7 +72,7 @@ internal fun isValType(
 }
 
 internal fun isShape(
-    name: Matcher<String> = anything,
+    name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything,
     tagged: Matcher<Boolean> = anything,
@@ -87,7 +88,7 @@ internal fun isShape(
 }
 
 internal fun isShapeField(
-    name: Matcher<String>,
+    name: Matcher<Identifier>,
     type: Matcher<StaticNode>
 ) = allOf(
     has(ShapeFieldNode::name, name),
@@ -95,7 +96,7 @@ internal fun isShapeField(
 )
 
 internal fun isUnion(
-    name: Matcher<String> = anything,
+    name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     members: Matcher<List<StaticNode>> = anything,
     superType: Matcher<StaticReferenceNode?> = anythingOrNull
@@ -108,12 +109,12 @@ internal fun isUnion(
     ))
 }
 
-internal fun isFunctionDeclaration(name: Matcher<String>): Matcher<ModuleStatementNode> {
+internal fun isFunctionDeclaration(name: Matcher<Identifier>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionDeclarationNode::name, name))
 }
 
 internal fun isTypeParameter(
-    name: Matcher<String>,
+    name: Matcher<Identifier>,
     variance: Matcher<Variance> = anything
 ): Matcher<StaticParameterNode> {
     return cast(allOf(
@@ -123,16 +124,16 @@ internal fun isTypeParameter(
 }
 
 internal fun isEffectParameterNode(
-    name: Matcher<String>
+    name: Matcher<Identifier>
 ): Matcher<StaticParameterNode> {
     return cast(has(EffectParameterNode::name, name))
 }
 
 internal fun isParameter(name: String, typeReference: String): Matcher<ParameterNode> {
     return allOf(
-        has(ParameterNode::name, equalTo(name)),
+        has(ParameterNode::name, isIdentifier(name)),
         has(ParameterNode::type, cast(
-            has(StaticReferenceNode::name, equalTo(typeReference))
+            has(StaticReferenceNode::name, isIdentifier(typeReference))
         ))
     )
 }
@@ -188,7 +189,7 @@ internal fun isPartialCall(
 }
 
 internal fun isCallNamedArgument(
-    name: Matcher<String>,
+    name: Matcher<Identifier>,
     expression: Matcher<ExpressionNode>
 ) = allOf(
     has(CallNamedArgumentNode::name, name),
@@ -197,21 +198,21 @@ internal fun isCallNamedArgument(
 
 internal fun isFieldAccess(
     receiver: Matcher<ExpressionNode>,
-    fieldName: Matcher<String>
+    fieldName: Matcher<Identifier>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(FieldAccessNode::receiver, receiver),
     has(FieldAccessNode::fieldName, fieldName)
 ))
 
 internal fun isVariableReference(name: String) : Matcher<ExpressionNode>
-    = cast(has(VariableReferenceNode::name, equalTo(name)))
+    = cast(has(VariableReferenceNode::name, isIdentifier(name)))
 
 internal fun isStaticReference(name: String) : Matcher<StaticNode>
-    = cast(has(StaticReferenceNode::name, equalTo(name)))
+    = cast(has(StaticReferenceNode::name, isIdentifier(name)))
 
 internal fun isStaticFieldAccess(
     receiver: Matcher<StaticNode>,
-    fieldName: Matcher<String>
+    fieldName: Matcher<Identifier>
 ): Matcher<StaticNode> = cast(allOf(
     has(StaticFieldAccessNode::receiver, receiver),
     has(StaticFieldAccessNode::fieldName, fieldName)

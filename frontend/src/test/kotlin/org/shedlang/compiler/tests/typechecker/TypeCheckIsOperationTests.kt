@@ -9,13 +9,12 @@ import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.TagField
 import org.shedlang.compiler.types.TagValue
 
 class TypeCheckIsOperationTests {
     @Test
     fun expressionMustBeUnion() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val memberType = shapeType(name = "Member", tagValue = TagValue(tagField, 0))
         val memberReference = staticReference("Member")
 
@@ -29,7 +28,7 @@ class TypeCheckIsOperationTests {
 
     @Test
     fun isOperationHasBooleanType() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val memberType = shapeType(name = "Member", tagValue = TagValue(tagField, 0))
         val unionType = unionType(name = "Union", members = listOf(memberType), tagField = tagField)
 

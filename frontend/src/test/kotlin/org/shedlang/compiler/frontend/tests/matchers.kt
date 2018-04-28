@@ -1,18 +1,21 @@
 package org.shedlang.compiler.frontend.tests
 
 import com.natpryce.hamkrest.*
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.anythingOrNull
 import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
 
+internal fun isIdentifier(name: String) = has(Identifier::value, equalTo(name))
+
 internal fun isType(type: Type): Matcher<Type> = equalTo(type)
 
 internal fun isFunctionType(
     positionalParameters: Matcher<List<Type>> = anything,
     returnType: Matcher<Type> = anything,
-    namedParameters: Matcher<Map<String, Type>> = anything,
+    namedParameters: Matcher<Map<Identifier, Type>> = anything,
     effect: Matcher<Effect> = anything
 ): Matcher<Type> = cast(allOf(
     has(FunctionType::positionalParameters, positionalParameters),
@@ -22,7 +25,7 @@ internal fun isFunctionType(
 ))
 
 internal fun isShapeType(
-    name: Matcher<String> = anything,
+    name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
     shapeId: Matcher<Int> = anything,
     tagField: Matcher<TagField?> = anythingOrNull,
@@ -36,17 +39,17 @@ internal fun isShapeType(
 ))
 
 internal fun isShapeType(
-    name: Matcher<String> = anything,
+    name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
     fields: List<Pair<String, Matcher<Type>>>
 ): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::name, name),
     has(ShapeType::staticArguments, staticArguments),
-    has(ShapeType::fields, isMap(*fields.toTypedArray()))
+    has(ShapeType::fields, isMap(*fields.map { (name, type) -> Identifier(name) to type }.toTypedArray()))
 ))
 
 internal fun isUnionType(
-    name: Matcher<String> = anything,
+    name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
     members: Matcher<List<Type>> = anything,
     tagField: Matcher<TagField> = anything
@@ -81,7 +84,7 @@ internal fun isTypeFunction(
 ))
 
 internal fun isTypeParameter(
-    name: Matcher<String>,
+    name: Matcher<Identifier>,
     variance: Matcher<Variance>
 ): Matcher<StaticValue> = cast(allOf(
     has(TypeParameter::name, name),
@@ -111,7 +114,7 @@ internal fun isEquivalentType(type: Type): Matcher<Type> {
 internal val isUnionTypeGroup: Matcher<TypeGroup> = equalTo(UnionTypeGroup)
 internal val isMetaTypeGroup: Matcher<TypeGroup> = equalTo(MetaTypeGroup)
 
-fun isTag(name: Matcher<String>, tagId: Matcher<Int>): Matcher<TagField> {
+fun isTag(name: Matcher<Identifier>, tagId: Matcher<Int>): Matcher<TagField> {
     return allOf(
         has(TagField::name, name),
         has(TagField::tagFieldId, tagId)

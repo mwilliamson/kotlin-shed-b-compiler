@@ -9,7 +9,7 @@ class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode
         val targetNode = references[node.nodeId]
         if (targetNode == null) {
             throw CompilerError(
-                "reference ${node.name} is unresolved",
+                "reference ${node.name.value} is unresolved",
                 source = node.source
             )
         } else {
@@ -20,7 +20,7 @@ class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode
 }
 
 internal class ResolutionContext(
-    val bindings: Map<String, VariableBindingNode>,
+    val bindings: Map<Identifier, VariableBindingNode>,
     val nodes: MutableMap<Int, VariableBindingNode>,
     val isInitialised: MutableSet<Int>,
     val deferred: MutableMap<Int, () -> Unit>
@@ -64,12 +64,12 @@ internal class ResolutionContext(
         deferredInitialisation()
     }
 
-    fun enterScope(bindings: Map<String, VariableBindingNode>): ResolutionContext {
+    fun enterScope(bindings: Map<Identifier, VariableBindingNode>): ResolutionContext {
         return ResolutionContext(this.bindings + bindings, nodes, isInitialised, deferred)
     }
 }
 
-fun resolve(node: Node, globals: Map<String, VariableBindingNode>): ResolvedReferences {
+fun resolve(node: Node, globals: Map<Identifier, VariableBindingNode>): ResolvedReferences {
     val context = ResolutionContext(
         globals,
         mutableMapOf(),

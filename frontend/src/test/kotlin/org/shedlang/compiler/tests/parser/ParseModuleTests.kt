@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ModuleNode
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
@@ -50,8 +51,8 @@ class ParseModuleTests {
 
         assertThat(node, allOf(
             has(ModuleNode::body, isSequence(
-                isFunctionDeclaration(name = equalTo("f")),
-                isFunctionDeclaration(name = equalTo("g"))
+                isFunctionDeclaration(name = isIdentifier("f")),
+                isFunctionDeclaration(name = isIdentifier("g"))
             ))
         ))
     }

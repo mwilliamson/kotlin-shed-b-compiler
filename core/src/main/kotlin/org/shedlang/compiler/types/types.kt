@@ -1,5 +1,6 @@
 package org.shedlang.compiler.types
 
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
 
 
@@ -98,7 +99,7 @@ fun freshShapeId() = nextShapeId++
 fun freshTagFieldId() = freshNodeId()
 
 data class TagField(
-    val name: String,
+    val name: Identifier,
     val tagFieldId: Int = freshTagFieldId()
 )
 
@@ -108,7 +109,7 @@ data class TagValue(
 )
 
 interface StaticParameter: StaticValue {
-    val name: String
+    val name: Identifier
 
     fun <T> accept(visitor: Visitor<T>): T
 
@@ -119,7 +120,7 @@ interface StaticParameter: StaticValue {
 }
 
 data class TypeParameter(
-    override val name: String,
+    override val name: Identifier,
     val variance: Variance,
     val typeParameterId: Int = freshTypeParameterId()
 ): StaticParameter, Type {
@@ -130,7 +131,7 @@ data class TypeParameter(
                 Variance.COVARIANT -> "+"
                 Variance.CONTRAVARIANT  -> "-"
             }
-            return prefix + name
+            return prefix + name.value
         }
 
     override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
@@ -139,11 +140,11 @@ data class TypeParameter(
 }
 
 data class EffectParameter(
-    override val name: String,
+    override val name: Identifier,
     val staticParameterId: Int = freshEffectParameterId()
 ): StaticParameter, Effect {
     override val shortDescription: String
-        get() = name
+        get() = name.value
 
     override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
         return visitor.visit(this)
@@ -166,11 +167,11 @@ data class TypeFunction (
 }
 
 interface HasFieldsType : Type {
-    val fields: Map<String, Type>
+    val fields: Map<Identifier, Type>
 }
 
 data class ModuleType(
-    override val fields: Map<String, Type>
+    override val fields: Map<Identifier, Type>
 ): HasFieldsType {
     override val shortDescription: String
     // TODO: should include name of module
@@ -180,7 +181,7 @@ data class ModuleType(
 data class FunctionType(
     val staticParameters: List<StaticParameter>,
     val positionalParameters: List<Type>,
-    val namedParameters: Map<String, Type>,
+    val namedParameters: Map<Identifier, Type>,
     val returns: Type,
     val effect: Effect
 ): Type {
@@ -200,7 +201,7 @@ data class FunctionType(
             val namedParameterStrings = namedParameters
                 .asIterable()
                 .sortedBy({ (name, _) -> name })
-                .map({ (name, type) -> "${name}: ${type.shortDescription}" })
+                .map({ (name, type) -> "${name.value}: ${type.shortDescription}" })
             val parameters = (positionalParameterStrings + namedParameterStrings)
                 .joinToString(", ")
 
@@ -219,7 +220,7 @@ interface MayDeclareTagField {
 }
 
 interface ShapeType: HasFieldsType, MayDeclareTagField {
-    val name: String
+    val name: Identifier
     val shapeId: Int
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
@@ -227,8 +228,8 @@ interface ShapeType: HasFieldsType, MayDeclareTagField {
 }
 
 data class LazyShapeType(
-    override val name: String,
-    private val getFields: Lazy<Map<String, Type>>,
+    override val name: Identifier,
+    private val getFields: Lazy<Map<Identifier, Type>>,
     override val shapeId: Int = freshShapeId(),
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>,
@@ -237,16 +238,16 @@ data class LazyShapeType(
 ): ShapeType {
     override val shortDescription: String
         get() = if (staticArguments.isEmpty()) {
-            name
+            name.value
         } else {
             appliedTypeShortDescription(name, staticArguments)
         }
-    override val fields: Map<String, Type> by getFields
+    override val fields: Map<Identifier, Type> by getFields
     override val tagValue: TagValue? by getTagValue
 }
 
 interface UnionType: Type, MayDeclareTagField {
-    val name: String
+    val name: Identifier
     val members: List<ShapeType>
     val staticArguments: List<StaticValue>
     override val declaredTagField: TagField
@@ -254,7 +255,7 @@ interface UnionType: Type, MayDeclareTagField {
 
 
 data class AnonymousUnionType(
-    override val name: String = "_Union" + freshAnonymousTypeId(),
+    override val name: Identifier = Identifier("_Union" + freshAnonymousTypeId()),
     override val members: List<ShapeType>,
     override val declaredTagField: TagField
 ): UnionType {
@@ -262,18 +263,18 @@ data class AnonymousUnionType(
         get() = listOf()
 
     override val shortDescription: String
-        get() = name
+        get() = name.value
 }
 
 data class LazyUnionType(
-    override val name: String,
+    override val name: Identifier,
     private val getMembers: Lazy<List<ShapeType>>,
     override val declaredTagField: TagField,
     override val staticArguments: List<StaticValue>
 ): UnionType {
     override val shortDescription: String
         get() = if (staticArguments.isEmpty()) {
-            name
+            name.value
         } else {
             appliedTypeShortDescription(name, staticArguments)
         }
@@ -285,16 +286,16 @@ object ListConstructorType : Type {
     override val shortDescription: String
         get() = "ListConstructor"
 }
-val listTypeParameter = TypeParameter("T", variance = Variance.COVARIANT)
+val listTypeParameter = covariantTypeParameter("T")
 val listTypeShapeId = freshShapeId()
 val ListType = TypeFunction(
     parameters = listOf(listTypeParameter),
     type = LazyShapeType(
         shapeId = listTypeShapeId,
-        name = "List",
+        name = Identifier("List"),
         staticParameters = listOf(listTypeParameter),
         staticArguments = listOf(listTypeParameter),
-        getFields = lazy({ mapOf<String, Type>() }),
+        getFields = lazy({ mapOf<Identifier, Type>() }),
         declaredTagField = null,
         getTagValue = lazy { null }
     )
@@ -303,7 +304,7 @@ val ListType = TypeFunction(
 fun functionType(
     staticParameters: List<StaticParameter> = listOf(),
     positionalParameters: List<Type> = listOf(),
-    namedParameters: Map<String, Type> = mapOf(),
+    namedParameters: Map<Identifier, Type> = mapOf(),
     returns: Type = UnitType,
     effect: Effect = EmptyEffect
 ) = FunctionType(
@@ -317,16 +318,16 @@ fun functionType(
 fun positionalFunctionType(parameters: List<Type>, returns: Type)
     = functionType(positionalParameters = parameters, returns = returns)
 
-fun invariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.INVARIANT)
-fun covariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.COVARIANT)
-fun contravariantTypeParameter(name: String) = TypeParameter(name, variance = Variance.CONTRAVARIANT)
+fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT)
+fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT)
+fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT)
 
-fun effectParameter(name: String) = EffectParameter(name)
+fun effectParameter(name: String) = EffectParameter(Identifier(name))
 
 
-private fun appliedTypeShortDescription(name: String, parameters: List<StaticValue>): String {
+private fun appliedTypeShortDescription(name: Identifier, parameters: List<StaticValue>): String {
     val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })
-    return name + "[" + parametersString + "]"
+    return name.value + "[" + parametersString + "]"
 }
 
 data class ValidateTypeResult(val errors: List<String>) {
@@ -363,7 +364,7 @@ fun validateType(type: Type): ValidateTypeResult {
     } else if (type is UnionType) {
         for (member in type.members) {
             if (!hasTagValueFor(member, type.declaredTagField)) {
-                return ValidateTypeResult(listOf("union member did not have tag value for " + type.declaredTagField.name))
+                return ValidateTypeResult(listOf("union member did not have tag value for " + type.declaredTagField.name.value))
             }
         }
         return ValidateTypeResult.success

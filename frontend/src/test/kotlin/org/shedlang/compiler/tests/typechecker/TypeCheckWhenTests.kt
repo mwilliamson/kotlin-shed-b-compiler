@@ -14,20 +14,19 @@ import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.TagField
 import org.shedlang.compiler.types.TagValue
 
 class TypeCheckWhenTests {
     private val inputMember1TypeReference = staticReference("Member1")
     private val inputMember2TypeReference = staticReference("Member2")
-    private val inputTagField = TagField("Tag")
+    private val inputTagField = tagField("Tag")
     private val inputMember1 = shapeType(name = "Member1", tagValue = TagValue(inputTagField, freshNodeId()))
     private val inputMember2 = shapeType(name = "Member2", tagValue = TagValue(inputTagField, freshNodeId()))
     private val inputUnion = unionType("Union", members = listOf(inputMember1, inputMember2), tagField = inputTagField)
 
     private val outputMember1Reference = variableReference("outputMember1")
     private val outputMember2Reference = variableReference("outputMember2")
-    private val outputTagField = TagField("OutputTag")
+    private val outputTagField = tagField("OutputTag")
     private val outputMember1 = shapeType(name = "OutputMember1", tagValue = TagValue(outputTagField, freshNodeId()))
     private val outputMember2 = shapeType(name = "OutputMember2", tagValue = TagValue(outputTagField, freshNodeId()))
 

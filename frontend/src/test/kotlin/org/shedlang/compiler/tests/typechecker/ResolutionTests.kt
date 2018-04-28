@@ -6,12 +6,12 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.VariableBindingNode
-import org.shedlang.compiler.ast.VariableReferenceNode
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
-import java.util.*
 
 class ResolutionTests {
     private val declaration = valStatement("declaration")
@@ -23,18 +23,18 @@ class ResolutionTests {
     @Test
     fun variableReferencesAreResolved() {
         val node = variableReference("x")
-        val references = resolve(node, globals = mapOf("x" to declaration))
+        val references = resolve(node, globals = mapOf(Identifier("x") to declaration))
         assertThat(references[node], isVariableBinding(declaration))
     }
 
     @Test
     fun whenVariableIsUninitialisedThenExceptionIsThrown() {
         val node = variableReference("x")
-        val context = resolutionContext(mapOf("x" to anyDeclaration()))
+        val context = resolutionContext(mapOf(Identifier("x") to anyDeclaration()))
 
         assertThat(
             { resolve(node, context) },
-            throws(has(UninitialisedVariableError::name, equalTo("x")))
+            throws(has(UninitialisedVariableError::name, isIdentifier("x")))
         )
     }
 
@@ -45,14 +45,14 @@ class ResolutionTests {
 
         assertThat(
             { resolve(node, context) },
-            throws(has(UnresolvedReferenceError::name, equalTo("x")))
+            throws(has(UnresolvedReferenceError::name, isIdentifier("x")))
         )
     }
 
     @Test
     fun typeReferencesAreResolved() {
         val node = staticReference("X")
-        val references = resolve(node, globals = mapOf("X" to declaration))
+        val references = resolve(node, globals = mapOf(Identifier("X") to declaration))
         assertThat(references[node], isVariableBinding(declaration))
     }
 
@@ -63,14 +63,14 @@ class ResolutionTests {
 
         assertThat(
             { resolve(node, context) },
-            throws(has(UnresolvedReferenceError::name, equalTo("X")))
+            throws(has(UnresolvedReferenceError::name, isIdentifier("X")))
         )
     }
 
     @Test
     fun childrenAreResolved() {
-        val node = VariableReferenceNode("x", anySource())
-        val references = resolve(expressionStatement(node), globals = mapOf("x" to declaration))
+        val node = variableReference("x")
+        val references = resolve(expressionStatement(node), globals = mapOf(Identifier("x") to declaration))
         assertThat(references[node], isVariableBinding(declaration))
     }
 
@@ -84,7 +84,7 @@ class ResolutionTests {
             body = listOf(expressionStatement(reference))
         )
 
-        val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
+        val references = resolve(node, globals = mapOf(Identifier("Int") to anyDeclaration()))
 
         assertThat(references[reference], isVariableBinding(parameter))
     }
@@ -99,7 +99,7 @@ class ResolutionTests {
             body = listOf(expressionStatement(reference))
         )
 
-        val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
+        val references = resolve(node, globals = mapOf(Identifier("Int") to anyDeclaration()))
 
         assertThat(references[reference], isVariableBinding(parameter))
     }
@@ -116,7 +116,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf(
             reference.name to anyDeclaration(),
-            "Int" to anyDeclaration()
+            Identifier("Int") to anyDeclaration()
         ))
 
         assertThat(references[reference], isVariableBinding(parameter))
@@ -148,8 +148,8 @@ class ResolutionTests {
         )
 
         val references = resolve(node, globals = mapOf(
-            "Int" to anyDeclaration(),
-            "Io" to declaration
+            Identifier("Int") to anyDeclaration(),
+            Identifier("Io") to declaration
         ))
 
         assertThat(references[effect], isVariableBinding(declaration))
@@ -187,7 +187,7 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(node, globals = mapOf("Int" to anyDeclaration()))
+        val references = resolve(node, globals = mapOf(Identifier("Int") to anyDeclaration()))
         assertThat(references[reference], isVariableBinding(valStatement))
     }
 
@@ -196,7 +196,7 @@ class ResolutionTests {
         val reference = variableReference("x")
         val valStatement = valStatement(name = "y", expression = reference)
 
-        val references = resolve(valStatement, globals = mapOf("x" to declaration))
+        val references = resolve(valStatement, globals = mapOf(Identifier("x") to declaration))
         assertThat(references[reference], isVariableBinding(declaration))
     }
 
@@ -214,7 +214,7 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(module, globals = mapOf("Unit" to anyDeclaration()))
+        val references = resolve(module, globals = mapOf(Identifier("Unit") to anyDeclaration()))
 
         assertThat(references[reference], isVariableBinding(import))
     }
@@ -250,7 +250,7 @@ class ResolutionTests {
             definitionOfSecond
         ))
 
-        val references = resolve(node, globals = mapOf("Unit" to anyDeclaration()))
+        val references = resolve(node, globals = mapOf(Identifier("Unit") to anyDeclaration()))
 
         assertThat(references[referenceToFirst], isVariableBinding(definitionOfFirst))
         assertThat(references[referenceToSecond], isVariableBinding(definitionOfSecond))
@@ -271,8 +271,8 @@ class ResolutionTests {
         ))
 
         assertThat(
-            { resolve(node, globals = mapOf("Int" to anyDeclaration()))},
-            throws(has(UninitialisedVariableError::name, equalTo("x")))
+            { resolve(node, globals = mapOf(Identifier("Int") to anyDeclaration()))},
+            throws(has(UninitialisedVariableError::name, isIdentifier("x")))
         )
     }
 
@@ -281,7 +281,7 @@ class ResolutionTests {
         val reference = variableReference("x")
         val node = ifStatement(condition = reference)
 
-        val references = resolve(node, globals = mapOf("x" to declaration))
+        val references = resolve(node, globals = mapOf(Identifier("x") to declaration))
 
         assertThat(references[reference], isVariableBinding(declaration))
     }
@@ -316,7 +316,7 @@ class ResolutionTests {
         val reference = variableReference("x")
         val node = whenExpression(expression = reference)
 
-        val references = resolve(node, globals = mapOf("x" to declaration))
+        val references = resolve(node, globals = mapOf(Identifier("x") to declaration))
 
         assertThat(references[reference], isVariableBinding(declaration))
     }
@@ -331,7 +331,7 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(node, globals = mapOf("T" to declaration))
+        val references = resolve(node, globals = mapOf(Identifier("T") to declaration))
 
         assertThat(references[typeReference], isVariableBinding(declaration))
     }
@@ -354,7 +354,7 @@ class ResolutionTests {
             )
         )
 
-        val references = resolve(node, globals = mapOf("T" to anyDeclaration()))
+        val references = resolve(node, globals = mapOf(Identifier("T") to anyDeclaration()))
 
         assertThat(references[variableReference], isVariableBinding(variableDeclaration))
     }
@@ -369,8 +369,8 @@ class ResolutionTests {
         ))
 
         assertThat(
-            { resolve(node, globals = mapOf("Unit" to anyDeclaration())) },
-            throws(has(RedeclarationError::name, equalTo("x")))
+            { resolve(node, globals = mapOf(Identifier("Unit") to anyDeclaration())) },
+            throws(has(RedeclarationError::name, isIdentifier("x")))
         )
     }
 
@@ -450,13 +450,11 @@ class ResolutionTests {
     }
 
     private fun resolutionContext(
-        bindings: Map<String, VariableBindingNode> = mapOf(),
-        isInitialised: Set<Int> = setOf(),
-        globals: Map<String, VariableBindingNode> = mapOf()
+        bindings: Map<Identifier, VariableBindingNode> = mapOf()
     ) = ResolutionContext(
-        bindings = globals + bindings,
+        bindings = bindings,
         nodes = mutableMapOf(),
-        isInitialised = HashSet(globals.values.map({ value -> value.nodeId }) + isInitialised),
+        isInitialised = mutableSetOf(),
         deferred = mutableMapOf()
     )
 

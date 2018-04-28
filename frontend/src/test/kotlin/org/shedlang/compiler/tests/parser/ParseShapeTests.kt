@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseShape
 import org.shedlang.compiler.tests.isSequence
@@ -16,7 +17,7 @@ class ParseShapeTests {
         val source = "shape X { }"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
-            name = equalTo("X"),
+            name = isIdentifier("X"),
             staticParameters = isSequence(),
             fields = isSequence()
         ))
@@ -38,11 +39,11 @@ class ParseShapeTests {
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
-                    name = equalTo("a"),
+                    name = isIdentifier("a"),
                     type = isStaticReference("Int")
                 ),
                 isShapeField(
-                    name = equalTo("b"),
+                    name = isIdentifier("b"),
                     type = isStaticReference("String")
                 )
             )
@@ -56,7 +57,7 @@ class ParseShapeTests {
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
-                    name = equalTo("a"),
+                    name = isIdentifier("a"),
                     type = isStaticReference("Int")
                 )
             )
@@ -68,8 +69,8 @@ class ParseShapeTests {
         val source = "shape X[T] { }"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
-            name = equalTo("X"),
-            staticParameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            name = isIdentifier("X"),
+            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
             fields = isSequence()
         ))
     }
@@ -79,10 +80,10 @@ class ParseShapeTests {
         val source = "shape X[T, U] { }"
         val node = parseString(::parseShape, source)
         assertThat(node, isShape(
-            name = equalTo("X"),
+            name = isIdentifier("X"),
             staticParameters = isSequence(
-                isTypeParameter(name = equalTo("T")),
-                isTypeParameter(name = equalTo("U"))
+                isTypeParameter(name = isIdentifier("T")),
+                isTypeParameter(name = isIdentifier("U"))
             ),
             fields = isSequence()
         ))

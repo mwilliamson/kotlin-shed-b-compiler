@@ -1,13 +1,18 @@
 package org.shedlang.compiler.ast
 
 import org.shedlang.compiler.nullableToList
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.Variance
+import org.shedlang.compiler.types.*
 
 interface Node {
     val source: Source
     val nodeId: Int
     val children: List<Node>
+}
+
+data class Identifier(val value: String) : Comparable<Identifier> {
+    override fun compareTo(other: Identifier): Int {
+        return value.compareTo(other.value)
+    }
 }
 
 fun Node.descendants(): List<Node> {
@@ -17,11 +22,11 @@ fun Node.descendants(): List<Node> {
 }
 
 interface VariableBindingNode: Node {
-    val name: String
+    val name: Identifier
 }
 
 data class BuiltinVariable(
-    override val name: String,
+    override val name: Identifier,
     val type: Type,
     override val nodeId: Int = freshNodeId()
 ): VariableBindingNode {
@@ -31,10 +36,25 @@ data class BuiltinVariable(
         get() = listOf()
 }
 
+fun builtinType(name: String, type: Type) = BuiltinVariable(
+    name = Identifier(name),
+    type = MetaType(type)
+)
+
+fun builtinEffect(name: String, effect: Effect) = BuiltinVariable(
+    name = Identifier(name),
+    type = EffectType(effect)
+)
+
+fun builtinVariable(name: String, type: Type) = BuiltinVariable(
+    name = Identifier(name),
+    type = type
+)
+
 interface TypeDeclarationNode: VariableBindingNode
 
 interface ReferenceNode: Node {
-    val name: String
+    val name: Identifier
 }
 
 interface Source {
@@ -103,7 +123,7 @@ interface StaticNode : Node {
 }
 
 data class StaticReferenceNode(
-    override val name: String,
+    override val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ReferenceNode, StaticNode {
@@ -117,7 +137,7 @@ data class StaticReferenceNode(
 
 data class StaticFieldAccessNode(
     val receiver: StaticNode,
-    val fieldName: String,
+    val fieldName: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : StaticNode {
@@ -181,7 +201,7 @@ data class TypesModuleNode(
 }
 
 data class ValTypeNode(
-    override val name: String,
+    override val name: Identifier,
     val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -190,10 +210,10 @@ data class ValTypeNode(
         get() = listOf(type)
 }
 
-data class ImportPath(val base: ImportPathBase, val parts: List<String>) {
+data class ImportPath(val base: ImportPathBase, val parts: List<Identifier>) {
     companion object {
-        fun absolute(parts: List<String>) = ImportPath(ImportPathBase.Absolute, parts)
-        fun relative(parts: List<String>) = ImportPath(ImportPathBase.Relative, parts)
+        fun absolute(parts: List<String>) = ImportPath(ImportPathBase.Absolute, parts.map(::Identifier))
+        fun relative(parts: List<String>) = ImportPath(ImportPathBase.Relative, parts.map(::Identifier))
     }
 }
 sealed class ImportPathBase {
@@ -206,7 +226,7 @@ data class ImportNode(
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode {
-    override val name: String
+    override val name: Identifier
         get() = path.parts.last()
 
     override val children: List<Node>
@@ -225,7 +245,7 @@ interface ModuleStatementNode: Node {
 }
 
 data class ShapeNode(
-    override val name: String,
+    override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
     val tagged: Boolean,
     val hasTagValueFor: StaticNode?,
@@ -242,7 +262,7 @@ data class ShapeNode(
 }
 
 data class ShapeFieldNode(
-    val name: String,
+    val name: Identifier,
     val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -252,7 +272,7 @@ data class ShapeFieldNode(
 }
 
 data class UnionNode(
-    override val name: String,
+    override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
     val superType: StaticReferenceNode?,
     val members: List<StaticNode>,
@@ -312,7 +332,7 @@ data class FunctionExpressionNode(
 }
 
 data class FunctionDeclarationNode(
-    override val name: String,
+    override val name: Identifier,
     override val staticParameters: List<StaticParameterNode>,
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
@@ -343,7 +363,7 @@ interface StaticParameterNode: VariableBindingNode {
 }
 
 data class TypeParameterNode(
-    override val name: String,
+    override val name: Identifier,
     val variance: Variance,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -357,7 +377,7 @@ data class TypeParameterNode(
 }
 
 data class EffectParameterNode(
-    override val name: String,
+    override val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticParameterNode, Node {
@@ -370,7 +390,7 @@ data class EffectParameterNode(
 }
 
 data class ParameterNode(
-    override val name: String,
+    override val name: Identifier,
     val type: StaticNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -473,7 +493,7 @@ data class ExpressionStatementNode(
 }
 
 data class ValNode(
-    override val name: String,
+    override val name: Identifier,
     val expression: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -564,7 +584,7 @@ data class StringLiteralNode(
 }
 
 data class VariableReferenceNode(
-    override val name: String,
+    override val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ReferenceNode, ExpressionNode {
@@ -645,7 +665,7 @@ data class PartialCallNode(
 }
 
 data class CallNamedArgumentNode(
-    val name: String,
+    val name: Identifier,
     val expression: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -656,7 +676,7 @@ data class CallNamedArgumentNode(
 
 data class FieldAccessNode(
     val receiver: ExpressionNode,
-    val fieldName: String,
+    val fieldName: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {

@@ -110,14 +110,6 @@ private fun parseValType(source: Source, tokens: TokenIterator<TokenType>): ValT
     )
 }
 
-internal fun parseModuleName(tokens: TokenIterator<TokenType>): String {
-    return parseOneOrMoreWithSeparator(
-        { tokens -> parseIdentifier(tokens) },
-        { tokens -> tokens.trySkip(TokenType.SYMBOL_DOT) },
-        tokens
-    ).joinToString(".")
-}
-
 internal fun parseImport(source: Source, tokens: TokenIterator<TokenType>): ImportNode {
     tokens.skip(TokenType.KEYWORD_IMPORT)
     val isLocal = tokens.trySkip(TokenType.SYMBOL_DOT)
@@ -358,8 +350,9 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Stat
 
 private fun parseStaticParameter(allowVariance: Boolean) = fun (source: Source, tokens: TokenIterator<TokenType>): StaticParameterNode {
     if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
+        val name = parseIdentifier(tokens)
         return EffectParameterNode(
-            name = tokens.nextValue(TokenType.IDENTIFIER),
+            name = name,
             source = source
         )
     } else {
@@ -879,7 +872,7 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
 }
 
 private fun parseVariableReference(source: Source, tokens: TokenIterator<TokenType>): VariableReferenceNode {
-    val value = tokens.nextValue(TokenType.IDENTIFIER)
+    val value = parseIdentifier(tokens)
     return VariableReferenceNode(value, source)
 }
 
@@ -1071,7 +1064,7 @@ private object StaticFieldAccessParser : StaticOperationParser {
         get() = 14
 }
 
-private fun parseIdentifier(tokens: TokenIterator<TokenType>) = tokens.nextValue(TokenType.IDENTIFIER)
+private fun parseIdentifier(tokens: TokenIterator<TokenType>) = Identifier(tokens.nextValue(TokenType.IDENTIFIER))
 
 private fun <T> parseOneOrMoreWithSeparator(
     parseElement: (TokenIterator<TokenType>) -> T,

@@ -127,7 +127,7 @@ private fun checkArguments(
     call: CallBaseNode,
     staticParameters: List<StaticParameter>,
     positionalParameters: List<Type>,
-    namedParameters: Map<String, Type>,
+    namedParameters: Map<Identifier, Type>,
     context: TypeContext,
     allowMissing: Boolean
 ): StaticBindings {
@@ -265,7 +265,7 @@ private fun checkArgumentTypes(
 }
 
 private fun inferListCall(node: CallNode, context: TypeContext): Type {
-    val typeParameter = TypeParameter("T", variance = Variance.COVARIANT)
+    val typeParameter = covariantTypeParameter("T")
     val constraints = TypeConstraintSolver(parameters = setOf(typeParameter))
     for (argument in node.positionalArguments) {
         val argumentType = inferType(argument, context)

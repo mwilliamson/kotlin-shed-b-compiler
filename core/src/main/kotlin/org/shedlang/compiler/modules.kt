@@ -2,6 +2,7 @@ package org.shedlang.compiler
 
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.FunctionDeclarationNode
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
@@ -11,23 +12,23 @@ import java.nio.file.Paths
 class ModuleSet(val modules: Collection<Module>)
 
 sealed class Module {
-    abstract val name: List<String>
+    abstract val name: List<Identifier>
     abstract val type: ModuleType
 
     class Shed(
-        override val name: List<String>,
+        override val name: List<Identifier>,
         val node: ModuleNode,
         override val type: ModuleType,
         val expressionTypes: ExpressionTypes,
         val references: ResolvedReferences
     ): Module() {
         fun hasMain() = node.body.any({ node ->
-            node is FunctionDeclarationNode && node.name == "main"
+            node is FunctionDeclarationNode && node.name.value == "main"
         })
     }
 
     class Native(
-        override val name: List<String>,
+        override val name: List<Identifier>,
         override val type: ModuleType,
         private val filePath: Path
     ): Module() {

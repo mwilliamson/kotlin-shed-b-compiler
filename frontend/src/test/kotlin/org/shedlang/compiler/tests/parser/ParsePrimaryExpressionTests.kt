@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
 
@@ -40,7 +41,7 @@ class ParsePrimaryExpressionTests {
     fun identifierCanBeParsedAsVariableReference() {
         val source = "x"
         val node = parsePrimaryExpression(source)
-        assertThat(node, cast(has(VariableReferenceNode::name, equalTo("x"))))
+        assertThat(node, cast(has(VariableReferenceNode::name, isIdentifier("x"))))
     }
 
     @TestFactory

@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
@@ -31,7 +32,7 @@ class TypeCheckFunctionTests {
         typeContext.undefer()
 
         assertThat(typeContext.typeOf(typeParameter), isMetaType(
-            cast(has(TypeParameter::name, equalTo("T")))
+            cast(has(TypeParameter::name, isIdentifier("T")))
         ))
         assertThat(
             typeContext.typeOf(parameter),
@@ -41,7 +42,7 @@ class TypeCheckFunctionTests {
             typeContext.typeOf(node),
             cast(
                 has(FunctionType::staticParameters, isSequence(
-                    cast(has(TypeParameter::name, equalTo("T")))
+                    cast(has(TypeParameter::name, isIdentifier("T")))
                 ))
             )
         )
@@ -68,7 +69,7 @@ class TypeCheckFunctionTests {
         typeContext.undefer()
 
         assertThat(typeContext.typeOf(effectParameter), isEffectType(
-            cast(has(EffectParameter::name, equalTo("E")))
+            cast(has(EffectParameter::name, isIdentifier("E")))
         ))
         assertThat(
             (typeContext.typeOf(node) as FunctionType).effect,
@@ -78,7 +79,7 @@ class TypeCheckFunctionTests {
             typeContext.typeOf(node),
             cast(
                 has(FunctionType::staticParameters, isSequence(
-                    cast(has(EffectParameter::name, equalTo("E")))
+                    cast(has(EffectParameter::name, isIdentifier("E")))
                 ))
             )
         )
@@ -162,7 +163,7 @@ class TypeCheckFunctionTests {
             typeContext.typeOf(node),
             isFunctionType(
                 positionalParameters = isSequence(),
-                namedParameters = isMap("x" to isIntType)
+                namedParameters = isMap(Identifier("x") to isIntType)
             )
         )
     }

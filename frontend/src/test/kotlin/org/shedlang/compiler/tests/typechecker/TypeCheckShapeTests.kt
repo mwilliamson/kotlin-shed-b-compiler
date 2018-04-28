@@ -26,7 +26,7 @@ class TypeCheckShapeTests {
         ))
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            name = equalTo("X"),
+            name = isIdentifier("X"),
             fields = listOf("a" to isIntType, "b" to isBoolType)
         )))
     }
@@ -46,7 +46,7 @@ class TypeCheckShapeTests {
         assertThat(
             { typeCheck(node, typeContext) },
             throws(
-                has(FieldAlreadyDeclaredError::fieldName, equalTo("a"))
+                has(FieldAlreadyDeclaredError::fieldName, isIdentifier("a"))
             )
         )
     }
@@ -68,10 +68,10 @@ class TypeCheckShapeTests {
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
-            parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
+            parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
             type = isShapeType(
-                name = equalTo("X"),
-                fields = listOf("a" to isTypeParameter(name = equalTo("T"), variance = isInvariant))
+                name = isIdentifier("X"),
+                fields = listOf("a" to isTypeParameter(name = isIdentifier("T"), variance = isInvariant))
             )
         )))
     }
@@ -90,7 +90,7 @@ class TypeCheckShapeTests {
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
-            parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isCovariant))
+            parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isCovariant))
         )))
     }
 
@@ -112,7 +112,7 @@ class TypeCheckShapeTests {
         val typeContext = typeContext()
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            tagField = present(isTag(name = equalTo("X"), tagId = equalTo(node.nodeId)))
+            tagField = present(isTag(name = isIdentifier("X"), tagId = equalTo(node.nodeId)))
         )))
     }
 
@@ -150,7 +150,7 @@ class TypeCheckShapeTests {
     @Test
     fun tagValueCanReferToTypeFunction() {
         val taggedReference = staticReference("T")
-        val tag = TagField("T")
+        val tag = tagField("T")
         val taggedType = parametrizedUnionType("T", tagField = tag)
 
         val node = shape("X", hasTagValueFor = taggedReference)

@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isSequence
 
@@ -13,7 +14,7 @@ class ParseUnionTests {
         val source = "union X = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            name = equalTo("X"),
+            name = isIdentifier("X"),
             staticParameters = isSequence(),
             members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
@@ -24,8 +25,8 @@ class ParseUnionTests {
         val source = "union X[T] = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            name = equalTo("X"),
-            staticParameters = isSequence(isTypeParameter(name = equalTo("T"))),
+            name = isIdentifier("X"),
+            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
             members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))
     }
@@ -35,10 +36,10 @@ class ParseUnionTests {
         val source = "union X[T, U] = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            name = equalTo("X"),
+            name = isIdentifier("X"),
             staticParameters = isSequence(
-                isTypeParameter(name = equalTo("T")),
-                isTypeParameter(name = equalTo("U"))
+                isTypeParameter(name = isIdentifier("T")),
+                isTypeParameter(name = isIdentifier("U"))
             ),
             members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
         ))

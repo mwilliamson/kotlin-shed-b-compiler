@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.installDependencies
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.readStandalone
@@ -31,26 +32,26 @@ data class TestProgram(
         }
     }
 
-    val mainModule: List<String>
+    val mainModule: List<Identifier>
         get() = source.mainModule
 }
 
 sealed class TestProgramSource {
     abstract val path: Path
-    abstract val mainModule: List<String>
+    abstract val mainModule: List<Identifier>
     abstract val expectedResult: Matcher<ExecutionResult>?
 
     class File(
         override val path: Path,
         override val expectedResult: Matcher<ExecutionResult>?
     ): TestProgramSource() {
-        override val mainModule: List<String>
-            get() = listOf("main")
+        override val mainModule: List<Identifier>
+            get() = listOf(Identifier("main"))
     }
 
     class Directory(
         override val path: Path,
-        override val mainModule: List<String>,
+        override val mainModule: List<Identifier>,
         override val expectedResult: Matcher<ExecutionResult>?
     ): TestProgramSource()
 }
@@ -59,7 +60,7 @@ fun testPrograms(): List<TestProgram> {
     return findTestFiles().map(fun(source): TestProgram {
         val mainPath = when (source) {
             is TestProgramSource.File -> source.path
-            is TestProgramSource.Directory -> source.path.resolve("src").resolve(source.mainModule.joinToString("/") + ".shed")
+            is TestProgramSource.Directory -> source.path.resolve("src").resolve(source.mainModule.map(Identifier::value).joinToString("/") + ".shed")
         }
         val text = mainPath.toFile().readText()
 
@@ -93,13 +94,13 @@ private fun findTestFiles(): List<TestProgramSource> {
     val exampleDirectory = root.resolve("examples")
     val stdlibTestsSource = TestProgramSource.Directory(
         root.resolve("stdlib"),
-        listOf("stdlibTests", "main"),
+        listOf(Identifier("stdlibTests"), Identifier("main")),
         has(ExecutionResult::exitCode, equalTo(0))
     )
     return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramSource? {
         val file = exampleDirectory.resolve(name)
         if (file.toFile().isDirectory) {
-            return TestProgramSource.Directory(file, listOf("main"), null)
+            return TestProgramSource.Directory(file, listOf(Identifier("main")), null)
         } else {
             return TestProgramSource.File(file, null)
         }

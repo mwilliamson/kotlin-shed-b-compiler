@@ -7,6 +7,7 @@ import org.shedlang.compiler.ast.FunctionBody
 import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.ast.StaticReferenceNode
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.frontend.tests.isInvariant
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
@@ -21,11 +22,11 @@ class ParseFunctionTests {
         val source = "fun f() -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionDeclarationNode::name, equalTo("f")),
+            has(FunctionDeclarationNode::name, isIdentifier("f")),
             has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::returnType, present(cast(
-                has(StaticReferenceNode::name, equalTo("Unit"))
+                has(StaticReferenceNode::name, isIdentifier("Unit"))
             )))
         ))
     }
@@ -75,8 +76,8 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::staticParameters, isSequence(
-                isTypeParameter(name = equalTo("T"), variance = isInvariant),
-                isTypeParameter(name = equalTo("U"), variance = isInvariant)
+                isTypeParameter(name = isIdentifier("T"), variance = isInvariant),
+                isTypeParameter(name = isIdentifier("U"), variance = isInvariant)
             ))
         ))
     }
@@ -96,7 +97,7 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
             has(FunctionNode::staticParameters, isSequence(
-                isEffectParameterNode(name = equalTo("E"))
+                isEffectParameterNode(name = isIdentifier("E"))
             ))
         ))
     }
@@ -154,7 +155,7 @@ class ParseFunctionTests {
             has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::returnType, present(cast(
-                has(StaticReferenceNode::name, equalTo("Unit"))
+                has(StaticReferenceNode::name, isIdentifier("Unit"))
             )))
         )))
     }

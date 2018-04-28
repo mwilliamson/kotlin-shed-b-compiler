@@ -1,9 +1,9 @@
 package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.frontend.types.replaceStaticValuesInType
@@ -26,7 +26,7 @@ class TypeApplicationTests {
         assertThat(
             applyStatic(shape, listOf(BoolType, IntType)),
             isShapeType(
-                name = equalTo("Pair"),
+                name = isIdentifier("Pair"),
                 staticArguments = isSequence(isBoolType, isIntType)
             )
         )
@@ -89,7 +89,7 @@ class TypeApplicationTests {
         assertThat(
             applyStatic(union, listOf(BoolType, IntType)),
             isUnionType(
-                name = equalTo("Either"),
+                name = isIdentifier("Either"),
                 staticArguments = isSequence(isBoolType, isIntType)
             )
         )
@@ -138,12 +138,12 @@ class TypeApplicationTests {
         @Test
         fun namedArgumentsAreReplaced() {
             val functionType = functionType(
-                namedParameters = mapOf("x" to typeParameter)
+                namedParameters = mapOf(Identifier("x") to typeParameter)
             )
 
             assertThat(
                 replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
-                isFunctionType(namedParameters = isMap("x" to isIntType))
+                isFunctionType(namedParameters = isMap(Identifier("x") to isIntType))
             )
         }
 

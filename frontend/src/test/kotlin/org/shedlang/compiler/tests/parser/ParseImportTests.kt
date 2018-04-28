@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.parser.parseImport
 
 class ParseImportTests {
@@ -13,7 +12,7 @@ class ParseImportTests {
         val source = "import example.x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(path = equalTo(
-            ImportPath(ImportPathBase.Absolute, listOf("example", "x"))
+            ImportPath.absolute(listOf("example", "x"))
         )))
     }
 
@@ -22,7 +21,7 @@ class ParseImportTests {
         val source = "import example .  x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(path = equalTo(
-            ImportPath(ImportPathBase.Absolute, listOf("example", "x"))
+            ImportPath.absolute(listOf("example", "x"))
         )))
     }
 
@@ -31,7 +30,7 @@ class ParseImportTests {
         val source = "import .example.x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(path = equalTo(
-            ImportPath(ImportPathBase.Relative, listOf("example", "x"))
+            ImportPath.relative(listOf("example", "x"))
         )))
     }
 }

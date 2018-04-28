@@ -36,7 +36,7 @@ internal class CodeGenerationContext(
         return name(references[node])
     }
 
-    private fun name(nodeId: Int, name: String): String {
+    private fun name(nodeId: Int, name: Identifier): String {
         if (!nodeNames.containsKey(nodeId)) {
             val pythonName = generateName(name)
             nodeNames[nodeId] = pythonName
@@ -44,8 +44,12 @@ internal class CodeGenerationContext(
         return nodeNames[nodeId]!!
     }
 
+    private fun generateName(originalName: Identifier): String {
+        return generateName(pythoniseName(originalName))
+    }
+
     private fun generateName(originalName: String): String {
-        var name = uniquifyName(pythoniseName(originalName))
+        var name = uniquifyName(originalName)
         namesInScope.add(name)
         return name
     }
@@ -74,7 +78,7 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
     // TODO: assign names properly using context
     val source = NodeSource(node)
 
-    val pythonPackageName = node.path.parts.take(node.path.parts.size - 1)
+    val pythonPackageName = node.path.parts.take(node.path.parts.size - 1).map { part -> part.value }
     val module = when (node.path.base) {
         ImportPathBase.Relative -> "." + pythonPackageName.joinToString(".")
         ImportPathBase.Absolute -> (listOf(topLevelPythonPackageName) + pythonPackageName).joinToString(".")
@@ -84,7 +88,7 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
 
     return PythonImportFromNode(
         module = module,
-        names = listOf(name to pythoniseName(name)),
+        names = listOf(name.value to pythoniseName(name)),
         source = source
     )
 }
@@ -101,15 +105,15 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 private fun generateCode(node: ShapeNode, context: CodeGenerationContext): PythonClassNode {
     val init = PythonFunctionNode(
         name = "__init__",
-        parameters = listOf("self") + node.fields.map({ field -> field.name }),
+        parameters = listOf("self") + node.fields.map({ field -> pythoniseName(field.name) }),
         body = node.fields.map({ field ->
             PythonAssignmentNode(
                 target = PythonAttributeAccessNode(
                     receiver = PythonVariableReferenceNode("self", source = NodeSource(field)),
-                    attributeName = field.name,
+                    attributeName = pythoniseName(field.name),
                     source = NodeSource(field)
                 ),
-                expression = PythonVariableReferenceNode(field.name, source = NodeSource(field)),
+                expression = PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(field)),
                 source = NodeSource(field)
             )
         }),
@@ -189,7 +193,7 @@ private fun hasFunctionExpressions(function: FunctionNode): Boolean {
 }
 
 private class TailRecursionArgument(val parameter: ParameterNode, val expression: ExpressionNode) {
-    val name: String
+    val name: Identifier
         get() = parameter.name
 }
 
@@ -233,7 +237,7 @@ private fun findTailRecursionArguments(
 
 private fun reassignArguments(arguments: List<TailRecursionArgument>, source: NodeSource, context: CodeGenerationContext): List<PythonStatementNode> {
     val reassignments = arguments.map { argument ->
-        val temporaryName = context.freshName(argument.name)
+        val temporaryName = context.freshName(pythoniseName(argument.name))
         val newValue = generateExpressionCode(argument.expression, context).toStatements { pythonArgument ->
             listOf(assign(temporaryName, pythonArgument, source = source))
         }
@@ -241,7 +245,7 @@ private fun reassignArguments(arguments: List<TailRecursionArgument>, source: No
             temporaryName,
             source = source
         )
-        val assignNewValue = assign(argument.name, temporaryReference, source = source)
+        val assignNewValue = assign(context.name(argument.parameter), temporaryReference, source = source)
         Pair(newValue, listOf(assignNewValue))
     }
     return reassignments.flatMap{ (first, _) -> first } + reassignments.flatMap { (_, second) -> second }
@@ -531,7 +535,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         private fun generateNamedArguments(node: CallBaseNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
             val results = node.namedArguments.map({ argument ->
                 generateExpressionCode(argument.expression, context).pureMap { expression ->
-                    argument.name to expression
+                    pythoniseName(argument.name) to expression
                 }
             })
             return GeneratedCode.flatten(results, spill = { (name, expression) ->

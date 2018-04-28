@@ -7,7 +7,9 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleResult
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.import
 import org.shedlang.compiler.tests.isSequence
@@ -28,7 +30,7 @@ class TypeCheckImportTests {
                 path to ModuleResult.Found(Module.Native(
                     type = moduleType,
                     filePath = Paths.get("/"),
-                    name = listOf("Messages")
+                    name = identifiers("Messages")
                 ))
             )
         )
@@ -40,11 +42,11 @@ class TypeCheckImportTests {
     fun whenModuleIsNotFoundThenErrorIsThrown() {
         val path = ImportPath.relative(listOf("Messages"))
         val node = import(path)
-        val typeContext = typeContext(modules = mapOf(path to ModuleResult.NotFound(name = listOf("Lib", "Messages"))))
+        val typeContext = typeContext(modules = mapOf(path to ModuleResult.NotFound(name = identifiers("Lib", "Messages"))))
 
         assertThat(
             { typeCheck(node, typeContext) },
-            throwsException(has(ModuleNotFoundError::name, isSequence(equalTo("Lib"), equalTo("Messages"))))
+            throwsException(has(ModuleNotFoundError::name, isSequence(isIdentifier("Lib"), isIdentifier("Messages"))))
         )
     }
 
@@ -52,11 +54,13 @@ class TypeCheckImportTests {
     fun whenMultipleModulesAreNotFoundThenErrorIsThrown() {
         val path = ImportPath.relative(listOf("Messages"))
         val node = import(path)
-        val typeContext = typeContext(modules = mapOf(path to ModuleResult.FoundMany(name = listOf("Lib", "Messages"))))
+        val typeContext = typeContext(modules = mapOf(path to ModuleResult.FoundMany(name = identifiers("Lib", "Messages"))))
 
         assertThat(
             { typeCheck(node, typeContext) },
-            throwsException(has(MultipleModulesWithSameNameFoundError::name, isSequence(equalTo("Lib"), equalTo("Messages"))))
+            throwsException(has(MultipleModulesWithSameNameFoundError::name, isSequence(isIdentifier("Lib"), isIdentifier("Messages"))))
         )
     }
+
+    private fun identifiers(vararg names: String) = names.map(::Identifier).toList()
 }

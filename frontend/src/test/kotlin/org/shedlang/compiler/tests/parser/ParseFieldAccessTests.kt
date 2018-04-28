@@ -1,8 +1,8 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parseExpression
 
 class ParseFieldAccessTests {
@@ -12,7 +12,7 @@ class ParseFieldAccessTests {
         val node = parseString(::parseExpression, source)
         assertThat(node, isFieldAccess(
             receiver = isVariableReference("x"),
-            fieldName = equalTo("y")
+            fieldName = isIdentifier("y")
         ))
     }
 
@@ -23,9 +23,9 @@ class ParseFieldAccessTests {
         assertThat(node, isFieldAccess(
             receiver = isFieldAccess(
                 receiver = isVariableReference("x"),
-                fieldName = equalTo("y")
+                fieldName = isIdentifier("y")
             ),
-            fieldName = equalTo("z")
+            fieldName = isIdentifier("z")
         ))
     }
 }

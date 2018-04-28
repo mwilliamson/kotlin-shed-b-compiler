@@ -4,8 +4,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.shapeType
+import org.shedlang.compiler.tests.tagField
 import org.shedlang.compiler.tests.unionType
 import org.shedlang.compiler.types.*
 
@@ -18,7 +20,7 @@ class ValidateTypeTests {
 
     @Test
     fun namedParameterTypesCannotBeCovariant() {
-        val type = functionType(namedParameters = mapOf("x" to covariantTypeParameter("T")))
+        val type = functionType(namedParameters = mapOf(Identifier("x") to covariantTypeParameter("T")))
         assertThat(validateType(type = type), isFailure("parameter type cannot be covariant"))
     }
 
@@ -48,7 +50,7 @@ class ValidateTypeTests {
 
     @Test
     fun whenUnionMembersHaveValueForTagOfUnionThenUnionIsValid() {
-        val tag = TagField("Tagged")
+        val tag = tagField("Tagged")
         val member1 = shapeType("Member1", tagValue = TagValue(tag, 1))
         val member2 = shapeType("Member2", tagValue = TagValue(tag, 2))
         val type = unionType(members = listOf(member1, member2), tagField = tag)
@@ -57,7 +59,7 @@ class ValidateTypeTests {
 
     @Test
     fun whenUnionMembersDontHaveTagValueThenUnionIsInvalid() {
-        val tag = TagField("Tagged")
+        val tag = tagField("Tagged")
         val member = shapeType("Member1", tagValue = null)
         val type = unionType(members = listOf(member), tagField = tag)
 
@@ -66,9 +68,9 @@ class ValidateTypeTests {
 
     @Test
     fun whenUnionMembersHaveTagValuesForWrongTagThenUnionIsInvalid() {
-        val tag = TagField("Tagged")
-        val tag1 = TagField("Tagged1")
-        val tag2 = TagField("Tagged2")
+        val tag = tagField("Tagged")
+        val tag1 = tagField("Tagged1")
+        val tag2 = tagField("Tagged2")
         val member1 = shapeType("Member1", tagValue = TagValue(tag1, 1))
         val member2 = shapeType("Member2", tagValue = TagValue(tag2, 2))
         val type = unionType(members = listOf(member1, member2), tagField = tag)

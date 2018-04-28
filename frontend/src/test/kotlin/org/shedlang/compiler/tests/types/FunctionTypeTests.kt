@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.types
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.types.*
 
 class FunctionTypeTests {
@@ -25,7 +26,7 @@ class FunctionTypeTests {
     fun shortDescriptionIncludesNamedArgumentsAfterPositionalArguments() {
         val functionType = functionType(
             positionalParameters = listOf(IntType),
-            namedParameters = mapOf("x" to BoolType),
+            namedParameters = mapOf(Identifier("x") to BoolType),
             returns = UnitType
         )
         assertThat(functionType.shortDescription, equalTo("(Int, x: Bool) -> Unit"))
@@ -35,7 +36,7 @@ class FunctionTypeTests {
     fun namedArgumentsAreInAlphabeticalOrder() {
         val functionType = functionType(
             positionalParameters = listOf(),
-            namedParameters = mapOf("x" to BoolType, "a" to IntType),
+            namedParameters = mapOf(Identifier("x") to BoolType, Identifier("a") to IntType),
             returns = UnitType
         )
         assertThat(functionType.shortDescription, equalTo("(a: Int, x: Bool) -> Unit"))

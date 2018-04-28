@@ -11,14 +11,13 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.TagField
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.invariantTypeParameter
 
 class TypeCheckUnionTests {
     @Test
     fun unionDeclaresType() {
-        val tagField = TagField("Tag")
+        val tagField = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
         val member1Reference = staticReference("Member1")
@@ -35,7 +34,7 @@ class TypeCheckUnionTests {
         ))
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            name = equalTo("X"),
+            name = isIdentifier("X"),
             members = isSequence(isType(member1), isType(member2))
         )))
     }
@@ -61,11 +60,11 @@ class TypeCheckUnionTests {
         )
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
-            parameters = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)),
+            parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
             type = isUnionType(
-                name = equalTo("Union"),
+                name = isIdentifier("Union"),
                 members = isSequence(
-                    isShapeType(staticArguments = isSequence(isTypeParameter(name = equalTo("T"), variance = isInvariant)))
+                    isShapeType(staticArguments = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)))
                 )
             )
         )))
@@ -78,7 +77,7 @@ class TypeCheckUnionTests {
         val typeContext = typeContext()
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
-            tagField = isTag(name = equalTo("X"), tagId = equalTo(node.nodeId))
+            tagField = isTag(name = isIdentifier("X"), tagId = equalTo(node.nodeId))
         )))
     }
 

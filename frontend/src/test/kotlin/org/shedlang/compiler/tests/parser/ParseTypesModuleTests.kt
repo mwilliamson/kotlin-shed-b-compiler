@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.TypesModuleNode
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parseTypesModule
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
@@ -45,7 +46,7 @@ class ParseTypesModuleTests {
         val node = parseTypesModule("<string>", source)
 
         assertThat(node, has(TypesModuleNode::body, isSequence(
-            isValType(name = equalTo("x"), type = isStaticReference("Int"))
+            isValType(name = isIdentifier("x"), type = isStaticReference("Int"))
         )))
     }
 }

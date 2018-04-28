@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
@@ -36,7 +37,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
                 positionalParameters = listOf(),
-                namedParameters = mapOf("x" to BoolType),
+                namedParameters = mapOf(Identifier("x") to BoolType),
                 returns = IntType
             ))
         )
@@ -147,7 +148,7 @@ class TypeCheckCallTests {
 
     @Test
     fun typeParameterTakesUnionTypeWhenUsedWithMultipleTypes() {
-        val tag = TagField("Tag")
+        val tag = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
 
@@ -300,7 +301,7 @@ class TypeCheckCallTests {
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
-            name = equalTo("Box"),
+            name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
             fields = listOf("value" to isBoolType)
         ))
@@ -330,7 +331,7 @@ class TypeCheckCallTests {
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
-            name = equalTo("Sink"),
+            name = isIdentifier("Sink"),
             staticArguments = isSequence(isIntType)
         ))
     }
@@ -443,7 +444,7 @@ class TypeCheckCallTests {
 
         assertThat(
             { inferCallType(node, typeContext) },
-            throws(has(MissingArgumentError::argumentName, equalTo("a")))
+            throws(has(MissingArgumentError::argumentName, isIdentifier("a")))
         )
     }
 
@@ -477,7 +478,7 @@ class TypeCheckCallTests {
 
         assertThat(
             { inferCallType(node, typeContext) },
-            throws(has(ExtraArgumentError::argumentName, equalTo("a")))
+            throws(has(ExtraArgumentError::argumentName, isIdentifier("a")))
         )
     }
 
@@ -497,7 +498,7 @@ class TypeCheckCallTests {
 
         assertThat(
             { inferCallType(node, typeContext) },
-            throws(has(ArgumentAlreadyPassedError::argumentName, equalTo("a")))
+            throws(has(ArgumentAlreadyPassedError::argumentName, isIdentifier("a")))
         )
     }
 
@@ -705,7 +706,7 @@ class TypeCheckCallTests {
 
     @Test
     fun listCallOfElementsOfDifferentTypeReturnsListOfUnionOfElementTypes() {
-        val tag = TagField("Tag")
+        val tag = tagField("Tag")
         val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
         val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
 

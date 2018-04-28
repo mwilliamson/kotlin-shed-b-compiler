@@ -36,10 +36,10 @@ private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptSta
         ImportPathBase.Absolute -> "./" + "../".repeat(module.name.size - 1)
     }
 
-    val importPath = importBase + import.path.parts.joinToString("/")
+    val importPath = importBase + import.path.parts.map(Identifier::value).joinToString("/")
 
     return JavascriptConstNode(
-        name = import.name,
+        name = generateName(import.name),
         expression = JavascriptFunctionCallNode(
             JavascriptVariableReferenceNode("require", source = source),
             listOf(JavascriptStringLiteralNode(importPath, source = source)),
@@ -54,10 +54,10 @@ private fun generateExport(statement: VariableBindingNode): JavascriptExpression
         JavascriptAssignmentNode(
             JavascriptPropertyAccessNode(
                 JavascriptVariableReferenceNode("exports", source = NodeSource(statement)),
-                statement.name,
+                generateName(statement.name),
                 source = NodeSource(statement)
             ),
-            JavascriptVariableReferenceNode(statement.name, source = NodeSource(statement)),
+            JavascriptVariableReferenceNode(generateName(statement.name), source = NodeSource(statement)),
             source = NodeSource(statement)
         ),
         source = NodeSource(statement)
@@ -76,13 +76,13 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 private fun generateCode(node: ShapeNode) : JavascriptStatementNode {
     val source = NodeSource(node)
     return JavascriptConstNode(
-        name = node.name,
+        name = generateName(node.name),
         expression = JavascriptFunctionCallNode(
             JavascriptVariableReferenceNode(
                 "\$shed.declareShape",
                 source = source
             ),
-            listOf(JavascriptStringLiteralNode(node.name, source = source)),
+            listOf(JavascriptStringLiteralNode(generateName(node.name), source = source)),
             source = source
         ),
         source = source
@@ -92,7 +92,7 @@ private fun generateCode(node: ShapeNode) : JavascriptStatementNode {
 private fun generateCode(node: UnionNode) : JavascriptStatementNode {
     val source = NodeSource(node)
     return JavascriptConstNode(
-        name = node.name,
+        name = generateName(node.name),
         expression = JavascriptNullLiteralNode(source = source),
         source = source
     )
@@ -101,7 +101,7 @@ private fun generateCode(node: UnionNode) : JavascriptStatementNode {
 private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): JavascriptFunctionDeclarationNode {
     val javascriptFunction = generateFunction(node, context)
     return JavascriptFunctionDeclarationNode(
-        name = node.name,
+        name = generateName(node.name),
         parameters = javascriptFunction.parameters,
         body = javascriptFunction.body,
         source = NodeSource(node)
@@ -109,7 +109,7 @@ private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationC
 }
 
 private fun generateFunction(node: FunctionNode, context: CodeGenerationContext): JavascriptFunctionNode {
-    val positionalParameters = node.parameters.map(ParameterNode::name)
+    val positionalParameters = node.parameters.map(ParameterNode::name).map(Identifier::value)
     val namedParameterName = "\$named"
     val namedParameters = if (node.namedParameters.isEmpty()) {
         listOf()
@@ -118,13 +118,13 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
     }
     val namedParameterAssignments = node.namedParameters.map { parameter ->
         JavascriptConstNode(
-            name = parameter.name,
+            name = generateName(parameter.name),
             expression = JavascriptPropertyAccessNode(
                 receiver = JavascriptVariableReferenceNode(
                     name = namedParameterName,
                     source = NodeSource(parameter)
                 ),
-                propertyName = parameter.name,
+                propertyName = generateName(parameter.name),
                 source = NodeSource(parameter)
             ),
             source = NodeSource(parameter)
@@ -162,7 +162,7 @@ internal fun generateCode(node: StatementNode, context: CodeGenerationContext): 
 
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
     return JavascriptConstNode(
-        name = node.name,
+        name = generateName(node.name),
         expression = generateCode(node.expression, context),
         source = NodeSource(node)
     )
@@ -216,7 +216,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             } else {
                 listOf(JavascriptObjectLiteralNode(
                     node.namedArguments.associate({ argument ->
-                        argument.name to generateCode(argument.expression, context)
+                        generateName(argument.name) to generateCode(argument.expression, context)
                     }),
                     source = NodeSource(node)
                 ))
@@ -246,7 +246,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             val partialParameters = listOf("\$func") +
                 positionalArguments.indices.map { index -> "\$arg" + index } +
-                namedArguments.map { argument -> argument.first }
+                namedArguments.map { argument -> generateName(argument.first) }
 
             val remainingPositionalParameters = (positionalArguments.size..functionType.positionalParameters.size - 1)
                 .map { index -> "\$arg" + index }
@@ -265,17 +265,17 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                         .keys
                         .sorted()
                         .associateBy(
-                            { parameter -> parameter },
+                            { parameter -> generateName(parameter) },
                             { parameter ->
                                 if (node.namedArguments.any { argument -> argument.name == parameter }) {
-                                    JavascriptVariableReferenceNode(parameter, source = NodeSource(node))
+                                    JavascriptVariableReferenceNode(generateName(parameter), source = NodeSource(node))
                                 } else {
                                     JavascriptPropertyAccessNode(
                                         receiver = JavascriptVariableReferenceNode(
                                             "\$named",
                                             source = NodeSource(node)
                                         ),
-                                        propertyName = parameter,
+                                        propertyName = generateName(parameter),
                                         source = NodeSource(node)
                                     )
                                 }
@@ -323,7 +323,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
             return JavascriptPropertyAccessNode(
                 generateCode(node.receiver, context),
-                node.fieldName,
+                generateName(node.fieldName),
                 source = NodeSource(node)
             )
         }
@@ -448,7 +448,7 @@ private fun generateCode(node: StaticNode): JavascriptExpressionNode {
         override fun visit(node: StaticFieldAccessNode): JavascriptExpressionNode {
             return JavascriptPropertyAccessNode(
                 generateCode(node.receiver),
-                node.fieldName,
+                generateName(node.fieldName),
                 source = NodeSource(node)
             )
         }
@@ -464,5 +464,9 @@ private fun generateCode(node: StaticNode): JavascriptExpressionNode {
 }
 
 private fun generateCodeForReferenceNode(node: ReferenceNode): JavascriptExpressionNode {
-    return JavascriptVariableReferenceNode(node.name, NodeSource(node))
+    return JavascriptVariableReferenceNode(generateName(node.name), NodeSource(node))
+}
+
+private fun generateName(identifier: Identifier): String {
+    return identifier.value
 }

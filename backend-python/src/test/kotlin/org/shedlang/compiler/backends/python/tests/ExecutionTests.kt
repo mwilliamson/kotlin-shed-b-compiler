@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.python.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.python.compile
 import org.shedlang.compiler.backends.python.topLevelPythonPackageName
 import org.shedlang.compiler.backends.tests.run
@@ -19,7 +20,7 @@ class ExecutionTests {
                 temporaryDirectory().use { temporaryDirectory ->
                     compile(testProgram.load(), target = temporaryDirectory.file.toPath())
                     val result = run(
-                        listOf("python", "-m", topLevelPythonPackageName + "." + testProgram.mainModule.joinToString(".")),
+                        listOf("python", "-m", topLevelPythonPackageName + "." + testProgram.mainModule.map(Identifier::value).joinToString(".")),
                         workingDirectory = temporaryDirectory.file
                     )
                     assertThat("stderr was:\n" + result.stderr, result, testProgram.expectedResult)
