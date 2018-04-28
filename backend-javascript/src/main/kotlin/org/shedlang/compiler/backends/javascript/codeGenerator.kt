@@ -468,5 +468,13 @@ private fun generateCodeForReferenceNode(node: ReferenceNode): JavascriptExpress
 }
 
 private fun generateName(identifier: Identifier): String {
-    return identifier.value
+    if (isJavascriptKeyword(identifier.value)) {
+        return identifier.value + "_"
+    } else {
+        return identifier.value
+    }
+}
+
+fun isJavascriptKeyword(value: String): Boolean {
+    return value == "null"
 }

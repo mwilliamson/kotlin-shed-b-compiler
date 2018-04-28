@@ -1,0 +1,27 @@
+import stdlib.Json;
+import stdlib.Matchers;
+import stdlib.Options;
+import stdlib.Tests;
+
+val testCases = Tests.suite("JsonTests", list(
+    Tests.suite("valueToText", list(
+        Tests.testCase("null", fun () {
+            val value = Json.null;
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("null"))
+        }),
+
+        Tests.testCase("true", fun () {
+            val value = Json.boolean(true);
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("true"))
+        }),
+
+        Tests.testCase("false", fun () {
+            val value = Json.boolean(false);
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("false"))
+        }),
+    )),
+));
+

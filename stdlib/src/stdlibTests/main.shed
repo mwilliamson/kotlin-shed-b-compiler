@@ -1,7 +1,11 @@
 import stdlib.Tests;
 
+import .JsonTests;
 import .optionsTests;
 
 fun main() !Io -> Int {
-    Tests.runTests(list(optionsTests.testCases))
+    Tests.runTests(list(
+        JsonTests.testCases,
+        optionsTests.testCases,
+    ))
 }
