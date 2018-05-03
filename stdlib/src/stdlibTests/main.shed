@@ -2,10 +2,12 @@ import stdlib.Tests;
 
 import .JsonTests;
 import .optionsTests;
+import .StringsTests;
 
 fun main() !Io -> Int {
     Tests.runTests(list(
         JsonTests.testCases,
         optionsTests.testCases,
+        StringsTests.testCases,
     ))
 }

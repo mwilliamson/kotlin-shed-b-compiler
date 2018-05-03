@@ -1,0 +1,23 @@
+import stdlib.Matchers;
+import stdlib.Strings;
+import stdlib.Tests;
+
+val testCases = Tests.suite("StringsTests", list(
+    Tests.suite("join", list(
+        Tests.testCase("empty iterable is joined to empty string", fun () {
+            val result = Strings.join(", ", list());
+            Tests.assertThat(result, Matchers.isString(""))
+        }),
+
+        Tests.testCase("singleton iterable is joined without separator", fun () {
+            val result = Strings.join(", ", list("apple"));
+            Tests.assertThat(result, Matchers.isString("apple"))
+        }),
+
+        Tests.testCase("iterable with multiple values is joined with separator", fun () {
+            val result = Strings.join(", ", list("apple", "banana", "coconut"));
+            Tests.assertThat(result, Matchers.isString("apple, banana, coconut"))
+        }),
+    )),
+));
+
