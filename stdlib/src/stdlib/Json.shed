@@ -22,7 +22,11 @@ fun array(elements: List[JsonValue]) -> JsonValue {
 }
 
 shape JsonNumber memberOf JsonValue {
-    value: Int,
+    value: String,
+}
+
+fun number(value: String) -> JsonValue {
+    JsonNumber(value = value)
 }
 
 shape JsonString memberOf JsonValue {
@@ -52,7 +56,7 @@ fun valueToText(value: JsonValue) -> String {
             "[" + elements +  "]"
         }
         is JsonNumber {
-            ""
+            value.value
         }
         is JsonString {
             ""
