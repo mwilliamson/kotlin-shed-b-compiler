@@ -33,6 +33,10 @@ shape JsonString memberOf JsonValue {
     value: String,
 }
 
+fun string(value: String) -> JsonValue {
+    JsonString(value = value)
+}
+
 shape JsonBoolean memberOf JsonValue {
     value: Bool,
 }
@@ -59,7 +63,7 @@ fun valueToText(value: JsonValue) -> String {
             value.value
         }
         is JsonString {
-            ""
+            "\"" + value.value + "\""
         }
         is JsonBoolean {
             if (value.value) {
