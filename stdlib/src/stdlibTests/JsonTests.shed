@@ -58,6 +58,28 @@ val testCases = Tests.suite("JsonTests", list(
             val text = Json.valueToText(value);
             Tests.assertThat(text, Matchers.isString("[null,true,false]"))
         }),
+
+        Tests.testCase("empty object is serialised to curly braces", fun () {
+            val value = Json.object(list());
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("{}"))
+        }),
+
+        Tests.testCase("singleton object is serialised to curly braces containing property", fun () {
+            val value = Json.object(list(Json.property("apples", Json.null)));
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("{\"apples\":null}"))
+        }),
+
+        Tests.testCase("object properties are comma separated", fun () {
+            val value = Json.object(list(
+                Json.property("apples", Json.null),
+                Json.property("bananas", Json.boolean(true)),
+                Json.property("coconut", Json.boolean(false)),
+            ));
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("{\"apples\":null,\"bananas\":true,\"coconut\":false}"))
+        }),
     )),
 ));
 

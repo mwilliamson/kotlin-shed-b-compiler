@@ -55,6 +55,8 @@ private val pythonKeywords = setOf(
     "lambda",
     "nonlocal",
     "not",
+    // object isn't a keyword, but we rely on it being available
+    "object",
     "or",
     "pass",
     // We add a __future__ statement for print functions, so we don't need to

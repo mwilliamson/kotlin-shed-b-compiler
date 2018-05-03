@@ -8,9 +8,17 @@ shape JsonObject memberOf JsonValue {
     properties: List[JsonProperty],
 }
 
+fun object(properties: List[JsonProperty]) -> JsonValue {
+    JsonObject(properties = properties)
+}
+
 shape JsonProperty {
     key: String,
     value: JsonValue,
+}
+
+fun property(key: String, value: JsonValue) -> JsonProperty {
+    JsonProperty(key = key, value = value)
 }
 
 shape JsonArray memberOf JsonValue {
@@ -53,7 +61,8 @@ val null = JsonNull();
 fun valueToText(value: JsonValue) -> String {
     when (value) {
         is JsonObject {
-            ""
+            val properties = Strings.join(",", Lists.map(propertyToText, value.properties));
+            "{" + properties + "}"
         }
         is JsonArray {
             val elements = Strings.join(",", Lists.map(valueToText, value.elements));
@@ -63,7 +72,7 @@ fun valueToText(value: JsonValue) -> String {
             value.value
         }
         is JsonString {
-            "\"" + value.value + "\""
+            jsonStringToText(value.value)
         }
         is JsonBoolean {
             if (value.value) {
@@ -76,4 +85,12 @@ fun valueToText(value: JsonValue) -> String {
             "null"
         }
     }
+}
+
+fun propertyToText(property: JsonProperty) -> String {
+    jsonStringToText(property.key) + ":" + valueToText(property.value)
+}
+
+fun jsonStringToText(value: String) -> String {
+    "\"" + value + "\""
 }
