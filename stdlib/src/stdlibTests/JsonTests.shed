@@ -41,6 +41,12 @@ val testCases = Tests.suite("JsonTests", list(
             Tests.assertThat(text, Matchers.isString("\"apples\""))
         }),
 
+        Tests.testCase("backslashes are escaped", fun () {
+            val value = Json.string("\\ \\");
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("\"\\\\ \\\\\""))
+        }),
+
         Tests.testCase("empty array is serialised to square brackets", fun () {
             val value = Json.array(list());
             val text = Json.valueToText(value);
