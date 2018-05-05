@@ -186,6 +186,11 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return JavascriptStringLiteralNode(node.value, NodeSource(node))
         }
 
+        override fun visit(node: CharacterLiteralNode): JavascriptExpressionNode {
+            val value = Character.toChars(node.value).joinToString()
+            return JavascriptStringLiteralNode(value, NodeSource(node))
+        }
+
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
             return generateCodeForReferenceNode(node)
         }

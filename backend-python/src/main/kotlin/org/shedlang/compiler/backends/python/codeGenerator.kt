@@ -439,6 +439,13 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             )
         }
 
+        override fun visit(node: CharacterLiteralNode): GeneratedExpression {
+            val value = Character.toChars(node.value).joinToString()
+            return GeneratedExpression.pure(
+                PythonStringLiteralNode(value, NodeSource(node))
+            )
+        }
+
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
             return GeneratedExpression.pure(
                 PythonVariableReferenceNode(context.name(node), NodeSource(node))

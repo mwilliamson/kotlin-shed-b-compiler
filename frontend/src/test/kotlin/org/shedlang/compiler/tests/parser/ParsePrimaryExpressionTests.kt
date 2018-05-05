@@ -65,6 +65,26 @@ class ParsePrimaryExpressionTests {
         )
     }
 
+    @TestFactory
+    fun canParseCharacterLiteral(): List<DynamicTest> {
+        fun testCase(name: String, source: String, value: Int): DynamicTest {
+            return DynamicTest.dynamicTest(name, {
+                val node = parsePrimaryExpression(source)
+                assertThat(node, cast(has(CharacterLiteralNode::value, equalTo(value))))
+            })
+        }
+
+        return listOf(
+            testCase("normal character", "'a'", 'a'.toInt()),
+            testCase("escaped backslash is decoded", "'\\\\'", '\\'.toInt()),
+            testCase("escaped single-quote is decoded", "'\\''", '\''.toInt()),
+            testCase("escaped tab is decoded", "'\\t'", '\t'.toInt()),
+            testCase("escaped newline is decoded", "'\\n'", '\n'.toInt()),
+            testCase("escaped carriage return is decoded", "'\\r'", '\r'.toInt()),
+            testCase("hexadecimal unicode escape sequence is decoded", "'\\u001B'", '\u001B'.toInt())
+        )
+    }
+
     @Test
     fun unrecognisedEscapeSequenceThrowsError() {
         val source = "\"a\\pb\""

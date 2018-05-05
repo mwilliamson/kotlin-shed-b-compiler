@@ -21,6 +21,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: BooleanLiteralNode) = BoolType
         override fun visit(node: IntegerLiteralNode) = IntType
         override fun visit(node: StringLiteralNode) = StringType
+        override fun visit(node: CharacterLiteralNode) = CharType
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
 
         override fun visit(node: BinaryOperationNode): Type {

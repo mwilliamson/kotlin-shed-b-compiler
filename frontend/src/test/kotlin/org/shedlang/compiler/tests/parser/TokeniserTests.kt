@@ -80,7 +80,8 @@ class TokeniserTests {
             "\"\"",
             "\"abc\"",
             "\"\\n\"",
-            "\"\\\"\""
+            "\"\\\"\"",
+            "\"\\u001B\""
         ).map { string ->
             DynamicTest.dynamicTest(string, {
                 assertEquals(
@@ -127,6 +128,23 @@ class TokeniserTests {
             ),
             tokenise("\"\n\"")
         )
+    }
+
+    @TestFactory
+    fun charactersAreTokenised(): List<DynamicTest> {
+        return listOf(
+            "'a'",
+            "'\\n'",
+            "'\\\"'",
+            "'\\u001B'"
+        ).map { string ->
+            DynamicTest.dynamicTest(string, {
+                assertEquals(
+                    listOf(Token(0, TokenType.CHARACTER, string)),
+                    tokenise(string)
+                )
+            })
+        }
     }
 
     data class WhitespaceTestCase(val input: String, val description: String)

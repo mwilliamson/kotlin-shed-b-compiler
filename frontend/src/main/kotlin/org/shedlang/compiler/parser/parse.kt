@@ -835,6 +835,12 @@ internal fun tryParsePrimaryExpression(source: Source, tokens: TokenIterator<Tok
             val value = decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source)
             return StringLiteralNode(value, source)
         }
+        TokenType.CHARACTER -> {
+            val token = tokens.next()
+            val stringValue = decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source)
+            val value = stringValue[0].toInt()
+            return CharacterLiteralNode(value, source)
+        }
         TokenType.SYMBOL_OPEN_PAREN -> {
             tokens.skip()
             val expression = parseExpression(tokens)
@@ -910,6 +916,7 @@ private fun escapeSequence(code: String, source: Source): Char {
         "r" -> return '\r'
         "t" -> return '\t'
         "\"" -> return '"'
+        "'" -> return '\''
         "\\" -> return '\\'
         else -> throw UnrecognisedEscapeSequenceError("\\" + code, source = source)
     }

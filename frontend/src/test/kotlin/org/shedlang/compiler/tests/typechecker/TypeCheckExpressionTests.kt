@@ -45,6 +45,13 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun characterLiteralIsTypedAsChar() {
+        val node = literalChar()
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(equalTo(CharType)))
+    }
+
+    @Test
     fun variableReferenceTypeIsRetrievedFromContext() {
         val node = variableReference("x")
         val type = inferType(node, typeContext(referenceTypes = mutableMapOf(node to IntType)))

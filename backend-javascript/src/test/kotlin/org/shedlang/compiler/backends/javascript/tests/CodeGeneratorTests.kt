@@ -283,6 +283,13 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun characterLiteralGeneratesStringLiteral() {
+        val shed = literalChar('!')
+        val node = generateCode(shed)
+        assertThat(node, isJavascriptStringLiteral("!"))
+    }
+
+    @Test
     fun variableReferenceGenerateVariableReference() {
         val shed = variableReference("x")
 

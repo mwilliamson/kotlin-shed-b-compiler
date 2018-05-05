@@ -66,6 +66,9 @@ object BoolType : BasicType {
 object IntType : BasicType{
     override val shortDescription = "Int"
 }
+object CharType : BasicType {
+    override val shortDescription = "Char"
+}
 object StringType : BasicType{
     override val shortDescription = "String"
 }

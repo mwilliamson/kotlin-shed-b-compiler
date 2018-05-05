@@ -523,6 +523,13 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun characterLiteralGeneratesStringLiteral() {
+        val shed = literalChar('!')
+        val node = generateCode(shed)
+        assertThat(node, isGeneratedExpression(isPythonStringLiteral("!")))
+    }
+
+    @Test
     fun variableReferenceGeneratesVariableReference() {
         val declaration = parameter("x")
         val shed = variableReference("x")
