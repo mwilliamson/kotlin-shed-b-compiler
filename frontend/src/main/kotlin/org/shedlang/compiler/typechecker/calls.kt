@@ -185,7 +185,8 @@ private fun checkArgumentTypes(
 
         val inferredTypeArguments = typeParameters.map({ parameter -> TypeParameter(
             name = parameter.name,
-            variance = parameter.variance
+            variance = parameter.variance,
+            memberOf = null
         ) })
 
         val constraints = TypeConstraintSolver(
