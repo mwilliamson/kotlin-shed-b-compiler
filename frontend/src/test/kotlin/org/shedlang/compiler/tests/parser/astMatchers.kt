@@ -115,7 +115,8 @@ internal fun isFunctionDeclaration(name: Matcher<Identifier>): Matcher<ModuleSta
 
 internal fun isTypeParameter(
     name: Matcher<Identifier>,
-    variance: Matcher<Variance> = anything
+    variance: Matcher<Variance> = anything,
+    memberOf: Matcher<StaticNode?> = anythingOrNull
 ): Matcher<StaticParameterNode> {
     return cast(allOf(
         has(TypeParameterNode::name, name),

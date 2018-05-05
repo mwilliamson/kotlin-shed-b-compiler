@@ -379,10 +379,17 @@ private fun parseStaticParameter(allowVariance: Boolean) = fun (source: StringSo
             Variance.INVARIANT
         }
         val name = parseIdentifier(tokens)
+
+        val memberOf = if (tokens.trySkip(TokenType.KEYWORD_MEMBER_OF)) {
+            parseStaticExpression(tokens)
+        } else {
+            null
+        }
+
         return TypeParameterNode(
             name = name,
             variance = variance,
-            memberOf = null,
+            memberOf = memberOf,
             source = source
         )
     }
