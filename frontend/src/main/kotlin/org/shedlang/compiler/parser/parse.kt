@@ -7,10 +7,23 @@ import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
 
+internal open class InvalidCharacter(
+    source: Source,
+    message: String
+) : SourceError(message, source = source)
+
 internal class UnrecognisedEscapeSequenceError(
     val escapeSequence: String,
-    val source: Source
-) : Exception("Unrecognised escape sequence")
+    source: Source
+) : InvalidCharacter(
+    source = source,
+    message = "Unrecognised escape sequence"
+)
+
+internal class InvalidCharacterLiteral(message: String, source: Source) : SourceError(
+    message = message,
+    source = source
+)
 
 fun parse(filename: String, input: String): ModuleNode {
     return parse(
@@ -836,14 +849,18 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
         }
         TokenType.STRING -> {
             val token = tokens.next()
-            val value = decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source)
+            val value = decodeCharacterToken(token.value, source = source)
             return StringLiteralNode(value, source)
         }
         TokenType.CHARACTER -> {
             val token = tokens.next()
-            val stringValue = decodeEscapeSequence(token.value.substring(1, token.value.length - 1), source = source)
-            val value = stringValue[0].toInt()
-            return CharacterLiteralNode(value, source)
+            val stringValue = decodeCharacterToken(token.value, source = source)
+            if (stringValue.length == 1) {
+                val value = stringValue[0].toInt()
+                return CharacterLiteralNode(value, source)
+            } else {
+                throw InvalidCharacterLiteral("Character literal has ${stringValue.length} characters", source = source)
+            }
         }
         TokenType.SYMBOL_OPEN_PAREN -> {
             tokens.skip()
@@ -886,6 +903,10 @@ private fun parseVariableReference(source: StringSource, tokens: TokenIterator<T
     return VariableReferenceNode(value, source)
 }
 
+private fun decodeCharacterToken(value: String, source: StringSource): String {
+    return decodeEscapeSequence(value.substring(1, value.length - 1), source = source)
+}
+
 private fun decodeEscapeSequence(value: String, source: StringSource): String {
     return decodeEscapeSequence(CharBuffer.wrap(value), source = source)
 }
@@ -900,11 +921,24 @@ private fun decodeEscapeSequence(value: CharBuffer, source: StringSource): Strin
         decoded.append(value.subSequence(lastIndex, matcher.start()))
         val code = matcher.group(1)
         if (code == "u") {
-            val endIndex = matcher.end() + 4
-            val hex = value.subSequence(matcher.end(), endIndex).toString()
+            if (value[matcher.end()] != '{') {
+                throw InvalidCharacter(
+                    source = source.at(matcher.end() + 1),
+                    message = "Expected opening brace"
+                )
+            }
+            val startIndex = matcher.end() + 1
+            val endIndex = value.indexOf("}", startIndex = startIndex)
+            if (endIndex == -1) {
+                throw InvalidCharacter(
+                    source = source.at(matcher.end() + 1),
+                    message = "Could not find closing brace"
+                )
+            }
+            val hex = value.subSequence(startIndex, endIndex).toString()
             val codePoint = hex.toInt(16)
             decoded.append(codePoint.toChar())
-            lastIndex = endIndex
+            lastIndex = endIndex + 1
         } else {
             decoded.append(escapeSequence(code, source = source))
             lastIndex = matcher.end()

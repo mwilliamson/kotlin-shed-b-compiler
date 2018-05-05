@@ -68,9 +68,9 @@ fun suite(name: String, tests: List[Test]) -> Test {
     TestSuite(name = name, tests = tests)
 }
 
-val greenCode = "\u001B[32m";
-val redCode = "\u001B[31m";
-val blackCode = "\u001B[39m";
+val greenCode = "\u{1B}[32m";
+val redCode = "\u{1B}[31m";
+val blackCode = "\u{1B}[39m";
 
 fun runTests(tests: List[Test]) !Io -> Int {
     val results = Lists.map(runTest ~ (parent = Options.none), tests);

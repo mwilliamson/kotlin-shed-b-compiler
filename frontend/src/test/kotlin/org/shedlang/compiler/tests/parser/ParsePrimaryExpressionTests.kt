@@ -7,8 +7,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.tests.isIdentifier
+import org.shedlang.compiler.parser.InvalidCharacter
+import org.shedlang.compiler.parser.InvalidCharacterLiteral
 import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
+import org.shedlang.compiler.tests.allOf
 
 class ParsePrimaryExpressionTests {
     @Test
@@ -61,7 +64,49 @@ class ParsePrimaryExpressionTests {
             testCase("escaped tabs are decoded", "\"\\t\"", "\t"),
             testCase("escaped newlines are decoded", "\"\\n\"", "\n"),
             testCase("escaped carriage returns are decoded", "\"\\r\"", "\r"),
-            testCase("hexadecimal unicode escape sequences are decoded", "\"\\u001B\"", "\u001B")
+            testCase("hexadecimal unicode escape sequences are decoded", "\"\\u{1B}\"", "\u001B")
+        )
+    }
+
+    @Test
+    fun whenUnicodeEscapeSequenceInStringIsMissingOpeningBraceThenErrorIsThrown() {
+        assertThat(
+            { parsePrimaryExpression("\"\\u001B\"") },
+            throws(allOf(
+                has(InvalidCharacter::source, isStringSource(
+                    contents = "\"\\u001B\"",
+                    index = 3
+                )),
+                has(InvalidCharacter::message, equalTo("Expected opening brace"))
+            ))
+        )
+    }
+
+    @Test
+    fun whenUnicodeEscapeSequenceInStringIsMissingClosingBraceThenErrorIsThrown() {
+        assertThat(
+            { parsePrimaryExpression("\"\\u{1B\"") },
+            throws(allOf(
+                has(InvalidCharacter::source, isStringSource(
+                    contents = "\"\\u{1B\"",
+                    index = 3
+                )),
+                has(InvalidCharacter::message, equalTo("Could not find closing brace"))
+            ))
+        )
+    }
+
+    @Test
+    fun unicodeEscapeSequenceErrorIndexIsRelativeToEntireSource() {
+        assertThat(
+            { parsePrimaryExpression("  \"\\u001B\"") },
+            throws(allOf(
+                has(InvalidCharacter::source, isStringSource(
+                    contents = "  \"\\u001B\"",
+                    index = 5
+                )),
+                has(InvalidCharacter::message, equalTo("Expected opening brace"))
+            ))
         )
     }
 
@@ -81,7 +126,35 @@ class ParsePrimaryExpressionTests {
             testCase("escaped tab is decoded", "'\\t'", '\t'.toInt()),
             testCase("escaped newline is decoded", "'\\n'", '\n'.toInt()),
             testCase("escaped carriage return is decoded", "'\\r'", '\r'.toInt()),
-            testCase("hexadecimal unicode escape sequence is decoded", "'\\u001B'", '\u001B'.toInt())
+            testCase("hexadecimal unicode escape sequence is decoded", "'\\u{1B}'", '\u001B'.toInt())
+        )
+    }
+
+    @Test
+    fun whenUnicodeEscapeSequenceInCharacterIsMissingOpeningBraceThenErrorIsThrown() {
+        assertThat(
+            { parsePrimaryExpression("'\\u001B'") },
+            throws(allOf(
+                has(InvalidCharacter::source, isStringSource(
+                    contents = "'\\u001B'",
+                    index = 3
+                )),
+                has(InvalidCharacter::message, equalTo("Expected opening brace"))
+            ))
+        )
+    }
+
+    @Test
+    fun whenCharacterLiteralHasMultipleCharactersThenErrorIsThrown() {
+        assertThat(
+            { parsePrimaryExpression("'ab'") },
+            throws(allOf(
+                has(InvalidCharacterLiteral::source, isStringSource(
+                    contents = "'ab'",
+                    index = 0
+                )),
+                has(InvalidCharacterLiteral::message, equalTo("Character literal has 2 characters"))
+            ))
         )
     }
 
@@ -96,5 +169,12 @@ class ParsePrimaryExpressionTests {
 
     private fun parsePrimaryExpression(source: String): ExpressionNode {
         return parseString(::tryParsePrimaryExpression, source)!!
+    }
+
+    private fun isStringSource(contents: String, index: Int): Matcher<Source> {
+        return cast(allOf(
+            has(StringSource::contents, equalTo(contents)),
+            has(StringSource::characterIndex, equalTo(index))
+        ))
     }
 }

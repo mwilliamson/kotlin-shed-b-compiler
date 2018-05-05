@@ -8,7 +8,7 @@ private fun keyword(tokenType: TokenType, string: String)
 private fun symbol(tokenType: TokenType, string: String)
     = RegexTokeniser.rule(tokenType, Regex.escape(string))
 
-private val unterminatedStringPattern = "\"(?:[^\\\\\"\n]|\\\\.)*"
+private val unterminatedStringPattern = "\"(?:[^\\\\\"\n\r]|\\\\.)*"
 
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     keyword(TokenType.KEYWORD_ELSE, "else"),
@@ -62,7 +62,7 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     RegexTokeniser.rule(TokenType.IDENTIFIER, "[A-Za-z][A-Za-z0-9]*"),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
     RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
-    RegexTokeniser.rule(TokenType.CHARACTER, "'(?:[^\\\\'\n]|\\\\.|\\\\u[0-9A-Fa-f]{4})'"),
+    RegexTokeniser.rule(TokenType.CHARACTER, "'(?:[^\\\\'\n\r]|\\\\.)*'"),
     RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+"),
     RegexTokeniser.rule(TokenType.COMMENT, "//[^\n]*")
 ))

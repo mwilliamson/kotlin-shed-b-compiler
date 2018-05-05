@@ -80,5 +80,3 @@ Alternative would be to use `:=` i.e. `x := tmp`.
 * Optimise directly recursive tail calls
 
 * Check number of static arguments
-
-* Switch unicode escape sequence to match Rust (curly braces)?

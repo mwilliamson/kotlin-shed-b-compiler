@@ -79,6 +79,10 @@ data class StringSource(
     val contents: String,
     val characterIndex: Int
 ) : Source {
+    fun at(index: Int): StringSource {
+        return StringSource(filename, contents, characterIndex + index)
+    }
+
     override fun describe(): String {
         val lines = contents.splitToSequence("\n")
         var position = 0

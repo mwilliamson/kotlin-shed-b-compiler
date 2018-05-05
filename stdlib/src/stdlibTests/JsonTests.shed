@@ -72,7 +72,7 @@ val testCases = Tests.suite("JsonTests", list(
         }),
 
         Tests.testCase("control codes are escaped", fun () {
-            val value = Json.string("\u000B");
+            val value = Json.string("\u{B}");
             val text = Json.valueToText(value);
             Tests.assertThat(text, Matchers.isString("\"\\u000B\""))
         }),

@@ -81,7 +81,7 @@ class TokeniserTests {
             "\"abc\"",
             "\"\\n\"",
             "\"\\\"\"",
-            "\"\\u001B\""
+            "\"\\u{1B}\""
         ).map { string ->
             DynamicTest.dynamicTest(string, {
                 assertEquals(
@@ -136,7 +136,7 @@ class TokeniserTests {
             "'a'",
             "'\\n'",
             "'\\\"'",
-            "'\\u001B'"
+            "'\\u{1B}'"
         ).map { string ->
             DynamicTest.dynamicTest(string, {
                 assertEquals(
