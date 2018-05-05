@@ -379,7 +379,12 @@ private fun parseStaticParameter(allowVariance: Boolean) = fun (source: StringSo
             Variance.INVARIANT
         }
         val name = parseIdentifier(tokens)
-        return TypeParameterNode(name = name, variance = variance, source = source)
+        return TypeParameterNode(
+            name = name,
+            variance = variance,
+            memberOf = null,
+            source = source
+        )
     }
 }
 

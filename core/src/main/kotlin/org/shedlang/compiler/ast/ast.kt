@@ -369,6 +369,7 @@ interface StaticParameterNode: VariableBindingNode {
 data class TypeParameterNode(
     override val name: Identifier,
     val variance: Variance,
+    val memberOf: StaticNode?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticParameterNode, Node {

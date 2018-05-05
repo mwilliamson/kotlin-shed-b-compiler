@@ -125,6 +125,7 @@ interface StaticParameter: StaticValue {
 data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
+    val memberOf: Type?,
     val typeParameterId: Int = freshTypeParameterId()
 ): StaticParameter, Type {
     override val shortDescription: String
@@ -321,9 +322,9 @@ fun functionType(
 fun positionalFunctionType(parameters: List<Type>, returns: Type)
     = functionType(positionalParameters = parameters, returns = returns)
 
-fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT)
-fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT)
-fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT)
+fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT, memberOf = null)
+fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT, memberOf = null)
+fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT, memberOf = null)
 
 fun effectParameter(name: String) = EffectParameter(Identifier(name))
 

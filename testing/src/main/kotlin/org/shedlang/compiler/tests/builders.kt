@@ -267,11 +267,13 @@ fun union(
 )
 
 fun typeParameter(
-    name: String,
-    variance: Variance = Variance.INVARIANT
+    name: String = "T",
+    variance: Variance = Variance.INVARIANT,
+    memberOf: StaticNode? = null
 ) = TypeParameterNode(
     name = Identifier(name),
     variance = variance,
+    memberOf = memberOf,
     source = anySource()
 )
 

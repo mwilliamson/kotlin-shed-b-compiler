@@ -84,11 +84,13 @@ internal fun isTypeFunction(
 ))
 
 internal fun isTypeParameter(
-    name: Matcher<Identifier>,
-    variance: Matcher<Variance>
+    name: Matcher<Identifier> = anything,
+    variance: Matcher<Variance> = anything,
+    memberOf: Matcher<Type?> = anythingOrNull
 ): Matcher<StaticValue> = cast(allOf(
     has(TypeParameter::name, name),
-    has(TypeParameter::variance, variance)
+    has(TypeParameter::variance, variance),
+    has(TypeParameter::memberOf, memberOf)
 ))
 
 internal val isInvariant = equalTo(Variance.INVARIANT)
