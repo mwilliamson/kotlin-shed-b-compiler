@@ -92,7 +92,6 @@ fun propertyToText(property: JsonProperty) -> String {
 }
 
 fun jsonStringToText(value: String) -> String {
-    // TODO: handle special characters
     val characters = Strings.mapCharacters(jsonStringCharacterToText, value);
     "\"" + characters + "\""
 }
@@ -102,6 +101,9 @@ fun jsonStringCharacterToText(character: Char) -> String {
         "\\\\"
     } else if (character == '\"') {
         "\\\""
+    } else if (character < '\u0020') {
+        val hexString = Strings.charToHexString(character);
+        "\\u" + Strings.padLeft(4, '0', hexString)
     } else {
         Strings.charToString(character)
     }

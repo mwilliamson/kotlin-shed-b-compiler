@@ -1,6 +1,7 @@
 import stdlib.Lists;
 import stdlib.platform.Strings;
 
+val charToHexString = Strings.charToHexString;
 val charToString = Strings.charToString;
 val mapCharacters = Strings.mapCharacters;
 val replace = Strings.replace;
@@ -17,4 +18,8 @@ fun join(separator: String, elements: List[String]) -> String {
         "",
         elements
     )
+}
+
+fun padLeft(length: Int, padding: Char, string: String) -> String {
+    Strings.repeat(charToString(padding), length - Strings.length(string)) + string
 }
