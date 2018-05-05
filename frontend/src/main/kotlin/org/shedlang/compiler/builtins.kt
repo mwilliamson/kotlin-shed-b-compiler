@@ -1,6 +1,5 @@
 package org.shedlang.compiler
 
-import org.shedlang.compiler.ast.BuiltinVariable
 import org.shedlang.compiler.ast.builtinEffect
 import org.shedlang.compiler.ast.builtinType
 import org.shedlang.compiler.ast.builtinVariable
@@ -15,6 +14,7 @@ private val coreBuiltins = listOf(
     builtinType("Unit", UnitType),
     builtinType("Int", IntType),
     builtinType("String", StringType),
+    builtinType("Char", CharType),
     builtinType("Bool", BoolType),
     builtinType("List", ListType),
 
