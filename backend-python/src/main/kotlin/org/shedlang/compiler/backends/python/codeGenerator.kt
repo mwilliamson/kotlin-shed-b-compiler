@@ -805,10 +805,13 @@ private fun generateTypeCondition(
 private fun generateCode(operator: Operator): PythonOperator {
     return when (operator) {
         Operator.EQUALS -> PythonOperator.EQUALS
+        Operator.LESS_THAN -> PythonOperator.LESS_THAN
+        Operator.LESS_THAN_OR_EQUAL -> PythonOperator.LESS_THAN_OR_EQUAL
+        Operator.GREATER_THAN -> PythonOperator.GREATER_THAN
+        Operator.GREATER_THAN_OR_EQUAL -> PythonOperator.GREATER_THAN_OR_EQUAL
         Operator.ADD -> PythonOperator.ADD
         Operator.SUBTRACT -> PythonOperator.SUBTRACT
         Operator.MULTIPLY -> PythonOperator.MULTIPLY
-
     }
 }
 

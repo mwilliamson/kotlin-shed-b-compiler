@@ -545,7 +545,11 @@ class CodeGeneratorTests {
             Operator.ADD to PythonOperator.ADD,
             Operator.SUBTRACT to PythonOperator.SUBTRACT,
             Operator.MULTIPLY to PythonOperator.MULTIPLY,
-            Operator.EQUALS to PythonOperator.EQUALS
+            Operator.EQUALS to PythonOperator.EQUALS,
+            Operator.LESS_THAN to PythonOperator.LESS_THAN,
+            Operator.LESS_THAN_OR_EQUAL to PythonOperator.LESS_THAN_OR_EQUAL,
+            Operator.GREATER_THAN to PythonOperator.GREATER_THAN,
+            Operator.GREATER_THAN_OR_EQUAL to PythonOperator.GREATER_THAN_OR_EQUAL
         ).map({ operator ->  DynamicTest.dynamicTest(
             operator.first.toString(), {
                 val shed = binaryOperation(

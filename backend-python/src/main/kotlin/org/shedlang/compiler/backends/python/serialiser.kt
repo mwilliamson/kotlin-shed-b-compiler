@@ -166,6 +166,10 @@ private fun serialiseSubExpression(
 
 private fun serialise(operator: PythonOperator) = when(operator) {
     PythonOperator.EQUALS -> "=="
+    PythonOperator.LESS_THAN-> "<"
+    PythonOperator.LESS_THAN_OR_EQUAL -> "<="
+    PythonOperator.GREATER_THAN -> ">"
+    PythonOperator.GREATER_THAN_OR_EQUAL -> ">="
     PythonOperator.ADD -> "+"
     PythonOperator.SUBTRACT -> "-"
     PythonOperator.MULTIPLY -> "*"
@@ -173,6 +177,10 @@ private fun serialise(operator: PythonOperator) = when(operator) {
 
 private fun isLeftAssociative(operator: PythonOperator) = when(operator) {
     PythonOperator.EQUALS -> false
+    PythonOperator.LESS_THAN -> false
+    PythonOperator.LESS_THAN_OR_EQUAL -> false
+    PythonOperator.GREATER_THAN -> false
+    PythonOperator.GREATER_THAN_OR_EQUAL -> false
     PythonOperator.ADD -> true
     PythonOperator.SUBTRACT -> true
     PythonOperator.MULTIPLY -> true
@@ -207,6 +215,10 @@ private fun precedence(node: PythonExpressionNode): Int {
         override fun visit(node: PythonBinaryOperationNode): Int {
             return when(node.operator) {
                 PythonOperator.EQUALS -> 6
+                PythonOperator.LESS_THAN -> 6
+                PythonOperator.LESS_THAN_OR_EQUAL -> 6
+                PythonOperator.GREATER_THAN -> 6
+                PythonOperator.GREATER_THAN_OR_EQUAL -> 6
                 PythonOperator.ADD -> 11
                 PythonOperator.SUBTRACT -> 11
                 PythonOperator.MULTIPLY -> 12

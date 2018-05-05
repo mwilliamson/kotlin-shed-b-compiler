@@ -436,6 +436,10 @@ private fun immediatelyInvokedFunction(
 private fun generateCode(operator: Operator): JavascriptOperator {
     return when (operator) {
         Operator.EQUALS -> JavascriptOperator.EQUALS
+        Operator.LESS_THAN -> JavascriptOperator.LESS_THAN
+        Operator.LESS_THAN_OR_EQUAL -> JavascriptOperator.LESS_THAN_OR_EQUAL
+        Operator.GREATER_THAN -> JavascriptOperator.GREATER_THAN
+        Operator.GREATER_THAN_OR_EQUAL -> JavascriptOperator.GREATER_THAN_OR_EQUAL
         Operator.ADD -> JavascriptOperator.ADD
         Operator.SUBTRACT -> JavascriptOperator.SUBTRACT
         Operator.MULTIPLY -> JavascriptOperator.MULTIPLY
