@@ -588,7 +588,7 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
 }
 
 private val PIPELINE_PRECEDENCE = 7
-private val EQUALS_PRECEDENCE = 8
+private val COMPARISON_PRECEDENCE = 8
 private val IS_PRECEDENCE = 9
 private val ADD_PRECENDECE = 11
 private val SUBTRACT_PRECEDENCE = 11
@@ -599,7 +599,11 @@ private val FIELD_ACCESS_PRECEDENCE = 14
 private interface OperationParser: ExpressionParser<ExpressionNode> {
     companion object {
         val parsers = listOf(
-            InfixOperationParser(Operator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, EQUALS_PRECEDENCE),
+            InfixOperationParser(Operator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, COMPARISON_PRECEDENCE),
+            InfixOperationParser(Operator.LESS_THAN, TokenType.SYMBOL_LESS_THAN, COMPARISON_PRECEDENCE),
+            InfixOperationParser(Operator.LESS_THAN_OR_EQUAL, TokenType.SYMBOL_LESS_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
+            InfixOperationParser(Operator.GREATER_THAN, TokenType.SYMBOL_GREATER_THAN, COMPARISON_PRECEDENCE),
+            InfixOperationParser(Operator.GREATER_THAN_OR_EQUAL, TokenType.SYMBOL_GREATER_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
             InfixOperationParser(Operator.ADD, TokenType.SYMBOL_PLUS, ADD_PRECENDECE),
             InfixOperationParser(Operator.SUBTRACT, TokenType.SYMBOL_MINUS, SUBTRACT_PRECEDENCE),
             InfixOperationParser(Operator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
