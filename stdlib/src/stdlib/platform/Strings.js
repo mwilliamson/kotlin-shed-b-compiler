@@ -6,8 +6,12 @@ function charToString(char) {
     return char;
 }
 
-function length(string) {
-    return string.length;
+function codePointCount(string) {
+    let count = 0;
+    for (const char of string) {
+        count++;
+    }
+    return count;
 }
 
 function mapCharacters(func, string) {
@@ -32,7 +36,7 @@ function replace(old, replacement, string) {
 
 exports.charToHexString = charToHexString;
 exports.charToString = charToString;
-exports.length = length;
+exports.codePointCount = codePointCount;
 exports.mapCharacters = mapCharacters;
 exports.repeat = repeat;
 exports.replace = replace;

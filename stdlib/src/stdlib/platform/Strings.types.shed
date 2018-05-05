@@ -1,6 +1,6 @@
 val charToHexString: (Char) -> String;
 val charToString: (Char) -> String;
-val length: (String) -> Int;
+val codePointCount: (String) -> Int;
 val mapCharacters: ((Char) -> String, String) -> String;
 val repeat: (String, Int) -> String;
 val replace: (String, String, String) -> String;

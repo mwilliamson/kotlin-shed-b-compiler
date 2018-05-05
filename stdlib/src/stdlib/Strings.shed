@@ -3,6 +3,7 @@ import stdlib.platform.Strings;
 
 val charToHexString = Strings.charToHexString;
 val charToString = Strings.charToString;
+val codePointCount = Strings.codePointCount;
 val mapCharacters = Strings.mapCharacters;
 val replace = Strings.replace;
 
@@ -20,6 +21,6 @@ fun join(separator: String, elements: List[String]) -> String {
     )
 }
 
-fun padLeft(length: Int, padding: Char, string: String) -> String {
-    Strings.repeat(charToString(padding), length - Strings.length(string)) + string
+fun padLeft(desiredCodePointCount: Int, padding: Char, string: String) -> String {
+    Strings.repeat(charToString(padding), desiredCodePointCount - Strings.codePointCount(string)) + string
 }

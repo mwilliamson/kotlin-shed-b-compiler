@@ -9,7 +9,7 @@ def char_to_string(char):
     return char
 
 
-def length(string):
+def code_point_count(string):
     return len(string)
 
 
