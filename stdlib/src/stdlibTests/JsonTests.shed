@@ -53,6 +53,24 @@ val testCases = Tests.suite("JsonTests", list(
             Tests.assertThat(text, Matchers.isString("\"\\\" \\\"\""))
         }),
 
+        Tests.testCase("tabs are escaped", fun () {
+            val value = Json.string("\t \t");
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("\"\\t \\t\""))
+        }),
+
+        Tests.testCase("line feeds are escaped", fun () {
+            val value = Json.string("\n \n");
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("\"\\n \\n\""))
+        }),
+
+        Tests.testCase("carriage returns are escaped", fun () {
+            val value = Json.string("\r \r");
+            val text = Json.valueToText(value);
+            Tests.assertThat(text, Matchers.isString("\"\\r \\r\""))
+        }),
+
         Tests.testCase("control codes are escaped", fun () {
             val value = Json.string("\u000B");
             val text = Json.valueToText(value);

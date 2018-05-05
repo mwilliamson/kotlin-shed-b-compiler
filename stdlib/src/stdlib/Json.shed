@@ -101,6 +101,12 @@ fun jsonStringCharacterToText(character: Char) -> String {
         "\\\\"
     } else if (character == '\"') {
         "\\\""
+    } else if (character == '\t') {
+        "\\t"
+    } else if (character == '\n') {
+        "\\n"
+    } else if (character == '\r') {
+        "\\r"
     } else if (character < '\u0020') {
         val hexString = Strings.charToHexString(character);
         "\\u" + Strings.padLeft(4, '0', hexString)
