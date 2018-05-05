@@ -74,6 +74,10 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
         OperationType(Operator.ADD, StringType, StringType) -> StringType
 
         OperationType(Operator.EQUALS, CharType, CharType) -> BoolType
+        OperationType(Operator.LESS_THAN, CharType, CharType) -> BoolType
+        OperationType(Operator.LESS_THAN_OR_EQUAL, CharType, CharType) -> BoolType
+        OperationType(Operator.GREATER_THAN, CharType, CharType) -> BoolType
+        OperationType(Operator.GREATER_THAN_OR_EQUAL, CharType, CharType) -> BoolType
 
         OperationType(Operator.EQUALS, BoolType, BoolType) -> BoolType
 

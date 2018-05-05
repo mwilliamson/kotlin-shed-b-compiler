@@ -5,7 +5,9 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
+import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
@@ -142,11 +144,19 @@ class TypeCheckExpressionTests {
         assertThat(type, cast(isStringType))
     }
 
-    @Test
-    fun charEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(Operator.EQUALS, literalChar(), literalChar())
-        val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(isBoolType))
+    @TestFactory
+    fun charComparisonOperationReturnsBoolean(): List<DynamicTest> {
+        return listOf(
+            Operator.EQUALS,
+            Operator.LESS_THAN,
+            Operator.LESS_THAN_OR_EQUAL,
+            Operator.GREATER_THAN,
+            Operator.GREATER_THAN_OR_EQUAL
+        ).map { operator -> DynamicTest.dynamicTest("char $operator operation returns boolean", {
+            val node = binaryOperation(operator, literalChar(), literalChar())
+            val type = inferType(node, emptyTypeContext())
+            assertThat(type, cast(isBoolType))
+        }) }
     }
 
     @Test
