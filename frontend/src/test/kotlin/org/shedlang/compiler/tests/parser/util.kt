@@ -1,13 +1,13 @@
 package org.shedlang.compiler.tests.parser
 
-import org.shedlang.compiler.ast.Source
+import org.shedlang.compiler.ast.StringSource
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.TokenType
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parserTokenise
 
 
-internal fun <T> parseString(parser: (Source, TokenIterator<TokenType>) -> T, input: String): T {
+internal fun <T> parseString(parser: (StringSource, TokenIterator<TokenType>) -> T, input: String): T {
     val tokens = tokeniseWithoutWhitespace(input)
     return parser.parse(tokens)
 }
