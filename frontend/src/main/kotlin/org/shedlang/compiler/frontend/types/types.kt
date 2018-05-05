@@ -83,7 +83,7 @@ internal fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Ty
             returns = replaceStaticValuesInType(type.returns, bindings),
             staticParameters = type.staticParameters
         )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is AnyType) {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CharType || type is AnyType) {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)

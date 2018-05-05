@@ -143,6 +143,13 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun charEqualityOperationReturnsBoolean() {
+        val node = binaryOperation(Operator.EQUALS, literalChar(), literalChar())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
     fun booleanEqualityOperationReturnsBoolean() {
         val node = binaryOperation(Operator.EQUALS, literalBool(), literalBool())
         val type = inferType(node, emptyTypeContext())

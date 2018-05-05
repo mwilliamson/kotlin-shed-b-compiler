@@ -1,6 +1,8 @@
 import stdlib.Lists;
 import stdlib.platform.Strings;
 
+val charToString = Strings.charToString;
+val mapCharacters = Strings.mapCharacters;
 val replace = Strings.replace;
 
 fun join(separator: String, elements: List[String]) -> String {

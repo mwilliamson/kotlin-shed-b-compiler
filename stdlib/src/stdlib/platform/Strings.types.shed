@@ -1,1 +1,3 @@
+val charToString: (Char) -> String;
+val mapCharacters: ((Char) -> String, String) -> String;
 val replace: (String, String, String) -> String;
