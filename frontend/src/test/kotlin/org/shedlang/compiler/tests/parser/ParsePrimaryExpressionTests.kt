@@ -126,7 +126,8 @@ class ParsePrimaryExpressionTests {
             testCase("escaped tab is decoded", "'\\t'", '\t'.toInt()),
             testCase("escaped newline is decoded", "'\\n'", '\n'.toInt()),
             testCase("escaped carriage return is decoded", "'\\r'", '\r'.toInt()),
-            testCase("hexadecimal unicode escape sequence is decoded", "'\\u{1B}'", '\u001B'.toInt())
+            testCase("hexadecimal unicode escape sequence is decoded", "'\\u{1B}'", '\u001B'.toInt()),
+            testCase("character outside of BMP", "'\uD835\uDD3C'", 0x1D53C)
         )
     }
 
