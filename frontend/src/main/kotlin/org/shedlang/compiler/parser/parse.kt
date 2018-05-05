@@ -855,6 +855,7 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
         TokenType.CHARACTER -> {
             val token = tokens.next()
             val stringValue = decodeCharacterToken(token.value, source = source)
+            // TODO: handle surrogate pairs
             if (stringValue.length == 1) {
                 val value = stringValue[0].toInt()
                 return CharacterLiteralNode(value, source)
