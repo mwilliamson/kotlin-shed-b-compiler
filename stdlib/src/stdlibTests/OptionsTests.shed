@@ -6,7 +6,7 @@ fun addOne(value: Int) -> Int {
     value + 1
 }
 
-val testCases = Tests.suite("optionsTests", list(
+val testCases = Tests.suite(moduleName, list(
     Tests.testCase("map(f, none) is none", fun () {
         Tests.assertThat(Options.map(addOne, Options.none), Matchers.isNone())
     }),

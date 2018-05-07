@@ -3,7 +3,9 @@ package org.shedlang.compiler.backends.javascript
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.NodeSource
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
 import java.io.OutputStreamWriter
@@ -84,7 +86,24 @@ private fun compileModule(module: Module.Shed, modules: ModuleSet): JavascriptMo
     } else {
         ""
     }
-    val contents = builtins + "(function() {\n" + serialise(generateCode) + main + "})();\n"
+    // TODO: test module name
+    val moduleName = JavascriptExpressionStatementNode(
+        JavascriptAssignmentNode(
+            target = JavascriptVariableReferenceNode(
+                "moduleName",
+                source = NodeSource(module.node)
+            ),
+            expression = JavascriptStringLiteralNode(
+                module.name.map(Identifier::value).joinToString("."),
+                source = NodeSource(module.node)
+            ),
+            source = NodeSource(module.node)
+        ),
+        source = NodeSource(module.node)
+    )
+    val contents = builtins +
+        serialise(moduleName, indentation = 0) +
+        "(function() {\n" + serialise(generateCode) + main + "})();\n"
     return JavascriptModule(
         name = module.name.map(Identifier::value),
         source = contents

@@ -10,7 +10,7 @@ fun codePointCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase
     })
 }
 
-val testCases = Tests.suite("StringsTests", list(
+val testCases = Tests.suite(moduleName, list(
     Tests.suite("codePointCount", list(
         codePointCountTestCase("", 0),
         codePointCountTestCase("a", 1),

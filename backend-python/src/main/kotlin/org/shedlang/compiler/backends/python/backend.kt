@@ -3,7 +3,11 @@ package org.shedlang.compiler.backends.python
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.NodeSource
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.python.ast.PythonAssignmentNode
+import org.shedlang.compiler.backends.python.ast.PythonStringLiteralNode
+import org.shedlang.compiler.backends.python.ast.PythonVariableReferenceNode
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
 import java.io.OutputStreamWriter
@@ -86,7 +90,20 @@ private fun compileModule(module: Module.Shed): PythonModule {
             reduce,
         )
     """.trimIndent()
-    val contents = builtins + "\n" + serialise(generateCode) + "\n"
+
+    // TODO: push module name generation into code generator
+    val moduleName = PythonAssignmentNode(
+        target = PythonVariableReferenceNode(
+            "module_name",
+            source = NodeSource(module.node)
+        ),
+        expression = PythonStringLiteralNode(
+            module.name.map(Identifier::value).joinToString("."),
+            source = NodeSource(module.node)
+        ),
+        source = NodeSource(module.node)
+    )
+    val contents = builtins + "\n" + serialise(moduleName) + "\n" + serialise(generateCode) + "\n"
     val main = if (module.hasMain()) {
         // TODO: avoid _shed_main collision
         """

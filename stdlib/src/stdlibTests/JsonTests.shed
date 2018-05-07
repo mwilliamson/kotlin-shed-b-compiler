@@ -3,7 +3,7 @@ import stdlib.Matchers;
 import stdlib.Options;
 import stdlib.Tests;
 
-val testCases = Tests.suite("JsonTests", list(
+val testCases = Tests.suite(moduleName, list(
     Tests.suite("valueToText", list(
         Tests.testCase("null", fun () {
             val value = Json.null;
