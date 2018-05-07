@@ -1,3 +1,5 @@
+"use strict";
+
 function charToHexString(char) {
     return char.charCodeAt(0).toString(16).toUpperCase();
 }
