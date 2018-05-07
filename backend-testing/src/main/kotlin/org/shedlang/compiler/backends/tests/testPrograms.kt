@@ -94,7 +94,7 @@ private fun findTestFiles(): List<TestProgramSource> {
     val exampleDirectory = root.resolve("examples")
     val stdlibTestsSource = TestProgramSource.Directory(
         root.resolve("stdlib"),
-        listOf(Identifier("stdlibTests"), Identifier("main")),
+        listOf(Identifier("stdlibTests"), Identifier("Main")),
         has(ExecutionResult::exitCode, equalTo(0))
     )
     return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramSource? {
