@@ -78,10 +78,40 @@ object AnyType : Type {
 object NothingType : Type {
     override val shortDescription = "Nothing"
 }
-class MetaType(val type: Type): Type {
-    override val shortDescription: String
-        get() = "MetaType(${type.shortDescription})"
+
+val metaTypeParameter = covariantTypeParameter("T")
+val metaTypeShapeId = freshShapeId()
+val metaType = TypeFunction(
+    parameters = listOf(metaTypeParameter),
+    type = LazyShapeType(
+        shapeId = metaTypeShapeId,
+        name = Identifier("Type"),
+        staticParameters = listOf(metaTypeParameter),
+        staticArguments = listOf(metaTypeParameter),
+        getFields = lazy({ mapOf<Identifier, Type>() }),
+        declaredTagField = null,
+        getTagValue = lazy { null }
+    )
+)
+
+fun MetaType(type: Type): Type {
+    return applyStatic(metaType, listOf(type))
 }
+
+fun metaTypeToType(type: Type): Type? {
+    if (type is ShapeType && type.shapeId == metaTypeShapeId) {
+        val argument = type.staticArguments[0]
+        if (argument is Type) {
+            return argument
+        } else {
+            // TODO: throw a better exception
+            throw Exception("expected type")
+        }
+    } else {
+        return null
+    }
+}
+
 class EffectType(val effect: Effect): Type {
     override val shortDescription: String
         get() = "EffectType(${effect})"
@@ -386,5 +416,74 @@ fun hasTagValueFor(type: Type, tagField: TagField): Boolean {
         return tagValue != null && return tagValue.tagField == tagField
     } else {
         return false
+    }
+}
+
+fun applyStatic(receiver: TypeFunction, arguments: List<StaticValue>): Type {
+    val bindings = receiver.parameters.zip(arguments).toMap()
+    return replaceStaticValuesInType(receiver.type, bindings = bindings)
+}
+
+typealias StaticBindings = Map<StaticParameter, StaticValue>
+
+private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): StaticValue {
+    return value.acceptStaticValueVisitor(object : StaticValue.Visitor<StaticValue> {
+        override fun visit(effect: Effect): StaticValue {
+            return replaceEffects(effect, bindings)
+        }
+
+        override fun visit(type: Type): StaticValue {
+            return replaceStaticValuesInType(type, bindings)
+        }
+    })
+}
+
+fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
+    if (type is TypeParameter) {
+        // TODO: handle non-type bindings
+        return bindings.getOrElse(type, { type }) as Type
+    } else if (type is UnionType) {
+        return LazyUnionType(
+            type.name,
+            lazy({
+                type.members.map({ memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType })
+            }),
+            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) }),
+            declaredTagField = type.declaredTagField
+        )
+    } else if (type is ShapeType) {
+        return LazyShapeType(
+            name = type.name,
+            getFields = lazy({
+                type.fields.mapValues({ field -> replaceStaticValuesInType(field.value, bindings) })
+            }),
+            shapeId = type.shapeId,
+            staticParameters = type.staticParameters,
+            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) }),
+            declaredTagField = type.declaredTagField,
+            getTagValue = lazy { type.tagValue }
+        )
+    } else if (type is FunctionType) {
+        return FunctionType(
+            positionalParameters = type.positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
+            namedParameters = type.namedParameters.mapValues({ parameter -> replaceStaticValuesInType(parameter.value, bindings) }),
+            effect = replaceEffects(type.effect, bindings),
+            returns = replaceStaticValuesInType(type.returns, bindings),
+            staticParameters = type.staticParameters
+        )
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CharType || type is AnyType) {
+        return type
+    } else {
+        throw NotImplementedError("Type replacement not implemented for: " + type)
+    }
+}
+
+public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
+    val effectParameter = effect as? EffectParameter
+    if (effectParameter == null) {
+        return effect
+    } else {
+        // TODO: handle non-effect bindings
+        return bindings.getOrElse(effect, { effect }) as Effect
     }
 }

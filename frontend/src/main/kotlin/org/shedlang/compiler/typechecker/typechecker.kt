@@ -5,7 +5,6 @@ import org.shedlang.compiler.ExpressionTypesMap
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.types.*
 import java.util.*
 
@@ -322,24 +321,29 @@ private fun typeCheck(type: StaticNode, context: TypeContext) {
 
 internal fun evalType(type: StaticNode, context: TypeContext): Type {
     val staticValue = evalStatic(type, context)
-    return when (staticValue) {
-        is MetaType -> staticValue.type
-        else -> throw UnexpectedTypeError(
+    val metaTypeValue = metaTypeToType(staticValue)
+    if (metaTypeValue == null) {
+        throw UnexpectedTypeError(
             expected = MetaTypeGroup,
             actual = staticValue,
             source = type.source
         )
+    } else {
+        return metaTypeValue
     }
 }
 
 private fun evalStaticValue(node: StaticNode, context: TypeContext): StaticValue {
-    val static = evalStatic(node, context)
-    return when (static) {
-        is MetaType -> static.type
-        is EffectType -> static.effect
-        else -> throw UnexpectedTypeError(
+    val staticValue = evalStatic(node, context)
+    val metaTypeValue = metaTypeToType(staticValue)
+    if (staticValue is EffectType) {
+        return staticValue.effect
+    } else if (metaTypeValue != null) {
+        return metaTypeValue
+    } else {
+        throw UnexpectedTypeError(
             expected = StaticValueTypeGroup,
-            actual = static,
+            actual = staticValue,
             source = node.source
         )
     }

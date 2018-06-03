@@ -1,10 +1,6 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.types.StaticBindings
-import org.shedlang.compiler.frontend.types.applyStatic
-import org.shedlang.compiler.frontend.types.replaceEffects
-import org.shedlang.compiler.frontend.types.replaceStaticValuesInType
 import org.shedlang.compiler.types.*
 
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
@@ -31,8 +27,10 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
 internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Type? {
     if (receiverType is FunctionType) {
         return inferFunctionCallType(node, receiverType, context)
-    } else if (receiverType is MetaType) {
-        val receiverInnerType = receiverType.type
+    }
+
+    val receiverInnerType = metaTypeToType(receiverType)
+    if (receiverInnerType != null) {
         if (receiverInnerType is ShapeType) {
             return inferConstructorCallType(node, null, receiverInnerType, context)
         } else if (receiverInnerType is TypeFunction) {

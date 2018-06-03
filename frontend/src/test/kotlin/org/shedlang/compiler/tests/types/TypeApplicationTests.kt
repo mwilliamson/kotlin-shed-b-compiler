@@ -5,8 +5,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.frontend.tests.*
-import org.shedlang.compiler.frontend.types.applyStatic
-import org.shedlang.compiler.frontend.types.replaceStaticValuesInType
 import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.parametrizedShapeType

@@ -5,7 +5,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isEquivalentType
-import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult

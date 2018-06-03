@@ -36,7 +36,7 @@ class TypeCheckFunctionTests {
         ))
         assertThat(
             typeContext.typeOf(parameter),
-            equalTo((typeContext.typeOf(typeParameter) as MetaType).type)
+            equalTo(metaTypeToType(typeContext.typeOf(typeParameter)))
         )
         assertThat(
             typeContext.typeOf(node),

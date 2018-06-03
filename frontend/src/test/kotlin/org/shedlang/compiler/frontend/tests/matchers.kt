@@ -67,7 +67,11 @@ internal val isIntType: Matcher<StaticValue> = cast(equalTo(IntType))
 internal val isBoolType: Matcher<StaticValue> = cast(equalTo(BoolType))
 internal val isStringType: Matcher<StaticValue> = cast(equalTo(StringType))
 
-internal fun isMetaType(type: Matcher<Type>): Matcher<StaticValue> = cast(has(MetaType::type, type))
+internal fun isMetaType(type: Matcher<Type>): Matcher<StaticValue> = isShapeType(
+    shapeId = equalTo(metaTypeShapeId),
+    staticArguments = isSequence(cast(type))
+)
+
 internal fun isEffectType(effect: Matcher<Effect>): Matcher<StaticValue> = cast(has(EffectType::effect, effect))
 
 internal fun isListType(elementType: Matcher<StaticValue>): Matcher<StaticValue> = isShapeType(

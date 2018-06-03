@@ -7,7 +7,6 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isIntType
 import org.shedlang.compiler.frontend.tests.isUnionType
-import org.shedlang.compiler.frontend.types.applyStatic
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.canCoerce
