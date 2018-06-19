@@ -1,0 +1,5 @@
+import .platform.Types;
+
+val cast = Types.cast;
+val name = Types.name;
+val typeOf = Types.typeOf;

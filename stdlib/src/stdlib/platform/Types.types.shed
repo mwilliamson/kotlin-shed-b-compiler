@@ -1,0 +1,5 @@
+import stdlib.Options;
+
+val cast: [T](Type[T], Any) -> Options.Option[T];
+val name: (Type[Any]) -> String;
+val typeOf: [T](T) -> Type[T];

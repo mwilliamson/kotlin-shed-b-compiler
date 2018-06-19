@@ -1,4 +1,5 @@
 import .Options;
+import .Types;
 
 fun anything() -> Matcher[Any] {
     Matcher(
@@ -46,6 +47,23 @@ fun isSome[T](matcher: Matcher[T]) -> Matcher[Options.Option[T]] {
                 failure("was none")
             }
         }
+    )
+}
+
+fun isInstance[T](type: Type[T], matcher: Matcher[T]) -> Matcher[Any] {
+    Matcher(
+        description = "instance of " + Types.name(type),
+        match = fun(actual: Any) {
+            val result = Types.cast(type, actual);
+            when (result) {
+                is Options.Some[T] {
+                    matcher.match(result.value)
+                }
+                is Options.None {
+                    failure("was instance of " + Types.name(Types.typeOf(actual)))
+                }
+            }
+        },
     )
 }
 

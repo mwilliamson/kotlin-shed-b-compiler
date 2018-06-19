@@ -43,6 +43,7 @@ function declareShape(name) {
     }
 
     shape.typeId = typeId;
+    shape.typeName = name;
 
     return shape;
 }

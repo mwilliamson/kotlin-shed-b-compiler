@@ -117,5 +117,13 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(text, Matchers.isString("{\"apples\":null,\"bananas\":true,\"coconut\":false}"))
         }),
     )),
+
+    Tests.suite("textToValue", list(
+        Tests.testCase("null", fun () {
+            val text = "null";
+            val value = Json.textToValue(text);
+            Tests.assertThat(value, Matchers.isInstance(Json.JsonNull, Matchers.anything()))
+        }),
+    )),
 ));
 

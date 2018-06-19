@@ -17,6 +17,7 @@ private val coreBuiltins = listOf(
     builtinType("Char", CharType),
     builtinType("Bool", BoolType),
     builtinType("List", ListType),
+    builtinType("Type", metaType),
 
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect)

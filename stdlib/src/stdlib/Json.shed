@@ -114,3 +114,7 @@ fun jsonStringCharacterToText(character: Char) -> String {
         Strings.charToString(character)
     }
 }
+
+fun textToValue(text: String) -> JsonValue {
+    null
+}
