@@ -172,7 +172,7 @@ fun fieldAccess(
     fieldName: String
 ) = FieldAccessNode(
     receiver = receiver,
-    fieldName = Identifier(fieldName),
+    fieldName = FieldNameNode(Identifier(fieldName), source = anySource()),
     source = anySource()
 )
 

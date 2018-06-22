@@ -202,7 +202,7 @@ internal fun isFieldAccess(
     fieldName: Matcher<Identifier>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(FieldAccessNode::receiver, receiver),
-    has(FieldAccessNode::fieldName, fieldName)
+    has(FieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName))
 ))
 
 internal fun isVariableReference(name: String) : Matcher<ExpressionNode>

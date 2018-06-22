@@ -695,16 +695,25 @@ data class CallNamedArgumentNode(
 
 data class FieldAccessNode(
     val receiver: ExpressionNode,
-    val fieldName: Identifier,
+    val fieldName: FieldNameNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(receiver)
+        get() = listOf(receiver, fieldName)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class FieldNameNode(
+    val identifier: Identifier,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : Node {
+    override val children: List<Node>
+        get() = listOf()
 }
 
 enum class Operator {

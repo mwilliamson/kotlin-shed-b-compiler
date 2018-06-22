@@ -555,7 +555,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             return generateExpressionCode(node.receiver, context).pureMap { receiver ->
                 PythonAttributeAccessNode(
                     receiver,
-                    pythoniseName(node.fieldName),
+                    pythoniseName(node.fieldName.identifier),
                     source = NodeSource(node)
                 )
             }
