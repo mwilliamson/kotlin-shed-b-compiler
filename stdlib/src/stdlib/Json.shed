@@ -116,5 +116,25 @@ fun jsonStringCharacterToText(character: Char) -> String {
 }
 
 fun textToValue(text: String) -> JsonValue {
-    null
+    if (text == "true") {
+        boolean(true)
+    } else if (text == "false") {
+        boolean(false)
+    } else {
+        null
+    }
+}
+
+fun equals(left: JsonValue, right: JsonValue) -> Bool {
+    if (left is JsonNull) {
+        right is JsonNull
+    } else if (left is JsonBoolean) {
+        if (right is JsonBoolean) {
+            left.value == right.value
+        } else {
+            false
+        }
+    } else {
+        false
+    }
 }
