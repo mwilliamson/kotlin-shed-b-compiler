@@ -191,6 +191,8 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return JavascriptStringLiteralNode(value, NodeSource(node))
         }
 
+        override fun visit(node: SymbolNode) = throw NotImplementedError()
+
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
             return generateCodeForReferenceNode(node)
         }
