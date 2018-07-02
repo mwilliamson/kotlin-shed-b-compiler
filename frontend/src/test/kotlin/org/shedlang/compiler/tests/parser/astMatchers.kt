@@ -244,3 +244,6 @@ internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
     = cast(has(IntegerLiteralNode::value, value))
 
 internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))
+
+internal fun isSymbolName(name: String): Matcher<ExpressionNode>
+    = cast(has(SymbolNode::name, equalTo(name)))

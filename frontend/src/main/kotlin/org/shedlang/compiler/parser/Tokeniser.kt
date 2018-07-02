@@ -10,6 +10,8 @@ private fun symbol(tokenType: TokenType, string: String)
 
 private val unterminatedStringPattern = "\"(?:[^\\\\\"\n\r]|\\\\.)*"
 
+val identifierPattern = "[A-Za-z][A-Za-z0-9]*"
+
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     keyword(TokenType.KEYWORD_ELSE, "else"),
     keyword(TokenType.KEYWORD_FALSE, "false"),
@@ -59,7 +61,8 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     symbol(TokenType.SYMBOL_TILDE, "~"),
     symbol(TokenType.SYMBOL_BANG, "!"),
 
-    RegexTokeniser.rule(TokenType.IDENTIFIER, "[A-Za-z][A-Za-z0-9]*"),
+    RegexTokeniser.rule(TokenType.IDENTIFIER, identifierPattern),
+    RegexTokeniser.rule(TokenType.SYMBOL_NAME, "@" + identifierPattern),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
     RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
     RegexTokeniser.rule(TokenType.CHARACTER, "'(?:[^\\\\'\n\r]|\\\\.)*'"),
@@ -93,6 +96,7 @@ internal enum class TokenType {
     KEYWORD_WHEN,
 
     IDENTIFIER,
+    SYMBOL_NAME,
 
     SYMBOL_ARROW,
     SYMBOL_FAT_ARROW,

@@ -857,6 +857,9 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
         TokenType.IDENTIFIER -> {
             return parseVariableReference(source, tokens)
         }
+        TokenType.SYMBOL_NAME -> {
+            return parseSymbolName(source, tokens)
+        }
         TokenType.KEYWORD_TRUE -> {
             tokens.skip()
             return BooleanLiteralNode(true, source)
@@ -919,6 +922,11 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
 private fun parseVariableReference(source: StringSource, tokens: TokenIterator<TokenType>): VariableReferenceNode {
     val value = parseIdentifier(tokens)
     return VariableReferenceNode(value, source)
+}
+
+private fun parseSymbolName(source: StringSource, tokens: TokenIterator<TokenType>): SymbolNode {
+    val name = tokens.nextValue(TokenType.SYMBOL_NAME)
+    return SymbolNode(name, source)
 }
 
 private fun decodeCharacterToken(value: String, source: StringSource): String {
