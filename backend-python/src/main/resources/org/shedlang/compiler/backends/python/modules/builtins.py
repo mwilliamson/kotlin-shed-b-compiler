@@ -27,3 +27,14 @@ def reduce(func, initial, elements):
     for element in elements:
         result = func(result, element)
     return result
+
+def symbol_factory():
+    symbols = {}
+
+    def create_symbol(name):
+        if name not in symbols:
+            symbols[name] = object()
+
+        return symbols[name]
+
+    return create_symbol

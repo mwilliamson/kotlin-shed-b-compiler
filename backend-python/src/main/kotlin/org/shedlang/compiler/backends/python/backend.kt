@@ -88,13 +88,10 @@ private fun compileModule(module: Module.Shed): PythonModule {
             map,
             partial as _partial,
             reduce,
+            symbol_factory as _symbol_factory,
         )
 
-        _symbols = {}
-        def _symbol(name):
-            if name not in _symbols:
-                _symbols[name] = object()
-            return _symbols[name]
+        _symbol = _symbol_factory()
     """.trimIndent()
 
     // TODO: push module name generation into code generator
