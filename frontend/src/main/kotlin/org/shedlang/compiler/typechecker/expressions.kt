@@ -66,6 +66,10 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
     val leftType = inferType(node.left, context)
     val rightType = inferType(node.right, context)
 
+    if (leftType is SymbolType && rightType is SymbolType && node.operator == Operator.EQUALS) {
+        return BoolType
+    }
+
     return when (OperationType(node.operator, leftType, rightType)) {
         OperationType(Operator.EQUALS, IntType, IntType) -> BoolType
         OperationType(Operator.ADD, IntType, IntType) -> IntType

@@ -175,6 +175,13 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun symbolEqualityOperationReturnsBoolean() {
+        val node = binaryOperation(Operator.EQUALS, symbolName("@x"), symbolName("@y"))
+        val type = inferType(node, typeContext(moduleName = listOf("A")))
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
     fun functionExpressionHasFunctionType() {
         val intReference = staticReference("Int")
         val unitReference = staticReference("Unit")
