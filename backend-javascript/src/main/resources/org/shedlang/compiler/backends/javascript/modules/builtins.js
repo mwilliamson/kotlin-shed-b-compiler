@@ -57,9 +57,20 @@ function isType(value, type) {
     return value != null && value.$shedType === type;
 }
 
+function symbolFactory() {
+    const symbols = new Map();
+    return function(name) {
+        if (!symbols.has(name)) {
+            symbols.set(name, {});
+        }
+        return symbols.get(name);
+    };
+}
+
 module.exports = {
     declareShape: declareShape,
     isType: isType,
+    symbolFactory: symbolFactory,
 
     all: all,
     forEach: forEach,

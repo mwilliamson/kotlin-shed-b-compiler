@@ -290,6 +290,16 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun symbolNameGeneratesCallToSymbolFunction() {
+        val shed = symbolName("@blah")
+        val node = generateCode(shed)
+        assertThat(node, isJavascriptFunctionCall(
+            isJavascriptVariableReference("_symbol"),
+            isSequence(isJavascriptStringLiteral("@blah"))
+        ))
+    }
+
+    @Test
     fun variableReferenceGenerateVariableReference() {
         val shed = variableReference("x")
 

@@ -5,7 +5,10 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.NodeSource
 import org.shedlang.compiler.backends.Backend
-import org.shedlang.compiler.backends.javascript.ast.*
+import org.shedlang.compiler.backends.javascript.ast.JavascriptAssignmentNode
+import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionStatementNode
+import org.shedlang.compiler.backends.javascript.ast.JavascriptStringLiteralNode
+import org.shedlang.compiler.backends.javascript.ast.JavascriptVariableReferenceNode
 import org.shedlang.compiler.backends.readResourceText
 import java.io.File
 import java.io.OutputStreamWriter
@@ -71,7 +74,7 @@ private fun compileModule(module: Module.Shed, modules: ModuleSet): JavascriptMo
     val builtinsPath = "./" + "../".repeat(module.name.size - 1) + "builtins"
     val builtins = "const \$shed = require(\"$builtinsPath\");\n" + builtinNames.map { builtinName ->
         "const ${builtinName} = \$shed.${builtinName};\n"
-    }.joinToString("")
+    }.joinToString("") + "const _symbol = \$shed.symbolFactory();\n"
     val main = if (module.hasMain()) {
         """
             if (require.main === module) {
