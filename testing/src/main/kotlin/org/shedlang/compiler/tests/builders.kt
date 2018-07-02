@@ -110,6 +110,7 @@ fun literalBool(
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value, anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
 fun literalChar(value: Char = '!') = CharacterLiteralNode(value.toInt(), anySource())
+fun symbolName(name: String) = SymbolNode(name, anySource())
 fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 
 fun binaryOperation(

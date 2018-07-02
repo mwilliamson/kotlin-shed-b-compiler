@@ -52,6 +52,7 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         val typeCheckResult = typeCheck(
+            name.map { part -> part.value },
             moduleNode,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
@@ -68,6 +69,7 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         val typeCheckResult = typeCheck(
+            name.map { part -> part.value },
             moduleNode,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,

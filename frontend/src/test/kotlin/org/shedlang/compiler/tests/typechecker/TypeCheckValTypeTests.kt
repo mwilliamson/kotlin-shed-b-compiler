@@ -36,6 +36,7 @@ class TypeCheckValTypeTests {
         val intReference = staticReference("Int")
         val node = valType(name = "value", type = intReference)
         val typeContext = newTypeContext(
+            moduleName = null,
             nodeTypes = mapOf(
                 intDeclaration.nodeId to MetaType(IntType)
             ),

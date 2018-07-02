@@ -9,12 +9,14 @@ import org.shedlang.compiler.types.*
 import java.util.*
 
 internal fun newTypeContext(
+    moduleName: List<String>?,
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleResult
 ): TypeContext {
     return TypeContext(
+        moduleName = moduleName,
         effect = EmptyEffect,
         expressionTypes = expressionTypes,
         variableTypes = nodeTypes.toMutableMap(),
@@ -25,6 +27,7 @@ internal fun newTypeContext(
 }
 
 internal class TypeContext(
+    val moduleName: List<String>?,
     val effect: Effect,
     private val variableTypes: MutableMap<Int, Type>,
     private val expressionTypes: MutableMap<Int, Type>,
@@ -72,6 +75,7 @@ internal class TypeContext(
 
     fun enterFunction(effect: Effect): TypeContext {
         return TypeContext(
+            moduleName = moduleName,
             effect = effect,
             expressionTypes = expressionTypes,
             variableTypes = variableTypes,
@@ -83,6 +87,7 @@ internal class TypeContext(
 
     fun enterScope(): TypeContext {
         return TypeContext(
+            moduleName = moduleName,
             effect = effect,
             expressionTypes = expressionTypes,
             variableTypes = HashMap(variableTypes),
@@ -129,12 +134,14 @@ data class TypeCheckResult(
 )
 
 internal fun typeCheck(
+    moduleName: List<String>?,
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleResult
 ): TypeCheckResult {
     return typeCheckModule(
+        moduleName = moduleName,
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -143,12 +150,14 @@ internal fun typeCheck(
 }
 
 internal fun typeCheck(
+    moduleName: List<String>?,
     module: TypesModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleResult
 ): TypeCheckResult {
     return typeCheckModule(
+        moduleName = moduleName,
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -157,6 +166,7 @@ internal fun typeCheck(
 }
 
 private fun typeCheckModule(
+    moduleName: List<String>?,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleResult,
@@ -164,6 +174,7 @@ private fun typeCheckModule(
 ): TypeCheckResult {
     val expressionTypes = mutableMapOf<Int, Type>()
     val typeContext = newTypeContext(
+        moduleName = moduleName,
         nodeTypes = nodeTypes,
         expressionTypes = expressionTypes,
         resolvedReferences = resolvedReferences,

@@ -34,6 +34,7 @@ class TypeCheckValTests {
     fun valTakesTypeOfExpression() {
         val node = valStatement(name = "x", expression = literalInt())
         val typeContext = newTypeContext(
+            moduleName = null,
             nodeTypes = mapOf(),
             resolvedReferences = ResolvedReferencesMap(mapOf()),
             getModule = { moduleName -> throw UnsupportedOperationException() }

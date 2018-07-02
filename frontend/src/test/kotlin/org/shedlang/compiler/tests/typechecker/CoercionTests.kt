@@ -26,6 +26,39 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceSymbolTypeToSymbolInSameModuleWithSameName() {
+        assertThat(
+            canCoerce(
+                from = SymbolType(listOf("A", "B"), "@x"),
+                to = SymbolType(listOf("A", "B"), "@x")
+            ),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun cannotSymbolTypeToSymbolInDifferentModuleWithSameName() {
+        assertThat(
+            canCoerce(
+                from = SymbolType(listOf("A", "B"), "@x"),
+                to = SymbolType(listOf("A", "C"), "@x")
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun cannotSymbolTypeToSymbolInSameModuleWithDifferentName() {
+        assertThat(
+            canCoerce(
+                from = SymbolType(listOf("A", "B"), "@x"),
+                to = SymbolType(listOf("A", "B"), "@y")
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
     fun canCoerceAllTypesToAnyType() {
         assertThat(canCoerce(from = UnitType, to = AnyType), equalTo(true))
         val shapeType = shapeType("Box", mapOf("value" to IntType))

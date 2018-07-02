@@ -22,7 +22,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: IntegerLiteralNode) = IntType
         override fun visit(node: StringLiteralNode) = StringType
         override fun visit(node: CharacterLiteralNode) = CharType
-        override fun visit(node: SymbolNode) = throw NotImplementedError()
+        // TODO: handle missing module name
+        override fun visit(node: SymbolNode) = SymbolType(context.moduleName!!, node.name)
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
 
         override fun visit(node: BinaryOperationNode): Type {

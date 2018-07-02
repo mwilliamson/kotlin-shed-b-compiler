@@ -40,6 +40,7 @@ class EvalTypeTests {
             { evalType(
                 reference,
                 newTypeContext(
+                    moduleName = null,
                     nodeTypes = mutableMapOf(),
                     resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
                     getModule = { moduleName -> throw UnsupportedOperationException() }

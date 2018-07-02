@@ -8,6 +8,7 @@ import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.*
+import java.util.*
 
 private val coreBuiltins = listOf(
     builtinType("Any", AnyType),
@@ -35,6 +36,7 @@ fun parseType(string: String): Type {
     )
 
     val typeContext = newTypeContext(
+        moduleName = null,
         nodeTypes = coreBuiltins.associate({ builtin -> builtin.nodeId to builtin.type}),
         resolvedReferences = resolvedReferences,
         getModule = { importPath -> throw UnsupportedOperationException() }

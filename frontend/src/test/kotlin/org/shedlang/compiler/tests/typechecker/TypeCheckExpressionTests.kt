@@ -54,6 +54,13 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun symbolIsTypedAsSymbol() {
+        val node = symbolName("@blah")
+        val type = inferType(node, typeContext(moduleName = listOf("Some", "Module")))
+        assertThat(type, isType(SymbolType(listOf("Some", "Module"), "@blah")))
+    }
+
+    @Test
     fun variableReferenceTypeIsRetrievedFromContext() {
         val node = variableReference("x")
         val type = inferType(node, typeContext(referenceTypes = mutableMapOf(node to IntType)))
@@ -69,6 +76,7 @@ class TypeCheckExpressionTests {
             { inferType(
                 reference,
                 newTypeContext(
+                    moduleName = null,
                     nodeTypes = mutableMapOf(),
                     resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
                     getModule = { moduleName -> throw UnsupportedOperationException() }
