@@ -1,0 +1,3 @@
+val x1 = @x;
+val x2 = @x;
+val y = @y;
