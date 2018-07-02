@@ -530,6 +530,16 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun symbolNameGeneratesCallToSymbolFunction() {
+        val shed = symbolName("@blah")
+        val node = generateCode(shed)
+        assertThat(node, isGeneratedExpression(isPythonFunctionCall(
+            isPythonVariableReference("_symbol"),
+            isSequence(isPythonStringLiteral("@blah"))
+        )))
+    }
+
+    @Test
     fun variableReferenceGeneratesVariableReference() {
         val declaration = parameter("x")
         val shed = variableReference("x")

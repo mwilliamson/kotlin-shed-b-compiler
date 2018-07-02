@@ -89,6 +89,12 @@ private fun compileModule(module: Module.Shed): PythonModule {
             partial as _partial,
             reduce,
         )
+
+        _symbols = {}
+        def _symbol(name):
+            if name not in _symbols:
+                _symbols[name] = object()
+            return _symbols[name]
     """.trimIndent()
 
     // TODO: push module name generation into code generator

@@ -446,7 +446,16 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             )
         }
 
-        override fun visit(node: SymbolNode) = throw NotImplementedError()
+        override fun visit(node: SymbolNode): GeneratedExpression {
+            return GeneratedExpression.pure(
+                PythonFunctionCallNode(
+                    function = PythonVariableReferenceNode("_symbol", source = NodeSource(node)),
+                    arguments = listOf(PythonStringLiteralNode(node.name, source = NodeSource(node))),
+                    keywordArguments = listOf(),
+                    source = NodeSource(node)
+                )
+            )
+        }
 
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
             return GeneratedExpression.pure(
