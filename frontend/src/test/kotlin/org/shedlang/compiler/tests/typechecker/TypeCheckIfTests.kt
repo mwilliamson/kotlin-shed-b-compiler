@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isType
 import org.shedlang.compiler.frontend.tests.isUnionType
 import org.shedlang.compiler.tests.*
@@ -13,7 +12,6 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.TagValue
 
 class TypeCheckIfTests {
     @Test
@@ -43,9 +41,8 @@ class TypeCheckIfTests {
 
     @Test
     fun typeOfIfNodeIsUnionOfBranchTypes() {
-        val tag = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
         val reference1 = variableReference("member1")
         val reference2 = variableReference("member2")
 
@@ -73,10 +70,9 @@ class TypeCheckIfTests {
         val referenceInFalseBranch = variableReference("x")
 
         val member1Reference = staticReference("Member1")
-        val tagField = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
-        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
+        val union = unionType("Union", members = listOf(member1, member2))
 
         val types = captureTypes(
             ifExpression(

@@ -74,16 +74,12 @@ internal fun isValType(
 internal fun isShape(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    fields: Matcher<List<ShapeFieldNode>> = anything,
-    tagged: Matcher<Boolean> = anything,
-    hasValueForTag: Matcher<StaticNode?> = anythingOrNull
+    fields: Matcher<List<ShapeFieldNode>> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(ShapeNode::name, name),
         has(ShapeNode::staticParameters, staticParameters),
-        has(ShapeNode::fields, fields),
-        has(ShapeNode::tagged, tagged),
-        has(ShapeNode::hasTagValueFor, hasValueForTag)
+        has(ShapeNode::fields, fields)
     ))
 }
 
@@ -115,8 +111,7 @@ internal fun isFunctionDeclaration(name: Matcher<Identifier>): Matcher<ModuleSta
 
 internal fun isTypeParameter(
     name: Matcher<Identifier>,
-    variance: Matcher<Variance> = anything,
-    memberOf: Matcher<StaticNode?> = anythingOrNull
+    variance: Matcher<Variance> = anything
 ): Matcher<StaticParameterNode> {
     return cast(allOf(
         has(TypeParameterNode::name, name),

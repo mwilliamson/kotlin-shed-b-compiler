@@ -165,13 +165,6 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
     val name = parseIdentifier(tokens)
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
-    val tagged = tokens.trySkip(TokenType.KEYWORD_TAGGED)
-    val tagValueFor = if (tokens.trySkip(TokenType.KEYWORD_MEMBER_OF)) {
-        parseStaticExpression(tokens)
-    } else {
-        null
-    }
-
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val fields = parseZeroOrMoreNodes(
@@ -186,8 +179,6 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
     return ShapeNode(
         name = name,
         staticParameters = staticParameters,
-        tagged = tagged,
-        hasTagValueFor = tagValueFor,
         fields = fields,
         source = source
     )
@@ -380,16 +371,9 @@ private fun parseStaticParameter(allowVariance: Boolean) = fun (source: StringSo
         }
         val name = parseIdentifier(tokens)
 
-        val memberOf = if (tokens.trySkip(TokenType.KEYWORD_MEMBER_OF)) {
-            parseStaticExpression(tokens)
-        } else {
-            null
-        }
-
         return TypeParameterNode(
             name = name,
             variance = variance,
-            memberOf = memberOf,
             source = source
         )
     }

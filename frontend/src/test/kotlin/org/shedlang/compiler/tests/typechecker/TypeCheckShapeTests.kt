@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
@@ -91,80 +93,6 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isCovariant))
-        )))
-    }
-
-    @Test
-    fun whenShapeNodeHasNoTagThenTypeHasNoTag() {
-        val node = shape("X", tag = false)
-
-        val typeContext = typeContext()
-        typeCheck(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            tagField = absent()
-        )))
-    }
-
-    @Test
-    fun whenShapeNodeHasTagThenTypeHasTag() {
-        val node = shape("X", tag = true)
-
-        val typeContext = typeContext()
-        typeCheck(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            tagField = present(isTag(name = isIdentifier("X"), tagId = equalTo(node.nodeId)))
-        )))
-    }
-
-    @Test
-    fun whenShapeNodeHasNoTagValueThenTypeHasNoTagValue() {
-        val node = shape("X", hasTagValueFor = null)
-
-        val typeContext = typeContext()
-        typeCheck(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            tagValue = absent()
-        )))
-    }
-
-    @Test
-    fun whenShapeNodeHasTagValueThenTypeHasTagValue() {
-        val taggedReference = staticReference("T")
-        val taggedType = unionType("T")
-
-        val node = shape("X", hasTagValueFor = taggedReference)
-
-        val typeContext = typeContext(
-            referenceTypes = mapOf(taggedReference to MetaType(taggedType))
-        )
-        typeCheck(node, typeContext)
-
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            tagValue = present(isTagValue(
-                tagField = equalTo(taggedType.declaredTagField),
-                tagValueId = equalTo(node.nodeId)
-            ))
-        )))
-    }
-
-    @Test
-    fun tagValueCanReferToTypeFunction() {
-        val taggedReference = staticReference("T")
-        val tag = tagField("T")
-        val taggedType = parametrizedUnionType("T", tagField = tag)
-
-        val node = shape("X", hasTagValueFor = taggedReference)
-
-        val typeContext = typeContext(
-            referenceTypes = mapOf(taggedReference to MetaType(taggedType))
-        )
-        typeCheck(node, typeContext)
-
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            tagValue = present(isTagValue(
-                tagField = equalTo(tag),
-                tagValueId = equalTo(node.nodeId)
-            ))
         )))
     }
 

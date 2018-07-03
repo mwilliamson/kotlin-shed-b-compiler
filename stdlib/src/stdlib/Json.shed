@@ -4,7 +4,7 @@ import stdlib.Strings;
 
 union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
 
-shape JsonObject memberOf JsonValue {
+shape JsonObject {
     properties: List[JsonProperty],
 }
 
@@ -21,7 +21,7 @@ fun property(key: String, value: JsonValue) -> JsonProperty {
     JsonProperty(key = key, value = value)
 }
 
-shape JsonArray memberOf JsonValue {
+shape JsonArray {
     elements: List[JsonValue],
 }
 
@@ -29,7 +29,7 @@ fun array(elements: List[JsonValue]) -> JsonValue {
     JsonArray(elements = elements)
 }
 
-shape JsonNumber memberOf JsonValue {
+shape JsonNumber {
     value: String,
 }
 
@@ -37,7 +37,7 @@ fun number(value: String) -> JsonValue {
     JsonNumber(value = value)
 }
 
-shape JsonString memberOf JsonValue {
+shape JsonString {
     value: String,
 }
 
@@ -45,7 +45,7 @@ fun string(value: String) -> JsonValue {
     JsonString(value = value)
 }
 
-shape JsonBoolean memberOf JsonValue {
+shape JsonBoolean {
     value: Bool,
 }
 
@@ -53,7 +53,7 @@ fun boolean(value: Bool) -> JsonValue {
     JsonBoolean(value = value)
 }
 
-shape JsonNull memberOf JsonValue {
+shape JsonNull {
 }
 
 val null = JsonNull();

@@ -56,8 +56,8 @@ shape Matcher[-T] {
 }
 
 union Result = Success | Failure;
-shape Success memberOf Result { }
-shape Failure memberOf Result {
+shape Success { }
+shape Failure {
     message: String,
 }
 val success = Success();

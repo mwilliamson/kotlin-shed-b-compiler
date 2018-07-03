@@ -27,15 +27,11 @@ internal fun isFunctionType(
 internal fun isShapeType(
     name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
-    shapeId: Matcher<Int> = anything,
-    tagField: Matcher<TagField?> = anythingOrNull,
-    tagValue: Matcher<TagValue?> = anythingOrNull
+    shapeId: Matcher<Int> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::name, name),
     has(ShapeType::staticArguments, staticArguments),
-    has(ShapeType::shapeId, shapeId),
-    has(ShapeType::declaredTagField, tagField),
-    has(ShapeType::tagValue, tagValue)
+    has(ShapeType::shapeId, shapeId)
 ))
 
 internal fun isShapeType(
@@ -51,13 +47,11 @@ internal fun isShapeType(
 internal fun isUnionType(
     name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
-    members: Matcher<List<Type>> = anything,
-    tagField: Matcher<TagField> = anything
+    members: Matcher<List<Type>> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::staticArguments, staticArguments),
-    has(UnionType::members, members),
-    has(UnionType::declaredTagField, tagField)
+    has(UnionType::members, members)
 ))
 
 internal val isAnyType: Matcher<StaticValue> = cast(equalTo(AnyType))
@@ -93,8 +87,7 @@ internal fun isTypeParameter(
     memberOf: Matcher<Type?> = anythingOrNull
 ): Matcher<StaticValue> = cast(allOf(
     has(TypeParameter::name, name),
-    has(TypeParameter::variance, variance),
-    has(TypeParameter::memberOf, memberOf)
+    has(TypeParameter::variance, variance)
 ))
 
 internal val isInvariant = equalTo(Variance.INVARIANT)
@@ -119,20 +112,6 @@ internal fun isEquivalentType(type: Type): Matcher<Type> {
 
 internal val isUnionTypeGroup: Matcher<TypeGroup> = equalTo(UnionTypeGroup)
 internal val isMetaTypeGroup: Matcher<TypeGroup> = equalTo(MetaTypeGroup)
-
-fun isTag(name: Matcher<Identifier>, tagId: Matcher<Int>): Matcher<TagField> {
-    return allOf(
-        has(TagField::name, name),
-        has(TagField::tagFieldId, tagId)
-    )
-}
-
-fun isTagValue(tagField: Matcher<TagField>, tagValueId: Matcher<Int>): Matcher<TagValue> {
-    return allOf(
-        has(TagValue::tagField, tagField),
-        has(TagValue::tagValueId, tagValueId)
-    )
-}
 
 inline fun <reified T : Throwable> throwsException(exceptionCriteria: Matcher<T>? = null): Matcher<() -> Unit> {
     val exceptionName = T::class.qualifiedName

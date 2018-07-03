@@ -40,12 +40,12 @@ shape AssertionResult {
 union Test = TestCase | TestSuite;
 union TestResult = TestCaseResult | TestSuiteResult;
 
-shape TestCase memberOf Test {
+shape TestCase {
     name: String,
     run: () -> AssertionResult,
 }
 
-shape TestCaseResult memberOf TestResult {
+shape TestCaseResult {
     name: String,
     error: Options.Option[AssertionError],
 }
@@ -54,12 +54,12 @@ fun testCase(name: String, run: () -> AssertionResult) -> TestCase {
     TestCase(name = name, run = run)
 }
 
-shape TestSuite memberOf Test {
+shape TestSuite {
     name: String,
     tests: List[Test],
 }
 
-shape TestSuiteResult memberOf TestResult {
+shape TestSuiteResult {
     name: String,
     results: List[TestResult],
 }

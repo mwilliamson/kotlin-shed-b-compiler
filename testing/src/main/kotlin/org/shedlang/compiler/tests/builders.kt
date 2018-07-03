@@ -233,14 +233,10 @@ fun functionExpression(
 fun shape(
     name: String = "Shape",
     staticParameters: List<StaticParameterNode> = listOf(),
-    tag: Boolean = false,
-    hasTagValueFor: StaticNode? = null,
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
     name = Identifier(name),
     staticParameters = staticParameters,
-    tagged = tag,
-    hasTagValueFor = hasTagValueFor,
     fields = fields,
     source = anySource()
 )
@@ -269,12 +265,10 @@ fun union(
 
 fun typeParameter(
     name: String = "T",
-    variance: Variance = Variance.INVARIANT,
-    memberOf: StaticNode? = null
+    variance: Variance = Variance.INVARIANT
 ) = TypeParameterNode(
     name = Identifier(name),
     variance = variance,
-    memberOf = memberOf,
     source = anySource()
 )
 
@@ -368,30 +362,24 @@ fun shapeType(
     name: String = "Shape",
     fields: Map<String, Type> = mapOf(),
     typeParameters: List<TypeParameter> = listOf(),
-    typeArguments: List<Type> = listOf(),
-    tagField: TagField? = null,
-    tagValue: TagValue? = null
+    typeArguments: List<Type> = listOf()
 ) = LazyShapeType(
     name = Identifier(name),
     getFields = lazy { fields.mapKeys { entry -> Identifier(entry.key) } },
     shapeId = freshShapeId(),
     staticParameters = typeParameters,
-    staticArguments = typeArguments,
-    declaredTagField = tagField,
-    getTagValue = lazy { tagValue }
+    staticArguments = typeArguments
 )
 
 
 fun parametrizedUnionType(
     name: String,
     parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
-    members: List<ShapeType> = listOf(),
-    tagField: TagField = TagField(Identifier(name))
+    members: List<ShapeType> = listOf()
 ) = TypeFunction(
     type = LazyUnionType(
         name = Identifier(name),
         getMembers = lazy { members },
-        declaredTagField = tagField,
         staticArguments = parameters
     ),
     parameters = parameters
@@ -399,17 +387,13 @@ fun parametrizedUnionType(
 
 fun unionType(
     name: String = "Union",
-    members: List<ShapeType> = listOf(),
-    tagField: TagField = TagField(Identifier(name))
+    members: List<ShapeType> = listOf()
 ) = LazyUnionType(
     name = Identifier(name),
     getMembers = lazy { members },
-    declaredTagField = tagField,
     staticArguments = listOf()
 )
 
 fun moduleType(fields: Map<String, Type>) = ModuleType(
     fields = fields.mapKeys { (name, type) -> Identifier(name) }
 )
-
-fun tagField(name: String) = TagField(Identifier(name))

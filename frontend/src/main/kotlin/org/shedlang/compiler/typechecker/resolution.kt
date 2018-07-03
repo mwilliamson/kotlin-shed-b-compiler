@@ -109,7 +109,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             context.defer(node, {
                 resolveScope(
                     binders = node.staticParameters,
-                    body = node.hasTagValueFor.nullableToList() + node.fields,
+                    body = node.fields,
                     context = context
                 )
             })

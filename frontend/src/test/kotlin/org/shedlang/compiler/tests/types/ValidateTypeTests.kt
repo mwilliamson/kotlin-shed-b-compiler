@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.tests.tagField
-import org.shedlang.compiler.tests.unionType
 import org.shedlang.compiler.types.*
 
 class ValidateTypeTests {
@@ -46,36 +44,6 @@ class ValidateTypeTests {
     fun shapeFieldsCannotBeContravariantTypeParameters() {
         val type = shapeType(fields = mapOf("value" to contravariantTypeParameter("T")))
         assertThat(validateType(type = type), isFailure("field type cannot be contravariant"))
-    }
-
-    @Test
-    fun whenUnionMembersHaveValueForTagOfUnionThenUnionIsValid() {
-        val tag = tagField("Tagged")
-        val member1 = shapeType("Member1", tagValue = TagValue(tag, 1))
-        val member2 = shapeType("Member2", tagValue = TagValue(tag, 2))
-        val type = unionType(members = listOf(member1, member2), tagField = tag)
-        assertThat(validateType(type = type), isSuccess)
-    }
-
-    @Test
-    fun whenUnionMembersDontHaveTagValueThenUnionIsInvalid() {
-        val tag = tagField("Tagged")
-        val member = shapeType("Member1", tagValue = null)
-        val type = unionType(members = listOf(member), tagField = tag)
-
-        assertThat(validateType(type = type), isFailure("union member did not have tag value for Tagged"))
-    }
-
-    @Test
-    fun whenUnionMembersHaveTagValuesForWrongTagThenUnionIsInvalid() {
-        val tag = tagField("Tagged")
-        val tag1 = tagField("Tagged1")
-        val tag2 = tagField("Tagged2")
-        val member1 = shapeType("Member1", tagValue = TagValue(tag1, 1))
-        val member2 = shapeType("Member2", tagValue = TagValue(tag2, 2))
-        val type = unionType(members = listOf(member1, member2), tagField = tag)
-
-        assertThat(validateType(type = type), isFailure("union member did not have tag value for Tagged"))
     }
 
     private val isSuccess = equalTo(ValidateTypeResult.success)

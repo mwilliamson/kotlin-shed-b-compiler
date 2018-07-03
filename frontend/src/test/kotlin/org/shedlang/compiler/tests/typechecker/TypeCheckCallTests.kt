@@ -7,7 +7,6 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
@@ -148,9 +147,8 @@ class TypeCheckCallTests {
 
     @Test
     fun typeParameterTakesUnionTypeWhenUsedWithMultipleTypes() {
-        val tag = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
 
         val functionReference = variableReference("f")
         val member1Reference = variableReference("member1")
@@ -706,9 +704,8 @@ class TypeCheckCallTests {
 
     @Test
     fun listCallOfElementsOfDifferentTypeReturnsListOfUnionOfElementTypes() {
-        val tag = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
 
         val member1Reference = variableReference("member1")
         val member2Reference = variableReference("member2")

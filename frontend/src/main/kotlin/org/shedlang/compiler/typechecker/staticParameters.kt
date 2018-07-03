@@ -37,8 +37,7 @@ private fun typeCheckTypeParameter(
 ): TypeParameter {
     val typeParameter = TypeParameter(
         name = parameter.name,
-        variance = parameter.variance,
-        memberOf = parameter.memberOf?.let { evalType(it, context) }
+        variance = parameter.variance
     )
     context.addVariableType(parameter, MetaType(typeParameter))
     return typeParameter

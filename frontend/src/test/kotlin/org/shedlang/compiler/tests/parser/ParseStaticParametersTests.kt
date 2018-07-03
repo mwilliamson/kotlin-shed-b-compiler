@@ -1,7 +1,6 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.isContravariant
 import org.shedlang.compiler.frontend.tests.isCovariant
@@ -34,13 +33,6 @@ class ParseStaticParametersTests {
         val parameters = parseString(Companion::parseStaticParametersWithVariance, "[-T]")
         assertThat(parameters, isSequence(
             isTypeParameter(name = isIdentifier("T"), variance = isContravariant)
-        ))
-    }
-    @Test
-    fun canParseTypeParameterWithMemberOfConstraint() {
-        val parameters = parseString(Companion::parseStaticParametersWithVariance, "[T memberOf U]")
-        assertThat(parameters, isSequence(
-            isTypeParameter(name = isIdentifier("T"), memberOf = present(isStaticReference("U")))
         ))
     }
 

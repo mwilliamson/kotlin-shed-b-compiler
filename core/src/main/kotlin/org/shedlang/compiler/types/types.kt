@@ -1,7 +1,6 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.freshNodeId
 
 
 interface StaticValue {
@@ -92,9 +91,7 @@ val metaType = TypeFunction(
         name = Identifier("Type"),
         staticParameters = listOf(metaTypeParameter),
         staticArguments = listOf(metaTypeParameter),
-        getFields = lazy({ mapOf<Identifier, Type>() }),
-        declaredTagField = null,
-        getTagValue = lazy { null }
+        getFields = lazy({ mapOf<Identifier, Type>() })
     )
 )
 
@@ -133,18 +130,6 @@ fun freshAnonymousTypeId() = nextAnonymousTypeId++
 private var nextShapeId = 0
 fun freshShapeId() = nextShapeId++
 
-fun freshTagFieldId() = freshNodeId()
-
-data class TagField(
-    val name: Identifier,
-    val tagFieldId: Int = freshTagFieldId()
-)
-
-data class TagValue(
-    val tagField: TagField,
-    val tagValueId: Int
-)
-
 interface StaticParameter: StaticValue {
     val name: Identifier
 
@@ -159,7 +144,6 @@ interface StaticParameter: StaticValue {
 data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
-    val memberOf: Type?,
     val typeParameterId: Int = freshTypeParameterId()
 ): StaticParameter, Type {
     override val shortDescription: String
@@ -253,16 +237,11 @@ data class FunctionType(
         }
 }
 
-interface MayDeclareTagField {
-    val declaredTagField: TagField?
-}
-
-interface ShapeType: HasFieldsType, MayDeclareTagField {
+interface ShapeType: HasFieldsType {
     val name: Identifier
     val shapeId: Int
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
-    val tagValue: TagValue?
 }
 
 data class LazyShapeType(
@@ -270,9 +249,7 @@ data class LazyShapeType(
     private val getFields: Lazy<Map<Identifier, Type>>,
     override val shapeId: Int = freshShapeId(),
     override val staticParameters: List<StaticParameter>,
-    override val staticArguments: List<StaticValue>,
-    override val declaredTagField: TagField?,
-    private val getTagValue: Lazy<TagValue?>
+    override val staticArguments: List<StaticValue>
 ): ShapeType {
     override val shortDescription: String
         get() = if (staticArguments.isEmpty()) {
@@ -281,21 +258,18 @@ data class LazyShapeType(
             appliedTypeShortDescription(name, staticArguments)
         }
     override val fields: Map<Identifier, Type> by getFields
-    override val tagValue: TagValue? by getTagValue
 }
 
-interface UnionType: Type, MayDeclareTagField {
+interface UnionType: Type {
     val name: Identifier
-    val members: List<ShapeType>
+    val members: List<Type>
     val staticArguments: List<StaticValue>
-    override val declaredTagField: TagField
 }
 
 
 data class AnonymousUnionType(
     override val name: Identifier = Identifier("_Union" + freshAnonymousTypeId()),
-    override val members: List<ShapeType>,
-    override val declaredTagField: TagField
+    override val members: List<Type>
 ): UnionType {
     override val staticArguments: List<StaticValue>
         get() = listOf()
@@ -307,7 +281,6 @@ data class AnonymousUnionType(
 data class LazyUnionType(
     override val name: Identifier,
     private val getMembers: Lazy<List<ShapeType>>,
-    override val declaredTagField: TagField,
     override val staticArguments: List<StaticValue>
 ): UnionType {
     override val shortDescription: String
@@ -333,9 +306,7 @@ val ListType = TypeFunction(
         name = Identifier("List"),
         staticParameters = listOf(listTypeParameter),
         staticArguments = listOf(listTypeParameter),
-        getFields = lazy({ mapOf<Identifier, Type>() }),
-        declaredTagField = null,
-        getTagValue = lazy { null }
+        getFields = lazy({ mapOf<Identifier, Type>() })
     )
 )
 
@@ -356,9 +327,9 @@ fun functionType(
 fun positionalFunctionType(parameters: List<Type>, returns: Type)
     = functionType(positionalParameters = parameters, returns = returns)
 
-fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT, memberOf = null)
-fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT, memberOf = null)
-fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT, memberOf = null)
+fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT)
+fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT)
+fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT)
 
 fun effectParameter(name: String) = EffectParameter(Identifier(name))
 
@@ -400,26 +371,11 @@ fun validateType(type: Type): ValidateTypeResult {
             }
         }))
     } else if (type is UnionType) {
-        for (member in type.members) {
-            if (!hasTagValueFor(member, type.declaredTagField)) {
-                return ValidateTypeResult(listOf("union member did not have tag value for " + type.declaredTagField.name.value))
-            }
-        }
         return ValidateTypeResult.success
     } else if (type is TypeFunction) {
         return validateType(type.type)
     } else {
         throw NotImplementedError("not implemented for type: ${type.shortDescription}")
-    }
-}
-
-fun hasTagValueFor(type: Type, tagField: TagField): Boolean {
-    // TODO: handle unions
-    if (type is ShapeType) {
-        val tagValue = type.tagValue
-        return tagValue != null && return tagValue.tagField == tagField
-    } else {
-        return false
     }
 }
 
@@ -452,8 +408,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             lazy({
                 type.members.map({ memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType })
             }),
-            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) }),
-            declaredTagField = type.declaredTagField
+            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
         )
     } else if (type is ShapeType) {
         return LazyShapeType(
@@ -463,9 +418,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             }),
             shapeId = type.shapeId,
             staticParameters = type.staticParameters,
-            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) }),
-            declaredTagField = type.declaredTagField,
-            getTagValue = lazy { type.tagValue }
+            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
         )
     } else if (type is FunctionType) {
         return FunctionType(

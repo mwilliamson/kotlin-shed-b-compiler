@@ -1,9 +1,6 @@
 package org.shedlang.compiler.tests.parser
 
-import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.isIdentifier
@@ -86,42 +83,6 @@ class ParseShapeTests {
                 isTypeParameter(name = isIdentifier("U"))
             ),
             fields = isSequence()
-        ))
-    }
-
-    @Test
-    fun shapeHasNoTagByDefault() {
-        val source = "shape X {}"
-        val node = parseString(::parseShape, source)
-        assertThat(node, isShape(
-            tagged = equalTo(false)
-        ))
-    }
-
-    @Test
-    fun shapeTaggedKeywordIsPresentThenShapeHasTag() {
-        val source = "shape X tagged {}"
-        val node = parseString(::parseShape, source)
-        assertThat(node, isShape(
-            tagged = equalTo(true)
-        ))
-    }
-
-    @Test
-    fun shapeHasNoTagValueByDefault() {
-        val source = "shape X {}"
-        val node = parseString(::parseShape, source)
-        assertThat(node, isShape(
-            hasValueForTag = absent()
-        ))
-    }
-
-    @Test
-    fun whenShapeHasMemberOfKeywordThenShapeHasTagValue() {
-        val source = "shape X memberOf Y  {}"
-        val node = parseString(::parseShape, source)
-        assertThat(node, isShape(
-            hasValueForTag = present(isStaticReference("Y"))
         ))
     }
 }

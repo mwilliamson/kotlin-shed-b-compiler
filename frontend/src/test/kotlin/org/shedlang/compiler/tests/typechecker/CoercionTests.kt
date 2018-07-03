@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.frontend.tests.isIntType
 import org.shedlang.compiler.frontend.tests.isUnionType
 import org.shedlang.compiler.tests.*
@@ -209,10 +208,9 @@ class CoercionTests {
 
     @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
-        val tagField = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
-        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
+        val union = unionType("Union", members = listOf(member1, member2))
 
         assertThat(canCoerce(from = member1, to = union), equalTo(true))
         assertThat(canCoerce(from = member2, to = union), equalTo(true))
@@ -221,26 +219,24 @@ class CoercionTests {
 
     @Test
     fun canCoerceUnionToSupersetUnion() {
-        val tagField = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
-        val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
+        val member3 = shapeType(name = "Member3")
 
-        val union = unionType("Union", members = listOf(member1, member2), tagField = tagField)
-        val supersetUnion = unionType("SupersetUnion", members = listOf(member1, member2, member3), tagField = tagField)
+        val union = unionType("Union", members = listOf(member1, member2))
+        val supersetUnion = unionType("SupersetUnion", members = listOf(member1, member2, member3))
 
         assertThat(canCoerce(from = union, to = supersetUnion), equalTo(true))
     }
 
     @Test
     fun cannotCoerceUnionToSubsetUnion() {
-        val tagField = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tagField, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tagField, freshNodeId()))
-        val member3 = shapeType(name = "Member3", tagValue = TagValue(tagField, freshNodeId()))
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
+        val member3 = shapeType(name = "Member3")
 
-        val union = unionType("Union", members = listOf(member1, member2, member3), tagField = tagField)
-        val subsetUnion = unionType("SupersetUnion", members = listOf(member1, member2), tagField = tagField)
+        val union = unionType("Union", members = listOf(member1, member2, member3))
+        val subsetUnion = unionType("SupersetUnion", members = listOf(member1, member2))
 
         assertThat(canCoerce(from = union, to = subsetUnion), equalTo(false))
     }
@@ -374,10 +370,9 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceTypeParameterToSupertypeOfMultipleTypesWithSameTag() {
-        val tag = tagField("Tag")
-        val member1 = shapeType(name = "Member1", tagValue = TagValue(tag, freshNodeId()))
-        val member2 = shapeType(name = "Member2", tagValue = TagValue(tag, freshNodeId()))
+    fun canCoerceTypeParameterToSupertypeOfMultipleTypes() {
+        val member1 = shapeType(name = "Member1")
+        val member2 = shapeType(name = "Member2")
 
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(

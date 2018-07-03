@@ -4,11 +4,11 @@
 //   3
 
 union List = Cons | Nil;
-shape Cons memberOf List {
+shape Cons {
     head: Int,
     tail: List,
 }
-shape Nil memberOf List { }
+shape Nil { }
 val nil = Nil();
 
 fun cons(head: Int, tail: List) -> List {

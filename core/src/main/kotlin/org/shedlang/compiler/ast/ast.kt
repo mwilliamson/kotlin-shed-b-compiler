@@ -251,14 +251,12 @@ interface ModuleStatementNode: Node {
 data class ShapeNode(
     override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
-    val tagged: Boolean,
-    val hasTagValueFor: StaticNode?,
     val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = staticParameters + hasTagValueFor.nullableToList() + fields
+        get() = staticParameters + fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -369,7 +367,6 @@ interface StaticParameterNode: VariableBindingNode {
 data class TypeParameterNode(
     override val name: Identifier,
     val variance: Variance,
-    val memberOf: StaticNode?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticParameterNode, Node {
