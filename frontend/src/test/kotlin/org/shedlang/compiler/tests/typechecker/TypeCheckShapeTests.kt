@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
@@ -34,6 +35,28 @@ class TypeCheckShapeTests {
                 "b" to isField(isBoolType, isConstant = equalTo(true))
             )
         )))
+    }
+
+    @Test
+    fun whenFieldValueDisagreesWithTypeThenErrorIsThrown() {
+        val intType = staticReference("Int")
+        val node = shape("X", fields = listOf(
+            shapeField("a", intType, value = literalBool())
+        ))
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            intType to MetaType(IntType)
+        ))
+        assertThat(
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
+            throwsUnexpectedType(
+                expected = cast(isIntType),
+                actual = isBoolType
+            )
+        )
     }
 
     @Test

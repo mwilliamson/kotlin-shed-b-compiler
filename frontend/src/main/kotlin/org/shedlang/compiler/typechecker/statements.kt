@@ -43,7 +43,11 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     }
     context.addVariableType(node, MetaType(type))
     context.defer({
-        fields.value
+        for (field in node.fields) {
+            if (field.value != null) {
+                verifyType(field.value!!, context, expected = fields.value[field.name]!!.type)
+            }
+        }
         checkType(type, source = node.source)
     })
 }
