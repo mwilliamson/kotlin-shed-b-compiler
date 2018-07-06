@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.tests.field
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.shapeType
 import org.shedlang.compiler.types.*
@@ -30,19 +31,19 @@ class ValidateTypeTests {
 
     @Test
     fun shapeFieldsCanBeInvariantTypeParameters() {
-        val type = shapeType(fields = mapOf("value" to covariantTypeParameter("T")))
+        val type = shapeType(fields = mapOf("value" to field(covariantTypeParameter("T"))))
         assertThat(validateType(type = type), isSuccess)
     }
 
     @Test
     fun shapeFieldsCanBeCovariantTypeParameters() {
-        val type = shapeType(fields = mapOf("value" to invariantTypeParameter("T")))
+        val type = shapeType(fields = mapOf("value" to field(invariantTypeParameter("T"))))
         assertThat(validateType(type = type), isSuccess)
     }
 
     @Test
     fun shapeFieldsCannotBeContravariantTypeParameters() {
-        val type = shapeType(fields = mapOf("value" to contravariantTypeParameter("T")))
+        val type = shapeType(fields = mapOf("value" to field(contravariantTypeParameter("T"))))
         assertThat(validateType(type = type), isFailure("field type cannot be contravariant"))
     }
 

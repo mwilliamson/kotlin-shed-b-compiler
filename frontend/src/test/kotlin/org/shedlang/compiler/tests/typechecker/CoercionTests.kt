@@ -60,21 +60,21 @@ class CoercionTests {
     @Test
     fun canCoerceAllTypesToAnyType() {
         assertThat(canCoerce(from = UnitType, to = AnyType), equalTo(true))
-        val shapeType = shapeType("Box", mapOf("value" to IntType))
+        val shapeType = shapeType("Box", mapOf("value" to field(IntType)))
         assertThat(canCoerce(from = shapeType, to = AnyType), equalTo(true))
     }
 
     @Test
     fun canCoerceNoTypesToNothingType() {
         assertThat(canCoerce(from = UnitType, to = NothingType), equalTo(false))
-        val shapeType = shapeType("Box", mapOf("value" to IntType))
+        val shapeType = shapeType("Box", mapOf("value" to field(IntType)))
         assertThat(canCoerce(from = shapeType, to = NothingType), equalTo(false))
     }
 
     @Test
     fun canCoerceNothingTypeToAnyType() {
         assertThat(canCoerce(from = NothingType, to = UnitType), equalTo(true))
-        val shapeType = shapeType("Box", mapOf("value" to IntType))
+        val shapeType = shapeType("Box", mapOf("value" to field(IntType)))
         assertThat(canCoerce(from = NothingType, to = shapeType), equalTo(true))
     }
 
@@ -248,7 +248,7 @@ class CoercionTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -265,7 +265,7 @@ class CoercionTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -282,7 +282,7 @@ class CoercionTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -299,7 +299,7 @@ class CoercionTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val canCoerce = canCoerce(

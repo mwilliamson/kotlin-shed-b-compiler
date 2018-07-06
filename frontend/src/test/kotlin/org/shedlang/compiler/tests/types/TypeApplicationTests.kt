@@ -5,10 +5,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.frontend.tests.*
-import org.shedlang.compiler.tests.isMap
-import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.parametrizedShapeType
-import org.shedlang.compiler.tests.parametrizedUnionType
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 class TypeApplicationTests {
@@ -38,15 +35,15 @@ class TypeApplicationTests {
             "Pair",
             parameters = listOf(typeParameter1, typeParameter2),
             fields = mapOf(
-                "first" to typeParameter1,
-                "second" to typeParameter2
+                "first" to field(typeParameter1),
+                "second" to field(typeParameter2)
             )
         )
         assertThat(
             applyStatic(shape, listOf(BoolType, IntType)),
             isShapeType(fields = listOf(
-                "first" to isBoolType,
-                "second" to isIntType
+                "first" to isField(isBoolType),
+                "second" to isField(isIntType)
             ))
         )
     }
@@ -57,20 +54,20 @@ class TypeApplicationTests {
         val innerShapeType = parametrizedShapeType(
             "InnerShapeType",
             parameters = listOf(innerShapeTypeParameter),
-            fields = mapOf("field" to innerShapeTypeParameter)
+            fields = mapOf("field" to field(innerShapeTypeParameter))
         )
 
         val shapeTypeParameter = invariantTypeParameter("U")
         val shapeType = parametrizedShapeType(
             "Shape",
             parameters = listOf(shapeTypeParameter),
-            fields = mapOf("value" to applyStatic(innerShapeType, listOf(shapeTypeParameter)))
+            fields = mapOf("value" to field(applyStatic(innerShapeType, listOf(shapeTypeParameter))))
         )
 
         assertThat(
             applyStatic(shapeType, listOf(BoolType)),
             isShapeType(fields = listOf(
-                "value" to isEquivalentType(applyStatic(innerShapeType, listOf(BoolType)))
+                "value" to isField(isEquivalentType(applyStatic(innerShapeType, listOf(BoolType))))
             ))
         )
     }
@@ -99,7 +96,7 @@ class TypeApplicationTests {
         val shapeType = parametrizedShapeType(
             "Shape",
             listOf(shapeTypeParameter),
-            fields = mapOf("value" to shapeTypeParameter)
+            fields = mapOf("value" to field(shapeTypeParameter))
         )
 
         val unionTypeParameter = invariantTypeParameter("T")

@@ -91,7 +91,7 @@ val metaType = TypeFunction(
         name = Identifier("Type"),
         staticParameters = listOf(metaTypeParameter),
         staticArguments = listOf(metaTypeParameter),
-        getFields = lazy({ mapOf<Identifier, Type>() })
+        getFields = lazy({ mapOf<Identifier, Field>() })
     )
 )
 
@@ -188,13 +188,9 @@ data class TypeFunction (
         get() = "TypeFunction(TODO)"
 }
 
-interface HasFieldsType : Type {
-    val fields: Map<Identifier, Type>
-}
-
 data class ModuleType(
-    override val fields: Map<Identifier, Type>
-): HasFieldsType {
+    val fields: Map<Identifier, Type>
+): Type {
     override val shortDescription: String
     // TODO: should include name of module
         get() = "ModuleType(TODO)"
@@ -237,16 +233,22 @@ data class FunctionType(
         }
 }
 
-interface ShapeType: HasFieldsType {
+interface ShapeType: Type {
     val name: Identifier
     val shapeId: Int
+    val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
 }
 
+data class Field(
+    val type: Type,
+    val isConstant: Boolean
+)
+
 data class LazyShapeType(
     override val name: Identifier,
-    private val getFields: Lazy<Map<Identifier, Type>>,
+    private val getFields: Lazy<Map<Identifier, Field>>,
     override val shapeId: Int = freshShapeId(),
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>
@@ -257,7 +259,7 @@ data class LazyShapeType(
         } else {
             appliedTypeShortDescription(name, staticArguments)
         }
-    override val fields: Map<Identifier, Type> by getFields
+    override val fields: Map<Identifier, Field> by getFields
 }
 
 interface UnionType: Type {
@@ -306,7 +308,7 @@ val ListType = TypeFunction(
         name = Identifier("List"),
         staticParameters = listOf(listTypeParameter),
         staticArguments = listOf(listTypeParameter),
-        getFields = lazy({ mapOf<Identifier, Type>() })
+        getFields = lazy({ mapOf<Identifier, Field>() })
     )
 )
 
@@ -363,7 +365,7 @@ fun validateType(type: Type): ValidateTypeResult {
         }
     } else if (type is ShapeType) {
         return ValidateTypeResult(type.fields.mapNotNull({ field ->
-            val fieldType = field.value
+            val fieldType = field.value.type
             if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
                 "field type cannot be contravariant"
             } else {
@@ -414,7 +416,10 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         return LazyShapeType(
             name = type.name,
             getFields = lazy({
-                type.fields.mapValues({ field -> replaceStaticValuesInType(field.value, bindings) })
+                type.fields.mapValues({ field -> Field(
+                    type = replaceStaticValuesInType(field.value.type, bindings),
+                    isConstant = field.value.isConstant
+                ) })
             }),
             shapeId = type.shapeId,
             staticParameters = type.staticParameters,

@@ -288,7 +288,7 @@ class TypeCheckCallTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val node = call(receiver = shapeReference, namedArguments = listOf(
@@ -301,7 +301,7 @@ class TypeCheckCallTests {
         assertThat(type, isShapeType(
             name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
-            fields = listOf("value" to isBoolType)
+            fields = listOf("value" to isField(isBoolType))
         ))
     }
 
@@ -315,7 +315,7 @@ class TypeCheckCallTests {
             "Sink",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "accept" to functionType(positionalParameters = listOf(typeParameter), returns = UnitType)
+                "accept" to field(functionType(positionalParameters = listOf(typeParameter), returns = UnitType))
             )
         )
         val node = call(receiver = shapeReference, namedArguments = listOf(
@@ -437,7 +437,7 @@ class TypeCheckCallTests {
         val shapeReference = variableReference("X")
         val node = call(receiver = shapeReference)
 
-        val shapeType = shapeType(name = "X", fields = mapOf("a" to BoolType))
+        val shapeType = shapeType(name = "X", fields = mapOf("a" to field(BoolType)))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
@@ -454,7 +454,7 @@ class TypeCheckCallTests {
             namedArguments = listOf(callNamedArgument("a", literalInt()))
         )
 
-        val shapeType = shapeType(name = "X", fields = mapOf("a" to BoolType))
+        val shapeType = shapeType(name = "X", fields = mapOf("a" to field(BoolType)))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
@@ -491,7 +491,7 @@ class TypeCheckCallTests {
             )
         )
 
-        val shapeType = shapeType(name = "X", fields = mapOf("a" to IntType))
+        val shapeType = shapeType(name = "X", fields = mapOf("a" to field(IntType)))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(

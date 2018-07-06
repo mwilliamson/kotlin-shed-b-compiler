@@ -5,10 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.isEquivalentType
 import org.shedlang.compiler.frontend.types.union
-import org.shedlang.compiler.tests.isMap
-import org.shedlang.compiler.tests.parametrizedShapeType
-import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.tests.unionType
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CoercionResult
 import org.shedlang.compiler.typechecker.TypeConstraintSolver
 import org.shedlang.compiler.typechecker.coerce
@@ -67,7 +64,7 @@ class TypeConstraintsTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val result = coerce(
@@ -84,7 +81,7 @@ class TypeConstraintsTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val result = coerce(

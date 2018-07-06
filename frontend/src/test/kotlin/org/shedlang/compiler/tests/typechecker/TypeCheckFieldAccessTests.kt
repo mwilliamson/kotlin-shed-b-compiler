@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.frontend.tests.isIntType
+import org.shedlang.compiler.tests.field
 import org.shedlang.compiler.tests.fieldAccess
 import org.shedlang.compiler.tests.shapeType
 import org.shedlang.compiler.tests.variableReference
@@ -19,7 +20,7 @@ class TypeCheckFieldAccessTests {
     fun typeOfFieldAccessIsTypeOfField() {
         val receiver = variableReference("x")
         val node = fieldAccess(receiver = receiver, fieldName = "y")
-        val shapeType = shapeType(name = "X", fields = mapOf("y" to IntType))
+        val shapeType = shapeType(name = "X", fields = mapOf("y" to field(IntType)))
 
         val typeContext = typeContext(referenceTypes = mapOf(receiver to shapeType))
         val type = inferType(node, typeContext)

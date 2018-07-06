@@ -112,16 +112,25 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 
 private fun inferFieldAccessType(node: FieldAccessNode, context: TypeContext): Type {
     val receiverType = inferType(node.receiver, context)
-    if (receiverType is HasFieldsType) {
-        val fieldType = receiverType.fields[node.fieldName.identifier]
-        if (fieldType != null) {
-            return fieldType
-        }
+
+    val identifier = node.fieldName.identifier
+
+    val fieldType = if (receiverType is ShapeType) {
+        receiverType.fields[identifier]?.type
+    } else if (receiverType is ModuleType) {
+        receiverType.fields[identifier]
+    } else {
+        null
     }
-    throw NoSuchFieldError(
-        fieldName = node.fieldName.identifier,
-        source = node.fieldName.source
-    )
+
+    if (fieldType == null) {
+        throw NoSuchFieldError(
+            fieldName = node.fieldName.identifier,
+            source = node.fieldName.source
+        )
+    } else {
+        return fieldType
+    }
 }
 
 private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {

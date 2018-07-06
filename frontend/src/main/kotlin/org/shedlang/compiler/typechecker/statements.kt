@@ -24,7 +24,10 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
-        node.fields.associate({ field -> field.name to evalType(field.type, context) })
+        node.fields.associate({ field -> field.name to Field(
+            type = evalType(field.type, context),
+            isConstant = false
+        ) })
     })
 
     val shapeType = LazyShapeType(

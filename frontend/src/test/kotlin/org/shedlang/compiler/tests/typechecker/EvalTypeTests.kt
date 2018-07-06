@@ -71,7 +71,7 @@ class EvalTypeTests {
             "Box",
             parameters = listOf(typeParameter),
             fields = mapOf(
-                "value" to typeParameter
+                "value" to field(typeParameter)
             )
         )
         val application = staticApplication(listReference, listOf(boolReference))
@@ -87,7 +87,7 @@ class EvalTypeTests {
             name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
             fields = listOf(
-                "value" to isBoolType
+                "value" to isField(isBoolType)
             )
         ))
     }

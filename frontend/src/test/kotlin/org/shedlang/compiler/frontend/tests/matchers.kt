@@ -37,12 +37,14 @@ internal fun isShapeType(
 internal fun isShapeType(
     name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
-    fields: List<Pair<String, Matcher<Type>>>
+    fields: List<Pair<String, Matcher<Field>>>
 ): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::name, name),
     has(ShapeType::staticArguments, staticArguments),
     has(ShapeType::fields, isMap(*fields.map { (name, type) -> Identifier(name) to type }.toTypedArray()))
 ))
+
+internal fun isField(type: Matcher<Type>) = has(Field::type, type)
 
 internal fun isUnionType(
     name: Matcher<Identifier> = anything,
