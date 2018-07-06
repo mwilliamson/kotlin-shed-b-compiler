@@ -90,7 +90,8 @@ class CodeGeneratorTests {
         val shed = shape(
             name = "OneTwoThree",
             fields = listOf(
-                shapeField("a", staticReference("Int"))
+                shapeField("a", staticReference("Int"), value = null),
+                shapeField("b", staticReference("Int"), value = literalInt(0))
             )
         )
 
@@ -99,6 +100,7 @@ class CodeGeneratorTests {
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
             body = isSequence(
+                isPythonAssignment("b", isPythonIntegerLiteral(0)),
                 isPythonFunction(
                     name = equalTo("__init__"),
                     parameters = isSequence(equalTo("self"), equalTo("a")),

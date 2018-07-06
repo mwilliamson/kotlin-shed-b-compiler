@@ -103,10 +103,12 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 }
 
 private fun generateCode(node: ShapeNode, context: CodeGenerationContext): PythonClassNode {
+    val (variableFields, constantFields) = node.fields.partition { field -> field.value == null }
+
     val init = PythonFunctionNode(
         name = "__init__",
-        parameters = listOf("self") + node.fields.map({ field -> pythoniseName(field.name) }),
-        body = node.fields.map({ field ->
+        parameters = listOf("self") + variableFields.map({ field -> pythoniseName(field.name) }),
+        body = variableFields.map({ field ->
             PythonAssignmentNode(
                 target = PythonAttributeAccessNode(
                     receiver = PythonVariableReferenceNode("self", source = NodeSource(field)),
@@ -119,10 +121,17 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
         }),
         source = NodeSource(node)
     )
+    val body = constantFields.map { field ->
+        PythonAssignmentNode(
+            PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
+            generateExpressionCode(field.value!!, context).pureExpression(),
+            source = NodeSource(node)
+        )
+    } + listOf(init)
     return PythonClassNode(
         // TODO: test renaming
         name = context.name(node),
-        body = listOf(init),
+        body = body,
         source = NodeSource(node)
     )
 }
@@ -360,6 +369,14 @@ internal data class GeneratedCode<out T>(
             return func(value)
         } else {
             return null
+        }
+    }
+
+    fun pureExpression(): T {
+        if (statements.isEmpty()) {
+            return value
+        } else {
+            throw NotImplementedError()
         }
     }
 
