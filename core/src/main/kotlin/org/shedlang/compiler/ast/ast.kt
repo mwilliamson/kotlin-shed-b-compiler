@@ -271,7 +271,7 @@ data class ShapeFieldNode(
     override val nodeId: Int = freshNodeId()
 ): Node {
     override val children: List<Node>
-        get() = listOf(type)
+        get() = listOf(type) + value.nullableToList()
 }
 
 data class UnionNode(
