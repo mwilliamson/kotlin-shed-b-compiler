@@ -89,7 +89,7 @@ internal fun isShapeField(
     value: Matcher<ExpressionNode?> = anythingOrNull
 ) = allOf(
     has(ShapeFieldNode::name, name),
-    has(ShapeFieldNode::type, type),
+    has(ShapeFieldNode::type, present(type)),
     has(ShapeFieldNode::value, value)
 )
 

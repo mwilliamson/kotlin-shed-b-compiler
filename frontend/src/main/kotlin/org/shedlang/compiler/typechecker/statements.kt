@@ -24,10 +24,32 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
-        node.fields.associate({ field -> field.name to Field(
-            type = evalType(field.type, context),
-            isConstant = field.value != null
-        ) })
+        node.fields.associate({ field ->
+            val fieldTypeExpression = field.type
+            val fieldType = if (fieldTypeExpression == null) {
+                null
+            } else {
+                evalType(fieldTypeExpression, context)
+            }
+
+            val fieldValueExpression = field.value
+            val valueType = if (fieldValueExpression == null) {
+                null
+            } else {
+                inferType(fieldValueExpression, context)
+            }
+
+            val type = if (fieldType == null) {
+                valueType
+            } else {
+                fieldType
+            }
+            field.name to Field(
+                // TODO: handle neither type nor value being set
+                type = type!!,
+                isConstant = field.value != null
+            )
+        })
     })
 
     val shapeType = LazyShapeType(
@@ -44,8 +66,9 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     context.addVariableType(node, MetaType(type))
     context.defer({
         for (field in node.fields) {
-            if (field.value != null) {
-                verifyType(field.value!!, context, expected = fields.value[field.name]!!.type)
+            val fieldValue = field.value
+            if (fieldValue != null) {
+                verifyType(fieldValue, context, expected = fields.value[field.name]!!.type)
             }
         }
         checkType(type, source = node.source)

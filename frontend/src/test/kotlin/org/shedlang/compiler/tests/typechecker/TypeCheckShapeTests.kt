@@ -60,6 +60,22 @@ class TypeCheckShapeTests {
     }
 
     @Test
+    fun whenFieldHasNoTypeThenTypeIsInferredFromValue() {
+        val node = shape("X", fields = listOf(
+            shapeField("a", type = null, value = literalBool())
+        ))
+
+        val typeContext = typeContext()
+        typeCheck(node, typeContext)
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+            name = isIdentifier("X"),
+            fields = listOf(
+                "a" to isField(isBoolType, isConstant = equalTo(true))
+            )
+        )))
+    }
+
+    @Test
     fun whenShapeDeclaresMultipleFieldsWithSameNameThenExceptionIsThrown() {
         val intType = staticReference("Int")
         val node = shape("X", fields = listOf(
