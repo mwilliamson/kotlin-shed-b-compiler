@@ -1,5 +1,6 @@
 package org.shedlang.compiler.tests.parser
 
+import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
@@ -38,11 +39,13 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = isIdentifier("a"),
-                    type = isStaticReference("Int")
+                    type = present(isStaticReference("Int")),
+                    value = absent()
                 ),
                 isShapeField(
                     name = isIdentifier("b"),
-                    type = isStaticReference("String")
+                    type = present(isStaticReference("String")),
+                    value = absent()
                 )
             )
         ))
@@ -56,7 +59,8 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = isIdentifier("a"),
-                    type = isStaticReference("Int")
+                    type = present(isStaticReference("Int")),
+                    value = absent()
                 )
             )
         ))
@@ -70,7 +74,22 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = isIdentifier("a"),
-                    type = isStaticReference("Int"),
+                    type = present(isStaticReference("Int")),
+                    value = present(isIntLiteral(0))
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun fieldMayHaveValueWithoutExplicitType() {
+        val source = "shape X { a = 0, }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            fields = isSequence(
+                isShapeField(
+                    name = isIdentifier("a"),
+                    type = absent(),
                     value = present(isIntLiteral(0))
                 )
             )

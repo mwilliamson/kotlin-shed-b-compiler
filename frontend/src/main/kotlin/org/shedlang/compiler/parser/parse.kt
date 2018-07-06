@@ -186,7 +186,12 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
 
 private fun parseShapeField(source: StringSource, tokens: TokenIterator<TokenType>): ShapeFieldNode {
     val name = parseIdentifier(tokens)
-    val type = parseTypeSpec(tokens)
+
+    val type = if (tokens.trySkip(TokenType.SYMBOL_COLON)) {
+        parseStaticExpression(tokens)
+    } else {
+        null
+    }
 
     val value = if (tokens.trySkip(TokenType.SYMBOL_EQUALS)) {
         parseExpression(tokens)
