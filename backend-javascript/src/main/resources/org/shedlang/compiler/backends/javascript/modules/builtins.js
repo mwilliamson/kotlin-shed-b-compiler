@@ -31,12 +31,15 @@ function reduce(func, initial, list) {
     return list.reduce(func, initial);
 }
 
-function declareShape(name) {
+function declareShape(name, constantFields) {
     const typeId = freshTypeId();
 
     function shape(fields) {
         if (fields === undefined) {
             fields = {};
+        }
+        for (var key in constantFields) {
+            fields[key] = constantFields[key];
         }
         fields.$shedType = shape;
         return fields;

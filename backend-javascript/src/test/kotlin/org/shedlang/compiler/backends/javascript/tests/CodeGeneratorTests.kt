@@ -81,7 +81,13 @@ class CodeGeneratorTests {
 
     @Test
     fun shapeGeneratesType() {
-        val shed = shape(name = "X")
+        val shed = shape(
+            name = "X",
+            fields = listOf(
+                shapeField("a", staticReference("Int"), value = null),
+                shapeField("b", staticReference("Int"), value = literalInt(0))
+            )
+        )
 
         val node = generateCode(shed).single()
 
@@ -89,7 +95,12 @@ class CodeGeneratorTests {
             name = equalTo("X"),
             expression = isJavascriptFunctionCall(
                 isJavascriptVariableReference("\$shed.declareShape"),
-                isSequence(isJavascriptStringLiteral("X"))
+                isSequence(
+                    isJavascriptStringLiteral("X"),
+                    isJavascriptObject(isMap(
+                        "b" to isJavascriptIntegerLiteral(0)
+                    ))
+                )
             )
         ))
     }

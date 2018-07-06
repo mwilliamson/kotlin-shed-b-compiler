@@ -66,14 +66,14 @@ private fun generateExport(statement: VariableBindingNode): JavascriptExpression
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
-        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node))
+        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
         override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
     })
 }
 
-private fun generateCode(node: ShapeNode) : JavascriptStatementNode {
+private fun generateCode(node: ShapeNode, context: CodeGenerationContext) : JavascriptStatementNode {
     val source = NodeSource(node)
     return JavascriptConstNode(
         name = generateName(node.name),
@@ -82,7 +82,16 @@ private fun generateCode(node: ShapeNode) : JavascriptStatementNode {
                 "\$shed.declareShape",
                 source = source
             ),
-            listOf(JavascriptStringLiteralNode(generateName(node.name), source = source)),
+            listOf(
+                JavascriptStringLiteralNode(generateName(node.name), source = source),
+                JavascriptObjectLiteralNode(
+                    node.fields.filter { field -> field.value != null }.associateBy(
+                        { field -> generateName(field.name) },
+                        { field -> generateCode(field.value!!, context) }
+                    ),
+                    source = source
+                )
+            ),
             source = source
         ),
         source = source
