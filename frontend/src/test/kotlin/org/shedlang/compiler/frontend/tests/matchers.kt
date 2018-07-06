@@ -44,7 +44,13 @@ internal fun isShapeType(
     has(ShapeType::fields, isMap(*fields.map { (name, type) -> Identifier(name) to type }.toTypedArray()))
 ))
 
-internal fun isField(type: Matcher<Type>) = has(Field::type, type)
+internal fun isField(
+    type: Matcher<Type>,
+    isConstant: Matcher<Boolean> = anything
+) = allOf(
+    has(Field::type, type),
+    has(Field::isConstant, isConstant)
+)
 
 internal fun isUnionType(
     name: Matcher<Identifier> = anything,

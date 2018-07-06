@@ -18,8 +18,8 @@ class TypeCheckShapeTests {
         val intType = staticReference("Int")
         val boolType = staticReference("Bool")
         val node = shape("X", fields = listOf(
-            shapeField("a", intType),
-            shapeField("b", boolType)
+            shapeField("a", intType, value = null),
+            shapeField("b", boolType, value = literalBool())
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -29,7 +29,10 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             name = isIdentifier("X"),
-            fields = listOf("a" to isField(isIntType), "b" to isField(isBoolType))
+            fields = listOf(
+                "a" to isField(isIntType, isConstant = equalTo(false)),
+                "b" to isField(isBoolType, isConstant = equalTo(true))
+            )
         )))
     }
 

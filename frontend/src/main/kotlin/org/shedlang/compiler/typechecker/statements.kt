@@ -26,7 +26,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     val fields = lazy({
         node.fields.associate({ field -> field.name to Field(
             type = evalType(field.type, context),
-            isConstant = false
+            isConstant = field.value != null
         ) })
     })
 
