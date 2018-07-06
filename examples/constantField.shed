@@ -1,0 +1,12 @@
+// stdout:
+//   Hello, world
+
+shape Box {
+    x: String = "Hello, ",
+    y: String,
+}
+
+fun main() !Io -> Unit {
+    val box = Box(y = "world\n");
+    print(box.x + box.y);
+}
