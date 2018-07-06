@@ -243,10 +243,12 @@ fun shape(
 
 fun shapeField(
     name: String = "field",
-    type: StaticNode
+    type: StaticNode,
+    value: ExpressionNode? = null
 ) = ShapeFieldNode(
     name = Identifier(name),
     type = type,
+    value = value,
     source = anySource()
 )
 

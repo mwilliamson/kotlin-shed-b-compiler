@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.isIdentifier
@@ -56,6 +57,21 @@ class ParseShapeTests {
                 isShapeField(
                     name = isIdentifier("a"),
                     type = isStaticReference("Int")
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun fieldMayHaveValueAndType() {
+        val source = "shape X { a: Int = 0, }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            fields = isSequence(
+                isShapeField(
+                    name = isIdentifier("a"),
+                    type = isStaticReference("Int"),
+                    value = present(isIntLiteral(0))
                 )
             )
         ))

@@ -266,6 +266,7 @@ data class ShapeNode(
 data class ShapeFieldNode(
     val name: Identifier,
     val type: StaticNode,
+    val value: ExpressionNode?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): Node {
