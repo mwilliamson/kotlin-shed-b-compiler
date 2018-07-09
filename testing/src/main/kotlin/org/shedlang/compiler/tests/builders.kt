@@ -375,8 +375,8 @@ fun shapeType(
     staticArguments = typeArguments
 )
 
-fun field(name: String, type: Type, isConstant: Boolean = false) = Field(
-    freshShapeId(),
+fun field(name: String, type: Type, isConstant: Boolean = false, shapeId: Int = freshShapeId()) = Field(
+    shapeId,
     Identifier(name),
     type,
     isConstant = isConstant

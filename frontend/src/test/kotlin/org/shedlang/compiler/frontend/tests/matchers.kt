@@ -35,8 +35,8 @@ internal fun isShapeType(
 ))
 
 internal fun isField(
-    name: Matcher<Identifier>,
-    type: Matcher<Type>,
+    name: Matcher<Identifier> = anything,
+    type: Matcher<Type> = anything,
     isConstant: Matcher<Boolean> = anything
 ) = allOf(
     has(Field::name, name),

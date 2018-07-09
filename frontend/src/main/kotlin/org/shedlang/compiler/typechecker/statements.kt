@@ -26,34 +26,26 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
-        node.fields.map { field ->
-            val fieldTypeExpression = field.type
-            val fieldType = if (fieldTypeExpression == null) {
-                null
-            } else {
-                evalType(fieldTypeExpression, context)
-            }
-
-            val fieldValueExpression = field.value
-            val valueType = if (fieldValueExpression == null) {
-                null
-            } else {
-                inferType(fieldValueExpression, context)
-            }
-
-            val type = if (fieldType == null) {
-                valueType
-            } else {
-                fieldType
-            }
-            Field(
-                shapeId = shapeId,
-                name = field.name,
-                // TODO: handle neither type nor value being set
-                type = type!!,
-                isConstant = field.value != null
-            )
+        // TODO: check for name clashes from different shapes
+        // TODO: allow narrowing of fields
+        val extends = node.extends.map { extend ->
+            evalType(extend, context)
         }
+
+        val extendsFields = extends.flatMap { superType ->
+            if (superType is ShapeType) {
+                superType.fields.values
+            } else {
+                // TODO: throw a better exception
+                throw NotImplementedError()
+            }
+        }
+
+        val newFields = node.fields.map { field ->
+            generateField(field, context, shapeId = shapeId)
+        }
+
+        extendsFields + newFields
     })
 
     val shapeType = lazyShapeType(
@@ -78,6 +70,35 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         }
         checkType(type, source = node.source)
     })
+}
+
+private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int): Field {
+    val fieldTypeExpression = field.type
+    val fieldType = if (fieldTypeExpression == null) {
+        null
+    } else {
+        evalType(fieldTypeExpression, context)
+    }
+
+    val fieldValueExpression = field.value
+    val valueType = if (fieldValueExpression == null) {
+        null
+    } else {
+        inferType(fieldValueExpression, context)
+    }
+
+    val type = if (fieldType == null) {
+        valueType
+    } else {
+        fieldType
+    }
+    return Field(
+        shapeId = shapeId,
+        name = field.name,
+        // TODO: handle neither type nor value being set
+        type = type!!,
+        isConstant = field.value != null
+    )
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {

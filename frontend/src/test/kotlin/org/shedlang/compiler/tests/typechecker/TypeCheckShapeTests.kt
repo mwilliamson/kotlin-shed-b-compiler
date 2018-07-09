@@ -96,6 +96,52 @@ class TypeCheckShapeTests {
     }
 
     @Test
+    fun shapeIncludesFieldsFromExtendedShapes() {
+        val intType = staticReference("Int")
+        val extendsShape1Reference = staticReference("Extends1")
+        val extendsShape2Reference = staticReference("Extends2")
+
+        val shape1Id = freshShapeId()
+        val shape1 = shapeType(
+            fields = listOf(
+                field(name = "b", type = BoolType, shapeId = shape1Id, isConstant = true)
+            )
+        )
+
+        val shape2Id = freshShapeId()
+        val shape2 = shapeType(
+            fields = listOf(
+                field(name = "c", type = StringType, shapeId = shape2Id, isConstant = false)
+            )
+        )
+
+        val node = shape(
+            extends = listOf(
+                extendsShape1Reference,
+                extendsShape2Reference
+            ),
+            fields = listOf(
+                shapeField("a", intType)
+            )
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            intType to MetaType(IntType),
+            extendsShape1Reference to MetaType(shape1),
+            extendsShape2Reference to MetaType(shape2)
+        ))
+        typeCheck(node, typeContext)
+        print(((typeContext.typeOf(node) as ShapeType).staticArguments[0] as ShapeType).fields)
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+            fields = isSequence(
+                isField(name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
+                isField(name = isIdentifier("c"), type = isStringType, isConstant = equalTo(false)),
+                isField(name = isIdentifier("a"), type = isIntType)
+            )
+        )))
+    }
+
+    @Test
     fun shapeWithTypeParametersDeclaresTypeFunction() {
         val typeParameterDeclaration = typeParameter("T")
         val typeParameterReference = staticReference("T")
