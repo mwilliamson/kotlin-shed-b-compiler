@@ -16,7 +16,7 @@ class TypeApplicationTests {
         val shape = parametrizedShapeType(
             "Pair",
             parameters = listOf(typeParameter1, typeParameter2),
-            fields = mapOf()
+            fields = listOf()
         )
         assertThat(
             applyStatic(shape, listOf(BoolType, IntType)),
@@ -34,9 +34,9 @@ class TypeApplicationTests {
         val shape = parametrizedShapeType(
             "Pair",
             parameters = listOf(typeParameter1, typeParameter2),
-            fields = mapOf(
-                "first" to field(typeParameter1),
-                "second" to field(typeParameter2)
+            fields = listOf(
+                field("first", typeParameter1),
+                field("second", typeParameter2)
             )
         )
         assertThat(
@@ -54,14 +54,14 @@ class TypeApplicationTests {
         val innerShapeType = parametrizedShapeType(
             "InnerShapeType",
             parameters = listOf(innerShapeTypeParameter),
-            fields = mapOf("field" to field(innerShapeTypeParameter))
+            fields = listOf(field("field", innerShapeTypeParameter))
         )
 
         val shapeTypeParameter = invariantTypeParameter("U")
         val shapeType = parametrizedShapeType(
             "Shape",
             parameters = listOf(shapeTypeParameter),
-            fields = mapOf("value" to field(applyStatic(innerShapeType, listOf(shapeTypeParameter))))
+            fields = listOf(field("value", applyStatic(innerShapeType, listOf(shapeTypeParameter))))
         )
 
         assertThat(
@@ -96,7 +96,7 @@ class TypeApplicationTests {
         val shapeType = parametrizedShapeType(
             "Shape",
             listOf(shapeTypeParameter),
-            fields = mapOf("value" to field(shapeTypeParameter))
+            fields = listOf(field("value", shapeTypeParameter))
         )
 
         val unionTypeParameter = invariantTypeParameter("T")

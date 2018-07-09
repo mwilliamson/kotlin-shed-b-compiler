@@ -31,19 +31,19 @@ class ValidateTypeTests {
 
     @Test
     fun shapeFieldsCanBeInvariantTypeParameters() {
-        val type = shapeType(fields = mapOf("value" to field(covariantTypeParameter("T"))))
+        val type = shapeType(fields = listOf(field("value", covariantTypeParameter("T"))))
         assertThat(validateType(type = type), isSuccess)
     }
 
     @Test
     fun shapeFieldsCanBeCovariantTypeParameters() {
-        val type = shapeType(fields = mapOf("value" to field(invariantTypeParameter("T"))))
+        val type = shapeType(fields = listOf(field("value", invariantTypeParameter("T"))))
         assertThat(validateType(type = type), isSuccess)
     }
 
     @Test
     fun shapeFieldsCannotBeContravariantTypeParameters() {
-        val type = shapeType(fields = mapOf("value" to field(contravariantTypeParameter("T"))))
+        val type = shapeType(fields = listOf(field("value", contravariantTypeParameter("T"))))
         assertThat(validateType(type = type), isFailure("field type cannot be contravariant"))
     }
 

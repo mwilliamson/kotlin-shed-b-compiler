@@ -63,8 +63,8 @@ class TypeConstraintsTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val result = coerce(
@@ -80,8 +80,8 @@ class TypeConstraintsTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val result = coerce(

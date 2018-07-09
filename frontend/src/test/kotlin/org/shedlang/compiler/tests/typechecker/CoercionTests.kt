@@ -60,21 +60,21 @@ class CoercionTests {
     @Test
     fun canCoerceAllTypesToAnyType() {
         assertThat(canCoerce(from = UnitType, to = AnyType), equalTo(true))
-        val shapeType = shapeType("Box", mapOf("value" to field(IntType)))
+        val shapeType = shapeType("Box", listOf(field("value", IntType)))
         assertThat(canCoerce(from = shapeType, to = AnyType), equalTo(true))
     }
 
     @Test
     fun canCoerceNoTypesToNothingType() {
         assertThat(canCoerce(from = UnitType, to = NothingType), equalTo(false))
-        val shapeType = shapeType("Box", mapOf("value" to field(IntType)))
+        val shapeType = shapeType("Box", listOf(field("value", IntType)))
         assertThat(canCoerce(from = shapeType, to = NothingType), equalTo(false))
     }
 
     @Test
     fun canCoerceNothingTypeToAnyType() {
         assertThat(canCoerce(from = NothingType, to = UnitType), equalTo(true))
-        val shapeType = shapeType("Box", mapOf("value" to field(IntType)))
+        val shapeType = shapeType("Box", listOf(field("value", IntType)))
         assertThat(canCoerce(from = NothingType, to = shapeType), equalTo(true))
     }
 
@@ -247,8 +247,8 @@ class CoercionTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -264,8 +264,8 @@ class CoercionTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -281,8 +281,8 @@ class CoercionTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -298,8 +298,8 @@ class CoercionTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val canCoerce = canCoerce(
@@ -315,7 +315,7 @@ class CoercionTests {
         val shapeType = parametrizedShapeType(
             "Sink",
             parameters = listOf(typeParameter),
-            fields = mapOf()
+            fields = listOf()
         )
         val canCoerce = canCoerce(
             from = applyStatic(shapeType, listOf(AnyType)),
@@ -330,7 +330,7 @@ class CoercionTests {
         val shapeType = parametrizedShapeType(
             "Sink",
             parameters = listOf(typeParameter),
-            fields = mapOf()
+            fields = listOf()
         )
         val canCoerce = canCoerce(
             from = applyStatic(shapeType, listOf(BoolType)),

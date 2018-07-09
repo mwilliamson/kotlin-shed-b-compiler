@@ -20,7 +20,7 @@ class TypeCheckFieldAccessTests {
     fun typeOfFieldAccessIsTypeOfField() {
         val receiver = variableReference("x")
         val node = fieldAccess(receiver = receiver, fieldName = "y")
-        val shapeType = shapeType(name = "X", fields = mapOf("y" to field(IntType)))
+        val shapeType = shapeType(name = "X", fields = listOf(field("y", IntType)))
 
         val typeContext = typeContext(referenceTypes = mapOf(receiver to shapeType))
         val type = inferType(node, typeContext)

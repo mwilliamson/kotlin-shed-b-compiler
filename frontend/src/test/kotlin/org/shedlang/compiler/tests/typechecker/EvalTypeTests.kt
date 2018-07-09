@@ -70,8 +70,8 @@ class EvalTypeTests {
         val listType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val application = staticApplication(listReference, listOf(boolReference))

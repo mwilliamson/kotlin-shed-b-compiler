@@ -287,8 +287,8 @@ class TypeCheckCallTests {
         val shapeType = parametrizedShapeType(
             "Box",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "value" to field(typeParameter)
+            fields = listOf(
+                field("value", typeParameter)
             )
         )
         val node = call(receiver = shapeReference, namedArguments = listOf(
@@ -314,8 +314,8 @@ class TypeCheckCallTests {
         val shapeType = parametrizedShapeType(
             "Sink",
             parameters = listOf(typeParameter),
-            fields = mapOf(
-                "accept" to field(functionType(positionalParameters = listOf(typeParameter), returns = UnitType))
+            fields = listOf(
+                field("accept", functionType(positionalParameters = listOf(typeParameter), returns = UnitType))
             )
         )
         val node = call(receiver = shapeReference, namedArguments = listOf(
@@ -342,7 +342,7 @@ class TypeCheckCallTests {
         val shapeType = parametrizedShapeType(
             "Thing",
             parameters = listOf(typeParameter),
-            fields = mapOf()
+            fields = listOf()
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
@@ -362,7 +362,7 @@ class TypeCheckCallTests {
         val shapeType = parametrizedShapeType(
             "Thing",
             parameters = listOf(typeParameter),
-            fields = mapOf()
+            fields = listOf()
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
@@ -382,7 +382,7 @@ class TypeCheckCallTests {
         val shapeType = parametrizedShapeType(
             "Thing",
             parameters = listOf(typeParameter),
-            fields = mapOf()
+            fields = listOf()
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
@@ -437,7 +437,7 @@ class TypeCheckCallTests {
         val shapeReference = variableReference("X")
         val node = call(receiver = shapeReference)
 
-        val shapeType = shapeType(name = "X", fields = mapOf("a" to field(BoolType)))
+        val shapeType = shapeType(name = "X", fields = listOf(field("a", BoolType)))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
@@ -454,7 +454,7 @@ class TypeCheckCallTests {
             namedArguments = listOf(callNamedArgument("a", literalInt()))
         )
 
-        val shapeType = shapeType(name = "X", fields = mapOf("a" to field(BoolType)))
+        val shapeType = shapeType(name = "X", fields = listOf(field("a", BoolType)))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(
@@ -488,8 +488,8 @@ class TypeCheckCallTests {
             namedArguments = listOf(callNamedArgument("a", literalInt()))
         )
 
-        val shapeType = shapeType(name = "X", fields = mapOf(
-            "a" to Field(type = IntType, isConstant = true)
+        val shapeType = shapeType(name = "X", fields = listOf(
+            field("a", IntType, isConstant = true)
         ))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
@@ -510,7 +510,7 @@ class TypeCheckCallTests {
             )
         )
 
-        val shapeType = shapeType(name = "X", fields = mapOf("a" to field(IntType)))
+        val shapeType = shapeType(name = "X", fields = listOf(field("a", IntType)))
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
 
         assertThat(

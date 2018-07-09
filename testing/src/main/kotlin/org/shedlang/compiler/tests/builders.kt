@@ -349,7 +349,7 @@ fun functionTypeNode(
 fun parametrizedShapeType(
     name: String,
     parameters: List<TypeParameter>,
-    fields: Map<String, Field> = mapOf()
+    fields: List<Field> = listOf()
 ) = TypeFunction(
     type = shapeType(
         name = name,
@@ -362,18 +362,17 @@ fun parametrizedShapeType(
 
 fun shapeType(
     name: String = "Shape",
-    fields: Map<String, Field> = mapOf(),
+    fields: List<Field> = listOf(),
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf()
-) = LazyShapeType(
+) = lazyShapeType(
     name = Identifier(name),
-    getFields = lazy { fields.mapKeys { entry -> Identifier(entry.key) } },
-    shapeId = freshShapeId(),
+    getFields = lazy { fields },
     staticParameters = typeParameters,
     staticArguments = typeArguments
 )
 
-fun field(type: Type) = Field(type, isConstant = false)
+fun field(name: String, type: Type, isConstant: Boolean = false) = Field(Identifier(name), type, isConstant = isConstant)
 
 
 fun parametrizedUnionType(

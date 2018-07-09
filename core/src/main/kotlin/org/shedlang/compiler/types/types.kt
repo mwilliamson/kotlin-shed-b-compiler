@@ -242,8 +242,29 @@ interface ShapeType: Type {
 }
 
 data class Field(
+    val name: Identifier,
     val type: Type,
     val isConstant: Boolean
+) {
+    fun mapType(func: (Type) -> Type): Field = Field(
+        name = name,
+        type = func(type),
+        isConstant = isConstant
+    )
+}
+
+fun lazyShapeType(
+    name: Identifier,
+    getFields: Lazy<List<Field>>,
+    staticParameters: List<StaticParameter>,
+    staticArguments: List<StaticValue>
+) = LazyShapeType(
+    name,
+    getFields = lazy {
+        getFields.value.associateBy { field -> field.name }
+    },
+    staticParameters = staticParameters,
+    staticArguments = staticArguments
 )
 
 data class LazyShapeType(
@@ -416,10 +437,9 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         return LazyShapeType(
             name = type.name,
             getFields = lazy({
-                type.fields.mapValues({ field -> Field(
-                    type = replaceStaticValuesInType(field.value.type, bindings),
-                    isConstant = field.value.isConstant
-                ) })
+                type.fields.mapValues{ field -> field.value.mapType { type ->
+                    replaceStaticValuesInType(field.value.type, bindings)
+                } }
             }),
             shapeId = type.shapeId,
             staticParameters = type.staticParameters,
