@@ -74,11 +74,13 @@ internal fun isValType(
 internal fun isShape(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
+    extends: Matcher<List<StaticNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(ShapeNode::name, name),
         has(ShapeNode::staticParameters, staticParameters),
+        has(ShapeNode::extends, extends),
         has(ShapeNode::fields, fields)
     ))
 }

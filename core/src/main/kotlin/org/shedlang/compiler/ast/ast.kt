@@ -251,12 +251,13 @@ interface ModuleStatementNode: Node {
 data class ShapeNode(
     override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
+    val extends: List<StaticNode>,
     val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = staticParameters + fields
+        get() = staticParameters + extends + fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

@@ -18,6 +18,7 @@ class ParseShapeTests {
         assertThat(node, isShape(
             name = isIdentifier("X"),
             staticParameters = isSequence(),
+            extends = isSequence(),
             fields = isSequence()
         ))
     }
@@ -92,6 +93,29 @@ class ParseShapeTests {
                     type = absent(),
                     value = present(isIntLiteral(0))
                 )
+            )
+        ))
+    }
+
+    @Test
+    fun shapeCanExtendSingleShape() {
+        val source = "shape X extends Y { }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            extends = isSequence(
+                isStaticReference("Y")
+            )
+        ))
+    }
+
+    @Test
+    fun shapeCanExtendMultipleShape() {
+        val source = "shape X extends Y, Z { }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            extends = isSequence(
+                isStaticReference("Y"),
+                isStaticReference("Z")
             )
         ))
     }

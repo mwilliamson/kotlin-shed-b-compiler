@@ -165,6 +165,19 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
     val name = parseIdentifier(tokens)
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
+    val extends = if (tokens.trySkip(TokenType.KEYWORD_EXTENDS)) {
+        parseMany(
+            parseElement = { tokens -> parseStaticExpression(tokens) },
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens -> !tokens.isNext(TokenType.SYMBOL_COMMA) },
+            allowZero = false,
+            tokens = tokens,
+            allowTrailingSeparator = false
+        )
+    } else {
+        listOf()
+    }
+
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val fields = parseZeroOrMoreNodes(
@@ -179,6 +192,7 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
     return ShapeNode(
         name = name,
         staticParameters = staticParameters,
+        extends = extends,
         fields = fields,
         source = source
     )

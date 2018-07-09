@@ -233,10 +233,12 @@ fun functionExpression(
 fun shape(
     name: String = "Shape",
     staticParameters: List<StaticParameterNode> = listOf(),
+    extends: List<StaticNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
     name = Identifier(name),
     staticParameters = staticParameters,
+    extends = extends,
     fields = fields,
     source = anySource()
 )
