@@ -22,6 +22,8 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         }
     }
 
+    val shapeId = freshShapeId()
+
     // TODO: test laziness
     val fields = lazy({
         node.fields.map { field ->
@@ -45,6 +47,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
                 fieldType
             }
             Field(
+                shapeId = shapeId,
                 name = field.name,
                 // TODO: handle neither type nor value being set
                 type = type!!,
@@ -54,6 +57,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     })
 
     val shapeType = lazyShapeType(
+        shapeId = shapeId,
         name = node.name,
         getFields = fields,
         staticParameters = staticParameters,

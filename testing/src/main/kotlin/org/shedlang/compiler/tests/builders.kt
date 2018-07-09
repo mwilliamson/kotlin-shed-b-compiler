@@ -366,13 +366,19 @@ fun shapeType(
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf()
 ) = lazyShapeType(
+    shapeId = freshShapeId(),
     name = Identifier(name),
     getFields = lazy { fields },
     staticParameters = typeParameters,
     staticArguments = typeArguments
 )
 
-fun field(name: String, type: Type, isConstant: Boolean = false) = Field(Identifier(name), type, isConstant = isConstant)
+fun field(name: String, type: Type, isConstant: Boolean = false) = Field(
+    freshShapeId(),
+    Identifier(name),
+    type,
+    isConstant = isConstant
+)
 
 
 fun parametrizedUnionType(

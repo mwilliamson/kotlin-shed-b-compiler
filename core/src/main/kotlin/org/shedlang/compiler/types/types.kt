@@ -242,11 +242,13 @@ interface ShapeType: Type {
 }
 
 data class Field(
+    val shapeId: Int,
     val name: Identifier,
     val type: Type,
     val isConstant: Boolean
 ) {
     fun mapType(func: (Type) -> Type): Field = Field(
+        shapeId = shapeId,
         name = name,
         type = func(type),
         isConstant = isConstant
@@ -254,12 +256,14 @@ data class Field(
 }
 
 fun lazyShapeType(
+    shapeId: Int,
     name: Identifier,
     getFields: Lazy<List<Field>>,
     staticParameters: List<StaticParameter>,
     staticArguments: List<StaticValue>
 ) = LazyShapeType(
-    name,
+    shapeId = shapeId,
+    name = name,
     getFields = lazy {
         getFields.value.associateBy { field -> field.name }
     },
