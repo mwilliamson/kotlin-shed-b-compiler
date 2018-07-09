@@ -3,7 +3,6 @@ package org.shedlang.compiler.frontend.tests
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.anythingOrNull
 import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
@@ -91,8 +90,7 @@ internal fun isTypeFunction(
 
 internal fun isTypeParameter(
     name: Matcher<Identifier> = anything,
-    variance: Matcher<Variance> = anything,
-    memberOf: Matcher<Type?> = anythingOrNull
+    variance: Matcher<Variance> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(TypeParameter::name, name),
     has(TypeParameter::variance, variance)
