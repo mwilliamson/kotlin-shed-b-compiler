@@ -37,11 +37,13 @@ internal fun isShapeType(
 internal fun isField(
     name: Matcher<Identifier> = anything,
     type: Matcher<Type> = anything,
-    isConstant: Matcher<Boolean> = anything
+    isConstant: Matcher<Boolean> = anything,
+    shapeId: Matcher<Int> = anything
 ) = allOf(
     has(Field::name, name),
     has(Field::type, type),
-    has(Field::isConstant, isConstant)
+    has(Field::isConstant, isConstant),
+    has(Field::shapeId, shapeId)
 )
 
 internal fun isUnionType(

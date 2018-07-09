@@ -26,15 +26,13 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
-        // TODO: check for name clashes from different shapes
         // TODO: allow narrowing of fields
-        val extends = node.extends.map { extend ->
-            evalType(extend, context)
-        }
-
-        val extendsFields = extends.flatMap { superType ->
+        val extendsFields = node.extends.flatMap { extendNode ->
+            val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
-                superType.fields.values
+                superType.fields.values.map { field ->
+                    FieldDefinition(field, extendNode.source)
+                }
             } else {
                 // TODO: throw a better exception
                 throw NotImplementedError()
@@ -45,7 +43,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
             generateField(field, context, shapeId = shapeId)
         }
 
-        extendsFields + newFields
+        mergeFields(extendsFields + newFields)
     })
 
     val shapeType = lazyShapeType(
@@ -72,7 +70,9 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     })
 }
 
-private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int): Field {
+private data class FieldDefinition(val field: Field, val source: Source)
+
+private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int): FieldDefinition {
     val fieldTypeExpression = field.type
     val fieldType = if (fieldTypeExpression == null) {
         null
@@ -92,13 +92,31 @@ private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: 
     } else {
         fieldType
     }
-    return Field(
-        shapeId = shapeId,
-        name = field.name,
-        // TODO: handle neither type nor value being set
-        type = type!!,
-        isConstant = field.value != null
+    return FieldDefinition(
+        Field(
+            shapeId = shapeId,
+            name = field.name,
+            // TODO: handle neither type nor value being set
+            type = type!!,
+            isConstant = field.value != null
+        ),
+        field.source
     )
+}
+
+private fun mergeFields(fields: List<FieldDefinition>): List<Field> {
+    val fieldsByName = fields.groupBy { field -> field.field.name }
+    return fieldsByName.map { (name, fieldsWithName) ->
+        mergeField(name, fieldsWithName)
+    }
+}
+
+private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
+    if (fields.size == 1) {
+        return fields.single().field
+    } else {
+        throw FieldDefinitionConflict(name = name, source = fields[1].source)
+    }
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {

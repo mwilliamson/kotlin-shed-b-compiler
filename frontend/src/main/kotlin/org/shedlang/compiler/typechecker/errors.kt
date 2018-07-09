@@ -53,6 +53,8 @@ class InvalidOperationError(val operator: Operator, val operands: List<Type>, so
     "Operation ${operator} is not valid for operands ${operands.map({operand -> operand.shortDescription}).joinToString(", ")}",
     source
 )
+class FieldDefinitionConflict(val name: Identifier, source: Source)
+    : TypeCheckError("A field with the name ${name} from a different shape has already been defined", source)
 class MissingReturnTypeError(message: String, source: Source)
     : TypeCheckError(message, source)
 class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)

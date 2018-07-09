@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.FieldAlreadyDeclaredError
+import org.shedlang.compiler.typechecker.FieldDefinitionConflict
 import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
@@ -131,14 +132,55 @@ class TypeCheckShapeTests {
             extendsShape2Reference to MetaType(shape2)
         ))
         typeCheck(node, typeContext)
-        print(((typeContext.typeOf(node) as ShapeType).staticArguments[0] as ShapeType).fields)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             fields = isSequence(
-                isField(name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
-                isField(name = isIdentifier("c"), type = isStringType, isConstant = equalTo(false)),
+                isField(shapeId = equalTo(shape1Id), name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
+                isField(shapeId = equalTo(shape2Id), name = isIdentifier("c"), type = isStringType, isConstant = equalTo(false)),
                 isField(name = isIdentifier("a"), type = isIntType)
             )
         )))
+    }
+
+    @Test
+    fun whenFieldsWithSameNameHaveDifferentShapeIdsThenErrorIsThrown() {
+        val extendsShape1Reference = staticReference("Extends1")
+        val extendsShape2Reference = staticReference("Extends2")
+
+        val shape1Id = freshShapeId()
+        val shape1 = shapeType(
+            fields = listOf(
+                field(name = "a", type = BoolType, shapeId = shape1Id, isConstant = true)
+            )
+        )
+
+        val shape2Id = freshShapeId()
+        val shape2 = shapeType(
+            fields = listOf(
+                field(name = "a", type = StringType, shapeId = shape2Id, isConstant = false)
+            )
+        )
+
+        val node = shape(
+            extends = listOf(
+                extendsShape1Reference,
+                extendsShape2Reference
+            ),
+            fields = listOf()
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            extendsShape1Reference to MetaType(shape1),
+            extendsShape2Reference to MetaType(shape2)
+        ))
+        assertThat(
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
+            throws(
+                has(FieldDefinitionConflict::name, isIdentifier("a"))
+            )
+        )
     }
 
     @Test
