@@ -30,9 +30,9 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             name = isIdentifier("X"),
-            fields = listOf(
-                "a" to isField(isIntType, isConstant = equalTo(false)),
-                "b" to isField(isBoolType, isConstant = equalTo(true))
+            fields = isSequence(
+                isField(name = isIdentifier("a"), type = isIntType, isConstant = equalTo(false)),
+                isField(name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true))
             )
         )))
     }
@@ -69,8 +69,8 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
             name = isIdentifier("X"),
-            fields = listOf(
-                "a" to isField(isBoolType, isConstant = equalTo(true))
+            fields = isSequence(
+                isField(name = isIdentifier("a"), type = isBoolType, isConstant = equalTo(true))
             )
         )))
     }
@@ -115,7 +115,9 @@ class TypeCheckShapeTests {
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
             type = isShapeType(
                 name = isIdentifier("X"),
-                fields = listOf("a" to isField(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)))
+                fields = isSequence(
+                    isField(name = isIdentifier("a"), type = isTypeParameter(name = isIdentifier("T"), variance = isInvariant))
+                )
             )
         )))
     }

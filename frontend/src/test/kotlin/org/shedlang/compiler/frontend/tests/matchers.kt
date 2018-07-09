@@ -3,7 +3,6 @@ package org.shedlang.compiler.frontend.tests
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
 
@@ -24,29 +23,23 @@ internal fun isFunctionType(
 ))
 
 internal fun isShapeType(
+    shapeId: Matcher<Int> = anything,
     name: Matcher<Identifier> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
-    shapeId: Matcher<Int> = anything
+    fields: Matcher<Collection<Field>> = anything
 ): Matcher<StaticValue> = cast(allOf(
+    has(ShapeType::shapeId, shapeId),
     has(ShapeType::name, name),
     has(ShapeType::staticArguments, staticArguments),
-    has(ShapeType::shapeId, shapeId)
-))
-
-internal fun isShapeType(
-    name: Matcher<Identifier> = anything,
-    staticArguments: Matcher<List<StaticValue>> = anything,
-    fields: List<Pair<String, Matcher<Field>>>
-): Matcher<StaticValue> = cast(allOf(
-    has(ShapeType::name, name),
-    has(ShapeType::staticArguments, staticArguments),
-    has(ShapeType::fields, isMap(*fields.map { (name, type) -> Identifier(name) to type }.toTypedArray()))
+    has("fields", { type -> type.fields.values }, fields)
 ))
 
 internal fun isField(
+    name: Matcher<Identifier>,
     type: Matcher<Type>,
     isConstant: Matcher<Boolean> = anything
 ) = allOf(
+    has(Field::name, name),
     has(Field::type, type),
     has(Field::isConstant, isConstant)
 )

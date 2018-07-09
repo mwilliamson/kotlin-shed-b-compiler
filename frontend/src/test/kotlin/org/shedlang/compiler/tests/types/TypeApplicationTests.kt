@@ -41,9 +41,9 @@ class TypeApplicationTests {
         )
         assertThat(
             applyStatic(shape, listOf(BoolType, IntType)),
-            isShapeType(fields = listOf(
-                "first" to isField(isBoolType),
-                "second" to isField(isIntType)
+            isShapeType(fields = isSequence(
+                isField(name = isIdentifier("first"), type = isBoolType),
+                isField(name = isIdentifier("second"), type = isIntType)
             ))
         )
     }
@@ -66,8 +66,8 @@ class TypeApplicationTests {
 
         assertThat(
             applyStatic(shapeType, listOf(BoolType)),
-            isShapeType(fields = listOf(
-                "value" to isField(isEquivalentType(applyStatic(innerShapeType, listOf(BoolType))))
+            isShapeType(fields = isSequence(
+                isField(name = isIdentifier("value"), type = isEquivalentType(applyStatic(innerShapeType, listOf(BoolType))))
             ))
         )
     }
