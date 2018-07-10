@@ -87,12 +87,14 @@ internal fun isShape(
 
 internal fun isShapeField(
     name: Matcher<Identifier>,
-    type: Matcher<StaticNode?>,
-    value: Matcher<ExpressionNode?> = anythingOrNull
+    type: Matcher<StaticNode?> = anythingOrNull,
+    value: Matcher<ExpressionNode?> = anythingOrNull,
+    shape: Matcher<StaticNode?> = anythingOrNull
 ) = allOf(
     has(ShapeFieldNode::name, name),
     has(ShapeFieldNode::type, type),
-    has(ShapeFieldNode::value, value)
+    has(ShapeFieldNode::value, value),
+    has(ShapeFieldNode::shape, shape)
 )
 
 internal fun isUnion(

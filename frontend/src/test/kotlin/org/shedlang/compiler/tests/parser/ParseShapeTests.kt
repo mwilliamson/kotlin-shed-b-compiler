@@ -98,6 +98,34 @@ class ParseShapeTests {
     }
 
     @Test
+    fun fieldShapeIsNullIfNotExplicitlySet() {
+        val source = "shape X { a: Int, }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            fields = isSequence(
+                isShapeField(
+                    name = isIdentifier("a"),
+                    shape = absent()
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun fieldShapeIsSetUsingFromKeyword() {
+        val source = "shape X { a from Y: Int, }"
+        val node = parseString(::parseShape, source)
+        assertThat(node, isShape(
+            fields = isSequence(
+                isShapeField(
+                    name = isIdentifier("a"),
+                    shape = present(isStaticReference("Y"))
+                )
+            )
+        ))
+    }
+
+    @Test
     fun shapeCanExtendSingleShape() {
         val source = "shape X extends Y { }"
         val node = parseString(::parseShape, source)
