@@ -184,6 +184,46 @@ class TypeCheckShapeTests {
     }
 
     @Test
+    fun extendedShapesCanDefineFieldProvidedFieldIsNarrowed() {
+        val extendsShape1Reference = staticReference("Extends1")
+        val extendsShape2Reference = staticReference("Extends2")
+
+        val shapeId = freshShapeId()
+        val shape1 = shapeType(
+            fields = listOf(
+                field(name = "a", type = AnyType, shapeId = shapeId)
+            )
+        )
+
+        val shape2 = shapeType(
+            fields = listOf(
+                field(name = "a", type = StringType, shapeId = shapeId)
+            )
+        )
+
+        val node = shape(
+            extends = listOf(
+                extendsShape1Reference,
+                extendsShape2Reference
+            ),
+            fields = listOf()
+        )
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            extendsShape1Reference to MetaType(shape1),
+            extendsShape2Reference to MetaType(shape2)
+        ))
+        typeCheck(node, typeContext)
+        typeContext.undefer()
+
+        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+            fields = isSequence(
+                isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+            )
+        )))
+    }
+
+    @Test
     fun shapeWithTypeParametersDeclaresTypeFunction() {
         val typeParameterDeclaration = typeParameter("T")
         val typeParameterReference = staticReference("T")

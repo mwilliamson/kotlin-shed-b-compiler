@@ -112,8 +112,18 @@ private fun mergeFields(fields: List<FieldDefinition>): List<Field> {
 }
 
 private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
-    if (fields.size == 1) {
-        return fields.single().field
+    if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
+        val bottomFields = fields.filter { bottomField ->
+            fields.all { upperField ->
+                canCoerce(from = bottomField.field.type, to = upperField.field.type)
+            }
+        }
+        if (bottomFields.size == 1) {
+            return bottomFields.single().field
+        } else {
+            // TODO:
+            throw NotImplementedError()
+        }
     } else {
         throw FieldDeclarationConflictError(name = name, source = fields[1].source)
     }
