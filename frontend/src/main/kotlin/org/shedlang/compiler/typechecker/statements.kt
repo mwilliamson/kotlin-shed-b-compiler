@@ -116,8 +116,7 @@ private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
     if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
         val bottomFields = fields.filter { bottomField ->
             fields.all { upperField ->
-                canCoerce(from = bottomField.field.type, to = upperField.field.type) &&
-                    (bottomField.field.isConstant || !upperField.field.isConstant)
+                isNarrowerField(lower = bottomField.field, upper = upperField.field)
             }
         }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
         if (bottomFields.size == 1) {
@@ -129,6 +128,11 @@ private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
     } else {
         throw FieldDeclarationConflictError(name = name, source = fields[1].source)
     }
+}
+
+private fun isNarrowerField(lower: Field, upper: Field): Boolean {
+    return canCoerce(from = lower.type, to = upper.type) &&
+        (lower.isConstant || !upper.isConstant)
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {
