@@ -143,40 +143,14 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenFieldsWithSameNameHaveDifferentShapeIdsThenErrorIsThrown() {
-        val extendsShape1Reference = staticReference("Extends1")
-        val extendsShape2Reference = staticReference("Extends2")
-
         val shape1Id = freshShapeId()
-        val shape1 = shapeType(
-            fields = listOf(
-                field(name = "a", type = BoolType, shapeId = shape1Id, isConstant = true)
-            )
-        )
+        val firstField = field(name = "a", type = BoolType, shapeId = shape1Id, isConstant = true)
 
         val shape2Id = freshShapeId()
-        val shape2 = shapeType(
-            fields = listOf(
-                field(name = "a", type = StringType, shapeId = shape2Id, isConstant = false)
-            )
-        )
+        val secondField = field(name = "a", type = StringType, shapeId = shape2Id, isConstant = false)
 
-        val node = shape(
-            extends = listOf(
-                extendsShape1Reference,
-                extendsShape2Reference
-            ),
-            fields = listOf()
-        )
-
-        val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShape1Reference to MetaType(shape1),
-            extendsShape2Reference to MetaType(shape2)
-        ))
         assertThat(
-            {
-                typeCheck(node, typeContext)
-                typeContext.undefer()
-            },
+            { mergeFields(firstField, secondField) },
             throws(
                 has(FieldDeclarationConflictError::name, isIdentifier("a"))
             )
@@ -185,21 +159,26 @@ class TypeCheckShapeTests {
 
     @Test
     fun extendedShapesCanDefineFieldProvidedFieldIsNarrowed() {
+        val shapeId = freshShapeId()
+        val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
+        val secondField = field(name = "a", type = StringType, shapeId = shapeId)
+
+        assertThat(
+            mergeFields(firstField, secondField),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+        )
+        assertThat(
+            mergeFields(secondField, firstField),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+        )
+    }
+
+    private fun mergeFields(first: Field, second: Field): Field {
         val extendsShape1Reference = staticReference("Extends1")
         val extendsShape2Reference = staticReference("Extends2")
 
-        val shapeId = freshShapeId()
-        val shape1 = shapeType(
-            fields = listOf(
-                field(name = "a", type = AnyType, shapeId = shapeId)
-            )
-        )
-
-        val shape2 = shapeType(
-            fields = listOf(
-                field(name = "a", type = StringType, shapeId = shapeId)
-            )
-        )
+        val shape1 = shapeType(fields = listOf(first))
+        val shape2 = shapeType(fields = listOf(second))
 
         val node = shape(
             extends = listOf(
@@ -216,11 +195,9 @@ class TypeCheckShapeTests {
         typeCheck(node, typeContext)
         typeContext.undefer()
 
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
-            fields = isSequence(
-                isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
-            )
-        )))
+        val type = typeContext.typeOf(node)
+        assertThat(type, isMetaType(isShapeType()))
+        return ((type as ShapeType).staticArguments[0] as ShapeType).fields.values.single()
     }
 
     @Test
