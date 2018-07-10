@@ -36,6 +36,16 @@ fun <T> Iterable<T>.allIndexed(predicate: (Int, T) -> Boolean): Boolean {
     return true
 }
 
+fun <T> Iterable<T>.distinctWith(areEqual: (T, T) -> Boolean): List<T> {
+    val result = mutableListOf<T>()
+    for (element in this) {
+        if (!result.any { existing -> areEqual(element, existing) }) {
+            result.add(element)
+        }
+    }
+    return result
+}
+
 internal fun <T> Iterable<T>.isUnique(): Boolean {
     val list = toList()
     return list.toSet().size == list.size

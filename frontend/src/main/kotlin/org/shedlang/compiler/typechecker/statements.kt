@@ -1,6 +1,7 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.distinctWith
 import org.shedlang.compiler.types.*
 
 
@@ -115,14 +116,15 @@ private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
     if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
         val bottomFields = fields.filter { bottomField ->
             fields.all { upperField ->
-                canCoerce(from = bottomField.field.type, to = upperField.field.type)
+                canCoerce(from = bottomField.field.type, to = upperField.field.type) &&
+                    (bottomField.field.isConstant || !upperField.field.isConstant)
             }
-        }
+        }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
         if (bottomFields.size == 1) {
             return bottomFields.single().field
         } else {
-            // TODO:
-            throw NotImplementedError()
+            // TODO: define separate errors for the two cases (or otherwise distinguish error messages)
+            throw FieldDeclarationConflictError(name = name, source = fields[1].source)
         }
     } else {
         throw FieldDeclarationConflictError(name = name, source = fields[1].source)

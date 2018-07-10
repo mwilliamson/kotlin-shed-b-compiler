@@ -158,7 +158,7 @@ class TypeCheckShapeTests {
     }
 
     @Test
-    fun extendedShapesCanDefineFieldProvidedFieldIsNarrowed() {
+    fun whenFieldTypesAreNarrowedThenFinalFieldHasNarrowedType() {
         val shapeId = freshShapeId()
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId)
@@ -170,6 +170,68 @@ class TypeCheckShapeTests {
         assertThat(
             mergeFields(secondField, firstField),
             isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+        )
+    }
+
+    @Test
+    fun whenFieldTypesAreTheSameThenFinalFieldHasSameType() {
+        val shapeId = freshShapeId()
+        val firstField = field(name = "a", type = StringType, shapeId = shapeId)
+        val secondField = field(name = "a", type = StringType, shapeId = shapeId)
+
+        assertThat(
+            mergeFields(firstField, secondField),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+        )
+        assertThat(
+            mergeFields(secondField, firstField),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+        )
+    }
+
+    @Test
+    fun whenFieldIsDefinedWithConflictingTypesThenErrorIsThrown() {
+        val shapeId = freshShapeId()
+        val firstField = field(name = "a", type = BoolType, shapeId = shapeId)
+        val secondField = field(name = "a", type = StringType, shapeId = shapeId)
+
+
+        assertThat(
+            { mergeFields(firstField, secondField) },
+            throws(
+                has(FieldDeclarationConflictError::name, isIdentifier("a"))
+            )
+        )
+    }
+
+    @Test
+    fun whetherFieldIsConstantIsConsideredInNarrowing() {
+        val shapeId = freshShapeId()
+        val firstField = field(name = "a", type = AnyType, shapeId = shapeId, isConstant = true)
+        val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
+
+
+        assertThat(
+            { mergeFields(firstField, secondField) },
+            throws(
+                has(FieldDeclarationConflictError::name, isIdentifier("a"))
+            )
+        )
+    }
+
+    @Test
+    fun shapeCanOverrideNonConstantFieldWithConstantField() {
+        val shapeId = freshShapeId()
+        val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
+        val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
+
+        assertThat(
+            mergeFields(firstField, secondField),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId), isConstant = equalTo(true))
+        )
+        assertThat(
+            mergeFields(secondField, firstField),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId), isConstant = equalTo(true))
         )
     }
 
