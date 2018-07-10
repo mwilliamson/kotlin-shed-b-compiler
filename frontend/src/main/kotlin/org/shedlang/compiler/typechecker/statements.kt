@@ -115,7 +115,7 @@ private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
     if (fields.size == 1) {
         return fields.single().field
     } else {
-        throw FieldDefinitionConflict(name = name, source = fields[1].source)
+        throw FieldDeclarationConflictError(name = name, source = fields[1].source)
     }
 }
 

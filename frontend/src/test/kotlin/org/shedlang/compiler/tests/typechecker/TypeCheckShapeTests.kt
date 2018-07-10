@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.FieldAlreadyDeclaredError
-import org.shedlang.compiler.typechecker.FieldDefinitionConflict
+import org.shedlang.compiler.typechecker.FieldDeclarationConflictError
 import org.shedlang.compiler.typechecker.TypeCheckError
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.*
@@ -178,7 +178,7 @@ class TypeCheckShapeTests {
                 typeContext.undefer()
             },
             throws(
-                has(FieldDefinitionConflict::name, isIdentifier("a"))
+                has(FieldDeclarationConflictError::name, isIdentifier("a"))
             )
         )
     }
