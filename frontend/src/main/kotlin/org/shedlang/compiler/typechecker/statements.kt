@@ -107,6 +107,8 @@ private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: 
         }
     }
 
+    // TODO: check field type matches type in shape
+
     return FieldDefinition(
         Field(
             shapeId = fieldShapeId,
