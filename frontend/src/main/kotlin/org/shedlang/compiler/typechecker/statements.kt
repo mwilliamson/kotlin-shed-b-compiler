@@ -27,7 +27,6 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
-        // TODO: allow narrowing of fields
         val extendsFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
@@ -131,11 +130,15 @@ private fun mergeFields(fields: List<FieldDefinition>): List<Field> {
 
 private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
     if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
-        val hasOverride = fields.any { field -> field.isOverride }
-        val bottomFields = fields.filter { bottomField ->
+        val overrideFields = fields.filter { field -> field.isOverride }
+        val bottomFieldCandidates = if (overrideFields.isEmpty()) {
+            fields
+        } else {
+            overrideFields
+        }
+        val bottomFields = bottomFieldCandidates.filter { bottomField ->
             fields.all { upperField ->
-                (!hasOverride || bottomField.isOverride) &&
-                    isNarrowerField(lower = bottomField.field, upper = upperField.field)
+                isNarrowerField(lower = bottomField.field, upper = upperField.field)
             }
         }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
         if (bottomFields.size == 1) {
