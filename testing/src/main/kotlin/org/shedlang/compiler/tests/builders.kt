@@ -368,9 +368,10 @@ fun shapeType(
     name: String = "Shape",
     fields: List<Field> = listOf(),
     typeParameters: List<TypeParameter> = listOf(),
-    typeArguments: List<Type> = listOf()
+    typeArguments: List<Type> = listOf(),
+    shapeId: Int = freshShapeId()
 ) = lazyShapeType(
-    shapeId = freshShapeId(),
+    shapeId = shapeId,
     name = Identifier(name),
     getFields = lazy { fields },
     staticParameters = typeParameters,

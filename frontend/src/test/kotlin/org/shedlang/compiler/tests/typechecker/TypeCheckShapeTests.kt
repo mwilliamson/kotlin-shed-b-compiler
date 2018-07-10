@@ -210,7 +210,6 @@ class TypeCheckShapeTests {
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId, isConstant = true)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
 
-
         assertThat(
             { mergeFields(firstField, secondField) },
             throws(
@@ -220,7 +219,7 @@ class TypeCheckShapeTests {
     }
 
     @Test
-    fun shapeCanOverrideNonConstantFieldWithConstantField() {
+    fun constantFieldTakesPrecedenceWhenMergingFields() {
         val shapeId = freshShapeId()
         val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
@@ -260,6 +259,95 @@ class TypeCheckShapeTests {
         val type = typeContext.typeOf(node)
         assertThat(type, isMetaType(isShapeType()))
         return ((type as ShapeType).staticArguments[0] as ShapeType).fields.values.single()
+    }
+
+    @Test
+    fun shapeCannotOverrideFieldWithDifferentShape() {
+        val shapeId = freshShapeId()
+        val stringTypeReference = staticReference("String")
+
+        val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
+
+        val extendsShapeReference = staticReference("Extends")
+        val shape = shapeType(fields = listOf(firstField))
+        val node = shape(
+            extends = listOf(extendsShapeReference),
+            fields = listOf(shapeField(shape = null, name = "a", type = stringTypeReference))
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            extendsShapeReference to MetaType(shape),
+            stringTypeReference to MetaType(StringType)
+        ))
+        assertThat(
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
+            throws(
+                has(FieldDeclarationConflictError::name, isIdentifier("a"))
+            )
+        )
+    }
+
+    @Test
+    fun shapeCanOverrideFieldWithSubtypeUsingSameShape() {
+        val shapeId = freshShapeId()
+        val baseReference = staticReference("Base")
+        val base = shapeType(shapeId = shapeId)
+        val stringTypeReference = staticReference("String")
+
+        val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
+
+        val extendsShapeReference = staticReference("Extends")
+        val shape = shapeType(fields = listOf(firstField))
+        val node = shape(
+            extends = listOf(extendsShapeReference),
+            fields = listOf(shapeField(shape = baseReference, name = "a", type = stringTypeReference))
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            extendsShapeReference to MetaType(shape),
+            stringTypeReference to MetaType(StringType),
+            baseReference to MetaType(base)
+        ))
+        typeCheck(node, typeContext)
+        typeContext.undefer()
+        val type = typeContext.typeOf(node)
+        assertThat(type, isMetaType(isShapeType()))
+        assertThat(
+            ((type as ShapeType).staticArguments[0] as ShapeType).fields.values.single(),
+            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
+        )
+    }
+
+    @Test
+    fun shapeCannotOverrideFieldWithSuperType() {
+        val shapeId = freshShapeId()
+        val baseReference = staticReference("Base")
+        val base = shapeType(shapeId = shapeId)
+        val stringTypeReference = staticReference("String")
+
+        val firstField = field(name = "a", type = StringType, shapeId = shapeId)
+
+        val extendsShapeReference = staticReference("Extends")
+        val shape = shapeType(fields = listOf(firstField))
+        val node = shape(
+            extends = listOf(extendsShapeReference),
+            fields = listOf(shapeField(shape = baseReference, name = "a", type = stringTypeReference))
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            extendsShapeReference to MetaType(shape),
+            stringTypeReference to MetaType(AnyType),
+            baseReference to MetaType(base)
+        ))
+        assertThat(
+            {
+                typeCheck(node, typeContext)
+                typeContext.undefer()
+            },
+            throws(
+                has(FieldDeclarationConflictError::name, isIdentifier("a"))
+            )
+        )
     }
 
     @Test

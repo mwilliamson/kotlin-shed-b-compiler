@@ -32,7 +32,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
                 superType.fields.values.map { field ->
-                    FieldDefinition(field, extendNode.source)
+                    FieldDefinition(field, extendNode.source, isOverride = false)
                 }
             } else {
                 // TODO: throw a better exception
@@ -71,7 +71,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     })
 }
 
-private data class FieldDefinition(val field: Field, val source: Source)
+private data class FieldDefinition(val field: Field, val source: Source, val isOverride: Boolean)
 
 private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int): FieldDefinition {
     val fieldTypeExpression = field.type
@@ -93,15 +93,30 @@ private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: 
     } else {
         fieldType
     }
+
+    val fieldShapeExpression = field.shape
+    val fieldShapeId = if (fieldShapeExpression == null) {
+        shapeId
+    } else {
+        val fieldShapeType = evalType(fieldShapeExpression, context)
+        if (fieldShapeType is ShapeType) {
+            fieldShapeType.shapeId
+        } else {
+            // TODO: throw a better error
+            throw NotImplementedError()
+        }
+    }
+
     return FieldDefinition(
         Field(
-            shapeId = shapeId,
+            shapeId = fieldShapeId,
             name = field.name,
             // TODO: handle neither type nor value being set
             type = type!!,
             isConstant = field.value != null
         ),
-        field.source
+        field.source,
+        isOverride = true
     )
 }
 
@@ -114,9 +129,11 @@ private fun mergeFields(fields: List<FieldDefinition>): List<Field> {
 
 private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
     if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
+        val hasOverride = fields.any { field -> field.isOverride }
         val bottomFields = fields.filter { bottomField ->
             fields.all { upperField ->
-                isNarrowerField(lower = bottomField.field, upper = upperField.field)
+                (!hasOverride || bottomField.isOverride) &&
+                    isNarrowerField(lower = bottomField.field, upper = upperField.field)
             }
         }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
         if (bottomFields.size == 1) {
