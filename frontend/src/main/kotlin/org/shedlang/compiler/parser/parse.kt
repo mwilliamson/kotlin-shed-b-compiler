@@ -214,6 +214,7 @@ private fun parseShapeField(source: StringSource, tokens: TokenIterator<TokenTyp
     }
 
     return ShapeFieldNode(
+        shape = null,
         name = name,
         type = type,
         value = value,

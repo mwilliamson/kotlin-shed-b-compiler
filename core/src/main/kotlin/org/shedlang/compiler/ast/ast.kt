@@ -265,6 +265,7 @@ data class ShapeNode(
 }
 
 data class ShapeFieldNode(
+    val shape: StaticNode?,
     val name: Identifier,
     val type: StaticNode?,
     val value: ExpressionNode?,
@@ -272,7 +273,7 @@ data class ShapeFieldNode(
     override val nodeId: Int = freshNodeId()
 ): Node {
     override val children: List<Node>
-        get() = type.nullableToList() + value.nullableToList()
+        get() = shape.nullableToList() + type.nullableToList() + value.nullableToList()
 }
 
 data class UnionNode(
