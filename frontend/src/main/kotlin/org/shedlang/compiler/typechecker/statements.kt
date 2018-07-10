@@ -2,6 +2,7 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.distinctWith
+import org.shedlang.compiler.mapNullable
 import org.shedlang.compiler.types.*
 
 
@@ -73,25 +74,13 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 private data class FieldDefinition(val field: Field, val source: Source, val isOverride: Boolean)
 
 private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int): FieldDefinition {
-    val fieldTypeExpression = field.type
-    val fieldType = if (fieldTypeExpression == null) {
-        null
-    } else {
-        evalType(fieldTypeExpression, context)
+    val fieldType = field.type.mapNullable { expression ->
+        evalType(expression, context)
     }
-
-    val fieldValueExpression = field.value
-    val valueType = if (fieldValueExpression == null) {
-        null
-    } else {
-        inferType(fieldValueExpression, context)
+    val valueType = field.value.mapNullable { expression ->
+        inferType(expression, context)
     }
-
-    val type = if (fieldType == null) {
-        valueType
-    } else {
-        fieldType
-    }
+    val type = fieldType ?: valueType
 
     val fieldShapeExpression = field.shape
     val fieldShapeId = if (fieldShapeExpression == null) {

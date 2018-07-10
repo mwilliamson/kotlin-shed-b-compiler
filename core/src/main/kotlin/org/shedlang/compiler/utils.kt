@@ -71,6 +71,14 @@ fun <T1, T2, T3, R> zip3(
     return list
 }
 
+fun <T, R> T?.mapNullable(func: (T) -> R): R? {
+    if (this == null) {
+        return null
+    } else {
+        return func(this)
+    }
+}
+
 private fun <T> Iterable<T>.collectionSizeOrDefault(default: Int): Int = if (this is Collection<*>) this.size else default
 
 
