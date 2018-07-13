@@ -8,7 +8,6 @@ import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.*
-import java.util.*
 
 private val coreBuiltins = listOf(
     builtinType("Any", AnyType),
@@ -19,6 +18,7 @@ private val coreBuiltins = listOf(
     builtinType("Bool", BoolType),
     builtinType("List", ListType),
     builtinType("Type", metaType),
+    builtinType("Symbol", AnySymbolType),
 
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect)
