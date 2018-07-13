@@ -79,6 +79,22 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceSpecificSymbolTypeToGeneralSymbolType() {
+        assertThat(
+            canCoerce(from = SymbolType(listOf("A"), "B"), to = AnySymbolType),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun cannotCoerceGeneralSymbolTypeToSpecificSymbolType() {
+        assertThat(
+            canCoerce(from = AnySymbolType, to = SymbolType(listOf("A"), "B")),
+            equalTo(false)
+        )
+    }
+
+    @Test
     fun functionTypesAreContravariantInPositionalArgumentType() {
         assertThat(
             canCoerce(

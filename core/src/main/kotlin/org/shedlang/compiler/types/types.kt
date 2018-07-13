@@ -75,6 +75,10 @@ data class SymbolType(val module: List<String>, val name: String): BasicType {
     override val shortDescription: String
         get() = "Symbol[${module}.${name}]"
 }
+object AnySymbolType : Type {
+    override val shortDescription: String
+        get() = "Symbol"
+}
 object AnyType : Type {
     override val shortDescription = "Any"
 }

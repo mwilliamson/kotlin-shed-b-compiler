@@ -73,6 +73,10 @@ internal class TypeConstraintSolver(
             return true
         }
 
+        if (from is SymbolType && to == AnySymbolType) {
+            return true
+        }
+
         if (to is TypeParameter && to in parameters) {
             val boundType = typeBindings[to]
             if (boundType == null) {
