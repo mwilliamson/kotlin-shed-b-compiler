@@ -3,6 +3,7 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.distinctWith
 import org.shedlang.compiler.mapNullable
+import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.*
 
 
@@ -28,11 +29,11 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
-        val extendsFields = node.extends.flatMap { extendNode ->
+        val parentFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
                 superType.fields.values.map { field ->
-                    FieldDefinition(field, extendNode.source, isOverride = false)
+                    FieldDefinition(field, superType.name, extendNode.source)
                 }
             } else {
                 // TODO: throw a better exception
@@ -41,10 +42,10 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         }
 
         val newFields = node.fields.map { field ->
-            generateField(field, context, shapeId = shapeId)
+            generateField(field, context, shapeId = shapeId, shapeName = node.name)
         }
 
-        mergeFields(extendsFields + newFields)
+        mergeFields(parentFields, newFields)
     })
 
     val shapeType = lazyShapeType(
@@ -71,9 +72,9 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
     })
 }
 
-private data class FieldDefinition(val field: Field, val source: Source, val isOverride: Boolean)
+private data class FieldDefinition(val field: Field, val shape: Identifier, val source: Source)
 
-private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int): FieldDefinition {
+private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int, shapeName: Identifier): FieldDefinition {
     val fieldType = field.type.mapNullable { expression ->
         evalType(expression, context)
     }
@@ -105,45 +106,94 @@ private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: 
             type = type!!,
             isConstant = field.value != null
         ),
-        field.source,
-        isOverride = true
+        shapeName,
+        field.source
     )
 }
 
-private fun mergeFields(fields: List<FieldDefinition>): List<Field> {
-    val fieldsByName = fields.groupBy { field -> field.field.name }
-    return fieldsByName.map { (name, fieldsWithName) ->
-        mergeField(name, fieldsWithName)
+private fun mergeFields(parentFields: List<FieldDefinition>, newFields: List<FieldDefinition>): List<Field> {
+    val parentFieldsByName = parentFields.groupBy { field -> field.field.name }
+    val newFieldsByName = newFields.associateBy { field -> field.field.name }
+
+    val fieldNames = (parentFieldsByName.keys + newFieldsByName.keys).sorted()
+
+    return fieldNames.map { name ->
+        mergeField(
+            name,
+            parentFieldsByName.getOrDefault(name, listOf()),
+            newFieldsByName[name]
+        )
     }
 }
 
-private fun mergeField(name: Identifier, fields: List<FieldDefinition>): Field {
+private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, newField: FieldDefinition?): Field {
+    val fields = parentFields + newField.nullableToList()
     if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
-        val overrideFields = fields.filter { field -> field.isOverride }
-        val bottomFieldCandidates = if (overrideFields.isEmpty()) {
-            fields
-        } else {
-            overrideFields
-        }
-        val bottomFields = bottomFieldCandidates.filter { bottomField ->
-            fields.all { upperField ->
-                isNarrowerField(lower = bottomField.field, upper = upperField.field)
+        if (newField == null) {
+            val constantFields = parentFields.filter { parentField -> parentField.field.isConstant }
+
+            if (constantFields.size > 1) {
+                throw FieldDeclarationValueConflictError(
+                    name = name,
+                    parentShape = constantFields[0].shape,
+                    source = constantFields[1].source
+                )
             }
-        }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
-        if (bottomFields.size == 1) {
-            return bottomFields.single().field
+
+            val bottomFieldCandiates = if (constantFields.size == 1) {
+                constantFields
+            } else {
+                parentFields
+            }
+
+            val bottomFields = bottomFieldCandiates.filter { bottomField ->
+                parentFields.all { upperField ->
+                    canCoerce(from = bottomField.field.type, to = upperField.field.type)
+                }
+            }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
+            if (bottomFields.size == 1) {
+                val bottomField = bottomFields.single()
+                for (parentField in parentFields) {
+                    if (parentField.field.isConstant && parentField != bottomField) {
+                        throw FieldDeclarationValueConflictError(
+                            name = name,
+                            parentShape = parentField.shape,
+                            source = bottomField.source
+                        )
+                    }
+                }
+                return bottomField.field
+            } else {
+                throw FieldDeclarationMergeTypeConflictError(
+                    name = name,
+                    types = fields.map { field -> field.field.type },
+                    source = fields[0].source
+                )
+            }
         } else {
-            // TODO: define separate errors for the two cases (or otherwise distinguish error messages)
-            throw FieldDeclarationConflictError(name = name, source = fields[1].source)
+            for (parentField in parentFields) {
+                if (!canCoerce(from = newField.field.type, to = parentField.field.type)) {
+                    throw FieldDeclarationOverrideTypeConflictError(
+                        name = name,
+                        overrideType = newField.field.type,
+                        parentShape = parentField.shape,
+                        parentType = parentField.field.type,
+                        source = newField.source
+                    )
+                }
+                if (parentField.field.isConstant) {
+                    throw FieldDeclarationValueConflictError(
+                        name = name,
+                        parentShape = parentField.shape,
+                        source = newField.source
+                    )
+                }
+            }
+            return newField.field
         }
     } else {
-        throw FieldDeclarationConflictError(name = name, source = fields[1].source)
+        throw FieldDeclarationShapeIdConflictError(name = name, source = fields[0].source)
     }
-}
-
-private fun isNarrowerField(lower: Field, upper: Field): Boolean {
-    return canCoerce(from = lower.type, to = upper.type) &&
-        (lower.isConstant || !upper.isConstant)
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {

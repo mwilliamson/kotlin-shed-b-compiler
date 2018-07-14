@@ -53,8 +53,28 @@ class InvalidOperationError(val operator: Operator, val operands: List<Type>, so
     "Operation ${operator} is not valid for operands ${operands.map({operand -> operand.shortDescription}).joinToString(", ")}",
     source
 )
-class FieldDeclarationConflictError(val name: Identifier, source: Source)
+class FieldDeclarationShapeIdConflictError(val name: Identifier, source: Source)
     : TypeCheckError("A field with the name ${name} from a different shape has already been declared", source)
+class FieldDeclarationMergeTypeConflictError(
+    val name: Identifier,
+    val types: List<Type>,
+    source: Source
+): TypeCheckError("A field with the name ${name} is declared with incompatible types " +
+    types.joinToString(",") { type -> type.shortDescription }, source)
+class FieldDeclarationOverrideTypeConflictError(
+    val name: Identifier,
+    val overrideType: Type,
+    val parentShape: Identifier,
+    val parentType: Type,
+    source: Source
+): TypeCheckError("The field ${name} is declared with the type ${overrideType.shortDescription}," +
+    " but the parent ${parentShape} declares ${name} with the type ${parentType.shortDescription}", source)
+class FieldDeclarationValueConflictError(
+    val name: Identifier,
+    val parentShape: Identifier,
+    source: Source
+): TypeCheckError("The field ${name} is declared with a constant value in parent ${parentShape}," +
+    " and constant fields cannot be overridden", source)
 class MissingReturnTypeError(message: String, source: Source)
     : TypeCheckError(message, source)
 class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)
