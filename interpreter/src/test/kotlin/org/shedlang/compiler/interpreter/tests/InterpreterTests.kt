@@ -54,9 +54,31 @@ class InterpreterTests {
     }
 
     @Test
+    fun equalityOfIntegers() {
+        val equalValue = evaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(42)))
+        assertThat(equalValue, cast(equalTo(BooleanValue(true))))
+
+
+        val notEqualValue = evaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(47)))
+        assertThat(notEqualValue, cast(equalTo(BooleanValue(false))))
+    }
+
+    @Test
     fun additionOfIntegersEvaluatesToTotalValue() {
         val value = evaluate(binaryOperation(Operator.ADD, literalInt(1), literalInt(2)))
         assertThat(value, cast(equalTo(IntegerValue(3))))
+    }
+
+    @Test
+    fun subtractionOfIntegersEvaluatesToDifference() {
+        val value = evaluate(binaryOperation(Operator.SUBTRACT, literalInt(1), literalInt(2)))
+        assertThat(value, cast(equalTo(IntegerValue(-1))))
+    }
+
+    @Test
+    fun multiplicationOfIntegersEvaluatesToDifference() {
+        val value = evaluate(binaryOperation(Operator.MULTIPLY, literalInt(2), literalInt(3)))
+        assertThat(value, cast(equalTo(IntegerValue(6))))
     }
 
     @Test

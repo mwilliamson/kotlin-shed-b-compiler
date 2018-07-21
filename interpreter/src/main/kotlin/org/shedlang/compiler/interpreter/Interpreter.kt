@@ -33,8 +33,14 @@ data class BinaryOperation(
                     right.evaluate(context)
                 )
                 is InterpreterValue ->
-                    if (left is IntegerValue && right is IntegerValue) {
+                    if (operator == Operator.EQUALS && left is IntegerValue && right is IntegerValue) {
+                        BooleanValue(left.value == right.value)
+                    } else if (operator == Operator.ADD && left is IntegerValue && right is IntegerValue) {
                         IntegerValue(left.value + right.value)
+                    } else if (operator == Operator.SUBTRACT && left is IntegerValue && right is IntegerValue) {
+                        IntegerValue(left.value - right.value)
+                    } else if (operator == Operator.MULTIPLY && left is IntegerValue && right is IntegerValue) {
+                        IntegerValue(left.value * right.value)
                     } else {
                         throw NotImplementedError()
                     }
