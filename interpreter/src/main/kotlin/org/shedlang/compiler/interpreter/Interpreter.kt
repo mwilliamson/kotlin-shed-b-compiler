@@ -8,18 +8,18 @@ import org.shedlang.compiler.ast.Operator
 internal sealed class Expression
 
 internal abstract class IncompleteExpression: Expression() {
-    abstract fun evaluate(context: InterpreterContext): Expression
+    abstract fun evaluate(context: InterpreterContext): EvaluationResult<Expression>
 }
 
 internal data class ModuleReference(val name: List<Identifier>): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
-        return context.module(name)
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
+        return EvaluationResult.pure(context.module(name))
     }
 }
 
 internal data class VariableReference(val name: String): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
-        return context.value(name)
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
+        return EvaluationResult.pure(context.value(name))
     }
 }
 
@@ -28,32 +28,36 @@ internal data class BinaryOperation(
     val left: Expression,
     val right: Expression
 ): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (left) {
-            is IncompleteExpression -> BinaryOperation(
-                operator,
-                left.evaluate(context),
-                right
-            )
-            is InterpreterValue -> when (right) {
-                is IncompleteExpression -> BinaryOperation(
+            is IncompleteExpression -> left.evaluate(context).map { evaluatedLeft ->
+                BinaryOperation(
                     operator,
-                    left,
-                    right.evaluate(context)
+                    evaluatedLeft,
+                    right
                 )
+            }
+            is InterpreterValue -> when (right) {
+                is IncompleteExpression -> right.evaluate(context).map { evaluatedRight ->
+                    BinaryOperation(
+                        operator,
+                        left,
+                        evaluatedRight
+                    )
+                }
                 is InterpreterValue ->
                     if (operator == Operator.EQUALS && left is IntegerValue && right is IntegerValue) {
-                        BooleanValue(left.value == right.value)
+                        EvaluationResult.pure(BooleanValue(left.value == right.value))
                     } else if (operator == Operator.ADD && left is IntegerValue && right is IntegerValue) {
-                        IntegerValue(left.value + right.value)
+                        EvaluationResult.pure(IntegerValue(left.value + right.value))
                     } else if (operator == Operator.SUBTRACT && left is IntegerValue && right is IntegerValue) {
-                        IntegerValue(left.value - right.value)
+                        EvaluationResult.pure(IntegerValue(left.value - right.value))
                     } else if (operator == Operator.MULTIPLY && left is IntegerValue && right is IntegerValue) {
-                        IntegerValue(left.value * right.value)
+                        EvaluationResult.pure(IntegerValue(left.value * right.value))
                     } else if (operator == Operator.EQUALS && left is StringValue && right is StringValue) {
-                        BooleanValue(left.value == right.value)
+                        EvaluationResult.pure(BooleanValue(left.value == right.value))
                     } else if (operator == Operator.ADD && left is StringValue && right is StringValue) {
-                        StringValue(left.value + right.value)
+                        EvaluationResult.pure(StringValue(left.value + right.value))
                     } else {
                         throw NotImplementedError()
                     }
@@ -66,12 +70,14 @@ internal data class Call(
     val receiver: Expression,
     val positionalArguments: List<Expression>
 ): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (receiver) {
-            is IncompleteExpression -> Call(
-                receiver.evaluate(context),
-                positionalArguments
-            )
+            is IncompleteExpression -> receiver.evaluate(context).map { evaluatedReceiver ->
+                Call(
+                    evaluatedReceiver,
+                    positionalArguments
+                )
+            }
             is InterpreterValue -> call(receiver, positionalArguments as List<InterpreterValue>, context)
         }
     }
@@ -81,15 +87,14 @@ private fun call(
     receiver: InterpreterValue,
     positionalArguments: List<InterpreterValue>,
     context: InterpreterContext
-): Expression {
+): EvaluationResult<Expression> {
     return when (receiver) {
         is PrintValue -> {
-            context.writeStdout((positionalArguments[0] as StringValue).value)
-            UnitValue
+            EvaluationResult(UnitValue, stdout = (positionalArguments[0] as StringValue).value)
         }
-        is FunctionValue -> Block(
+        is FunctionValue -> EvaluationResult.pure(Block(
             body = receiver.body
-        )
+        ))
         else -> throw NotImplementedError()
     }
 }
@@ -98,15 +103,14 @@ internal data class FieldAccess(
     val receiver: Expression,
     val fieldName: Identifier
 ): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (receiver) {
-            is IncompleteExpression -> FieldAccess(
-                receiver.evaluate(context),
-                fieldName
-            )
+            is IncompleteExpression -> receiver.evaluate(context).map { evaluatedReceiver ->
+                FieldAccess(evaluatedReceiver, fieldName)
+            }
             is InterpreterValue ->
                 when (receiver) {
-                    is ModuleValue -> receiver.fields[fieldName]!!
+                    is ModuleValue -> EvaluationResult.pure(receiver.fields[fieldName]!!)
                     else -> throw NotImplementedError()
                 }
         }
@@ -125,23 +129,21 @@ internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) :
 internal data class FunctionValue(val body: List<Statement>): InterpreterValue()
 
 internal data class Block(val body: List<Statement>): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         if (body.isEmpty()) {
-            return UnitValue
+            return EvaluationResult.pure(UnitValue)
         } else {
             val statement = body[0]
             if (statement is ExpressionStatement && statement.expression is InterpreterValue) {
                 if (statement.isReturn) {
-                    return statement.expression
+                    return EvaluationResult.pure(statement.expression)
                 } else {
-                    return Block(
-                        body.drop(1)
-                    )
+                    return EvaluationResult.pure(Block(body.drop(1)))
                 }
             } else {
-                return Block(
-                    listOf(statement.execute(context)) + body.drop(1)
-                )
+                return statement.execute(context).map { evaluatedStatement ->
+                    Block(listOf(evaluatedStatement) + body.drop(1))
+                }
             }
         }
     }
@@ -151,7 +153,7 @@ internal data class If(
     val conditionalBranches: List<ConditionalBranch>,
     val elseBranch: List<Statement>
 ): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): Expression {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         throw UnsupportedOperationException("not implemented")
     }
 
@@ -163,13 +165,15 @@ internal data class ConditionalBranch(
 )
 
 internal interface Statement {
-    fun execute(context: InterpreterContext): Statement
+    fun execute(context: InterpreterContext): EvaluationResult<Statement>
 }
 
 internal data class ExpressionStatement(val expression: Expression, val isReturn: Boolean): Statement {
-    override fun execute(context: InterpreterContext): Statement {
+    override fun execute(context: InterpreterContext): EvaluationResult<Statement> {
         if (expression is IncompleteExpression) {
-            return ExpressionStatement(expression.evaluate(context), isReturn)
+            return expression.evaluate(context).map { evaluatedExpression ->
+                ExpressionStatement(evaluatedExpression, isReturn = isReturn)
+            }
         } else {
             throw NotImplementedError()
         }
@@ -182,8 +186,6 @@ internal class InterpreterContext(
     private val variables: Map<String, InterpreterValue>,
     private val modules: Map<List<Identifier>, ModuleValue>
 ) {
-    private val stdoutBuilder = StringBuilder()
-
     fun value(name: String): InterpreterValue {
         return variables[name]!!
     }
@@ -191,16 +193,9 @@ internal class InterpreterContext(
     fun module(name: List<Identifier>): InterpreterValue {
         return modules[name]!!
     }
-
-    val stdout: String
-        get() = stdoutBuilder.toString()
-
-    fun writeStdout(value: String) {
-        stdoutBuilder.append(value)
-    }
 }
 
-internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): EvaluationResult {
+internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvaluationResult {
     val loadedModules = loadModuleSet(modules)
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
@@ -208,28 +203,44 @@ internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): Evaluat
     )
     val context = InterpreterContext(variables = mapOf(), modules = loadedModules)
     val result = evaluate(call, context)
-    val exitCode = when (result) {
-        is IntegerValue -> result.value
+    val exitCode = when (result.value) {
+        is IntegerValue -> result.value.value
         is UnitValue -> 0
         else -> throw NotImplementedError()
     }
-    return EvaluationResult(exitCode = exitCode, stdout = context.stdout)
+    return ModuleEvaluationResult(exitCode = exitCode, stdout = result.stdout)
 }
 
-internal data class EvaluationResult(val exitCode: Int, val stdout: String)
+internal data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
 
-internal fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): InterpreterValue {
+internal fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): EvaluationResult<InterpreterValue> {
     return evaluate(loadExpression(expressionNode), context)
 }
 
-internal fun evaluate(initialExpression: Expression, context: InterpreterContext): InterpreterValue {
+internal fun evaluate(initialExpression: Expression, context: InterpreterContext): EvaluationResult<InterpreterValue> {
     var expression = initialExpression
+    val stdout = StringBuilder()
     while (true) {
         when (expression) {
-            is IncompleteExpression ->
-                expression = expression.evaluate(context)
+            is IncompleteExpression -> {
+                val result = expression.evaluate(context)
+                stdout.append(result.stdout)
+                expression = result.value
+            }
             is InterpreterValue ->
-                return expression
+                return EvaluationResult(value = expression, stdout = stdout.toString())
+        }
+    }
+}
+
+internal data class EvaluationResult<out T>(val value: T, val stdout: String) {
+    internal fun <R> map(func: (T) -> R): EvaluationResult<R> {
+        return EvaluationResult(func(value), stdout)
+    }
+
+    companion object {
+        internal fun <T> pure(value: T): EvaluationResult<T> {
+            return EvaluationResult(value, stdout = "")
         }
     }
 }
