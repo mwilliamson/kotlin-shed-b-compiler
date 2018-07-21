@@ -13,7 +13,13 @@ data class StringValue(val value: String): InterpreterValue
 data class CharacterValue(val value: Int): InterpreterValue
 data class SymbolValue(val name: String): InterpreterValue
 
-fun evaluate(expression: ExpressionNode): InterpreterValue {
+class InterpreterContext(private val variables: Map<String, InterpreterValue>) {
+    fun value(name: String): InterpreterValue {
+        return variables[name]!!
+    }
+}
+
+fun evaluate(expression: ExpressionNode, context: InterpreterContext): InterpreterValue {
     return expression.accept(object : ExpressionNode.Visitor<InterpreterValue> {
         override fun visit(node: UnitLiteralNode) = UnitValue
         override fun visit(node: BooleanLiteralNode) = BooleanValue(node.value)
@@ -21,10 +27,7 @@ fun evaluate(expression: ExpressionNode): InterpreterValue {
         override fun visit(node: StringLiteralNode) = StringValue(node.value)
         override fun visit(node: CharacterLiteralNode) = CharacterValue(node.value)
         override fun visit(node: SymbolNode) = SymbolValue(node.name)
-
-        override fun visit(node: VariableReferenceNode): InterpreterValue {
-            throw UnsupportedOperationException("not implemented")
-        }
+        override fun visit(node: VariableReferenceNode) = context.value(node.name.value)
 
         override fun visit(node: BinaryOperationNode): InterpreterValue {
             throw UnsupportedOperationException("not implemented")
