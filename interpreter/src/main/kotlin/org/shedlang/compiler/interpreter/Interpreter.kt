@@ -2,10 +2,22 @@ package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ast.*
 
-interface InterpreterValue {
-
+sealed class Expression {
+    class Incomplete(val expression: IncompleteExpression): Expression()
+    class Value(val value: InterpreterValue): Expression()
 }
 
+interface IncompleteExpression {
+    fun evaluate(context: InterpreterContext): Expression
+}
+
+data class VariableReference(val name: String): IncompleteExpression {
+    override fun evaluate(context: InterpreterContext): Expression {
+        return Expression.Value(context.value(name))
+    }
+}
+
+interface InterpreterValue
 object UnitValue: InterpreterValue
 data class BooleanValue(val value: Boolean): InterpreterValue
 data class IntegerValue(val value: Int): InterpreterValue
@@ -19,47 +31,59 @@ class InterpreterContext(private val variables: Map<String, InterpreterValue>) {
     }
 }
 
-fun evaluate(expression: ExpressionNode, context: InterpreterContext): InterpreterValue {
-    return expression.accept(object : ExpressionNode.Visitor<InterpreterValue> {
-        override fun visit(node: UnitLiteralNode) = UnitValue
-        override fun visit(node: BooleanLiteralNode) = BooleanValue(node.value)
-        override fun visit(node: IntegerLiteralNode) = IntegerValue(node.value)
-        override fun visit(node: StringLiteralNode) = StringValue(node.value)
-        override fun visit(node: CharacterLiteralNode) = CharacterValue(node.value)
-        override fun visit(node: SymbolNode) = SymbolValue(node.name)
-        override fun visit(node: VariableReferenceNode) = context.value(node.name.value)
+fun initialise(expression: ExpressionNode): Expression {
+    return expression.accept(object : ExpressionNode.Visitor<Expression> {
+        override fun visit(node: UnitLiteralNode) = Expression.Value(UnitValue)
+        override fun visit(node: BooleanLiteralNode) = Expression.Value(BooleanValue(node.value))
+        override fun visit(node: IntegerLiteralNode) = Expression.Value(IntegerValue(node.value))
+        override fun visit(node: StringLiteralNode) = Expression.Value(StringValue(node.value))
+        override fun visit(node: CharacterLiteralNode) = Expression.Value(CharacterValue(node.value))
+        override fun visit(node: SymbolNode) = Expression.Value(SymbolValue(node.name))
+        override fun visit(node: VariableReferenceNode) = Expression.Incomplete(VariableReference(node.name.value))
 
-        override fun visit(node: BinaryOperationNode): InterpreterValue {
+        override fun visit(node: BinaryOperationNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: IsNode): InterpreterValue {
+        override fun visit(node: IsNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: CallNode): InterpreterValue {
+        override fun visit(node: CallNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: PartialCallNode): InterpreterValue {
+        override fun visit(node: PartialCallNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: FieldAccessNode): InterpreterValue {
+        override fun visit(node: FieldAccessNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: FunctionExpressionNode): InterpreterValue {
+        override fun visit(node: FunctionExpressionNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: IfNode): InterpreterValue {
+        override fun visit(node: IfNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: WhenNode): InterpreterValue {
+        override fun visit(node: WhenNode): Expression {
             throw UnsupportedOperationException("not implemented")
         }
-
     })
+}
+
+fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): InterpreterValue {
+    var expression = initialise(expressionNode)
+
+    while (true) {
+        when (expression) {
+            is Expression.Incomplete ->
+                expression = expression.expression.evaluate(context)
+            is Expression.Value ->
+                return expression.value
+        }
+    }
 }
