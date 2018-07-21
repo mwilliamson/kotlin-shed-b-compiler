@@ -87,7 +87,7 @@ private fun call(
             context.writeStdout((positionalArguments[0] as StringValue).value)
             UnitValue
         }
-        is FunctionValue -> PartiallyEvaluatedFunction(
+        is FunctionValue -> Block(
             body = receiver.body
         )
         else -> throw NotImplementedError()
@@ -124,7 +124,7 @@ internal data class SymbolValue(val name: String): InterpreterValue()
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
 internal data class FunctionValue(val body: List<Statement>): InterpreterValue()
 
-internal data class PartiallyEvaluatedFunction(val body: List<Statement>): IncompleteExpression() {
+internal data class Block(val body: List<Statement>): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
         if (body.isEmpty()) {
             return UnitValue
@@ -134,12 +134,12 @@ internal data class PartiallyEvaluatedFunction(val body: List<Statement>): Incom
                 if (statement.isReturn) {
                     return statement.expression
                 } else {
-                    return PartiallyEvaluatedFunction(
+                    return Block(
                         body.drop(1)
                     )
                 }
             } else {
-                return PartiallyEvaluatedFunction(
+                return Block(
                     listOf(statement.execute(context)) + body.drop(1)
                 )
             }

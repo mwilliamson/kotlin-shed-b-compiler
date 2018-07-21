@@ -182,7 +182,7 @@ class InterpreterTests {
             )
         )
         val expression = Call(function, listOf()).evaluate(context)
-        assertThat(expression, cast(equalTo(PartiallyEvaluatedFunction(
+        assertThat(expression, cast(equalTo(Block(
             body = listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
             )
@@ -216,7 +216,7 @@ class InterpreterTests {
     @Test
     fun whenPartiallyEvaluatedFunctionHasNoStatementsThenValueIsUnit() {
         val context = createContext()
-        val expression = PartiallyEvaluatedFunction(
+        val expression = Block(
             body = listOf()
         ).evaluate(context)
         assertThat(expression, cast(equalTo(UnitValue)))
@@ -229,13 +229,13 @@ class InterpreterTests {
                 "x" to IntegerValue(42)
             )
         )
-        val expression = PartiallyEvaluatedFunction(
+        val expression = Block(
             body = listOf(
                 ExpressionStatement(expression = VariableReference("x"), isReturn = false),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
             )
         ).evaluate(context)
-        assertThat(expression, cast(equalTo(PartiallyEvaluatedFunction(
+        assertThat(expression, cast(equalTo(Block(
             body = listOf(
                 ExpressionStatement(IntegerValue(42), isReturn = false),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
@@ -246,13 +246,13 @@ class InterpreterTests {
     @Test
     fun whenPartiallyEvaluatedFunctionHasNonReturningExpressionStatementWithValueThenStatementIsDropped() {
         val context = createContext()
-        val expression = PartiallyEvaluatedFunction(
+        val expression = Block(
             body = listOf(
                 ExpressionStatement(IntegerValue(42), isReturn = false),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
             )
         ).evaluate(context)
-        assertThat(expression, cast(equalTo(PartiallyEvaluatedFunction(
+        assertThat(expression, cast(equalTo(Block(
             body = listOf(
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
             )
@@ -262,7 +262,7 @@ class InterpreterTests {
     @Test
     fun whenPartiallyEvaluatedFunctionHasReturningExpressionStatementWithValueThenValueIsExpressionStatementValue() {
         val context = createContext()
-        val expression = PartiallyEvaluatedFunction(
+        val expression = Block(
             body = listOf(
                 ExpressionStatement(IntegerValue(42), isReturn = true),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
