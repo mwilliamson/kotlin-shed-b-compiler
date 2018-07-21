@@ -89,7 +89,10 @@ internal fun loadExpression(expression: ExpressionNode): Expression {
         }
 
         override fun visit(node: CallNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return Call(
+                receiver = loadExpression(node.receiver),
+                positionalArguments = node.positionalArguments.map(::loadExpression)
+            )
         }
 
         override fun visit(node: PartialCallNode): Expression {
@@ -105,7 +108,15 @@ internal fun loadExpression(expression: ExpressionNode): Expression {
         }
 
         override fun visit(node: IfNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return If(
+                conditionalBranches = node.conditionalBranches.map { branch ->
+                    ConditionalBranch(
+                        condition = loadExpression(branch.condition),
+                        body = branch.body.map(::loadStatement)
+                    )
+                },
+                elseBranch = node.elseBranch.map(::loadStatement)
+            )
         }
 
         override fun visit(node: WhenNode): Expression {

@@ -64,7 +64,7 @@ internal data class BinaryOperation(
 
 internal data class Call(
     val receiver: Expression,
-    val positionalArguments: List<InterpreterValue>
+    val positionalArguments: List<Expression>
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
         return when (receiver) {
@@ -72,7 +72,7 @@ internal data class Call(
                 receiver.evaluate(context),
                 positionalArguments
             )
-            is InterpreterValue -> call(receiver, positionalArguments, context)
+            is InterpreterValue -> call(receiver, positionalArguments as List<InterpreterValue>, context)
         }
     }
 }
@@ -146,6 +146,21 @@ internal data class Block(val body: List<Statement>): IncompleteExpression() {
         }
     }
 }
+
+internal data class If(
+    val conditionalBranches: List<ConditionalBranch>,
+    val elseBranch: List<Statement>
+): IncompleteExpression() {
+    override fun evaluate(context: InterpreterContext): Expression {
+        throw UnsupportedOperationException("not implemented")
+    }
+
+}
+
+internal data class ConditionalBranch(
+    val condition: Expression,
+    val body: List<Statement>
+)
 
 internal interface Statement {
     fun execute(context: InterpreterContext): Statement
