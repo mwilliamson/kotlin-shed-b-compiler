@@ -10,27 +10,6 @@ function list() {
     return Array.prototype.slice.call(arguments);
 }
 
-function all(list) {
-    for (var index = 0; index < list.length; index++) {
-        if (!list[index]) {
-            return false;
-        }
-    }
-    return true;
-}
-
-function map(func, list) {
-    return list.map(func);
-}
-
-function forEach(func, list) {
-    return list.forEach(func);
-}
-
-function reduce(func, initial, list) {
-    return list.reduce(func, initial);
-}
-
 function declareShape(name, constantFields) {
     const typeId = freshTypeId();
 
@@ -75,11 +54,7 @@ module.exports = {
     isType: isType,
     symbolFactory: symbolFactory,
 
-    all: all,
-    forEach: forEach,
     intToString: intToString,
     list: list,
-    map: map,
     print: print,
-    reduce: reduce,
 };

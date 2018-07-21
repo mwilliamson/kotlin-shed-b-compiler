@@ -84,10 +84,7 @@ private fun compileModule(module: Module.Shed): PythonModule {
             int_to_string,
             list,
             print,
-            for_each,
-            map,
             partial as _partial,
-            reduce,
             symbol_factory as _symbol_factory,
         )
 

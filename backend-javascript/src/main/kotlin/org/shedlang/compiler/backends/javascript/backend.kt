@@ -124,11 +124,7 @@ private fun builtinModule(): JavascriptModule {
 }
 
 val builtinNames = listOf(
-    "all",
-    "forEach",
     "intToString",
     "list",
-    "map",
-    "print",
-    "reduce"
+    "print"
 );
