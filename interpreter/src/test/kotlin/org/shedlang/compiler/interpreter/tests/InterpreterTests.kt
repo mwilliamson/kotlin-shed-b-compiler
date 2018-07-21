@@ -214,7 +214,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun whenPartiallyEvaluatedFunctionHasNoStatementsThenValueIsUnit() {
+    fun whenBlockHasNoStatementsThenValueIsUnit() {
         val context = createContext()
         val expression = Block(
             body = listOf()
@@ -223,7 +223,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun whenPartiallyEvaluatedFunctionHasStatementThenStatementIsEvaluated() {
+    fun whenBlockHasStatementThenStatementIsEvaluated() {
         val context = createContext(
             variables = mapOf(
                 "x" to IntegerValue(42)
@@ -244,7 +244,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun whenPartiallyEvaluatedFunctionHasNonReturningExpressionStatementWithValueThenStatementIsDropped() {
+    fun whenBlockHasNonReturningExpressionStatementWithValueThenStatementIsDropped() {
         val context = createContext()
         val expression = Block(
             body = listOf(
@@ -260,7 +260,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun whenPartiallyEvaluatedFunctionHasReturningExpressionStatementWithValueThenValueIsExpressionStatementValue() {
+    fun whenBlockHasReturningExpressionStatementWithValueThenValueIsExpressionStatementValue() {
         val context = createContext()
         val expression = Block(
             body = listOf(
