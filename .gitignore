@@ -8,4 +8,5 @@
 /cli/target
 /core/target
 /frontend/target
+/interpreter/target
 /testing/target

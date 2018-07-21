@@ -16,6 +16,7 @@
         <module>cli</module>
         <module>core</module>
         <module>frontend</module>
+        <module>interpreter</module>
         <module>testing</module>
     </modules>
 
