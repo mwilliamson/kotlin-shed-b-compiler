@@ -41,6 +41,10 @@ data class BinaryOperation(
                         IntegerValue(left.value - right.value)
                     } else if (operator == Operator.MULTIPLY && left is IntegerValue && right is IntegerValue) {
                         IntegerValue(left.value * right.value)
+                    } else if (operator == Operator.EQUALS && left is StringValue && right is StringValue) {
+                        BooleanValue(left.value == right.value)
+                    } else if (operator == Operator.ADD && left is StringValue && right is StringValue) {
+                        StringValue(left.value + right.value)
                     } else {
                         throw NotImplementedError()
                     }

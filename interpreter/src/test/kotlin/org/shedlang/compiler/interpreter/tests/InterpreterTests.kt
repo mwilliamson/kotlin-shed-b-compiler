@@ -82,6 +82,22 @@ class InterpreterTests {
     }
 
     @Test
+    fun equalityOfStrings() {
+        val equalValue = evaluate(binaryOperation(Operator.EQUALS, literalString("a"), literalString("a")))
+        assertThat(equalValue, cast(equalTo(BooleanValue(true))))
+
+
+        val notEqualValue = evaluate(binaryOperation(Operator.EQUALS, literalString("a"), literalString("b")))
+        assertThat(notEqualValue, cast(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun additionOfStringsEvaluatesToConcatenation() {
+        val value = evaluate(binaryOperation(Operator.ADD, literalString("hello "), literalString("world")))
+        assertThat(value, cast(equalTo(StringValue("hello world"))))
+    }
+
+    @Test
     fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
         val context = createContext(
             variables = mapOf(
