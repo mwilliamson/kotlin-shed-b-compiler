@@ -2,22 +2,15 @@ package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ast.*
 
-sealed class Expression {
-    data class Incomplete(val expression: IncompleteExpression): Expression() {
-        fun evaluate(context: InterpreterContext): Expression {
-            return expression.evaluate(context)
-        }
-    }
-    data class Value(val value: InterpreterValue): Expression()
+sealed class Expression
+
+abstract class IncompleteExpression: Expression() {
+    abstract fun evaluate(context: InterpreterContext): Expression
 }
 
-interface IncompleteExpression {
-    fun evaluate(context: InterpreterContext): Expression
-}
-
-data class VariableReference(val name: String): IncompleteExpression {
+data class VariableReference(val name: String): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
-        return Expression.Value(context.value(name))
+        return context.value(name)
     }
 }
 
@@ -25,23 +18,23 @@ data class BinaryOperation(
     val operator: Operator,
     val left: Expression,
     val right: Expression
-): IncompleteExpression {
+): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
         return when (left) {
-            is Expression.Incomplete -> Expression.Incomplete(BinaryOperation(
+            is IncompleteExpression -> BinaryOperation(
                 operator,
                 left.evaluate(context),
                 right
-            ))
-            is Expression.Value -> when (right) {
-                is Expression.Incomplete -> Expression.Incomplete(BinaryOperation(
+            )
+            is InterpreterValue -> when (right) {
+                is IncompleteExpression -> BinaryOperation(
                     operator,
                     left,
                     right.evaluate(context)
-                ))
-                is Expression.Value ->
-                    if (left.value is IntegerValue && right.value is IntegerValue) {
-                        Expression.Value(IntegerValue(left.value.value + right.value.value))
+                )
+                is InterpreterValue ->
+                    if (left is IntegerValue && right is IntegerValue) {
+                        IntegerValue(left.value + right.value)
                     } else {
                         throw NotImplementedError()
                     }
@@ -50,13 +43,13 @@ data class BinaryOperation(
     }
 }
 
-interface InterpreterValue
-object UnitValue: InterpreterValue
-data class BooleanValue(val value: Boolean): InterpreterValue
-data class IntegerValue(val value: Int): InterpreterValue
-data class StringValue(val value: String): InterpreterValue
-data class CharacterValue(val value: Int): InterpreterValue
-data class SymbolValue(val name: String): InterpreterValue
+abstract class InterpreterValue: Expression()
+object UnitValue: InterpreterValue()
+data class BooleanValue(val value: Boolean): InterpreterValue()
+data class IntegerValue(val value: Int): InterpreterValue()
+data class StringValue(val value: String): InterpreterValue()
+data class CharacterValue(val value: Int): InterpreterValue()
+data class SymbolValue(val name: String): InterpreterValue()
 
 class InterpreterContext(private val variables: Map<String, InterpreterValue>) {
     fun value(name: String): InterpreterValue {
@@ -66,16 +59,16 @@ class InterpreterContext(private val variables: Map<String, InterpreterValue>) {
 
 fun initialise(expression: ExpressionNode): Expression {
     return expression.accept(object : ExpressionNode.Visitor<Expression> {
-        override fun visit(node: UnitLiteralNode) = Expression.Value(UnitValue)
-        override fun visit(node: BooleanLiteralNode) = Expression.Value(BooleanValue(node.value))
-        override fun visit(node: IntegerLiteralNode) = Expression.Value(IntegerValue(node.value))
-        override fun visit(node: StringLiteralNode) = Expression.Value(StringValue(node.value))
-        override fun visit(node: CharacterLiteralNode) = Expression.Value(CharacterValue(node.value))
-        override fun visit(node: SymbolNode) = Expression.Value(SymbolValue(node.name))
-        override fun visit(node: VariableReferenceNode) = Expression.Incomplete(VariableReference(node.name.value))
+        override fun visit(node: UnitLiteralNode) = UnitValue
+        override fun visit(node: BooleanLiteralNode) = BooleanValue(node.value)
+        override fun visit(node: IntegerLiteralNode) = IntegerValue(node.value)
+        override fun visit(node: StringLiteralNode) = StringValue(node.value)
+        override fun visit(node: CharacterLiteralNode) = CharacterValue(node.value)
+        override fun visit(node: SymbolNode) = SymbolValue(node.name)
+        override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)
 
         override fun visit(node: BinaryOperationNode): Expression
-            = Expression.Incomplete(BinaryOperation(node.operator, initialise(node.left), initialise(node.right)))
+            = BinaryOperation(node.operator, initialise(node.left), initialise(node.right))
 
         override fun visit(node: IsNode): Expression {
             throw UnsupportedOperationException("not implemented")
@@ -112,10 +105,10 @@ fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): Inter
 
     while (true) {
         when (expression) {
-            is Expression.Incomplete ->
-                expression = expression.expression.evaluate(context)
-            is Expression.Value ->
-                return expression.value
+            is IncompleteExpression ->
+                expression = expression.evaluate(context)
+            is InterpreterValue ->
+                return expression
         }
     }
 }

@@ -69,14 +69,14 @@ class InterpreterTests {
         )
         val expression = BinaryOperation(
             Operator.ADD,
-            Expression.Incomplete(VariableReference("x")),
-            Expression.Incomplete(VariableReference("y"))
+            VariableReference("x"),
+            VariableReference("y")
         ).evaluate(context)
-        assertThat(expression, cast(equalTo(Expression.Incomplete(BinaryOperation(
+        assertThat(expression, cast(equalTo(BinaryOperation(
             Operator.ADD,
-            Expression.Value(IntegerValue(1)),
-            Expression.Incomplete(VariableReference("y"))
-        )))))
+            IntegerValue(1),
+            VariableReference("y")
+        ))))
     }
 
     @Test
@@ -88,14 +88,14 @@ class InterpreterTests {
         )
         val expression = BinaryOperation(
             Operator.ADD,
-            Expression.Value(IntegerValue(1)),
-            Expression.Incomplete(VariableReference("y"))
+            IntegerValue(1),
+            VariableReference("y")
         ).evaluate(context)
-        assertThat(expression, cast(equalTo(Expression.Incomplete(BinaryOperation(
+        assertThat(expression, cast(equalTo(BinaryOperation(
             Operator.ADD,
-            Expression.Value(IntegerValue(1)),
-            Expression.Value(IntegerValue(2))
-        )))))
+            IntegerValue(1),
+            IntegerValue(2)
+        ))))
     }
 
     private fun evaluate(expression: ExpressionNode): InterpreterValue {
