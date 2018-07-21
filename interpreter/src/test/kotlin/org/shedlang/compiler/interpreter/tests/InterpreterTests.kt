@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 
@@ -50,6 +51,18 @@ class InterpreterTests {
         )
         val value = evaluate(variableReference("x"), context)
         assertThat(value, cast(equalTo(IntegerValue(42))))
+    }
+
+    @Test
+    fun additionOfIntegersEvaluatesToTotalValue() {
+        val context = createContext(
+            variables = mapOf(
+                "x" to IntegerValue(42),
+                "y" to IntegerValue(47)
+            )
+        )
+        val value = evaluate(binaryOperation(Operator.ADD, literalInt(1), literalInt(2)), context)
+        assertThat(value, cast(equalTo(IntegerValue(3))))
     }
 
     private fun evaluate(expression: ExpressionNode): InterpreterValue {

@@ -3,7 +3,11 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.ast.*
 
 sealed class Expression {
-    class Incomplete(val expression: IncompleteExpression): Expression()
+    class Incomplete(val expression: IncompleteExpression): Expression() {
+        fun evaluate(context: InterpreterContext): Expression {
+            return expression.evaluate(context)
+        }
+    }
     class Value(val value: InterpreterValue): Expression()
 }
 
@@ -14,6 +18,35 @@ interface IncompleteExpression {
 data class VariableReference(val name: String): IncompleteExpression {
     override fun evaluate(context: InterpreterContext): Expression {
         return Expression.Value(context.value(name))
+    }
+}
+
+data class BinaryOperation(
+    val operator: Operator,
+    val left: Expression,
+    val right: Expression
+): IncompleteExpression {
+    override fun evaluate(context: InterpreterContext): Expression {
+        return when (left) {
+            is Expression.Incomplete -> Expression.Incomplete(BinaryOperation(
+                operator,
+                left.evaluate(context),
+                right
+            ))
+            is Expression.Value -> when (right) {
+                is Expression.Incomplete -> Expression.Incomplete(BinaryOperation(
+                    operator,
+                    left,
+                    right.evaluate(context)
+                ))
+                is Expression.Value ->
+                    if (left.value is IntegerValue && right.value is IntegerValue) {
+                        Expression.Value(IntegerValue(left.value.value + right.value.value))
+                    } else {
+                        throw NotImplementedError()
+                    }
+            }
+        }
     }
 }
 
@@ -41,9 +74,8 @@ fun initialise(expression: ExpressionNode): Expression {
         override fun visit(node: SymbolNode) = Expression.Value(SymbolValue(node.name))
         override fun visit(node: VariableReferenceNode) = Expression.Incomplete(VariableReference(node.name.value))
 
-        override fun visit(node: BinaryOperationNode): Expression {
-            throw UnsupportedOperationException("not implemented")
-        }
+        override fun visit(node: BinaryOperationNode): Expression
+            = Expression.Incomplete(BinaryOperation(node.operator, initialise(node.left), initialise(node.right)))
 
         override fun visit(node: IsNode): Expression {
             throw UnsupportedOperationException("not implemented")
