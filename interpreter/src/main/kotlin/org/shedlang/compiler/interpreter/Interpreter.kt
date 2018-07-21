@@ -5,25 +5,25 @@ import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
 
-sealed class Expression
+internal sealed class Expression
 
-abstract class IncompleteExpression: Expression() {
+internal abstract class IncompleteExpression: Expression() {
     abstract fun evaluate(context: InterpreterContext): Expression
 }
 
-data class ModuleReference(val name: List<Identifier>): IncompleteExpression() {
+internal data class ModuleReference(val name: List<Identifier>): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
         return context.module(name)
     }
 }
 
-data class VariableReference(val name: String): IncompleteExpression() {
+internal data class VariableReference(val name: String): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
         return context.value(name)
     }
 }
 
-data class BinaryOperation(
+internal data class BinaryOperation(
     val operator: Operator,
     val left: Expression,
     val right: Expression
@@ -62,7 +62,7 @@ data class BinaryOperation(
     }
 }
 
-data class Call(
+internal data class Call(
     val receiver: Expression,
     val positionalArguments: List<InterpreterValue>
 ): IncompleteExpression() {
@@ -94,7 +94,7 @@ private fun call(
     }
 }
 
-data class FieldAccess(
+internal data class FieldAccess(
     val receiver: Expression,
     val fieldName: Identifier
 ): IncompleteExpression() {
@@ -113,18 +113,18 @@ data class FieldAccess(
     }
 }
 
-abstract class InterpreterValue: Expression()
-object UnitValue: InterpreterValue()
-data class BooleanValue(val value: Boolean): InterpreterValue()
-data class IntegerValue(val value: Int): InterpreterValue()
-data class StringValue(val value: String): InterpreterValue()
-data class CharacterValue(val value: Int): InterpreterValue()
-data class SymbolValue(val name: String): InterpreterValue()
+internal abstract class InterpreterValue: Expression()
+internal object UnitValue: InterpreterValue()
+internal data class BooleanValue(val value: Boolean): InterpreterValue()
+internal data class IntegerValue(val value: Int): InterpreterValue()
+internal data class StringValue(val value: String): InterpreterValue()
+internal data class CharacterValue(val value: Int): InterpreterValue()
+internal data class SymbolValue(val name: String): InterpreterValue()
 
-data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
-data class FunctionValue(val body: List<Statement>): InterpreterValue()
+internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
+internal data class FunctionValue(val body: List<Statement>): InterpreterValue()
 
-data class PartiallyEvaluatedFunction(val body: List<Statement>): IncompleteExpression() {
+internal data class PartiallyEvaluatedFunction(val body: List<Statement>): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): Expression {
         if (body.isEmpty()) {
             return UnitValue
@@ -147,11 +147,11 @@ data class PartiallyEvaluatedFunction(val body: List<Statement>): IncompleteExpr
     }
 }
 
-interface Statement {
+internal interface Statement {
     fun execute(context: InterpreterContext): Statement
 }
 
-data class ExpressionStatement(val expression: Expression, val isReturn: Boolean): Statement {
+internal data class ExpressionStatement(val expression: Expression, val isReturn: Boolean): Statement {
     override fun execute(context: InterpreterContext): Statement {
         if (expression is IncompleteExpression) {
             return ExpressionStatement(expression.evaluate(context), isReturn)
@@ -161,9 +161,9 @@ data class ExpressionStatement(val expression: Expression, val isReturn: Boolean
     }
 }
 
-object PrintValue: InterpreterValue()
+internal object PrintValue: InterpreterValue()
 
-class InterpreterContext(
+internal class InterpreterContext(
     private val variables: Map<String, InterpreterValue>,
     private val modules: Map<List<Identifier>, ModuleValue>
 ) {
@@ -185,7 +185,7 @@ class InterpreterContext(
     }
 }
 
-fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): EvaluationResult {
+internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): EvaluationResult {
     val loadedModules = loadModuleSet(modules)
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
@@ -201,13 +201,13 @@ fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): EvaluationResult
     return EvaluationResult(exitCode = exitCode, stdout = context.stdout)
 }
 
-data class EvaluationResult(val exitCode: Int, val stdout: String)
+internal data class EvaluationResult(val exitCode: Int, val stdout: String)
 
-fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): InterpreterValue {
+internal fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): InterpreterValue {
     return evaluate(loadExpression(expressionNode), context)
 }
 
-fun evaluate(initialExpression: Expression, context: InterpreterContext): InterpreterValue {
+internal fun evaluate(initialExpression: Expression, context: InterpreterContext): InterpreterValue {
     var expression = initialExpression
     while (true) {
         when (expression) {
