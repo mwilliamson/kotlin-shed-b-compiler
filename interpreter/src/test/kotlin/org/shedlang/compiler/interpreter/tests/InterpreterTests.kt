@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
@@ -51,6 +52,18 @@ class InterpreterTests {
         )
         val value = evaluate(variableReference("x"), context)
         assertThat(value, cast(equalTo(IntegerValue(42))))
+    }
+
+    @Test
+    fun moduleReferenceEvaluatesToModuleValue() {
+        val module = ModuleValue(fields = mapOf())
+        val context = createContext(
+            modules = mapOf(
+                listOf(Identifier("X")) to module
+            )
+        )
+        val value = evaluate(ModuleReference(listOf(Identifier("X"))), context)
+        assertThat(value, cast(equalTo(module)))
     }
 
     @Test
@@ -136,11 +149,139 @@ class InterpreterTests {
         ))))
     }
 
+    @Test
+    fun callReceiverIsEvaluatedFirst() {
+        val context = createContext(
+            variables = mapOf(
+                "x" to IntegerValue(1)
+            )
+        )
+        val expression = Call(VariableReference("x"), listOf()).evaluate(context)
+        assertThat(expression, cast(equalTo(Call(
+            IntegerValue(1),
+            listOf()
+        ))))
+    }
+
+    @Test
+    fun callingPrintUpdatesStdout() {
+        val context = createContext()
+        Call(
+            PrintValue,
+            listOf(StringValue("hello"))
+        ).evaluate(context)
+        assertThat(context.stdout, equalTo("hello"))
+    }
+
+    @Test
+    fun whenReceiverIsFunctionThenCallIsEvaluatedToPartiallyEvaluatedFunction() {
+        val context = createContext()
+        val function = FunctionValue(
+            body = listOf(
+                ExpressionStatement(IntegerValue(1), isReturn = false)
+            )
+        )
+        val expression = Call(function, listOf()).evaluate(context)
+        assertThat(expression, cast(equalTo(PartiallyEvaluatedFunction(
+            body = listOf(
+                ExpressionStatement(IntegerValue(1), isReturn = false)
+            )
+        ))))
+    }
+
+    @Test
+    fun fieldAccessReceiverIsEvaluatedFirst() {
+        val context = createContext(
+            variables = mapOf(
+                "x" to IntegerValue(1)
+            )
+        )
+        val expression = FieldAccess(VariableReference("x"), Identifier("y")).evaluate(context)
+        assertThat(expression, cast(equalTo(FieldAccess(
+            IntegerValue(1),
+            Identifier("y")
+        ))))
+    }
+
+    @Test
+    fun whenReceiverIsModuleThenFieldAccessIsEvaluatedToModuleFieldValue() {
+        val context = createContext()
+        val module = ModuleValue(
+            fields = mapOf(Identifier("x") to IntegerValue(42))
+        )
+        val expression = FieldAccess(module, Identifier("x")).evaluate(context)
+        assertThat(expression, cast(equalTo(IntegerValue(42))))
+    }
+
+    @Test
+    fun whenPartiallyEvaluatedFunctionHasNoStatementsThenValueIsUnit() {
+        val context = createContext()
+        val expression = PartiallyEvaluatedFunction(
+            body = listOf()
+        ).evaluate(context)
+        assertThat(expression, cast(equalTo(UnitValue)))
+    }
+
+    @Test
+    fun whenPartiallyEvaluatedFunctionHasStatementThenStatementIsEvaluated() {
+        val context = createContext(
+            variables = mapOf(
+                "x" to IntegerValue(42)
+            )
+        )
+        val expression = PartiallyEvaluatedFunction(
+            body = listOf(
+                ExpressionStatement(expression = VariableReference("x"), isReturn = false),
+                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+            )
+        ).evaluate(context)
+        assertThat(expression, cast(equalTo(PartiallyEvaluatedFunction(
+            body = listOf(
+                ExpressionStatement(IntegerValue(42), isReturn = false),
+                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+            )
+        ))))
+    }
+
+    @Test
+    fun whenPartiallyEvaluatedFunctionHasNonReturningExpressionStatementWithValueThenStatementIsDropped() {
+        val context = createContext()
+        val expression = PartiallyEvaluatedFunction(
+            body = listOf(
+                ExpressionStatement(IntegerValue(42), isReturn = false),
+                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+            )
+        ).evaluate(context)
+        assertThat(expression, cast(equalTo(PartiallyEvaluatedFunction(
+            body = listOf(
+                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+            )
+        ))))
+    }
+
+    @Test
+    fun whenPartiallyEvaluatedFunctionHasReturningExpressionStatementWithValueThenValueIsExpressionStatementValue() {
+        val context = createContext()
+        val expression = PartiallyEvaluatedFunction(
+            body = listOf(
+                ExpressionStatement(IntegerValue(42), isReturn = true),
+                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+            )
+        ).evaluate(context)
+        assertThat(expression, cast(equalTo(IntegerValue(42))))
+    }
+
     private fun evaluate(expression: ExpressionNode): InterpreterValue {
         return evaluate(expression, createContext())
     }
 
-    private fun createContext(variables: Map<String, InterpreterValue> = mapOf()): InterpreterContext {
-        return InterpreterContext(variables)
+    private fun createContext(
+        variables: Map<String, InterpreterValue> = mapOf(),
+        modules: Map<List<Identifier>, ModuleValue> = mapOf()
+    ): InterpreterContext {
+        return InterpreterContext(
+            variables = variables,
+            modules = modules
+        )
     }
 }
