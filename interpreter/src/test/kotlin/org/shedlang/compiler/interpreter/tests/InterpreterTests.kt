@@ -55,14 +55,47 @@ class InterpreterTests {
 
     @Test
     fun additionOfIntegersEvaluatesToTotalValue() {
+        val value = evaluate(binaryOperation(Operator.ADD, literalInt(1), literalInt(2)))
+        assertThat(value, cast(equalTo(IntegerValue(3))))
+    }
+
+    @Test
+    fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
         val context = createContext(
             variables = mapOf(
-                "x" to IntegerValue(42),
-                "y" to IntegerValue(47)
+                "x" to IntegerValue(1),
+                "y" to IntegerValue(2)
             )
         )
-        val value = evaluate(binaryOperation(Operator.ADD, literalInt(1), literalInt(2)), context)
-        assertThat(value, cast(equalTo(IntegerValue(3))))
+        val expression = BinaryOperation(
+            Operator.ADD,
+            Expression.Incomplete(VariableReference("x")),
+            Expression.Incomplete(VariableReference("y"))
+        ).evaluate(context)
+        assertThat(expression, cast(equalTo(Expression.Incomplete(BinaryOperation(
+            Operator.ADD,
+            Expression.Value(IntegerValue(1)),
+            Expression.Incomplete(VariableReference("y"))
+        )))))
+    }
+
+    @Test
+    fun binaryOperationRightOperandIsEvaluatedWhenLeftOperandIsValue() {
+        val context = createContext(
+            variables = mapOf(
+                "y" to IntegerValue(2)
+            )
+        )
+        val expression = BinaryOperation(
+            Operator.ADD,
+            Expression.Value(IntegerValue(1)),
+            Expression.Incomplete(VariableReference("y"))
+        ).evaluate(context)
+        assertThat(expression, cast(equalTo(Expression.Incomplete(BinaryOperation(
+            Operator.ADD,
+            Expression.Value(IntegerValue(1)),
+            Expression.Value(IntegerValue(2))
+        )))))
     }
 
     private fun evaluate(expression: ExpressionNode): InterpreterValue {

@@ -3,12 +3,12 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.ast.*
 
 sealed class Expression {
-    class Incomplete(val expression: IncompleteExpression): Expression() {
+    data class Incomplete(val expression: IncompleteExpression): Expression() {
         fun evaluate(context: InterpreterContext): Expression {
             return expression.evaluate(context)
         }
     }
-    class Value(val value: InterpreterValue): Expression()
+    data class Value(val value: InterpreterValue): Expression()
 }
 
 interface IncompleteExpression {
