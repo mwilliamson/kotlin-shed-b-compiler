@@ -339,7 +339,7 @@ internal val builtinStackFrame = ScopeFrame(mapOf(
     "print" to PrintValue
 ))
 
-internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvaluationResult {
+internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvaluationResult {
     val loadedModules = loadModuleSet(modules)
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
@@ -351,7 +351,7 @@ internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleE
         moduleExpressions = loadedModules,
         moduleValues = mapOf()
     )
-    val result = evaluate(call, context)
+    val result = fullyEvaluate(call, context)
     val exitCode = when (result.value) {
         is IntegerValue -> result.value.value
         is UnitValue -> 0
@@ -362,11 +362,11 @@ internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleE
 
 internal data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
 
-internal fun evaluate(expressionNode: ExpressionNode, context: InterpreterContext): EvaluationResult<InterpreterValue> {
-    return evaluate(loadExpression(expressionNode), context)
+internal fun fullyEvaluate(expressionNode: ExpressionNode, context: InterpreterContext): EvaluationResult<InterpreterValue> {
+    return fullyEvaluate(loadExpression(expressionNode), context)
 }
 
-internal fun evaluate(initialExpression: Expression, initialContext: InterpreterContext): EvaluationResult.Value<InterpreterValue> {
+internal fun fullyEvaluate(initialExpression: Expression, initialContext: InterpreterContext): EvaluationResult.Value<InterpreterValue> {
     var expression = initialExpression
     var context = initialContext
     val stdout = StringBuilder()

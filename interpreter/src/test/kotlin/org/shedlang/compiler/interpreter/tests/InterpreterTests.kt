@@ -15,33 +15,33 @@ import org.shedlang.compiler.tests.*
 class InterpreterTests {
     @Test
     fun unitNodeEvaluatesToUnitValue() {
-        assertThat(evaluate(literalUnit()), isPureResult(equalTo(UnitValue)))
+        assertThat(fullyEvaluate(literalUnit()), isPureResult(equalTo(UnitValue)))
     }
 
     @Test
     fun booleanNodeEvaluatesToBooleanValue() {
-        assertThat(evaluate(literalBool(true)), isPureResult(equalTo(BooleanValue(true))))
-        assertThat(evaluate(literalBool(false)), isPureResult(equalTo(BooleanValue(false))))
+        assertThat(fullyEvaluate(literalBool(true)), isPureResult(equalTo(BooleanValue(true))))
+        assertThat(fullyEvaluate(literalBool(false)), isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun integerNodeEvaluatesToIntegerValue() {
-        assertThat(evaluate(literalInt(42)), isPureResult(equalTo(IntegerValue(42))))
+        assertThat(fullyEvaluate(literalInt(42)), isPureResult(equalTo(IntegerValue(42))))
     }
 
     @Test
     fun stringNodeEvaluatesToStringValue() {
-        assertThat(evaluate(literalString("hello")), isPureResult(equalTo(StringValue("hello"))))
+        assertThat(fullyEvaluate(literalString("hello")), isPureResult(equalTo(StringValue("hello"))))
     }
 
     @Test
     fun characterNodeEvaluatesToCharacterValue() {
-        assertThat(evaluate(literalChar('!')), isPureResult(equalTo(CharacterValue('!'.toInt()))))
+        assertThat(fullyEvaluate(literalChar('!')), isPureResult(equalTo(CharacterValue('!'.toInt()))))
     }
 
     @Test
     fun symbolNodeEvaluatesToSymbolValue() {
-        assertThat(evaluate(symbolName("@cons")), isPureResult(equalTo(SymbolValue("@cons"))))
+        assertThat(fullyEvaluate(symbolName("@cons")), isPureResult(equalTo(SymbolValue("@cons"))))
     }
 
     @Test
@@ -52,7 +52,7 @@ class InterpreterTests {
                 "y" to IntegerValue(47)
             ))
         )
-        val value = evaluate(variableReference("x"), context)
+        val value = fullyEvaluate(variableReference("x"), context)
         assertThat(value, isPureResult(equalTo(IntegerValue(42))))
     }
 
@@ -68,7 +68,7 @@ class InterpreterTests {
                 ))
             ))
         )
-        val value = evaluate(variableReference("x"), context)
+        val value = fullyEvaluate(variableReference("x"), context)
         assertThat(value, isPureResult(equalTo(IntegerValue(47))))
     }
 
@@ -99,45 +99,45 @@ class InterpreterTests {
 
     @Test
     fun equalityOfIntegers() {
-        val equalValue = evaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(42)))
+        val equalValue = fullyEvaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(42)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
 
-        val notEqualValue = evaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(47)))
+        val notEqualValue = fullyEvaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(47)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun additionOfIntegersEvaluatesToTotalValue() {
-        val value = evaluate(binaryOperation(Operator.ADD, literalInt(1), literalInt(2)))
+        val value = fullyEvaluate(binaryOperation(Operator.ADD, literalInt(1), literalInt(2)))
         assertThat(value, isPureResult(equalTo(IntegerValue(3))))
     }
 
     @Test
     fun subtractionOfIntegersEvaluatesToDifference() {
-        val value = evaluate(binaryOperation(Operator.SUBTRACT, literalInt(1), literalInt(2)))
+        val value = fullyEvaluate(binaryOperation(Operator.SUBTRACT, literalInt(1), literalInt(2)))
         assertThat(value, isPureResult(equalTo(IntegerValue(-1))))
     }
 
     @Test
     fun multiplicationOfIntegersEvaluatesToDifference() {
-        val value = evaluate(binaryOperation(Operator.MULTIPLY, literalInt(2), literalInt(3)))
+        val value = fullyEvaluate(binaryOperation(Operator.MULTIPLY, literalInt(2), literalInt(3)))
         assertThat(value, isPureResult(equalTo(IntegerValue(6))))
     }
 
     @Test
     fun equalityOfStrings() {
-        val equalValue = evaluate(binaryOperation(Operator.EQUALS, literalString("a"), literalString("a")))
+        val equalValue = fullyEvaluate(binaryOperation(Operator.EQUALS, literalString("a"), literalString("a")))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
 
-        val notEqualValue = evaluate(binaryOperation(Operator.EQUALS, literalString("a"), literalString("b")))
+        val notEqualValue = fullyEvaluate(binaryOperation(Operator.EQUALS, literalString("a"), literalString("b")))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun additionOfStringsEvaluatesToConcatenation() {
-        val value = evaluate(binaryOperation(Operator.ADD, literalString("hello "), literalString("world")))
+        val value = fullyEvaluate(binaryOperation(Operator.ADD, literalString("hello "), literalString("world")))
         assertThat(value, isPureResult(equalTo(StringValue("hello world"))))
     }
 
@@ -483,8 +483,8 @@ class InterpreterTests {
         assertThat(expression, isPureResult(equalTo(IntegerValue(42))))
     }
 
-    private fun evaluate(expression: ExpressionNode): EvaluationResult<InterpreterValue> {
-        return evaluate(expression, createContext())
+    private fun fullyEvaluate(expression: ExpressionNode): EvaluationResult<InterpreterValue> {
+        return fullyEvaluate(expression, createContext())
     }
 
     private fun createContext(
