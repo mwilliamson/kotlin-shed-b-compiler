@@ -76,12 +76,25 @@ class InterpreterTests {
     fun moduleReferenceEvaluatesToModuleValue() {
         val module = ModuleValue(fields = mapOf())
         val context = createContext(
-            modules = mapOf(
+            moduleValues = mapOf(
                 listOf(Identifier("X")) to module
             )
         )
-        val value = evaluate(ModuleReference(listOf(Identifier("X"))), context)
+        val value = ModuleReference(listOf(Identifier("X"))).evaluate(context)
         assertThat(value, isPureResult(equalTo(module)))
+    }
+
+    @Test
+    fun moduleReferenceEvaluatesModuleWhenModuleIsNotValue() {
+        val module = ModuleExpression(fieldExpressions = listOf(), fieldValues = listOf())
+        val context = createContext(
+            moduleValues = mapOf(),
+            moduleExpressions = mapOf(
+                listOf(Identifier("X")) to module
+            )
+        )
+        val value = ModuleReference(listOf(Identifier("X"))).evaluate(context)
+        assertThat(value, cast(has(EvaluationResult.ModuleUpdate::moduleName, equalTo(listOf(Identifier("X"))))))
     }
 
     @Test
@@ -284,7 +297,7 @@ class InterpreterTests {
     @Test
     fun whenCallingFunctionThenBlockHasScopeFromFunction() {
         val context = createContext(
-            modules = mapOf(
+            moduleValues = mapOf(
                 listOf(Identifier("Some"), Identifier("Module")) to ModuleValue(mapOf(
                     Identifier("x") to IntegerValue(42)
                 ))
@@ -476,12 +489,13 @@ class InterpreterTests {
 
     private fun createContext(
         scope: Scope = Scope(listOf()),
-        modules: Map<List<Identifier>, ModuleValue> = mapOf()
+        moduleValues: Map<List<Identifier>, ModuleValue> = mapOf(),
+        moduleExpressions: Map<List<Identifier>, ModuleExpression> = mapOf()
     ): InterpreterContext {
         return InterpreterContext(
             scope = scope,
-            moduleValues = modules,
-            moduleExpressions = mapOf()
+            moduleValues = moduleValues,
+            moduleExpressions = moduleExpressions
         )
     }
 
