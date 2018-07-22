@@ -97,7 +97,8 @@ internal fun loadExpression(expression: ExpressionNode): Expression {
         override fun visit(node: CallNode): Expression {
             return Call(
                 receiver = loadExpression(node.receiver),
-                positionalArguments = node.positionalArguments.map(::loadExpression)
+                positionalArgumentExpressions = node.positionalArguments.map(::loadExpression),
+                positionalArgumentValues = listOf()
             )
         }
 

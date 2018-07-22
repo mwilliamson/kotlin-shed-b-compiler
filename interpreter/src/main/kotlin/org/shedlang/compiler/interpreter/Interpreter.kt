@@ -70,32 +70,37 @@ internal data class BinaryOperation(
 
 internal data class Call(
     val receiver: Expression,
-    val positionalArguments: List<Expression>
+    val positionalArgumentExpressions: List<Expression>,
+    val positionalArgumentValues: List<InterpreterValue>
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (receiver) {
             is IncompleteExpression -> receiver.evaluate(context).map { evaluatedReceiver ->
                 Call(
                     evaluatedReceiver,
-                    positionalArguments
+                    positionalArgumentExpressions,
+                    positionalArgumentValues
                 )
             }
             is InterpreterValue -> {
-                val incompletePositionalArguments = positionalArguments.map { argument ->
-                    argument as? IncompleteExpression
-                }
-                val index = incompletePositionalArguments.indexOfFirst { argument ->
-                    argument != null
-                }
-                if (index == -1) {
-                    call(receiver, positionalArguments as List<InterpreterValue>, context)
-                } else {
-                    incompletePositionalArguments[index]!!.evaluate(context).map { evaluatedArgument ->
-                        Call(
+                if (positionalArgumentExpressions.isNotEmpty()) {
+                    val argument = positionalArgumentExpressions[0]
+                    when (argument) {
+                        is IncompleteExpression -> argument.evaluate(context).map { evaluatedArgument ->
+                            Call(
+                                receiver,
+                                listOf(evaluatedArgument) + positionalArgumentExpressions.drop(1),
+                                positionalArgumentValues
+                            )
+                        }
+                        is InterpreterValue -> EvaluationResult.pure(Call(
                             receiver,
-                            positionalArguments.take(index) + listOf(evaluatedArgument) + positionalArguments.drop(index + 1)
-                        )
+                            positionalArgumentExpressions.drop(1),
+                            positionalArgumentValues + listOf(argument)
+                        ))
                     }
+                } else {
+                    call(receiver, positionalArgumentValues, context)
                 }
             }
         }
@@ -262,7 +267,8 @@ internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleE
     val loadedModules = loadModuleSet(modules)
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
-        positionalArguments = listOf()
+        positionalArgumentExpressions = listOf(),
+        positionalArgumentValues = listOf()
     )
     val context = InterpreterContext(scope = Scope(listOf(builtinStackFrame)), modules = loadedModules)
     val result = evaluate(call, context)

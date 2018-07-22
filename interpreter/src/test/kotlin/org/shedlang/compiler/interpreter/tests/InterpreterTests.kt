@@ -174,15 +174,14 @@ class InterpreterTests {
                 "x" to IntegerValue(1)
             ))
         )
-        val expression = Call(VariableReference("x"), listOf()).evaluate(context)
-        assertThat(expression, isPureResult(equalTo(Call(
-            IntegerValue(1),
-            listOf()
+        val expression = call(receiver = VariableReference("x")).evaluate(context)
+        assertThat(expression, isPureResult(equalTo(call(
+            receiver = IntegerValue(1)
         ))))
     }
 
     @Test
-    fun callPositionArgumentsAreEvaluatedInOrder() {
+    fun callPositionalArgumentsAreEvaluatedInOrder() {
         val context = createContext(
             scope = scopeOf(mapOf(
                 "y" to IntegerValue(2),
@@ -191,18 +190,52 @@ class InterpreterTests {
         )
         val expression = Call(
             PrintValue,
-            listOf(
-                IntegerValue(1),
+            positionalArgumentExpressions = listOf(
                 VariableReference("y"),
                 VariableReference("z")
+            ),
+            positionalArgumentValues = listOf(
+                IntegerValue(1)
             )
         ).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Call(
             PrintValue,
-            listOf(
-                IntegerValue(1),
+            positionalArgumentExpressions = listOf(
                 IntegerValue(2),
                 VariableReference("z")
+            ),
+            positionalArgumentValues = listOf(
+                IntegerValue(1)
+            )
+        ))))
+    }
+
+    @Test
+    fun callPositionalArgumentsAreMovedToValuesOnceFullyEvaluated() {
+        val context = createContext(
+            scope = scopeOf(mapOf(
+                "y" to IntegerValue(2),
+                "z" to IntegerValue(3)
+            ))
+        )
+        val expression = Call(
+            PrintValue,
+            positionalArgumentExpressions = listOf(
+                IntegerValue(2),
+                VariableReference("z")
+            ),
+            positionalArgumentValues = listOf(
+                IntegerValue(1)
+            )
+        ).evaluate(context)
+        assertThat(expression, isPureResult(equalTo(Call(
+            PrintValue,
+            positionalArgumentExpressions = listOf(
+                VariableReference("z")
+            ),
+            positionalArgumentValues = listOf(
+                IntegerValue(1),
+                IntegerValue(2)
             )
         ))))
     }
@@ -210,9 +243,9 @@ class InterpreterTests {
     @Test
     fun callingPrintUpdatesStdout() {
         val context = createContext()
-        val result = Call(
+        val result = call(
             PrintValue,
-            listOf(StringValue("hello"))
+            positionalArgumentValues = listOf(StringValue("hello"))
         ).evaluate(context)
         assertThat(result.stdout, equalTo("hello"))
     }
@@ -220,9 +253,9 @@ class InterpreterTests {
     @Test
     fun callingIntToStringConvertsIntToString() {
         val context = createContext()
-        val result = Call(
+        val result = call(
             IntToStringValue,
-            listOf(IntegerValue(42))
+            positionalArgumentValues = listOf(IntegerValue(42))
         ).evaluate(context)
         assertThat(result, isPureResult(equalTo(StringValue("42"))))
     }
@@ -236,7 +269,7 @@ class InterpreterTests {
             ),
             module = lazy { ModuleValue(mapOf()) }
         )
-        val expression = Call(function, listOf()).evaluate(context)
+        val expression = call(receiver = function).evaluate(context)
         assertThat(expression, isPureResult(isBlock(
             body = equalTo(listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
@@ -253,7 +286,7 @@ class InterpreterTests {
                 Identifier("x") to IntegerValue(42)
             )) }
         )
-        val expression = Call(function, listOf()).evaluate(context)
+        val expression = call(receiver = function).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Block(
             body = listOf(),
             scope = Scope(listOf(
@@ -369,6 +402,18 @@ class InterpreterTests {
 
     private fun scopeOf(variables: Map<String, InterpreterValue>): Scope {
         return Scope(listOf(ScopeFrame(variables)))
+    }
+
+    private fun call(
+        receiver: Expression,
+        positionalArgumentExpressions: List<Expression> = listOf(),
+        positionalArgumentValues: List<InterpreterValue> = listOf()
+    ): Call {
+        return Call(
+            receiver,
+            positionalArgumentExpressions = positionalArgumentExpressions,
+            positionalArgumentValues = positionalArgumentValues
+        )
     }
 
     private inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {
