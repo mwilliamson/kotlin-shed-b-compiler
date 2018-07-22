@@ -3,6 +3,7 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.resolveImport
 
 
 internal fun loadModuleSet(modules: ModuleSet): Map<List<Identifier>, ModuleExpression> {
@@ -22,7 +23,10 @@ internal fun loadModule(module: Module): ModuleExpression {
 }
 
 internal fun loadModule(module: Module.Shed): ModuleExpression {
-    val fields = module.node.body.map { statement ->
+    val imports = module.node.imports.map { import ->
+        import.name to ModuleReference(resolveImport(module.name, import.path))
+    }
+    val declarations = module.node.body.map { statement ->
         val name = statement.accept(object : ModuleStatementNode.Visitor<Identifier> {
             override fun visit(node: ShapeNode) = node.name
             override fun visit(node: UnionNode) = node.name
@@ -54,7 +58,7 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
         })
         name to expression
     }
-    return ModuleExpression(fieldExpressions = fields, fieldValues = listOf())
+    return ModuleExpression(fieldExpressions = imports + declarations, fieldValues = listOf())
 }
 
 private fun loadStatement(statement: StatementNode): Statement {
