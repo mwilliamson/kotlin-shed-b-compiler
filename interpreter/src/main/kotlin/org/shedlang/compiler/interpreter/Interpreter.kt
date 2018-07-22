@@ -108,8 +108,13 @@ private fun call(
     context: InterpreterContext
 ): EvaluationResult<Expression> {
     return when (receiver) {
+        is IntToStringValue -> {
+            val argument = (positionalArguments[0] as IntegerValue).value
+            EvaluationResult.pure(StringValue(argument.toString()))
+        }
         is PrintValue -> {
-            EvaluationResult(UnitValue, stdout = (positionalArguments[0] as StringValue).value)
+            val argument = (positionalArguments[0] as StringValue).value
+            EvaluationResult(UnitValue, stdout = argument)
         }
         is FunctionValue -> EvaluationResult.pure(Block(
             body = receiver.body
@@ -199,6 +204,7 @@ internal data class ExpressionStatement(val expression: Expression, val isReturn
     }
 }
 
+internal object IntToStringValue: InterpreterValue()
 internal object PrintValue: InterpreterValue()
 
 internal class InterpreterContext(

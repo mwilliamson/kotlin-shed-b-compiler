@@ -218,6 +218,16 @@ class InterpreterTests {
     }
 
     @Test
+    fun callingIntToStringConvertsIntToString() {
+        val context = createContext()
+        val result = Call(
+            IntToStringValue,
+            listOf(IntegerValue(42))
+        ).evaluate(context)
+        assertThat(result, isPureResult(equalTo(StringValue("42"))))
+    }
+
+    @Test
     fun whenReceiverIsFunctionThenCallIsEvaluatedToPartiallyEvaluatedFunction() {
         val context = createContext()
         val function = FunctionValue(
