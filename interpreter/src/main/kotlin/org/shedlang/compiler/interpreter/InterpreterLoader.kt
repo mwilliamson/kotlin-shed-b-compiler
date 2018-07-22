@@ -5,14 +5,14 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 
 
-internal fun loadModuleSet(modules: ModuleSet): Map<List<Identifier>, ModuleValue> {
+internal fun loadModuleSet(modules: ModuleSet): Map<List<Identifier>, ModuleExpression> {
     return modules.modules.associateBy(
         { module -> module.name },
         { module -> loadModule(module) }
     )
 }
 
-internal fun loadModule(module: Module): ModuleValue {
+internal fun loadModule(module: Module): ModuleExpression {
     return when (module) {
         is Module.Shed ->
             loadModule(module)
@@ -21,45 +21,40 @@ internal fun loadModule(module: Module): ModuleValue {
     }
 }
 
-internal fun loadModule(module: Module.Shed): ModuleValue {
-    var moduleValue: ModuleValue? = null
-    val fields = module.node.body.associateBy(
-        { statement ->
-            statement.accept(object : ModuleStatementNode.Visitor<Identifier> {
-                override fun visit(node: ShapeNode) = node.name
-                override fun visit(node: UnionNode) = node.name
-                override fun visit(node: FunctionDeclarationNode) = node.name
-                override fun visit(node: ValNode) = node.name
-            })
-        },
-        { statement ->
-            statement.accept(object : ModuleStatementNode.Visitor<InterpreterValue> {
-                override fun visit(node: ShapeNode): InterpreterValue {
-                    throw UnsupportedOperationException("not implemented")
-                }
+internal fun loadModule(module: Module.Shed): ModuleExpression {
+    val fields = module.node.body.map { statement ->
+        val name = statement.accept(object : ModuleStatementNode.Visitor<Identifier> {
+            override fun visit(node: ShapeNode) = node.name
+            override fun visit(node: UnionNode) = node.name
+            override fun visit(node: FunctionDeclarationNode) = node.name
+            override fun visit(node: ValNode) = node.name
+        })
+        val expression = statement.accept(object : ModuleStatementNode.Visitor<InterpreterValue> {
+            override fun visit(node: ShapeNode): InterpreterValue {
+                throw UnsupportedOperationException("not implemented")
+            }
 
-                override fun visit(node: UnionNode): InterpreterValue {
-                    throw UnsupportedOperationException("not implemented")
-                }
+            override fun visit(node: UnionNode): InterpreterValue {
+                throw UnsupportedOperationException("not implemented")
+            }
 
-                override fun visit(node: FunctionDeclarationNode): InterpreterValue {
-                    return FunctionValue(
-                        positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
-                        body = node.bodyStatements.map { statement ->
-                            loadStatement(statement)
-                        },
-                        module = lazy { moduleValue!! }
-                    )
-                }
+            override fun visit(node: FunctionDeclarationNode): InterpreterValue {
+                return FunctionValue(
+                    positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
+                    body = node.bodyStatements.map { statement ->
+                        loadStatement(statement)
+                    },
+                    moduleName = module.name
+                )
+            }
 
-                override fun visit(node: ValNode): InterpreterValue {
-                    throw UnsupportedOperationException("not implemented")
-                }
-            })
-        }
-    )
-    moduleValue = ModuleValue(fields = fields)
-    return moduleValue
+            override fun visit(node: ValNode): InterpreterValue {
+                throw UnsupportedOperationException("not implemented")
+            }
+        })
+        name to expression
+    }
+    return ModuleExpression(fieldExpressions = fields, fieldValues = listOf())
 }
 
 private fun loadStatement(statement: StatementNode): Statement {

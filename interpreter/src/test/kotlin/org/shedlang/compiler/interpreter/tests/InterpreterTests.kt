@@ -268,7 +268,7 @@ class InterpreterTests {
             body = listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
             ),
-            module = lazy { ModuleValue(mapOf()) }
+            moduleName = null
         )
         val expression = call(
             receiver = function,
@@ -283,13 +283,17 @@ class InterpreterTests {
 
     @Test
     fun whenCallingFunctionThenBlockHasScopeFromFunction() {
-        val context = createContext()
+        val context = createContext(
+            modules = mapOf(
+                listOf(Identifier("Some"), Identifier("Module")) to ModuleValue(mapOf(
+                    Identifier("x") to IntegerValue(42)
+                ))
+            )
+        )
         val function = FunctionValue(
             positionalParameterNames = listOf("arg0", "arg1"),
             body = listOf(),
-            module = lazy { ModuleValue(mapOf(
-                Identifier("x") to IntegerValue(42)
-            )) }
+            moduleName = listOf(Identifier("Some"), Identifier("Module"))
         )
         val expression = call(
             receiver = function,
@@ -473,7 +477,8 @@ class InterpreterTests {
     ): InterpreterContext {
         return InterpreterContext(
             scope = scope,
-            modules = modules
+            moduleValues = modules,
+            moduleExpressions = mapOf()
         )
     }
 
