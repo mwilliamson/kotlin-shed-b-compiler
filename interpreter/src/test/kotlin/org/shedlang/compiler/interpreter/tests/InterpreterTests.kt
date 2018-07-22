@@ -47,13 +47,29 @@ class InterpreterTests {
     @Test
     fun variableReferenceEvaluatesToValueOfVariable() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "x" to IntegerValue(42),
                 "y" to IntegerValue(47)
-            )
+            ))
         )
         val value = evaluate(variableReference("x"), context)
         assertThat(value, isPureResult(equalTo(IntegerValue(42))))
+    }
+
+    @Test
+    fun variablesCanBeOverriddenInLowerStackFrames() {
+        val context = createContext(
+            stack = Stack(listOf(
+                StackFrame(mapOf(
+                    "x" to IntegerValue(47)
+                )),
+                StackFrame(mapOf(
+                    "x" to IntegerValue(42)
+                ))
+            ))
+        )
+        val value = evaluate(variableReference("x"), context)
+        assertThat(value, isPureResult(equalTo(IntegerValue(47))))
     }
 
     @Test
@@ -115,10 +131,10 @@ class InterpreterTests {
     @Test
     fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "x" to IntegerValue(1),
                 "y" to IntegerValue(2)
-            )
+            ))
         )
         val expression = BinaryOperation(
             Operator.ADD,
@@ -135,9 +151,9 @@ class InterpreterTests {
     @Test
     fun binaryOperationRightOperandIsEvaluatedWhenLeftOperandIsValue() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "y" to IntegerValue(2)
-            )
+            ))
         )
         val expression = BinaryOperation(
             Operator.ADD,
@@ -154,9 +170,9 @@ class InterpreterTests {
     @Test
     fun callReceiverIsEvaluatedFirst() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "x" to IntegerValue(1)
-            )
+            ))
         )
         val expression = Call(VariableReference("x"), listOf()).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Call(
@@ -168,10 +184,10 @@ class InterpreterTests {
     @Test
     fun callPositionArgumentsAreEvaluatedInOrder() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "y" to IntegerValue(2),
                 "z" to IntegerValue(3)
-            )
+            ))
         )
         val expression = Call(
             PrintValue,
@@ -220,9 +236,9 @@ class InterpreterTests {
     @Test
     fun fieldAccessReceiverIsEvaluatedFirst() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "x" to IntegerValue(1)
-            )
+            ))
         )
         val expression = FieldAccess(VariableReference("x"), Identifier("y")).evaluate(context)
         assertThat(expression, isPureResult(equalTo(FieldAccess(
@@ -253,9 +269,9 @@ class InterpreterTests {
     @Test
     fun whenBlockHasStatementThenStatementIsEvaluated() {
         val context = createContext(
-            variables = mapOf(
+            stack = stackOf(mapOf(
                 "x" to IntegerValue(42)
-            )
+            ))
         )
         val expression = Block(
             body = listOf(
@@ -304,13 +320,17 @@ class InterpreterTests {
     }
 
     private fun createContext(
-        variables: Map<String, InterpreterValue> = mapOf(),
+        stack: Stack = Stack(listOf()),
         modules: Map<List<Identifier>, ModuleValue> = mapOf()
     ): InterpreterContext {
         return InterpreterContext(
-            variables = variables,
+            stack = stack,
             modules = modules
         )
+    }
+
+    private fun stackOf(variables: Map<String, InterpreterValue>): Stack {
+        return Stack(listOf(StackFrame(variables)))
     }
 
     private inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {

@@ -202,16 +202,11 @@ internal data class ExpressionStatement(val expression: Expression, val isReturn
 internal object PrintValue: InterpreterValue()
 
 internal class InterpreterContext(
-    private val variables: Map<String, InterpreterValue>,
+    private val stack: Stack,
     private val modules: Map<List<Identifier>, ModuleValue>
 ) {
     fun value(name: String): InterpreterValue {
-        val value = variables[name]
-        if (value == null) {
-            throw InterpreterError("Could not find variable: " + name)
-        } else {
-            return value
-        }
+        return stack.value(name)
     }
 
     fun module(name: List<Identifier>): InterpreterValue {
@@ -219,13 +214,35 @@ internal class InterpreterContext(
     }
 }
 
+internal class Stack(private val frames: List<StackFrame>) {
+    fun value(name: String): InterpreterValue {
+        for (frame in frames) {
+            val value = frame.value(name)
+            if (value != null) {
+                return value
+            }
+        }
+        throw InterpreterError("Could not find variable: " + name)
+    }
+}
+
+internal class StackFrame(private val variables: Map<String, InterpreterValue>) {
+    fun value(name: String): InterpreterValue? {
+        return variables[name]
+    }
+}
+
+private val builtinStackFrame = StackFrame(mapOf(
+    "print" to PrintValue
+))
+
 internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvaluationResult {
     val loadedModules = loadModuleSet(modules)
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
         positionalArguments = listOf()
     )
-    val context = InterpreterContext(variables = mapOf(), modules = loadedModules)
+    val context = InterpreterContext(stack = Stack(listOf(builtinStackFrame)), modules = loadedModules)
     val result = evaluate(call, context)
     val exitCode = when (result.value) {
         is IntegerValue -> result.value.value
