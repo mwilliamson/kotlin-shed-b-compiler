@@ -3,7 +3,6 @@ package org.shedlang.compiler
 import com.moandjiezana.toml.Toml
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.ast.ImportPathBase
 import org.shedlang.compiler.ast.Node
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parseTypesModule
@@ -36,15 +35,8 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
 
     val nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type })
     val importPathToModule: (ImportPath) -> ModuleResult = { importPath ->
-        when (importPath.base) {
-            ImportPathBase.Relative -> {
-                val importedModuleName = resolveName(name, importPath.parts)
-                getModule(importedModuleName)
-            }
-            ImportPathBase.Absolute -> {
-                getModule(importPath.parts)
-            }
-        }
+        val fullPath = resolveImport(name, importPath)
+        getModule(fullPath)
     }
 
     if (path.toString().endsWith(".types.shed")) {
@@ -150,10 +142,6 @@ private class ModuleReader(private val root: Path) {
 
 private fun pathAppend(path: Path, suffix: String): Path {
     return path.resolveSibling(path.fileName.toString() + suffix)
-}
-
-private fun resolveName(base: List<Identifier>, name: List<Identifier>): List<Identifier> {
-    return base.dropLast(1) + name
 }
 
 fun installDependencies(path: Path) {
