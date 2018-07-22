@@ -21,7 +21,8 @@ internal data class ModuleReference(val name: List<Identifier>): IncompleteExpre
         }
         val expression = context.moduleExpression(name)
         if (expression != null) {
-            return EvaluationResult.ModuleUpdate(name)
+            val scope = Scope(moduleStackFrames(name))
+            return expression.evaluate(name, context.inScope(scope))
         }
         throw InterpreterError("Could not find module: " + name)
     }
@@ -379,8 +380,11 @@ internal fun fullyEvaluate(initialExpression: Expression, initialContext: Interp
                         stdout.append(result.stdout)
                         expression = result.value
                     }
-                    is EvaluationResult.ModuleUpdate -> {
-                        context = updateModule(result.moduleName, context)
+                    is EvaluationResult.ModuleValueUpdate -> {
+                        context = context.updateModule(result.moduleName, result.value)
+                    }
+                    is EvaluationResult.ModuleExpressionUpdate -> {
+                        context = context.updateModule(result.moduleName, result.value)
                     }
                 }
             }
@@ -388,12 +392,6 @@ internal fun fullyEvaluate(initialExpression: Expression, initialContext: Interp
                 return EvaluationResult.Value(value = expression, stdout = stdout.toString())
         }
     }
-}
-
-private fun updateModule(moduleName: List<Identifier>, context: InterpreterContext): InterpreterContext {
-    val moduleExpression = context.moduleExpression(moduleName)!!
-    val scope = Scope(moduleStackFrames(moduleName))
-    return moduleExpression.evaluate(moduleName, context.inScope(scope))
 }
 
 private fun moduleStackFrames(moduleName: List<Identifier>?): List<ScopeFrame> {
@@ -418,7 +416,19 @@ internal sealed class EvaluationResult<out T> {
         }
     }
 
-    internal data class ModuleUpdate(val moduleName: List<Identifier>): EvaluationResult<Nothing>() {
+    internal data class ModuleValueUpdate(
+        val moduleName: List<Identifier>,
+        val value: ModuleValue
+    ): EvaluationResult<Nothing>() {
+        override fun <R> map(func: (Nothing) -> R): EvaluationResult<R> {
+            return this
+        }
+    }
+
+    internal data class ModuleExpressionUpdate(
+        val moduleName: List<Identifier>,
+        val value: ModuleExpression
+    ): EvaluationResult<Nothing>() {
         override fun <R> map(func: (Nothing) -> R): EvaluationResult<R> {
             return this
         }
@@ -435,17 +445,20 @@ internal data class ModuleExpression(
     val fieldExpressions: List<Pair<Identifier, Expression>>,
     val fieldValues: List<Pair<Identifier, InterpreterValue>>
 ) {
-    fun evaluate(moduleName: List<Identifier>, context: InterpreterContext): InterpreterContext {
+    fun evaluate(moduleName: List<Identifier>, context: InterpreterContext): EvaluationResult<Nothing> {
         if (fieldExpressions.isEmpty()) {
-            return context.updateModule(moduleName, ModuleValue(fieldValues.toMap()))
+            return EvaluationResult.ModuleValueUpdate(moduleName, ModuleValue(fieldValues.toMap()))
         } else {
             val (fieldName, expression) = fieldExpressions[0]
             when (expression) {
                 is InterpreterValue ->
-                    return context.updateModule(moduleName, ModuleExpression(
-                        fieldExpressions = fieldExpressions.drop(1),
-                        fieldValues = fieldValues + listOf(fieldName to expression)
-                    ))
+                    return EvaluationResult.ModuleExpressionUpdate(
+                        moduleName,
+                        ModuleExpression(
+                            fieldExpressions = fieldExpressions.drop(1),
+                            fieldValues = fieldValues + listOf(fieldName to expression)
+                        )
+                    )
                 is IncompleteExpression -> {
                     val result = expression.evaluate(context)
                     when (result) {
@@ -453,14 +466,18 @@ internal data class ModuleExpression(
                             if (result.stdout != "") {
                                 throw InterpreterError("Unexpected side effect")
                             }
-                            return context.updateModule(moduleName, ModuleExpression(
-                                fieldExpressions = listOf(fieldName to result.value) + fieldExpressions.drop(1),
-                                fieldValues = fieldValues
-                            ))
+                            return EvaluationResult.ModuleExpressionUpdate(
+                                moduleName,
+                                ModuleExpression(
+                                    fieldExpressions = listOf(fieldName to result.value) + fieldExpressions.drop(1),
+                                    fieldValues = fieldValues
+                                )
+                            )
                         }
-                        is EvaluationResult.ModuleUpdate -> {
-                            return updateModule(result.moduleName, context)
-                        }
+                        is EvaluationResult.ModuleValueUpdate ->
+                            return result
+                        is EvaluationResult.ModuleExpressionUpdate ->
+                            return result
                     }
                 }
 

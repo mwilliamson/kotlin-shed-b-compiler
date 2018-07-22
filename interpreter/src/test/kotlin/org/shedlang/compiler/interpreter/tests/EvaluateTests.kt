@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
+import org.shedlang.compiler.tests.allOf
 
 class EvaluateVariableReferenceTests {
     @Test
@@ -54,7 +55,10 @@ class EvaluateModuleReferenceTests {
 
     @Test
     fun moduleReferenceEvaluatesModuleWhenModuleIsNotValue() {
-        val module = ModuleExpression(fieldExpressions = listOf(), fieldValues = listOf())
+        val module = ModuleExpression(
+            fieldExpressions = listOf(),
+            fieldValues = listOf()
+        )
         val context = createContext(
             moduleValues = mapOf(),
             moduleExpressions = mapOf(
@@ -62,7 +66,10 @@ class EvaluateModuleReferenceTests {
             )
         )
         val value = ModuleReference(listOf(Identifier("X"))).evaluate(context)
-        assertThat(value, cast(has(EvaluationResult.ModuleUpdate::moduleName, equalTo(listOf(Identifier("X"))))))
+        assertThat(value, cast(allOf(
+            has(EvaluationResult.ModuleValueUpdate::moduleName, equalTo(listOf(Identifier("X")))),
+            has(EvaluationResult.ModuleValueUpdate::value, equalTo(ModuleValue(mapOf())))
+        )))
     }
 }
 
