@@ -166,6 +166,32 @@ class InterpreterTests {
     }
 
     @Test
+    fun callPositionArgumentsAreEvaluatedInOrder() {
+        val context = createContext(
+            variables = mapOf(
+                "y" to IntegerValue(2),
+                "z" to IntegerValue(3)
+            )
+        )
+        val expression = Call(
+            PrintValue,
+            listOf(
+                IntegerValue(1),
+                VariableReference("y"),
+                VariableReference("z")
+            )
+        ).evaluate(context)
+        assertThat(expression, isPureResult(equalTo(Call(
+            PrintValue,
+            listOf(
+                IntegerValue(1),
+                IntegerValue(2),
+                VariableReference("z")
+            )
+        ))))
+    }
+
+    @Test
     fun callingPrintUpdatesStdout() {
         val context = createContext()
         val result = Call(

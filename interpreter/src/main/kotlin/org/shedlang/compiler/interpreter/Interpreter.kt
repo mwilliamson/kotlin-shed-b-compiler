@@ -80,7 +80,24 @@ internal data class Call(
                     positionalArguments
                 )
             }
-            is InterpreterValue -> call(receiver, positionalArguments as List<InterpreterValue>, context)
+            is InterpreterValue -> {
+                val incompletePositionalArguments = positionalArguments.map { argument ->
+                    argument as? IncompleteExpression
+                }
+                val index = incompletePositionalArguments.indexOfFirst { argument ->
+                    argument != null
+                }
+                if (index == -1) {
+                    call(receiver, positionalArguments as List<InterpreterValue>, context)
+                } else {
+                    incompletePositionalArguments[index]!!.evaluate(context).map { evaluatedArgument ->
+                        Call(
+                            receiver,
+                            positionalArguments.take(index) + listOf(evaluatedArgument) + positionalArguments.drop(index + 1)
+                        )
+                    }
+                }
+            }
         }
     }
 }
