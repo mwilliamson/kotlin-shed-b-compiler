@@ -108,7 +108,10 @@ internal fun loadExpression(expression: ExpressionNode): Expression {
         }
 
         override fun visit(node: FieldAccessNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return FieldAccess(
+                receiver = loadExpression(node.receiver),
+                fieldName = node.fieldName.identifier
+            )
         }
 
         override fun visit(node: FunctionExpressionNode): Expression {
