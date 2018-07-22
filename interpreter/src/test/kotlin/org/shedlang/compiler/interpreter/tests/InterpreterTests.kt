@@ -246,7 +246,7 @@ class InterpreterTests {
         val result = call(
             PrintValue,
             positionalArgumentValues = listOf(StringValue("hello"))
-        ).evaluate(context)
+        ).evaluate(context) as EvaluationResult.Value
         assertThat(result.stdout, equalTo("hello"))
     }
 
@@ -501,7 +501,7 @@ class InterpreterTests {
     private fun returns(expression: IntegerValue) = ExpressionStatement(expression, isReturn = true)
 
     private inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {
-        return has(EvaluationResult<T>::value, cast(matcher))
+        return cast(has(EvaluationResult.Value<T>::value, cast(matcher)))
     }
 
     private fun isBlock(body: Matcher<List<Statement>>): Matcher<Block> {
