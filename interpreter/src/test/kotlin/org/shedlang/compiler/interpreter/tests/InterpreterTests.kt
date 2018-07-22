@@ -233,13 +233,35 @@ class InterpreterTests {
         val function = FunctionValue(
             body = listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
-            )
+            ),
+            module = lazy { ModuleValue(mapOf()) }
+        )
+        val expression = Call(function, listOf()).evaluate(context)
+        assertThat(expression, isPureResult(isBlock(
+            body = equalTo(listOf(
+                ExpressionStatement(IntegerValue(1), isReturn = false)
+            ))
+        )))
+    }
+
+    @Test
+    fun whenCallingFunctionThenBlockHasScopeFromFunction() {
+        val context = createContext()
+        val function = FunctionValue(
+            body = listOf(),
+            module = lazy { ModuleValue(mapOf(
+                Identifier("x") to IntegerValue(42)
+            )) }
         )
         val expression = Call(function, listOf()).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Block(
-            body = listOf(
-                ExpressionStatement(IntegerValue(1), isReturn = false)
-            )
+            body = listOf(),
+            scope = Scope(listOf(
+                ScopeFrame(mapOf(
+                    "x" to IntegerValue(42)
+                )),
+                builtinStackFrame
+            ))
         ))))
     }
 
@@ -271,29 +293,32 @@ class InterpreterTests {
     fun whenBlockHasNoStatementsThenValueIsUnit() {
         val context = createContext()
         val expression = Block(
-            body = listOf()
+            body = listOf(),
+            scope = Scope(listOf())
         ).evaluate(context)
         assertThat(expression, isPureResult(equalTo(UnitValue)))
     }
 
     @Test
-    fun whenBlockHasStatementThenStatementIsEvaluated() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
-                "x" to IntegerValue(42)
-            ))
-        )
+    fun whenBlockHasStatementThenStatementIsEvaluatedInScope() {
+        val context = createContext()
         val expression = Block(
             body = listOf(
                 ExpressionStatement(expression = VariableReference("x"), isReturn = false),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
-            )
+            ),
+            scope = scopeOf(mapOf(
+                "x" to IntegerValue(42)
+            ))
         ).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Block(
             body = listOf(
                 ExpressionStatement(IntegerValue(42), isReturn = false),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
-            )
+            ),
+            scope = scopeOf(mapOf(
+                "x" to IntegerValue(42)
+            ))
         ))))
     }
 
@@ -304,12 +329,14 @@ class InterpreterTests {
             body = listOf(
                 ExpressionStatement(IntegerValue(42), isReturn = false),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
-            )
+            ),
+            scope = Scope(listOf())
         ).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Block(
             body = listOf(
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
-            )
+            ),
+            scope = Scope(listOf())
         ))))
     }
 
@@ -320,7 +347,8 @@ class InterpreterTests {
             body = listOf(
                 ExpressionStatement(IntegerValue(42), isReturn = true),
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
-            )
+            ),
+            scope = Scope(listOf())
         ).evaluate(context)
         assertThat(expression, isPureResult(equalTo(IntegerValue(42))))
     }
@@ -345,5 +373,9 @@ class InterpreterTests {
 
     private inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {
         return has(EvaluationResult<T>::value, cast(matcher))
+    }
+
+    private fun isBlock(body: Matcher<List<Statement>>): Matcher<Block> {
+        return has(Block::body, body)
     }
 }

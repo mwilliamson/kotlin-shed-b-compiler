@@ -22,15 +22,18 @@ internal fun loadModule(module: Module): ModuleValue {
 }
 
 internal fun loadModule(module: Module.Shed): ModuleValue {
-    return ModuleValue(
-        fields = module.node.body.associateBy(
-            { statement -> statement.accept(object : ModuleStatementNode.Visitor<Identifier> {
+    var moduleValue: ModuleValue? = null
+    val fields = module.node.body.associateBy(
+        { statement ->
+            statement.accept(object : ModuleStatementNode.Visitor<Identifier> {
                 override fun visit(node: ShapeNode) = node.name
                 override fun visit(node: UnionNode) = node.name
                 override fun visit(node: FunctionDeclarationNode) = node.name
                 override fun visit(node: ValNode) = node.name
-            }) },
-            { statement -> statement.accept(object: ModuleStatementNode.Visitor<InterpreterValue> {
+            })
+        },
+        { statement ->
+            statement.accept(object : ModuleStatementNode.Visitor<InterpreterValue> {
                 override fun visit(node: ShapeNode): InterpreterValue {
                     throw UnsupportedOperationException("not implemented")
                 }
@@ -43,16 +46,19 @@ internal fun loadModule(module: Module.Shed): ModuleValue {
                     return FunctionValue(
                         body = node.bodyStatements.map { statement ->
                             loadStatement(statement)
-                        }
+                        },
+                        module = lazy { moduleValue!! }
                     )
                 }
 
                 override fun visit(node: ValNode): InterpreterValue {
                     throw UnsupportedOperationException("not implemented")
                 }
-            }) }
-        )
+            })
+        }
     )
+    moduleValue = ModuleValue(fields = fields)
+    return moduleValue
 }
 
 private fun loadStatement(statement: StatementNode): Statement {

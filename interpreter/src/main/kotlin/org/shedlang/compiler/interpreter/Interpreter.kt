@@ -117,7 +117,11 @@ private fun call(
             EvaluationResult(UnitValue, stdout = argument)
         }
         is FunctionValue -> EvaluationResult.pure(Block(
-            body = receiver.body
+            body = receiver.body,
+            scope = Scope(listOf(
+                ScopeFrame(receiver.module.value.fields.mapKeys { key -> key.key.value }),
+                builtinStackFrame
+            ))
         ))
         else -> throw NotImplementedError()
     }
@@ -150,9 +154,12 @@ internal data class CharacterValue(val value: Int): InterpreterValue()
 internal data class SymbolValue(val name: String): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
-internal data class FunctionValue(val body: List<Statement>): InterpreterValue()
+internal data class FunctionValue(
+    val body: List<Statement>,
+    val module: Lazy<ModuleValue>
+): InterpreterValue()
 
-internal data class Block(val body: List<Statement>): IncompleteExpression() {
+internal data class Block(val body: List<Statement>, val scope: Scope): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         if (body.isEmpty()) {
             return EvaluationResult.pure(UnitValue)
@@ -162,14 +169,18 @@ internal data class Block(val body: List<Statement>): IncompleteExpression() {
                 if (statement.isReturn) {
                     return EvaluationResult.pure(statement.expression)
                 } else {
-                    return EvaluationResult.pure(Block(body.drop(1)))
+                    return EvaluationResult.pure(withBody(body.drop(1)))
                 }
             } else {
-                return statement.execute(context).map { evaluatedStatement ->
-                    Block(listOf(evaluatedStatement) + body.drop(1))
+                return statement.execute(context.inScope(scope)).map { evaluatedStatement ->
+                    withBody(listOf(evaluatedStatement) + body.drop(1))
                 }
             }
         }
+    }
+
+    private fun withBody(body: List<Statement>): Block {
+        return Block(body, scope)
     }
 }
 
@@ -218,9 +229,13 @@ internal class InterpreterContext(
     fun module(name: List<Identifier>): InterpreterValue {
         return modules[name]!!
     }
+
+    fun inScope(scope: Scope): InterpreterContext {
+        return InterpreterContext(scope, modules)
+    }
 }
 
-internal class Scope(private val frames: List<ScopeFrame>) {
+internal data class Scope(private val frames: List<ScopeFrame>) {
     fun value(name: String): InterpreterValue {
         for (frame in frames) {
             val value = frame.value(name)
@@ -232,13 +247,13 @@ internal class Scope(private val frames: List<ScopeFrame>) {
     }
 }
 
-internal class ScopeFrame(private val variables: Map<String, InterpreterValue>) {
+internal data class ScopeFrame(private val variables: Map<String, InterpreterValue>) {
     fun value(name: String): InterpreterValue? {
         return variables[name]
     }
 }
 
-private val builtinStackFrame = ScopeFrame(mapOf(
+internal val builtinStackFrame = ScopeFrame(mapOf(
     "intToString" to IntToStringValue,
     "print" to PrintValue
 ))
