@@ -138,9 +138,8 @@ private fun call(
             }
             val scope = Scope(listOf(
                 ScopeFrame(receiver.positionalParameterNames.zip(positionalArguments).toMap()),
-                ScopeFrame(moduleFields.mapKeys { key -> key.key.value }),
-                builtinStackFrame
-            ))
+                ScopeFrame(moduleFields.mapKeys { key -> key.key.value })
+            ) + moduleStackFrames(receiver.moduleName))
             EvaluationResult.pure(Block(
                 body = receiver.body,
                 scope = scope
@@ -348,7 +347,7 @@ internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleE
         positionalArgumentValues = listOf()
     )
     val context = InterpreterContext(
-        scope = Scope(listOf(builtinStackFrame)),
+        scope = Scope(listOf()),
         moduleExpressions = loadedModules,
         moduleValues = mapOf()
     )
@@ -393,7 +392,21 @@ internal fun evaluate(initialExpression: Expression, initialContext: Interpreter
 
 private fun updateModule(moduleName: List<Identifier>, context: InterpreterContext): InterpreterContext {
     val moduleExpression = context.moduleExpression(moduleName)!!
-    return moduleExpression.evaluate(moduleName, context)
+    val scope = Scope(moduleStackFrames(moduleName))
+    return moduleExpression.evaluate(moduleName, context.inScope(scope))
+}
+
+private fun moduleStackFrames(moduleName: List<Identifier>?): List<ScopeFrame> {
+    val moduleNameFrame = if (moduleName == null) {
+        ScopeFrame(mapOf())
+    } else {
+        val moduleNameString = moduleName.map(Identifier::value).joinToString(".")
+        ScopeFrame(mapOf("moduleName" to StringValue(moduleNameString)))
+    }
+    return listOf(
+        moduleNameFrame,
+        builtinStackFrame
+    )
 }
 
 internal sealed class EvaluationResult<out T> {

@@ -309,6 +309,9 @@ class InterpreterTests {
                 ScopeFrame(mapOf(
                     "x" to IntegerValue(42)
                 )),
+                ScopeFrame(mapOf(
+                    "moduleName" to StringValue("Some.Module")
+                )),
                 builtinStackFrame
             ))
         ))))
