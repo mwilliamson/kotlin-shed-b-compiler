@@ -100,7 +100,7 @@ internal data class Call(
                         ))
                     }
                 } else {
-                    call(receiver, positionalArgumentValues, context)
+                    call(receiver, positionalArgumentValues)
                 }
             }
         }
@@ -109,8 +109,7 @@ internal data class Call(
 
 private fun call(
     receiver: InterpreterValue,
-    positionalArguments: List<InterpreterValue>,
-    context: InterpreterContext
+    positionalArguments: List<InterpreterValue>
 ): EvaluationResult<Expression> {
     return when (receiver) {
         is IntToStringValue -> {
