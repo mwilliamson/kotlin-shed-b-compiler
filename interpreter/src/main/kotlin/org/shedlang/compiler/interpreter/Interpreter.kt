@@ -5,6 +5,8 @@ import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
 
+internal class InterpreterError(message: String): Exception(message)
+
 internal sealed class Expression
 
 internal abstract class IncompleteExpression: Expression() {
@@ -187,7 +189,12 @@ internal class InterpreterContext(
     private val modules: Map<List<Identifier>, ModuleValue>
 ) {
     fun value(name: String): InterpreterValue {
-        return variables[name]!!
+        val value = variables[name]
+        if (value == null) {
+            throw InterpreterError("Could not find variable: " + name)
+        } else {
+            return value
+        }
     }
 
     fun module(name: List<Identifier>): InterpreterValue {
