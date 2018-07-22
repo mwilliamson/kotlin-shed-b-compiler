@@ -47,7 +47,7 @@ class InterpreterTests {
     @Test
     fun variableReferenceEvaluatesToValueOfVariable() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "x" to IntegerValue(42),
                 "y" to IntegerValue(47)
             ))
@@ -57,13 +57,13 @@ class InterpreterTests {
     }
 
     @Test
-    fun variablesCanBeOverriddenInLowerStackFrames() {
+    fun variablesCanBeOverriddenInInnerScope() {
         val context = createContext(
-            stack = Stack(listOf(
-                StackFrame(mapOf(
+            scope = Scope(listOf(
+                ScopeFrame(mapOf(
                     "x" to IntegerValue(47)
                 )),
-                StackFrame(mapOf(
+                ScopeFrame(mapOf(
                     "x" to IntegerValue(42)
                 ))
             ))
@@ -131,7 +131,7 @@ class InterpreterTests {
     @Test
     fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "x" to IntegerValue(1),
                 "y" to IntegerValue(2)
             ))
@@ -151,7 +151,7 @@ class InterpreterTests {
     @Test
     fun binaryOperationRightOperandIsEvaluatedWhenLeftOperandIsValue() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "y" to IntegerValue(2)
             ))
         )
@@ -170,7 +170,7 @@ class InterpreterTests {
     @Test
     fun callReceiverIsEvaluatedFirst() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "x" to IntegerValue(1)
             ))
         )
@@ -184,7 +184,7 @@ class InterpreterTests {
     @Test
     fun callPositionArgumentsAreEvaluatedInOrder() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "y" to IntegerValue(2),
                 "z" to IntegerValue(3)
             ))
@@ -246,7 +246,7 @@ class InterpreterTests {
     @Test
     fun fieldAccessReceiverIsEvaluatedFirst() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "x" to IntegerValue(1)
             ))
         )
@@ -279,7 +279,7 @@ class InterpreterTests {
     @Test
     fun whenBlockHasStatementThenStatementIsEvaluated() {
         val context = createContext(
-            stack = stackOf(mapOf(
+            scope = scopeOf(mapOf(
                 "x" to IntegerValue(42)
             ))
         )
@@ -330,17 +330,17 @@ class InterpreterTests {
     }
 
     private fun createContext(
-        stack: Stack = Stack(listOf()),
+        scope: Scope = Scope(listOf()),
         modules: Map<List<Identifier>, ModuleValue> = mapOf()
     ): InterpreterContext {
         return InterpreterContext(
-            stack = stack,
+            scope = scope,
             modules = modules
         )
     }
 
-    private fun stackOf(variables: Map<String, InterpreterValue>): Stack {
-        return Stack(listOf(StackFrame(variables)))
+    private fun scopeOf(variables: Map<String, InterpreterValue>): Scope {
+        return Scope(listOf(ScopeFrame(variables)))
     }
 
     private inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {

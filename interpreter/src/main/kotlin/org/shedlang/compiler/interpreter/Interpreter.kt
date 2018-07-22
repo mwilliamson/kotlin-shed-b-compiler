@@ -208,11 +208,11 @@ internal object IntToStringValue: InterpreterValue()
 internal object PrintValue: InterpreterValue()
 
 internal class InterpreterContext(
-    private val stack: Stack,
+    private val scope: Scope,
     private val modules: Map<List<Identifier>, ModuleValue>
 ) {
     fun value(name: String): InterpreterValue {
-        return stack.value(name)
+        return scope.value(name)
     }
 
     fun module(name: List<Identifier>): InterpreterValue {
@@ -220,7 +220,7 @@ internal class InterpreterContext(
     }
 }
 
-internal class Stack(private val frames: List<StackFrame>) {
+internal class Scope(private val frames: List<ScopeFrame>) {
     fun value(name: String): InterpreterValue {
         for (frame in frames) {
             val value = frame.value(name)
@@ -232,13 +232,13 @@ internal class Stack(private val frames: List<StackFrame>) {
     }
 }
 
-internal class StackFrame(private val variables: Map<String, InterpreterValue>) {
+internal class ScopeFrame(private val variables: Map<String, InterpreterValue>) {
     fun value(name: String): InterpreterValue? {
         return variables[name]
     }
 }
 
-private val builtinStackFrame = StackFrame(mapOf(
+private val builtinStackFrame = ScopeFrame(mapOf(
     "intToString" to IntToStringValue,
     "print" to PrintValue
 ))
@@ -249,7 +249,7 @@ internal fun evaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleE
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
         positionalArguments = listOf()
     )
-    val context = InterpreterContext(stack = Stack(listOf(builtinStackFrame)), modules = loadedModules)
+    val context = InterpreterContext(scope = Scope(listOf(builtinStackFrame)), modules = loadedModules)
     val result = evaluate(call, context)
     val exitCode = when (result.value) {
         is IntegerValue -> result.value.value
