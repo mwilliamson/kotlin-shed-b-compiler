@@ -33,16 +33,16 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
             override fun visit(node: FunctionDeclarationNode) = node.name
             override fun visit(node: ValNode) = node.name
         })
-        val expression = statement.accept(object : ModuleStatementNode.Visitor<InterpreterValue> {
-            override fun visit(node: ShapeNode): InterpreterValue {
+        val expression = statement.accept(object : ModuleStatementNode.Visitor<Expression> {
+            override fun visit(node: ShapeNode): Expression {
                 throw UnsupportedOperationException("not implemented")
             }
 
-            override fun visit(node: UnionNode): InterpreterValue {
+            override fun visit(node: UnionNode): Expression {
                 throw UnsupportedOperationException("not implemented")
             }
 
-            override fun visit(node: FunctionDeclarationNode): InterpreterValue {
+            override fun visit(node: FunctionDeclarationNode): Expression {
                 return FunctionValue(
                     positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
                     body = node.bodyStatements.map { statement ->
@@ -52,8 +52,8 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
                 )
             }
 
-            override fun visit(node: ValNode): InterpreterValue {
-                throw UnsupportedOperationException("not implemented")
+            override fun visit(node: ValNode): Expression {
+                return loadExpression(node.expression)
             }
         })
         name to expression
