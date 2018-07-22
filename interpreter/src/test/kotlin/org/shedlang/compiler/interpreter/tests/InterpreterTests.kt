@@ -323,6 +323,71 @@ class InterpreterTests {
     }
 
     @Test
+    fun whenConditionalBranchesIsEmptyThenIfEvaluatesToElseBranch() {
+        val ifExpression = If(
+            conditionalBranches = listOf(),
+            elseBranch = listOf(returns(IntegerValue(3)))
+        )
+        val expression = ifExpression.evaluate(createContext())
+        assertThat(expression, isPureResult(isBlock(
+            body = equalTo(listOf(returns(IntegerValue(3))))
+        )))
+    }
+
+    @Test
+    fun whenConditionalBranchConditionIsFalseValueThenConditionalBranchIsRemoved() {
+        val ifExpression = If(
+            conditionalBranches = listOf(
+                ConditionalBranch(BooleanValue(false), listOf(returns(IntegerValue(1)))),
+                ConditionalBranch(VariableReference("y"), listOf(returns(IntegerValue(2))))
+            ),
+            elseBranch = listOf(returns(IntegerValue(3)))
+        )
+        val expression = ifExpression.evaluate(createContext())
+        assertThat(expression, isPureResult(equalTo(If(
+            conditionalBranches = listOf(
+                ConditionalBranch(VariableReference("y"), listOf(returns(IntegerValue(2))))
+            ),
+            elseBranch = listOf(returns(IntegerValue(3)))
+        ))))
+    }
+
+    @Test
+    fun whenConditionalBranchConditionIsTrueValueThenIfEvaluatesToBranchBody() {
+        val ifExpression = If(
+            conditionalBranches = listOf(
+                ConditionalBranch(BooleanValue(true), listOf(returns(IntegerValue(1)))),
+                ConditionalBranch(VariableReference("y"), listOf(returns(IntegerValue(2))))
+            ),
+            elseBranch = listOf(returns(IntegerValue(3)))
+        )
+        val expression = ifExpression.evaluate(createContext())
+        assertThat(expression, isPureResult(isBlock(
+            body = equalTo(listOf(returns(IntegerValue(1))))
+        )))
+    }
+
+    @Test
+    fun whenConditionalBranchConditionIsNotValueThenConditionIsEvaluated() {
+        val ifExpression = If(
+            conditionalBranches = listOf(
+                ConditionalBranch(VariableReference("x"), listOf(returns(IntegerValue(1)))),
+                ConditionalBranch(VariableReference("y"), listOf(returns(IntegerValue(2))))
+            ),
+            elseBranch = listOf(returns(IntegerValue(3)))
+        )
+        val context = createContext(scope = scopeOf(mapOf("x" to BooleanValue(true))))
+        val expression = ifExpression.evaluate(context)
+        assertThat(expression, isPureResult(equalTo(If(
+            conditionalBranches = listOf(
+                ConditionalBranch(BooleanValue(true), listOf(returns(IntegerValue(1)))),
+                ConditionalBranch(VariableReference("y"), listOf(returns(IntegerValue(2))))
+            ),
+            elseBranch = listOf(returns(IntegerValue(3)))
+        ))))
+    }
+
+    @Test
     fun whenBlockHasNoStatementsThenValueIsUnit() {
         val context = createContext()
         val expression = Block(
@@ -415,6 +480,8 @@ class InterpreterTests {
             positionalArgumentValues = positionalArgumentValues
         )
     }
+
+    private fun returns(expression: IntegerValue) = ExpressionStatement(expression, isReturn = true)
 
     private inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {
         return has(EvaluationResult<T>::value, cast(matcher))

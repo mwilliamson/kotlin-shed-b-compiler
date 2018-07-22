@@ -194,7 +194,39 @@ internal data class If(
     val elseBranch: List<Statement>
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
-        throw UnsupportedOperationException("not implemented")
+        if (conditionalBranches.isEmpty()) {
+            // TODO: extend scope
+            return EvaluationResult.pure(Block(elseBranch, scope = context.scope))
+        } else {
+            val branch = conditionalBranches[0]
+            return when (branch.condition) {
+                BooleanValue(false) ->
+                    EvaluationResult.pure(If(
+                        conditionalBranches = conditionalBranches.drop(1),
+                        elseBranch = elseBranch
+                    ))
+
+                BooleanValue(true) ->
+                    // TODO: extend scope
+                    EvaluationResult.pure(Block(branch.body, scope = context.scope))
+
+                is IncompleteExpression ->
+                   branch.condition.evaluate(context).map { evaluatedCondition ->
+                       If(
+                           conditionalBranches = listOf(
+                               ConditionalBranch(
+                                   condition = evaluatedCondition,
+                                   body = branch.body
+                               )
+                           ) + conditionalBranches.drop(1),
+                           elseBranch = elseBranch
+                       )
+                   }
+
+                else ->
+                    throw NotImplementedError()
+            }
+        }
     }
 
 }
@@ -224,7 +256,7 @@ internal object IntToStringValue: InterpreterValue()
 internal object PrintValue: InterpreterValue()
 
 internal class InterpreterContext(
-    private val scope: Scope,
+    internal val scope: Scope,
     private val modules: Map<List<Identifier>, ModuleValue>
 ) {
     fun value(name: String): InterpreterValue {
