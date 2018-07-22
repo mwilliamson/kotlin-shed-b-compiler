@@ -264,12 +264,16 @@ class InterpreterTests {
     fun whenReceiverIsFunctionThenCallIsEvaluatedToPartiallyEvaluatedFunction() {
         val context = createContext()
         val function = FunctionValue(
+            positionalParameterNames = listOf(),
             body = listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
             ),
             module = lazy { ModuleValue(mapOf()) }
         )
-        val expression = call(receiver = function).evaluate(context)
+        val expression = call(
+            receiver = function,
+            positionalArgumentValues = listOf()
+        ).evaluate(context)
         assertThat(expression, isPureResult(isBlock(
             body = equalTo(listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
@@ -281,15 +285,23 @@ class InterpreterTests {
     fun whenCallingFunctionThenBlockHasScopeFromFunction() {
         val context = createContext()
         val function = FunctionValue(
+            positionalParameterNames = listOf("arg0", "arg1"),
             body = listOf(),
             module = lazy { ModuleValue(mapOf(
                 Identifier("x") to IntegerValue(42)
             )) }
         )
-        val expression = call(receiver = function).evaluate(context)
+        val expression = call(
+            receiver = function,
+            positionalArgumentValues = listOf(StringValue("zero"), StringValue("one"))
+        ).evaluate(context)
         assertThat(expression, isPureResult(equalTo(Block(
             body = listOf(),
             scope = Scope(listOf(
+                ScopeFrame(mapOf(
+                    "arg0" to StringValue("zero"),
+                    "arg1" to StringValue("one")
+                )),
                 ScopeFrame(mapOf(
                     "x" to IntegerValue(42)
                 )),

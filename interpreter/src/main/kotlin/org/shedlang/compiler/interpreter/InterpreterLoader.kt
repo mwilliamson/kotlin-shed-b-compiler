@@ -44,6 +44,7 @@ internal fun loadModule(module: Module.Shed): ModuleValue {
 
                 override fun visit(node: FunctionDeclarationNode): InterpreterValue {
                     return FunctionValue(
+                        positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
                         body = node.bodyStatements.map { statement ->
                             loadStatement(statement)
                         },

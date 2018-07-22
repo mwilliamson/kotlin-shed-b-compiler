@@ -124,6 +124,7 @@ private fun call(
         is FunctionValue -> EvaluationResult.pure(Block(
             body = receiver.body,
             scope = Scope(listOf(
+                ScopeFrame(receiver.positionalParameterNames.zip(positionalArguments).toMap()),
                 ScopeFrame(receiver.module.value.fields.mapKeys { key -> key.key.value }),
                 builtinStackFrame
             ))
@@ -160,6 +161,7 @@ internal data class SymbolValue(val name: String): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
 internal data class FunctionValue(
+    val positionalParameterNames: List<String>,
     val body: List<Statement>,
     val module: Lazy<ModuleValue>
 ): InterpreterValue()
