@@ -239,6 +239,7 @@ internal class StackFrame(private val variables: Map<String, InterpreterValue>) 
 }
 
 private val builtinStackFrame = StackFrame(mapOf(
+    "intToString" to IntToStringValue,
     "print" to PrintValue
 ))
 
