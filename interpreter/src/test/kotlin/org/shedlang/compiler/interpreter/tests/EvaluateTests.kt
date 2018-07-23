@@ -247,6 +247,80 @@ class EvaluateCallTests {
     }
 
     @Test
+    fun namedArgumentsAreEvaluatedInOrder() {
+        val context = createContext(
+            scope = scopeOf(mapOf(
+                "y" to IntegerValue(2),
+                "z" to IntegerValue(3)
+            ))
+        )
+        val expression = evaluate(
+            Call(
+                PrintValue,
+                positionalArgumentExpressions = listOf(),
+                positionalArgumentValues = listOf(),
+                namedArgumentExpressions = listOf(
+                    Identifier("b") to VariableReference("y"),
+                    Identifier("c") to VariableReference("z")
+                ),
+                namedArgumentValues = listOf(
+                    Identifier("a") to IntegerValue(1)
+                )
+            ),
+            context
+        )
+        assertThat(expression, isPureResult(equalTo(Call(
+            PrintValue,
+            positionalArgumentExpressions = listOf(),
+            positionalArgumentValues = listOf(),
+            namedArgumentExpressions = listOf(
+                Identifier("b") to IntegerValue(2),
+                Identifier("c") to VariableReference("z")
+            ),
+            namedArgumentValues = listOf(
+                Identifier("a") to IntegerValue(1)
+            )
+        ))))
+    }
+
+    @Test
+    fun namedArgumentsAreMovedToValuesOnceFullyEvaluated() {
+        val context = createContext(
+            scope = scopeOf(mapOf(
+                "y" to IntegerValue(2),
+                "z" to IntegerValue(3)
+            ))
+        )
+        val expression = evaluate(
+            Call(
+                PrintValue,
+                positionalArgumentExpressions = listOf(),
+                positionalArgumentValues = listOf(),
+                namedArgumentExpressions = listOf(
+                    Identifier("b") to IntegerValue(2),
+                    Identifier("c") to VariableReference("z")
+                ),
+                namedArgumentValues = listOf(
+                    Identifier("a") to IntegerValue(1)
+                )
+            ),
+            context
+        )
+        assertThat(expression, isPureResult(equalTo(Call(
+            PrintValue,
+            positionalArgumentExpressions = listOf(),
+            positionalArgumentValues = listOf(),
+            namedArgumentExpressions = listOf(
+                Identifier("c") to VariableReference("z")
+            ),
+            namedArgumentValues = listOf(
+                Identifier("a") to IntegerValue(1),
+                Identifier("b") to IntegerValue(2)
+            )
+        ))))
+    }
+
+    @Test
     fun callingPrintUpdatesStdout() {
         val context = createContext()
         val result = evaluate(

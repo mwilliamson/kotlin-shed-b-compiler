@@ -87,33 +87,33 @@ internal data class Call(
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (receiver) {
             is IncompleteExpression -> receiver.evaluate(context).map { evaluatedReceiver ->
-                Call(
-                    receiver = evaluatedReceiver,
-                    positionalArgumentExpressions = positionalArgumentExpressions,
-                    positionalArgumentValues = positionalArgumentValues,
-                    namedArgumentExpressions = namedArgumentExpressions,
-                    namedArgumentValues = namedArgumentValues
-                )
+                copy(receiver = evaluatedReceiver)
             }
             is InterpreterValue -> {
                 if (positionalArgumentExpressions.isNotEmpty()) {
                     val argument = positionalArgumentExpressions[0]
                     when (argument) {
                         is IncompleteExpression -> argument.evaluate(context).map { evaluatedArgument ->
-                            Call(
-                                receiver = receiver,
-                                positionalArgumentExpressions = listOf(evaluatedArgument) + positionalArgumentExpressions.drop(1),
-                                positionalArgumentValues = positionalArgumentValues,
-                                namedArgumentExpressions = namedArgumentExpressions,
-                                namedArgumentValues = namedArgumentValues
+                            copy(
+                                positionalArgumentExpressions = listOf(evaluatedArgument) + positionalArgumentExpressions.drop(1)
                             )
                         }
-                        is InterpreterValue -> EvaluationResult.pure(Call(
-                            receiver = receiver,
+                        is InterpreterValue -> EvaluationResult.pure(copy(
                             positionalArgumentExpressions = positionalArgumentExpressions.drop(1),
-                            positionalArgumentValues = positionalArgumentValues + listOf(argument),
-                            namedArgumentExpressions = namedArgumentExpressions,
-                            namedArgumentValues = namedArgumentValues
+                            positionalArgumentValues = positionalArgumentValues + listOf(argument)
+                        ))
+                    }
+                } else if (namedArgumentExpressions.isNotEmpty()) {
+                    val (name, argument) = namedArgumentExpressions[0]
+                    when (argument) {
+                        is IncompleteExpression -> argument.evaluate(context).map { evaluatedArgument ->
+                            copy(
+                                namedArgumentExpressions = listOf(name to evaluatedArgument) + namedArgumentExpressions.drop(1)
+                            )
+                        }
+                        is InterpreterValue -> EvaluationResult.pure(copy(
+                            namedArgumentExpressions = namedArgumentExpressions.drop(1),
+                            namedArgumentValues = namedArgumentValues + listOf(name to argument)
                         ))
                     }
                 } else {
