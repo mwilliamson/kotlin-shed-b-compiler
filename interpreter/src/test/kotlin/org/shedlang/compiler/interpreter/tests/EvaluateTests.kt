@@ -381,6 +381,16 @@ class EvaluateFieldAccessTests {
         val expression = evaluate(FieldAccess(module, Identifier("x")), context)
         assertThat(expression, isPureResult(equalTo(IntegerValue(42))))
     }
+
+    @Test
+    fun whenReceiverIsShapeValueThenFieldAccessIsEvaluatedToShapeFieldValue() {
+        val context = createContext()
+        val module = ShapeValue(
+            fields = mapOf(Identifier("x") to IntegerValue(42))
+        )
+        val expression = evaluate(FieldAccess(module, Identifier("x")), context)
+        assertThat(expression, isPureResult(equalTo(IntegerValue(42))))
+    }
 }
 
 class EvaluateIfTests {
