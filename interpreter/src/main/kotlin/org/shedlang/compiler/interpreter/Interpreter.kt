@@ -80,7 +80,8 @@ internal data class BinaryOperation(
 internal data class Call(
     val receiver: Expression,
     val positionalArgumentExpressions: List<Expression>,
-    val positionalArgumentValues: List<InterpreterValue>
+    val positionalArgumentValues: List<InterpreterValue>,
+    val namedArgumentValues: List<Pair<Identifier, InterpreterValue>>
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (receiver) {
@@ -88,7 +89,8 @@ internal data class Call(
                 Call(
                     evaluatedReceiver,
                     positionalArgumentExpressions,
-                    positionalArgumentValues
+                    positionalArgumentValues,
+                    namedArgumentValues
                 )
             }
             is InterpreterValue -> {
@@ -99,17 +101,19 @@ internal data class Call(
                             Call(
                                 receiver,
                                 listOf(evaluatedArgument) + positionalArgumentExpressions.drop(1),
-                                positionalArgumentValues
+                                positionalArgumentValues,
+                                namedArgumentValues
                             )
                         }
                         is InterpreterValue -> EvaluationResult.pure(Call(
                             receiver,
                             positionalArgumentExpressions.drop(1),
-                            positionalArgumentValues + listOf(argument)
+                            positionalArgumentValues + listOf(argument),
+                            namedArgumentValues
                         ))
                     }
                 } else {
-                    call(receiver, positionalArgumentValues, context)
+                    call(receiver, positionalArgumentValues, namedArgumentValues, context)
                 }
             }
         }
@@ -119,6 +123,7 @@ internal data class Call(
 private fun call(
     receiver: InterpreterValue,
     positionalArguments: List<InterpreterValue>,
+    namedArguments: List<Pair<Identifier, InterpreterValue>>,
     context: InterpreterContext
 ): EvaluationResult<Expression> {
     return when (receiver) {
@@ -145,6 +150,11 @@ private fun call(
                 body = receiver.body,
                 scope = scope
             ))
+        }
+        is ShapeTypeValue -> {
+            val constantFields = receiver.constantFields.toMap()
+            val dynamicFields = namedArguments.toMap()
+            EvaluationResult.pure(ShapeValue(constantFields + dynamicFields))
         }
         else -> throw NotImplementedError()
     }
@@ -184,7 +194,11 @@ internal data class FunctionValue(
 ): InterpreterValue()
 
 internal data class ShapeTypeValue(
-    val fields: Map<Identifier, Expression?>
+    val constantFields: Map<Identifier, InterpreterValue>
+): InterpreterValue()
+
+internal data class ShapeValue(
+    val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue()
 
 internal data class Block(val body: List<Statement>, val scope: Scope): IncompleteExpression() {
@@ -361,7 +375,8 @@ internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): Mo
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
         positionalArgumentExpressions = listOf(),
-        positionalArgumentValues = listOf()
+        positionalArgumentValues = listOf(),
+        namedArgumentValues = listOf()
     )
     val context = InterpreterContext(
         scope = Scope(listOf()),

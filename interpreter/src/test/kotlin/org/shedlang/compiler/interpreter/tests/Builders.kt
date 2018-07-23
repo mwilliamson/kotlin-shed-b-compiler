@@ -23,12 +23,14 @@ internal fun scopeOf(variables: Map<String, InterpreterValue>): Scope {
 internal fun call(
     receiver: Expression,
     positionalArgumentExpressions: List<Expression> = listOf(),
-    positionalArgumentValues: List<InterpreterValue> = listOf()
+    positionalArgumentValues: List<InterpreterValue> = listOf(),
+    namedArgumentValues: List<Pair<Identifier, InterpreterValue>> = listOf()
 ): Call {
     return Call(
         receiver,
         positionalArgumentExpressions = positionalArgumentExpressions,
-        positionalArgumentValues = positionalArgumentValues
+        positionalArgumentValues = positionalArgumentValues,
+        namedArgumentValues = namedArgumentValues
     )
 }
 

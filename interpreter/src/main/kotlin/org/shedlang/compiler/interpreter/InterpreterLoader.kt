@@ -3,7 +3,6 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.mapNullable
 import org.shedlang.compiler.resolveImport
 
 
@@ -37,10 +36,16 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
         val expression = statement.accept(object : ModuleStatementNode.Visitor<Expression> {
             override fun visit(node: ShapeNode): Expression {
                 return ShapeTypeValue(
-                    fields = node.fields.associateBy(
-                        { field -> field.name },
-                        { field -> field.value.mapNullable(::loadExpression) }
-                    )
+                    constantFields = node.fields
+                        .mapNotNull { field ->
+                            val expression = field.value
+                            if (expression == null) {
+                                null
+                            } else {
+                                field.name to loadExpression(expression) as InterpreterValue
+                            }
+                        }
+                        .toMap()
                 )
             }
 
@@ -106,7 +111,8 @@ internal fun loadExpression(expression: ExpressionNode): Expression {
             return Call(
                 receiver = loadExpression(node.receiver),
                 positionalArgumentExpressions = node.positionalArguments.map(::loadExpression),
-                positionalArgumentValues = listOf()
+                positionalArgumentValues = listOf(),
+                namedArgumentValues = listOf()
             )
         }
 

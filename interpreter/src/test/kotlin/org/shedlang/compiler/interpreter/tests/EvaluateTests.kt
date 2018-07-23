@@ -189,7 +189,8 @@ class EvaluateCallTests {
                 ),
                 positionalArgumentValues = listOf(
                     IntegerValue(1)
-                )
+                ),
+                namedArgumentValues = listOf()
             ),
             context
         )
@@ -201,7 +202,8 @@ class EvaluateCallTests {
             ),
             positionalArgumentValues = listOf(
                 IntegerValue(1)
-            )
+            ),
+            namedArgumentValues = listOf()
         ))))
     }
 
@@ -222,7 +224,8 @@ class EvaluateCallTests {
                 ),
                 positionalArgumentValues = listOf(
                     IntegerValue(1)
-                )
+                ),
+                namedArgumentValues = listOf()
             ),
             context
         )
@@ -234,7 +237,8 @@ class EvaluateCallTests {
             positionalArgumentValues = listOf(
                 IntegerValue(1),
                 IntegerValue(2)
-            )
+            ),
+            namedArgumentValues = listOf()
         ))))
     }
 
@@ -262,6 +266,31 @@ class EvaluateCallTests {
             context
         )
         assertThat(result, isPureResult(equalTo(StringValue("42"))))
+    }
+
+    @Test
+    fun whenReceiverIsShapeTypeThenCallIsEvaluatedToShapeValue() {
+        val context = createContext()
+        val shapeType = ShapeTypeValue(
+            constantFields = mapOf(
+                Identifier("x") to IntegerValue(1)
+            )
+        )
+        val expression = evaluate(
+            call(
+                receiver = shapeType,
+                namedArgumentValues = listOf(
+                    Identifier("y") to IntegerValue(2)
+                )
+            ),
+            context
+        )
+        assertThat(expression, isPureResult(equalTo(ShapeValue(
+            fields = mapOf(
+                Identifier("x") to IntegerValue(1),
+                Identifier("y") to IntegerValue(2)
+            )
+        ))))
     }
 
     @Test
