@@ -119,6 +119,30 @@ class EvaluateBinaryOperationTests {
     }
 
     @Test
+    fun equalityOfSymbols() {
+        val equalValue = evaluate(BinaryOperation(
+            Operator.EQUALS,
+            SymbolValue(listOf(Identifier("X")), "@a"),
+            SymbolValue(listOf(Identifier("X")), "@a")
+        ))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
+
+        val differentName = evaluate(BinaryOperation(
+            Operator.EQUALS,
+            SymbolValue(listOf(Identifier("X")), "@a"),
+            SymbolValue(listOf(Identifier("X")), "@b")
+        ))
+        assertThat(differentName, isPureResult(equalTo(BooleanValue(false))))
+
+        val differentModule = evaluate(BinaryOperation(
+            Operator.EQUALS,
+            SymbolValue(listOf(Identifier("X")), "@a"),
+            SymbolValue(listOf(Identifier("Y")), "@a")
+        ))
+        assertThat(differentModule, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
     fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
         val context = createContext(
             scope = scopeOf(mapOf(

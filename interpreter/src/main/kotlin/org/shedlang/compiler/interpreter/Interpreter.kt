@@ -69,6 +69,8 @@ internal data class BinaryOperation(
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
                     } else if (operator == Operator.ADD && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(StringValue(left.value + right.value))
+                    } else if (operator == Operator.EQUALS && left is SymbolValue && right is SymbolValue) {
+                        EvaluationResult.pure(BooleanValue(left == right))
                     } else {
                         throw NotImplementedError()
                     }
@@ -189,7 +191,10 @@ internal data class BooleanValue(val value: Boolean): InterpreterValue()
 internal data class IntegerValue(val value: Int): InterpreterValue()
 internal data class StringValue(val value: String): InterpreterValue()
 internal data class CharacterValue(val value: Int): InterpreterValue()
-internal data class SymbolValue(val name: String): InterpreterValue()
+internal data class SymbolValue(
+    val moduleName: List<Identifier>,
+    val name: String
+): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
 internal data class FunctionValue(
@@ -418,7 +423,7 @@ internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): Mo
 internal data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
 
 internal fun fullyEvaluate(expressionNode: ExpressionNode, context: InterpreterContext): EvaluationResult<InterpreterValue> {
-    return fullyEvaluate(loadExpression(expressionNode), context)
+    return fullyEvaluate(loadExpression(listOf(), expressionNode), context)
 }
 
 internal fun fullyEvaluate(initialExpression: Expression, initialContext: InterpreterContext): EvaluationResult.Value<InterpreterValue> {
