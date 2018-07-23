@@ -3,6 +3,7 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.mapNullable
 import org.shedlang.compiler.resolveImport
 
 
@@ -35,7 +36,12 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
         })
         val expression = statement.accept(object : ModuleStatementNode.Visitor<Expression> {
             override fun visit(node: ShapeNode): Expression {
-                throw UnsupportedOperationException("not implemented")
+                return ShapeTypeValue(
+                    fields = node.fields.associateBy(
+                        { field -> field.name },
+                        { field -> field.value.mapNullable(::loadExpression) }
+                    )
+                )
             }
 
             override fun visit(node: UnionNode): Expression {
@@ -71,9 +77,11 @@ private fun loadStatement(statement: StatementNode): Statement {
         }
 
         override fun visit(node: ValNode): Statement {
-            throw UnsupportedOperationException("not implemented")
+            return Val(
+                name = node.name,
+                expression = loadExpression(node.expression)
+            )
         }
-
     })
 }
 

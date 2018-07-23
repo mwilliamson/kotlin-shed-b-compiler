@@ -491,9 +491,32 @@ class EvaluateBlockTests {
     }
 }
 
+class EvaluateValTests {
+    @Test
+    fun expressionIsEvaluated() {
+        val context = createContext(
+            scope = scopeOf(mapOf(
+                "y" to IntegerValue(42)
+            ))
+        )
+        val statement = evaluate(
+            Val(Identifier("x"), VariableReference("y")),
+            context
+        )
+        assertThat(statement, isPureResult(equalTo(Val(Identifier("x"), IntegerValue(42)))))
+    }
+}
+
 private fun evaluate(
     expression: IncompleteExpression,
     context: InterpreterContext = createContext()
 ): EvaluationResult<Expression> {
     return expression.evaluate(context)
+}
+
+private fun evaluate(
+    statement: Statement,
+    context: InterpreterContext = createContext()
+): EvaluationResult<Statement> {
+    return statement.execute(context)
 }

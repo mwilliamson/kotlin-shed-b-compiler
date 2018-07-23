@@ -183,6 +183,10 @@ internal data class FunctionValue(
     val moduleName: List<Identifier>?
 ): InterpreterValue()
 
+internal data class ShapeTypeValue(
+    val fields: Map<Identifier, Expression?>
+): InterpreterValue()
+
 internal data class Block(val body: List<Statement>, val scope: Scope): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         if (body.isEmpty()) {
@@ -268,6 +272,18 @@ internal data class ExpressionStatement(val expression: Expression, val isReturn
         } else {
             throw NotImplementedError()
         }
+    }
+}
+
+internal data class Val(val name: Identifier, val expression: Expression): Statement {
+    override fun execute(context: InterpreterContext): EvaluationResult<Statement> {
+        when (expression) {
+            is IncompleteExpression ->
+                return expression.evaluate(context).map { evaluatedExpression ->
+                    Val(name, evaluatedExpression)
+                }
+        }
+        throw UnsupportedOperationException("not implemented")
     }
 }
 
