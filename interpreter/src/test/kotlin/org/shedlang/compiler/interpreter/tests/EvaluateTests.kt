@@ -518,6 +518,40 @@ class EvaluateBlockTests {
         )
         assertThat(expression, isPureResult(equalTo(IntegerValue(42))))
     }
+
+    @Test
+    fun whenBlockHasValStatementWithValueThenStatementIsDroppedAndScopeIsUpdated() {
+        val expression = evaluate(
+            Block(
+                body = listOf(
+                    Val(Identifier("x"), IntegerValue(47)),
+                    ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+                ),
+                scope = Scope(listOf(
+                    ScopeFrame(mapOf(
+                        "y" to IntegerValue(4)
+                    )),
+                    ScopeFrame(mapOf(
+                        "x" to IntegerValue(100)
+                    ))
+                ))
+            )
+        )
+        assertThat(expression, isPureResult(equalTo(Block(
+            body = listOf(
+                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+            ),
+            scope = Scope(listOf(
+                ScopeFrame(mapOf(
+                    "x" to IntegerValue(47),
+                    "y" to IntegerValue(4)
+                )),
+                ScopeFrame(mapOf(
+                    "x" to IntegerValue(100)
+                ))
+            ))
+        ))))
+    }
 }
 
 class EvaluateValTests {

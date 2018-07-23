@@ -213,6 +213,11 @@ internal data class Block(val body: List<Statement>, val scope: Scope): Incomple
                 } else {
                     return EvaluationResult.pure(withBody(body.drop(1)))
                 }
+            } else if (statement is Val && statement.expression is InterpreterValue) {
+                return EvaluationResult.pure(Block(
+                    body = body.drop(1),
+                    scope = scope.add(statement.name, statement.expression)
+                ))
             } else {
                 return statement.execute(context.inScope(scope)).map { evaluatedStatement ->
                     withBody(listOf(evaluatedStatement) + body.drop(1))
@@ -357,11 +362,23 @@ internal data class Scope(private val frames: List<ScopeFrame>) {
         }
         throw InterpreterError("Could not find variable: " + name)
     }
+
+    fun add(name: Identifier, value: InterpreterValue): Scope {
+        return Scope(listOf(frames[0].add(name, value)) + frames.drop(1))
+    }
 }
 
 internal data class ScopeFrame(private val variables: Map<String, InterpreterValue>) {
     fun value(name: String): InterpreterValue? {
         return variables[name]
+    }
+
+    fun add(name: Identifier, value: InterpreterValue): ScopeFrame {
+        if (variables.containsKey(name.value)) {
+            throw InterpreterError("name is already bound in scope")
+        } else {
+            return ScopeFrame(mapOf(name.value to value) + variables)
+        }
     }
 }
 
