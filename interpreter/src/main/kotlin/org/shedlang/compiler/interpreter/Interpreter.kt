@@ -81,16 +81,18 @@ internal data class Call(
     val receiver: Expression,
     val positionalArgumentExpressions: List<Expression>,
     val positionalArgumentValues: List<InterpreterValue>,
+    val namedArgumentExpressions: List<Pair<Identifier, Expression>>,
     val namedArgumentValues: List<Pair<Identifier, InterpreterValue>>
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return when (receiver) {
             is IncompleteExpression -> receiver.evaluate(context).map { evaluatedReceiver ->
                 Call(
-                    evaluatedReceiver,
-                    positionalArgumentExpressions,
-                    positionalArgumentValues,
-                    namedArgumentValues
+                    receiver = evaluatedReceiver,
+                    positionalArgumentExpressions = positionalArgumentExpressions,
+                    positionalArgumentValues = positionalArgumentValues,
+                    namedArgumentExpressions = namedArgumentExpressions,
+                    namedArgumentValues = namedArgumentValues
                 )
             }
             is InterpreterValue -> {
@@ -99,17 +101,19 @@ internal data class Call(
                     when (argument) {
                         is IncompleteExpression -> argument.evaluate(context).map { evaluatedArgument ->
                             Call(
-                                receiver,
-                                listOf(evaluatedArgument) + positionalArgumentExpressions.drop(1),
-                                positionalArgumentValues,
-                                namedArgumentValues
+                                receiver = receiver,
+                                positionalArgumentExpressions = listOf(evaluatedArgument) + positionalArgumentExpressions.drop(1),
+                                positionalArgumentValues = positionalArgumentValues,
+                                namedArgumentExpressions = namedArgumentExpressions,
+                                namedArgumentValues = namedArgumentValues
                             )
                         }
                         is InterpreterValue -> EvaluationResult.pure(Call(
-                            receiver,
-                            positionalArgumentExpressions.drop(1),
-                            positionalArgumentValues + listOf(argument),
-                            namedArgumentValues
+                            receiver = receiver,
+                            positionalArgumentExpressions = positionalArgumentExpressions.drop(1),
+                            positionalArgumentValues = positionalArgumentValues + listOf(argument),
+                            namedArgumentExpressions = namedArgumentExpressions,
+                            namedArgumentValues = namedArgumentValues
                         ))
                     }
                 } else {
@@ -394,6 +398,7 @@ internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): Mo
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
         positionalArgumentExpressions = listOf(),
         positionalArgumentValues = listOf(),
+        namedArgumentExpressions = listOf(),
         namedArgumentValues = listOf()
     )
     val context = InterpreterContext(

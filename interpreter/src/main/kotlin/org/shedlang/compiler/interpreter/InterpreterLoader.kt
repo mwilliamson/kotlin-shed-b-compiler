@@ -112,6 +112,9 @@ internal fun loadExpression(expression: ExpressionNode): Expression {
                 receiver = loadExpression(node.receiver),
                 positionalArgumentExpressions = node.positionalArguments.map(::loadExpression),
                 positionalArgumentValues = listOf(),
+                namedArgumentExpressions = node.namedArguments.map { argument ->
+                    argument.name to loadExpression(argument.expression)
+                },
                 namedArgumentValues = listOf()
             )
         }

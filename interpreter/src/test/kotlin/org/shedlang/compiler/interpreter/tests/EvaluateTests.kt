@@ -190,6 +190,7 @@ class EvaluateCallTests {
                 positionalArgumentValues = listOf(
                     IntegerValue(1)
                 ),
+                namedArgumentExpressions = listOf(),
                 namedArgumentValues = listOf()
             ),
             context
@@ -203,6 +204,7 @@ class EvaluateCallTests {
             positionalArgumentValues = listOf(
                 IntegerValue(1)
             ),
+            namedArgumentExpressions = listOf(),
             namedArgumentValues = listOf()
         ))))
     }
@@ -225,6 +227,7 @@ class EvaluateCallTests {
                 positionalArgumentValues = listOf(
                     IntegerValue(1)
                 ),
+                namedArgumentExpressions = listOf(),
                 namedArgumentValues = listOf()
             ),
             context
@@ -238,6 +241,7 @@ class EvaluateCallTests {
                 IntegerValue(1),
                 IntegerValue(2)
             ),
+            namedArgumentExpressions = listOf(),
             namedArgumentValues = listOf()
         ))))
     }

@@ -24,12 +24,14 @@ internal fun call(
     receiver: Expression,
     positionalArgumentExpressions: List<Expression> = listOf(),
     positionalArgumentValues: List<InterpreterValue> = listOf(),
+    namedArgumentExpressions: List<Pair<Identifier, Expression>> = listOf(),
     namedArgumentValues: List<Pair<Identifier, InterpreterValue>> = listOf()
 ): Call {
     return Call(
         receiver,
         positionalArgumentExpressions = positionalArgumentExpressions,
         positionalArgumentValues = positionalArgumentValues,
+        namedArgumentExpressions = namedArgumentExpressions,
         namedArgumentValues = namedArgumentValues
     )
 }
