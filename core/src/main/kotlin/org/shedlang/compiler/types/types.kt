@@ -1,6 +1,7 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.freshNodeId
 
 
 interface StaticValue {
@@ -131,8 +132,7 @@ fun freshEffectParameterId() = nextEffectParameterId++
 private var nextAnonymousTypeId = 0
 fun freshAnonymousTypeId() = nextAnonymousTypeId++
 
-private var nextShapeId = 0
-fun freshShapeId() = nextShapeId++
+fun freshShapeId() = freshNodeId()
 
 interface StaticParameter: StaticValue {
     val name: Identifier
@@ -461,7 +461,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             returns = replaceStaticValuesInType(type.returns, bindings),
             staticParameters = type.staticParameters
         )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CharType || type is AnyType) {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CharType || type is AnyType || type is SymbolType) {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)

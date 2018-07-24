@@ -45,7 +45,8 @@ internal fun typeContext(
         variableTypes = HashMap(finalTypes),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),
-        getModule = { moduleName -> modules[moduleName]!! }
+        getModule = { moduleName -> modules[moduleName]!! },
+        unions = mutableListOf()
     )
 }
 

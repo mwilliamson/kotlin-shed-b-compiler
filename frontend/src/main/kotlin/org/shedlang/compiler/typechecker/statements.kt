@@ -29,6 +29,8 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 
     // TODO: test laziness
     val fields = lazy({
+        val unions = context.findUnionsWithMember(node)
+
         val parentFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
@@ -41,11 +43,24 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
             }
         }
 
-        val newFields = node.fields.map { field ->
+        val explicitFields = node.fields.map { field ->
             generateField(field, context, shapeId = shapeId, shapeName = node.name)
         }
+        val unionFields = unions.map { union ->
+            FieldDefinition(
+                field = Field(
+                    // TODO: this relies on uniqueness with shape and node IDs
+                    shapeId = freshShapeId(),
+                    name = Identifier("\$unionTag\$${context.moduleName!!.joinToString(".")}\$${union.name.value}"),
+                    isConstant = true,
+                    type = SymbolType(context.moduleName!!, "@" + node.name.value)
+                ),
+                shape = union.name,
+                source = union.source
+            )
+        }
 
-        mergeFields(parentFields, newFields)
+        mergeFields(parentFields, explicitFields + unionFields)
     })
 
     val shapeType = lazyShapeType(
@@ -197,10 +212,12 @@ private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, ne
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {
+    context.addUnion(node)
     // TODO: check for duplicates in members
     // TODO: check for circularity
     // TODO: test laziness
     // TODO: check members satisfy subtype relation
+    // TODO: check members have common tag field
     val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     val superTypeNode = node.superType
