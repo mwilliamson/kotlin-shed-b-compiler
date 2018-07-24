@@ -50,7 +50,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
             FieldDefinition(
                 field = Field(
                     // TODO: this relies on uniqueness with shape and node IDs
-                    shapeId = freshShapeId(),
+                    shapeId = union.nodeId,
                     name = Identifier("\$unionTag\$${context.moduleName!!.joinToString(".")}\$${union.name.value}"),
                     isConstant = true,
                     type = SymbolType(context.moduleName!!, "@" + node.name.value)

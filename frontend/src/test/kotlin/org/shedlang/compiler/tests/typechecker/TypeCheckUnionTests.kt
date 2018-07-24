@@ -104,6 +104,7 @@ class TypeCheckUnionTests {
         ))
         assertThat(member1Type, isShapeType(fields = isSequence(
             isField(
+                shapeId = equalTo(unionNode.nodeId),
                 name = isIdentifier("\$unionTag\$A.B\$X"),
                 isConstant = equalTo(true),
                 type = equalTo(SymbolType(
@@ -114,6 +115,7 @@ class TypeCheckUnionTests {
         )))
         assertThat(member2Type, isShapeType(fields = isSequence(
             isField(
+                shapeId = equalTo(unionNode.nodeId),
                 name = isIdentifier("\$unionTag\$A.B\$X"),
                 isConstant = equalTo(true),
                 type = equalTo(SymbolType(
