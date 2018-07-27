@@ -50,7 +50,7 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
             }
 
             override fun visit(node: UnionNode): Expression {
-                throw UnsupportedOperationException("not implemented")
+                return UnionTypeValue
             }
 
             override fun visit(node: FunctionDeclarationNode): Expression {

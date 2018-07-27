@@ -207,6 +207,8 @@ internal data class ShapeTypeValue(
     val constantFields: Map<Identifier, InterpreterValue>
 ): InterpreterValue()
 
+internal object UnionTypeValue: InterpreterValue()
+
 internal data class ShapeValue(
     val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue()
