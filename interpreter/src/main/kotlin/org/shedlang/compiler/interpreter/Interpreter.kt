@@ -1,7 +1,6 @@
 package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
 
@@ -423,10 +422,6 @@ internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): Mo
 }
 
 internal data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
-
-internal fun fullyEvaluate(expressionNode: ExpressionNode, context: InterpreterContext): EvaluationResult<InterpreterValue> {
-    return fullyEvaluate(loadExpression(listOf(), expressionNode), context)
-}
 
 internal fun fullyEvaluate(initialExpression: Expression, initialContext: InterpreterContext): EvaluationResult.Value<InterpreterValue> {
     var expression = initialExpression

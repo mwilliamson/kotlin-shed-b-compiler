@@ -6,6 +6,9 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.resolveImport
 
 
+internal class LoaderContext(val moduleName: List<Identifier>)
+
+
 internal fun loadModuleSet(modules: ModuleSet): Map<List<Identifier>, ModuleExpression> {
     return modules.modules.associateBy(
         { module -> module.name },
@@ -23,6 +26,8 @@ internal fun loadModule(module: Module): ModuleExpression {
 }
 
 internal fun loadModule(module: Module.Shed): ModuleExpression {
+    val context = LoaderContext(moduleName = module.name)
+
     val imports = module.node.imports.map { import ->
         import.name to ModuleReference(resolveImport(module.name, import.path))
     }
@@ -42,7 +47,7 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
                             if (expression == null) {
                                 null
                             } else {
-                                field.name to loadExpression(module.name, expression) as InterpreterValue
+                                field.name to loadExpression(expression, context) as InterpreterValue
                             }
                         }
                         .toMap()
@@ -57,14 +62,14 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
                 return FunctionValue(
                     positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
                     body = node.bodyStatements.map { statement ->
-                        loadStatement(module.name, statement)
+                        loadStatement(statement, context)
                     },
                     moduleName = module.name
                 )
             }
 
             override fun visit(node: ValNode): Expression {
-                return loadExpression(module.name, node.expression)
+                return loadExpression(node.expression, context)
             }
         })
         name to expression
@@ -72,11 +77,11 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
     return ModuleExpression(fieldExpressions = imports + declarations, fieldValues = listOf())
 }
 
-private fun loadStatement(moduleName: List<Identifier>, statement: StatementNode): Statement {
+private fun loadStatement(statement: StatementNode, context: LoaderContext): Statement {
     return statement.accept(object: StatementNode.Visitor<Statement> {
         override fun visit(node: ExpressionStatementNode): Statement {
             return ExpressionStatement(
-                expression = loadExpression(moduleName, node.expression),
+                expression = loadExpression(node.expression, context),
                 isReturn = node.isReturn
             )
         }
@@ -84,24 +89,28 @@ private fun loadStatement(moduleName: List<Identifier>, statement: StatementNode
         override fun visit(node: ValNode): Statement {
             return Val(
                 name = node.name,
-                expression = loadExpression(moduleName, node.expression)
+                expression = loadExpression(node.expression, context)
             )
         }
     })
 }
 
-internal fun loadExpression(moduleName: List<Identifier>, expression: ExpressionNode): Expression {
+internal fun loadExpression(expression: ExpressionNode, context: LoaderContext): Expression {
     return expression.accept(object : ExpressionNode.Visitor<Expression> {
         override fun visit(node: UnitLiteralNode) = UnitValue
         override fun visit(node: BooleanLiteralNode) = BooleanValue(node.value)
         override fun visit(node: IntegerLiteralNode) = IntegerValue(node.value)
         override fun visit(node: StringLiteralNode) = StringValue(node.value)
         override fun visit(node: CharacterLiteralNode) = CharacterValue(node.value)
-        override fun visit(node: SymbolNode) = SymbolValue(moduleName, node.name)
+        override fun visit(node: SymbolNode) = SymbolValue(context.moduleName, node.name)
         override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)
 
         override fun visit(node: BinaryOperationNode): Expression
-            = BinaryOperation(node.operator, loadExpression(moduleName, node.left), loadExpression(moduleName, node.right))
+            = BinaryOperation(
+            node.operator,
+            loadExpression(node.left, context),
+            loadExpression(node.right, context)
+        )
 
         override fun visit(node: IsNode): Expression {
             throw UnsupportedOperationException("not implemented")
@@ -109,13 +118,13 @@ internal fun loadExpression(moduleName: List<Identifier>, expression: Expression
 
         override fun visit(node: CallNode): Expression {
             return Call(
-                receiver = loadExpression(moduleName, node.receiver),
+                receiver = loadExpression(node.receiver, context),
                 positionalArgumentExpressions = node.positionalArguments.map { argument ->
-                    loadExpression(moduleName, argument)
+                    loadExpression(argument, context)
                 },
                 positionalArgumentValues = listOf(),
                 namedArgumentExpressions = node.namedArguments.map { argument ->
-                    argument.name to loadExpression(moduleName, argument.expression)
+                    argument.name to loadExpression(argument.expression, context)
                 },
                 namedArgumentValues = listOf()
             )
@@ -127,7 +136,7 @@ internal fun loadExpression(moduleName: List<Identifier>, expression: Expression
 
         override fun visit(node: FieldAccessNode): Expression {
             return FieldAccess(
-                receiver = loadExpression(moduleName, node.receiver),
+                receiver = loadExpression(node.receiver, context),
                 fieldName = node.fieldName.identifier
             )
         }
@@ -140,14 +149,14 @@ internal fun loadExpression(moduleName: List<Identifier>, expression: Expression
             return If(
                 conditionalBranches = node.conditionalBranches.map { branch ->
                     ConditionalBranch(
-                        condition = loadExpression(moduleName, branch.condition),
+                        condition = loadExpression(branch.condition, context),
                         body = branch.body.map { statement ->
-                            loadStatement(moduleName, statement)
+                            loadStatement(statement, context)
                         }
                     )
                 },
                 elseBranch = node.elseBranch.map { statement ->
-                    loadStatement(moduleName, statement)
+                    loadStatement(statement, context)
                 }
             )
         }

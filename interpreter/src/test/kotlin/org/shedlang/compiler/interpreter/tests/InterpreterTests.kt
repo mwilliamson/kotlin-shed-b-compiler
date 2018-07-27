@@ -58,7 +58,13 @@ class InterpreterTests {
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
     }
 
-    private fun fullyEvaluate(expression: ExpressionNode): EvaluationResult<InterpreterValue> {
-        return fullyEvaluate(expression, createContext())
+    private fun fullyEvaluate(
+        expression: ExpressionNode,
+        context: InterpreterContext = createContext()
+    ): EvaluationResult<InterpreterValue> {
+        return fullyEvaluate(
+            loadExpression(expression, LoaderContext(moduleName = listOf())),
+            context
+        )
     }
 }
