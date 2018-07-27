@@ -1,6 +1,6 @@
 package org.shedlang.compiler.tests.typechecker
 
-import org.shedlang.compiler.ExpressionTypesMap
+import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.ReferenceNode
 import org.shedlang.compiler.ast.VariableBindingNode
@@ -12,7 +12,7 @@ internal fun captureTypes(
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     types: Map<VariableBindingNode, Type> = mapOf()
-): ExpressionTypesMap {
+): TypesMap {
     val expressionTypes = mutableMapOf<Int, Type>()
     val typeContext = typeContext(
         expressionTypes = expressionTypes,
@@ -24,5 +24,5 @@ internal fun captureTypes(
     typeCheck(expression, typeContext)
     typeContext.undefer()
 
-    return ExpressionTypesMap(expressionTypes)
+    return TypesMap(expressionTypes = expressionTypes, variableTypes = mapOf())
 }

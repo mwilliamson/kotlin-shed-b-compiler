@@ -72,7 +72,7 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
             name = name,
             node = moduleNode,
             type = typeCheckResult.moduleType,
-            expressionTypes = typeCheckResult.expressionTypes,
+            types = typeCheckResult.types,
             references = resolvedReferences
         )
     }

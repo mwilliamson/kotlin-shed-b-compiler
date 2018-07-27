@@ -1,9 +1,9 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.ExpressionTypes
-import org.shedlang.compiler.ExpressionTypesMap
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.Types
+import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 import java.util.*
@@ -133,6 +133,13 @@ internal class TypeContext(
             else -> false
         }
     }
+
+    fun toTypes(): Types {
+        return TypesMap(
+            expressionTypes = expressionTypes,
+            variableTypes = variableTypes
+        )
+    }
 }
 
 interface NodeTypes {
@@ -156,7 +163,7 @@ internal class NodeTypesMap(private val nodeTypes: Map<Int, Type>) : NodeTypes {
 
 data class TypeCheckResult(
     val moduleType: ModuleType,
-    val expressionTypes: ExpressionTypes
+    val types: Types
 )
 
 internal fun typeCheck(
@@ -209,7 +216,7 @@ private fun typeCheckModule(
     val moduleType = typeCheck(typeContext)
     return TypeCheckResult(
         moduleType = moduleType,
-        expressionTypes = ExpressionTypesMap(expressionTypes)
+        types = typeContext.toTypes()
     )
 }
 

@@ -1,11 +1,9 @@
 package org.shedlang.compiler
 
-import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.ast.FunctionDeclarationNode
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleNode
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.metaTypeToType
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -19,7 +17,7 @@ sealed class Module {
         override val name: List<Identifier>,
         val node: ModuleNode,
         override val type: ModuleType,
-        val expressionTypes: ExpressionTypes,
+        val types: Types,
         val references: ResolvedReferences
     ): Module() {
         fun hasMain() = node.body.any({ node ->
@@ -41,14 +39,22 @@ sealed class Module {
 }
 
 
-interface ExpressionTypes {
+interface Types {
     fun typeOf(node: ExpressionNode): Type
+    fun declaredType(node: TypeDeclarationNode): Type
 }
 
-val emptyExpressionTypes: ExpressionTypes = ExpressionTypesMap(mapOf())
+val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf())
 
-class ExpressionTypesMap(private val types: Map<Int, Type>) : ExpressionTypes {
+class TypesMap(
+    private val expressionTypes: Map<Int, Type>,
+    private val variableTypes: Map<Int, Type>
+) : Types {
     override fun typeOf(node: ExpressionNode): Type {
-        return types[node.nodeId]!!
+        return expressionTypes[node.nodeId]!!
+    }
+
+    override fun declaredType(node: TypeDeclarationNode): Type {
+        return metaTypeToType(variableTypes[node.nodeId]!!)!!
     }
 }

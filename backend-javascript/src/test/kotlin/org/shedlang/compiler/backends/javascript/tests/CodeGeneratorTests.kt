@@ -5,14 +5,14 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ExpressionTypesMap
+import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
-import org.shedlang.compiler.emptyExpressionTypes
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
@@ -73,7 +73,7 @@ class CodeGeneratorTests {
         return Module.Shed(
             name = listOf(Identifier("Module")),
             type = ModuleType(mapOf()),
-            expressionTypes = emptyExpressionTypes,
+            types = EMPTY_TYPES,
             references = ResolvedReferencesMap(mapOf()),
             node = node
         )
@@ -551,11 +551,14 @@ class CodeGeneratorTests {
     private fun context(
         referenceTypes: List<Pair<ReferenceNode, Type>> = listOf()
     ): CodeGenerationContext {
-        val expressionTypes = ExpressionTypesMap(referenceTypes.associateBy(
-            { entry -> entry.first.nodeId },
-            { entry -> entry.second }
-        ))
-        return CodeGenerationContext(expressionTypes = expressionTypes)
+        val types = TypesMap(
+            expressionTypes = referenceTypes.associateBy(
+                { entry -> entry.first.nodeId },
+                { entry -> entry.second }
+            ),
+            variableTypes = mapOf()
+        )
+        return CodeGenerationContext(types = types)
     }
 
     private fun isJavascriptModule(body: Matcher<List<JavascriptStatementNode>>)
