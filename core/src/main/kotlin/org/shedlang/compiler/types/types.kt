@@ -118,6 +118,13 @@ fun metaTypeToType(type: Type): Type? {
     }
 }
 
+fun rawType(type: Type): Type {
+    return when (type) {
+        is TypeFunction -> type.type
+        else -> type
+    }
+}
+
 class EffectType(val effect: Effect): Type {
     override val shortDescription: String
         get() = "EffectType(${effect})"

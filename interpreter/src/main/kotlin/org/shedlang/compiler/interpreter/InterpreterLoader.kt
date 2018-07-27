@@ -4,6 +4,9 @@ import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.resolveImport
+import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.SymbolType
+import org.shedlang.compiler.types.rawType
 
 
 internal class LoaderContext(val moduleName: List<Identifier>)
@@ -40,17 +43,28 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
         })
         val expression = statement.accept(object : ModuleStatementNode.Visitor<Expression> {
             override fun visit(node: ShapeNode): Expression {
+                val type = rawType(module.types.declaredType(node)) as ShapeType
+
+                val constantFields = type.fields.filter { (_, field) -> field.isConstant }.map { (name, field) ->
+                    val fieldValueNode = node.fields
+                        .find { fieldNode -> fieldNode.name == name }
+                        ?.value
+                    val fieldType = field.type
+                    val value = if (fieldValueNode != null) {
+                        loadExpression(fieldValueNode, context) as InterpreterValue
+                    } else if (fieldType is SymbolType) {
+                        SymbolValue(
+                            moduleName = fieldType.module.map(::Identifier),
+                            name = fieldType.name
+                        )
+                    } else {
+                        throw InterpreterError("Could not find value for constant field")
+                    }
+                    name to value
+                }
+
                 return ShapeTypeValue(
-                    constantFields = node.fields
-                        .mapNotNull { field ->
-                            val expression = field.value
-                            if (expression == null) {
-                                null
-                            } else {
-                                field.name to loadExpression(expression, context) as InterpreterValue
-                            }
-                        }
-                        .toMap()
+                    constantFields = constantFields.toMap()
                 )
             }
 
