@@ -3,6 +3,8 @@ package org.shedlang.compiler.interpreter.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.EMPTY_TYPES
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
@@ -63,7 +65,7 @@ class InterpreterTests {
         context: InterpreterContext = createContext()
     ): EvaluationResult<InterpreterValue> {
         return fullyEvaluate(
-            loadExpression(expression, LoaderContext(moduleName = listOf())),
+            loadExpression(expression, LoaderContext(moduleName = listOf(), types = EMPTY_TYPES)),
             context
         )
     }

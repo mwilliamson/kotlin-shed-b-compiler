@@ -2,6 +2,7 @@ package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.resolveImport
 import org.shedlang.compiler.types.ShapeType
@@ -9,7 +10,7 @@ import org.shedlang.compiler.types.SymbolType
 import org.shedlang.compiler.types.rawType
 
 
-internal class LoaderContext(val moduleName: List<Identifier>)
+internal class LoaderContext(val moduleName: List<Identifier>, val types: Types)
 
 
 internal fun loadModuleSet(modules: ModuleSet): Map<List<Identifier>, ModuleExpression> {
@@ -29,7 +30,7 @@ internal fun loadModule(module: Module): ModuleExpression {
 }
 
 internal fun loadModule(module: Module.Shed): ModuleExpression {
-    val context = LoaderContext(moduleName = module.name)
+    val context = LoaderContext(moduleName = module.name, types = module.types)
 
     val imports = module.node.imports.map { import ->
         import.name to ModuleReference(resolveImport(module.name, import.path))
@@ -41,54 +42,58 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
             override fun visit(node: FunctionDeclarationNode) = node.name
             override fun visit(node: ValNode) = node.name
         })
-        val expression = statement.accept(object : ModuleStatementNode.Visitor<Expression> {
-            override fun visit(node: ShapeNode): Expression {
-                val type = rawType(module.types.declaredType(node)) as ShapeType
-
-                val constantFields = type.fields.filter { (_, field) -> field.isConstant }.map { (name, field) ->
-                    val fieldValueNode = node.fields
-                        .find { fieldNode -> fieldNode.name == name }
-                        ?.value
-                    val fieldType = field.type
-                    val value = if (fieldValueNode != null) {
-                        loadExpression(fieldValueNode, context) as InterpreterValue
-                    } else if (fieldType is SymbolType) {
-                        SymbolValue(
-                            moduleName = fieldType.module.map(::Identifier),
-                            name = fieldType.name
-                        )
-                    } else {
-                        throw InterpreterError("Could not find value for constant field")
-                    }
-                    name to value
-                }
-
-                return ShapeTypeValue(
-                    constantFields = constantFields.toMap()
-                )
-            }
-
-            override fun visit(node: UnionNode): Expression {
-                return UnionTypeValue
-            }
-
-            override fun visit(node: FunctionDeclarationNode): Expression {
-                return FunctionValue(
-                    positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
-                    body = node.bodyStatements.map { statement ->
-                        loadStatement(statement, context)
-                    },
-                    moduleName = module.name
-                )
-            }
-
-            override fun visit(node: ValNode): Expression {
-                return loadExpression(node.expression, context)
-            }
-        })
+        val expression = loadModuleStatement(statement, context)
         name to expression
     }
     return ModuleExpression(fieldExpressions = imports + declarations, fieldValues = listOf())
+}
+
+internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): Expression {
+    return statement.accept(object : ModuleStatementNode.Visitor<Expression> {
+        override fun visit(node: ShapeNode): Expression {
+            val type = rawType(context.types.declaredType(node)) as ShapeType
+
+            val constantFields = type.fields.filter { (_, field) -> field.isConstant }.map { (name, field) ->
+                val fieldValueNode = node.fields
+                    .find { fieldNode -> fieldNode.name == name }
+                    ?.value
+                val fieldType = field.type
+                val value = if (fieldValueNode != null) {
+                    loadExpression(fieldValueNode, context) as InterpreterValue
+                } else if (fieldType is SymbolType) {
+                    SymbolValue(
+                        moduleName = fieldType.module.map(::Identifier),
+                        name = fieldType.name
+                    )
+                } else {
+                    throw InterpreterError("Could not find value for constant field")
+                }
+                name to value
+            }
+
+            return ShapeTypeValue(
+                constantFields = constantFields.toMap()
+            )
+        }
+
+        override fun visit(node: UnionNode): Expression {
+            return UnionTypeValue
+        }
+
+        override fun visit(node: FunctionDeclarationNode): Expression {
+            return FunctionValue(
+                positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
+                body = node.bodyStatements.map { statement ->
+                    loadStatement(statement, context)
+                },
+                moduleName = context.moduleName
+            )
+        }
+
+        override fun visit(node: ValNode): Expression {
+            return loadExpression(node.expression, context)
+        }
+    })
 }
 
 private fun loadStatement(statement: StatementNode, context: LoaderContext): Statement {
