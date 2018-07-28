@@ -117,7 +117,7 @@ internal data class Call(
                         ))
                     }
                 } else {
-                    call(receiver, positionalArgumentValues, namedArgumentValues, context)
+                    call(receiver, positionalArgumentValues, namedArgumentValues)
                 }
             }
         }
@@ -127,8 +127,7 @@ internal data class Call(
 private fun call(
     receiver: InterpreterValue,
     positionalArguments: List<InterpreterValue>,
-    namedArguments: List<Pair<Identifier, InterpreterValue>>,
-    context: InterpreterContext
+    namedArguments: List<Pair<Identifier, InterpreterValue>>
 ): EvaluationResult<Expression> {
     return when (receiver) {
         is IntToStringValue -> {
@@ -140,9 +139,9 @@ private fun call(
             EvaluationResult.Value(UnitValue, stdout = argument)
         }
         is FunctionValue -> {
-            val scope = Scope(listOf(
+            val scope = receiver.scope.enter(
                 ScopeFrameMap(receiver.positionalParameterNames.zip(positionalArguments).toMap())
-            ) + moduleStackFrames(receiver.moduleName, context))
+            )
             EvaluationResult.pure(Block(
                 body = receiver.body,
                 scope = scope
@@ -188,10 +187,24 @@ internal data class SymbolValue(
 ): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
+
+internal data class FunctionExpression(
+    val positionalParameterNames: List<String>,
+    val body: List<Statement>
+): IncompleteExpression() {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
+        return EvaluationResult.pure(FunctionValue(
+            positionalParameterNames = positionalParameterNames,
+            body = body,
+            scope = context.scope
+        ))
+    }
+}
+
 internal data class FunctionValue(
     val positionalParameterNames: List<String>,
     val body: List<Statement>,
-    val moduleName: List<Identifier>?
+    val scope: Scope
 ): InterpreterValue()
 
 internal data class ShapeTypeValue(
@@ -318,7 +331,7 @@ internal class InterpreterContext(
     private val moduleExpressions: Map<List<Identifier>, ModuleExpression>
 ) {
     fun value(name: String): InterpreterValue {
-        return scope.value(name)
+        return scope.value(name, this)
     }
 
     fun moduleValue(name: List<Identifier>): ModuleValue? {
@@ -356,9 +369,9 @@ internal class InterpreterContext(
 }
 
 internal data class Scope(private val frames: List<ScopeFrame>) {
-    fun value(name: String): InterpreterValue {
+    fun value(name: String, context: InterpreterContext): InterpreterValue {
         for (frame in frames) {
-            val value = frame.value(name)
+            val value = frame.value(name, context)
             if (value != null) {
                 return value
             }
@@ -369,10 +382,14 @@ internal data class Scope(private val frames: List<ScopeFrame>) {
     fun add(name: Identifier, value: InterpreterValue): Scope {
         return Scope(listOf(frames[0].add(name, value)) + frames.drop(1))
     }
+
+    fun enter(frame: ScopeFrame): Scope {
+        return Scope(frames = listOf(frame) + frames)
+    }
 }
 
 internal interface ScopeFrame {
-    fun value(name: String): InterpreterValue?
+    fun value(name: String, context: InterpreterContext): InterpreterValue?
     fun add(name: Identifier, value: InterpreterValue): ScopeFrame
 
     companion object {
@@ -381,7 +398,7 @@ internal interface ScopeFrame {
 }
 
 internal data class ScopeFrameMap(private val variables: Map<String, InterpreterValue>): ScopeFrame {
-    override fun value(name: String): InterpreterValue? {
+    override fun value(name: String, context: InterpreterContext): InterpreterValue? {
         return variables[name]
     }
 
@@ -395,10 +412,9 @@ internal data class ScopeFrameMap(private val variables: Map<String, Interpreter
 }
 
 internal data class ModuleScopeFrame(
-    private val moduleName: List<Identifier>,
-    private val context: InterpreterContext
+    private val moduleName: List<Identifier>
 ): ScopeFrame {
-    override fun value(name: String): InterpreterValue? {
+    override fun value(name: String, context: InterpreterContext): InterpreterValue? {
         val identifier = Identifier(name)
 
         val moduleValue = context.moduleValue(moduleName)
@@ -488,15 +504,14 @@ internal fun fullyEvaluate(initialExpression: Expression, initialContext: Interp
 }
 
 private fun moduleStackFrames(
-    moduleName: List<Identifier>?,
-    context: InterpreterContext
+    moduleName: List<Identifier>?
 ): List<ScopeFrame> {
     val moduleFrames = if (moduleName == null) {
         listOf()
     } else {
         val moduleNameString = moduleName.map(Identifier::value).joinToString(".")
         listOf(
-            ModuleScopeFrame(moduleName, context),
+            ModuleScopeFrame(moduleName),
             ScopeFrameMap(mapOf("moduleName" to StringValue(moduleNameString)))
         )
     }
@@ -557,7 +572,7 @@ internal data class ModuleExpression(
                     )
                 is IncompleteExpression -> {
                     val scope = Scope(
-                        frames = moduleStackFrames(moduleName, context)
+                        frames = moduleStackFrames(moduleName)
                     )
                     val result = expression.evaluate(context.inScope(scope))
                     when (result) {

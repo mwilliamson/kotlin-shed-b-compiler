@@ -432,7 +432,7 @@ class EvaluateCallTests {
             body = listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
             ),
-            moduleName = null
+            scope = scopeOf(mapOf())
         )
         val expression = evaluate(
             call(
@@ -450,17 +450,13 @@ class EvaluateCallTests {
 
     @Test
     fun whenCallingFunctionThenBlockHasScopeFromFunction() {
-        val context = createContext(
-            moduleValues = mapOf(
-                listOf(Identifier("Some"), Identifier("Module")) to ModuleValue(mapOf(
-                    Identifier("x") to IntegerValue(42)
-                ))
-            )
-        )
+        val context = createContext()
         val function = FunctionValue(
             positionalParameterNames = listOf("arg0", "arg1"),
             body = listOf(),
-            moduleName = listOf(Identifier("Some"), Identifier("Module"))
+            scope = Scope(frames = listOf(
+                ScopeFrameMap(variables = mapOf("x" to IntegerValue(42)))
+            ))
         )
         val expression = evaluate(
             call(
@@ -476,14 +472,7 @@ class EvaluateCallTests {
                     "arg0" to StringValue("zero"),
                     "arg1" to StringValue("one")
                 )),
-                ModuleScopeFrame(
-                    moduleName = listOf(Identifier("Some"), Identifier("Module")),
-                    context = context
-                ),
-                ScopeFrameMap(mapOf(
-                    "moduleName" to StringValue("Some.Module")
-                )),
-                builtinStackFrame
+                ScopeFrameMap(variables = mapOf("x" to IntegerValue(42)))
             ))
         ))))
     }
