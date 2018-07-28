@@ -157,7 +157,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         }
 
         override fun visit(node: FunctionExpressionNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return functionToExpression(node, context)
         }
 
         override fun visit(node: IfNode): Expression {
