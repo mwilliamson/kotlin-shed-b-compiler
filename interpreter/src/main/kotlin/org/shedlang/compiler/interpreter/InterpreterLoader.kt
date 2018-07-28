@@ -122,7 +122,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
 
         override fun visit(node: IsNode): Expression {
             val sourceType = context.types.typeOf(node.expression)
-            val targetType = rawType(metaTypeToType(context.types.typeOf(node.type))!!) as ShapeType
+            val targetType = typeValue(node.type, context) as ShapeType
             val discriminator = findDiscriminator(sourceType = sourceType, targetType = targetType)!!
             return BinaryOperation(
                 Operator.EQUALS,
@@ -177,10 +177,24 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         }
 
         override fun visit(node: WhenNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return When(
+                expression = loadExpression(node.expression, context),
+                expressionType = context.types.typeOf(node.expression),
+                branches = node.branches.map { branch ->
+                    WhenBranch(
+                        type = typeValue(branch.type, context),
+                        body = branch.body.map { statement ->
+                            loadStatement(statement, context)
+                        }
+                    )
+                }
+            )
         }
     })
 }
+
+private fun typeValue(typeNode: StaticNode, context: LoaderContext) =
+    rawType(metaTypeToType(context.types.typeOf(typeNode))!!)
 
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
     return FunctionExpression(
