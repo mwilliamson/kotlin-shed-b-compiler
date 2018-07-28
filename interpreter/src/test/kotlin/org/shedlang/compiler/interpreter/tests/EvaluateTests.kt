@@ -402,6 +402,51 @@ class EvaluateCallTests {
     }
 
     @Test
+    fun whenReceiverIsPartialCallFunctionValueThenCallIsEvaluatedToPartialCall() {
+        val context = createContext()
+        val result = evaluate(
+            call(
+                PartialCallFunctionValue,
+                positionalArgumentValues = listOf(PrintValue, IntegerValue(1)),
+                namedArgumentValues = listOf(Identifier("x") to IntegerValue(2))
+            ),
+            context
+        )
+        assertThat(result, isPureResult(equalTo(PartialCallValue(
+            receiver = PrintValue,
+            positionalArguments = listOf(IntegerValue(1)),
+            namedArguments = listOf(Identifier("x") to IntegerValue(2))
+        ))))
+    }
+
+    @Test
+    fun whenReceiverIsPartialCallValueThenCallIsEvaluatedWithCombinedArguments() {
+        val context = createContext()
+        val result = evaluate(
+            call(
+                PartialCallValue(
+                    receiver = PrintValue,
+                    positionalArguments = listOf(IntegerValue(1)),
+                    namedArguments = listOf(Identifier("x") to IntegerValue(2))
+                ),
+                positionalArgumentValues = listOf(IntegerValue(3)),
+                namedArgumentValues = listOf(Identifier("y") to IntegerValue(4))
+            ),
+            context
+        )
+        assertThat(result, isPureResult(equalTo(Call(
+            receiver = PrintValue,
+            positionalArgumentExpressions = listOf(),
+            positionalArgumentValues = listOf(IntegerValue(1), IntegerValue(3)),
+            namedArgumentExpressions = listOf(),
+            namedArgumentValues = listOf(
+                Identifier("x") to IntegerValue(2),
+                Identifier("y") to IntegerValue(4)
+            )
+        ))))
+    }
+
+    @Test
     fun whenReceiverIsShapeTypeThenCallIsEvaluatedToShapeValue() {
         val context = createContext()
         val shapeType = ShapeTypeValue(

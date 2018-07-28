@@ -143,8 +143,8 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
 
         override fun visit(node: PartialCallNode): Expression {
             return Call(
-                receiver = PartialCallValue,
-                positionalArgumentExpressions = loadPositionalArguments(node.positionalArguments),
+                receiver = PartialCallFunctionValue,
+                positionalArgumentExpressions = loadPositionalArguments(listOf(node.receiver) + node.positionalArguments),
                 positionalArgumentValues = listOf(),
                 namedArgumentExpressions = loadNamedArguments(node.namedArguments),
                 namedArgumentValues = listOf()

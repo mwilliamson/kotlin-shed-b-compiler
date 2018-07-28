@@ -142,6 +142,22 @@ private fun call(
             val argument = (positionalArguments[0] as StringValue).value
             EvaluationResult.Value(UnitValue, stdout = argument)
         }
+        is PartialCallFunctionValue -> {
+            EvaluationResult.pure(PartialCallValue(
+                receiver = positionalArguments[0],
+                positionalArguments = positionalArguments.drop(1),
+                namedArguments = namedArguments
+            ))
+        }
+        is PartialCallValue -> {
+            EvaluationResult.pure(Call(
+                receiver = receiver.receiver,
+                positionalArgumentExpressions = listOf(),
+                positionalArgumentValues = receiver.positionalArguments + positionalArguments,
+                namedArgumentExpressions = listOf(),
+                namedArgumentValues = receiver.namedArguments + namedArguments
+            ))
+        }
         is FunctionValue -> {
             val scope = receiver.scope.enter(
                 ScopeFrameMap(receiver.positionalParameterNames.zip(positionalArguments).toMap())
@@ -360,7 +376,13 @@ internal data class Val(val name: Identifier, val expression: Expression): State
 
 internal object IntToStringValue: InterpreterValue()
 internal object PrintValue: InterpreterValue()
-internal object PartialCallValue: InterpreterValue()
+internal object PartialCallFunctionValue : InterpreterValue()
+
+internal data class PartialCallValue(
+    val receiver: Expression,
+    val positionalArguments: List<InterpreterValue>,
+    val namedArguments: List<Pair<Identifier, InterpreterValue>>
+): InterpreterValue()
 
 internal class InterpreterContext(
     internal val scope: Scope,
