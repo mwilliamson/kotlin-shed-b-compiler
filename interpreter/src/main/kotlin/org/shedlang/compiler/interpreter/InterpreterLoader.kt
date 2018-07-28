@@ -22,8 +22,14 @@ internal fun loadModule(module: Module): ModuleExpression {
     return when (module) {
         is Module.Shed ->
             loadModule(module)
-        is Module.Native ->
-            throw NotImplementedError()
+        is Module.Native -> {
+            val loadedModule = nativeModules[module.name]
+            if (loadedModule == null) {
+                throw InterpreterError("Could not find native module: " + module.name)
+            } else {
+                return loadedModule
+            }
+        }
     }
 }
 
