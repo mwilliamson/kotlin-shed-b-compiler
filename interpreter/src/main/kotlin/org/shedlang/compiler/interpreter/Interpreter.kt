@@ -20,8 +20,7 @@ internal data class ModuleReference(val name: List<Identifier>): IncompleteExpre
         }
         val expression = context.moduleExpression(name)
         if (expression != null) {
-            val scope = Scope(moduleStackFrames(name))
-            return expression.evaluate(name, context.inScope(scope))
+            return expression.evaluate(name, context)
         }
         throw InterpreterError("Could not find module: " + name)
     }
