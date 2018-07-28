@@ -484,3 +484,17 @@ public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticV
         return bindings.getOrElse(effect, { effect }) as Effect
     }
 }
+
+public data class Discriminator(val fieldName: Identifier, val symbolType: SymbolType)
+
+public fun findDiscriminator(sourceType: Type, targetType: ShapeType): Discriminator? {
+    // TODO: find discriminator properly (check that all members of
+    // sourceType have the field, and that value is unique)
+    for (field in targetType.fields.values) {
+        val fieldType = field.type
+        if (fieldType is SymbolType) {
+            return Discriminator(field.name, fieldType)
+        }
+    }
+    return null
+}

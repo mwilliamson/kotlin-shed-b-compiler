@@ -182,32 +182,11 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
     })
 }
 
-private data class Discriminator(val fieldName: Identifier, val symbolType: SymbolType)
-
-private fun findDiscriminator(sourceType: Type, targetType: ShapeType): Discriminator? {
-    // TODO: find discriminator properly (check that all members of
-    // sourceType have the field, and that value is unique)
-    for (field in targetType.fields.values) {
-        val fieldType = field.type
-        if (fieldType is SymbolType) {
-            return Discriminator(field.name, fieldType)
-        }
-    }
-    return null
-}
-
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
     return FunctionExpression(
         positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
         body = node.body.statements.map { statement ->
             loadStatement(statement, context)
         }
-    )
-}
-
-private fun symbolTypeToValue(symbolType: SymbolType): SymbolValue {
-    return SymbolValue(
-        moduleName = symbolType.module.map(::Identifier),
-        name = symbolType.name
     )
 }

@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.types.AnyType
+import org.shedlang.compiler.types.SymbolType
 
 class EvaluateVariableReferenceTests {
     @Test
@@ -581,6 +583,111 @@ class EvaluateIfTests {
                 ConditionalBranch(VariableReference("y"), listOf(returns(IntegerValue(2))))
             ),
             elseBranch = listOf(returns(IntegerValue(3)))
+        ))))
+    }
+}
+
+class EvaluateWhenTests {
+    @Test
+    fun whenExpressionIsNotValueThenExpressionIsEvaluated() {
+        val whenExpression = When(
+            expression = VariableReference("x"),
+            expressionType = AnyType,
+            branches = listOf()
+        )
+        val context = createContext(scope = scopeOf(mapOf("x" to BooleanValue(true))))
+        val expression = evaluate(whenExpression, context)
+        assertThat(expression, isPureResult(equalTo(When(
+            expression = BooleanValue(true),
+            expressionType = AnyType,
+            branches = listOf()
+        ))))
+    }
+
+    @Test
+    fun whenExpressionMatchesTypeThenEvaluatesToBody() {
+        val shapeType1 = shapeType(
+            fields = listOf(
+                field("tag", SymbolType(listOf("M"), "@A"))
+            )
+        )
+        val shapeType2 = shapeType(
+            fields = listOf(
+                field("tag", SymbolType(listOf("M"), "@B"))
+            )
+        )
+        val unionType = unionType(members = listOf(shapeType1, shapeType2))
+
+        val whenExpression = When(
+            expression = ShapeValue(fields = mapOf(
+                Identifier("tag") to SymbolValue(listOf(Identifier("M")), "@A")
+            )),
+            expressionType = unionType,
+            branches = listOf(
+                WhenBranch(
+                    type = shapeType1,
+                    body = listOf(ExpressionStatement(IntegerValue(1), isReturn = true))
+                ),
+                WhenBranch(
+                    type = shapeType2,
+                    body = listOf(ExpressionStatement(IntegerValue(2), isReturn = true))
+                )
+            )
+        )
+
+        val scope = Scope(listOf(ScopeFrame.EMPTY))
+        val expression = evaluate(whenExpression, createContext(scope = scope))
+        assertThat(expression, isPureResult(isBlock(
+            body = isSequence(
+                cast(equalTo(ExpressionStatement(IntegerValue(1), isReturn = true)))
+            ),
+            scope = equalTo(scope.enter())
+        )))
+    }
+
+    @Test
+    fun whenExpressionDoesNotMatchTypeThenBranchIsDropped() {
+        val shapeType1 = shapeType(
+            fields = listOf(
+                field("tag", SymbolType(listOf("M"), "@A"))
+            )
+        )
+        val shapeType2 = shapeType(
+            fields = listOf(
+                field("tag", SymbolType(listOf("M"), "@B"))
+            )
+        )
+        val unionType = unionType(members = listOf(shapeType1, shapeType2))
+
+        val whenExpression = When(
+            expression = ShapeValue(fields = mapOf(
+                Identifier("tag") to SymbolValue(listOf(Identifier("M")), "@B")
+            )),
+            expressionType = unionType,
+            branches = listOf(
+                WhenBranch(
+                    type = shapeType1,
+                    body = listOf(ExpressionStatement(IntegerValue(1), isReturn = true))
+                ),
+                WhenBranch(
+                    type = shapeType2,
+                    body = listOf(ExpressionStatement(IntegerValue(2), isReturn = true))
+                )
+            )
+        )
+
+        val expression = evaluate(whenExpression)
+        assertThat(expression, isPureResult(equalTo(When(
+            expression = ShapeValue(fields = mapOf(
+                Identifier("tag") to SymbolValue(listOf(Identifier("M")), "@B")
+            )),
+            expressionType = unionType,
+            branches = listOf(
+                WhenBranch(
+                    type = shapeType2,
+                    body = listOf(ExpressionStatement(IntegerValue(2), isReturn = true))
+                )
+            )
         ))))
     }
 }
