@@ -516,7 +516,11 @@ internal data class ModuleExpression(
                         )
                     )
                 is IncompleteExpression -> {
-                    val result = expression.evaluate(context)
+                    val moduleFrame = fieldValues.map { (fieldName, fieldValue) -> fieldName.value to fieldValue }.toMap()
+                    val scope = Scope(
+                        frames = listOf(ScopeFrame(moduleFrame)) + moduleStackFrames(moduleName)
+                    )
+                    val result = expression.evaluate(context.inScope(scope))
                     when (result) {
                         is EvaluationResult.Value -> {
                             if (result.stdout != "") {

@@ -71,6 +71,35 @@ class EvaluateModuleReferenceTests {
             has(EvaluationResult.ModuleValueUpdate::value, equalTo(ModuleValue(mapOf())))
         )))
     }
+
+    @Test
+    fun expressionsAtTopLevelOfModuleAreEvaluatedInModuleScope() {
+        val module = ModuleExpression(
+            fieldExpressions = listOf(
+                Identifier("y") to VariableReference("x")
+            ),
+            fieldValues = listOf(
+                Identifier("x") to IntegerValue(1)
+            )
+        )
+        val context = createContext(
+            moduleValues = mapOf(),
+            moduleExpressions = mapOf(
+                listOf(Identifier("X")) to module
+            )
+        )
+        val value = ModuleReference(listOf(Identifier("X"))).evaluate(context)
+        assertThat(value, cast(allOf(
+            has(EvaluationResult.ModuleExpressionUpdate::value, equalTo(ModuleExpression(
+                fieldExpressions = listOf(
+                    Identifier("y") to IntegerValue(1)
+                ),
+                fieldValues = listOf(
+                    Identifier("x") to IntegerValue(1)
+                )
+            )))
+        )))
+    }
 }
 
 class EvaluateBinaryOperationTests {
