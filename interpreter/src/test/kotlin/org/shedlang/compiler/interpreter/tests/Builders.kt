@@ -17,7 +17,7 @@ internal fun createContext(
 }
 
 internal fun scopeOf(variables: Map<String, InterpreterValue>): Scope {
-    return Scope(listOf(ScopeFrame(variables)))
+    return Scope(listOf(ScopeFrameMap(variables)))
 }
 
 internal fun call(

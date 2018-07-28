@@ -140,16 +140,9 @@ private fun call(
             EvaluationResult.Value(UnitValue, stdout = argument)
         }
         is FunctionValue -> {
-            val moduleFields = if (receiver.moduleName == null) {
-                mapOf()
-            } else {
-                val moduleValue = context.moduleValue(receiver.moduleName)!!
-                moduleValue.fields
-            }
             val scope = Scope(listOf(
-                ScopeFrame(receiver.positionalParameterNames.zip(positionalArguments).toMap()),
-                ScopeFrame(moduleFields.mapKeys { key -> key.key.value })
-            ) + moduleStackFrames(receiver.moduleName))
+                ScopeFrameMap(receiver.positionalParameterNames.zip(positionalArguments).toMap())
+            ) + moduleStackFrames(receiver.moduleName, context))
             EvaluationResult.pure(Block(
                 body = receiver.body,
                 scope = scope
@@ -378,21 +371,66 @@ internal data class Scope(private val frames: List<ScopeFrame>) {
     }
 }
 
-internal data class ScopeFrame(private val variables: Map<String, InterpreterValue>) {
-    fun value(name: String): InterpreterValue? {
+internal interface ScopeFrame {
+    fun value(name: String): InterpreterValue?
+    fun add(name: Identifier, value: InterpreterValue): ScopeFrame
+
+    companion object {
+        val EMPTY = ScopeFrameMap(mapOf())
+    }
+}
+
+internal data class ScopeFrameMap(private val variables: Map<String, InterpreterValue>): ScopeFrame {
+    override fun value(name: String): InterpreterValue? {
         return variables[name]
     }
 
-    fun add(name: Identifier, value: InterpreterValue): ScopeFrame {
+    override fun add(name: Identifier, value: InterpreterValue): ScopeFrame {
         if (variables.containsKey(name.value)) {
             throw InterpreterError("name is already bound in scope")
         } else {
-            return ScopeFrame(mapOf(name.value to value) + variables)
+            return ScopeFrameMap(mapOf(name.value to value) + variables)
         }
     }
 }
 
-internal val builtinStackFrame = ScopeFrame(mapOf(
+internal data class ModuleScopeFrame(
+    private val moduleName: List<Identifier>,
+    private val context: InterpreterContext
+): ScopeFrame {
+    override fun value(name: String): InterpreterValue? {
+        val identifier = Identifier(name)
+
+        val moduleValue = context.moduleValue(moduleName)
+        if (moduleValue != null) {
+            return moduleValue.fields[identifier]
+        }
+
+        val moduleExpression = context.moduleExpression(moduleName)
+        if (moduleExpression != null) {
+            val value = moduleExpression.fieldValues.toMap()[identifier]
+            if (value != null) {
+                return value
+            }
+
+            val expression = moduleExpression.fieldExpressions.toMap()[identifier]
+            if (expression != null) {
+                throw InterpreterError("module field is not initialised: " + name)
+            }
+
+            return null
+        }
+
+        throw InterpreterError("Could not find module: " + moduleName)
+    }
+
+    override fun add(name: Identifier, value: InterpreterValue): ScopeFrame {
+        throw UnsupportedOperationException("not implemented")
+    }
+
+}
+
+internal val builtinStackFrame = ScopeFrameMap(mapOf(
     "intToString" to IntToStringValue,
     "print" to PrintValue
 ))
@@ -449,17 +487,20 @@ internal fun fullyEvaluate(initialExpression: Expression, initialContext: Interp
     }
 }
 
-private fun moduleStackFrames(moduleName: List<Identifier>?): List<ScopeFrame> {
-    val moduleNameFrame = if (moduleName == null) {
-        ScopeFrame(mapOf())
+private fun moduleStackFrames(
+    moduleName: List<Identifier>?,
+    context: InterpreterContext
+): List<ScopeFrame> {
+    val moduleFrames = if (moduleName == null) {
+        listOf()
     } else {
         val moduleNameString = moduleName.map(Identifier::value).joinToString(".")
-        ScopeFrame(mapOf("moduleName" to StringValue(moduleNameString)))
+        listOf(
+            ModuleScopeFrame(moduleName, context),
+            ScopeFrameMap(mapOf("moduleName" to StringValue(moduleNameString)))
+        )
     }
-    return listOf(
-        moduleNameFrame,
-        builtinStackFrame
-    )
+    return moduleFrames + listOf(builtinStackFrame)
 }
 
 internal sealed class EvaluationResult<out T> {
@@ -515,9 +556,8 @@ internal data class ModuleExpression(
                         )
                     )
                 is IncompleteExpression -> {
-                    val moduleFrame = fieldValues.map { (fieldName, fieldValue) -> fieldName.value to fieldValue }.toMap()
                     val scope = Scope(
-                        frames = listOf(ScopeFrame(moduleFrame)) + moduleStackFrames(moduleName)
+                        frames = moduleStackFrames(moduleName, context)
                     )
                     val result = expression.evaluate(context.inScope(scope))
                     when (result) {

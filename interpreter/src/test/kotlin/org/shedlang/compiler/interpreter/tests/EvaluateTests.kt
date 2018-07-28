@@ -27,10 +27,10 @@ class EvaluateVariableReferenceTests {
     fun variablesCanBeOverriddenInInnerScope() {
         val context = createContext(
             scope = Scope(listOf(
-                ScopeFrame(mapOf(
+                ScopeFrameMap(mapOf(
                     "x" to IntegerValue(47)
                 )),
-                ScopeFrame(mapOf(
+                ScopeFrameMap(mapOf(
                     "x" to IntegerValue(42)
                 ))
             ))
@@ -472,14 +472,15 @@ class EvaluateCallTests {
         assertThat(expression, isPureResult(equalTo(Block(
             body = listOf(),
             scope = Scope(listOf(
-                ScopeFrame(mapOf(
+                ScopeFrameMap(mapOf(
                     "arg0" to StringValue("zero"),
                     "arg1" to StringValue("one")
                 )),
-                ScopeFrame(mapOf(
-                    "x" to IntegerValue(42)
-                )),
-                ScopeFrame(mapOf(
+                ModuleScopeFrame(
+                    moduleName = listOf(Identifier("Some"), Identifier("Module")),
+                    context = context
+                ),
+                ScopeFrameMap(mapOf(
                     "moduleName" to StringValue("Some.Module")
                 )),
                 builtinStackFrame
@@ -669,10 +670,10 @@ class EvaluateBlockTests {
                     ExpressionStatement(expression = VariableReference("y"), isReturn = false)
                 ),
                 scope = Scope(listOf(
-                    ScopeFrame(mapOf(
+                    ScopeFrameMap(mapOf(
                         "y" to IntegerValue(4)
                     )),
-                    ScopeFrame(mapOf(
+                    ScopeFrameMap(mapOf(
                         "x" to IntegerValue(100)
                     ))
                 ))
@@ -683,11 +684,11 @@ class EvaluateBlockTests {
                 ExpressionStatement(expression = VariableReference("y"), isReturn = false)
             ),
             scope = Scope(listOf(
-                ScopeFrame(mapOf(
+                ScopeFrameMap(mapOf(
                     "x" to IntegerValue(47),
                     "y" to IntegerValue(4)
                 )),
-                ScopeFrame(mapOf(
+                ScopeFrameMap(mapOf(
                     "x" to IntegerValue(100)
                 ))
             ))
