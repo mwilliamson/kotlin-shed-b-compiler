@@ -2,9 +2,31 @@ package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ast.Identifier
 
+
+private object ListsSequenceToListValue: Callable() {
+    override fun call(
+        positionalArguments: List<InterpreterValue>,
+        namedArguments: List<Pair<Identifier, InterpreterValue>>
+    ): EvaluationResult<Expression> {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
+private object ListsListToSequenceValue: Callable() {
+    override fun call(
+        positionalArguments: List<InterpreterValue>,
+        namedArguments: List<Pair<Identifier, InterpreterValue>>
+    ): EvaluationResult<Expression> {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 private val listsModule = ModuleExpression(
     fieldExpressions = listOf(),
-    fieldValues = listOf()
+    fieldValues = listOf(
+        Identifier("sequenceToList") to ListsSequenceToListValue,
+        Identifier("listToSequence") to ListsListToSequenceValue
+    )
 )
 
 private object StringsCharToHexStringValue: Callable() {
