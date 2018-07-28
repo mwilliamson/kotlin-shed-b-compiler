@@ -76,13 +76,7 @@ internal fun loadModuleStatement(statement: ModuleStatementNode, context: Loader
         }
 
         override fun visit(node: FunctionDeclarationNode): Expression {
-            return FunctionValue(
-                positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
-                body = node.bodyStatements.map { statement ->
-                    loadStatement(statement, context)
-                },
-                moduleName = context.moduleName
-            )
+            return functionToValue(node, context)
         }
 
         override fun visit(node: ValNode): Expression {
@@ -200,6 +194,16 @@ private fun findDiscriminator(sourceType: Type, targetType: ShapeType): Discrimi
         }
     }
     return null
+}
+
+private fun functionToValue(node: FunctionNode, context: LoaderContext): FunctionValue {
+    return FunctionValue(
+        positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
+        body = node.body.statements.map { statement ->
+            loadStatement(statement, context)
+        },
+        moduleName = context.moduleName
+    )
 }
 
 private fun symbolTypeToValue(symbolType: SymbolType): SymbolValue {
