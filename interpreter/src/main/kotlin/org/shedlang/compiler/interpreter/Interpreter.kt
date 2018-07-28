@@ -187,8 +187,8 @@ internal data class FieldAccess(
             }
             is InterpreterValue ->
                 when (receiver) {
-                    is ModuleValue -> EvaluationResult.pure(receiver.fields[fieldName]!!)
-                    is ShapeValue -> EvaluationResult.pure(receiver.fields[fieldName]!!)
+                    is ModuleValue -> EvaluationResult.pure(receiver.fields.getValue(fieldName))
+                    is ShapeValue -> EvaluationResult.pure(receiver.fields.getValue(fieldName))
                     else -> throw NotImplementedError()
                 }
         }
