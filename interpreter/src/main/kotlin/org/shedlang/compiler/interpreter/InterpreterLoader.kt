@@ -5,9 +5,7 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.resolveImport
-import org.shedlang.compiler.types.ShapeType
-import org.shedlang.compiler.types.SymbolType
-import org.shedlang.compiler.types.rawType
+import org.shedlang.compiler.types.*
 
 
 internal class LoaderContext(val moduleName: List<Identifier>, val types: Types)
@@ -129,7 +127,14 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         )
 
         override fun visit(node: IsNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            val sourceType = context.types.typeOf(node.expression)
+            val targetType = rawType(metaTypeToType(context.types.typeOf(node.type))!!) as ShapeType
+            val discriminator = findDiscriminator(sourceType = sourceType, targetType = targetType)!!
+            return BinaryOperation(
+                Operator.EQUALS,
+                FieldAccess(loadExpression(node.expression, context), discriminator.fieldName),
+                symbolTypeToValue(discriminator.symbolType)
+            )
         }
 
         override fun visit(node: CallNode): Expression {
@@ -181,6 +186,20 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             throw UnsupportedOperationException("not implemented")
         }
     })
+}
+
+private data class Discriminator(val fieldName: Identifier, val symbolType: SymbolType)
+
+private fun findDiscriminator(sourceType: Type, targetType: ShapeType): Discriminator? {
+    // TODO: find discriminator properly (check that all members of
+    // sourceType have the field, and that value is unique)
+    for (field in targetType.fields.values) {
+        val fieldType = field.type
+        if (fieldType is SymbolType) {
+            return Discriminator(field.name, fieldType)
+        }
+    }
+    return null
 }
 
 private fun symbolTypeToValue(symbolType: SymbolType): SymbolValue {

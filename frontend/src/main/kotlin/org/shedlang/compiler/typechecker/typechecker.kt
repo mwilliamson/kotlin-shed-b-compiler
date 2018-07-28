@@ -75,6 +75,10 @@ internal class TypeContext(
         expressionTypes[node.nodeId] = type
     }
 
+    fun addStaticExpressionType(node: StaticNode, type: Type) {
+        expressionTypes[node.nodeId] = type
+    }
+
     fun addUnion(node: UnionNode) {
         unions.add(node)
     }
@@ -394,7 +398,7 @@ private fun evalStaticValue(node: StaticNode, context: TypeContext): StaticValue
 }
 
 private fun evalStatic(node: StaticNode, context: TypeContext): Type {
-    return node.accept(object : StaticNode.Visitor<Type> {
+    val type = node.accept(object : StaticNode.Visitor<Type> {
         override fun visit(node: StaticReferenceNode): Type {
             return inferReferenceType(node, context)
         }
@@ -427,7 +431,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
             })
             val namedParameters = node.namedParameters.associateBy(
                 { parameter -> parameter.name },
-                { parameter -> evalType(parameter.type, context)}
+                { parameter -> evalType(parameter.type, context) }
             )
             val effect = evalEffects(node.effects, context)
             val returnType = evalType(node.returnType, context)
@@ -442,6 +446,8 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
             return MetaType(type)
         }
     })
+    context.addStaticExpressionType(node, type)
+    return type
 }
 
 internal fun evalEffect(node: StaticNode, context: TypeContext): Effect {

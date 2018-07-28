@@ -41,6 +41,7 @@ sealed class Module {
 
 interface Types {
     fun typeOf(node: ExpressionNode): Type
+    fun typeOf(node: StaticNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
 }
 
@@ -51,6 +52,10 @@ class TypesMap(
     private val variableTypes: Map<Int, Type>
 ) : Types {
     override fun typeOf(node: ExpressionNode): Type {
+        return expressionTypes[node.nodeId]!!
+    }
+
+    override fun typeOf(node: StaticNode): Type {
         return expressionTypes[node.nodeId]!!
     }
 

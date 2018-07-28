@@ -7,11 +7,13 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.SymbolType
+
 
 class LoadShapeTests {
     @Test
@@ -126,5 +128,44 @@ class LoadShapeTests {
                 )))
             ))
         ))
+    }
+}
+
+class LoadIsTests {
+    @Test
+    fun isExpressionIsConvertedToBinaryOperationOnDiscriminatorField() {
+        val shapeType1 = shapeType(
+            fields = listOf(
+                field("tag", SymbolType(listOf("M"), "@A"))
+            )
+        )
+        val shapeType2 = shapeType(
+            fields = listOf(
+                field("tag", SymbolType(listOf("M"), "@B"))
+            )
+        )
+        val unionType = unionType(members = listOf(shapeType1, shapeType2))
+
+        val variableReference = variableReference("x")
+        val shapeReference = staticReference("Shape1")
+        val node = isOperation(variableReference, shapeReference)
+        val context = LoaderContext(
+            moduleName = listOf(),
+            types = TypesMap(
+                expressionTypes = mapOf(
+                    variableReference.nodeId to unionType,
+                    shapeReference.nodeId to MetaType(shapeType1)
+                ),
+                variableTypes = mapOf()
+            )
+        )
+
+        val expression = loadExpression(node, context = context)
+
+        assertThat(expression, cast(allOf(
+            has(BinaryOperation::operator, equalTo(Operator.EQUALS)),
+            has(BinaryOperation::left, cast(equalTo(FieldAccess(VariableReference("x"), Identifier("tag"))))),
+            has(BinaryOperation::right, cast(equalTo(SymbolValue(listOf(Identifier("M")), "@A"))))
+        )))
     }
 }
