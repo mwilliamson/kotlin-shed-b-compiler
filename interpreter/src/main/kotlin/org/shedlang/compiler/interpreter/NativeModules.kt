@@ -65,6 +65,15 @@ private object StringsMapCharactersValue: Callable() {
     }
 }
 
+private object StringsRepeatValue: Callable() {
+    override fun call(
+        positionalArguments: List<InterpreterValue>,
+        namedArguments: List<Pair<Identifier, InterpreterValue>>
+    ): EvaluationResult<Expression> {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 private object StringsReplaceValue: Callable() {
     override fun call(
         positionalArguments: List<InterpreterValue>,
@@ -81,6 +90,7 @@ private val stringsModule = ModuleExpression(
         Identifier("charToString") to StringsCharToStringValue,
         Identifier("codePointCount") to StringsCodePointCountValue,
         Identifier("mapCharacters") to StringsMapCharactersValue,
+        Identifier("repeat") to StringsRepeatValue,
         Identifier("replace") to StringsReplaceValue
     )
 )
