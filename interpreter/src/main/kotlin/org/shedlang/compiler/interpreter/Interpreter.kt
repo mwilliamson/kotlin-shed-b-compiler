@@ -379,6 +379,15 @@ internal object IntToStringValue: Callable() {
     }
 }
 
+internal object ListConstructorValue: Callable() {
+    override fun call(
+        positionalArguments: List<InterpreterValue>,
+        namedArguments: List<Pair<Identifier, InterpreterValue>>
+    ): EvaluationResult<Expression> {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 internal object PrintValue: Callable() {
     override fun call(
         positionalArguments: List<InterpreterValue>,
@@ -548,6 +557,7 @@ internal data class ModuleScopeFrame(
 
 internal val builtinStackFrame = ScopeFrameMap(mapOf(
     "intToString" to IntToStringValue,
+    "list" to ListConstructorValue,
     "print" to PrintValue
 ))
 
