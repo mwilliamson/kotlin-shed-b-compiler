@@ -134,19 +134,33 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         override fun visit(node: CallNode): Expression {
             return Call(
                 receiver = loadExpression(node.receiver, context),
-                positionalArgumentExpressions = node.positionalArguments.map { argument ->
-                    loadExpression(argument, context)
-                },
+                positionalArgumentExpressions = loadPositionalArguments(node.positionalArguments),
                 positionalArgumentValues = listOf(),
-                namedArgumentExpressions = node.namedArguments.map { argument ->
-                    argument.name to loadExpression(argument.expression, context)
-                },
+                namedArgumentExpressions = loadNamedArguments(node.namedArguments),
                 namedArgumentValues = listOf()
             )
         }
 
         override fun visit(node: PartialCallNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return Call(
+                receiver = PartialCallValue,
+                positionalArgumentExpressions = loadPositionalArguments(node.positionalArguments),
+                positionalArgumentValues = listOf(),
+                namedArgumentExpressions = loadNamedArguments(node.namedArguments),
+                namedArgumentValues = listOf()
+            )
+        }
+
+        private fun loadPositionalArguments(arguments: List<ExpressionNode>): List<Expression> {
+            return arguments.map { argument ->
+                loadExpression(argument, context)
+            }
+        }
+
+        private fun loadNamedArguments(arguments: List<CallNamedArgumentNode>): List<Pair<Identifier, Expression>> {
+            return arguments.map { argument ->
+                argument.name to loadExpression(argument.expression, context)
+            }
         }
 
         override fun visit(node: FieldAccessNode): Expression {

@@ -360,6 +360,7 @@ internal data class Val(val name: Identifier, val expression: Expression): State
 
 internal object IntToStringValue: InterpreterValue()
 internal object PrintValue: InterpreterValue()
+internal object PartialCallValue: InterpreterValue()
 
 internal class InterpreterContext(
     internal val scope: Scope,
