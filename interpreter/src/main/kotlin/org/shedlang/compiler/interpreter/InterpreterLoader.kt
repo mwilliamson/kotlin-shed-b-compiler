@@ -61,10 +61,7 @@ internal fun loadModuleStatement(statement: ModuleStatementNode, context: Loader
                 val value = if (fieldValueNode != null) {
                     loadExpression(fieldValueNode, context) as InterpreterValue
                 } else if (fieldType is SymbolType) {
-                    SymbolValue(
-                        moduleName = fieldType.module.map(::Identifier),
-                        name = fieldType.name
-                    )
+                    symbolTypeToValue(fieldType)
                 } else {
                     throw InterpreterError("Could not find value for constant field")
                 }
@@ -184,4 +181,11 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             throw UnsupportedOperationException("not implemented")
         }
     })
+}
+
+private fun symbolTypeToValue(symbolType: SymbolType): SymbolValue {
+    return SymbolValue(
+        moduleName = symbolType.module.map(::Identifier),
+        name = symbolType.name
+    )
 }
