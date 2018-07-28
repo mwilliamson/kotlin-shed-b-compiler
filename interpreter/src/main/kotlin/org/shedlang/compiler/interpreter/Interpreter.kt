@@ -170,6 +170,7 @@ internal data class SymbolValue(
     val moduleName: List<Identifier>,
     val name: String
 ): InterpreterValue()
+internal data class ListValue(val elements: List<InterpreterValue>): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
 
@@ -384,7 +385,7 @@ internal object ListConstructorValue: Callable() {
         positionalArguments: List<InterpreterValue>,
         namedArguments: List<Pair<Identifier, InterpreterValue>>
     ): EvaluationResult<Expression> {
-        throw UnsupportedOperationException("not implemented")
+        return EvaluationResult.pure(ListValue(positionalArguments))
     }
 }
 

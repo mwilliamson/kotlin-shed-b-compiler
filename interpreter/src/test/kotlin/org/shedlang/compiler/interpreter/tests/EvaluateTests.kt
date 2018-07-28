@@ -376,19 +376,6 @@ class EvaluateCallTests {
     }
 
     @Test
-    fun callingPrintUpdatesStdout() {
-        val context = createContext()
-        val result = evaluate(
-            call(
-                PrintValue,
-                positionalArgumentValues = listOf(StringValue("hello"))
-            ),
-            context
-        ) as EvaluationResult.Value
-        assertThat(result.stdout, equalTo("hello"))
-    }
-
-    @Test
     fun callingIntToStringConvertsIntToString() {
         val context = createContext()
         val result = evaluate(
@@ -399,6 +386,32 @@ class EvaluateCallTests {
             context
         )
         assertThat(result, isPureResult(equalTo(StringValue("42"))))
+    }
+
+    @Test
+    fun callingListConstructorCreatesList() {
+        val context = createContext()
+        val result = evaluate(
+            call(
+                ListConstructorValue,
+                positionalArgumentValues = listOf(IntegerValue(42))
+            ),
+            context
+        )
+        assertThat(result, isPureResult(equalTo(ListValue(listOf(IntegerValue(42))))))
+    }
+
+    @Test
+    fun callingPrintUpdatesStdout() {
+        val context = createContext()
+        val result = evaluate(
+            call(
+                PrintValue,
+                positionalArgumentValues = listOf(StringValue("hello"))
+            ),
+            context
+        ) as EvaluationResult.Value
+        assertThat(result.stdout, equalTo("hello"))
     }
 
     @Test
