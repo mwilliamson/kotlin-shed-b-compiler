@@ -253,8 +253,7 @@ internal data class If(
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         if (conditionalBranches.isEmpty()) {
-            // TODO: extend scope
-            return EvaluationResult.pure(Block(elseBranch, scope = context.scope))
+            return EvaluationResult.pure(Block(elseBranch, scope = context.scope.enter()))
         } else {
             val branch = conditionalBranches[0]
             return when (branch.condition) {
@@ -265,8 +264,7 @@ internal data class If(
                     ))
 
                 BooleanValue(true) ->
-                    // TODO: extend scope
-                    EvaluationResult.pure(Block(branch.body, scope = context.scope))
+                    EvaluationResult.pure(Block(branch.body, scope = context.scope.enter()))
 
                 is IncompleteExpression ->
                    branch.condition.evaluate(context).map { evaluatedCondition ->
@@ -381,6 +379,10 @@ internal data class Scope(private val frames: List<ScopeFrame>) {
 
     fun add(name: Identifier, value: InterpreterValue): Scope {
         return Scope(listOf(frames[0].add(name, value)) + frames.drop(1))
+    }
+
+    fun enter(): Scope {
+        return enter(ScopeFrameMap(mapOf()))
     }
 
     fun enter(frame: ScopeFrame): Scope {

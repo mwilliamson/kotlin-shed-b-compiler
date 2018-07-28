@@ -521,9 +521,11 @@ class EvaluateIfTests {
             conditionalBranches = listOf(),
             elseBranch = listOf(returns(IntegerValue(3)))
         )
-        val expression = evaluate(ifExpression)
+        val scope = Scope(frames = listOf(ScopeFrame.EMPTY))
+        val expression = evaluate(ifExpression, context = createContext(scope = scope))
         assertThat(expression, isPureResult(isBlock(
-            body = equalTo(listOf(returns(IntegerValue(3))))
+            body = equalTo(listOf(returns(IntegerValue(3)))),
+            scope = equalTo(scope.enter())
         )))
     }
 
@@ -554,9 +556,11 @@ class EvaluateIfTests {
             ),
             elseBranch = listOf(returns(IntegerValue(3)))
         )
-        val expression = evaluate(ifExpression)
+        val scope = Scope(frames = listOf(ScopeFrame.EMPTY))
+        val expression = evaluate(ifExpression, createContext(scope = scope))
         assertThat(expression, isPureResult(isBlock(
-            body = equalTo(listOf(returns(IntegerValue(1))))
+            body = equalTo(listOf(returns(IntegerValue(1)))),
+            scope = equalTo(scope.enter())
         )))
     }
 
