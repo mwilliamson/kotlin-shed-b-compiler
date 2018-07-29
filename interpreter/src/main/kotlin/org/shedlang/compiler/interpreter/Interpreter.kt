@@ -196,8 +196,10 @@ internal data class FunctionValue(
         positionalArguments: List<InterpreterValue>,
         namedArguments: List<Pair<Identifier, InterpreterValue>>
     ): EvaluationResult<Expression> {
+        val positionalBindings = positionalParameterNames.zip(positionalArguments)
+        val namedBindings = namedArguments.map { (name, argument) -> name.value to argument }
         val scope = this.scope.enter(
-            ScopeFrameMap(positionalParameterNames.zip(positionalArguments).toMap())
+            ScopeFrameMap((positionalBindings + namedBindings).toMap())
         )
         return EvaluationResult.pure(Block(
             body = body,

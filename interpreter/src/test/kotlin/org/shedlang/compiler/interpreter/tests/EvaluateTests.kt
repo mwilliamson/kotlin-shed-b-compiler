@@ -521,7 +521,11 @@ class EvaluateCallTests {
         val expression = evaluate(
             call(
                 receiver = function,
-                positionalArgumentValues = listOf(StringValue("zero"), StringValue("one"))
+                positionalArgumentValues = listOf(StringValue("zero"), StringValue("one")),
+                namedArgumentValues = listOf(
+                    Identifier("arg2") to StringValue("two"),
+                    Identifier("arg3") to StringValue("three")
+                )
             ),
             context
         )
@@ -530,7 +534,9 @@ class EvaluateCallTests {
             scope = Scope(listOf(
                 ScopeFrameMap(mapOf(
                     "arg0" to StringValue("zero"),
-                    "arg1" to StringValue("one")
+                    "arg1" to StringValue("one"),
+                    "arg2" to StringValue("two"),
+                    "arg3" to StringValue("three")
                 )),
                 ScopeFrameMap(variables = mapOf("x" to IntegerValue(42)))
             ))
