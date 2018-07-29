@@ -10,34 +10,28 @@ import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
-    private val blacklist = listOf("stdlib")
-
     @TestFactory
     fun testProgram(): List<DynamicTest> {
         return testPrograms().mapNotNull { testProgram ->
-            if (blacklist.contains(testProgram.name)) {
-                null
-            } else {
-                DynamicTest.dynamicTest(testProgram.name, {
-                    try {
-                        val modules = testProgram.load()
-                        val result = fullyEvaluate(modules, testProgram.mainModule)
+            DynamicTest.dynamicTest(testProgram.name, {
+                try {
+                    val modules = testProgram.load()
+                    val result = fullyEvaluate(modules, testProgram.mainModule)
 
-                        val executionResult = ExecutionResult(
-                            exitCode = result.exitCode,
-                            stderr = "",
-                            stdout = result.stdout
-                        )
-                        assertThat(executionResult, testProgram.expectedResult)
-                    } catch (error: SourceError) {
-                        print(error.source.describe())
-                        throw error
-                    } catch (error: CompilerError) {
-                        print(error.source.describe())
-                        throw error
-                    }
-                })
-            }
+                    val executionResult = ExecutionResult(
+                        exitCode = result.exitCode,
+                        stderr = "",
+                        stdout = result.stdout
+                    )
+                    assertThat(executionResult, testProgram.expectedResult)
+                } catch (error: SourceError) {
+                    print(error.source.describe())
+                    throw error
+                } catch (error: CompilerError) {
+                    print(error.source.describe())
+                    throw error
+                }
+            })
         }
     }
 }
