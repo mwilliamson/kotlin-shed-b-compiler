@@ -106,10 +106,18 @@ class EvaluateModuleReferenceTests {
 
 class EvaluateBinaryOperationTests {
     @Test
+    fun equalityOfBooleans() {
+        val equalValue = evaluate(BinaryOperation(Operator.EQUALS, BooleanValue(true), BooleanValue(true)))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
+
+        val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, BooleanValue(true), BooleanValue(false)))
+        assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
     fun equalityOfIntegers() {
         val equalValue = evaluate(BinaryOperation(Operator.EQUALS, IntegerValue(42), IntegerValue(42)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
-
 
         val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, IntegerValue(42), IntegerValue(47)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
