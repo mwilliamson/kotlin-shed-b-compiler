@@ -17,7 +17,6 @@ import org.shedlang.compiler.typechecker.ModuleNotFoundError
 import org.shedlang.compiler.typechecker.MultipleModulesWithSameNameFoundError
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.ModuleType
-import java.nio.file.Paths
 
 class TypeCheckImportTests {
     @Test
@@ -29,7 +28,6 @@ class TypeCheckImportTests {
             modules = mapOf(
                 path to ModuleResult.Found(Module.Native(
                     type = moduleType,
-                    filePath = Paths.get("/"),
                     name = identifiers("Messages")
                 ))
             )

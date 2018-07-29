@@ -9,7 +9,9 @@ import org.shedlang.compiler.backends.python.ast.PythonAssignmentNode
 import org.shedlang.compiler.backends.python.ast.PythonStringLiteralNode
 import org.shedlang.compiler.backends.python.ast.PythonVariableReferenceNode
 import org.shedlang.compiler.backends.readResourceText
+import org.shedlang.compiler.backends.resourceStream
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -27,7 +29,7 @@ val backend = object: Backend {
                 // TODO: remove duplication with JavaScript backend
                 is Module.Native -> {
                     moduleWriter(target, shedModuleNameToPythonModuleName(module.name)).use { writer ->
-                        module.platformPath(".py").toFile().reader().use { reader ->
+                        nativeModuleSource(module).reader().use { reader ->
                             reader.copyTo(writer)
                         }
                     }
@@ -35,6 +37,12 @@ val backend = object: Backend {
             }
         }
         writeModule(target, builtinModule())
+    }
+
+    private fun nativeModuleSource(module: Module.Native): InputStream {
+        val resourcePrefix = "org/shedlang/compiler/backends/python/modules/"
+        val resourceName = resourcePrefix + module.name.map { part -> part.value }.joinToString("/") + ".py"
+        return resourceStream(resourceName)
     }
 
     private fun writeModule(target: Path, module: PythonModule) {

@@ -4,8 +4,6 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.metaTypeToType
-import java.nio.file.Path
-import java.nio.file.Paths
 
 class ModuleSet(val modules: Collection<Module>)
 
@@ -27,15 +25,8 @@ sealed class Module {
 
     class Native(
         override val name: List<Identifier>,
-        override val type: ModuleType,
-        private val filePath: Path
-    ): Module() {
-        fun platformPath(extension: String): Path {
-            // TODO: avoid converting to String
-            // TODO: remove duplication of extension
-            return Paths.get(filePath.toString().removeSuffix(".types.shed") + extension)
-        }
-    }
+        override val type: ModuleType
+    ): Module()
 }
 
 

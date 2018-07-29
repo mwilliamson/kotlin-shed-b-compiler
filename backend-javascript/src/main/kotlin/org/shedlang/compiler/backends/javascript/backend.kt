@@ -10,7 +10,9 @@ import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionStateme
 import org.shedlang.compiler.backends.javascript.ast.JavascriptStringLiteralNode
 import org.shedlang.compiler.backends.javascript.ast.JavascriptVariableReferenceNode
 import org.shedlang.compiler.backends.readResourceText
+import org.shedlang.compiler.backends.resourceStream
 import java.io.File
+import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
@@ -28,7 +30,7 @@ val backend = object: Backend {
                 }
                 is Module.Native -> {
                     moduleWriter(target, module.name.map(Identifier::value)).use { writer ->
-                        module.platformPath(".js").toFile().reader().use { reader ->
+                        nativeModuleSource(module).reader().use { reader ->
                             reader.copyTo(writer)
                         }
                     }
@@ -37,6 +39,12 @@ val backend = object: Backend {
         }
 
         writeModule(target, builtinModule())
+    }
+
+    private fun nativeModuleSource(module: Module.Native): InputStream {
+        val resourcePrefix = "org/shedlang/compiler/backends/javascript/modules/"
+        val resourceName = resourcePrefix + module.name.map { part -> part.value }.joinToString("/") + ".js"
+        return resourceStream(resourceName)
     }
 
     private fun writeModule(target: Path, javascriptModule: JavascriptModule) {

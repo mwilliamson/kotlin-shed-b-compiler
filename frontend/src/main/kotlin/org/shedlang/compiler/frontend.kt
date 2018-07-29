@@ -53,8 +53,7 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
 
         return Module.Native(
             name = name,
-            type = typeCheckResult.moduleType,
-            filePath = path
+            type = typeCheckResult.moduleType
         )
     } else {
         val moduleNode = parse(filename = path.toString(), input = moduleText)
