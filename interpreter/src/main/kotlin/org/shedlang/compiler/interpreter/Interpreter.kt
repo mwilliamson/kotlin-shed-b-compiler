@@ -597,7 +597,7 @@ internal val builtinStackFrame = ScopeFrameMap(mapOf(
     "print" to PrintValue
 ))
 
-internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvaluationResult {
+fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvaluationResult {
     val loadedModules = loadModuleSet(modules)
     val call = Call(
         receiver = FieldAccess(ModuleReference(moduleName), Identifier("main")),
@@ -620,7 +620,7 @@ internal fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): Mo
     return ModuleEvaluationResult(exitCode = exitCode, stdout = result.stdout)
 }
 
-internal data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
+data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
 
 internal fun fullyEvaluate(initialExpression: Expression, initialContext: InterpreterContext): EvaluationResult.Value<InterpreterValue> {
     var expression = initialExpression

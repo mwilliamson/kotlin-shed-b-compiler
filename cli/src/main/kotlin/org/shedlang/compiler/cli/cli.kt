@@ -1,9 +1,11 @@
 package org.shedlang.compiler.cli
 
 import com.xenomachina.argparser.ArgParser
+import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.interpreter.fullyEvaluate
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.typechecker.SourceError
 import java.nio.file.Path
@@ -25,13 +27,23 @@ object ShedCli {
 
         val tempDir = createTempDir()
         try {
-            compile(
-                base = Paths.get(arguments.source),
-                mainName = arguments.mainModule,
-                backend = arguments.backend,
-                target = tempDir.toPath()
-            )
-            return arguments.backend.run(tempDir.toPath(), mainName)
+            val base = Paths.get(arguments.source)
+            val backend = arguments.backend
+            if (backend == null) {
+                val source = readPackage(base, arguments.mainModule)
+                val result = fullyEvaluate(source, readMainModuleName(arguments.mainModule))
+                // TODO: print stdout as it's generated
+                print(result.stdout)
+                return result.exitCode
+            } else {
+                compile(
+                    base = base,
+                    mainName = arguments.mainModule,
+                    backend = backend,
+                    target = tempDir.toPath()
+                )
+                return backend.run(tempDir.toPath(), mainName)
+            }
         } finally {
             tempDir.deleteRecursively()
         }
@@ -40,7 +52,7 @@ object ShedCli {
     private class Arguments(parser: ArgParser) {
         val source by parser.shedSource()
         val mainModule by parser.positional("MAIN", help = "main module to run")
-        val backend by parser.shedBackends()
+        val backend by parser.shedBackends().default(null)
 
         init {
             parser.force()
@@ -80,7 +92,7 @@ object ShedcCli {
 
 private fun compile(base: Path, mainName: String, backend: Backend, target: Path) {
     try {
-        val result = readPackage(base, mainName.split(".").map(::Identifier))
+        val result = readPackage(base, mainName)
         backend.compile(result, target = target)
     } catch (error: SourceError) {
         System.err.println("Error: " + error.message)
@@ -88,3 +100,9 @@ private fun compile(base: Path, mainName: String, backend: Backend, target: Path
         exitProcess(2)
     }
 }
+
+private fun readPackage(base: Path, mainName: String) =
+    readPackage(base, readMainModuleName(mainName))
+
+private fun readMainModuleName(mainName: String) =
+    mainName.split(".").map(::Identifier)
