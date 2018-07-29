@@ -67,18 +67,48 @@ internal data class BinaryOperation(
                         EvaluationResult.pure(IntegerValue(left.value - right.value))
                     } else if (operator == Operator.MULTIPLY && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(IntegerValue(left.value * right.value))
+
                     } else if (operator == Operator.EQUALS && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
                     } else if (operator == Operator.ADD && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(StringValue(left.value + right.value))
+
+                    } else if (operator == Operator.EQUALS && left is CharacterValue && right is CharacterValue) {
+                        EvaluationResult.pure(BooleanValue(left.value == right.value))
+                    } else if (operator == Operator.LESS_THAN && left is CharacterValue && right is CharacterValue) {
+                        EvaluationResult.pure(BooleanValue(left.value < right.value))
+                    } else if (operator == Operator.LESS_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
+                        EvaluationResult.pure(BooleanValue(left.value <= right.value))
+                    } else if (operator == Operator.GREATER_THAN && left is CharacterValue && right is CharacterValue) {
+                        EvaluationResult.pure(BooleanValue(left.value > right.value))
+                    } else if (operator == Operator.GREATER_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
+                        EvaluationResult.pure(BooleanValue(left.value >= right.value))
+
                     } else if (operator == Operator.EQUALS && left is SymbolValue && right is SymbolValue) {
                         EvaluationResult.pure(BooleanValue(left == right))
+
                     } else {
-                        throw NotImplementedError()
+                        throw NotImplementedError(this.toString())
                     }
             }
         }
     }
+}
+
+internal fun call(
+    receiver: Expression,
+    positionalArgumentExpressions: List<Expression> = listOf(),
+    positionalArgumentValues: List<InterpreterValue> = listOf(),
+    namedArgumentExpressions: List<Pair<Identifier, Expression>> = listOf(),
+    namedArgumentValues: List<Pair<Identifier, InterpreterValue>> = listOf()
+): Call {
+    return Call(
+        receiver = receiver,
+        positionalArgumentExpressions = positionalArgumentExpressions,
+        positionalArgumentValues = positionalArgumentValues,
+        namedArgumentExpressions = namedArgumentExpressions,
+        namedArgumentValues = namedArgumentValues
+    )
 }
 
 internal data class Call(
@@ -317,7 +347,7 @@ internal data class When(
                 val branch = branches[0]
                 // TODO: handle non-shape values in type
                 val discriminator = findDiscriminator(sourceType = expressionType, targetType = branch.type as ShapeType)!!
-                val discriminatorValue = expression.fields[discriminator.fieldName]!!
+                val discriminatorValue = expression.fields.getValue(discriminator.fieldName)
                 if (discriminatorValue == symbolTypeToValue(discriminator.symbolType)) {
                     EvaluationResult.pure(Block(branch.body, context.scope.enter()))
                 } else {

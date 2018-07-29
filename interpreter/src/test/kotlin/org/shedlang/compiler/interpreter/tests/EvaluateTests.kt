@@ -150,6 +150,80 @@ class EvaluateBinaryOperationTests {
     }
 
     @Test
+    fun equalityOfCharacters() {
+        val equalValue = evaluate(BinaryOperation(Operator.EQUALS, CharacterValue(90), CharacterValue(90)))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
+
+
+        val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, CharacterValue(90), CharacterValue(91)))
+        assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun lessThanOperatorForCharacters() {
+        assertThat(
+            evaluate(BinaryOperation(Operator.LESS_THAN, CharacterValue(89), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(true)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.LESS_THAN, CharacterValue(90), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(false)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.LESS_THAN, CharacterValue(91), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(false)))
+        )
+    }
+
+    @Test
+    fun lessThanOrEqualOperatorForCharacters() {
+        assertThat(
+            evaluate(BinaryOperation(Operator.LESS_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(true)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.LESS_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(true)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.LESS_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(false)))
+        )
+    }
+
+    @Test
+    fun greaterThanOperatorForCharacters() {
+        assertThat(
+            evaluate(BinaryOperation(Operator.GREATER_THAN, CharacterValue(89), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(false)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.GREATER_THAN, CharacterValue(90), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(false)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.GREATER_THAN, CharacterValue(91), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(true)))
+        )
+    }
+
+    @Test
+    fun greaterThanOrEqualOperatorForCharacters() {
+        assertThat(
+            evaluate(BinaryOperation(Operator.GREATER_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(false)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.GREATER_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(true)))
+        )
+        assertThat(
+            evaluate(BinaryOperation(Operator.GREATER_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
+            isPureResult(equalTo(BooleanValue(true)))
+        )
+    }
+
+    @Test
     fun equalityOfSymbols() {
         val equalValue = evaluate(BinaryOperation(
             Operator.EQUALS,
