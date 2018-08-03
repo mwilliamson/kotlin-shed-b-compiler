@@ -11,8 +11,6 @@ function list() {
 }
 
 function declareShape(name, constantFields) {
-    const typeId = freshTypeId();
-
     function shape(fields) {
         if (fields === undefined) {
             fields = {};
@@ -24,15 +22,9 @@ function declareShape(name, constantFields) {
         return fields;
     }
 
-    shape.typeId = typeId;
     shape.typeName = name;
 
     return shape;
-}
-
-var nextTypeId = 1;
-function freshTypeId() {
-    return nextTypeId++;
 }
 
 function isType(value, type) {
