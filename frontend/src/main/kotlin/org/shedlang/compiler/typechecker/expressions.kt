@@ -99,9 +99,13 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
     // TODO: test expression and type checking
 
     val expressionType = checkTypePredicateOperand(node.expression, context)
-    evalType(node.type, context)
 
-    // TODO: for this to be valid, the type must have a tag value
+    val targetType = evalType(node.type, context)
+
+    if (findDiscriminator(sourceType = expressionType, targetType = targetType) == null) {
+        throw CouldNotFindDiscriminator(sourceType = expressionType, targetType = targetType, source = node.source)
+    }
+
     // TODO: given generics are erased, when node.type is generic we
     // should make sure no other instantiations of that generic type
     // are possible e.g. if the expression has type Cons[T] | Nil,
