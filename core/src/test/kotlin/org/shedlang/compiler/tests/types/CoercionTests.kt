@@ -1,16 +1,14 @@
-package org.shedlang.compiler.tests.typechecker
+package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.frontend.tests.isIntType
-import org.shedlang.compiler.frontend.tests.isUnionType
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.CoercionResult
-import org.shedlang.compiler.typechecker.canCoerce
-import org.shedlang.compiler.typechecker.coerce
-import org.shedlang.compiler.typechecker.isSubEffect
+import org.shedlang.compiler.types.CoercionResult
+import org.shedlang.compiler.types.canCoerce
+import org.shedlang.compiler.types.coerce
+import org.shedlang.compiler.types.isSubEffect
 import org.shedlang.compiler.types.*
 
 class CoercionTests {

@@ -4,12 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isType
-import org.shedlang.compiler.frontend.tests.isUnionType
-import org.shedlang.compiler.frontend.types.union
-import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.tests.unionType
+import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.types.union
 
 class UnionTests {
     @Test

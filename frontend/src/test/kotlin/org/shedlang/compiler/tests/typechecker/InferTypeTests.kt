@@ -3,7 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIntType
+import org.shedlang.compiler.tests.isIntType
 import org.shedlang.compiler.tests.variableReference
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.types.IntType

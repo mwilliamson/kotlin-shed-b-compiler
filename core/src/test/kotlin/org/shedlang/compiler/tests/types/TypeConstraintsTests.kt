@@ -1,14 +1,9 @@
-package org.shedlang.compiler.tests.typechecker
+package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isEquivalentType
-import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.CoercionResult
-import org.shedlang.compiler.typechecker.TypeConstraintSolver
-import org.shedlang.compiler.typechecker.coerce
 import org.shedlang.compiler.types.*
 
 class TypeConstraintsTests {

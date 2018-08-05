@@ -4,10 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.frontend.tests.isBoolType
-import org.shedlang.compiler.frontend.tests.isFunctionType
-import org.shedlang.compiler.frontend.tests.isStringType
-import org.shedlang.compiler.frontend.tests.isUnitType
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.types.*

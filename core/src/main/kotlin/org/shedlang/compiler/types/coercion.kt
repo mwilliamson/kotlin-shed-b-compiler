@@ -1,20 +1,18 @@
-package org.shedlang.compiler.typechecker
+package org.shedlang.compiler.types
 
 import org.shedlang.compiler.all
-import org.shedlang.compiler.frontend.types.union
-import org.shedlang.compiler.types.*
 import org.shedlang.compiler.zip3
 
-internal fun isSubEffect(subEffect: Effect, superEffect: Effect): Boolean {
+fun isSubEffect(subEffect: Effect, superEffect: Effect): Boolean {
     val solver = TypeConstraintSolver(parameters = setOf())
     return solver.coerceEffect(from = subEffect, to = superEffect)
 }
 
-internal fun canCoerce(from: Type, to: Type): Boolean {
+fun canCoerce(from: Type, to: Type): Boolean {
     return coerce(from = from, to = to) is CoercionResult.Success
 }
 
-internal fun isEquivalentType(first: Type, second: Type): Boolean {
+fun isEquivalentType(first: Type, second: Type): Boolean {
     return canCoerce(from = first, to = second) && canCoerce(from = second, to = first)
 }
 
@@ -44,7 +42,7 @@ internal sealed class CoercionResult {
     internal object Failure: CoercionResult()
 }
 
-internal class TypeConstraintSolver(
+class TypeConstraintSolver(
     private val parameters: Set<StaticParameter>
 ) {
     internal val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf()

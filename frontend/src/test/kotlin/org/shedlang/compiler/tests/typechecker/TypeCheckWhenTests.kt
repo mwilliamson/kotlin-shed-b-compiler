@@ -4,9 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isType
-import org.shedlang.compiler.frontend.tests.isUnionType
-import org.shedlang.compiler.frontend.tests.isUnionTypeGroup
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.WhenIsNotExhaustiveError
 import org.shedlang.compiler.typechecker.inferType

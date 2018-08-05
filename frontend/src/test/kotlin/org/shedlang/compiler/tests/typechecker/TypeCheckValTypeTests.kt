@@ -2,11 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIntType
-import org.shedlang.compiler.frontend.tests.isMetaTypeGroup
-import org.shedlang.compiler.tests.import
-import org.shedlang.compiler.tests.staticReference
-import org.shedlang.compiler.tests.valType
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.typeCheck

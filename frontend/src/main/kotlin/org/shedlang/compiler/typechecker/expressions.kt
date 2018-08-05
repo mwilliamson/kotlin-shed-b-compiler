@@ -1,7 +1,6 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.types.union
 import org.shedlang.compiler.types.*
 
 private data class OperationType(val operator: Operator, val left: Type, val right: Type)
