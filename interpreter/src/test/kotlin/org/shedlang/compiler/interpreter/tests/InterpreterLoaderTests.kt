@@ -13,6 +13,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.SymbolType
+import org.shedlang.compiler.types.freshShapeId
 
 
 class LoadShapeTests {
@@ -134,14 +135,15 @@ class LoadShapeTests {
 class LoadIsTests {
     @Test
     fun isExpressionIsConvertedToBinaryOperationOnDiscriminatorField() {
+        val shapeId = freshShapeId()
         val shapeType1 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@A"))
+                field("tag", SymbolType(listOf("M"), "@A"), shapeId = shapeId)
             )
         )
         val shapeType2 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@B"))
+                field("tag", SymbolType(listOf("M"), "@B"), shapeId = shapeId)
             )
         )
         val unionType = unionType(members = listOf(shapeType1, shapeType2))

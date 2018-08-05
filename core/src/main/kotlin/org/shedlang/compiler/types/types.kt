@@ -505,14 +505,16 @@ public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticV
     }
 }
 
-public data class Discriminator(val fieldName: Identifier, val symbolType: SymbolType)
+public data class Discriminator(val field: Field, val symbolType: SymbolType) {
+    val fieldName: Identifier = field.name
+}
 
 public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
     if (sourceType is UnionType && targetType is ShapeType) {
         val candidateDiscriminators = targetType.fields.values.mapNotNull { field ->
             val fieldType = field.type
             if (fieldType is SymbolType) {
-                Discriminator(field.name, fieldType)
+                Discriminator(field, fieldType)
             } else {
                 null
             }
@@ -523,7 +525,9 @@ public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator?
                     val memberShape = member as ShapeType
                     val memberField = memberShape.fields[candidateDiscriminator.fieldName]
                     val memberSymbolType = memberField?.type as? SymbolType
-                    memberSymbolType != null && memberSymbolType != candidateDiscriminator.symbolType
+                    memberField?.shapeId == candidateDiscriminator.field.shapeId &&
+                        memberSymbolType != null &&
+                        memberSymbolType != candidateDiscriminator.symbolType
                 }
             }
         }

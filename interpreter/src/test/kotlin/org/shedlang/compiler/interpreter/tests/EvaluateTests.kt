@@ -11,6 +11,7 @@ import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.AnyType
 import org.shedlang.compiler.types.SymbolType
+import org.shedlang.compiler.types.freshShapeId
 
 class EvaluateVariableReferenceTests {
     @Test
@@ -752,14 +753,15 @@ class EvaluateWhenTests {
 
     @Test
     fun whenExpressionMatchesTypeThenEvaluatesToBody() {
+        val shapeId = freshShapeId()
         val shapeType1 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@A"))
+                field("tag", SymbolType(listOf("M"), "@A"), shapeId = shapeId)
             )
         )
         val shapeType2 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@B"))
+                field("tag", SymbolType(listOf("M"), "@B"), shapeId = shapeId)
             )
         )
         val unionType = unionType(members = listOf(shapeType1, shapeType2))
@@ -793,14 +795,15 @@ class EvaluateWhenTests {
 
     @Test
     fun whenExpressionDoesNotMatchTypeThenBranchIsDropped() {
+        val shapeId = freshShapeId()
         val shapeType1 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@A"))
+                field("tag", SymbolType(listOf("M"), "@A"), shapeId = shapeId)
             )
         )
         val shapeType2 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@B"))
+                field("tag", SymbolType(listOf("M"), "@B"), shapeId = shapeId)
             )
         )
         val unionType = unionType(members = listOf(shapeType1, shapeType2))

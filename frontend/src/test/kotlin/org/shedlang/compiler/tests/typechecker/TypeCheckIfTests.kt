@@ -7,10 +7,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.SymbolType
+import org.shedlang.compiler.types.*
 
 class TypeCheckIfTests {
     @Test
@@ -68,12 +65,13 @@ class TypeCheckIfTests {
         val referenceInTrueBranch = variableReference("x")
         val referenceInFalseBranch = variableReference("x")
 
+        val shapeId = freshShapeId()
         val member1Reference = staticReference("Member1")
         val member1 = shapeType(name = "Member1", fields = listOf(
-        field(name = "tag", type = SymbolType(listOf(), "@member1"))
+            field(name = "tag", shapeId = shapeId, type = SymbolType(listOf(), "@member1"))
         ))
         val member2 = shapeType(name = "Member2",fields = listOf(
-            field(name = "tag", type = SymbolType(listOf(), "@Member2"))
+            field(name = "tag", shapeId = shapeId, type = SymbolType(listOf(), "@Member2"))
         ))
         val union = unionType("Union", members = listOf(member1, member2))
 
