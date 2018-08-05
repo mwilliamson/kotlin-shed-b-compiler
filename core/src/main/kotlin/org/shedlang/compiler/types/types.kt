@@ -511,10 +511,21 @@ public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator?
     // TODO: find discriminator properly (check that all members of
     // sourceType have the field, and that value is unique)
     if (sourceType is UnionType && targetType is ShapeType) {
-        for (field in targetType.fields.values) {
+        val candidateDiscriminators = targetType.fields.values.mapNotNull { field ->
             val fieldType = field.type
             if (fieldType is SymbolType) {
-                return Discriminator(field.name, fieldType)
+                Discriminator(field.name, fieldType)
+            } else {
+                null
+            }
+        }
+        return candidateDiscriminators.find { candidateDiscriminator ->
+            sourceType.members.all { member ->
+                isEquivalentType(member, targetType) || run {
+                    val memberShape = member as ShapeType
+                    val memberField = memberShape.fields.getValue(candidateDiscriminator.fieldName)
+                    (memberField.type as SymbolType) != candidateDiscriminator.symbolType
+                }
             }
         }
     }
