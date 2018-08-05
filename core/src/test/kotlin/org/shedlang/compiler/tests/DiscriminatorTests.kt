@@ -69,7 +69,7 @@ class DiscriminatorTests {
 
     @Test
     fun whenSourceTypeIncludesEquivalentTargetTypeWithUniqueTagThenDiscriminatorIsFound() {
-        val typeParameter = invariantTypeParameter("T")
+        val typeParameter = covariantTypeParameter("T")
         val member1 = parametrizedShapeType(
             name = "Member1",
             parameters = listOf(typeParameter),
@@ -89,6 +89,51 @@ class DiscriminatorTests {
             fieldName = Identifier("tag"),
             symbolType = SymbolType(listOf(), "@Member1")
         ))))
+    }
+
+    @Test
+    fun whenSourceTypeIncludesParametrizedMemberWithCompatibleTypeParameterWithUniqueTagThenDiscriminatorIsFound() {
+        val typeParameter = covariantTypeParameter("T")
+        val member1 = parametrizedShapeType(
+            name = "Member1",
+            parameters = listOf(typeParameter),
+            fields = listOf(
+                field(name = "tag", type = SymbolType(listOf(), "@Member1")),
+                field(name = "value", type = typeParameter)
+            )
+        )
+        val member2 = shapeType(name = "Member2",fields = listOf(
+            field(name = "tag", type = SymbolType(listOf(), "@Member2"))
+        ))
+        val union = unionType("Union", members = listOf(applyStatic(member1, listOf(IntType)), member2))
+
+        val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(AnyType)))
+
+        assertThat(discriminator, present(equalTo(Discriminator(
+            fieldName = Identifier("tag"),
+            symbolType = SymbolType(listOf(), "@Member1")
+        ))))
+    }
+
+    @Test
+    fun whenSourceTypeIncludesParametrizedMemberWithIncompatibleTypeParameterWithUniqueTagThenDiscriminatorIsNotFound() {
+        val typeParameter = covariantTypeParameter("T")
+        val member1 = parametrizedShapeType(
+            name = "Member1",
+            parameters = listOf(typeParameter),
+            fields = listOf(
+                field(name = "tag", type = SymbolType(listOf(), "@Member1")),
+                field(name = "value", type = typeParameter)
+            )
+        )
+        val member2 = shapeType(name = "Member2",fields = listOf(
+            field(name = "tag", type = SymbolType(listOf(), "@Member2"))
+        ))
+        val union = unionType("Union", members = listOf(applyStatic(member1, listOf(AnyType)), member2))
+
+        val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(IntType)))
+
+        assertThat(discriminator, absent())
     }
 
     @Test

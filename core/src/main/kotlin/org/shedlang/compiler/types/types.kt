@@ -521,7 +521,7 @@ public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator?
         }
         return candidateDiscriminators.find { candidateDiscriminator ->
             sourceType.members.all { member ->
-                isEquivalentType(member, targetType) || run {
+                canCoerce(from = member, to = targetType) || run {
                     val memberShape = member as ShapeType
                     val memberField = memberShape.fields.getValue(candidateDiscriminator.fieldName)
                     (memberField.type as SymbolType) != candidateDiscriminator.symbolType
