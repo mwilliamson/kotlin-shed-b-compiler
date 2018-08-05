@@ -490,7 +490,7 @@ public data class Discriminator(val fieldName: Identifier, val symbolType: Symbo
 public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
     // TODO: find discriminator properly (check that all members of
     // sourceType have the field, and that value is unique)
-    if (targetType is ShapeType) {
+    if (sourceType is UnionType && targetType is ShapeType) {
         for (field in targetType.fields.values) {
             val fieldType = field.type
             if (fieldType is SymbolType) {

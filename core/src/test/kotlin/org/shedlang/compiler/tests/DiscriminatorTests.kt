@@ -7,10 +7,7 @@ import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.SymbolType
-import org.shedlang.compiler.types.findDiscriminator
+import org.shedlang.compiler.types.*
 
 class DiscriminatorTests {
     @Test
@@ -70,5 +67,16 @@ class DiscriminatorTests {
             fieldName = Identifier("tag"),
             symbolType = SymbolType(listOf(), "@Member1")
         ))))
+    }
+
+    @Test
+    fun whenTargetTypeDoesNotHaveDiscriminatingFieldThenDiscriminatorIsNotFound() {
+        val targetType = shapeType(name = "Target", fields = listOf(
+            field(name = "tag", type = SymbolType(listOf(), "@Target"))
+        ))
+
+        val discriminator = findDiscriminator(sourceType = AnyType, targetType = targetType)
+
+        assertThat(discriminator, absent())
     }
 }
