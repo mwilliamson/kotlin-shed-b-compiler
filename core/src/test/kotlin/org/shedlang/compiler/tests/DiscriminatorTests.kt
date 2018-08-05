@@ -35,6 +35,49 @@ class DiscriminatorTests {
     }
 
     @Test
+    fun whenSourceTypeMemberIsMissingDiscriminatorFieldThenDiscriminatorIsNotFound() {
+        val member1 = shapeType(name = "Member1", fields = listOf(
+            field(name = "tag", type = SymbolType(listOf(), "@Member1"))
+        ))
+        val member2 = shapeType(name = "Member2",fields = listOf())
+        val union = unionType("Union", members = listOf(member1, member2))
+
+        val discriminator = findDiscriminator(sourceType = union, targetType = member1)
+
+        assertThat(discriminator, absent())
+    }
+
+    @Test
+    fun whenSourceTypeMemberHasFieldNotOfSymbolTypeThenDiscriminatorIsNotFound() {
+        val member1 = shapeType(name = "Member1", fields = listOf(
+            field(name = "tag", type = SymbolType(listOf(), "@Member1"))
+        ))
+        val member2 = shapeType(name = "Member2",fields = listOf(
+            field(name = "tag", type = IntType)
+        ))
+        val union = unionType("Union", members = listOf(member1, member2))
+
+        val discriminator = findDiscriminator(sourceType = union, targetType = member1)
+
+        assertThat(discriminator, absent())
+    }
+
+    @Test
+    fun whenSourceTypeMemberHasFieldOfAnySymbolTypeThenDiscriminatorIsNotFound() {
+        val member1 = shapeType(name = "Member1", fields = listOf(
+            field(name = "tag", type = SymbolType(listOf(), "@Member1"))
+        ))
+        val member2 = shapeType(name = "Member2",fields = listOf(
+            field(name = "tag", type = AnySymbolType)
+        ))
+        val union = unionType("Union", members = listOf(member1, member2))
+
+        val discriminator = findDiscriminator(sourceType = union, targetType = member1)
+
+        assertThat(discriminator, absent())
+    }
+
+    @Test
     fun whenSourceTypeIncludesTargetTypeWithNonUniqueTagThenDiscriminatorIsNotFound() {
         val member1 = shapeType(name = "Member1", fields = listOf(
             field(name = "tag", type = SymbolType(listOf(), "@Member"))
