@@ -140,7 +140,8 @@ private object StringsCodePointCountValue: Callable() {
         namedArguments: List<Pair<Identifier, InterpreterValue>>
     ): EvaluationResult<Expression> {
         val string = positionalArguments[0] as StringValue
-        return EvaluationResult.pure(IntegerValue(string.value.codePointCount(0, string.value.length)))
+        val count = string.value.codePointCount(0, string.value.length)
+        return EvaluationResult.pure(IntegerValue(count))
     }
 }
 
@@ -176,7 +177,7 @@ private object StringsRepeatValue: Callable() {
     ): EvaluationResult<Expression> {
         val string = positionalArguments[0] as StringValue
         val times = positionalArguments[1] as IntegerValue
-        return EvaluationResult.pure(StringValue(string.value.repeat(times.value)))
+        return EvaluationResult.pure(StringValue(string.value.repeat(times.value.intValueExact())))
     }
 }
 

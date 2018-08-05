@@ -870,7 +870,7 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
         }
         TokenType.INTEGER -> {
             val token = tokens.next()
-            return IntegerLiteralNode(token.value.toInt(), source)
+            return IntegerLiteralNode(token.value.toBigInteger(), source)
         }
         TokenType.IDENTIFIER -> {
             return parseVariableReference(source, tokens)

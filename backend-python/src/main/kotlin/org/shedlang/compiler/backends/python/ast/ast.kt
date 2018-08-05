@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.python.ast
 
 import org.shedlang.compiler.ast.Source
+import java.math.BigInteger
 
 interface PythonNode {
     val source: Source
@@ -166,7 +167,7 @@ data class PythonBooleanLiteralNode(
 }
 
 data class PythonIntegerLiteralNode(
-    val value: Int,
+    val value: BigInteger,
     override val source: Source
 ): PythonExpressionNode {
     override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {

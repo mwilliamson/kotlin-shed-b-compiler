@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.javascript.ast
 
 import org.shedlang.compiler.ast.Source
+import java.math.BigInteger
 
 interface JavascriptNode {
     val source: Source
@@ -130,7 +131,7 @@ data class JavascriptBooleanLiteralNode(
 }
 
 data class JavascriptIntegerLiteralNode(
-    val value: Int,
+    val value: BigInteger,
     override val source: Source
 ) : JavascriptExpressionNode {
     override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {

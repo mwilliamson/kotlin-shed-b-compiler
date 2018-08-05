@@ -7,6 +7,7 @@ import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.SymbolType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.findDiscriminator
+import java.math.BigInteger
 
 internal class InterpreterError(message: String): Exception(message)
 
@@ -196,7 +197,9 @@ internal data class FieldAccess(
 internal abstract class InterpreterValue: Expression()
 internal object UnitValue: InterpreterValue()
 internal data class BooleanValue(val value: Boolean): InterpreterValue()
-internal data class IntegerValue(val value: Int): InterpreterValue()
+internal data class IntegerValue(val value: BigInteger): InterpreterValue() {
+    constructor(value: Int): this(value.toBigInteger())
+}
 internal data class StringValue(val value: String): InterpreterValue()
 internal data class CharacterValue(val value: Int): InterpreterValue()
 internal data class SymbolValue(
@@ -613,7 +616,7 @@ fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvalu
     )
     val result = fullyEvaluate(call, context)
     val exitCode = when (result.value) {
-        is IntegerValue -> result.value.value
+        is IntegerValue -> result.value.value.toInt()
         is UnitValue -> 0
         else -> throw NotImplementedError()
     }

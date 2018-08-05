@@ -16,6 +16,7 @@ import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
+import java.math.BigInteger
 
 class CodeGeneratorTests {
     private val emptyModules = ModuleSet(modules = listOf())
@@ -629,7 +630,7 @@ class CodeGeneratorTests {
 
     private fun isJavascriptIntegerLiteral(value: Int)
         : Matcher<JavascriptExpressionNode>
-        = cast(has(JavascriptIntegerLiteralNode::value, equalTo(value)))
+        = cast(has(JavascriptIntegerLiteralNode::value, has(BigInteger::intValueExact, equalTo(value))))
 
     private fun isJavascriptStringLiteral(value: String)
         : Matcher<JavascriptExpressionNode>

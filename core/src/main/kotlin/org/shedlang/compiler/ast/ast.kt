@@ -2,6 +2,7 @@ package org.shedlang.compiler.ast
 
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.*
+import java.math.BigInteger
 
 interface Node {
     val source: Source
@@ -565,7 +566,7 @@ data class BooleanLiteralNode(
 }
 
 data class IntegerLiteralNode(
-    val value: Int,
+    val value: BigInteger,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {

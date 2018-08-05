@@ -77,7 +77,7 @@ fun pythonLiteralBoolean(value: Boolean)
     = PythonBooleanLiteralNode(value, source = anySource())
 
 fun pythonLiteralInt(value: Int)
-    = PythonIntegerLiteralNode(value, source = anySource())
+    = PythonIntegerLiteralNode(value.toBigInteger(), source = anySource())
 
 fun pythonLiteralString(value: String)
     = PythonStringLiteralNode(value, source = anySource())

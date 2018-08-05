@@ -13,7 +13,7 @@ fun jsLiteralBool(value: Boolean) = JavascriptBooleanLiteralNode(
 )
 
 fun jsLiteralInt(value: Int) = JavascriptIntegerLiteralNode(
-    value = value,
+    value = value.toBigInteger(),
     source = anySource()
 )
 

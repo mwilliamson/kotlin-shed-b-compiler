@@ -25,7 +25,7 @@ class ParsePrimaryExpressionTests {
     fun integerTokenCanBeParsedAsIntegerLiteral() {
         val source = "1"
         val node = parsePrimaryExpression(source)
-        assertThat(node, cast(has(IntegerLiteralNode::value, equalTo(1))))
+        assertThat(node, cast(has(IntegerLiteralNode::value, equalTo(1.toBigInteger()))))
     }
 
     @TestFactory

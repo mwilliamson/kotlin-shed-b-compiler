@@ -15,6 +15,7 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.UnitType
+import java.math.BigInteger
 
 class CodeGeneratorTests {
     @Test
@@ -1038,7 +1039,7 @@ class CodeGeneratorTests {
 
     private fun isPythonIntegerLiteral(value: Int)
         : Matcher<PythonExpressionNode>
-        = cast(has(PythonIntegerLiteralNode::value, equalTo(value)))
+        = cast(has(PythonIntegerLiteralNode::value, has(BigInteger::intValueExact, equalTo(value))))
 
     private fun isPythonStringLiteral(value: String)
         : Matcher<PythonExpressionNode>

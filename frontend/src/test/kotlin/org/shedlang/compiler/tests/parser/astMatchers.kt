@@ -6,6 +6,7 @@ import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.anythingOrNull
 import org.shedlang.compiler.types.Variance
+import java.math.BigInteger
 
 internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
@@ -242,7 +243,7 @@ internal fun isFunctionType(
 ))
 
 internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
-    = cast(has(IntegerLiteralNode::value, value))
+    = cast(has(IntegerLiteralNode::value, has(BigInteger::intValueExact, value)))
 
 internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))
 
