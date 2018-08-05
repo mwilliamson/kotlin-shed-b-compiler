@@ -318,7 +318,7 @@ data class AnonymousUnionType(
 
 data class LazyUnionType(
     override val name: Identifier,
-    private val getMembers: Lazy<List<ShapeType>>,
+    private val getMembers: Lazy<List<Type>>,
     override val staticArguments: List<StaticValue>
 ): UnionType {
     override val shortDescription: String
@@ -328,7 +328,7 @@ data class LazyUnionType(
             appliedTypeShortDescription(name, staticArguments)
         }
 
-    override val members: List<ShapeType> by getMembers
+    override val members: List<Type> by getMembers
 }
 
 object ListConstructorType : Type {

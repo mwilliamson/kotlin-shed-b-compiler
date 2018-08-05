@@ -401,7 +401,7 @@ fun parametrizedUnionType(
 
 fun unionType(
     name: String = "Union",
-    members: List<ShapeType> = listOf()
+    members: List<Type> = listOf()
 ) = LazyUnionType(
     name = Identifier(name),
     getMembers = lazy { members },
