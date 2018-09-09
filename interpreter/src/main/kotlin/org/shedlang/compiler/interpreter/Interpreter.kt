@@ -3,7 +3,8 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.SymbolType
 import java.math.BigInteger
 
 internal class InterpreterError(message: String): Exception(message)
@@ -258,6 +259,12 @@ internal data class ShapeValue(
     val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue()
 
+internal data class DeferredBlock(val body: List<Statement>): IncompleteExpression() {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
+        return EvaluationResult.pure(Block(body, scope = context.scope))
+    }
+}
+
 internal data class Block(val body: List<Statement>, val scope: Scope): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         if (body.isEmpty()) {
@@ -329,41 +336,6 @@ internal data class If(
 
 internal data class ConditionalBranch(
     val condition: Expression,
-    val body: List<Statement>
-)
-
-internal data class When(
-    val expression: Expression,
-    val expressionType: Type,
-    val branches: List<WhenBranch>
-): IncompleteExpression() {
-    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
-        return when (expression) {
-            is IncompleteExpression ->
-                expression.evaluate(context).map { evaluatedExpression ->
-                    copy(expression = evaluatedExpression)
-                }
-            is ShapeValue -> {
-                val branch = branches[0]
-                // TODO: handle non-shape values in type
-                val discriminator = findDiscriminator(sourceType = expressionType, targetType = branch.type as ShapeType)!!
-                val discriminatorValue = expression.fields.getValue(discriminator.fieldName)
-                if (discriminatorValue == symbolTypeToValue(discriminator.symbolType)) {
-                    EvaluationResult.pure(Block(branch.body, context.scope.enter()))
-                } else {
-                    EvaluationResult.pure(copy(
-                        branches = branches.drop(1)
-                    ))
-                }
-            }
-            else ->
-                throw NotImplementedError()
-        }
-    }
-}
-
-internal data class WhenBranch(
-    val type: Type,
     val body: List<Statement>
 )
 

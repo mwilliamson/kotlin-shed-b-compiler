@@ -197,18 +197,30 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         }
 
         override fun visit(node: WhenNode): Expression {
-            return When(
-                expression = loadExpression(node.expression, context),
-                expressionType = context.types.typeOf(node.expression),
-                branches = node.branches.map { branch ->
-                    WhenBranch(
-                        type = context.types.rawTypeValue(branch.type)!!,
-                        body = branch.body.map { statement ->
-                            loadStatement(statement, context)
-                        }
-                    )
-                }
-            )
+            val expressionName = "\$whenExpression"
+
+            return DeferredBlock(listOf(
+                Val(Identifier(expressionName), loadExpression(node.expression, context)),
+                ExpressionStatement(isReturn = true, expression = If(
+                    conditionalBranches = node.branches.map { branch ->
+                        val sourceType = context.types.typeOf(node.expression)
+                        val targetType = context.types.rawTypeValue(branch.type) as ShapeType
+                        val discriminator = findDiscriminator(sourceType = sourceType, targetType = targetType)!!
+                        val condition = BinaryOperation(
+                            Operator.EQUALS,
+                            FieldAccess(VariableReference(expressionName), discriminator.fieldName),
+                            symbolTypeToValue(discriminator.symbolType)
+                        )
+                        ConditionalBranch(
+                            condition,
+                            branch.body.map { statement ->
+                                loadStatement(statement, context)
+                            }
+                        )
+                    },
+                    elseBranch = listOf()
+                ))
+            ))
         }
     })
 }
