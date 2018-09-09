@@ -128,7 +128,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
 
         override fun visit(node: IsNode): Expression {
             val sourceType = context.types.typeOf(node.expression)
-            val targetType = typeValue(node.type, context) as ShapeType
+            val targetType = context.types.rawTypeValue(node.type) as ShapeType
             val discriminator = findDiscriminator(sourceType = sourceType, targetType = targetType)!!
             return BinaryOperation(
                 Operator.EQUALS,
@@ -202,7 +202,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                 expressionType = context.types.typeOf(node.expression),
                 branches = node.branches.map { branch ->
                     WhenBranch(
-                        type = typeValue(branch.type, context),
+                        type = context.types.rawTypeValue(branch.type)!!,
                         body = branch.body.map { statement ->
                             loadStatement(statement, context)
                         }
@@ -212,9 +212,6 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         }
     })
 }
-
-private fun typeValue(typeNode: StaticNode, context: LoaderContext) =
-    rawType(metaTypeToType(context.types.typeOf(typeNode))!!)
 
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
     return FunctionExpression(

@@ -4,6 +4,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.metaTypeToType
+import org.shedlang.compiler.types.rawType
 
 class ModuleSet(val modules: Collection<Module>)
 
@@ -33,6 +34,9 @@ sealed class Module {
 interface Types {
     fun typeOf(node: ExpressionNode): Type
     fun typeOf(node: StaticNode): Type
+    fun rawTypeValue(node: StaticNode): Type? {
+        return metaTypeToType(typeOf(node)).mapNullable(::rawType)
+    }
     fun declaredType(node: TypeDeclarationNode): Type
 }
 
