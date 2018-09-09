@@ -22,7 +22,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: StringLiteralNode) = StringType
         override fun visit(node: CharacterLiteralNode) = CharType
         // TODO: handle missing module name
-        override fun visit(node: SymbolNode) = SymbolType(context.moduleName!!, node.name)
+        override fun visit(node: SymbolNode): SymbolType {
+            return SymbolType(Symbol(context.moduleName!!.map(::Identifier), node.name))
+        }
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
 
         override fun visit(node: BinaryOperationNode): Type {

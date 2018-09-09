@@ -53,7 +53,7 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
                     shapeId = union.nodeId,
                     name = Identifier("\$unionTag\$${context.moduleName!!.joinToString(".")}\$${union.name.value}"),
                     isConstant = true,
-                    type = SymbolType(context.moduleName!!, "@" + node.name.value)
+                    type = SymbolType(Symbol(context.moduleName.map(::Identifier), "@" + node.name.value))
                 ),
                 shape = union.name,
                 source = union.source

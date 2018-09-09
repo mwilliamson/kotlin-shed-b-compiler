@@ -72,10 +72,13 @@ object CharType : BasicType {
 object StringType : BasicType{
     override val shortDescription = "String"
 }
-data class SymbolType(val module: List<String>, val name: String): BasicType {
+data class SymbolType(val symbol: Symbol): BasicType {
     override val shortDescription: String
-        get() = "Symbol[${module}.${name}]"
+        get() = "Symbol[${symbol.module}.${symbol.name}]"
 }
+
+data class Symbol(val module: List<Identifier>, val name: String)
+
 object AnySymbolType : Type {
     override val shortDescription: String
         get() = "Symbol"

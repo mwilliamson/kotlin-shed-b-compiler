@@ -411,3 +411,7 @@ fun unionType(
 fun moduleType(fields: Map<String, Type>) = ModuleType(
     fields = fields.mapKeys { (name, type) -> Identifier(name) }
 )
+
+fun symbolType(module: List<String>, name: String): SymbolType {
+    return SymbolType(Symbol(module.map(::Identifier), name))
+}

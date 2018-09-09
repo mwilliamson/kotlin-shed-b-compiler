@@ -9,7 +9,6 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -57,7 +56,7 @@ class TypeCheckExpressionTests {
     fun symbolIsTypedAsSymbol() {
         val node = symbolName("@blah")
         val type = inferType(node, typeContext(moduleName = listOf("Some", "Module")))
-        assertThat(type, isType(SymbolType(listOf("Some", "Module"), "@blah")))
+        assertThat(type, isType(symbolType(listOf("Some", "Module"), "@blah")))
     }
 
     @Test

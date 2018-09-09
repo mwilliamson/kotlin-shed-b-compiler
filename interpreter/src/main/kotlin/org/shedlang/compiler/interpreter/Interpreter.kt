@@ -3,10 +3,7 @@ package org.shedlang.compiler.interpreter
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
-import org.shedlang.compiler.types.ShapeType
-import org.shedlang.compiler.types.SymbolType
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.findDiscriminator
+import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
 internal class InterpreterError(message: String): Exception(message)
@@ -202,10 +199,7 @@ internal data class IntegerValue(val value: BigInteger): InterpreterValue() {
 }
 internal data class StringValue(val value: String): InterpreterValue()
 internal data class CharacterValue(val value: Int): InterpreterValue()
-internal data class SymbolValue(
-    val moduleName: List<Identifier>,
-    val name: String
-): InterpreterValue()
+internal data class SymbolValue(private val value: Symbol): InterpreterValue()
 internal data class ListValue(val elements: List<InterpreterValue>): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
@@ -750,8 +744,5 @@ internal data class ModuleExpression(
 }
 
 internal fun symbolTypeToValue(symbolType: SymbolType): SymbolValue {
-    return SymbolValue(
-        moduleName = symbolType.module.map(::Identifier),
-        name = symbolType.name
-    )
+    return SymbolValue(symbolType.symbol)
 }

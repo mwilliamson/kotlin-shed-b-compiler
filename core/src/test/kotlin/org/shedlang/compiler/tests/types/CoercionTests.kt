@@ -5,10 +5,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.types.CoercionResult
-import org.shedlang.compiler.types.canCoerce
-import org.shedlang.compiler.types.coerce
-import org.shedlang.compiler.types.isSubEffect
 import org.shedlang.compiler.types.*
 
 class CoercionTests {
@@ -26,8 +22,8 @@ class CoercionTests {
     fun canCoerceSymbolTypeToSymbolInSameModuleWithSameName() {
         assertThat(
             canCoerce(
-                from = SymbolType(listOf("A", "B"), "@x"),
-                to = SymbolType(listOf("A", "B"), "@x")
+                from = symbolType(listOf("A", "B"), "@x"),
+                to = symbolType(listOf("A", "B"), "@x")
             ),
             equalTo(true)
         )
@@ -37,8 +33,8 @@ class CoercionTests {
     fun cannotSymbolTypeToSymbolInDifferentModuleWithSameName() {
         assertThat(
             canCoerce(
-                from = SymbolType(listOf("A", "B"), "@x"),
-                to = SymbolType(listOf("A", "C"), "@x")
+                from = symbolType(listOf("A", "B"), "@x"),
+                to = symbolType(listOf("A", "C"), "@x")
             ),
             equalTo(false)
         )
@@ -48,8 +44,8 @@ class CoercionTests {
     fun cannotSymbolTypeToSymbolInSameModuleWithDifferentName() {
         assertThat(
             canCoerce(
-                from = SymbolType(listOf("A", "B"), "@x"),
-                to = SymbolType(listOf("A", "B"), "@y")
+                from = symbolType(listOf("A", "B"), "@x"),
+                to = symbolType(listOf("A", "B"), "@y")
             ),
             equalTo(false)
         )
@@ -79,7 +75,7 @@ class CoercionTests {
     @Test
     fun canCoerceSpecificSymbolTypeToGeneralSymbolType() {
         assertThat(
-            canCoerce(from = SymbolType(listOf("A"), "B"), to = AnySymbolType),
+            canCoerce(from = symbolType(listOf("A"), "B"), to = AnySymbolType),
             equalTo(true)
         )
     }
@@ -87,7 +83,7 @@ class CoercionTests {
     @Test
     fun cannotCoerceGeneralSymbolTypeToSpecificSymbolType() {
         assertThat(
-            canCoerce(from = AnySymbolType, to = SymbolType(listOf("A"), "B")),
+            canCoerce(from = AnySymbolType, to = symbolType(listOf("A"), "B")),
             equalTo(false)
         )
     }

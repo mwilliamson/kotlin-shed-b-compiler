@@ -10,7 +10,6 @@ import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.AnyType
-import org.shedlang.compiler.types.SymbolType
 import org.shedlang.compiler.types.freshShapeId
 
 class EvaluateVariableReferenceTests {
@@ -236,22 +235,22 @@ class EvaluateBinaryOperationTests {
     fun equalityOfSymbols() {
         val equalValue = evaluate(BinaryOperation(
             Operator.EQUALS,
-            SymbolValue(listOf(Identifier("X")), "@a"),
-            SymbolValue(listOf(Identifier("X")), "@a")
+            symbolValue(listOf("X"), "@a"),
+            symbolValue(listOf("X"), "@a")
         ))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
         val differentName = evaluate(BinaryOperation(
             Operator.EQUALS,
-            SymbolValue(listOf(Identifier("X")), "@a"),
-            SymbolValue(listOf(Identifier("X")), "@b")
+            symbolValue(listOf("X"), "@a"),
+            symbolValue(listOf("X"), "@b")
         ))
         assertThat(differentName, isPureResult(equalTo(BooleanValue(false))))
 
         val differentModule = evaluate(BinaryOperation(
             Operator.EQUALS,
-            SymbolValue(listOf(Identifier("X")), "@a"),
-            SymbolValue(listOf(Identifier("Y")), "@a")
+            symbolValue(listOf("X"), "@a"),
+            symbolValue(listOf("Y"), "@a")
         ))
         assertThat(differentModule, isPureResult(equalTo(BooleanValue(false))))
     }
@@ -756,19 +755,19 @@ class EvaluateWhenTests {
         val shapeId = freshShapeId()
         val shapeType1 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@A"), shapeId = shapeId)
+                field("tag", symbolType(listOf("M"), "@A"), shapeId = shapeId)
             )
         )
         val shapeType2 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@B"), shapeId = shapeId)
+                field("tag", symbolType(listOf("M"), "@B"), shapeId = shapeId)
             )
         )
         val unionType = unionType(members = listOf(shapeType1, shapeType2))
 
         val whenExpression = When(
             expression = ShapeValue(fields = mapOf(
-                Identifier("tag") to SymbolValue(listOf(Identifier("M")), "@A")
+                Identifier("tag") to symbolValue(listOf("M"), "@A")
             )),
             expressionType = unionType,
             branches = listOf(
@@ -798,19 +797,19 @@ class EvaluateWhenTests {
         val shapeId = freshShapeId()
         val shapeType1 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@A"), shapeId = shapeId)
+                field("tag", symbolType(listOf("M"), "@A"), shapeId = shapeId)
             )
         )
         val shapeType2 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@B"), shapeId = shapeId)
+                field("tag", symbolType(listOf("M"), "@B"), shapeId = shapeId)
             )
         )
         val unionType = unionType(members = listOf(shapeType1, shapeType2))
 
         val whenExpression = When(
             expression = ShapeValue(fields = mapOf(
-                Identifier("tag") to SymbolValue(listOf(Identifier("M")), "@B")
+                Identifier("tag") to symbolValue(listOf("M"), "@B")
             )),
             expressionType = unionType,
             branches = listOf(
@@ -828,7 +827,7 @@ class EvaluateWhenTests {
         val expression = evaluate(whenExpression)
         assertThat(expression, isPureResult(equalTo(When(
             expression = ShapeValue(fields = mapOf(
-                Identifier("tag") to SymbolValue(listOf(Identifier("M")), "@B")
+                Identifier("tag") to symbolValue(listOf("M"), "@B")
             )),
             expressionType = unionType,
             branches = listOf(

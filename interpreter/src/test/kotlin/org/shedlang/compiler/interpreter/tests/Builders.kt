@@ -2,6 +2,7 @@ package org.shedlang.compiler.interpreter.tests
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.interpreter.*
+import org.shedlang.compiler.types.Symbol
 
 
 internal fun createContext(
@@ -37,3 +38,7 @@ internal fun call(
 }
 
 internal fun returns(expression: IntegerValue) = ExpressionStatement(expression, isReturn = true)
+
+internal fun symbolValue(module: List<String>, name: String): SymbolValue {
+    return SymbolValue(Symbol(module.map(::Identifier), name))
+}

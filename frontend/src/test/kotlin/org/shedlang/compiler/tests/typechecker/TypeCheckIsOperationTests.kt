@@ -10,7 +10,6 @@ import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.SymbolType
 
 class TypeCheckIsOperationTests {
     @Test
@@ -52,7 +51,7 @@ class TypeCheckIsOperationTests {
     @Test
     fun isOperationHasBooleanType() {
         val memberType = shapeType(name = "Member", fields = listOf(
-            field(name = "tag", type = SymbolType(listOf(), "@B"))
+            field(name = "tag", type = symbolType(listOf(), "@B"))
         ))
         val unionType = unionType(name = "Union", members = listOf(memberType))
 

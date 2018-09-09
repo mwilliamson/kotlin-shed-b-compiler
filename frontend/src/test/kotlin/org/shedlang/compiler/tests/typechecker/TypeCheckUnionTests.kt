@@ -3,11 +3,10 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.*
+import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.SymbolType
 import org.shedlang.compiler.types.invariantTypeParameter
 import org.shedlang.compiler.types.metaTypeToType
 
@@ -107,7 +106,7 @@ class TypeCheckUnionTests {
                 shapeId = equalTo(unionNode.nodeId),
                 name = isIdentifier("\$unionTag\$A.B\$X"),
                 isConstant = equalTo(true),
-                type = equalTo(SymbolType(
+                type = equalTo(symbolType(
                     module = listOf("A", "B"),
                     name = "@Member1"
                 ))
@@ -118,7 +117,7 @@ class TypeCheckUnionTests {
                 shapeId = equalTo(unionNode.nodeId),
                 name = isIdentifier("\$unionTag\$A.B\$X"),
                 isConstant = equalTo(true),
-                type = equalTo(SymbolType(
+                type = equalTo(symbolType(
                     module = listOf("A", "B"),
                     name = "@Member2"
                 ))

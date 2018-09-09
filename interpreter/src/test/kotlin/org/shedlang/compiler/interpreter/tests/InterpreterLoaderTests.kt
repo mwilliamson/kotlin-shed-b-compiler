@@ -12,7 +12,6 @@ import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.SymbolType
 import org.shedlang.compiler.types.freshShapeId
 
 
@@ -106,7 +105,7 @@ class LoadShapeTests {
             fields = listOf(
                 field(
                     name = "x",
-                    type = SymbolType(module = listOf("A", "B"), name = "@C"),
+                    type = symbolType(module = listOf("A", "B"), name = "@C"),
                     isConstant = true
                 )
             )
@@ -123,8 +122,8 @@ class LoadShapeTests {
 
         assertThat(loadedStatement, cast(
             has(ShapeTypeValue::constantFields, isMap(
-                Identifier("x") to cast(equalTo(SymbolValue(
-                    moduleName = listOf(Identifier("A"), Identifier("B")),
+                Identifier("x") to cast(equalTo(symbolValue(
+                    module = listOf("A", "B"),
                     name = "@C"
                 )))
             ))
@@ -138,12 +137,12 @@ class LoadIsTests {
         val shapeId = freshShapeId()
         val shapeType1 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@A"), shapeId = shapeId)
+                field("tag", symbolType(listOf("M"), "@A"), shapeId = shapeId)
             )
         )
         val shapeType2 = shapeType(
             fields = listOf(
-                field("tag", SymbolType(listOf("M"), "@B"), shapeId = shapeId)
+                field("tag", symbolType(listOf("M"), "@B"), shapeId = shapeId)
             )
         )
         val unionType = unionType(members = listOf(shapeType1, shapeType2))
@@ -167,7 +166,7 @@ class LoadIsTests {
         assertThat(expression, cast(allOf(
             has(BinaryOperation::operator, equalTo(Operator.EQUALS)),
             has(BinaryOperation::left, cast(equalTo(FieldAccess(VariableReference("x"), Identifier("tag"))))),
-            has(BinaryOperation::right, cast(equalTo(SymbolValue(listOf(Identifier("M")), "@A"))))
+            has(BinaryOperation::right, cast(equalTo(symbolValue(listOf("M"), "@A"))))
         )))
     }
 }
