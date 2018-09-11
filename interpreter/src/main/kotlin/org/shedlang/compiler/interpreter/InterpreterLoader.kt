@@ -127,9 +127,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         )
 
         override fun visit(node: IsNode): Expression {
-            val sourceType = context.types.typeOf(node.expression)
-            val targetType = context.types.rawTypeValue(node.type) as ShapeType
-            val discriminator = findDiscriminator(sourceType = sourceType, targetType = targetType)!!
+            val discriminator = findDiscriminator(node, context.types)
             return BinaryOperation(
                 Operator.EQUALS,
                 FieldAccess(loadExpression(node.expression, context), discriminator.fieldName),
@@ -203,9 +201,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                 Val(Identifier(expressionName), loadExpression(node.expression, context)),
                 ExpressionStatement(isReturn = true, expression = If(
                     conditionalBranches = node.branches.map { branch ->
-                        val sourceType = context.types.typeOf(node.expression)
-                        val targetType = context.types.rawTypeValue(branch.type) as ShapeType
-                        val discriminator = findDiscriminator(sourceType = sourceType, targetType = targetType)!!
+                        val discriminator = findDiscriminator(node, branch, context.types)
                         val condition = BinaryOperation(
                             Operator.EQUALS,
                             FieldAccess(VariableReference(expressionName), discriminator.fieldName),
@@ -223,6 +219,22 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             ))
         }
     })
+}
+
+private fun findDiscriminator(node: IsNode, types: Types): Discriminator {
+    return findDiscriminator(node.expression, node.type, types = types)
+}
+
+private fun findDiscriminator(node: WhenNode, branch: WhenBranchNode, types: Types): Discriminator {
+    val expression = node.expression
+    val type = branch.type
+    return findDiscriminator(expression, type, types = types)
+}
+
+private fun findDiscriminator(expression: ExpressionNode, type: StaticNode, types: Types): Discriminator {
+    val sourceType = types.typeOf(expression)
+    val targetType = types.rawTypeValue(type) as ShapeType
+    return findDiscriminator(sourceType = sourceType, targetType = targetType)!!
 }
 
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
