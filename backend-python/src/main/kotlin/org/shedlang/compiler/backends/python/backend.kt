@@ -84,19 +84,22 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
 }
 
 private fun compileModule(module: Module.Shed): PythonModule {
-    val generateCode = generateCode(module.node, module.references)
+    val generateCode = generateCode(
+        moduleName = module.name,
+        node = module.node,
+        references = module.references,
+        types = module.types
+    )
     val builtins = """
         from __future__ import print_function
 
         from shed.builtins import (
+            create_symbol as _symbol,
             int_to_string,
             list,
             print,
             partial as _partial,
-            symbol_factory as _symbol_factory,
         )
-
-        _symbol = _symbol_factory()
     """.trimIndent()
 
     // TODO: push module name generation into code generator

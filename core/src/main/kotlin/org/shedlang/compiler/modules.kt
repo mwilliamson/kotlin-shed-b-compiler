@@ -1,10 +1,7 @@
 package org.shedlang.compiler
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.metaTypeToType
-import org.shedlang.compiler.types.rawType
+import org.shedlang.compiler.types.*
 
 class ModuleSet(val modules: Collection<Module>)
 
@@ -38,6 +35,9 @@ interface Types {
         return metaTypeToType(typeOf(node)).mapNullable(::rawType)
     }
     fun declaredType(node: TypeDeclarationNode): Type
+    fun shapeFields(node: ShapeNode): Map<Identifier, Field> {
+        return (rawType(declaredType(node)) as ShapeType).fields
+    }
 }
 
 val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf())

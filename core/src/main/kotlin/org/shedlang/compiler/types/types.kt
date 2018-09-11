@@ -1,7 +1,7 @@
 package org.shedlang.compiler.types
 
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.Types
+import org.shedlang.compiler.ast.*
 
 
 interface StaticValue {
@@ -510,6 +510,22 @@ public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticV
 
 public data class Discriminator(val field: Field, val symbolType: SymbolType) {
     val fieldName: Identifier = field.name
+}
+
+fun findDiscriminator(node: IsNode, types: Types): Discriminator {
+    return findDiscriminator(node.expression, node.type, types = types)
+}
+
+fun findDiscriminator(node: WhenNode, branch: WhenBranchNode, types: Types): Discriminator {
+    val expression = node.expression
+    val type = branch.type
+    return findDiscriminator(expression, type, types = types)
+}
+
+fun findDiscriminator(expression: ExpressionNode, type: StaticNode, types: Types): Discriminator {
+    val sourceType = types.typeOf(expression)
+    val targetType = types.rawTypeValue(type) as ShapeType
+    return findDiscriminator(sourceType = sourceType, targetType = targetType)!!
 }
 
 public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {

@@ -1,24 +1,39 @@
 package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
+import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.SymbolType
+import org.shedlang.compiler.types.findDiscriminator
+import java.lang.Exception
 
 // TODO: check that builtins aren't renamed
 // TODO: check imports aren't renamed
 
-internal fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
-    return generateCode(node, CodeGenerationContext(references))
+internal fun generateCode(
+    node: ModuleNode,
+    moduleName: List<Identifier>,
+    references: ResolvedReferences,
+    types: Types
+): PythonModuleNode {
+    return generateCode(node, CodeGenerationContext(moduleName, references, types))
 }
 
 internal class CodeGenerationContext(
+    val moduleName: List<Identifier>,
     val references: ResolvedReferences,
+    val types: Types,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf()
 ) {
     fun enterScope(): CodeGenerationContext {
         return CodeGenerationContext(
+            moduleName = moduleName,
             references = references,
+            types = types,
             nodeNames = nodeNames,
             namesInScope = namesInScope.toMutableSet()
         )
@@ -103,7 +118,11 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 }
 
 private fun generateCode(node: ShapeNode, context: CodeGenerationContext): PythonClassNode {
-    val (variableFields, constantFields) = node.fields.partition { field -> field.value == null }
+    // TODO: remove duplication with InterpreterLoader
+
+    val (constantFields, variableFields) = context.types.shapeFields(node)
+        .values
+        .partition { field -> field.isConstant }
 
     val init = PythonFunctionNode(
         name = "__init__",
@@ -111,20 +130,32 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
         body = variableFields.map({ field ->
             PythonAssignmentNode(
                 target = PythonAttributeAccessNode(
-                    receiver = PythonVariableReferenceNode("self", source = NodeSource(field)),
+                    receiver = PythonVariableReferenceNode("self", source = NodeSource(node)),
                     attributeName = pythoniseName(field.name),
-                    source = NodeSource(field)
+                    source = NodeSource(node)
                 ),
-                expression = PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(field)),
-                source = NodeSource(field)
+                expression = PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
+                source = NodeSource(node)
             )
         }),
         source = NodeSource(node)
     )
     val body = constantFields.map { field ->
+        val fieldValueNode = node.fields
+            .find { fieldNode -> fieldNode.name == field.name }
+            ?.value
+        val fieldType = field.type
+        val value = if (fieldValueNode != null) {
+            generateExpressionCode(fieldValueNode, context).pureExpression()
+        } else if (fieldType is SymbolType) {
+            symbol(fieldType.symbol, source = NodeSource(node))
+        } else {
+            // TODO: throw better exception
+            throw Exception("Could not find value for constant field")
+        }
         PythonAssignmentNode(
             PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
-            generateExpressionCode(field.value!!, context).pureExpression(),
+            value,
             source = NodeSource(node)
         )
     } + listOf(init)
@@ -464,14 +495,9 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: SymbolNode): GeneratedExpression {
-            return GeneratedExpression.pure(
-                PythonFunctionCallNode(
-                    function = PythonVariableReferenceNode("_symbol", source = NodeSource(node)),
-                    arguments = listOf(PythonStringLiteralNode(node.name, source = NodeSource(node))),
-                    keywordArguments = listOf(),
-                    source = NodeSource(node)
-                )
-            )
+            val source = NodeSource(node)
+            val symbol = Symbol(context.moduleName, node.name)
+            return GeneratedExpression.pure(symbol(symbol, source))
         }
 
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
@@ -503,7 +529,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
         override fun visit(node: IsNode): GeneratedExpression {
             return generateExpressionCode(node.expression, context).pureMap { expression ->
-                generateTypeCondition(expression, node.type, NodeSource(node), context)
+                val discriminator = findDiscriminator(node, types = context.types)
+                generateTypeCondition(expression, discriminator, NodeSource(node))
             }
         }
 
@@ -720,9 +747,8 @@ private fun generateWhenCode(
                     name = expressionName,
                     source = NodeSource(branch)
                 ),
-                type = branch.type,
-                source = NodeSource(branch),
-                context = context
+                discriminator = findDiscriminator(node, branch, types = context.types),
+                source = NodeSource(branch)
             ),
             body = generateBlockCode(
                 branch.body,
@@ -756,6 +782,18 @@ private fun assign(
             source = source
         ),
         expression = expression,
+        source = source
+    )
+}
+
+private fun symbol(symbol: Symbol, source: Source): PythonFunctionCallNode {
+    return PythonFunctionCallNode(
+        function = PythonVariableReferenceNode("_symbol", source = source),
+        arguments = listOf(
+            PythonStringLiteralNode(symbol.module.map(Identifier::value).joinToString("."), source = source),
+            PythonStringLiteralNode(symbol.name, source = source)
+        ),
+        keywordArguments = listOf(),
         source = source
     )
 }
@@ -818,14 +856,13 @@ private fun isScalar(node: PythonExpressionNode): Boolean {
 
 private fun generateTypeCondition(
     expression: PythonExpressionNode,
-    type: StaticNode,
-    source: Source,
-    context: CodeGenerationContext
-): PythonFunctionCallNode {
-    return PythonFunctionCallNode(
-        function = PythonVariableReferenceNode("isinstance", source = source),
-        arguments = listOf(expression, generateCode(type, context)),
-        keywordArguments = listOf(),
+    discriminator: Discriminator,
+    source: Source
+): PythonExpressionNode {
+    return PythonBinaryOperationNode(
+        PythonOperator.EQUALS,
+        PythonAttributeAccessNode(expression, pythoniseName(discriminator.fieldName), source),
+        symbol(discriminator.symbolType.symbol, source = source),
         source = source
     )
 }

@@ -13,13 +13,10 @@ def print(value):
     _print(value, end="")
 
 
-def symbol_factory():
-    symbols = {}
+_symbols = {}
 
-    def create_symbol(name):
-        if name not in symbols:
-            symbols[name] = object()
+def create_symbol(module, name):
+    if (module, name) not in _symbols:
+        _symbols[(module, name)] = object()
 
-        return symbols[name]
-
-    return create_symbol
+    return _symbols[(module, name)]
