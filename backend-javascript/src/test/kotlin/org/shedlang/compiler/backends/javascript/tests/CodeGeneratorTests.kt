@@ -8,7 +8,6 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
@@ -552,13 +551,7 @@ class CodeGeneratorTests {
     private fun context(
         referenceTypes: List<Pair<ReferenceNode, Type>> = listOf()
     ): CodeGenerationContext {
-        val types = TypesMap(
-            expressionTypes = referenceTypes.associateBy(
-                { entry -> entry.first.nodeId },
-                { entry -> entry.second }
-            ),
-            variableTypes = mapOf()
-        )
+        val types = typesMap(expressionTypes = referenceTypes.toMap())
         return CodeGenerationContext(types = types)
     }
 

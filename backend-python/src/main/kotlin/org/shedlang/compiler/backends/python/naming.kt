@@ -11,7 +11,8 @@ private fun pythoniseName(originalName: String): String {
         originalName
     } else {
         camelCaseToSnakeCase(originalName)
-    }
+        // TODO: remove $ and . from identifiers
+    }.replace("$", "_").replace(".", "_")
     return if (isKeyword(casedName)) {
         casedName + "_"
     } else {

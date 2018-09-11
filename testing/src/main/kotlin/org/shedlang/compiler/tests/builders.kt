@@ -1,5 +1,7 @@
 package org.shedlang.compiler.tests
 
+import org.shedlang.compiler.Types
+import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
@@ -414,4 +416,28 @@ fun moduleType(fields: Map<String, Type>) = ModuleType(
 
 fun symbolType(module: List<String>, name: String): SymbolType {
     return SymbolType(Symbol(module.map(::Identifier), name))
+}
+
+fun discriminator(symbolType: SymbolType, fieldName: String): Discriminator {
+    return Discriminator(
+        field = field(fieldName, symbolType, shapeId = freshShapeId()),
+        symbolType = symbolType
+    )
+}
+
+fun typesMap(
+    expressionTypes: Map<Node, Type> = mapOf(),
+    variableTypes: Map<VariableBindingNode, Type> = mapOf(),
+    discriminators: Map<Pair<ExpressionNode, StaticNode>, Discriminator> = mapOf()
+): Types {
+    val types = TypesMap(
+        expressionTypes = expressionTypes.mapKeys { (key, _) -> key.nodeId },
+        variableTypes = variableTypes.mapKeys { (key, _) -> key.nodeId }
+    )
+
+    return object: Types by types {
+        override fun findDiscriminator(expression: ExpressionNode, type: StaticNode): Discriminator {
+            return discriminators[Pair(expression, type)]!!
+        }
+    }
 }

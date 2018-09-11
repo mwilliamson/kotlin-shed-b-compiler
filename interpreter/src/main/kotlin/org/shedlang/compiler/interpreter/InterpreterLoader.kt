@@ -1,11 +1,9 @@
 package org.shedlang.compiler.interpreter
 
-import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.Types
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.resolveImport
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.SymbolType
 
 
 internal class LoaderContext(val moduleName: List<Identifier>, val types: Types)
@@ -55,9 +53,9 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
 internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): Expression {
     return statement.accept(object : ModuleStatementNode.Visitor<Expression> {
         override fun visit(node: ShapeNode): Expression {
-            val type = rawType(context.types.declaredType(node)) as ShapeType
+            val fields = context.types.shapeFields(node)
 
-            val constantFields = type.fields.filter { (_, field) -> field.isConstant }.map { (name, field) ->
+            val constantFields = fields.filter { (_, field) -> field.isConstant }.map { (name, field) ->
                 val fieldValueNode = node.fields
                     .find { fieldNode -> fieldNode.name == name }
                     ?.value
@@ -219,22 +217,6 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             ))
         }
     })
-}
-
-private fun findDiscriminator(node: IsNode, types: Types): Discriminator {
-    return findDiscriminator(node.expression, node.type, types = types)
-}
-
-private fun findDiscriminator(node: WhenNode, branch: WhenBranchNode, types: Types): Discriminator {
-    val expression = node.expression
-    val type = branch.type
-    return findDiscriminator(expression, type, types = types)
-}
-
-private fun findDiscriminator(expression: ExpressionNode, type: StaticNode, types: Types): Discriminator {
-    val sourceType = types.typeOf(expression)
-    val targetType = types.rawTypeValue(type) as ShapeType
-    return findDiscriminator(sourceType = sourceType, targetType = targetType)!!
 }
 
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {

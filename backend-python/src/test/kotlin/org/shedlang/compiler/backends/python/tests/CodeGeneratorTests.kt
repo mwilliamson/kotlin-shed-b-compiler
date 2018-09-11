@@ -6,6 +6,9 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.EMPTY_TYPES
+import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
@@ -13,7 +16,9 @@ import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
+import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.UnitType
 import java.math.BigInteger
 
@@ -95,8 +100,18 @@ class CodeGeneratorTests {
                 shapeField("b", staticReference("Int"), value = literalInt(0))
             )
         )
+        val shapeType = shapeType(
+            fields = listOf(
+                field("a", type = IntType, isConstant = false),
+                field("b", type = IntType, isConstant = true)
+            )
+        )
 
-        val node = generateCode(shed).single()
+        val types = typesMap(
+            variableTypes = mapOf(shed to MetaType(shapeType))
+        )
+
+        val node = generateCode(shed, context(types = types)).single()
 
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
@@ -291,7 +306,6 @@ class CodeGeneratorTests {
     fun whenExpressionGeneratesIfStatementsWithAssignmentToVariable() {
         val variableDeclaration = valStatement("x")
         val variableReference = variableReference("x")
-        val typeDeclaration = typeParameter("T")
         val typeReference = staticReference("T")
         val shed = whenExpression(
             variableReference,
@@ -305,12 +319,16 @@ class CodeGeneratorTests {
             )
         )
 
-        val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
-            variableReference to variableDeclaration,
-            typeReference to typeDeclaration
-        )
-
-        val generatedExpression = generateExpressionCode(shed, context(references = references))
+        val generatedExpression = generateExpressionCode(shed, context(
+            references = mapOf(
+                variableReference to variableDeclaration
+            ),
+            types = typesMap(
+                discriminators = mapOf(
+                    Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                )
+            )
+        ))
         val reference = generatedExpression.value as PythonVariableReferenceNode
 
         assertThat(generatedExpression.statements, isSequence(
@@ -323,7 +341,7 @@ class CodeGeneratorTests {
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
                             expression = isPythonVariableReference("anonymous_1"),
-                            type = isPythonVariableReference("T")
+                            discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
                         ),
                         body = isSequence(
                             isPythonAssignment(
@@ -363,14 +381,19 @@ class CodeGeneratorTests {
             )
         )
 
-        val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
-            variableReference to variableDeclaration,
-            typeReference to typeDeclaration
-        )
-
         val generatedCode = generateCode(
             shed,
-            context(references = references)
+            context(
+                references = mapOf(
+                    variableReference to variableDeclaration,
+                    typeReference to typeDeclaration
+                ),
+                types = typesMap(
+                    discriminators = mapOf(
+                        Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                    )
+                )
+            )
         )
 
         assertThat(generatedCode.single(), isPythonFunction(
@@ -384,7 +407,7 @@ class CodeGeneratorTests {
                         isPythonConditionalBranch(
                             condition = isPythonTypeCondition(
                                 expression = isPythonVariableReference("anonymous"),
-                                type = isPythonVariableReference("T")
+                                discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
                             ),
                             body = isSequence(
                                 isPythonReturn(isPythonIntegerLiteral(42))
@@ -423,7 +446,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val generatedCode = generateExpressionCode(shed, context(references))
+        val generatedCode = generateExpressionCode(shed, context(references = references))
 
         assertThat((generatedCode.statements.single() as PythonFunctionNode).body, isSequence(
             isPythonIfStatement(
@@ -535,10 +558,10 @@ class CodeGeneratorTests {
     @Test
     fun symbolNameGeneratesCallToSymbolFunction() {
         val shed = symbolName("@blah")
-        val node = generateCode(shed)
+        val node = generateExpressionCode(shed, context(moduleName = listOf("A", "B")))
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("_symbol"),
-            isSequence(isPythonStringLiteral("@blah"))
+            isSequence(isPythonStringLiteral("A.B"), isPythonStringLiteral("@blah"))
         )))
     }
 
@@ -547,7 +570,7 @@ class CodeGeneratorTests {
         val declaration = parameter("x")
         val shed = variableReference("x")
 
-        val node = generateExpressionCode(shed, context(mapOf(shed to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(shed to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonVariableReference("x")))
     }
@@ -683,24 +706,28 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun isOperationGeneratesIsInstanceCall() {
-        val declaration = parameter("x")
-        val reference = variableReference("x")
-        val typeReference = staticReference("X")
-        val typeDeclaration = shape("X", listOf())
+    fun isOperationGeneratesTypeConditionCheck() {
+        val variableDeclaration = declaration("x")
+        val variableReference = variableReference("x")
+        val shapeReference = staticReference("Shape1")
+        val shed = isOperation(variableReference, shapeReference)
 
-        val shed = isOperation(
-            expression = reference,
-            type = typeReference
+        val context = context(
+            references = mapOf(
+                variableReference to variableDeclaration
+            ),
+            types = typesMap(
+                discriminators = mapOf(
+                    Pair(variableReference, shapeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                )
+            )
         )
-
-        val context = context(mapOf(
-            reference to declaration,
-            typeReference to typeDeclaration
-        ))
         val node = generateExpressionCode(shed, context)
 
-        assertThat(node, isGeneratedExpression(isPythonTypeCondition(isPythonVariableReference("x"), isPythonVariableReference("X"))))
+        assertThat(node, isGeneratedExpression(isPythonTypeCondition(
+            isPythonVariableReference("x"),
+            discriminator(symbolType(listOf("M"), "@A"), "tag")
+        )))
     }
 
     @Test
@@ -713,7 +740,7 @@ class CodeGeneratorTests {
             namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
-        val node = generateExpressionCode(shed, context(mapOf(function to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(function to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("f"),
@@ -860,7 +887,7 @@ class CodeGeneratorTests {
             namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
-        val node = generateExpressionCode(shed, context(mapOf(function to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(function to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("_partial"),
@@ -875,7 +902,7 @@ class CodeGeneratorTests {
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "y")
 
-        val node = generateExpressionCode(shed, context(mapOf(receiver to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(receiver to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -889,7 +916,7 @@ class CodeGeneratorTests {
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "someValue")
 
-        val node = generateExpressionCode(shed, context(mapOf(receiver to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(receiver to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -903,7 +930,7 @@ class CodeGeneratorTests {
         val receiver = staticReference("x")
         val shed = staticFieldAccess(receiver, "y")
 
-        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+        val node = generateCode(shed, context(references = mapOf(receiver to declaration)))
 
         assertThat(node, isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -917,12 +944,21 @@ class CodeGeneratorTests {
         val receiver = staticReference("x")
         val shed = staticFieldAccess(receiver, "someValue")
 
-        val node = generateCode(shed, context(mapOf(receiver to declaration)))
+        val node = generateCode(shed, context(references = mapOf(receiver to declaration)))
 
         assertThat(node, isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
             attributeName = equalTo("some_value")
         ))
+    }
+
+    private fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
+        return generateCode(
+            moduleName = listOf(),
+            node = node,
+            references = references,
+            types = EMPTY_TYPES
+        )
     }
 
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
@@ -943,9 +979,13 @@ class CodeGeneratorTests {
     private fun generateCode(node: ExpressionNode) = generateExpressionCode(node, context())
 
     private fun context(
-        references: Map<ReferenceNode, VariableBindingNode> = mapOf()
+        moduleName: List<String> = listOf(),
+        references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
+        types: Types = EMPTY_TYPES
     ) = CodeGenerationContext(
-        references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value }))
+        moduleName = moduleName.map(::Identifier),
+        references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value })),
+        types = types
     )
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)
@@ -1082,11 +1122,22 @@ class CodeGeneratorTests {
 
     private fun isPythonTypeCondition(
         expression: Matcher<PythonExpressionNode>,
-        type: Matcher<PythonExpressionNode>
+        discriminator: Discriminator
     ): Matcher<PythonExpressionNode> {
-        return isPythonFunctionCall(
-            isPythonVariableReference("isinstance"),
-            isSequence(expression, type)
+        val symbol = discriminator.symbolType.symbol
+        return isPythonBinaryOperation(
+            operator = equalTo(PythonOperator.EQUALS),
+            left = isPythonAttributeAccess(
+                receiver = expression,
+                attributeName = equalTo(discriminator.fieldName.value)
+            ),
+            right = isPythonFunctionCall(
+                isPythonVariableReference("_symbol"),
+                isSequence(
+                    isPythonStringLiteral(symbol.module.map(Identifier::value).joinToString(".")),
+                    isPythonStringLiteral(symbol.name)
+                )
+            )
         )
     }
 
