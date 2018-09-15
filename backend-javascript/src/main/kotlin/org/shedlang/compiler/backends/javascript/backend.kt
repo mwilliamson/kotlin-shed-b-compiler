@@ -82,7 +82,7 @@ private fun compileModule(module: Module.Shed, modules: ModuleSet): JavascriptMo
     val builtinsPath = "./" + "../".repeat(module.name.size - 1) + "builtins"
     val builtins = "const \$shed = require(\"$builtinsPath\");\n" + builtinNames.map { builtinName ->
         "const ${builtinName} = \$shed.${builtinName};\n"
-    }.joinToString("") + "const _symbol = \$shed.symbol;\n"
+    }.joinToString("")
     val main = if (module.hasMain()) {
         """
             if (require.main === module) {
