@@ -8,6 +8,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
@@ -88,8 +89,17 @@ class CodeGeneratorTests {
                 shapeField("b", staticReference("Int"), value = literalInt(0))
             )
         )
+        val shapeType = shapeType(
+            fields = listOf(
+                field("a", type = IntType, isConstant = false),
+                field("b", type = IntType, isConstant = true)
+            )
+        )
+        val types = typesMap(
+            variableTypes = mapOf(shed to MetaType(shapeType))
+        )
 
-        val node = generateCode(shed).single()
+        val node = generateCode(shed, context(types = types)).single()
 
         assertThat(node, isJavascriptConst(
             name = equalTo("X"),
@@ -214,11 +224,13 @@ class CodeGeneratorTests {
 
     @Test
     fun whenExpressionGeneratesImmediatelyEvaluatedIfStatement() {
+        val reference = variableReference("x")
+        val typeReference = staticReference("T")
         val shed = whenExpression(
-            variableReference("x"),
+            reference,
             listOf(
                 whenBranch(
-                    staticReference("T"),
+                    typeReference,
                     listOf(
                         expressionStatement(literalInt(42), isReturn = true)
                     )
@@ -226,7 +238,12 @@ class CodeGeneratorTests {
             )
         )
 
-        val node = generateCode(shed)
+        val types = typesMap(
+            discriminators = mapOf(
+                Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+            )
+        )
+        val node = generateCode(shed, context(types = types))
 
         assertThat(node, isJavascriptImmediatelyInvokedFunction(
             body = isSequence(
@@ -239,7 +256,7 @@ class CodeGeneratorTests {
                         isJavascriptConditionalBranch(
                             condition = isJavascriptTypeCondition(
                                 expression = isJavascriptVariableReference("\$shed_tmp"),
-                                type = isJavascriptVariableReference("T")
+                                discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
                             ),
                             body = isSequence(
                                 isJavascriptReturn(isJavascriptIntegerLiteral(42))
@@ -301,13 +318,10 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun symbolNameGeneratesCallToSymbolFunction() {
+    fun symbolNameGeneratesString() {
         val shed = symbolName("@blah")
         val node = generateCode(shed, context(moduleName = listOf("A", "B")))
-        assertThat(node, isJavascriptFunctionCall(
-            isJavascriptVariableReference("_symbol"),
-            isSequence(isJavascriptStringLiteral("A.B.@blah"))
-        ))
+        assertThat(node, isJavascriptStringLiteral("A.B.@blah"))
     }
 
     @Test
@@ -359,9 +373,15 @@ class CodeGeneratorTests {
             type = typeReference
         )
 
-        val node = generateCode(shed)
+        val types = typesMap(discriminators = mapOf(
+            Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+        ))
+        val node = generateCode(shed, context(types = types))
 
-        assertThat(node, isJavascriptTypeCondition(isJavascriptVariableReference("x"), isJavascriptVariableReference("X")))
+        assertThat(node, isJavascriptTypeCondition(
+            isJavascriptVariableReference("x"),
+            discriminator(symbolType(listOf("M"), "@A"), "tag")
+        ))
     }
 
     @Test
@@ -415,8 +435,13 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, listOf(literalInt(42), literalBool(false)))
 
-        val referenceTypes = listOf(reference to functionType(positionalParameters = listOf(IntType, BoolType, IntType, IntType)))
-        val node = generateCode(shed, context(referenceTypes = referenceTypes))
+        val node = generateCode(shed, context(
+            types = typesMap(
+                expressionTypes = mapOf(
+                    reference to functionType(positionalParameters = listOf(IntType, BoolType, IntType, IntType))
+                )
+            )
+        ))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
@@ -455,8 +480,11 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val referenceTypes = listOf(reference to functionType(namedParameters = mapOf(Identifier("x") to IntType)))
-        val node = generateCode(shed, context(referenceTypes = referenceTypes))
+        val node = generateCode(shed, context(types = typesMap(
+            expressionTypes = mapOf(
+                reference to functionType(namedParameters = mapOf(Identifier("x") to IntType))
+            )
+        )))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
@@ -493,10 +521,13 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val referenceTypes = listOf(
-            reference to functionType(namedParameters = mapOf(Identifier("x") to IntType, Identifier("y") to IntType))
-        )
-        val node = generateCode(shed, context(referenceTypes = referenceTypes))
+        val node = generateCode(shed, context(
+            types = typesMap(
+                expressionTypes = mapOf(
+                    reference to functionType(namedParameters = mapOf(Identifier("x") to IntType, Identifier("y") to IntType))
+                )
+            )
+        ))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
@@ -550,9 +581,8 @@ class CodeGeneratorTests {
 
     private fun context(
         moduleName: List<String> = listOf(),
-        referenceTypes: List<Pair<ReferenceNode, Type>> = listOf()
+        types: Types = typesMap()
     ): CodeGenerationContext {
-        val types = typesMap(expressionTypes = referenceTypes.toMap())
         return CodeGenerationContext(moduleName = moduleName.map(::Identifier), types = types)
     }
 
@@ -691,12 +721,15 @@ class CodeGeneratorTests {
 
     private fun isJavascriptTypeCondition(
         expression: Matcher<JavascriptExpressionNode>,
-        type: Matcher<JavascriptExpressionNode>
+        discriminator: Discriminator
     ): Matcher<JavascriptExpressionNode> {
-        return isJavascriptFunctionCall(
-            // TODO: should be a field access
-            isJavascriptVariableReference("\$shed.isType"),
-            isSequence(expression, type)
+        return isJavascriptBinaryOperation(
+            operator = equalTo(JavascriptOperator.EQUALS),
+            left = isJavascriptPropertyAccess(
+                receiver = expression,
+                propertyName = equalTo(discriminator.fieldName.value)
+            ),
+            right = isJavascriptStringLiteral(discriminator.symbolType.symbol.fullName)
         )
     }
 

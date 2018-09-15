@@ -5,8 +5,9 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
-import org.shedlang.compiler.types.FunctionType
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.findDiscriminator
+import org.shedlang.compiler.types.*
+import java.lang.Exception
 
 internal fun generateCode(module: Module.Shed, modules: ModuleSet): JavascriptModuleNode {
     val context = CodeGenerationContext(moduleName = module.name, types = module.types)
@@ -26,6 +27,10 @@ internal class CodeGenerationContext(val moduleName: List<Identifier>, private v
     fun typeOfExpression(node: ExpressionNode): Type {
         return types.typeOf(node)
     }
+
+    fun findDiscriminator(node: IsNode) = findDiscriminator(node, types = types)
+    fun findDiscriminator(node: WhenNode, branch: WhenBranchNode) = findDiscriminator(node, branch, types = types)
+    fun shapeFields(node: ShapeNode) = types.shapeFields(node)
 }
 
 private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
@@ -74,6 +79,12 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 }
 
 private fun generateCode(node: ShapeNode, context: CodeGenerationContext) : JavascriptStatementNode {
+    // TODO: remove duplication with InterpreterLoader and Python code generator
+
+    val constantFields = context.shapeFields(node)
+        .values
+        .filter { field -> field.isConstant }
+
     val source = NodeSource(node)
     return JavascriptConstNode(
         name = generateName(node.name),
@@ -85,9 +96,22 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext) : Java
             listOf(
                 JavascriptStringLiteralNode(generateName(node.name), source = source),
                 JavascriptObjectLiteralNode(
-                    node.fields.filter { field -> field.value != null }.associateBy(
+                    constantFields.associateBy(
                         { field -> generateName(field.name) },
-                        { field -> generateCode(field.value!!, context) }
+                        { field ->
+                            val fieldValueNode = node.fields
+                                .find { fieldNode -> fieldNode.name == field.name }
+                                ?.value
+                            val fieldType = field.type
+                            if (fieldValueNode != null) {
+                                generateCode(fieldValueNode, context)
+                            } else if (fieldType is SymbolType) {
+                                generateSymbolCode(fieldType.symbol, source = NodeSource(node))
+                            } else {
+                                // TODO: throw better exception
+                                throw Exception("Could not find value for constant field")
+                            }
+                        }
                     ),
                     source = source
                 )
@@ -201,13 +225,8 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: SymbolNode): JavascriptExpressionNode {
-            val symbolParts = context.moduleName.map(Identifier::value) + listOf(node.name)
-            val symbolString = symbolParts.joinToString(".")
-            return JavascriptFunctionCallNode(
-                JavascriptVariableReferenceNode("_symbol", source = NodeSource(node)),
-                listOf(JavascriptStringLiteralNode(symbolString, source = NodeSource(node))),
-                source = NodeSource(node)
-            )
+            val symbol = Symbol(context.moduleName, node.name)
+            return generateSymbolCode(symbol, NodeSource(node))
         }
 
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
@@ -224,9 +243,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: IsNode): JavascriptExpressionNode {
+            val discriminator = context.findDiscriminator(node)
             return generateTypeCondition(
                 expression = generateCode(node.expression, context),
-                type = node.type,
+                discriminator = discriminator,
                 source = NodeSource(node)
             )
         }
@@ -387,10 +407,15 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             val branches = node.branches.map { branch ->
                 val expression = NodeSource(branch)
-                val condition = generateTypeCondition(JavascriptVariableReferenceNode(
-                    name = temporaryName,
-                    source = expression
-                ), branch.type, NodeSource(branch))
+                val discriminator = context.findDiscriminator(node, branch)
+                val condition = generateTypeCondition(
+                    JavascriptVariableReferenceNode(
+                        name = temporaryName,
+                        source = expression
+                    ),
+                    discriminator,
+                    NodeSource(branch)
+                )
                 JavascriptConditionalBranchNode(
                     condition = condition,
                     body = generateCode(branch.body, context),
@@ -417,18 +442,17 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
         private fun generateTypeCondition(
             expression: JavascriptExpressionNode,
-            type: StaticNode,
+            discriminator: Discriminator,
             source: NodeSource
-        ): JavascriptFunctionCallNode {
-            return JavascriptFunctionCallNode(
-                JavascriptVariableReferenceNode(
-                    name = "\$shed.isType",
-                    source = source
-                ),
-                listOf(
+        ): JavascriptExpressionNode {
+            return JavascriptBinaryOperationNode(
+                JavascriptOperator.EQUALS,
+                JavascriptPropertyAccessNode(
                     expression,
-                    generateCode(type)
+                    generateName(discriminator.fieldName),
+                    source
                 ),
+                generateSymbolCode(discriminator.symbolType.symbol, source),
                 source = source
             )
         }
@@ -449,7 +473,10 @@ private fun immediatelyInvokedFunction(
         arguments = listOf(),
         source = source
     )
+}
 
+private fun generateSymbolCode(symbol: Symbol, source: NodeSource): JavascriptExpressionNode {
+    return JavascriptStringLiteralNode(symbol.fullName, source = source)
 }
 
 private fun generateCode(operator: Operator): JavascriptOperator {
@@ -496,11 +523,12 @@ private fun generateCodeForReferenceNode(node: ReferenceNode): JavascriptExpress
 }
 
 private fun generateName(identifier: Identifier): String {
-    if (isJavascriptKeyword(identifier.value)) {
-        return identifier.value + "_"
+    // TODO: remove $ and . from identifiers
+    return if (isJavascriptKeyword(identifier.value)) {
+        identifier.value + "_"
     } else {
-        return identifier.value
-    }
+        identifier.value
+    }.replace("$", "_").replace(".", "_")
 }
 
 fun isJavascriptKeyword(value: String): Boolean {

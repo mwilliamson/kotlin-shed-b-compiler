@@ -18,7 +18,6 @@ function declareShape(name, constantFields) {
         for (var key in constantFields) {
             fields[key] = constantFields[key];
         }
-        fields.$shedType = shape;
         return fields;
     }
 
@@ -27,22 +26,8 @@ function declareShape(name, constantFields) {
     return shape;
 }
 
-function isType(value, type) {
-    return value != null && value.$shedType === type;
-}
-
-const symbols = new Map();
-function symbol(name) {
-    if (!symbols.has(name)) {
-        symbols.set(name, {});
-    }
-    return symbols.get(name);
-}
-
 module.exports = {
     declareShape: declareShape,
-    isType: isType,
-    symbol: symbol,
 
     intToString: intToString,
     list: list,

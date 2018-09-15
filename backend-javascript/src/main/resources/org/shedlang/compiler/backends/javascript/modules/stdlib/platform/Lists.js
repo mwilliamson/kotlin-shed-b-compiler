@@ -1,4 +1,3 @@
-var Builtins = require("../../builtins");
 var Options = require("../Options");
 var Sequences = require("../Sequences");
 
@@ -26,7 +25,7 @@ function sequenceToList(sequence) {
     
     while (true) {
         var item = sequence.next();
-        if (Builtins.isType(item, Options.None)) {
+        if (item._unionTag_stdlib_Options_Option === "stdlib.Options.@Some") {
             return result;
         } else {
             result.push(item.value.head);

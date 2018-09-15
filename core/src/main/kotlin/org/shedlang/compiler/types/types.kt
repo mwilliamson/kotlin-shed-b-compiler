@@ -77,7 +77,9 @@ data class SymbolType(val symbol: Symbol): BasicType {
         get() = "Symbol[${symbol.module}.${symbol.name}]"
 }
 
-data class Symbol(val module: List<Identifier>, val name: String)
+data class Symbol(val module: List<Identifier>, val name: String) {
+    val fullName: String = (module.map(Identifier::value) + listOf(name)).joinToString(".")
+}
 
 object AnySymbolType : Type {
     override val shortDescription: String
