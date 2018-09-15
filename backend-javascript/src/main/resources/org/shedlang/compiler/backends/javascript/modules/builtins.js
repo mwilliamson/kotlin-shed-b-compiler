@@ -21,8 +21,6 @@ function declareShape(name, constantFields) {
         return fields;
     }
 
-    shape.typeName = name;
-
     return shape;
 }
 
