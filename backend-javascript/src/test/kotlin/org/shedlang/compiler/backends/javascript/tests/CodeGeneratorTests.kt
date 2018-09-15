@@ -303,10 +303,10 @@ class CodeGeneratorTests {
     @Test
     fun symbolNameGeneratesCallToSymbolFunction() {
         val shed = symbolName("@blah")
-        val node = generateCode(shed)
+        val node = generateCode(shed, context(moduleName = listOf("A", "B")))
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("_symbol"),
-            isSequence(isJavascriptStringLiteral("@blah"))
+            isSequence(isJavascriptStringLiteral("A.B.@blah"))
         ))
     }
 
@@ -549,10 +549,11 @@ class CodeGeneratorTests {
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
     private fun context(
+        moduleName: List<String> = listOf(),
         referenceTypes: List<Pair<ReferenceNode, Type>> = listOf()
     ): CodeGenerationContext {
         val types = typesMap(expressionTypes = referenceTypes.toMap())
-        return CodeGenerationContext(types = types)
+        return CodeGenerationContext(moduleName = moduleName.map(::Identifier), types = types)
     }
 
     private fun isJavascriptModule(body: Matcher<List<JavascriptStatementNode>>)

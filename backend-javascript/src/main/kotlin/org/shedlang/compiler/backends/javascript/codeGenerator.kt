@@ -9,7 +9,7 @@ import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.Type
 
 internal fun generateCode(module: Module.Shed, modules: ModuleSet): JavascriptModuleNode {
-    val context = CodeGenerationContext(types = module.types)
+    val context = CodeGenerationContext(moduleName = module.name, types = module.types)
 
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
@@ -22,7 +22,7 @@ internal fun generateCode(module: Module.Shed, modules: ModuleSet): JavascriptMo
     )
 }
 
-internal class CodeGenerationContext(private val types: Types) {
+internal class CodeGenerationContext(val moduleName: List<Identifier>, private val types: Types) {
     fun typeOfExpression(node: ExpressionNode): Type {
         return types.typeOf(node)
     }
@@ -201,9 +201,11 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: SymbolNode): JavascriptExpressionNode {
+            val symbolParts = context.moduleName.map(Identifier::value) + listOf(node.name)
+            val symbolString = symbolParts.joinToString(".")
             return JavascriptFunctionCallNode(
                 JavascriptVariableReferenceNode("_symbol", source = NodeSource(node)),
-                listOf(JavascriptStringLiteralNode(node.name, source = NodeSource(node))),
+                listOf(JavascriptStringLiteralNode(symbolString, source = NodeSource(node))),
                 source = NodeSource(node)
             )
         }
