@@ -556,13 +556,10 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun symbolNameGeneratesCallToSymbolFunction() {
+    fun symbolNameGeneratesString() {
         val shed = symbolName("@blah")
         val node = generateExpressionCode(shed, context(moduleName = listOf("A", "B")))
-        assertThat(node, isGeneratedExpression(isPythonFunctionCall(
-            isPythonVariableReference("_symbol"),
-            isSequence(isPythonStringLiteral("A.B"), isPythonStringLiteral("@blah"))
-        )))
+        assertThat(node, isGeneratedExpression(isPythonStringLiteral("A.B.@blah")))
     }
 
     @Test
@@ -1131,13 +1128,7 @@ class CodeGeneratorTests {
                 receiver = expression,
                 attributeName = equalTo(discriminator.fieldName.value)
             ),
-            right = isPythonFunctionCall(
-                isPythonVariableReference("_symbol"),
-                isSequence(
-                    isPythonStringLiteral(symbol.module.map(Identifier::value).joinToString(".")),
-                    isPythonStringLiteral(symbol.name)
-                )
-            )
+            right = isPythonStringLiteral(symbol.fullName)
         )
     }
 

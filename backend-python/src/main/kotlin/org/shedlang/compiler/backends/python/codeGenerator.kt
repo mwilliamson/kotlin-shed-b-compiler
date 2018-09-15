@@ -786,16 +786,8 @@ private fun assign(
     )
 }
 
-private fun symbol(symbol: Symbol, source: Source): PythonFunctionCallNode {
-    return PythonFunctionCallNode(
-        function = PythonVariableReferenceNode("_symbol", source = source),
-        arguments = listOf(
-            PythonStringLiteralNode(symbol.module.map(Identifier::value).joinToString("."), source = source),
-            PythonStringLiteralNode(symbol.name, source = source)
-        ),
-        keywordArguments = listOf(),
-        source = source
-    )
+private fun symbol(symbol: Symbol, source: Source): PythonExpressionNode {
+    return PythonStringLiteralNode(symbol.fullName, source = source)
 }
 
 private fun <T1, T2> handleSpillage(
