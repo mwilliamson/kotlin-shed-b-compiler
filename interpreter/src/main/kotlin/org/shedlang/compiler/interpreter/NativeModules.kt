@@ -202,46 +202,9 @@ private val stringsModule = ModuleExpression(
     )
 )
 
-private object TypesCastValue: Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        throw UnsupportedOperationException("not implemented")
-    }
-}
-
-private object TypesNameValue: Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        throw UnsupportedOperationException("not implemented")
-    }
-}
-
-private object TypesTypeOfValue: Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        throw UnsupportedOperationException("not implemented")
-    }
-}
-
-private val typesModule = ModuleExpression(
-    fieldExpressions = listOf(),
-    fieldValues = listOf(
-        Identifier("cast") to TypesCastValue,
-        Identifier("name") to TypesNameValue,
-        Identifier("typeOf") to TypesTypeOfValue
-    )
-)
-
 internal val nativeModules: Map<List<Identifier>, ModuleExpression> = mapOf(
     listOf(Identifier("stdlib"), Identifier("platform"), Identifier("Lists")) to listsModule,
-    listOf(Identifier("stdlib"), Identifier("platform"), Identifier("Strings")) to stringsModule,
-    listOf(Identifier("stdlib"), Identifier("platform"), Identifier("Types")) to typesModule
+    listOf(Identifier("stdlib"), Identifier("platform"), Identifier("Strings")) to stringsModule
 )
 
 
