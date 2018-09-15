@@ -1,5 +1,4 @@
 import .Options;
-import .Types;
 
 fun anything() -> Matcher[Any] {
     Matcher(

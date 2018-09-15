@@ -1,4 +1,0 @@
-import .platform.Types;
-
-val name = Types.name;
-val typeOf = Types.typeOf;
