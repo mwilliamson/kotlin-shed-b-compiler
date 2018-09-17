@@ -28,13 +28,11 @@ private object ListsSequenceItemToListValue: Callable() {
     ): EvaluationResult<Expression> {
         val item = positionalArguments[0] as ShapeValue
         // TODO: use proper type check
-        val value = item.fields[Identifier("value")]
-        if (value == null) {
+        val head = item.fields[Identifier("head")]
+        if (head == null) {
             return EvaluationResult.pure(ListValue(listOf()))
         } else {
-            val valueShape = value as ShapeValue
-            val head = valueShape.fields.getValue(Identifier("head"))
-            val tail = valueShape.fields.getValue(Identifier("tail")) as ShapeValue
+            val tail = item.fields.getValue(Identifier("tail")) as ShapeValue
             return EvaluationResult.pure(call(
                 ListsConsValue,
                 positionalArgumentExpressions = listOf(
@@ -78,19 +76,14 @@ private object ListsListToSequenceValue: Callable() {
             ): EvaluationResult<Expression> {
                 if (index < list.elements.size) {
                     return EvaluationResult.pure(call(
-                        optionsSomeReference,
-                        positionalArgumentExpressions = listOf(
-                            call(
-                                sequenceItemTypeReference,
-                                namedArgumentExpressions = listOf(
-                                    Identifier("head") to list.elements[index],
-                                    Identifier("tail") to listIndexToSequence(list, index + 1)
-                                )
-                            )
+                        sequenceItemTypeReference,
+                        namedArgumentExpressions = listOf(
+                            Identifier("head") to list.elements[index],
+                            Identifier("tail") to listIndexToSequence(list, index + 1)
                         )
                     ))
                 } else {
-                    return EvaluationResult.pure(optionsNoneReference)
+                    return EvaluationResult.pure(sequenceEndReference)
                 }
             }
         }
@@ -215,3 +208,4 @@ private val optionsSomeReference = FieldAccess(optionsModuleReference, Identifie
 private val sequencesModuleReference = ModuleReference(listOf(Identifier("stdlib"), Identifier("Sequences")))
 private val sequenceTypeReference = FieldAccess(sequencesModuleReference, Identifier("Sequence"))
 private val sequenceItemTypeReference = FieldAccess(sequencesModuleReference, Identifier("SequenceItem"))
+private val sequenceEndReference = FieldAccess(sequencesModuleReference, Identifier("end"))

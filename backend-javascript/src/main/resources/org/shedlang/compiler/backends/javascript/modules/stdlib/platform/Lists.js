@@ -9,12 +9,12 @@ function listIndexToSequence(elements, index) {
     return Sequences.Sequence({
         next: function() {
             if (index < elements.length) {
-                return Options.some(Sequences.SequenceItem({
+                return Sequences.SequenceItem({
                     head: elements[index],
                     tail: listIndexToSequence(elements, index + 1)
-                }));
+                });
             } else {
-                return Options.none;
+                return Sequences.end;
             }
         }
     });
@@ -25,11 +25,11 @@ function sequenceToList(sequence) {
     
     while (true) {
         var item = sequence.next();
-        if (item._unionTag_stdlib_Options_Option === "stdlib.Options.@Some") {
+        if (item._unionTag_stdlib_Sequences_SequenceIterator === "stdlib.Sequences.@SequenceEnd") {
             return result;
         } else {
-            result.push(item.value.head);
-            sequence = item.value.tail;
+            result.push(item.head);
+            sequence = item.tail;
         }
     }
 }

@@ -8,14 +8,12 @@ def list_to_sequence(elements):
 def _list_index_to_sequence(elements, index):
     def next_item():
         if index < len(elements):
-            return Options.some(
-                Sequences.SequenceItem(
-                    head=elements[index],
-                    tail=_list_index_to_sequence(elements, index + 1),
-                )
+            return Sequences.SequenceItem(
+                head=elements[index],
+                tail=_list_index_to_sequence(elements, index + 1),
             )
         else:
-            return Options.none
+            return Sequences.end
     
     return Sequences.Sequence(
         next=next_item,
@@ -27,8 +25,8 @@ def sequence_to_list(sequence):
     
     while True:
         item = sequence.next()
-        if isinstance(item, Options.None_):
+        if item._union_tag_stdlib__sequences__sequence_iterator == "stdlib.Sequences.@SequenceEnd":
             return result
         else:
-            result.append(item.value.head)
-            sequence = item.value.tail
+            result.append(item.head)
+            sequence = item.tail
