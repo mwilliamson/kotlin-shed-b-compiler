@@ -11,6 +11,12 @@ fun isJson(expected: Json.JsonValue) -> Matchers.Matcher[Json.JsonValue] {
     )
 }
 
+val isJsonNull = isJson(Json.null);
+
+fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
+    isJson(Json.boolean(value))
+}
+
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("valueToText", list(
         Tests.testCase("null", fun () {
@@ -130,19 +136,19 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("null", fun () {
             val text = "null";
             val value = Json.textToValue(text);
-            Tests.assertThat(value, isJson(Json.null))
+            Tests.assertThat(value, isJsonNull)
         }),
 
         Tests.testCase("true", fun () {
             val text = "true";
             val value = Json.textToValue(text);
-            Tests.assertThat(value, isJson(Json.boolean(true)))
+            Tests.assertThat(value, isJsonBoolean(true))
         }),
 
         Tests.testCase("false", fun () {
             val text = "false";
             val value = Json.textToValue(text);
-            Tests.assertThat(value, isJson(Json.boolean(false)))
+            Tests.assertThat(value, isJsonBoolean(false))
         }),
     )),
 ));
