@@ -15,6 +15,7 @@
         <module>backend-testing</module>
         <module>cli</module>
         <module>core</module>
+        <module>core-tests</module>
         <module>frontend</module>
         <module>interpreter</module>
         <module>testing</module>

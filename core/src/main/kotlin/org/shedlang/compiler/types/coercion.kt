@@ -16,7 +16,7 @@ fun isEquivalentType(first: Type, second: Type): Boolean {
     return canCoerce(from = first, to = second) && canCoerce(from = second, to = first)
 }
 
-internal fun coerce(
+fun coerce(
     from: Type,
     to: Type,
     parameters: Set<TypeParameter> = setOf()
@@ -24,7 +24,7 @@ internal fun coerce(
     return coerce(listOf(from to to), parameters = parameters)
 }
 
-internal fun coerce(
+fun coerce(
     constraints: List<Pair<Type, Type>>,
     parameters: Set<TypeParameter> = setOf()
 ): CoercionResult {
@@ -37,16 +37,16 @@ internal fun coerce(
     return CoercionResult.Success(solver.typeBindings)
 }
 
-internal sealed class CoercionResult {
-    internal class Success(val bindings: Map<TypeParameter, Type>): CoercionResult()
-    internal object Failure: CoercionResult()
+sealed class CoercionResult {
+    class Success(val bindings: Map<TypeParameter, Type>): CoercionResult()
+    object Failure: CoercionResult()
 }
 
 class TypeConstraintSolver(
     private val parameters: Set<StaticParameter>
 ) {
-    internal val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf()
-    internal val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
+    val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf()
+    val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
     private val closed: MutableSet<TypeParameter> = mutableSetOf()
 
     fun boundTypeFor(parameter: TypeParameter): Type? {
