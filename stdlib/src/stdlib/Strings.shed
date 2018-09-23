@@ -7,6 +7,14 @@ val codePointCount = Strings.codePointCount;
 val mapCharacters = Strings.mapCharacters;
 val replace = Strings.replace;
 
+fun dropLeft(count: Int, value: String) -> String {
+    Strings.substring(count, codePointCount(value), value)
+}
+
+fun isEmpty(value: String) -> Bool {
+    Strings.codePointCount(value) == 0
+}
+
 fun join(separator: String, elements: List[String]) -> String {
     Lists.reduce(
         fun (text: String, element: String) -> String {
@@ -21,6 +29,14 @@ fun join(separator: String, elements: List[String]) -> String {
     )
 }
 
+fun left(count: Int, value: String) -> String {
+    Strings.substring(0, count, value)
+}
+
 fun padLeft(desiredCodePointCount: Int, padding: Char, string: String) -> String {
     Strings.repeat(charToString(padding), desiredCodePointCount - Strings.codePointCount(string)) + string
+}
+
+fun startsWith(prefix: String, value: String) -> Bool {
+    left(codePointCount(prefix), value) == prefix
 }

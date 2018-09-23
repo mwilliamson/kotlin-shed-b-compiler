@@ -4,3 +4,4 @@ val codePointCount: (String) -> Int;
 val mapCharacters: ((Char) -> String, String) -> String;
 val repeat: (String, Int) -> String;
 val replace: (String, String, String) -> String;
+val substring: (Int, Int, String) -> String;

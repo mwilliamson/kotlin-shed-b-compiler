@@ -2,6 +2,7 @@ package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Operator
+import kotlin.math.min
 
 
 private object ListsSequenceToListValue: Callable() {
@@ -183,6 +184,23 @@ private object StringsReplaceValue: Callable() {
     }
 }
 
+private object StringsSubstringValue: Callable() {
+    override fun call(
+        positionalArguments: List<InterpreterValue>,
+        namedArguments: List<Pair<Identifier, InterpreterValue>>
+    ): EvaluationResult<Expression> {
+        val startIndexValue = positionalArguments[0] as IntegerValue
+        val endIndexValue = positionalArguments[1] as IntegerValue
+        val string = positionalArguments[2] as StringValue
+
+        val startIndex = startIndexValue.value.toInt()
+        val endIndex = endIndexValue.value.toInt()
+        val result = string.value.substring(startIndex, min(endIndex, string.value.length))
+
+        return EvaluationResult.pure(StringValue(result))
+    }
+}
+
 private val stringsModule = ModuleExpression(
     fieldExpressions = listOf(),
     fieldValues = listOf(
@@ -191,7 +209,8 @@ private val stringsModule = ModuleExpression(
         Identifier("codePointCount") to StringsCodePointCountValue,
         Identifier("mapCharacters") to StringsMapCharactersValue,
         Identifier("repeat") to StringsRepeatValue,
-        Identifier("replace") to StringsReplaceValue
+        Identifier("replace") to StringsReplaceValue,
+        Identifier("substring") to StringsSubstringValue
     )
 )
 

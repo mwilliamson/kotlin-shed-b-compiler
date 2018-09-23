@@ -1,4 +1,5 @@
 import stdlib.Lists;
+import stdlib.Sequences;
 import stdlib.Strings;
 
 
@@ -116,12 +117,79 @@ fun jsonStringCharacterToText(character: Char) -> String {
 }
 
 fun textToValue(text: String) -> JsonValue {
-    if (text == "true") {
-        boolean(true)
-    } else if (text == "false") {
-        boolean(false)
+    tokensToValue(tokenise(text))
+}
+
+fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
+    val iterator = tokens.next();
+    when (iterator) {
+        is Sequences.SequenceEnd {
+            null
+        }
+        is Sequences.SequenceItem[Token, Pure] {
+            when (iterator.head.tokenType) {
+                is TokenTrue {
+                    boolean(true)
+                }
+                is TokenFalse {
+                    boolean(false)
+                }
+                is TokenNull {
+                    null
+                }
+                is TokenWhitespace {
+                    null
+                }
+                is TokenUnexpected {
+                    null
+                }
+            }
+        }
+    }
+}
+
+shape TokenWhitespace {}
+shape TokenNull {}
+shape TokenTrue {}
+shape TokenFalse {}
+shape TokenUnexpected {}
+union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenUnexpected;
+
+shape Token {
+    tokenType: TokenType,
+    value: String,
+}
+
+fun token(tokenType: TokenType, value: String) -> Token {
+    Token(tokenType = tokenType, value = value)
+}
+
+fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
+    Sequences.Sequence(
+        next = fun () -> Sequences.SequenceIterator[Token, Pure] {
+            if (Strings.isEmpty(value)) {
+                Sequences.end
+            } else {
+                val token = nextToken(value);
+                val remainder = Strings.dropLeft(Strings.codePointCount(token.value), value);
+                Sequences.SequenceItem(
+                    head = token,
+                    tail = tokenise(remainder),
+                )
+            }
+        },
+    )
+}
+
+fun nextToken(value: String) -> Token {
+    if (Strings.startsWith("true", value)) {
+        token(TokenTrue(), "true")
+    } else if (Strings.startsWith("false", value)) {
+        token(TokenFalse(), "false")
+    } else if (Strings.startsWith("null", value)) {
+        token(TokenNull(), "null")
     } else {
-        null
+        token(TokenUnexpected(), Strings.left(1, value))
     }
 }
 

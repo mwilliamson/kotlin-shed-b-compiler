@@ -36,9 +36,14 @@ function replace(old, replacement, string) {
     return string.split(old).join(replacement);
 }
 
+function substring(startIndex, endIndex, string) {
+    return string.substring(startIndex, endIndex);
+}
+
 exports.charToHexString = charToHexString;
 exports.charToString = charToString;
 exports.codePointCount = codePointCount;
 exports.mapCharacters = mapCharacters;
 exports.repeat = repeat;
 exports.replace = replace;
+exports.substring = substring;

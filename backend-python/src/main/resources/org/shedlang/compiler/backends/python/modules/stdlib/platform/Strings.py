@@ -26,3 +26,7 @@ def repeat(string, times):
 
 def replace(old, new, string):
     return string.replace(old, new)
+
+
+def substring(start_index, end_index, value):
+    return value[start_index:end_index]
