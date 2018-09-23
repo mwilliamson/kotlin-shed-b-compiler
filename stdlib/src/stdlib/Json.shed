@@ -117,7 +117,17 @@ fun jsonStringCharacterToText(character: Char) -> String {
 }
 
 fun textToValue(text: String) -> JsonValue {
-    tokensToValue(tokenise(text))
+    val isNotWhitespace = fun (token: Token) -> Bool {
+        // TODO: implement negation
+        if (token.tokenType is TokenWhitespace) {
+            false
+        } else {
+            true
+        }
+    };
+
+    val tokens = tokenise(text) |> Sequences.lazyFilter ~ (isNotWhitespace);
+    tokensToValue(tokens)
 }
 
 fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
@@ -188,6 +198,10 @@ fun nextToken(value: String) -> Token {
         token(TokenFalse(), "false")
     } else if (Strings.startsWith("null", value)) {
         token(TokenNull(), "null")
+    } else if (Strings.startsWith(" ", value)) {
+        // TODO: consume all whitespace in one token
+        // TODO: handle other whitespace characters
+        token(TokenWhitespace(), " ")
     } else {
         token(TokenUnexpected(), Strings.left(1, value))
     }

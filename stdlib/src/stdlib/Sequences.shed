@@ -59,6 +59,30 @@ fun forEach[T, !E](func: (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
     }
 }
 
+fun lazyFilter[T, !E](predicate: (T) !E -> Bool, sequence: Sequence[T, E]) -> Sequence[T, E] {
+    Sequence(
+        next = fun () !E -> SequenceIterator[T, E] {
+            val item = sequence.next();
+            when (item) {
+                is SequenceEnd {
+                    end
+                }
+                is SequenceItem[T, E] {
+                    val tail = lazyFilter(predicate, item.tail);
+                    if (predicate(item.head)) {
+                        SequenceItem(
+                            head = item.head,
+                            tail = tail,
+                        )
+                    } else {
+                        tail.next()
+                    }
+                }
+            }
+        }
+    )
+}
+
 fun lazyMap[T, R, !E](func: (T) !E -> R, sequence: Sequence[T, E]) -> Sequence[R, E] {
     Sequence(
         next = fun () !E -> SequenceIterator[R, E] {
