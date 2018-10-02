@@ -632,12 +632,12 @@ data class VariableReferenceNode(
 
 data class UnaryOperationNode(
     val operator: UnaryOperator,
-    val expression: ExpressionNode,
+    val operand: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(expression)
+        get() = listOf(operand)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         throw NotImplementedError()
