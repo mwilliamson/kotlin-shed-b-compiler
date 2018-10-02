@@ -233,6 +233,14 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return generateCodeForReferenceNode(node)
         }
 
+        override fun visit(node: UnaryOperationNode): JavascriptExpressionNode {
+            return JavascriptUnaryOperationNode(
+                operator = generateCode(node.operator),
+                operand = generateCode(node.operand, context),
+                source = NodeSource(node)
+            )
+        }
+
         override fun visit(node: BinaryOperationNode): JavascriptExpressionNode {
             return JavascriptBinaryOperationNode(
                 operator = generateCode(node.operator),
@@ -477,6 +485,12 @@ private fun immediatelyInvokedFunction(
 
 private fun generateSymbolCode(symbol: Symbol, source: NodeSource): JavascriptExpressionNode {
     return JavascriptStringLiteralNode(symbol.fullName, source = source)
+}
+
+private fun generateCode(operator: UnaryOperator): JavascriptUnaryOperator {
+    return when (operator) {
+        UnaryOperator.NOT -> JavascriptUnaryOperator.NOT
+    }
 }
 
 private fun generateCode(operator: BinaryOperator): JavascriptBinaryOperator {

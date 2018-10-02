@@ -6,8 +6,8 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.TypesMap
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.IntType

@@ -572,6 +572,21 @@ class CodeGeneratorTests {
         assertThat(node, isGeneratedExpression(isPythonVariableReference("x")))
     }
 
+    @Test
+    fun unaryOperationGenerateUnaryOperation() {
+        val shed = unaryOperation(
+            operator = UnaryOperator.NOT,
+            operand = literalBool(true)
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isGeneratedExpression(isPythonUnaryOperation(
+            operator = equalTo(PythonUnaryOperator.NOT),
+            operand = isPythonBooleanLiteral(true)
+        )))
+    }
+
     @TestFactory
     fun binaryOperationGeneratesBinaryOperation(): List<DynamicTest> {
         return listOf(
@@ -1085,6 +1100,14 @@ class CodeGeneratorTests {
     private fun isPythonVariableReference(name: String)
         : Matcher<PythonExpressionNode>
         = cast(has(PythonVariableReferenceNode::name, equalTo(name)))
+
+    private fun isPythonUnaryOperation(
+        operator: Matcher<PythonUnaryOperator>,
+        operand: Matcher<PythonExpressionNode>
+    ): Matcher<PythonExpressionNode> = cast(allOf(
+        has(PythonUnaryOperationNode::operator, operator),
+        has(PythonUnaryOperationNode::operand, operand)
+    ))
 
     private fun isPythonBinaryOperation(
         operator: Matcher<PythonBinaryOperator>,

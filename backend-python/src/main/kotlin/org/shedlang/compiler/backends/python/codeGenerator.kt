@@ -506,6 +506,16 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             )
         }
 
+        override fun visit(node: UnaryOperationNode): GeneratedExpression {
+            return generateExpressionCode(node.operand, context).pureMap { operand ->
+                PythonUnaryOperationNode(
+                    operator = generateCode(node.operator),
+                    operand = operand,
+                    source = NodeSource(node)
+                )
+            }
+        }
+
         override fun visit(node: BinaryOperationNode): GeneratedExpression {
             val unspilledLeftCode = generateExpressionCode(node.left, context)
             val rightCode = generateExpressionCode(node.right, context)
@@ -858,6 +868,12 @@ private fun generateTypeCondition(
         symbol(discriminator.symbolType.symbol, source = source),
         source = source
     )
+}
+
+private fun generateCode(operator: UnaryOperator): PythonUnaryOperator {
+    return when (operator) {
+        UnaryOperator.NOT -> PythonUnaryOperator.NOT
+    }
 }
 
 private fun generateCode(operator: BinaryOperator): PythonBinaryOperator {

@@ -1,8 +1,9 @@
 package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.SymbolType
 import java.math.BigInteger
@@ -32,6 +33,15 @@ internal data class ModuleReference(val name: List<Identifier>): IncompleteExpre
 internal data class VariableReference(val name: String): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
         return EvaluationResult.pure(context.value(name))
+    }
+}
+
+internal data class UnaryOperation(
+    val operator: UnaryOperator,
+    val operand: Expression
+): IncompleteExpression() {
+    override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
+        throw UnsupportedOperationException("not implemented")
     }
 }
 

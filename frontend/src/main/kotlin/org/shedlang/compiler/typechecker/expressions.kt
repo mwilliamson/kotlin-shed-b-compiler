@@ -27,6 +27,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
 
+        override fun visit(node: UnaryOperationNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: BinaryOperationNode): Type {
             return inferBinaryOperationType(node, context)
         }

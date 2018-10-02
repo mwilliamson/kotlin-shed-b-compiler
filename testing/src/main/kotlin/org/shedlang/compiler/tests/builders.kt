@@ -115,6 +115,15 @@ fun literalChar(value: Char = '!') = CharacterLiteralNode(value.toInt(), anySour
 fun symbolName(name: String) = SymbolNode(name, anySource())
 fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 
+fun unaryOperation(
+    operator: UnaryOperator,
+    operand: ExpressionNode
+) = UnaryOperationNode(
+    operator = operator,
+    operand = operand,
+    source = anySource()
+)
+
 fun binaryOperation(
     operator: BinaryOperator,
     left: ExpressionNode,

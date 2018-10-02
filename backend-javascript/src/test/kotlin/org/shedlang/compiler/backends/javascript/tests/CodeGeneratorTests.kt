@@ -333,6 +333,21 @@ class CodeGeneratorTests {
         assertThat(node, isJavascriptVariableReference("x"))
     }
 
+    @Test
+    fun unaryOperationGeneratesUnaryOperations() {
+        val shed = unaryOperation(
+            operator = UnaryOperator.NOT,
+            operand= literalBool(true)
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptUnaryOperation(
+            operator = equalTo(JavascriptUnaryOperator.NOT),
+            operand = isJavascriptBooleanLiteral(true)
+        ))
+    }
+
     @TestFactory
     fun binaryOperationGeneratesBinaryOperation(): List<DynamicTest> {
         return listOf(
@@ -663,6 +678,14 @@ class CodeGeneratorTests {
     private fun isJavascriptVariableReference(name: String)
         : Matcher<JavascriptExpressionNode>
         = cast(has(JavascriptVariableReferenceNode::name, equalTo(name)))
+
+    private fun isJavascriptUnaryOperation(
+        operator: Matcher<JavascriptUnaryOperator>,
+        operand: Matcher<JavascriptExpressionNode>
+    ): Matcher<JavascriptExpressionNode> = cast(allOf(
+        has(JavascriptUnaryOperationNode::operator, operator),
+        has(JavascriptUnaryOperationNode::operand, operand)
+    ))
 
     private fun isJavascriptBinaryOperation(
         operator: Matcher<JavascriptBinaryOperator>,

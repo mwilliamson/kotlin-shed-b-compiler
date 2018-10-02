@@ -527,6 +527,7 @@ interface ExpressionNode : Node {
         fun visit(node: CharacterLiteralNode): T
         fun visit(node: SymbolNode): T
         fun visit(node: VariableReferenceNode): T
+        fun visit(node: UnaryOperationNode): T
         fun visit(node: BinaryOperationNode): T
         fun visit(node: IsNode): T
         fun visit(node: CallNode): T
@@ -640,7 +641,7 @@ data class UnaryOperationNode(
         get() = listOf(operand)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
-        throw NotImplementedError()
+        return visitor.visit(this)
     }
 }
 

@@ -117,6 +117,11 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         override fun visit(node: SymbolNode) = SymbolValue(Symbol(context.moduleName, node.name))
         override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)
 
+        override fun visit(node: UnaryOperationNode): Expression = UnaryOperation(
+            node.operator,
+            loadExpression(node.operand, context)
+        )
+
         override fun visit(node: BinaryOperationNode): Expression
             = BinaryOperation(
             node.operator,
