@@ -7,7 +7,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.Operator
 import org.shedlang.compiler.parser.parseExpression
 
-class ParseBinaryExpressionTests {
+class ParseBinaryOperationTests {
     @TestFactory
     fun canParseOperator(): List<DynamicTest> {
         return listOf(
