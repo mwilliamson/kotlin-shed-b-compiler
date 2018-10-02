@@ -11,10 +11,33 @@ fun isJson(expected: Json.JsonValue) -> Matchers.Matcher[Json.JsonValue] {
     )
 }
 
-val isJsonNull = isJson(Json.null);
+val isJsonNull = Matchers.Matcher(
+    description = "null",
+    match = fun (actual: Json.JsonValue) -> Matchers.Result {
+        if (actual is Json.JsonNull) {
+            Matchers.success
+        } else {
+            Matchers.failure("was " + Json.valueToText(actual))
+        }
+    },
+);
 
 fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
-    isJson(Json.boolean(value))
+    Matchers.Matcher(
+        description = if (value) { "true" } else { "false" },
+        match = fun (actual: Json.JsonValue) -> Matchers.Result {
+            val isSuccess = if (actual is Json.JsonBoolean) {
+                actual.value == value
+            } else {
+                false
+            };
+            if (isSuccess) {
+                Matchers.success
+            } else {
+                Matchers.failure("was " + Json.valueToText(actual))
+            }
+        },
+    )
 }
 
 val testCases = Tests.suite(moduleName, list(
