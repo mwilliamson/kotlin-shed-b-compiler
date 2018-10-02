@@ -152,7 +152,7 @@ internal fun isUnaryOperation(
 }
 
 internal fun isBinaryOperation(
-    operator: Operator,
+    operator: BinaryOperator,
     left: Matcher<ExpressionNode>,
     right: Matcher<ExpressionNode>
 ) : Matcher<ExpressionNode> {

@@ -116,7 +116,7 @@ fun symbolName(name: String) = SymbolNode(name, anySource())
 fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 
 fun binaryOperation(
-    operator: Operator,
+    operator: BinaryOperator,
     left: ExpressionNode,
     right: ExpressionNode
 ) = BinaryOperationNode(

@@ -2,7 +2,7 @@ package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.SymbolType
 import java.math.BigInteger
@@ -36,7 +36,7 @@ internal data class VariableReference(val name: String): IncompleteExpression() 
 }
 
 internal data class BinaryOperation(
-    val operator: Operator,
+    val operator: BinaryOperator,
     val left: Expression,
     val right: Expression
 ): IncompleteExpression() {
@@ -58,35 +58,35 @@ internal data class BinaryOperation(
                     )
                 }
                 is InterpreterValue ->
-                    if (operator == Operator.EQUALS && left is BooleanValue && right is BooleanValue) {
+                    if (operator == BinaryOperator.EQUALS && left is BooleanValue && right is BooleanValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
 
-                    } else if (operator == Operator.EQUALS && left is IntegerValue && right is IntegerValue) {
+                    } else if (operator == BinaryOperator.EQUALS && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
-                    } else if (operator == Operator.ADD && left is IntegerValue && right is IntegerValue) {
+                    } else if (operator == BinaryOperator.ADD && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(IntegerValue(left.value + right.value))
-                    } else if (operator == Operator.SUBTRACT && left is IntegerValue && right is IntegerValue) {
+                    } else if (operator == BinaryOperator.SUBTRACT && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(IntegerValue(left.value - right.value))
-                    } else if (operator == Operator.MULTIPLY && left is IntegerValue && right is IntegerValue) {
+                    } else if (operator == BinaryOperator.MULTIPLY && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(IntegerValue(left.value * right.value))
 
-                    } else if (operator == Operator.EQUALS && left is StringValue && right is StringValue) {
+                    } else if (operator == BinaryOperator.EQUALS && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
-                    } else if (operator == Operator.ADD && left is StringValue && right is StringValue) {
+                    } else if (operator == BinaryOperator.ADD && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(StringValue(left.value + right.value))
 
-                    } else if (operator == Operator.EQUALS && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.EQUALS && left is CharacterValue && right is CharacterValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
-                    } else if (operator == Operator.LESS_THAN && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.LESS_THAN && left is CharacterValue && right is CharacterValue) {
                         EvaluationResult.pure(BooleanValue(left.value < right.value))
-                    } else if (operator == Operator.LESS_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.LESS_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
                         EvaluationResult.pure(BooleanValue(left.value <= right.value))
-                    } else if (operator == Operator.GREATER_THAN && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.GREATER_THAN && left is CharacterValue && right is CharacterValue) {
                         EvaluationResult.pure(BooleanValue(left.value > right.value))
-                    } else if (operator == Operator.GREATER_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.GREATER_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
                         EvaluationResult.pure(BooleanValue(left.value >= right.value))
 
-                    } else if (operator == Operator.EQUALS && left is SymbolValue && right is SymbolValue) {
+                    } else if (operator == BinaryOperator.EQUALS && left is SymbolValue && right is SymbolValue) {
                         EvaluationResult.pure(BooleanValue(left == right))
 
                     } else {

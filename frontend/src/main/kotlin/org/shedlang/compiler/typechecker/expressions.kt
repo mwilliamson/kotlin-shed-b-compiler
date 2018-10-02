@@ -3,7 +3,7 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
-private data class OperationType(val operator: Operator, val left: Type, val right: Type)
+private data class OperationType(val operator: BinaryOperator, val left: Type, val right: Type)
 
 internal fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
     inferType(expression, context)
@@ -67,26 +67,26 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
     val leftType = inferType(node.left, context)
     val rightType = inferType(node.right, context)
 
-    if (leftType is SymbolType && rightType is SymbolType && node.operator == Operator.EQUALS) {
+    if (leftType is SymbolType && rightType is SymbolType && node.operator == BinaryOperator.EQUALS) {
         return BoolType
     }
 
     return when (OperationType(node.operator, leftType, rightType)) {
-        OperationType(Operator.EQUALS, IntType, IntType) -> BoolType
-        OperationType(Operator.ADD, IntType, IntType) -> IntType
-        OperationType(Operator.SUBTRACT, IntType, IntType) -> IntType
-        OperationType(Operator.MULTIPLY, IntType, IntType) -> IntType
+        OperationType(BinaryOperator.EQUALS, IntType, IntType) -> BoolType
+        OperationType(BinaryOperator.ADD, IntType, IntType) -> IntType
+        OperationType(BinaryOperator.SUBTRACT, IntType, IntType) -> IntType
+        OperationType(BinaryOperator.MULTIPLY, IntType, IntType) -> IntType
 
-        OperationType(Operator.EQUALS, StringType, StringType) -> BoolType
-        OperationType(Operator.ADD, StringType, StringType) -> StringType
+        OperationType(BinaryOperator.EQUALS, StringType, StringType) -> BoolType
+        OperationType(BinaryOperator.ADD, StringType, StringType) -> StringType
 
-        OperationType(Operator.EQUALS, CharType, CharType) -> BoolType
-        OperationType(Operator.LESS_THAN, CharType, CharType) -> BoolType
-        OperationType(Operator.LESS_THAN_OR_EQUAL, CharType, CharType) -> BoolType
-        OperationType(Operator.GREATER_THAN, CharType, CharType) -> BoolType
-        OperationType(Operator.GREATER_THAN_OR_EQUAL, CharType, CharType) -> BoolType
+        OperationType(BinaryOperator.EQUALS, CharType, CharType) -> BoolType
+        OperationType(BinaryOperator.LESS_THAN, CharType, CharType) -> BoolType
+        OperationType(BinaryOperator.LESS_THAN_OR_EQUAL, CharType, CharType) -> BoolType
+        OperationType(BinaryOperator.GREATER_THAN, CharType, CharType) -> BoolType
+        OperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CharType, CharType) -> BoolType
 
-        OperationType(Operator.EQUALS, BoolType, BoolType) -> BoolType
+        OperationType(BinaryOperator.EQUALS, BoolType, BoolType) -> BoolType
 
         else -> throw InvalidOperationError(
             operator = node.operator,

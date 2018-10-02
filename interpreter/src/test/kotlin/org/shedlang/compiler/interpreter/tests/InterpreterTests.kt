@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 
@@ -55,7 +55,7 @@ class InterpreterTests {
 
     @Test
     fun binaryOperationIsEvaluated() {
-        val equalValue = fullyEvaluate(binaryOperation(Operator.EQUALS, literalInt(42), literalInt(42)))
+        val equalValue = fullyEvaluate(binaryOperation(BinaryOperator.EQUALS, literalInt(42), literalInt(42)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
     }
 

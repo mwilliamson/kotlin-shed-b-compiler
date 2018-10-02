@@ -4,18 +4,18 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.parser.parseExpression
 
 class ParseBinaryOperationTests {
     @TestFactory
     fun canParseOperator(): List<DynamicTest> {
         return listOf(
-            Pair("==", Operator.EQUALS),
-            Pair("<", Operator.LESS_THAN),
-            Pair("<=", Operator.LESS_THAN_OR_EQUAL),
-            Pair(">", Operator.GREATER_THAN),
-            Pair(">=", Operator.GREATER_THAN_OR_EQUAL)
+            Pair("==", BinaryOperator.EQUALS),
+            Pair("<", BinaryOperator.LESS_THAN),
+            Pair("<=", BinaryOperator.LESS_THAN_OR_EQUAL),
+            Pair(">", BinaryOperator.GREATER_THAN),
+            Pair(">=", BinaryOperator.GREATER_THAN_OR_EQUAL)
         ).map { (operatorString, operator) -> DynamicTest.dynamicTest("can parse $operatorString", {
             val source = "x $operatorString y"
             val node = parseString(::parseExpression, source)
@@ -32,7 +32,7 @@ class ParseBinaryOperationTests {
         val source = "x + y"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             isVariableReference("x"),
             isVariableReference("y")
         ))
@@ -43,7 +43,7 @@ class ParseBinaryOperationTests {
         val source = "x - y"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.SUBTRACT,
+            BinaryOperator.SUBTRACT,
             isVariableReference("x"),
             isVariableReference("y")
         ))
@@ -54,7 +54,7 @@ class ParseBinaryOperationTests {
         val source = "x * y"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.MULTIPLY,
+            BinaryOperator.MULTIPLY,
             isVariableReference("x"),
             isVariableReference("y")
         ))
@@ -65,9 +65,9 @@ class ParseBinaryOperationTests {
         val source = "x + y + z"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             isBinaryOperation(
-                Operator.ADD,
+                BinaryOperator.ADD,
                 isVariableReference("x"),
                 isVariableReference("y")
             ),
@@ -80,11 +80,11 @@ class ParseBinaryOperationTests {
         val source = "a + b + c + d"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             isBinaryOperation(
-                Operator.ADD,
+                BinaryOperator.ADD,
                 isBinaryOperation(
-                    Operator.ADD,
+                    BinaryOperator.ADD,
                     isVariableReference("a"),
                     isVariableReference("b")
                 ),
@@ -99,10 +99,10 @@ class ParseBinaryOperationTests {
         val source = "x + y * z"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             isVariableReference("x"),
             isBinaryOperation(
-                Operator.MULTIPLY,
+                BinaryOperator.MULTIPLY,
                 isVariableReference("y"),
                 isVariableReference("z")
             )
@@ -115,9 +115,9 @@ class ParseBinaryOperationTests {
         val source = "(x + y) * z"
         val node = parseString(::parseExpression, source)
         assertThat(node, isBinaryOperation(
-            Operator.MULTIPLY,
+            BinaryOperator.MULTIPLY,
             isBinaryOperation(
-                Operator.ADD,
+                BinaryOperator.ADD,
                 isVariableReference("x"),
                 isVariableReference("y")
             ),

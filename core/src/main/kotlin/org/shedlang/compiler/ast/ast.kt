@@ -645,7 +645,7 @@ data class UnaryOperationNode(
 }
 
 data class BinaryOperationNode(
-    val operator: Operator,
+    val operator: BinaryOperator,
     val left: ExpressionNode,
     val right: ExpressionNode,
     override val source: Source,
@@ -749,7 +749,7 @@ enum class UnaryOperator {
     NOT
 }
 
-enum class Operator {
+enum class BinaryOperator {
     EQUALS,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,

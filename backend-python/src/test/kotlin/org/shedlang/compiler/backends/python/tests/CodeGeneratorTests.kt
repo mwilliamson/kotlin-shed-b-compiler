@@ -575,14 +575,14 @@ class CodeGeneratorTests {
     @TestFactory
     fun binaryOperationGeneratesBinaryOperation(): List<DynamicTest> {
         return listOf(
-            Operator.ADD to PythonOperator.ADD,
-            Operator.SUBTRACT to PythonOperator.SUBTRACT,
-            Operator.MULTIPLY to PythonOperator.MULTIPLY,
-            Operator.EQUALS to PythonOperator.EQUALS,
-            Operator.LESS_THAN to PythonOperator.LESS_THAN,
-            Operator.LESS_THAN_OR_EQUAL to PythonOperator.LESS_THAN_OR_EQUAL,
-            Operator.GREATER_THAN to PythonOperator.GREATER_THAN,
-            Operator.GREATER_THAN_OR_EQUAL to PythonOperator.GREATER_THAN_OR_EQUAL
+            BinaryOperator.ADD to PythonOperator.ADD,
+            BinaryOperator.SUBTRACT to PythonOperator.SUBTRACT,
+            BinaryOperator.MULTIPLY to PythonOperator.MULTIPLY,
+            BinaryOperator.EQUALS to PythonOperator.EQUALS,
+            BinaryOperator.LESS_THAN to PythonOperator.LESS_THAN,
+            BinaryOperator.LESS_THAN_OR_EQUAL to PythonOperator.LESS_THAN_OR_EQUAL,
+            BinaryOperator.GREATER_THAN to PythonOperator.GREATER_THAN,
+            BinaryOperator.GREATER_THAN_OR_EQUAL to PythonOperator.GREATER_THAN_OR_EQUAL
         ).map({ operator ->  DynamicTest.dynamicTest(
             operator.first.toString(), {
                 val shed = binaryOperation(
@@ -634,7 +634,7 @@ class CodeGeneratorTests {
                 "binary operation",
                 generatedCode = run {
                     val shed = binaryOperation(
-                        operator = Operator.ADD,
+                        operator = BinaryOperator.ADD,
                         left = earlierExpression,
                         right = laterExpression
                     )

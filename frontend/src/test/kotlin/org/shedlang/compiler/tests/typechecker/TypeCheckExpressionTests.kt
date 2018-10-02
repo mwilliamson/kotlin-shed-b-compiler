@@ -8,7 +8,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -87,18 +87,18 @@ class TypeCheckExpressionTests {
 
     @Test
     fun addingTwoIntegersReturnsInteger() {
-        val node = binaryOperation(Operator.ADD, literalInt(1), literalInt(2))
+        val node = binaryOperation(BinaryOperator.ADD, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(IntType)))
     }
 
     @Test
     fun addWithLeftBooleanOperandThrowsTypeError() {
-        val node = binaryOperation(Operator.ADD, literalBool(true), literalInt(2))
+        val node = binaryOperation(BinaryOperator.ADD, literalBool(true), literalInt(2))
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
-                has(InvalidOperationError::operator, equalTo(Operator.ADD)),
+                has(InvalidOperationError::operator, equalTo(BinaryOperator.ADD)),
                 has(InvalidOperationError::operands, isSequence(isBoolType, isIntType))
             ))
         )
@@ -106,11 +106,11 @@ class TypeCheckExpressionTests {
 
     @Test
     fun addWithRightBooleanOperandThrowsTypeError() {
-        val node = binaryOperation(Operator.ADD, literalInt(2), literalBool(true))
+        val node = binaryOperation(BinaryOperator.ADD, literalInt(2), literalBool(true))
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
-                has(InvalidOperationError::operator, equalTo(Operator.ADD)),
+                has(InvalidOperationError::operator, equalTo(BinaryOperator.ADD)),
                 has(InvalidOperationError::operands, isSequence(isIntType, isBoolType))
             ))
         )
@@ -118,35 +118,35 @@ class TypeCheckExpressionTests {
 
     @Test
     fun integerSubtractionOperationReturnsInteger() {
-        val node = binaryOperation(Operator.SUBTRACT, literalInt(), literalInt())
+        val node = binaryOperation(BinaryOperator.SUBTRACT, literalInt(), literalInt())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, isIntType)
     }
 
     @Test
     fun integerMultiplicationOperationReturnsInteger() {
-        val node = binaryOperation(Operator.MULTIPLY, literalInt(), literalInt())
+        val node = binaryOperation(BinaryOperator.MULTIPLY, literalInt(), literalInt())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, isIntType)
     }
 
     @Test
     fun integerEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(Operator.EQUALS, literalInt(1), literalInt(2))
+        val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
         assertThat(type, isBoolType)
     }
 
     @Test
     fun stringEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(Operator.EQUALS, literalString(), literalString())
+        val node = binaryOperation(BinaryOperator.EQUALS, literalString(), literalString())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(isBoolType))
     }
 
     @Test
     fun stringAdditionOperationReturnsString() {
-        val node = binaryOperation(Operator.ADD, literalString(), literalString())
+        val node = binaryOperation(BinaryOperator.ADD, literalString(), literalString())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(isStringType))
     }
@@ -154,11 +154,11 @@ class TypeCheckExpressionTests {
     @TestFactory
     fun charComparisonOperationReturnsBoolean(): List<DynamicTest> {
         return listOf(
-            Operator.EQUALS,
-            Operator.LESS_THAN,
-            Operator.LESS_THAN_OR_EQUAL,
-            Operator.GREATER_THAN,
-            Operator.GREATER_THAN_OR_EQUAL
+            BinaryOperator.EQUALS,
+            BinaryOperator.LESS_THAN,
+            BinaryOperator.LESS_THAN_OR_EQUAL,
+            BinaryOperator.GREATER_THAN,
+            BinaryOperator.GREATER_THAN_OR_EQUAL
         ).map { operator -> DynamicTest.dynamicTest("char $operator operation returns boolean", {
             val node = binaryOperation(operator, literalChar(), literalChar())
             val type = inferType(node, emptyTypeContext())
@@ -168,14 +168,14 @@ class TypeCheckExpressionTests {
 
     @Test
     fun booleanEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(Operator.EQUALS, literalBool(), literalBool())
+        val node = binaryOperation(BinaryOperator.EQUALS, literalBool(), literalBool())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(isBoolType))
     }
 
     @Test
     fun symbolEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(Operator.EQUALS, symbolName("@x"), symbolName("@y"))
+        val node = binaryOperation(BinaryOperator.EQUALS, symbolName("@x"), symbolName("@y"))
         val type = inferType(node, typeContext(moduleName = listOf("A")))
         assertThat(type, cast(isBoolType))
     }

@@ -643,14 +643,14 @@ private val FIELD_ACCESS_PRECEDENCE = 14
 private interface OperationParser: ExpressionParser<ExpressionNode> {
     companion object {
         val parsers = listOf(
-            InfixOperationParser(Operator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, COMPARISON_PRECEDENCE),
-            InfixOperationParser(Operator.LESS_THAN, TokenType.SYMBOL_LESS_THAN, COMPARISON_PRECEDENCE),
-            InfixOperationParser(Operator.LESS_THAN_OR_EQUAL, TokenType.SYMBOL_LESS_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
-            InfixOperationParser(Operator.GREATER_THAN, TokenType.SYMBOL_GREATER_THAN, COMPARISON_PRECEDENCE),
-            InfixOperationParser(Operator.GREATER_THAN_OR_EQUAL, TokenType.SYMBOL_GREATER_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
-            InfixOperationParser(Operator.ADD, TokenType.SYMBOL_PLUS, ADD_PRECENDECE),
-            InfixOperationParser(Operator.SUBTRACT, TokenType.SYMBOL_MINUS, SUBTRACT_PRECEDENCE),
-            InfixOperationParser(Operator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, COMPARISON_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.LESS_THAN, TokenType.SYMBOL_LESS_THAN, COMPARISON_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.LESS_THAN_OR_EQUAL, TokenType.SYMBOL_LESS_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.GREATER_THAN, TokenType.SYMBOL_GREATER_THAN, COMPARISON_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.GREATER_THAN_OR_EQUAL, TokenType.SYMBOL_GREATER_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.ADD, TokenType.SYMBOL_PLUS, ADD_PRECENDECE),
+            InfixOperationParser(BinaryOperator.SUBTRACT, TokenType.SYMBOL_MINUS, SUBTRACT_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
             CallWithExplicitTypeArgumentsParser,
             CallParser,
             PartialCallParser,
@@ -666,7 +666,7 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
 }
 
 private class InfixOperationParser(
-    private val operator: Operator,
+    private val operator: BinaryOperator,
     override val operatorToken: TokenType,
     override val precedence: Int
 ) : OperationParser {

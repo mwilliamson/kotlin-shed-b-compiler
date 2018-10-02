@@ -127,7 +127,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         override fun visit(node: IsNode): Expression {
             val discriminator = findDiscriminator(node, context.types)
             return BinaryOperation(
-                Operator.EQUALS,
+                BinaryOperator.EQUALS,
                 FieldAccess(loadExpression(node.expression, context), discriminator.fieldName),
                 symbolTypeToValue(discriminator.symbolType)
             )
@@ -201,7 +201,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                     conditionalBranches = node.branches.map { branch ->
                         val discriminator = findDiscriminator(node, branch, context.types)
                         val condition = BinaryOperation(
-                            Operator.EQUALS,
+                            BinaryOperator.EQUALS,
                             FieldAccess(VariableReference(expressionName), discriminator.fieldName),
                             symbolTypeToValue(discriminator.symbolType)
                         )

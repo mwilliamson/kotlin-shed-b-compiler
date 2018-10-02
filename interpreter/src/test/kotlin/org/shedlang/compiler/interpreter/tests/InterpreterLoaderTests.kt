@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.IntType
@@ -164,7 +164,7 @@ class LoadIsTests {
         val expression = loadExpression(node, context = context)
 
         assertThat(expression, cast(allOf(
-            has(BinaryOperation::operator, equalTo(Operator.EQUALS)),
+            has(BinaryOperation::operator, equalTo(BinaryOperator.EQUALS)),
             has(BinaryOperation::left, cast(equalTo(FieldAccess(VariableReference("x"), Identifier("tag"))))),
             has(BinaryOperation::right, cast(equalTo(symbolValue(listOf("M"), "@A"))))
         )))

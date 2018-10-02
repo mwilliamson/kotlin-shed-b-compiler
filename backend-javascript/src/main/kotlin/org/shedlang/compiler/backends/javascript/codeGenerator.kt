@@ -479,16 +479,16 @@ private fun generateSymbolCode(symbol: Symbol, source: NodeSource): JavascriptEx
     return JavascriptStringLiteralNode(symbol.fullName, source = source)
 }
 
-private fun generateCode(operator: Operator): JavascriptOperator {
+private fun generateCode(operator: BinaryOperator): JavascriptOperator {
     return when (operator) {
-        Operator.EQUALS -> JavascriptOperator.EQUALS
-        Operator.LESS_THAN -> JavascriptOperator.LESS_THAN
-        Operator.LESS_THAN_OR_EQUAL -> JavascriptOperator.LESS_THAN_OR_EQUAL
-        Operator.GREATER_THAN -> JavascriptOperator.GREATER_THAN
-        Operator.GREATER_THAN_OR_EQUAL -> JavascriptOperator.GREATER_THAN_OR_EQUAL
-        Operator.ADD -> JavascriptOperator.ADD
-        Operator.SUBTRACT -> JavascriptOperator.SUBTRACT
-        Operator.MULTIPLY -> JavascriptOperator.MULTIPLY
+        BinaryOperator.EQUALS -> JavascriptOperator.EQUALS
+        BinaryOperator.LESS_THAN -> JavascriptOperator.LESS_THAN
+        BinaryOperator.LESS_THAN_OR_EQUAL -> JavascriptOperator.LESS_THAN_OR_EQUAL
+        BinaryOperator.GREATER_THAN -> JavascriptOperator.GREATER_THAN
+        BinaryOperator.GREATER_THAN_OR_EQUAL -> JavascriptOperator.GREATER_THAN_OR_EQUAL
+        BinaryOperator.ADD -> JavascriptOperator.ADD
+        BinaryOperator.SUBTRACT -> JavascriptOperator.SUBTRACT
+        BinaryOperator.MULTIPLY -> JavascriptOperator.MULTIPLY
 
     }
 }

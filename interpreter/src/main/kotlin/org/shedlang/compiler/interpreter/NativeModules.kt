@@ -1,7 +1,7 @@
 package org.shedlang.compiler.interpreter
 
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import kotlin.math.min
 
 
@@ -150,7 +150,7 @@ private object StringsMapCharactersValue: Callable() {
             return EvaluationResult.pure(StringValue(""))
         } else {
             return EvaluationResult.pure(BinaryOperation(
-                Operator.ADD,
+                BinaryOperator.ADD,
                 call(func, positionalArgumentExpressions = listOf(CharacterValue(string.value.codePointAt(0)))),
                 call(
                     StringsMapCharactersValue,

@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.Operator
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.allOf
 
@@ -105,78 +105,78 @@ class EvaluateModuleReferenceTests {
 class EvaluateBinaryOperationTests {
     @Test
     fun equalityOfBooleans() {
-        val equalValue = evaluate(BinaryOperation(Operator.EQUALS, BooleanValue(true), BooleanValue(true)))
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, BooleanValue(true), BooleanValue(true)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
-        val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, BooleanValue(true), BooleanValue(false)))
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, BooleanValue(true), BooleanValue(false)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun equalityOfIntegers() {
-        val equalValue = evaluate(BinaryOperation(Operator.EQUALS, IntegerValue(42), IntegerValue(42)))
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, IntegerValue(42), IntegerValue(42)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
-        val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, IntegerValue(42), IntegerValue(47)))
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, IntegerValue(42), IntegerValue(47)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun additionOfIntegersEvaluatesToTotalValue() {
-        val value = evaluate(BinaryOperation(Operator.ADD, IntegerValue(1), IntegerValue(2)))
+        val value = evaluate(BinaryOperation(BinaryOperator.ADD, IntegerValue(1), IntegerValue(2)))
         assertThat(value, isPureResult(equalTo(IntegerValue(3))))
     }
 
     @Test
     fun subtractionOfIntegersEvaluatesToDifference() {
-        val value = evaluate(BinaryOperation(Operator.SUBTRACT, IntegerValue(1), IntegerValue(2)))
+        val value = evaluate(BinaryOperation(BinaryOperator.SUBTRACT, IntegerValue(1), IntegerValue(2)))
         assertThat(value, isPureResult(equalTo(IntegerValue(-1))))
     }
 
     @Test
     fun multiplicationOfIntegersEvaluatesToDifference() {
-        val value = evaluate(BinaryOperation(Operator.MULTIPLY, IntegerValue(2), IntegerValue(3)))
+        val value = evaluate(BinaryOperation(BinaryOperator.MULTIPLY, IntegerValue(2), IntegerValue(3)))
         assertThat(value, isPureResult(equalTo(IntegerValue(6))))
     }
 
     @Test
     fun equalityOfStrings() {
-        val equalValue = evaluate(BinaryOperation(Operator.EQUALS, StringValue("a"), StringValue("a")))
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, StringValue("a"), StringValue("a")))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
 
-        val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, StringValue("a"), StringValue("b")))
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, StringValue("a"), StringValue("b")))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun additionOfStringsEvaluatesToConcatenation() {
-        val value = evaluate(BinaryOperation(Operator.ADD, StringValue("hello "), StringValue("world")))
+        val value = evaluate(BinaryOperation(BinaryOperator.ADD, StringValue("hello "), StringValue("world")))
         assertThat(value, isPureResult(equalTo(StringValue("hello world"))))
     }
 
     @Test
     fun equalityOfCharacters() {
-        val equalValue = evaluate(BinaryOperation(Operator.EQUALS, CharacterValue(90), CharacterValue(90)))
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CharacterValue(90), CharacterValue(90)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
 
-        val notEqualValue = evaluate(BinaryOperation(Operator.EQUALS, CharacterValue(90), CharacterValue(91)))
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CharacterValue(90), CharacterValue(91)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
     fun lessThanOperatorForCharacters() {
         assertThat(
-            evaluate(BinaryOperation(Operator.LESS_THAN, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CharacterValue(89), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.LESS_THAN, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CharacterValue(90), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.LESS_THAN, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CharacterValue(91), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
     }
@@ -184,15 +184,15 @@ class EvaluateBinaryOperationTests {
     @Test
     fun lessThanOrEqualOperatorForCharacters() {
         assertThat(
-            evaluate(BinaryOperation(Operator.LESS_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.LESS_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.LESS_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
     }
@@ -200,15 +200,15 @@ class EvaluateBinaryOperationTests {
     @Test
     fun greaterThanOperatorForCharacters() {
         assertThat(
-            evaluate(BinaryOperation(Operator.GREATER_THAN, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CharacterValue(89), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.GREATER_THAN, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CharacterValue(90), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.GREATER_THAN, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CharacterValue(91), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
     }
@@ -216,15 +216,15 @@ class EvaluateBinaryOperationTests {
     @Test
     fun greaterThanOrEqualOperatorForCharacters() {
         assertThat(
-            evaluate(BinaryOperation(Operator.GREATER_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.GREATER_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(Operator.GREATER_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
     }
@@ -232,21 +232,21 @@ class EvaluateBinaryOperationTests {
     @Test
     fun equalityOfSymbols() {
         val equalValue = evaluate(BinaryOperation(
-            Operator.EQUALS,
+            BinaryOperator.EQUALS,
             symbolValue(listOf("X"), "@a"),
             symbolValue(listOf("X"), "@a")
         ))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
         val differentName = evaluate(BinaryOperation(
-            Operator.EQUALS,
+            BinaryOperator.EQUALS,
             symbolValue(listOf("X"), "@a"),
             symbolValue(listOf("X"), "@b")
         ))
         assertThat(differentName, isPureResult(equalTo(BooleanValue(false))))
 
         val differentModule = evaluate(BinaryOperation(
-            Operator.EQUALS,
+            BinaryOperator.EQUALS,
             symbolValue(listOf("X"), "@a"),
             symbolValue(listOf("Y"), "@a")
         ))
@@ -262,12 +262,12 @@ class EvaluateBinaryOperationTests {
             ))
         )
         val expression = evaluate(BinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             VariableReference("x"),
             VariableReference("y")
         ), context)
         assertThat(expression, isPureResult(equalTo(BinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             IntegerValue(1),
             VariableReference("y")
         ))))
@@ -281,12 +281,12 @@ class EvaluateBinaryOperationTests {
             ))
         )
         val expression = evaluate(BinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             IntegerValue(1),
             VariableReference("y")
         ), context)
         assertThat(expression, isPureResult(equalTo(BinaryOperation(
-            Operator.ADD,
+            BinaryOperator.ADD,
             IntegerValue(1),
             IntegerValue(2)
         ))))

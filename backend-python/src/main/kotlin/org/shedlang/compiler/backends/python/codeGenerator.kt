@@ -859,16 +859,16 @@ private fun generateTypeCondition(
     )
 }
 
-private fun generateCode(operator: Operator): PythonOperator {
+private fun generateCode(operator: BinaryOperator): PythonOperator {
     return when (operator) {
-        Operator.EQUALS -> PythonOperator.EQUALS
-        Operator.LESS_THAN -> PythonOperator.LESS_THAN
-        Operator.LESS_THAN_OR_EQUAL -> PythonOperator.LESS_THAN_OR_EQUAL
-        Operator.GREATER_THAN -> PythonOperator.GREATER_THAN
-        Operator.GREATER_THAN_OR_EQUAL -> PythonOperator.GREATER_THAN_OR_EQUAL
-        Operator.ADD -> PythonOperator.ADD
-        Operator.SUBTRACT -> PythonOperator.SUBTRACT
-        Operator.MULTIPLY -> PythonOperator.MULTIPLY
+        BinaryOperator.EQUALS -> PythonOperator.EQUALS
+        BinaryOperator.LESS_THAN -> PythonOperator.LESS_THAN
+        BinaryOperator.LESS_THAN_OR_EQUAL -> PythonOperator.LESS_THAN_OR_EQUAL
+        BinaryOperator.GREATER_THAN -> PythonOperator.GREATER_THAN
+        BinaryOperator.GREATER_THAN_OR_EQUAL -> PythonOperator.GREATER_THAN_OR_EQUAL
+        BinaryOperator.ADD -> PythonOperator.ADD
+        BinaryOperator.SUBTRACT -> PythonOperator.SUBTRACT
+        BinaryOperator.MULTIPLY -> PythonOperator.MULTIPLY
     }
 }
 
