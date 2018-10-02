@@ -5,9 +5,10 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionNode
 import org.shedlang.compiler.backends.javascript.ast.JavascriptBinaryOperator
+import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionNode
 import org.shedlang.compiler.backends.javascript.ast.JavascriptStatementNode
+import org.shedlang.compiler.backends.javascript.ast.JavascriptUnaryOperator
 import org.shedlang.compiler.backends.javascript.serialise
 
 class SerialiserTests {
@@ -252,6 +253,29 @@ class SerialiserTests {
         val node = jsVariableReference("x")
         val output = serialise(node)
         assertThat(output, equalTo("x"))
+    }
+
+    @Test
+    fun unaryOperationSerialisation() {
+        val node = jsUnaryOperation(
+            operator = JavascriptUnaryOperator.NOT,
+            operand = jsVariableReference("x")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("!x"))
+    }
+
+    @Test
+    fun unaryOperationsCanBeRepeatedWithoutParens() {
+        val node = jsUnaryOperation(
+            operator = JavascriptUnaryOperator.NOT,
+            operand = jsUnaryOperation(
+                operator = JavascriptUnaryOperator.NOT,
+                operand = jsVariableReference("x")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("!!x"))
     }
 
     @TestFactory

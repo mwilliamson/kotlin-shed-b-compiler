@@ -100,6 +100,10 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
             return node.name
         }
 
+        override fun visit(node: JavascriptUnaryOperationNode): String {
+            return "!" + serialiseSubExpression(node, node.operand, associative = true, indentation = indentation)
+        }
+
         override fun visit(node: JavascriptBinaryOperationNode): String {
             return serialiseSubExpression(node, node.left, associative = true, indentation = indentation) +
                 " " +
@@ -182,7 +186,6 @@ private fun serialise(operator: JavascriptBinaryOperator) = when(operator) {
 
 private fun precedence(node: JavascriptExpressionNode): Int {
     return node.accept(object : JavascriptExpressionNode.Visitor<Int> {
-
         override fun visit(node: JavascriptNullLiteralNode): Int {
             return 21
         }
@@ -209,6 +212,10 @@ private fun precedence(node: JavascriptExpressionNode): Int {
 
         override fun visit(node: JavascriptVariableReferenceNode): Int {
             return 21
+        }
+
+        override fun visit(node: JavascriptUnaryOperationNode): Int {
+            return 16
         }
 
         override fun visit(node: JavascriptBinaryOperationNode): Int {

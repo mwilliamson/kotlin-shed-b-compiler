@@ -27,6 +27,15 @@ fun jsVariableReference(name: String) = JavascriptVariableReferenceNode(
     source = anySource()
 )
 
+fun jsUnaryOperation(
+    operator: JavascriptUnaryOperator,
+    operand: JavascriptExpressionNode
+) = JavascriptUnaryOperationNode(
+    operator = operator,
+    operand = operand,
+    source = anySource()
+)
+
 fun jsBinaryOperation(
     operator: JavascriptBinaryOperator,
     left: JavascriptExpressionNode,
