@@ -336,14 +336,14 @@ class CodeGeneratorTests {
     @TestFactory
     fun binaryOperationGeneratesBinaryOperation(): List<DynamicTest> {
         return listOf(
-            BinaryOperator.ADD to JavascriptOperator.ADD,
-            BinaryOperator.SUBTRACT to JavascriptOperator.SUBTRACT,
-            BinaryOperator.MULTIPLY to JavascriptOperator.MULTIPLY,
-            BinaryOperator.EQUALS to JavascriptOperator.EQUALS,
-            BinaryOperator.LESS_THAN to JavascriptOperator.LESS_THAN,
-            BinaryOperator.LESS_THAN_OR_EQUAL to JavascriptOperator.LESS_THAN_OR_EQUAL,
-            BinaryOperator.GREATER_THAN to JavascriptOperator.GREATER_THAN,
-            BinaryOperator.GREATER_THAN_OR_EQUAL to JavascriptOperator.GREATER_THAN_OR_EQUAL
+            BinaryOperator.ADD to JavascriptBinaryOperator.ADD,
+            BinaryOperator.SUBTRACT to JavascriptBinaryOperator.SUBTRACT,
+            BinaryOperator.MULTIPLY to JavascriptBinaryOperator.MULTIPLY,
+            BinaryOperator.EQUALS to JavascriptBinaryOperator.EQUALS,
+            BinaryOperator.LESS_THAN to JavascriptBinaryOperator.LESS_THAN,
+            BinaryOperator.LESS_THAN_OR_EQUAL to JavascriptBinaryOperator.LESS_THAN_OR_EQUAL,
+            BinaryOperator.GREATER_THAN to JavascriptBinaryOperator.GREATER_THAN,
+            BinaryOperator.GREATER_THAN_OR_EQUAL to JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL
         ).map({ operator ->  DynamicTest.dynamicTest(
             operator.first.toString(), {
                 val shed = binaryOperation(
@@ -665,7 +665,7 @@ class CodeGeneratorTests {
         = cast(has(JavascriptVariableReferenceNode::name, equalTo(name)))
 
     private fun isJavascriptBinaryOperation(
-        operator: Matcher<JavascriptOperator>,
+        operator: Matcher<JavascriptBinaryOperator>,
         left: Matcher<JavascriptExpressionNode>,
         right: Matcher<JavascriptExpressionNode>
     ) : Matcher<JavascriptExpressionNode>
@@ -724,7 +724,7 @@ class CodeGeneratorTests {
         discriminator: Discriminator
     ): Matcher<JavascriptExpressionNode> {
         return isJavascriptBinaryOperation(
-            operator = equalTo(JavascriptOperator.EQUALS),
+            operator = equalTo(JavascriptBinaryOperator.EQUALS),
             left = isJavascriptPropertyAccess(
                 receiver = expression,
                 propertyName = equalTo(discriminator.fieldName.value)

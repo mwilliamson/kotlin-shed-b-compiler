@@ -158,7 +158,7 @@ data class JavascriptVariableReferenceNode(
 }
 
 data class JavascriptBinaryOperationNode(
-    val operator: JavascriptOperator,
+    val operator: JavascriptBinaryOperator,
     val left: JavascriptExpressionNode,
     val right: JavascriptExpressionNode,
     override val source: Source
@@ -216,7 +216,7 @@ data class JavascriptAssignmentNode(
     }
 }
 
-enum class JavascriptOperator {
+enum class JavascriptBinaryOperator {
     EQUALS,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,

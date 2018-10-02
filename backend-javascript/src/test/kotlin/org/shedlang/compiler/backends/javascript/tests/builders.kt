@@ -28,7 +28,7 @@ fun jsVariableReference(name: String) = JavascriptVariableReferenceNode(
 )
 
 fun jsBinaryOperation(
-    operator: JavascriptOperator,
+    operator: JavascriptBinaryOperator,
     left: JavascriptExpressionNode,
     right: JavascriptExpressionNode
 ) = JavascriptBinaryOperationNode(

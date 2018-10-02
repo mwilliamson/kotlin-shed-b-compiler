@@ -169,15 +169,15 @@ private fun serialiseSubExpression(
     )
 }
 
-private fun serialise(operator: JavascriptOperator) = when(operator) {
-    JavascriptOperator.EQUALS -> "==="
-    JavascriptOperator.LESS_THAN -> "<"
-    JavascriptOperator.LESS_THAN_OR_EQUAL -> "<="
-    JavascriptOperator.GREATER_THAN -> ">"
-    JavascriptOperator.GREATER_THAN_OR_EQUAL -> ">="
-    JavascriptOperator.ADD -> "+"
-    JavascriptOperator.SUBTRACT -> "-"
-    JavascriptOperator.MULTIPLY -> "*"
+private fun serialise(operator: JavascriptBinaryOperator) = when(operator) {
+    JavascriptBinaryOperator.EQUALS -> "==="
+    JavascriptBinaryOperator.LESS_THAN -> "<"
+    JavascriptBinaryOperator.LESS_THAN_OR_EQUAL -> "<="
+    JavascriptBinaryOperator.GREATER_THAN -> ">"
+    JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL -> ">="
+    JavascriptBinaryOperator.ADD -> "+"
+    JavascriptBinaryOperator.SUBTRACT -> "-"
+    JavascriptBinaryOperator.MULTIPLY -> "*"
 }
 
 private fun precedence(node: JavascriptExpressionNode): Int {
@@ -213,14 +213,14 @@ private fun precedence(node: JavascriptExpressionNode): Int {
 
         override fun visit(node: JavascriptBinaryOperationNode): Int {
             return when(node.operator) {
-                JavascriptOperator.EQUALS -> 10
-                JavascriptOperator.LESS_THAN -> 10
-                JavascriptOperator.LESS_THAN_OR_EQUAL -> 10
-                JavascriptOperator.GREATER_THAN -> 10
-                JavascriptOperator.GREATER_THAN_OR_EQUAL -> 10
-                JavascriptOperator.ADD -> 13
-                JavascriptOperator.SUBTRACT -> 13
-                JavascriptOperator.MULTIPLY -> 14
+                JavascriptBinaryOperator.EQUALS -> 10
+                JavascriptBinaryOperator.LESS_THAN -> 10
+                JavascriptBinaryOperator.LESS_THAN_OR_EQUAL -> 10
+                JavascriptBinaryOperator.GREATER_THAN -> 10
+                JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL -> 10
+                JavascriptBinaryOperator.ADD -> 13
+                JavascriptBinaryOperator.SUBTRACT -> 13
+                JavascriptBinaryOperator.MULTIPLY -> 14
             }
         }
 

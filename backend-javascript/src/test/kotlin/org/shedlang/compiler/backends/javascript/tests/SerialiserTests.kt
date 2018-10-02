@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionNode
-import org.shedlang.compiler.backends.javascript.ast.JavascriptOperator
+import org.shedlang.compiler.backends.javascript.ast.JavascriptBinaryOperator
 import org.shedlang.compiler.backends.javascript.ast.JavascriptStatementNode
 import org.shedlang.compiler.backends.javascript.serialise
 
@@ -257,14 +257,14 @@ class SerialiserTests {
     @TestFactory
     fun binaryOperationSerialisation(): List<DynamicTest> {
         return listOf(
-            Pair(JavascriptOperator.EQUALS, "x === y"),
-            Pair(JavascriptOperator.LESS_THAN, "x < y"),
-            Pair(JavascriptOperator.LESS_THAN_OR_EQUAL, "x <= y"),
-            Pair(JavascriptOperator.GREATER_THAN, "x > y"),
-            Pair(JavascriptOperator.GREATER_THAN_OR_EQUAL, "x >= y"),
-            Pair(JavascriptOperator.ADD, "x + y"),
-            Pair(JavascriptOperator.SUBTRACT, "x - y"),
-            Pair(JavascriptOperator.MULTIPLY, "x * y")
+            Pair(JavascriptBinaryOperator.EQUALS, "x === y"),
+            Pair(JavascriptBinaryOperator.LESS_THAN, "x < y"),
+            Pair(JavascriptBinaryOperator.LESS_THAN_OR_EQUAL, "x <= y"),
+            Pair(JavascriptBinaryOperator.GREATER_THAN, "x > y"),
+            Pair(JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL, "x >= y"),
+            Pair(JavascriptBinaryOperator.ADD, "x + y"),
+            Pair(JavascriptBinaryOperator.SUBTRACT, "x - y"),
+            Pair(JavascriptBinaryOperator.MULTIPLY, "x * y")
         ).map({ operator -> DynamicTest.dynamicTest(operator.second, {
             val node = jsBinaryOperation(
                 operator = operator.first,
@@ -279,9 +279,9 @@ class SerialiserTests {
     @Test
     fun leftSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
         val node = jsBinaryOperation(
-            operator = JavascriptOperator.MULTIPLY,
+            operator = JavascriptBinaryOperator.MULTIPLY,
             left = jsBinaryOperation(
-                JavascriptOperator.ADD,
+                JavascriptBinaryOperator.ADD,
                 jsVariableReference("x"),
                 jsVariableReference("y")
             ),
@@ -294,10 +294,10 @@ class SerialiserTests {
     @Test
     fun rightSubExpressionOfBinaryOperationIsBracketedWhenPrecedenceIsLessThanOuterOperator() {
         val node = jsBinaryOperation(
-            operator = JavascriptOperator.MULTIPLY,
+            operator = JavascriptBinaryOperator.MULTIPLY,
             left = jsVariableReference("x"),
             right = jsBinaryOperation(
-                JavascriptOperator.ADD,
+                JavascriptBinaryOperator.ADD,
                 jsVariableReference("y"),
                 jsVariableReference("z")
             )
@@ -309,9 +309,9 @@ class SerialiserTests {
     @Test
     fun leftSubExpressionIsNotBracketedForLeftAssociativeOperators() {
         val node = jsBinaryOperation(
-            operator = JavascriptOperator.ADD,
+            operator = JavascriptBinaryOperator.ADD,
             left = jsBinaryOperation(
-                JavascriptOperator.ADD,
+                JavascriptBinaryOperator.ADD,
                 jsVariableReference("x"),
                 jsVariableReference("y")
             ),
@@ -324,10 +324,10 @@ class SerialiserTests {
     @Test
     fun rightSubExpressionIsBracketedForLeftAssociativeOperators() {
         val node = jsBinaryOperation(
-            operator = JavascriptOperator.ADD,
+            operator = JavascriptBinaryOperator.ADD,
             left = jsVariableReference("x"),
             right = jsBinaryOperation(
-                JavascriptOperator.ADD,
+                JavascriptBinaryOperator.ADD,
                 jsVariableReference("y"),
                 jsVariableReference("z")
             )
@@ -366,7 +366,7 @@ class SerialiserTests {
     fun functionInFunctionCallIsBracketedWhenOfLowerPrecedence() {
         val node = jsFunctionCall(
             function = jsBinaryOperation(
-                JavascriptOperator.ADD,
+                JavascriptBinaryOperator.ADD,
                 jsVariableReference("f"),
                 jsVariableReference("g")
             ),

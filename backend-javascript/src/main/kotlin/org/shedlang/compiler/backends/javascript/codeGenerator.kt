@@ -446,7 +446,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             source: NodeSource
         ): JavascriptExpressionNode {
             return JavascriptBinaryOperationNode(
-                JavascriptOperator.EQUALS,
+                JavascriptBinaryOperator.EQUALS,
                 JavascriptPropertyAccessNode(
                     expression,
                     generateName(discriminator.fieldName),
@@ -479,16 +479,16 @@ private fun generateSymbolCode(symbol: Symbol, source: NodeSource): JavascriptEx
     return JavascriptStringLiteralNode(symbol.fullName, source = source)
 }
 
-private fun generateCode(operator: BinaryOperator): JavascriptOperator {
+private fun generateCode(operator: BinaryOperator): JavascriptBinaryOperator {
     return when (operator) {
-        BinaryOperator.EQUALS -> JavascriptOperator.EQUALS
-        BinaryOperator.LESS_THAN -> JavascriptOperator.LESS_THAN
-        BinaryOperator.LESS_THAN_OR_EQUAL -> JavascriptOperator.LESS_THAN_OR_EQUAL
-        BinaryOperator.GREATER_THAN -> JavascriptOperator.GREATER_THAN
-        BinaryOperator.GREATER_THAN_OR_EQUAL -> JavascriptOperator.GREATER_THAN_OR_EQUAL
-        BinaryOperator.ADD -> JavascriptOperator.ADD
-        BinaryOperator.SUBTRACT -> JavascriptOperator.SUBTRACT
-        BinaryOperator.MULTIPLY -> JavascriptOperator.MULTIPLY
+        BinaryOperator.EQUALS -> JavascriptBinaryOperator.EQUALS
+        BinaryOperator.LESS_THAN -> JavascriptBinaryOperator.LESS_THAN
+        BinaryOperator.LESS_THAN_OR_EQUAL -> JavascriptBinaryOperator.LESS_THAN_OR_EQUAL
+        BinaryOperator.GREATER_THAN -> JavascriptBinaryOperator.GREATER_THAN
+        BinaryOperator.GREATER_THAN_OR_EQUAL -> JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL
+        BinaryOperator.ADD -> JavascriptBinaryOperator.ADD
+        BinaryOperator.SUBTRACT -> JavascriptBinaryOperator.SUBTRACT
+        BinaryOperator.MULTIPLY -> JavascriptBinaryOperator.MULTIPLY
 
     }
 }
