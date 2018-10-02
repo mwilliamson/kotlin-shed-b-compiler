@@ -5,8 +5,9 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.allOf
 
@@ -99,6 +100,34 @@ class EvaluateModuleReferenceTests {
                 )
             )))
         )))
+    }
+}
+
+class EvaluateUnaryOperationTests {
+    @Test
+    fun negationOfBooleans() {
+        val notTrue = evaluate(UnaryOperation(UnaryOperator.NOT, BooleanValue(true)))
+        assertThat(notTrue, isPureResult(equalTo(BooleanValue(false))))
+
+        val notFalse = evaluate(UnaryOperation(UnaryOperator.NOT, BooleanValue(false)))
+        assertThat(notFalse, isPureResult(equalTo(BooleanValue(true))))
+    }
+
+    @Test
+    fun incompleteOperandIsEvaluated() {
+        val context = createContext(
+            scope = scopeOf(mapOf(
+                "x" to IntegerValue(1)
+            ))
+        )
+        val expression = evaluate(UnaryOperation(
+            UnaryOperator.NOT,
+            VariableReference("x")
+        ), context)
+        assertThat(expression, isPureResult(equalTo(UnaryOperation(
+            UnaryOperator.NOT,
+            IntegerValue(1)
+        ))))
     }
 }
 

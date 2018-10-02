@@ -41,7 +41,20 @@ internal data class UnaryOperation(
     val operand: Expression
 ): IncompleteExpression() {
     override fun evaluate(context: InterpreterContext): EvaluationResult<Expression> {
-        throw UnsupportedOperationException("not implemented")
+        return when (operand) {
+            is IncompleteExpression -> {
+                operand.evaluate(context).map { evaluatedOperand ->
+                    UnaryOperation(
+                        operator = operator,
+                        operand = evaluatedOperand
+                    )
+                }
+            }
+            is InterpreterValue -> {
+                val booleanOperand = operand as BooleanValue
+                return EvaluationResult.pure(BooleanValue(!booleanOperand.value))
+            }
+        }
     }
 }
 
