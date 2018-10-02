@@ -1,7 +1,7 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.Type

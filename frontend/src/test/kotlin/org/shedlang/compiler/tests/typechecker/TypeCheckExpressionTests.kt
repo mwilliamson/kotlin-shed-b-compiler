@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -82,6 +83,22 @@ class TypeCheckExpressionTests {
                 )
             ) },
             throwsCompilerError("type of x is unknown")
+        )
+    }
+
+    @Test
+    fun negatingBooleanReturnsBoolean() {
+        val node = unaryOperation(UnaryOperator.NOT, literalBool(true))
+        val type = inferType(node, typeContext())
+        assertThat(type, isBoolType)
+    }
+
+    @Test
+    fun negatingNonBooleansThrowsError() {
+        val node = unaryOperation(UnaryOperator.NOT, literalInt(1))
+        assertThat(
+            { inferType(node, typeContext()) },
+            throwsUnexpectedType(expected = BoolType, actual = IntType)
         )
     }
 

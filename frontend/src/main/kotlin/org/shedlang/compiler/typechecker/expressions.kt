@@ -3,7 +3,8 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
-private data class OperationType(val operator: BinaryOperator, val left: Type, val right: Type)
+private data class UnaryOperationType(val operator: UnaryOperator, val operand: Type)
+private data class BinaryOperationType(val operator: BinaryOperator, val left: Type, val right: Type)
 
 internal fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
     inferType(expression, context)
@@ -28,7 +29,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
 
         override fun visit(node: UnaryOperationNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return inferUnaryOperationType(node, context)
         }
 
         override fun visit(node: BinaryOperationNode): Type {
@@ -67,6 +68,20 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
     return type
 }
 
+private fun inferUnaryOperationType(node: UnaryOperationNode, context: TypeContext): Type {
+    val operandType = inferType(node.operand, context)
+
+    return when (UnaryOperationType(node.operator, operandType)) {
+        UnaryOperationType(UnaryOperator.NOT, BoolType) -> BoolType
+
+        else -> throw UnexpectedTypeError(
+            expected = BoolType,
+            actual = operandType,
+            source = node.operand.source
+        )
+    }
+}
+
 private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeContext): Type {
     val leftType = inferType(node.left, context)
     val rightType = inferType(node.right, context)
@@ -75,22 +90,22 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
         return BoolType
     }
 
-    return when (OperationType(node.operator, leftType, rightType)) {
-        OperationType(BinaryOperator.EQUALS, IntType, IntType) -> BoolType
-        OperationType(BinaryOperator.ADD, IntType, IntType) -> IntType
-        OperationType(BinaryOperator.SUBTRACT, IntType, IntType) -> IntType
-        OperationType(BinaryOperator.MULTIPLY, IntType, IntType) -> IntType
+    return when (BinaryOperationType(node.operator, leftType, rightType)) {
+        BinaryOperationType(BinaryOperator.EQUALS, IntType, IntType) -> BoolType
+        BinaryOperationType(BinaryOperator.ADD, IntType, IntType) -> IntType
+        BinaryOperationType(BinaryOperator.SUBTRACT, IntType, IntType) -> IntType
+        BinaryOperationType(BinaryOperator.MULTIPLY, IntType, IntType) -> IntType
 
-        OperationType(BinaryOperator.EQUALS, StringType, StringType) -> BoolType
-        OperationType(BinaryOperator.ADD, StringType, StringType) -> StringType
+        BinaryOperationType(BinaryOperator.EQUALS, StringType, StringType) -> BoolType
+        BinaryOperationType(BinaryOperator.ADD, StringType, StringType) -> StringType
 
-        OperationType(BinaryOperator.EQUALS, CharType, CharType) -> BoolType
-        OperationType(BinaryOperator.LESS_THAN, CharType, CharType) -> BoolType
-        OperationType(BinaryOperator.LESS_THAN_OR_EQUAL, CharType, CharType) -> BoolType
-        OperationType(BinaryOperator.GREATER_THAN, CharType, CharType) -> BoolType
-        OperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CharType, CharType) -> BoolType
+        BinaryOperationType(BinaryOperator.EQUALS, CharType, CharType) -> BoolType
+        BinaryOperationType(BinaryOperator.LESS_THAN, CharType, CharType) -> BoolType
+        BinaryOperationType(BinaryOperator.LESS_THAN_OR_EQUAL, CharType, CharType) -> BoolType
+        BinaryOperationType(BinaryOperator.GREATER_THAN, CharType, CharType) -> BoolType
+        BinaryOperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CharType, CharType) -> BoolType
 
-        OperationType(BinaryOperator.EQUALS, BoolType, BoolType) -> BoolType
+        BinaryOperationType(BinaryOperator.EQUALS, BoolType, BoolType) -> BoolType
 
         else -> throw InvalidOperationError(
             operator = node.operator,
