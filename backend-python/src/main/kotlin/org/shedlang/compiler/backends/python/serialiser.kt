@@ -119,6 +119,10 @@ internal fun serialise(node: PythonExpressionNode): String {
             return "(" + elements + trailingComma + ")"
         }
 
+        override fun visit(node: PythonUnaryOperationNode): String {
+            return "not " + serialiseSubExpression(node, node.operand, associative = true)
+        }
+
         override fun visit(node: PythonBinaryOperationNode): String {
             return serialiseSubExpression(node, node.left, associative = isLeftAssociative(node.operator)) +
                 " " +
@@ -210,6 +214,10 @@ private fun precedence(node: PythonExpressionNode): Int {
 
         override fun visit(node: PythonTupleNode): Int {
             return 18
+        }
+
+        override fun visit(node: PythonUnaryOperationNode): Int {
+            return 5
         }
 
         override fun visit(node: PythonBinaryOperationNode): Int {

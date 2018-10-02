@@ -70,6 +70,10 @@ private fun expressionChildrenEvaluationOrder(expression: PythonExpressionNode):
             throw UnsupportedOperationException("not implemented")
         }
 
+        override fun visit(node: PythonUnaryOperationNode): List<PythonNode> {
+            return listOf(node.operand)
+        }
+
         override fun visit(node: PythonBinaryOperationNode): List<PythonNode> {
             return listOf(node.left, node.right)
         }

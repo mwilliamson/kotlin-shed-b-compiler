@@ -5,9 +5,10 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.backends.python.ast.PythonFunctionNode
 import org.shedlang.compiler.backends.python.ast.PythonBinaryOperator
+import org.shedlang.compiler.backends.python.ast.PythonFunctionNode
 import org.shedlang.compiler.backends.python.ast.PythonStatementNode
+import org.shedlang.compiler.backends.python.ast.PythonUnaryOperator
 import org.shedlang.compiler.backends.python.serialise
 
 class SerialiserTests {
@@ -330,6 +331,29 @@ class SerialiserTests {
         val node = pythonTuple(pythonLiteralInt(0), pythonLiteralInt(1))
         val output = serialise(node)
         assertThat(output, equalTo("(0, 1)"))
+    }
+
+    @Test
+    fun unaryOperationSerialisation() {
+        val node = pythonUnaryOperation(
+            operator = PythonUnaryOperator.NOT,
+            operand = pythonVariableReference("x")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("not x"))
+    }
+
+    @Test
+    fun unaryOperationsCanBeRepeatedWithoutParens() {
+        val node = pythonUnaryOperation(
+            operator = PythonUnaryOperator.NOT,
+            operand = pythonUnaryOperation(
+                operator = PythonUnaryOperator.NOT,
+                operand = pythonVariableReference("x")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("not not x"))
     }
 
     @TestFactory

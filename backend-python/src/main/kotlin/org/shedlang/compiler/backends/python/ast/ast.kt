@@ -140,6 +140,7 @@ interface PythonExpressionNode : PythonNode {
         fun visit(node: PythonStringLiteralNode): T
         fun visit(node: PythonVariableReferenceNode): T
         fun visit(node: PythonTupleNode): T
+        fun visit(node: PythonUnaryOperationNode): T
         fun visit(node: PythonBinaryOperationNode): T
         fun visit(node: PythonFunctionCallNode): T
         fun visit(node: PythonAttributeAccessNode): T
@@ -200,6 +201,21 @@ data class PythonTupleNode(
     override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class PythonUnaryOperationNode(
+    val operator: PythonUnaryOperator,
+    val operand: PythonExpressionNode,
+    override val source: Source
+): PythonExpressionNode {
+    override fun <T> accept(visitor: PythonExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
+}
+
+enum class PythonUnaryOperator {
+    NOT
 }
 
 data class PythonBinaryOperationNode(

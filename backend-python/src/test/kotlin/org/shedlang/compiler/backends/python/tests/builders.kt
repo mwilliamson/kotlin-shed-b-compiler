@@ -88,6 +88,15 @@ fun pythonVariableReference(name: String)
 fun pythonTuple(vararg members: PythonExpressionNode)
     = PythonTupleNode(members.toList(), source = anySource())
 
+fun pythonUnaryOperation(
+    operator: PythonUnaryOperator,
+    operand: PythonExpressionNode
+) = PythonUnaryOperationNode(
+    operator = operator,
+    operand = operand,
+    source = anySource()
+)
+
 fun pythonBinaryOperation(
     operator: PythonBinaryOperator,
     left: PythonExpressionNode,
