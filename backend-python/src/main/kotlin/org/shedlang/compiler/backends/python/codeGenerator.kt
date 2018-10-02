@@ -852,23 +852,23 @@ private fun generateTypeCondition(
     source: Source
 ): PythonExpressionNode {
     return PythonBinaryOperationNode(
-        PythonOperator.EQUALS,
+        PythonBinaryOperator.EQUALS,
         PythonAttributeAccessNode(expression, pythoniseName(discriminator.fieldName), source),
         symbol(discriminator.symbolType.symbol, source = source),
         source = source
     )
 }
 
-private fun generateCode(operator: BinaryOperator): PythonOperator {
+private fun generateCode(operator: BinaryOperator): PythonBinaryOperator {
     return when (operator) {
-        BinaryOperator.EQUALS -> PythonOperator.EQUALS
-        BinaryOperator.LESS_THAN -> PythonOperator.LESS_THAN
-        BinaryOperator.LESS_THAN_OR_EQUAL -> PythonOperator.LESS_THAN_OR_EQUAL
-        BinaryOperator.GREATER_THAN -> PythonOperator.GREATER_THAN
-        BinaryOperator.GREATER_THAN_OR_EQUAL -> PythonOperator.GREATER_THAN_OR_EQUAL
-        BinaryOperator.ADD -> PythonOperator.ADD
-        BinaryOperator.SUBTRACT -> PythonOperator.SUBTRACT
-        BinaryOperator.MULTIPLY -> PythonOperator.MULTIPLY
+        BinaryOperator.EQUALS -> PythonBinaryOperator.EQUALS
+        BinaryOperator.LESS_THAN -> PythonBinaryOperator.LESS_THAN
+        BinaryOperator.LESS_THAN_OR_EQUAL -> PythonBinaryOperator.LESS_THAN_OR_EQUAL
+        BinaryOperator.GREATER_THAN -> PythonBinaryOperator.GREATER_THAN
+        BinaryOperator.GREATER_THAN_OR_EQUAL -> PythonBinaryOperator.GREATER_THAN_OR_EQUAL
+        BinaryOperator.ADD -> PythonBinaryOperator.ADD
+        BinaryOperator.SUBTRACT -> PythonBinaryOperator.SUBTRACT
+        BinaryOperator.MULTIPLY -> PythonBinaryOperator.MULTIPLY
     }
 }
 

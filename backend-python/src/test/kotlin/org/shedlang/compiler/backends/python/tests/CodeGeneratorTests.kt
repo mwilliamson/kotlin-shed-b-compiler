@@ -575,14 +575,14 @@ class CodeGeneratorTests {
     @TestFactory
     fun binaryOperationGeneratesBinaryOperation(): List<DynamicTest> {
         return listOf(
-            BinaryOperator.ADD to PythonOperator.ADD,
-            BinaryOperator.SUBTRACT to PythonOperator.SUBTRACT,
-            BinaryOperator.MULTIPLY to PythonOperator.MULTIPLY,
-            BinaryOperator.EQUALS to PythonOperator.EQUALS,
-            BinaryOperator.LESS_THAN to PythonOperator.LESS_THAN,
-            BinaryOperator.LESS_THAN_OR_EQUAL to PythonOperator.LESS_THAN_OR_EQUAL,
-            BinaryOperator.GREATER_THAN to PythonOperator.GREATER_THAN,
-            BinaryOperator.GREATER_THAN_OR_EQUAL to PythonOperator.GREATER_THAN_OR_EQUAL
+            BinaryOperator.ADD to PythonBinaryOperator.ADD,
+            BinaryOperator.SUBTRACT to PythonBinaryOperator.SUBTRACT,
+            BinaryOperator.MULTIPLY to PythonBinaryOperator.MULTIPLY,
+            BinaryOperator.EQUALS to PythonBinaryOperator.EQUALS,
+            BinaryOperator.LESS_THAN to PythonBinaryOperator.LESS_THAN,
+            BinaryOperator.LESS_THAN_OR_EQUAL to PythonBinaryOperator.LESS_THAN_OR_EQUAL,
+            BinaryOperator.GREATER_THAN to PythonBinaryOperator.GREATER_THAN,
+            BinaryOperator.GREATER_THAN_OR_EQUAL to PythonBinaryOperator.GREATER_THAN_OR_EQUAL
         ).map({ operator ->  DynamicTest.dynamicTest(
             operator.first.toString(), {
                 val shed = binaryOperation(
@@ -1087,7 +1087,7 @@ class CodeGeneratorTests {
         = cast(has(PythonVariableReferenceNode::name, equalTo(name)))
 
     private fun isPythonBinaryOperation(
-        operator: Matcher<PythonOperator>,
+        operator: Matcher<PythonBinaryOperator>,
         left: Matcher<PythonExpressionNode>,
         right: Matcher<PythonExpressionNode>
     ) : Matcher<PythonExpressionNode>
@@ -1123,7 +1123,7 @@ class CodeGeneratorTests {
     ): Matcher<PythonExpressionNode> {
         val symbol = discriminator.symbolType.symbol
         return isPythonBinaryOperation(
-            operator = equalTo(PythonOperator.EQUALS),
+            operator = equalTo(PythonBinaryOperator.EQUALS),
             left = isPythonAttributeAccess(
                 receiver = expression,
                 attributeName = equalTo(discriminator.fieldName.value)

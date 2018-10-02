@@ -203,7 +203,7 @@ data class PythonTupleNode(
 }
 
 data class PythonBinaryOperationNode(
-    val operator: PythonOperator,
+    val operator: PythonBinaryOperator,
     val left: PythonExpressionNode,
     val right: PythonExpressionNode,
     override val source: Source
@@ -213,7 +213,7 @@ data class PythonBinaryOperationNode(
     }
 }
 
-enum class PythonOperator {
+enum class PythonBinaryOperator {
     EQUALS,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,

@@ -164,26 +164,26 @@ private fun serialiseSubExpression(
     )
 }
 
-private fun serialise(operator: PythonOperator) = when(operator) {
-    PythonOperator.EQUALS -> "=="
-    PythonOperator.LESS_THAN-> "<"
-    PythonOperator.LESS_THAN_OR_EQUAL -> "<="
-    PythonOperator.GREATER_THAN -> ">"
-    PythonOperator.GREATER_THAN_OR_EQUAL -> ">="
-    PythonOperator.ADD -> "+"
-    PythonOperator.SUBTRACT -> "-"
-    PythonOperator.MULTIPLY -> "*"
+private fun serialise(operator: PythonBinaryOperator) = when(operator) {
+    PythonBinaryOperator.EQUALS -> "=="
+    PythonBinaryOperator.LESS_THAN-> "<"
+    PythonBinaryOperator.LESS_THAN_OR_EQUAL -> "<="
+    PythonBinaryOperator.GREATER_THAN -> ">"
+    PythonBinaryOperator.GREATER_THAN_OR_EQUAL -> ">="
+    PythonBinaryOperator.ADD -> "+"
+    PythonBinaryOperator.SUBTRACT -> "-"
+    PythonBinaryOperator.MULTIPLY -> "*"
 }
 
-private fun isLeftAssociative(operator: PythonOperator) = when(operator) {
-    PythonOperator.EQUALS -> false
-    PythonOperator.LESS_THAN -> false
-    PythonOperator.LESS_THAN_OR_EQUAL -> false
-    PythonOperator.GREATER_THAN -> false
-    PythonOperator.GREATER_THAN_OR_EQUAL -> false
-    PythonOperator.ADD -> true
-    PythonOperator.SUBTRACT -> true
-    PythonOperator.MULTIPLY -> true
+private fun isLeftAssociative(operator: PythonBinaryOperator) = when(operator) {
+    PythonBinaryOperator.EQUALS -> false
+    PythonBinaryOperator.LESS_THAN -> false
+    PythonBinaryOperator.LESS_THAN_OR_EQUAL -> false
+    PythonBinaryOperator.GREATER_THAN -> false
+    PythonBinaryOperator.GREATER_THAN_OR_EQUAL -> false
+    PythonBinaryOperator.ADD -> true
+    PythonBinaryOperator.SUBTRACT -> true
+    PythonBinaryOperator.MULTIPLY -> true
 }
 
 private fun precedence(node: PythonExpressionNode): Int {
@@ -214,14 +214,14 @@ private fun precedence(node: PythonExpressionNode): Int {
 
         override fun visit(node: PythonBinaryOperationNode): Int {
             return when(node.operator) {
-                PythonOperator.EQUALS -> 6
-                PythonOperator.LESS_THAN -> 6
-                PythonOperator.LESS_THAN_OR_EQUAL -> 6
-                PythonOperator.GREATER_THAN -> 6
-                PythonOperator.GREATER_THAN_OR_EQUAL -> 6
-                PythonOperator.ADD -> 11
-                PythonOperator.SUBTRACT -> 11
-                PythonOperator.MULTIPLY -> 12
+                PythonBinaryOperator.EQUALS -> 6
+                PythonBinaryOperator.LESS_THAN -> 6
+                PythonBinaryOperator.LESS_THAN_OR_EQUAL -> 6
+                PythonBinaryOperator.GREATER_THAN -> 6
+                PythonBinaryOperator.GREATER_THAN_OR_EQUAL -> 6
+                PythonBinaryOperator.ADD -> 11
+                PythonBinaryOperator.SUBTRACT -> 11
+                PythonBinaryOperator.MULTIPLY -> 12
             }
         }
 

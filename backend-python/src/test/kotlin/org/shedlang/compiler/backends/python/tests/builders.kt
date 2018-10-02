@@ -89,7 +89,7 @@ fun pythonTuple(vararg members: PythonExpressionNode)
     = PythonTupleNode(members.toList(), source = anySource())
 
 fun pythonBinaryOperation(
-    operator: PythonOperator,
+    operator: PythonBinaryOperator,
     left: PythonExpressionNode,
     right: PythonExpressionNode
 ) = PythonBinaryOperationNode(
