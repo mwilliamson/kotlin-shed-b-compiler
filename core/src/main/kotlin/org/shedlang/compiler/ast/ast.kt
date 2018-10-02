@@ -630,6 +630,20 @@ data class VariableReferenceNode(
     }
 }
 
+data class UnaryOperationNode(
+    val operator: UnaryOperator,
+    val expression: ExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ExpressionNode {
+    override val children: List<Node>
+        get() = listOf(expression)
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        throw NotImplementedError()
+    }
+}
+
 data class BinaryOperationNode(
     val operator: Operator,
     val left: ExpressionNode,
@@ -729,6 +743,10 @@ data class FieldNameNode(
 ) : Node {
     override val children: List<Node>
         get() = listOf()
+}
+
+enum class UnaryOperator {
+    NOT
 }
 
 enum class Operator {

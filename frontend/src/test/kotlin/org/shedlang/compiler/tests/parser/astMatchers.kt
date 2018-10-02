@@ -141,6 +141,16 @@ internal fun isParameter(name: String, typeReference: String): Matcher<Parameter
     )
 }
 
+internal fun isUnaryOperation(
+    operator: UnaryOperator,
+    expression: Matcher<ExpressionNode>
+): Matcher<ExpressionNode> {
+    return cast(allOf(
+        has(UnaryOperationNode::operator, equalTo(operator)),
+        has(UnaryOperationNode::expression, expression)
+    ))
+}
+
 internal fun isBinaryOperation(
     operator: Operator,
     left: Matcher<ExpressionNode>,

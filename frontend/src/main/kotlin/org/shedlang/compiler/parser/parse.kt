@@ -636,6 +636,7 @@ private val IS_PRECEDENCE = 9
 private val ADD_PRECENDECE = 11
 private val SUBTRACT_PRECEDENCE = 11
 private val MULTIPLY_PRECEDENCE = 12
+private val UNARY_PRECEDENCE = 13
 private val CALL_PRECEDENCE = 14
 private val FIELD_ACCESS_PRECEDENCE = 14
 
@@ -930,6 +931,15 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
                 returnType = signature.returnType,
                 effects = signature.effects,
                 body = body,
+                source = source
+            )
+        }
+        TokenType.KEYWORD_NOT -> {
+            tokens.skip()
+            val expression = parseExpression(tokens, precedence = UNARY_PRECEDENCE)
+            return UnaryOperationNode(
+                operator = UnaryOperator.NOT,
+                expression = expression,
                 source = source
             )
         }
