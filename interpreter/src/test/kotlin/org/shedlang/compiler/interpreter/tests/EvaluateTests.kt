@@ -536,8 +536,10 @@ class EvaluateCallTests {
         )
         assertThat(result, isPureResult(equalTo(PartialCallValue(
             receiver = PrintValue,
-            positionalArguments = listOf(IntegerValue(1)),
-            namedArguments = listOf(Identifier("x") to IntegerValue(2))
+            partialArguments = Arguments(
+                listOf(IntegerValue(1)),
+                listOf(Identifier("x") to IntegerValue(2))
+            )
         ))))
     }
 
@@ -548,8 +550,10 @@ class EvaluateCallTests {
             call(
                 PartialCallValue(
                     receiver = PrintValue,
-                    positionalArguments = listOf(IntegerValue(1)),
-                    namedArguments = listOf(Identifier("x") to IntegerValue(2))
+                    partialArguments = Arguments(
+                        listOf(IntegerValue(1)),
+                        listOf(Identifier("x") to IntegerValue(2))
+                    )
                 ),
                 positionalArgumentValues = listOf(IntegerValue(3)),
                 namedArgumentValues = listOf(Identifier("y") to IntegerValue(4))

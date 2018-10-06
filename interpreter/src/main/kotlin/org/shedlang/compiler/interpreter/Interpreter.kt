@@ -176,21 +176,18 @@ internal data class Call(
                         ))
                     }
                 } else {
-                    call(receiver, positionalArgumentValues, namedArgumentValues)
+                    val arguments = Arguments(positionalArgumentValues, namedArgumentValues)
+                    call(receiver, arguments)
                 }
             }
         }
     }
 }
 
-private fun call(
-    receiver: InterpreterValue,
-    positionalArguments: List<InterpreterValue>,
-    namedArguments: List<Pair<Identifier, InterpreterValue>>
-): EvaluationResult<Expression> {
+private fun call(receiver: InterpreterValue, arguments: Arguments): EvaluationResult<Expression> {
     return when (receiver) {
         is Callable ->
-            receiver.call(positionalArguments, namedArguments)
+            receiver.call(arguments)
         else ->
             throw NotImplementedError()
     }
@@ -216,14 +213,29 @@ internal data class FieldAccess(
 }
 
 internal abstract class InterpreterValue: Expression()
+
 internal object UnitValue: InterpreterValue()
+
 internal data class BooleanValue(val value: Boolean): InterpreterValue()
+
 internal data class IntegerValue(val value: BigInteger): InterpreterValue() {
     constructor(value: Int): this(value.toBigInteger())
 }
+
+internal fun InterpreterValue.int(): BigInteger {
+    return (this as IntegerValue).value
+}
+
 internal data class StringValue(val value: String): InterpreterValue()
+
+internal fun InterpreterValue.string(): String {
+    return (this as StringValue).value
+}
+
 internal data class CharacterValue(val value: Int): InterpreterValue()
+
 internal data class SymbolValue(private val value: Symbol): InterpreterValue()
+
 internal data class ListValue(val elements: List<InterpreterValue>): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
@@ -246,12 +258,9 @@ internal data class FunctionValue(
     val body: List<Statement>,
     val scope: Scope
 ): Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        val positionalBindings = positionalParameterNames.zip(positionalArguments)
-        val namedBindings = namedArguments.map { (name, argument) -> name.value to argument }
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+        val positionalBindings = positionalParameterNames.zip(arguments.positionals)
+        val namedBindings = arguments.named.map { (name, argument) -> name.value to argument }
         val scope = this.scope.enter(
             ScopeFrameMap((positionalBindings + namedBindings).toMap())
         )
@@ -265,12 +274,9 @@ internal data class FunctionValue(
 internal data class ShapeTypeValue(
     val constantFields: Map<Identifier, InterpreterValue>
 ): Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val constantFields = constantFields.toMap()
-        val dynamicFields = namedArguments.toMap()
+        val dynamicFields = arguments.named.toMap()
         return EvaluationResult.pure(ShapeValue(constantFields + dynamicFields))
     }
 
@@ -390,70 +396,74 @@ internal data class Val(val name: Identifier, val expression: Expression): State
     }
 }
 
+internal data class Arguments(
+    val positionals: List<InterpreterValue>,
+    val named: List<Pair<Identifier, InterpreterValue>>
+) {
+    operator fun get(index: Int): InterpreterValue {
+        return positionals[index]
+    }
+
+    operator fun plus(other: Arguments): Arguments {
+        return Arguments(
+            positionals + other.positionals,
+            named + other.named
+        )
+    }
+
+    fun dropPositional(count: Int): Arguments {
+        return Arguments(
+            positionals.drop(count),
+            named
+        )
+    }
+}
+
 internal abstract class Callable: InterpreterValue() {
-    abstract fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression>
+    abstract fun call(arguments: Arguments): EvaluationResult<Expression>
 }
 
 internal object IntToStringValue: Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        val argument = (positionalArguments[0] as IntegerValue).value
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+        val argument = arguments[0].int()
         return EvaluationResult.pure(StringValue(argument.toString()))
     }
 }
 
 internal object ListConstructorValue: Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        return EvaluationResult.pure(ListValue(positionalArguments))
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+        return EvaluationResult.pure(ListValue(arguments.positionals))
     }
 }
 
 internal object PrintValue: Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
-        val argument = (positionalArguments[0] as StringValue).value
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+        val argument = arguments[0].string()
         return EvaluationResult.Value(UnitValue, stdout = argument)
     }
 }
 
 internal object PartialCallFunctionValue : Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
         return EvaluationResult.pure(PartialCallValue(
-            receiver = positionalArguments[0],
-            positionalArguments = positionalArguments.drop(1),
-            namedArguments = namedArguments
+            receiver = arguments[0],
+            partialArguments = arguments.dropPositional(1)
         ))
     }
 }
 
 internal data class PartialCallValue(
-    val receiver: Expression,
-    val positionalArguments: List<InterpreterValue>,
-    val namedArguments: List<Pair<Identifier, InterpreterValue>>
+    private val receiver: Expression,
+    private val partialArguments: Arguments
 ): Callable() {
-    override fun call(
-        positionalArguments: List<InterpreterValue>,
-        namedArguments: List<Pair<Identifier, InterpreterValue>>
-    ): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+        val completeArguments = partialArguments + arguments
         return EvaluationResult.pure(Call(
             receiver = receiver,
             positionalArgumentExpressions = listOf(),
-            positionalArgumentValues = this.positionalArguments + positionalArguments,
+            positionalArgumentValues = completeArguments.positionals,
             namedArgumentExpressions = listOf(),
-            namedArgumentValues = this.namedArguments + namedArguments
+            namedArgumentValues = completeArguments.named
         ))
     }
 }
