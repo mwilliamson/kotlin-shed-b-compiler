@@ -546,5 +546,5 @@ private fun generateName(identifier: Identifier): String {
 }
 
 fun isJavascriptKeyword(value: String): Boolean {
-    return value == "null"
+    return value == "null" || value == "default"
 }
