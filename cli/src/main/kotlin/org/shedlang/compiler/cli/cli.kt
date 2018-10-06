@@ -30,11 +30,13 @@ object ShedCli {
             val base = Paths.get(arguments.source)
             val backend = arguments.backend
             if (backend == null) {
-                val source = readPackage(base, arguments.mainModule)
-                val result = fullyEvaluate(source, readMainModuleName(arguments.mainModule))
-                // TODO: print stdout as it's generated
-                print(result.stdout)
-                return result.exitCode
+                return onErrorPrintAndExit {
+                    val source = readPackage(base, arguments.mainModule)
+                    val result = fullyEvaluate(source, readMainModuleName(arguments.mainModule))
+                    // TODO: print stdout as it's generated
+                    print(result.stdout)
+                    result.exitCode
+                }
             } else {
                 compile(
                     base = base,
@@ -91,9 +93,15 @@ object ShedcCli {
 }
 
 private fun compile(base: Path, mainName: String, backend: Backend, target: Path) {
-    try {
+    onErrorPrintAndExit {
         val result = readPackage(base, mainName)
         backend.compile(result, target = target)
+    }
+}
+
+private fun <T> onErrorPrintAndExit(func: () -> T): T {
+    try {
+        return func()
     } catch (error: SourceError) {
         System.err.println("Error: " + error.message)
         System.err.println(error.source.describe())
