@@ -7,6 +7,20 @@ fun addOne(value: Int) -> Int {
 }
 
 val testCases = Tests.suite(moduleName, list(
+    Tests.testCase("default(x, some(y)) is y", fun () {
+        Tests.assertThat(
+            Options.default(1, Options.some(2)),
+            Matchers.isInteger(2)
+        )
+    }),
+
+    Tests.testCase("default(x, none) is x", fun () {
+        Tests.assertThat(
+            Options.default(1, Options.none),
+            Matchers.isInteger(1)
+        )
+    }),
+
     Tests.testCase("map(f, none) is none", fun () {
         Tests.assertThat(Options.map(addOne, Options.none), Matchers.isNone())
     }),
