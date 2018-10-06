@@ -201,17 +201,3 @@ fun nextToken(value: String) -> Token {
         token(TokenUnexpected(), Strings.left(1, value))
     }
 }
-
-fun equals(left: JsonValue, right: JsonValue) -> Bool {
-    if (left is JsonNull) {
-        right is JsonNull
-    } else if (left is JsonBoolean) {
-        if (right is JsonBoolean) {
-            left.value == right.value
-        } else {
-            false
-        }
-    } else {
-        false
-    }
-}

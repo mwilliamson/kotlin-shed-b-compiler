@@ -3,38 +3,35 @@ import stdlib.Matchers;
 import stdlib.Options;
 import stdlib.Tests;
 
-fun isJson(expected: Json.JsonValue) -> Matchers.Matcher[Json.JsonValue] {
-    Matchers.describingMatcher(
-        expected,
-        Json.valueToText,
-        Json.equals ~ (expected),
+
+fun isJson(*, description: String, predicate: (Json.JsonValue) -> Bool) -> Matchers.Matcher[Json.JsonValue] {
+    Matchers.Matcher(
+        description = description,
+        match = fun (actual: Json.JsonValue) -> Matchers.Result {
+            if (predicate(actual)) {
+                Matchers.success
+            } else {
+                Matchers.failure("was " + Json.valueToText(actual))
+            }
+        },
     )
 }
 
-val isJsonNull = Matchers.Matcher(
+val isJsonNull = isJson(
     description = "null",
-    match = fun (actual: Json.JsonValue) -> Matchers.Result {
-        if (actual is Json.JsonNull) {
-            Matchers.success
-        } else {
-            Matchers.failure("was " + Json.valueToText(actual))
-        }
+    predicate = fun (actual: Json.JsonValue) -> Bool {
+        actual is Json.JsonNull
     },
 );
 
 fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
-    Matchers.Matcher(
+    isJson(
         description = if (value) { "true" } else { "false" },
-        match = fun (actual: Json.JsonValue) -> Matchers.Result {
-            val isSuccess = if (actual is Json.JsonBoolean) {
+        predicate = fun (actual: Json.JsonValue) -> Bool {
+            if (actual is Json.JsonBoolean) {
                 actual.value == value
             } else {
                 false
-            };
-            if (isSuccess) {
-                Matchers.success
-            } else {
-                Matchers.failure("was " + Json.valueToText(actual))
             }
         },
     )
