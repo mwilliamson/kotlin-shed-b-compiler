@@ -7,7 +7,7 @@ fun anything() -> Matcher[Any] {
     )
 }
 
-fun isInteger(value: Int) -> Matcher[Int] {
+fun isInt(value: Int) -> Matcher[Int] {
     describingMatcher(
         value,
         fun (integer: Int) => intToString(integer),

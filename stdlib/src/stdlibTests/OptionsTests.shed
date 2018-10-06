@@ -10,14 +10,14 @@ val testCases = Tests.suite(moduleName, list(
     Tests.testCase("default(x, some(y)) is y", fun () {
         Tests.assertThat(
             Options.default(1, Options.some(2)),
-            Matchers.isInteger(2)
+            Matchers.isInt(2)
         )
     }),
 
     Tests.testCase("default(x, none) is x", fun () {
         Tests.assertThat(
             Options.default(1, Options.none),
-            Matchers.isInteger(1)
+            Matchers.isInt(1)
         )
     }),
 
@@ -28,7 +28,7 @@ val testCases = Tests.suite(moduleName, list(
     Tests.testCase("map(f, some(x)) is some(f(x))", fun () {
         Tests.assertThat(
             Options.map(addOne, Options.some(42)),
-            Matchers.isSome(Matchers.isInteger(43))
+            Matchers.isSome(Matchers.isInt(43))
         )
     }),
 ));

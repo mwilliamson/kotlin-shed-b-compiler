@@ -6,7 +6,7 @@ import stdlib.Tests;
 fun codePointCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
     Tests.testCase(string, fun () {
         val count = Strings.codePointCount(string);
-        Tests.assertThat(count, Matchers.isInteger(expectedCount))
+        Tests.assertThat(count, Matchers.isInt(expectedCount))
     })
 }
 
