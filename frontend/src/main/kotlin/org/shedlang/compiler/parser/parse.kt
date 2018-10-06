@@ -936,10 +936,10 @@ internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterat
         }
         TokenType.KEYWORD_NOT -> {
             tokens.skip()
-            val expression = parseExpression(tokens, precedence = UNARY_PRECEDENCE)
+            val operand = parseExpression(tokens, precedence = UNARY_PRECEDENCE)
             return UnaryOperationNode(
                 operator = UnaryOperator.NOT,
-                expression = expression,
+                operand = operand,
                 source = source
             )
         }
