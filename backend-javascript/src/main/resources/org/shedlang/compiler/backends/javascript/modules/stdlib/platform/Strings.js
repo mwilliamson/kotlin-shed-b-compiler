@@ -2,7 +2,7 @@
 var Options = require("../Options");
 
 function charToHexString(char) {
-    return char.charCodeAt(0).toString(16).toUpperCase();
+    return char.codePointAt(0).toString(16).toUpperCase();
 }
 
 function charToString(char) {
