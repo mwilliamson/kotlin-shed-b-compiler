@@ -115,6 +115,24 @@ private object StringsCodePointCountValue: Callable() {
     }
 }
 
+private object StringsFirstCharValue: Callable() {
+    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+        val string = arguments[0].string()
+        val value = if (string.isEmpty()) {
+            optionsNoneReference
+        } else {
+            Call(
+                receiver = optionsSomeReference,
+                positionalArgumentExpressions = listOf(),
+                namedArgumentExpressions = listOf(),
+                positionalArgumentValues = listOf(CharacterValue(string.codePointAt(0))),
+                namedArgumentValues = listOf()
+            )
+        }
+        return EvaluationResult.pure(value)
+    }
+}
+
 private object StringsMapCharactersValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val func = arguments[0]
@@ -171,6 +189,7 @@ private val stringsModule = ModuleExpression(
         Identifier("charToHexString") to StringsCharToHexStringValue,
         Identifier("charToString") to StringsCharToStringValue,
         Identifier("codePointCount") to StringsCodePointCountValue,
+        Identifier("firstChar") to StringsFirstCharValue,
         Identifier("mapCharacters") to StringsMapCharactersValue,
         Identifier("repeat") to StringsRepeatValue,
         Identifier("replace") to StringsReplaceValue,

@@ -1,9 +1,11 @@
 import stdlib.Lists;
+import stdlib.Options;
 import stdlib.platform.Strings;
 
 val charToHexString = Strings.charToHexString;
 val charToString = Strings.charToString;
 val codePointCount = Strings.codePointCount;
+val firstChar = Strings.firstChar;
 val mapCharacters = Strings.mapCharacters;
 val replace = Strings.replace;
 
@@ -31,6 +33,18 @@ fun join(separator: String, elements: List[String]) -> String {
 
 fun left(count: Int, value: String) -> String {
     Strings.substring(0, count, value)
+}
+
+fun leftWhile(predicate: (Char) -> Bool, value: String) -> String {
+    // TODO: a better implementation
+    val takeNext = firstChar(value)
+        |> Options.map ~ (predicate)
+        |> Options.default ~ (false);
+    if (takeNext) {
+        left(1, value) + leftWhile(predicate, dropLeft(1, value))
+    } else {
+        ""
+    }
 }
 
 fun padLeft(desiredCodePointCount: Int, padding: Char, string: String) -> String {

@@ -193,11 +193,17 @@ fun nextToken(value: String) -> Token {
         token(TokenFalse(), "false")
     } else if (Strings.startsWith("null", value)) {
         token(TokenNull(), "null")
-    } else if (Strings.startsWith(" ", value)) {
-        // TODO: consume all whitespace in one token
-        // TODO: handle other whitespace characters
-        token(TokenWhitespace(), " ")
     } else {
-        token(TokenUnexpected(), Strings.left(1, value))
+        val whitespace = value |> Strings.leftWhile ~ (isWhitespace);
+        if (not Strings.isEmpty(whitespace)) {
+            token(TokenWhitespace(), whitespace)
+        } else {
+            token(TokenUnexpected(), Strings.left(1, value))
+        }
     }
+}
+
+fun isWhitespace(value: Char) -> Bool {
+    // TODO: handle other whitespace characters
+    value == ' '
 }

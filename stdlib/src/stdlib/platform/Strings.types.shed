@@ -1,6 +1,9 @@
+import stdlib.Options;
+
 val charToHexString: (Char) -> String;
 val charToString: (Char) -> String;
 val codePointCount: (String) -> Int;
+val firstChar: (String) -> Options.Option[Char];
 val mapCharacters: ((Char) -> String, String) -> String;
 val repeat: (String, Int) -> String;
 val replace: (String, String, String) -> String;
