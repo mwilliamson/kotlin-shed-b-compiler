@@ -91,4 +91,38 @@ class TypeCheckPartialCallTests {
             returnType = isIntType
         ))
     }
+
+    @Test
+    fun partialCallBindsEffectParameters() {
+        val functionReference = variableReference("f")
+        val variableReference = variableReference("x")
+        val node = partialCall(
+            receiver = functionReference,
+            positionalArguments = listOf(variableReference)
+        )
+
+        val effectParameter = effectParameter("E")
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(
+                staticParameters = listOf(effectParameter),
+                positionalParameters = listOf(
+                    functionType(effect = effectParameter),
+                    functionType(effect = effectParameter)
+                ),
+                effect = effectParameter,
+                returns = UnitType
+            ),
+            variableReference to functionType(effect = IoEffect)
+        ))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isFunctionType(
+            staticParameters = isSequence(),
+            positionalParameters = isSequence(
+                isFunctionType(effect = equalTo(IoEffect))
+            ),
+            effect = equalTo(IoEffect)
+        ))
+    }
 }

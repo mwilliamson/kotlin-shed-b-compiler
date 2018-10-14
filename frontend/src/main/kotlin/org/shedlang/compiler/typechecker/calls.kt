@@ -119,7 +119,6 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
             }
         }
 
-        // TODO: handle effect bindings
         val remainingPositionalParameters = receiverType.positionalParameters
             .drop(node.positionalArguments.size)
             .map { parameter -> replaceStaticValuesInType(parameter, bindings) }
@@ -131,7 +130,7 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
             positionalParameters = remainingPositionalParameters,
             namedParameters = remainingNamedParameters,
             returns = replaceStaticValuesInType(receiverType.returns, bindings),
-            effect = receiverType.effect
+            effect = replaceEffects(receiverType.effect, bindings)
         )
     } else {
         throw NotImplementedError()
