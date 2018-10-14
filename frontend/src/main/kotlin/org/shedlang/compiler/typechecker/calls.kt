@@ -111,12 +111,27 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
             context = context,
             allowMissing = true
         )
-        // TODO: handle bindings
-        return receiverType.copy(
-            positionalParameters = receiverType.positionalParameters.drop(node.positionalArguments.size),
-            namedParameters = receiverType.namedParameters.filterKeys { name ->
-                !node.namedArguments.any { argument -> argument.name == name }
+
+        for (staticParameter in receiverType.staticParameters) {
+            if (staticParameter !in bindings) {
+                // TODO: handle this more appropriately
+                throw Exception("unbound type parameter")
             }
+        }
+
+        // TODO: handle effect bindings
+        val remainingPositionalParameters = receiverType.positionalParameters
+            .drop(node.positionalArguments.size)
+            .map { parameter -> replaceStaticValuesInType(parameter, bindings) }
+        val remainingNamedParameters = receiverType.namedParameters
+            .filterKeys { name -> !node.namedArguments.any { argument -> argument.name == name } }
+            .mapValues { (name, parameter) -> replaceStaticValuesInType(parameter, bindings) }
+        return FunctionType(
+            staticParameters = listOf(),
+            positionalParameters = remainingPositionalParameters,
+            namedParameters = remainingNamedParameters,
+            returns = replaceStaticValuesInType(receiverType.returns, bindings),
+            effect = receiverType.effect
         )
     } else {
         throw NotImplementedError()

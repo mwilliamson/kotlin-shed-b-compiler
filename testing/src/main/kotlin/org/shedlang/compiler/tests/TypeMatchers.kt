@@ -8,11 +8,13 @@ import org.shedlang.compiler.types.*
 fun isType(type: Type): Matcher<Type> = equalTo(type)
 
 fun isFunctionType(
+    staticParameters: Matcher<List<StaticParameter>> = anything,
     positionalParameters: Matcher<List<Type>> = anything,
     returnType: Matcher<Type> = anything,
     namedParameters: Matcher<Map<Identifier, Type>> = anything,
     effect: Matcher<Effect> = anything
 ): Matcher<Type> = cast(allOf(
+    has(FunctionType::staticParameters, staticParameters),
     has(FunctionType::positionalParameters, positionalParameters),
     has(FunctionType::namedParameters, namedParameters),
     has(FunctionType::returns, returnType),

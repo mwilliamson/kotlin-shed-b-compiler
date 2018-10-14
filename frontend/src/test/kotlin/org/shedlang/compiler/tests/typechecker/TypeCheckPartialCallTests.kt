@@ -63,4 +63,32 @@ class TypeCheckPartialCallTests {
             returnType = isUnitType
         ))
     }
+
+    @Test
+    fun partialCallBindsTypeParameters() {
+        val functionReference = variableReference("f")
+        val node = partialCall(
+            receiver = functionReference,
+            positionalArguments = listOf(literalInt())
+        )
+
+        val typeParameter = invariantTypeParameter("T")
+
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(
+                staticParameters = listOf(typeParameter),
+                positionalParameters = listOf(typeParameter, typeParameter),
+                namedParameters = mapOf(Identifier("x") to typeParameter),
+                returns = typeParameter
+            )
+        ))
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isFunctionType(
+            staticParameters = isSequence(),
+            positionalParameters = isSequence(isIntType),
+            namedParameters = isMap(Identifier("x") to isIntType),
+            returnType = isIntType
+        ))
+    }
 }
