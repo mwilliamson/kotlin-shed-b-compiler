@@ -175,6 +175,13 @@ data class TypeParameter(
     override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    fun fresh(): TypeParameter {
+        return TypeParameter(
+            name = name,
+            variance = variance
+        )
+    }
 }
 
 data class EffectParameter(

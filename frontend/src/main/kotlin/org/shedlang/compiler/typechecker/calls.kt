@@ -183,10 +183,7 @@ private fun checkArgumentTypes(
         val typeParameters = staticParameters.filterIsInstance<TypeParameter>()
         val effectParameters = staticParameters.filterIsInstance<EffectParameter>()
 
-        val inferredTypeArguments = typeParameters.map({ parameter -> TypeParameter(
-            name = parameter.name,
-            variance = parameter.variance
-        ) })
+        val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
 
         val constraints = TypeConstraintSolver(
             // TODO: need to regenerate effect parameters in the same way as type positionalParameters
