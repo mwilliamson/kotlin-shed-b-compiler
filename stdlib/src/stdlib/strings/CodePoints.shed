@@ -4,13 +4,13 @@ import stdlib.platform.Strings;
 
 val charToHexString = Strings.charToHexString;
 val charToString = Strings.charToString;
-val codePointCount = Strings.codePointCount;
+val length = Strings.codePointCount;
 val firstChar = Strings.firstChar;
-val mapCharacters = Strings.mapCharacters;
+val mapCodePoints = Strings.mapCharacters;
 val replace = Strings.replace;
 
 fun dropLeft(count: Int, value: String) -> String {
-    Strings.substring(count, codePointCount(value), value)
+    Strings.substring(count, length(value), value)
 }
 
 fun isEmpty(value: String) -> Bool {
@@ -52,5 +52,5 @@ fun padLeft(desiredCodePointCount: Int, padding: Char, string: String) -> String
 }
 
 fun startsWith(prefix: String, value: String) -> Bool {
-    left(codePointCount(prefix), value) == prefix
+    left(length(prefix), value) == prefix
 }

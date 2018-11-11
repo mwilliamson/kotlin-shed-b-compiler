@@ -1,38 +1,38 @@
 import stdlib.Lists;
 import stdlib.Matchers;
-import stdlib.Strings;
+import stdlib.strings.CodePoints;
 import stdlib.Tests;
 
-fun codePointCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
+fun lengthTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
     Tests.testCase(string, fun () {
-        val count = Strings.codePointCount(string);
+        val count = CodePoints.length(string);
         Tests.assertThat(count, Matchers.isInt(expectedCount))
     })
 }
 
 val testCases = Tests.suite(moduleName, list(
-    Tests.suite("codePointCount", list(
-        codePointCountTestCase("", 0),
-        codePointCountTestCase("a", 1),
-        codePointCountTestCase("abc", 3),
-        codePointCountTestCase("☃", 1),
-        codePointCountTestCase("𝔼", 1),
-        codePointCountTestCase("☃𝔼☃𝔼☃", 5),
+    Tests.suite("length", list(
+        lengthTestCase("", 0),
+        lengthTestCase("a", 1),
+        lengthTestCase("abc", 3),
+        lengthTestCase("☃", 1),
+        lengthTestCase("𝔼", 1),
+        lengthTestCase("☃𝔼☃𝔼☃", 5),
     )),
 
     Tests.suite("join", list(
         Tests.testCase("empty iterable is joined to empty string", fun () {
-            val result = Strings.join(", ", list());
+            val result = CodePoints.join(", ", list());
             Tests.assertThat(result, Matchers.isString(""))
         }),
 
         Tests.testCase("singleton iterable is joined without separator", fun () {
-            val result = Strings.join(", ", list("apple"));
+            val result = CodePoints.join(", ", list("apple"));
             Tests.assertThat(result, Matchers.isString("apple"))
         }),
 
         Tests.testCase("iterable with multiple values is joined with separator", fun () {
-            val result = Strings.join(", ", list("apple", "banana", "coconut"));
+            val result = CodePoints.join(", ", list("apple", "banana", "coconut"));
             Tests.assertThat(result, Matchers.isString("apple, banana, coconut"))
         }),
     )),

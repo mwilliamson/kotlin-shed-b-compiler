@@ -1,6 +1,6 @@
 import stdlib.Lists;
 import stdlib.Sequences;
-import stdlib.Strings;
+import stdlib.strings.CodePoints;
 
 
 union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
@@ -62,11 +62,11 @@ val null = JsonNull();
 fun valueToText(value: JsonValue) -> String {
     when (value) {
         is JsonObject {
-            val properties = Strings.join(",", Lists.map(propertyToText, value.properties));
+            val properties = CodePoints.join(",", Lists.map(propertyToText, value.properties));
             "{" + properties + "}"
         }
         is JsonArray {
-            val elements = Strings.join(",", Lists.map(valueToText, value.elements));
+            val elements = CodePoints.join(",", Lists.map(valueToText, value.elements));
             "[" + elements +  "]"
         }
         is JsonNumber {
@@ -93,7 +93,7 @@ fun propertyToText(property: JsonProperty) -> String {
 }
 
 fun jsonStringToText(value: String) -> String {
-    val characters = Strings.mapCharacters(jsonStringCharacterToText, value);
+    val characters = CodePoints.mapCodePoints(jsonStringCharacterToText, value);
     "\"" + characters + "\""
 }
 
@@ -109,10 +109,10 @@ fun jsonStringCharacterToText(character: Char) -> String {
     } else if (character == '\r') {
         "\\r"
     } else if (character < '\u{20}') {
-        val hexString = Strings.charToHexString(character);
-        "\\u" + Strings.padLeft(4, '0', hexString)
+        val hexString = CodePoints.charToHexString(character);
+        "\\u" + CodePoints.padLeft(4, '0', hexString)
     } else {
-        Strings.charToString(character)
+        CodePoints.charToString(character)
     }
 }
 
@@ -172,11 +172,11 @@ fun token(tokenType: TokenType, value: String) -> Token {
 fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
     Sequences.Sequence(
         next = fun () -> Sequences.SequenceIterator[Token, Pure] {
-            if (Strings.isEmpty(value)) {
+            if (CodePoints.isEmpty(value)) {
                 Sequences.end
             } else {
                 val token = nextToken(value);
-                val remainder = Strings.dropLeft(Strings.codePointCount(token.value), value);
+                val remainder = CodePoints.dropLeft(CodePoints.length(token.value), value);
                 Sequences.SequenceItem(
                     head = token,
                     tail = tokenise(remainder),
@@ -187,18 +187,18 @@ fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
 }
 
 fun nextToken(value: String) -> Token {
-    if (Strings.startsWith("true", value)) {
+    if (CodePoints.startsWith("true", value)) {
         token(TokenTrue(), "true")
-    } else if (Strings.startsWith("false", value)) {
+    } else if (CodePoints.startsWith("false", value)) {
         token(TokenFalse(), "false")
-    } else if (Strings.startsWith("null", value)) {
+    } else if (CodePoints.startsWith("null", value)) {
         token(TokenNull(), "null")
     } else {
-        val whitespace = value |> Strings.leftWhile ~ (isWhitespace);
-        if (not Strings.isEmpty(whitespace)) {
+        val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
+        if (not CodePoints.isEmpty(whitespace)) {
             token(TokenWhitespace(), whitespace)
         } else {
-            token(TokenUnexpected(), Strings.left(1, value))
+            token(TokenUnexpected(), CodePoints.left(1, value))
         }
     }
 }
