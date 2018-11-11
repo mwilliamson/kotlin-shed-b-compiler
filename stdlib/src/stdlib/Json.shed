@@ -97,22 +97,22 @@ fun jsonStringToText(value: String) -> String {
     "\"" + characters + "\""
 }
 
-fun jsonStringCharacterToText(character: Char) -> String {
-    if (character == '\\') {
+fun jsonStringCharacterToText(codePoint: Char) -> String {
+    if (codePoint == '\\') {
         "\\\\"
-    } else if (character == '\"') {
+    } else if (codePoint == '\"') {
         "\\\""
-    } else if (character == '\t') {
+    } else if (codePoint == '\t') {
         "\\t"
-    } else if (character == '\n') {
+    } else if (codePoint == '\n') {
         "\\n"
-    } else if (character == '\r') {
+    } else if (codePoint == '\r') {
         "\\r"
-    } else if (character < '\u{20}') {
-        val hexString = CodePoints.charToHexString(character);
+    } else if (codePoint < '\u{20}') {
+        val hexString = CodePoints.codePointToHexString(codePoint);
         "\\u" + CodePoints.padLeft(4, '0', hexString)
     } else {
-        CodePoints.charToString(character)
+        CodePoints.codePointToString(codePoint)
     }
 }
 

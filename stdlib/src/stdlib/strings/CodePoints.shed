@@ -2,10 +2,10 @@ import stdlib.Lists;
 import stdlib.Options;
 import stdlib.platform.Strings;
 
-val charToHexString = Strings.charToHexString;
-val charToString = Strings.charToString;
+val codePointToHexString = Strings.charToHexString;
+val codePointToString = Strings.charToString;
 val length = Strings.codePointCount;
-val firstChar = Strings.firstChar;
+val firstCodePoint = Strings.firstChar;
 val mapCodePoints = Strings.mapCharacters;
 val replace = Strings.replace;
 
@@ -37,7 +37,7 @@ fun left(count: Int, value: String) -> String {
 
 fun leftWhile(predicate: (Char) -> Bool, value: String) -> String {
     // TODO: a better implementation
-    val takeNext = firstChar(value)
+    val takeNext = firstCodePoint(value)
         |> Options.map ~ (predicate)
         |> Options.default ~ (false);
     if (takeNext) {
@@ -47,8 +47,8 @@ fun leftWhile(predicate: (Char) -> Bool, value: String) -> String {
     }
 }
 
-fun padLeft(desiredCodePointCount: Int, padding: Char, string: String) -> String {
-    Strings.repeat(charToString(padding), desiredCodePointCount - Strings.codePointCount(string)) + string
+fun padLeft(desiredLength: Int, padding: Char, string: String) -> String {
+    Strings.repeat(codePointToString(padding), desiredLength - length(string)) + string
 }
 
 fun startsWith(prefix: String, value: String) -> Bool {
