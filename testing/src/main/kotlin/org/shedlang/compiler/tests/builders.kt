@@ -111,7 +111,7 @@ fun literalBool(
 ) = BooleanLiteralNode(value, source = source)
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value.toBigInteger(), anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
-fun literalChar(value: Char = '!') = CharacterLiteralNode(value.toInt(), anySource())
+fun literalCodePoint(value: Char = '!') = CodePointLiteralNode(value.toInt(), anySource())
 fun symbolName(name: String) = SymbolNode(name, anySource())
 fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 

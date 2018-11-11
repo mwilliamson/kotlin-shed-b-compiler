@@ -7,8 +7,8 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.tests.isIdentifier
-import org.shedlang.compiler.parser.InvalidCharacter
-import org.shedlang.compiler.parser.InvalidCharacterLiteral
+import org.shedlang.compiler.parser.InvalidCodePoint
+import org.shedlang.compiler.parser.InvalidCodePointLiteral
 import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
 import org.shedlang.compiler.tests.allOf
@@ -73,11 +73,11 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("\"\\u001B\"") },
             throws(allOf(
-                has(InvalidCharacter::source, isStringSource(
+                has(InvalidCodePoint::source, isStringSource(
                     contents = "\"\\u001B\"",
                     index = 3
                 )),
-                has(InvalidCharacter::message, equalTo("Expected opening brace"))
+                has(InvalidCodePoint::message, equalTo("Expected opening brace"))
             ))
         )
     }
@@ -87,11 +87,11 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("\"\\u{1B\"") },
             throws(allOf(
-                has(InvalidCharacter::source, isStringSource(
+                has(InvalidCodePoint::source, isStringSource(
                     contents = "\"\\u{1B\"",
                     index = 3
                 )),
-                has(InvalidCharacter::message, equalTo("Could not find closing brace"))
+                has(InvalidCodePoint::message, equalTo("Could not find closing brace"))
             ))
         )
     }
@@ -101,60 +101,60 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("  \"\\u001B\"") },
             throws(allOf(
-                has(InvalidCharacter::source, isStringSource(
+                has(InvalidCodePoint::source, isStringSource(
                     contents = "  \"\\u001B\"",
                     index = 5
                 )),
-                has(InvalidCharacter::message, equalTo("Expected opening brace"))
+                has(InvalidCodePoint::message, equalTo("Expected opening brace"))
             ))
         )
     }
 
     @TestFactory
-    fun canParseCharacterLiteral(): List<DynamicTest> {
+    fun canParseCodePointLiteral(): List<DynamicTest> {
         fun testCase(name: String, source: String, value: Int): DynamicTest {
             return DynamicTest.dynamicTest(name, {
                 val node = parsePrimaryExpression(source)
-                assertThat(node, cast(has(CharacterLiteralNode::value, equalTo(value))))
+                assertThat(node, cast(has(CodePointLiteralNode::value, equalTo(value))))
             })
         }
 
         return listOf(
-            testCase("normal character", "'a'", 'a'.toInt()),
+            testCase("normal code point", "'a'", 'a'.toInt()),
             testCase("escaped backslash is decoded", "'\\\\'", '\\'.toInt()),
             testCase("escaped single-quote is decoded", "'\\''", '\''.toInt()),
             testCase("escaped tab is decoded", "'\\t'", '\t'.toInt()),
             testCase("escaped newline is decoded", "'\\n'", '\n'.toInt()),
             testCase("escaped carriage return is decoded", "'\\r'", '\r'.toInt()),
             testCase("hexadecimal unicode escape sequence is decoded", "'\\u{1B}'", '\u001B'.toInt()),
-            testCase("character outside of BMP", "'\uD835\uDD3C'", 0x1D53C)
+            testCase("code point outside of BMP", "'\uD835\uDD3C'", 0x1D53C)
         )
     }
 
     @Test
-    fun whenUnicodeEscapeSequenceInCharacterIsMissingOpeningBraceThenErrorIsThrown() {
+    fun whenUnicodeEscapeSequenceInCodePointIsMissingOpeningBraceThenErrorIsThrown() {
         assertThat(
             { parsePrimaryExpression("'\\u001B'") },
             throws(allOf(
-                has(InvalidCharacter::source, isStringSource(
+                has(InvalidCodePoint::source, isStringSource(
                     contents = "'\\u001B'",
                     index = 3
                 )),
-                has(InvalidCharacter::message, equalTo("Expected opening brace"))
+                has(InvalidCodePoint::message, equalTo("Expected opening brace"))
             ))
         )
     }
 
     @Test
-    fun whenCharacterLiteralHasMultipleCharactersThenErrorIsThrown() {
+    fun whenCodePointLiteralHasMultipleCodePointsThenErrorIsThrown() {
         assertThat(
             { parsePrimaryExpression("'ab'") },
             throws(allOf(
-                has(InvalidCharacterLiteral::source, isStringSource(
+                has(InvalidCodePointLiteral::source, isStringSource(
                     contents = "'ab'",
                     index = 0
                 )),
-                has(InvalidCharacterLiteral::message, equalTo("Character literal has 2 characters"))
+                has(InvalidCodePointLiteral::message, equalTo("Code point literal has 2 code points"))
             ))
         )
     }

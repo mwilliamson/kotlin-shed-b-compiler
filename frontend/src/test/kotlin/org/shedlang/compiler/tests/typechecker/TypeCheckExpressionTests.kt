@@ -48,7 +48,7 @@ class TypeCheckExpressionTests {
 
     @Test
     fun characterLiteralIsTypedAsChar() {
-        val node = literalChar()
+        val node = literalCodePoint()
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(CharType)))
     }
@@ -177,7 +177,7 @@ class TypeCheckExpressionTests {
             BinaryOperator.GREATER_THAN,
             BinaryOperator.GREATER_THAN_OR_EQUAL
         ).map { operator -> DynamicTest.dynamicTest("char $operator operation returns boolean", {
-            val node = binaryOperation(operator, literalChar(), literalChar())
+            val node = binaryOperation(operator, literalCodePoint(), literalCodePoint())
             val type = inferType(node, emptyTypeContext())
             assertThat(type, cast(isBoolType))
         }) }

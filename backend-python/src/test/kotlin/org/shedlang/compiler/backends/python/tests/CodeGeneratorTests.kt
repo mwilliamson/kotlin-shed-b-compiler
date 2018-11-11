@@ -550,7 +550,7 @@ class CodeGeneratorTests {
 
     @Test
     fun characterLiteralGeneratesStringLiteral() {
-        val shed = literalChar('!')
+        val shed = literalCodePoint('!')
         val node = generateCode(shed)
         assertThat(node, isGeneratedExpression(isPythonStringLiteral("!")))
     }

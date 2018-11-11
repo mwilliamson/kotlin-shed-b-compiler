@@ -33,7 +33,7 @@ class InterpreterTests {
 
     @Test
     fun characterNodeEvaluatesToCharacterValue() {
-        assertThat(fullyEvaluate(literalChar('!')), isPureResult(equalTo(CharacterValue('!'.toInt()))))
+        assertThat(fullyEvaluate(literalCodePoint('!')), isPureResult(equalTo(CharacterValue('!'.toInt()))))
     }
 
     @Test

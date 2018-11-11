@@ -140,7 +140,7 @@ class TokeniserTests {
         ).map { string ->
             DynamicTest.dynamicTest(string, {
                 assertEquals(
-                    listOf(Token(0, TokenType.CHARACTER, string)),
+                    listOf(Token(0, TokenType.CODE_POINT, string)),
                     tokenise(string)
                 )
             })
