@@ -64,7 +64,8 @@ class ParsePrimaryExpressionTests {
             testCase("escaped tabs are decoded", "\"\\t\"", "\t"),
             testCase("escaped newlines are decoded", "\"\\n\"", "\n"),
             testCase("escaped carriage returns are decoded", "\"\\r\"", "\r"),
-            testCase("hexadecimal unicode escape sequences are decoded", "\"\\u{1B}\"", "\u001B")
+            testCase("hexadecimal unicode escape sequences are decoded", "\"\\u{1B}\"", "\u001B"),
+            testCase("code point outside of BMP", "\"\uD835\uDD3C\"", "\uD835\uDD3C")
         )
     }
 
