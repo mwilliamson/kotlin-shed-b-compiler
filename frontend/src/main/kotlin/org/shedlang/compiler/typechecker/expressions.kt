@@ -21,7 +21,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: BooleanLiteralNode) = BoolType
         override fun visit(node: IntegerLiteralNode) = IntType
         override fun visit(node: StringLiteralNode) = StringType
-        override fun visit(node: CodePointLiteralNode) = CharType
+        override fun visit(node: CodePointLiteralNode) = CodePointType
         // TODO: handle missing module name
         override fun visit(node: SymbolNode): SymbolType {
             return SymbolType(Symbol(context.moduleName!!.map(::Identifier), node.name))
@@ -99,11 +99,11 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
         BinaryOperationType(BinaryOperator.EQUALS, StringType, StringType) -> BoolType
         BinaryOperationType(BinaryOperator.ADD, StringType, StringType) -> StringType
 
-        BinaryOperationType(BinaryOperator.EQUALS, CharType, CharType) -> BoolType
-        BinaryOperationType(BinaryOperator.LESS_THAN, CharType, CharType) -> BoolType
-        BinaryOperationType(BinaryOperator.LESS_THAN_OR_EQUAL, CharType, CharType) -> BoolType
-        BinaryOperationType(BinaryOperator.GREATER_THAN, CharType, CharType) -> BoolType
-        BinaryOperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CharType, CharType) -> BoolType
+        BinaryOperationType(BinaryOperator.EQUALS, CodePointType, CodePointType) -> BoolType
+        BinaryOperationType(BinaryOperator.LESS_THAN, CodePointType, CodePointType) -> BoolType
+        BinaryOperationType(BinaryOperator.LESS_THAN_OR_EQUAL, CodePointType, CodePointType) -> BoolType
+        BinaryOperationType(BinaryOperator.GREATER_THAN, CodePointType, CodePointType) -> BoolType
+        BinaryOperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CodePointType, CodePointType) -> BoolType
 
         BinaryOperationType(BinaryOperator.EQUALS, BoolType, BoolType) -> BoolType
 

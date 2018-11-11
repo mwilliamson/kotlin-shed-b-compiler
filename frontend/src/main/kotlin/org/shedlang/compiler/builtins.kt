@@ -14,7 +14,7 @@ private val coreBuiltins = listOf(
     builtinType("Unit", UnitType),
     builtinType("Int", IntType),
     builtinType("String", StringType),
-    builtinType("Char", CharType),
+    builtinType("CodePoint", CodePointType),
     builtinType("Bool", BoolType),
     builtinType("List", ListType),
     builtinType("Type", metaType),

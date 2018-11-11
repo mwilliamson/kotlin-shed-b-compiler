@@ -131,7 +131,7 @@ class TokeniserTests {
     }
 
     @TestFactory
-    fun charactersAreTokenised(): List<DynamicTest> {
+    fun codePointsAreTokenised(): List<DynamicTest> {
         return listOf(
             "'a'",
             "'\\n'",

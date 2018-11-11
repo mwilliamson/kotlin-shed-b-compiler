@@ -98,15 +98,15 @@ internal data class BinaryOperation(
                     } else if (operator == BinaryOperator.ADD && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(StringValue(left.value + right.value))
 
-                    } else if (operator == BinaryOperator.EQUALS && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.EQUALS && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
-                    } else if (operator == BinaryOperator.LESS_THAN && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.LESS_THAN && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value < right.value))
-                    } else if (operator == BinaryOperator.LESS_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.LESS_THAN_OR_EQUAL && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value <= right.value))
-                    } else if (operator == BinaryOperator.GREATER_THAN && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.GREATER_THAN && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value > right.value))
-                    } else if (operator == BinaryOperator.GREATER_THAN_OR_EQUAL && left is CharacterValue && right is CharacterValue) {
+                    } else if (operator == BinaryOperator.GREATER_THAN_OR_EQUAL && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value >= right.value))
 
                     } else if (operator == BinaryOperator.EQUALS && left is SymbolValue && right is SymbolValue) {
@@ -232,7 +232,7 @@ internal fun InterpreterValue.string(): String {
     return (this as StringValue).value
 }
 
-internal data class CharacterValue(val value: Int): InterpreterValue()
+internal data class CodePointValue(val value: Int): InterpreterValue()
 
 internal data class SymbolValue(private val value: Symbol): InterpreterValue()
 

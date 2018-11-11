@@ -47,10 +47,10 @@ class TypeCheckExpressionTests {
     }
 
     @Test
-    fun characterLiteralIsTypedAsChar() {
+    fun codePointLiteralIsTypedAsCodePoint() {
         val node = literalCodePoint()
         val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(equalTo(CharType)))
+        assertThat(type, cast(equalTo(CodePointType)))
     }
 
     @Test
@@ -169,7 +169,7 @@ class TypeCheckExpressionTests {
     }
 
     @TestFactory
-    fun charComparisonOperationReturnsBoolean(): List<DynamicTest> {
+    fun codePointComparisonOperationReturnsBoolean(): List<DynamicTest> {
         return listOf(
             BinaryOperator.EQUALS,
             BinaryOperator.LESS_THAN,

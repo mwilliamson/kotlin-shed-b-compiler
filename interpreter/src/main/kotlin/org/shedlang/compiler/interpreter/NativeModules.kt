@@ -93,14 +93,14 @@ private val listsModule = ModuleExpression(
 
 private object StringsCodePointToHexStringValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
-        val character = arguments[0] as CharacterValue
+        val character = arguments[0] as CodePointValue
         return EvaluationResult.pure(StringValue(character.value.toString(16).toUpperCase()))
     }
 }
 
 private object StringsCodePointToStringValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
-        val character = arguments[0] as CharacterValue
+        val character = arguments[0] as CodePointValue
         val builder = StringBuilder()
         builder.appendCodePoint(character.value)
         return EvaluationResult.pure(StringValue(builder.toString()))
@@ -125,7 +125,7 @@ private object StringsFirstCodePointValue: Callable() {
                 receiver = optionsSomeReference,
                 positionalArgumentExpressions = listOf(),
                 namedArgumentExpressions = listOf(),
-                positionalArgumentValues = listOf(CharacterValue(string.codePointAt(0))),
+                positionalArgumentValues = listOf(CodePointValue(string.codePointAt(0))),
                 namedArgumentValues = listOf()
             )
         }
@@ -142,7 +142,7 @@ private object StringsMapCodePointsValue: Callable() {
         } else {
             return EvaluationResult.pure(BinaryOperation(
                 BinaryOperator.ADD,
-                call(func, positionalArgumentExpressions = listOf(CharacterValue(string.codePointAt(0)))),
+                call(func, positionalArgumentExpressions = listOf(CodePointValue(string.codePointAt(0)))),
                 call(
                     StringsMapCodePointsValue,
                     positionalArgumentValues = listOf(

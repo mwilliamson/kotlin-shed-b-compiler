@@ -185,75 +185,75 @@ class EvaluateBinaryOperationTests {
     }
 
     @Test
-    fun equalityOfCharacters() {
-        val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CharacterValue(90), CharacterValue(90)))
+    fun equalityOfCodePoints() {
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CodePointValue(90), CodePointValue(90)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
 
-        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CharacterValue(90), CharacterValue(91)))
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CodePointValue(90), CodePointValue(91)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
     }
 
     @Test
-    fun lessThanOperatorForCharacters() {
+    fun lessThanOperatorForCodePoints() {
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CodePointValue(89), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CodePointValue(90), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN, CodePointValue(91), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
     }
 
     @Test
-    fun lessThanOrEqualOperatorForCharacters() {
+    fun lessThanOrEqualOperatorForCodePoints() {
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CodePointValue(89), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CodePointValue(90), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, CodePointValue(91), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
     }
 
     @Test
-    fun greaterThanOperatorForCharacters() {
+    fun greaterThanOperatorForCodePoints() {
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CodePointValue(89), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CodePointValue(90), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN, CodePointValue(91), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
     }
 
     @Test
-    fun greaterThanOrEqualOperatorForCharacters() {
+    fun greaterThanOrEqualOperatorForCodePoints() {
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CharacterValue(89), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CodePointValue(89), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(false)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CharacterValue(90), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CodePointValue(90), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
         assertThat(
-            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CharacterValue(91), CharacterValue(90))),
+            evaluate(BinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, CodePointValue(91), CodePointValue(90))),
             isPureResult(equalTo(BooleanValue(true)))
         )
     }

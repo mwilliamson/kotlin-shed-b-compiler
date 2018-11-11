@@ -113,7 +113,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         override fun visit(node: BooleanLiteralNode) = BooleanValue(node.value)
         override fun visit(node: IntegerLiteralNode) = IntegerValue(node.value)
         override fun visit(node: StringLiteralNode) = StringValue(node.value)
-        override fun visit(node: CodePointLiteralNode) = CharacterValue(node.value)
+        override fun visit(node: CodePointLiteralNode) = CodePointValue(node.value)
         override fun visit(node: SymbolNode) = SymbolValue(Symbol(context.moduleName, node.name))
         override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)
 

@@ -93,11 +93,11 @@ fun propertyToText(property: JsonProperty) -> String {
 }
 
 fun jsonStringToText(value: String) -> String {
-    val characters = CodePoints.mapCodePoints(jsonStringCharacterToText, value);
+    val characters = CodePoints.mapCodePoints(jsonStringCodePointToText, value);
     "\"" + characters + "\""
 }
 
-fun jsonStringCharacterToText(codePoint: Char) -> String {
+fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
     if (codePoint == '\\') {
         "\\\\"
     } else if (codePoint == '\"') {
@@ -203,7 +203,7 @@ fun nextToken(value: String) -> Token {
     }
 }
 
-fun isWhitespace(value: Char) -> Bool {
+fun isWhitespace(value: CodePoint) -> Bool {
     // TODO: handle other whitespace characters
     value == ' '
 }

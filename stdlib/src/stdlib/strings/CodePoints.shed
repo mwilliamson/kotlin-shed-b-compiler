@@ -35,7 +35,7 @@ fun left(count: Int, value: String) -> String {
     Strings.substring(0, count, value)
 }
 
-fun leftWhile(predicate: (Char) -> Bool, value: String) -> String {
+fun leftWhile(predicate: (CodePoint) -> Bool, value: String) -> String {
     // TODO: a better implementation
     val takeNext = firstCodePoint(value)
         |> Options.map ~ (predicate)
@@ -47,7 +47,7 @@ fun leftWhile(predicate: (Char) -> Bool, value: String) -> String {
     }
 }
 
-fun padLeft(desiredLength: Int, padding: Char, string: String) -> String {
+fun padLeft(desiredLength: Int, padding: CodePoint, string: String) -> String {
     Strings.repeat(codePointToString(padding), desiredLength - length(string)) + string
 }
 

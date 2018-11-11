@@ -66,8 +66,8 @@ object BoolType : BasicType {
 object IntType : BasicType{
     override val shortDescription = "Int"
 }
-object CharType : BasicType {
-    override val shortDescription = "Char"
+object CodePointType : BasicType {
+    override val shortDescription = "CodePoint"
 }
 object StringType : BasicType{
     override val shortDescription = "String"
@@ -500,7 +500,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             returns = replaceStaticValuesInType(type.returns, bindings),
             staticParameters = type.staticParameters
         )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CharType || type is AnyType || type is SymbolType) {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CodePointType || type is AnyType || type is SymbolType) {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)

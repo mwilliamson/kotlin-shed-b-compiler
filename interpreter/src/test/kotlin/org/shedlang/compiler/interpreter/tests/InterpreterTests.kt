@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
-import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 
@@ -32,8 +32,8 @@ class InterpreterTests {
     }
 
     @Test
-    fun characterNodeEvaluatesToCharacterValue() {
-        assertThat(fullyEvaluate(literalCodePoint('!')), isPureResult(equalTo(CharacterValue('!'.toInt()))))
+    fun codePointNodeEvaluatesToChodePointValue() {
+        assertThat(fullyEvaluate(literalCodePoint('!')), isPureResult(equalTo(CodePointValue('!'.toInt()))))
     }
 
     @Test
