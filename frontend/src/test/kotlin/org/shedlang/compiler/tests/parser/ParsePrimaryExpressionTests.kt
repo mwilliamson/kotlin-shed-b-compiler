@@ -65,6 +65,7 @@ class ParsePrimaryExpressionTests {
             testCase("escaped newlines are decoded", "\"\\n\"", "\n"),
             testCase("escaped carriage returns are decoded", "\"\\r\"", "\r"),
             testCase("hexadecimal unicode escape sequences are decoded", "\"\\u{1B}\"", "\u001B"),
+            testCase("hexadecimal unicode escape sequences outside of BMP are decoded", "\"\\u{1D53C}\"", "\uD835\uDD3C"),
             testCase("code point outside of BMP", "\"\uD835\uDD3C\"", "\uD835\uDD3C")
         )
     }
@@ -128,6 +129,7 @@ class ParsePrimaryExpressionTests {
             testCase("escaped newline is decoded", "'\\n'", '\n'.toInt()),
             testCase("escaped carriage return is decoded", "'\\r'", '\r'.toInt()),
             testCase("hexadecimal unicode escape sequence is decoded", "'\\u{1B}'", '\u001B'.toInt()),
+            testCase("hexadecimal unicode escape sequence outside of BMP is decoded", "'\\u{1D53C}'", 0x1D53C),
             testCase("code point outside of BMP", "'\uD835\uDD3C'", 0x1D53C)
         )
     }

@@ -992,7 +992,7 @@ private fun decodeEscapeSequence(value: CharBuffer, source: StringSource): Strin
             }
             val hex = value.subSequence(startIndex, endIndex).toString()
             val codePoint = hex.toInt(16)
-            decoded.append(codePoint.toChar())
+            decoded.appendCodePoint(codePoint)
             lastIndex = endIndex + 1
         } else {
             decoded.append(escapeSequence(code, source = source))
