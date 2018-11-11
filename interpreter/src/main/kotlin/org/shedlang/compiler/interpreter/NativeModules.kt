@@ -91,14 +91,14 @@ private val listsModule = ModuleExpression(
     )
 )
 
-private object StringsCharToHexStringValue: Callable() {
+private object StringsCodePointToHexStringValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val character = arguments[0] as CharacterValue
         return EvaluationResult.pure(StringValue(character.value.toString(16).toUpperCase()))
     }
 }
 
-private object StringsCharToStringValue: Callable() {
+private object StringsCodePointToStringValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val character = arguments[0] as CharacterValue
         val builder = StringBuilder()
@@ -115,7 +115,7 @@ private object StringsCodePointCountValue: Callable() {
     }
 }
 
-private object StringsFirstCharValue: Callable() {
+private object StringsFirstCodePointValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val string = arguments[0].string()
         val value = if (string.isEmpty()) {
@@ -133,7 +133,7 @@ private object StringsFirstCharValue: Callable() {
     }
 }
 
-private object StringsMapCharactersValue: Callable() {
+private object StringsMapCodePointsValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val func = arguments[0]
         val string = arguments[1].string()
@@ -144,7 +144,7 @@ private object StringsMapCharactersValue: Callable() {
                 BinaryOperator.ADD,
                 call(func, positionalArgumentExpressions = listOf(CharacterValue(string.codePointAt(0)))),
                 call(
-                    StringsMapCharactersValue,
+                    StringsMapCodePointsValue,
                     positionalArgumentValues = listOf(
                         func,
                         StringValue(string.substring(string.offsetByCodePoints(0, 1)))
@@ -186,11 +186,11 @@ private object StringsSubstringValue: Callable() {
 private val stringsModule = ModuleExpression(
     fieldExpressions = listOf(),
     fieldValues = listOf(
-        Identifier("charToHexString") to StringsCharToHexStringValue,
-        Identifier("charToString") to StringsCharToStringValue,
+        Identifier("codePointToHexString") to StringsCodePointToHexStringValue,
+        Identifier("codePointToString") to StringsCodePointToStringValue,
         Identifier("codePointCount") to StringsCodePointCountValue,
-        Identifier("firstChar") to StringsFirstCharValue,
-        Identifier("mapCharacters") to StringsMapCharactersValue,
+        Identifier("firstCodePoint") to StringsFirstCodePointValue,
+        Identifier("mapCodePoints") to StringsMapCodePointsValue,
         Identifier("repeat") to StringsRepeatValue,
         Identifier("replace") to StringsReplaceValue,
         Identifier("substring") to StringsSubstringValue

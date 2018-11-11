@@ -1,11 +1,11 @@
 "use strict";
 var Options = require("../Options");
 
-function charToHexString(char) {
+function codePointToHexString(char) {
     return char.codePointAt(0).toString(16).toUpperCase();
 }
 
-function charToString(char) {
+function codePointToString(char) {
     return char;
 }
 
@@ -17,7 +17,7 @@ function codePointCount(string) {
     return count;
 }
 
-function firstChar(string) {
+function firstCodePoint(string) {
     if (string.length === 0) {
         return Options.none;
     } else {
@@ -25,7 +25,7 @@ function firstChar(string) {
     }
 }
 
-function mapCharacters(func, string) {
+function mapCodePoints(func, string) {
     let result = "";
     for (const char of string) {
         result += func(char);
@@ -49,11 +49,11 @@ function substring(startIndex, endIndex, string) {
     return string.substring(startIndex, endIndex);
 }
 
-exports.charToHexString = charToHexString;
-exports.charToString = charToString;
+exports.codePointToHexString = codePointToHexString;
+exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
-exports.firstChar = firstChar;
-exports.mapCharacters = mapCharacters;
+exports.firstCodePoint = firstCodePoint;
+exports.mapCodePoints = mapCodePoints;
 exports.repeat = repeat;
 exports.replace = replace;
 exports.substring = substring;

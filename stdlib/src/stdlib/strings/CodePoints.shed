@@ -2,11 +2,11 @@ import stdlib.Lists;
 import stdlib.Options;
 import stdlib.platform.Strings;
 
-val codePointToHexString = Strings.charToHexString;
-val codePointToString = Strings.charToString;
+val codePointToHexString = Strings.codePointToHexString;
+val codePointToString = Strings.codePointToString;
 val length = Strings.codePointCount;
-val firstCodePoint = Strings.firstChar;
-val mapCodePoints = Strings.mapCharacters;
+val firstCodePoint = Strings.firstCodePoint;
+val mapCodePoints = Strings.mapCodePoints;
 val replace = Strings.replace;
 
 fun dropLeft(count: Int, value: String) -> String {
