@@ -216,6 +216,5 @@ fun nextToken(value: String) -> Token {
 }
 
 fun isWhitespace(value: CodePoint) -> Bool {
-    // TODO: handle other whitespace characters
-    value == ' '
+    value == ' ' || value == '\n' || value == '\r' || value == '\t'
 }

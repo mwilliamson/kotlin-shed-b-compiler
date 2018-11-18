@@ -172,7 +172,7 @@ val testCases = Tests.suite(moduleName, list(
         }),
 
         Tests.testCase("whitespace is ignored", fun () {
-            val text = "  false";
+            val text = "  \n\r\tfalse";
             val value = Json.textToValue(text);
             Tests.assertThat(value, isJsonBoolean(false))
         }),
