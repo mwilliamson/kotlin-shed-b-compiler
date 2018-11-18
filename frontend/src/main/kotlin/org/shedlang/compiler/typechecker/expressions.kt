@@ -132,7 +132,7 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 }
 
 private fun evalTypeCondition(
-    expressionType: Type,
+    expressionType: UnionType,
     targetTypeNode: StaticNode,
     context: TypeContext
 ): Type {
@@ -142,11 +142,12 @@ private fun evalTypeCondition(
     // should make sure no other instantiations of that generic type
     // are possible e.g. if the expression has type Cons[T] | Nil,
     // then checking the type to be Cons[U] is valid iff T <: U
-    if (findDiscriminator(sourceType = expressionType, targetType = targetType) == null) {
+    val discriminator = findDiscriminator(sourceType = expressionType, targetType = targetType)
+    if (discriminator == null) {
         throw CouldNotFindDiscriminator(sourceType = expressionType, targetType = targetType, source = targetTypeNode.source)
     }
 
-    return targetType
+    return discriminator.targetType
 }
 
 private fun inferFieldAccessType(node: FieldAccessNode, context: TypeContext): Type {

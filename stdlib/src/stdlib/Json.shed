@@ -198,7 +198,7 @@ fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
 fun nextToken(value: String) -> Token {
     val maybeFirst = CodePoints.firstCodePoint(value);
     when (maybeFirst) {
-        is Options.Some[CodePoint] {
+        is Options.Some {
             val first = maybeFirst.value;
             if (first == 't' && CodePoints.startsWith("true", value)) {
                 token(TokenTrue(), "true")

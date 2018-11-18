@@ -31,9 +31,6 @@ sealed class Module {
 interface Types {
     fun typeOf(node: ExpressionNode): Type
     fun typeOf(node: StaticNode): Type
-    fun rawTypeValue(node: StaticNode): Type? {
-        return metaTypeToType(typeOf(node)).mapNullable(::rawType)
-    }
     fun declaredType(node: TypeDeclarationNode): Type
     fun shapeFields(node: ShapeNode): Map<Identifier, Field> {
         return (rawType(declaredType(node)) as ShapeType).fields
@@ -41,7 +38,7 @@ interface Types {
 
     fun findDiscriminator(expression: ExpressionNode, type: StaticNode): Discriminator {
         val sourceType = typeOf(expression)
-        val targetType = rawTypeValue(type) as ShapeType
+        val targetType = metaTypeToType(typeOf(type))!!
         return findDiscriminator(sourceType = sourceType, targetType = targetType)!!
     }
 }

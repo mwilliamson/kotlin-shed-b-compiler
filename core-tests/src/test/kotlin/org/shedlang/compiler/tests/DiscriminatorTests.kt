@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests
 import com.natpryce.hamkrest.absent
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.types.*
@@ -121,10 +122,10 @@ class DiscriminatorTests {
 
         val discriminator = findDiscriminator(sourceType = union, targetType = member1)
 
-        assertThat(discriminator, present(equalTo(Discriminator(
-            field = discriminatorField,
-            symbolType = symbolType(listOf(), "@Member1")
-        ))))
+        assertThat(discriminator, present(allOf(
+            has(Discriminator::field, equalTo(discriminatorField)),
+            has(Discriminator::symbolType, equalTo(symbolType(listOf(), "@Member1")))
+        )))
     }
 
     @Test
@@ -146,10 +147,10 @@ class DiscriminatorTests {
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(IntType)))
 
-        assertThat(discriminator, present(equalTo(Discriminator(
-            field = discriminatorField,
-            symbolType = symbolType(listOf(), "@Member1")
-        ))))
+        assertThat(discriminator, present(allOf(
+            has(Discriminator::field, equalTo(discriminatorField)),
+            has(Discriminator::symbolType, equalTo(symbolType(listOf(), "@Member1")))
+        )))
     }
 
     @Test
@@ -171,10 +172,10 @@ class DiscriminatorTests {
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(AnyType)))
 
-        assertThat(discriminator, present(equalTo(Discriminator(
-            field = discriminatorField,
-            symbolType = symbolType(listOf(), "@Member1")
-        ))))
+        assertThat(discriminator, present(allOf(
+            has(Discriminator::field, equalTo(discriminatorField)),
+            has(Discriminator::symbolType, equalTo(symbolType(listOf(), "@Member1")))
+        )))
     }
 
     @Test

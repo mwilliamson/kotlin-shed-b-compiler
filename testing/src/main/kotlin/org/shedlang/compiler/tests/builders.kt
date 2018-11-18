@@ -427,10 +427,11 @@ fun symbolType(module: List<String>, name: String): SymbolType {
     return SymbolType(Symbol(module.map(::Identifier), name))
 }
 
-fun discriminator(symbolType: SymbolType, fieldName: String): Discriminator {
+fun discriminator(symbolType: SymbolType, fieldName: String, targetType: Type = AnyType): Discriminator {
     return Discriminator(
         field = field(fieldName, symbolType, shapeId = freshShapeId()),
-        symbolType = symbolType
+        symbolType = symbolType,
+        targetType = targetType
     )
 }
 

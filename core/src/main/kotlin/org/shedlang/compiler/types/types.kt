@@ -517,23 +517,40 @@ public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticV
     }
 }
 
-public data class Discriminator(val field: Field, val symbolType: SymbolType) {
+public data class Discriminator(
+    val field: Field,
+    val symbolType: SymbolType,
+    val targetType: Type
+) {
     val fieldName: Identifier = field.name
 }
 
 public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
-    if (sourceType is UnionType && targetType is ShapeType) {
-        val candidateDiscriminators = targetType.fields.values.mapNotNull { field ->
+    var refinedTargetType = targetType
+    if (sourceType is UnionType && targetType is TypeFunction) {
+        val innerTargetType = targetType.type
+        val matchingMembers = sourceType.members
+            .filterIsInstance<ShapeType>()
+            .filter { member ->
+                innerTargetType is ShapeType && member.shapeId == innerTargetType.shapeId
+            }
+        if (matchingMembers.size == 1) {
+            refinedTargetType = matchingMembers.single()
+        }
+    }
+
+    if (sourceType is UnionType && refinedTargetType is ShapeType) {
+        val candidateDiscriminators = refinedTargetType.fields.values.mapNotNull { field ->
             val fieldType = field.type
             if (fieldType is SymbolType) {
-                Discriminator(field, fieldType)
+                Discriminator(field = field, symbolType = fieldType, targetType = refinedTargetType)
             } else {
                 null
             }
         }
         return candidateDiscriminators.find { candidateDiscriminator ->
             sourceType.members.all { member ->
-                canCoerce(from = member, to = targetType) || run {
+                canCoerce(from = member, to = refinedTargetType) || run {
                     val memberShape = member as ShapeType
                     val memberField = memberShape.fields[candidateDiscriminator.fieldName]
                     val memberSymbolType = memberField?.type as? SymbolType
