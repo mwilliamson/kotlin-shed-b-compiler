@@ -120,7 +120,7 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
 private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType {
     // TODO: test expression and type checking
 
-    val expressionType = checkTypePredicateOperand(node.expression, context)
+    val expressionType = checkTypeConditionOperand(node.expression, context)
 
     evalTypeCondition(
         expressionType = expressionType,
@@ -196,7 +196,7 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
 }
 
 private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type {
-    val expressionType = checkTypePredicateOperand(node.expression, context)
+    val expressionType = checkTypeConditionOperand(node.expression, context)
 
     val branchResults = node.branches.map { branch ->
         val conditionType = evalTypeCondition(
@@ -225,7 +225,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     return branchTypes.reduce(::union)
 }
 
-private fun checkTypePredicateOperand(expression: ExpressionNode, context: TypeContext): UnionType {
+private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeContext): UnionType {
     val expressionType = inferType(expression, context)
     if (expressionType is UnionType) {
         return expressionType
