@@ -15,7 +15,9 @@ class ParseBinaryOperationTests {
             Pair("<", BinaryOperator.LESS_THAN),
             Pair("<=", BinaryOperator.LESS_THAN_OR_EQUAL),
             Pair(">", BinaryOperator.GREATER_THAN),
-            Pair(">=", BinaryOperator.GREATER_THAN_OR_EQUAL)
+            Pair(">=", BinaryOperator.GREATER_THAN_OR_EQUAL),
+            Pair("&&", BinaryOperator.AND),
+            Pair("||", BinaryOperator.OR)
         ).map { (operatorString, operator) -> DynamicTest.dynamicTest("can parse $operatorString", {
             val source = "x $operatorString y"
             val node = parseString(::parseExpression, source)

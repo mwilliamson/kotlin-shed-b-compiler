@@ -40,6 +40,8 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     symbol(TokenType.SYMBOL_DOUBLE_EQUALS, "=="),
     symbol(TokenType.SYMBOL_LESS_THAN_OR_EQUAL, "<="),
     symbol(TokenType.SYMBOL_GREATER_THAN_OR_EQUAL, ">="),
+    symbol(TokenType.SYMBOL_DOUBLE_AMPERSAND, "&&"),
+    symbol(TokenType.SYMBOL_DOUBLE_VERTICAL_BAR, "||"),
 
     symbol(TokenType.SYMBOL_DOT, "."),
     symbol(TokenType.SYMBOL_COMMA, ","),
@@ -118,6 +120,8 @@ internal enum class TokenType {
     SYMBOL_LESS_THAN_OR_EQUAL,
     SYMBOL_GREATER_THAN,
     SYMBOL_GREATER_THAN_OR_EQUAL,
+    SYMBOL_DOUBLE_AMPERSAND,
+    SYMBOL_DOUBLE_VERTICAL_BAR,
     SYMBOL_PLUS,
     SYMBOL_MINUS,
     SYMBOL_ASTERISK,

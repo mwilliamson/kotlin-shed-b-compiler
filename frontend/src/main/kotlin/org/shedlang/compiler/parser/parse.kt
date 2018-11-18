@@ -631,7 +631,9 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
     }
 }
 
-private val PIPELINE_PRECEDENCE = 7
+private val PIPELINE_PRECEDENCE = 4
+private val OR_PRECEDENCE = 6
+private val AND_PRECEDENCE = 7
 private val COMPARISON_PRECEDENCE = 8
 private val IS_PRECEDENCE = 9
 private val ADD_PRECENDECE = 11
@@ -652,6 +654,8 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
             InfixOperationParser(BinaryOperator.ADD, TokenType.SYMBOL_PLUS, ADD_PRECENDECE),
             InfixOperationParser(BinaryOperator.SUBTRACT, TokenType.SYMBOL_MINUS, SUBTRACT_PRECEDENCE),
             InfixOperationParser(BinaryOperator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.AND, TokenType.SYMBOL_DOUBLE_AMPERSAND, AND_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.OR, TokenType.SYMBOL_DOUBLE_VERTICAL_BAR, OR_PRECEDENCE),
             CallWithExplicitTypeArgumentsParser,
             CallParser,
             PartialCallParser,
