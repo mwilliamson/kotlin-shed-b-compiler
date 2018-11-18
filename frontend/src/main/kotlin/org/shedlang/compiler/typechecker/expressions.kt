@@ -122,18 +122,31 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 
     val expressionType = checkTypePredicateOperand(node.expression, context)
 
-    val targetType = evalType(node.type, context)
+    evalTypeCondition(
+        expressionType = expressionType,
+        targetTypeNode = node.type,
+        context = context
+    )
 
-    if (findDiscriminator(sourceType = expressionType, targetType = targetType) == null) {
-        throw CouldNotFindDiscriminator(sourceType = expressionType, targetType = targetType, source = node.source)
-    }
+    return BoolType
+}
+
+private fun evalTypeCondition(
+    expressionType: Type,
+    targetTypeNode: StaticNode,
+    context: TypeContext
+): Type {
+    val targetType = evalType(targetTypeNode, context)
 
     // TODO: given generics are erased, when node.type is generic we
     // should make sure no other instantiations of that generic type
     // are possible e.g. if the expression has type Cons[T] | Nil,
     // then checking the type to be Cons[U] is valid iff T <: U
+    if (findDiscriminator(sourceType = expressionType, targetType = targetType) == null) {
+        throw CouldNotFindDiscriminator(sourceType = expressionType, targetType = targetType, source = targetTypeNode.source)
+    }
 
-    return BoolType
+    return targetType
 }
 
 private fun inferFieldAccessType(node: FieldAccessNode, context: TypeContext): Type {
@@ -186,8 +199,11 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     val expressionType = checkTypePredicateOperand(node.expression, context)
 
     val branchResults = node.branches.map { branch ->
-        // TODO: check conditionType is a member of the union
-        val conditionType = evalType(branch.type, context)
+        val conditionType = evalTypeCondition(
+            expressionType = expressionType,
+            targetTypeNode = branch.type,
+            context = context
+        )
         val branchContext = context.enterScope()
         val expression = node.expression
         if (expression is VariableReferenceNode) {
