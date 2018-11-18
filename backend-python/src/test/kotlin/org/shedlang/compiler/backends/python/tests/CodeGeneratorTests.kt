@@ -597,7 +597,9 @@ class CodeGeneratorTests {
             BinaryOperator.LESS_THAN to PythonBinaryOperator.LESS_THAN,
             BinaryOperator.LESS_THAN_OR_EQUAL to PythonBinaryOperator.LESS_THAN_OR_EQUAL,
             BinaryOperator.GREATER_THAN to PythonBinaryOperator.GREATER_THAN,
-            BinaryOperator.GREATER_THAN_OR_EQUAL to PythonBinaryOperator.GREATER_THAN_OR_EQUAL
+            BinaryOperator.GREATER_THAN_OR_EQUAL to PythonBinaryOperator.GREATER_THAN_OR_EQUAL,
+            BinaryOperator.AND to PythonBinaryOperator.AND,
+            BinaryOperator.OR to PythonBinaryOperator.OR
         ).map({ operator ->  DynamicTest.dynamicTest(
             operator.first.toString(), {
                 val shed = binaryOperation(

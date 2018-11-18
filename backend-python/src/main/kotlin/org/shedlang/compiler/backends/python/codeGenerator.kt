@@ -886,6 +886,8 @@ private fun generateCode(operator: BinaryOperator): PythonBinaryOperator {
         BinaryOperator.ADD -> PythonBinaryOperator.ADD
         BinaryOperator.SUBTRACT -> PythonBinaryOperator.SUBTRACT
         BinaryOperator.MULTIPLY -> PythonBinaryOperator.MULTIPLY
+        BinaryOperator.AND -> PythonBinaryOperator.AND
+        BinaryOperator.OR -> PythonBinaryOperator.OR
     }
 }
 

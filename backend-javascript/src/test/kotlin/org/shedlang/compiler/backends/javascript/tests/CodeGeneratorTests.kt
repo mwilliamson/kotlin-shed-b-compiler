@@ -358,7 +358,9 @@ class CodeGeneratorTests {
             BinaryOperator.LESS_THAN to JavascriptBinaryOperator.LESS_THAN,
             BinaryOperator.LESS_THAN_OR_EQUAL to JavascriptBinaryOperator.LESS_THAN_OR_EQUAL,
             BinaryOperator.GREATER_THAN to JavascriptBinaryOperator.GREATER_THAN,
-            BinaryOperator.GREATER_THAN_OR_EQUAL to JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL
+            BinaryOperator.GREATER_THAN_OR_EQUAL to JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL,
+            BinaryOperator.AND to JavascriptBinaryOperator.AND,
+            BinaryOperator.OR to JavascriptBinaryOperator.OR
         ).map({ operator ->  DynamicTest.dynamicTest(
             operator.first.toString(), {
                 val shed = binaryOperation(

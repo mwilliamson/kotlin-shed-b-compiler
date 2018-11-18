@@ -503,7 +503,8 @@ private fun generateCode(operator: BinaryOperator): JavascriptBinaryOperator {
         BinaryOperator.ADD -> JavascriptBinaryOperator.ADD
         BinaryOperator.SUBTRACT -> JavascriptBinaryOperator.SUBTRACT
         BinaryOperator.MULTIPLY -> JavascriptBinaryOperator.MULTIPLY
-
+        BinaryOperator.AND -> JavascriptBinaryOperator.AND
+        BinaryOperator.OR -> JavascriptBinaryOperator.OR
     }
 }
 
