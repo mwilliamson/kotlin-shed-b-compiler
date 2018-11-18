@@ -83,6 +83,10 @@ internal data class BinaryOperation(
                 is InterpreterValue ->
                     if (operator == BinaryOperator.EQUALS && left is BooleanValue && right is BooleanValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
+                    } else if (operator == BinaryOperator.AND && left is BooleanValue && right is BooleanValue) {
+                        EvaluationResult.pure(BooleanValue(left.value && right.value))
+                    } else if (operator == BinaryOperator.OR && left is BooleanValue && right is BooleanValue) {
+                        EvaluationResult.pure(BooleanValue(left.value || right.value))
 
                     } else if (operator == BinaryOperator.EQUALS && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))

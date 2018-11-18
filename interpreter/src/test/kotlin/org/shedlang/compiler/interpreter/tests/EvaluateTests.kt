@@ -283,6 +283,68 @@ class EvaluateBinaryOperationTests {
     }
 
     @Test
+    fun logicalAndEvaluatesToTrueIfAndOnlyIfBothOperandsAreTrue() {
+        val trueTrueValue = evaluate(BinaryOperation(
+            BinaryOperator.AND,
+            BooleanValue(true),
+            BooleanValue(true)
+        ))
+        assertThat(trueTrueValue, isPureResult(equalTo(BooleanValue(true))))
+
+        val trueFalseValue = evaluate(BinaryOperation(
+            BinaryOperator.AND,
+            BooleanValue(true),
+            BooleanValue(false)
+        ))
+        assertThat(trueFalseValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val falseTrueValue = evaluate(BinaryOperation(
+            BinaryOperator.AND,
+            BooleanValue(false),
+            BooleanValue(true)
+        ))
+        assertThat(falseTrueValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val falseFalseValue = evaluate(BinaryOperation(
+            BinaryOperator.AND,
+            BooleanValue(false),
+            BooleanValue(false)
+        ))
+        assertThat(falseFalseValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun logicalOrEvaluatesToTrueIfAndOnlyIfAnyOperandIsTrue() {
+        val trueTrueValue = evaluate(BinaryOperation(
+            BinaryOperator.OR,
+            BooleanValue(true),
+            BooleanValue(true)
+        ))
+        assertThat(trueTrueValue, isPureResult(equalTo(BooleanValue(true))))
+
+        val trueFalseValue = evaluate(BinaryOperation(
+            BinaryOperator.OR,
+            BooleanValue(true),
+            BooleanValue(false)
+        ))
+        assertThat(trueFalseValue, isPureResult(equalTo(BooleanValue(true))))
+
+        val falseTrueValue = evaluate(BinaryOperation(
+            BinaryOperator.OR,
+            BooleanValue(false),
+            BooleanValue(true)
+        ))
+        assertThat(falseTrueValue, isPureResult(equalTo(BooleanValue(true))))
+
+        val falseFalseValue = evaluate(BinaryOperation(
+            BinaryOperator.OR,
+            BooleanValue(false),
+            BooleanValue(false)
+        ))
+        assertThat(falseFalseValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
     fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
         val context = createContext(
             scope = scopeOf(mapOf(
