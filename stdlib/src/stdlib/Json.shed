@@ -118,11 +118,7 @@ fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
 }
 
 fun textToValue(text: String) -> JsonValue {
-    val isNotWhitespace = fun (token: Token) -> Bool {
-        not (token.tokenType is TokenWhitespace)
-    };
-
-    val tokens = tokenise(text) |> Sequences.lazyFilter ~ (isNotWhitespace);
+    val tokens = tokenise(text);
     tokensToValue(tokens)
 }
 
@@ -144,7 +140,7 @@ fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
                     null
                 }
                 is TokenWhitespace {
-                    null
+                    tokensToValue(iterator.tail)
                 }
                 is TokenUnexpected {
                     null
