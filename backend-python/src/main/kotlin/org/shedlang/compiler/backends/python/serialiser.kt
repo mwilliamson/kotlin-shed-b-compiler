@@ -177,6 +177,8 @@ private fun serialise(operator: PythonBinaryOperator) = when(operator) {
     PythonBinaryOperator.ADD -> "+"
     PythonBinaryOperator.SUBTRACT -> "-"
     PythonBinaryOperator.MULTIPLY -> "*"
+    PythonBinaryOperator.AND -> "and"
+    PythonBinaryOperator.OR -> "or"
 }
 
 private fun isLeftAssociative(operator: PythonBinaryOperator) = when(operator) {
@@ -188,6 +190,8 @@ private fun isLeftAssociative(operator: PythonBinaryOperator) = when(operator) {
     PythonBinaryOperator.ADD -> true
     PythonBinaryOperator.SUBTRACT -> true
     PythonBinaryOperator.MULTIPLY -> true
+    PythonBinaryOperator.AND -> true
+    PythonBinaryOperator.OR -> true
 }
 
 private fun precedence(node: PythonExpressionNode): Int {
@@ -222,6 +226,8 @@ private fun precedence(node: PythonExpressionNode): Int {
 
         override fun visit(node: PythonBinaryOperationNode): Int {
             return when(node.operator) {
+                PythonBinaryOperator.OR -> 3
+                PythonBinaryOperator.AND -> 4
                 PythonBinaryOperator.EQUALS -> 6
                 PythonBinaryOperator.LESS_THAN -> 6
                 PythonBinaryOperator.LESS_THAN_OR_EQUAL -> 6

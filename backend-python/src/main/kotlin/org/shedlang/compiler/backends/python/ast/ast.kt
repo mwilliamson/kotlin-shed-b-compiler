@@ -237,7 +237,9 @@ enum class PythonBinaryOperator {
     GREATER_THAN_OR_EQUAL,
     ADD,
     SUBTRACT,
-    MULTIPLY
+    MULTIPLY,
+    AND,
+    OR
 }
 
 data class PythonFunctionCallNode(

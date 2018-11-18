@@ -366,7 +366,9 @@ class SerialiserTests {
             Pair(PythonBinaryOperator.GREATER_THAN_OR_EQUAL, "x >= y"),
             Pair(PythonBinaryOperator.ADD, "x + y"),
             Pair(PythonBinaryOperator.SUBTRACT, "x - y"),
-            Pair(PythonBinaryOperator.MULTIPLY, "x * y")
+            Pair(PythonBinaryOperator.MULTIPLY, "x * y"),
+            Pair(PythonBinaryOperator.AND, "x and y"),
+            Pair(PythonBinaryOperator.OR, "x or y")
         ).map({ operator -> DynamicTest.dynamicTest(operator.second, {
             val node = pythonBinaryOperation(
                 operator = operator.first,
