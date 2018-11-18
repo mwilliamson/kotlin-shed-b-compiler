@@ -139,6 +139,12 @@ fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
                 is TokenNull {
                     null
                 }
+                is TokenOpenSquare {
+                    array(list())
+                }
+                is TokenCloseSquare {
+                    null
+                }
                 is TokenWhitespace {
                     tokensToValue(iterator.tail)
                 }
@@ -157,9 +163,11 @@ shape TokenWhitespace {}
 shape TokenNull {}
 shape TokenTrue {}
 shape TokenFalse {}
+shape TokenOpenSquare {}
+shape TokenCloseSquare {}
 shape TokenUnexpected {}
 shape TokenEnd {}
-union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenUnexpected | TokenEnd;
+union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenUnexpected | TokenEnd;
 
 shape Token {
     tokenType: TokenType,
@@ -198,6 +206,10 @@ fun nextToken(value: String) -> Token {
                 token(TokenFalse(), "false")
             } else if (first == 'n' && CodePoints.startsWith("null", value)) {
                 token(TokenNull(), "null")
+            } else if (first == '[') {
+                token(TokenOpenSquare(), "[")
+            } else if (first == ']') {
+                token(TokenCloseSquare(), "]")
             } else if (isWhitespace(first)) {
                 val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
                 token(TokenWhitespace(), whitespace)

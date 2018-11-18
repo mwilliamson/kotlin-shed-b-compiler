@@ -80,3 +80,7 @@ val success = Success();
 fun failure(message: String) -> Failure {
     Failure(message=message)
 }
+
+fun isSuccess(result: Result) -> Bool {
+    result is Success
+}

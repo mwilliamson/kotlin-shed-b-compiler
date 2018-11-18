@@ -37,6 +37,19 @@ fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
     )
 }
 
+fun isJsonArray(elements: Matchers.Matcher[List[Json.JsonValue]]) -> Matchers.Matcher[Json.JsonValue] {
+    isJson(
+        description = "JSON array with elements: " + elements.description,
+        predicate = fun (actual: Json.JsonValue) -> Bool {
+            if (actual is Json.JsonArray) {
+                Matchers.isSuccess(elements.match(actual.elements))
+            } else {
+                false
+            }
+        }
+    )
+}
+
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("valueToText", list(
         Tests.testCase("null", fun () {
@@ -169,6 +182,12 @@ val testCases = Tests.suite(moduleName, list(
             val text = "false";
             val value = Json.textToValue(text);
             Tests.assertThat(value, isJsonBoolean(false))
+        }),
+
+        Tests.testCase("empty array", fun () {
+            val text = "[]";
+            val value = Json.textToValue(text);
+            Tests.assertThat(value, isJsonArray(Matchers.anything()))
         }),
 
         Tests.testCase("whitespace is ignored", fun () {
