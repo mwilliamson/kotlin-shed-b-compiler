@@ -32,7 +32,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun codePointNodeEvaluatesToChodePointValue() {
+    fun codePointNodeEvaluatesToCodePointValue() {
         assertThat(fullyEvaluate(literalCodePoint('!')), isPureResult(equalTo(CodePointValue('!'.toInt()))))
     }
 
