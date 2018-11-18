@@ -1,4 +1,5 @@
 import stdlib.Lists;
+import stdlib.Options;
 import stdlib.Sequences;
 import stdlib.strings.CodePoints;
 
@@ -148,6 +149,9 @@ fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
                 is TokenUnexpected {
                     null
                 }
+                is TokenEnd {
+                    null
+                }
             }
         }
     }
@@ -158,7 +162,8 @@ shape TokenNull {}
 shape TokenTrue {}
 shape TokenFalse {}
 shape TokenUnexpected {}
-union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenUnexpected;
+shape TokenEnd {}
+union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenUnexpected | TokenEnd;
 
 shape Token {
     tokenType: TokenType,
@@ -172,10 +177,10 @@ fun token(tokenType: TokenType, value: String) -> Token {
 fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
     Sequences.Sequence(
         next = fun () -> Sequences.SequenceIterator[Token, Pure] {
-            if (CodePoints.isEmpty(value)) {
+            val token = nextToken(value);
+            if (token.tokenType is TokenEnd) {
                 Sequences.end
             } else {
-                val token = nextToken(value);
                 val remainder = CodePoints.dropLeft(CodePoints.length(token.value), value);
                 Sequences.SequenceItem(
                     head = token,
@@ -187,18 +192,25 @@ fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
 }
 
 fun nextToken(value: String) -> Token {
-    if (CodePoints.startsWith("true", value)) {
-        token(TokenTrue(), "true")
-    } else if (CodePoints.startsWith("false", value)) {
-        token(TokenFalse(), "false")
-    } else if (CodePoints.startsWith("null", value)) {
-        token(TokenNull(), "null")
-    } else {
-        val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
-        if (not CodePoints.isEmpty(whitespace)) {
-            token(TokenWhitespace(), whitespace)
-        } else {
-            token(TokenUnexpected(), CodePoints.left(1, value))
+    val maybeFirst = CodePoints.firstCodePoint(value);
+    when (maybeFirst) {
+        is Options.Some[CodePoint] {
+            val first = maybeFirst.value;
+            if (first == 't' && CodePoints.startsWith("true", value)) {
+                token(TokenTrue(), "true")
+            } else if (first == 'f' && CodePoints.startsWith("false", value)) {
+                token(TokenFalse(), "false")
+            } else if (first == 'n' && CodePoints.startsWith("null", value)) {
+                token(TokenNull(), "null")
+            } else if (isWhitespace(first)) {
+                val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
+                token(TokenWhitespace(), whitespace)
+            } else {
+                token(TokenUnexpected(), CodePoints.left(1, value))
+            }
+        }
+        is Options.None {
+            token(TokenEnd(), "")
         }
     }
 }
