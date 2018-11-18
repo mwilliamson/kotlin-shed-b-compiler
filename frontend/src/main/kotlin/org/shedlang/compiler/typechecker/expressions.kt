@@ -106,6 +106,8 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
         BinaryOperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CodePointType, CodePointType) -> BoolType
 
         BinaryOperationType(BinaryOperator.EQUALS, BoolType, BoolType) -> BoolType
+        BinaryOperationType(BinaryOperator.AND, BoolType, BoolType) -> BoolType
+        BinaryOperationType(BinaryOperator.OR, BoolType, BoolType) -> BoolType
 
         else -> throw InvalidOperationError(
             operator = node.operator,

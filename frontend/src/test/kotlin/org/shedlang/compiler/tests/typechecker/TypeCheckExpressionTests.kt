@@ -198,6 +198,20 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun logicalAndReturnsBoolean() {
+        val node = binaryOperation(BinaryOperator.AND, literalBool(), literalBool())
+        val type = inferType(node, typeContext())
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
+    fun logicalOrReturnsBoolean() {
+        val node = binaryOperation(BinaryOperator.OR, literalBool(), literalBool())
+        val type = inferType(node, typeContext())
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
     fun functionExpressionHasFunctionType() {
         val intReference = staticReference("Int")
         val unitReference = staticReference("Unit")
