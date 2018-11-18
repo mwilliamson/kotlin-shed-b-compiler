@@ -288,7 +288,9 @@ class SerialiserTests {
             Pair(JavascriptBinaryOperator.GREATER_THAN_OR_EQUAL, "x >= y"),
             Pair(JavascriptBinaryOperator.ADD, "x + y"),
             Pair(JavascriptBinaryOperator.SUBTRACT, "x - y"),
-            Pair(JavascriptBinaryOperator.MULTIPLY, "x * y")
+            Pair(JavascriptBinaryOperator.MULTIPLY, "x * y"),
+            Pair(JavascriptBinaryOperator.AND, "x && y"),
+            Pair(JavascriptBinaryOperator.OR, "x || y")
         ).map({ operator -> DynamicTest.dynamicTest(operator.second, {
             val node = jsBinaryOperation(
                 operator = operator.first,

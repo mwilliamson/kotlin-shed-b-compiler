@@ -182,6 +182,8 @@ private fun serialise(operator: JavascriptBinaryOperator) = when(operator) {
     JavascriptBinaryOperator.ADD -> "+"
     JavascriptBinaryOperator.SUBTRACT -> "-"
     JavascriptBinaryOperator.MULTIPLY -> "*"
+    JavascriptBinaryOperator.AND -> "&&"
+    JavascriptBinaryOperator.OR -> "||"
 }
 
 private fun precedence(node: JavascriptExpressionNode): Int {
@@ -220,6 +222,8 @@ private fun precedence(node: JavascriptExpressionNode): Int {
 
         override fun visit(node: JavascriptBinaryOperationNode): Int {
             return when(node.operator) {
+                JavascriptBinaryOperator.OR -> 5
+                JavascriptBinaryOperator.AND -> 6
                 JavascriptBinaryOperator.EQUALS -> 10
                 JavascriptBinaryOperator.LESS_THAN -> 10
                 JavascriptBinaryOperator.LESS_THAN_OR_EQUAL -> 10

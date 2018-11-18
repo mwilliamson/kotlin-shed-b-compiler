@@ -239,5 +239,7 @@ enum class JavascriptBinaryOperator {
     GREATER_THAN_OR_EQUAL,
     ADD,
     SUBTRACT,
-    MULTIPLY
+    MULTIPLY,
+    AND,
+    OR
 }
