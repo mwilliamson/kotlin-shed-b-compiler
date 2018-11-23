@@ -136,6 +136,34 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun shapeWithOnlyConstantFieldsUsesDefaultInit() {
+        val shed = shape(
+            name = "OneTwoThree",
+            fields = listOf(
+                shapeField("b", staticReference("Int"), value = literalInt(0))
+            )
+        )
+        val shapeType = shapeType(
+            fields = listOf(
+                field("b", type = IntType, isConstant = true)
+            )
+        )
+
+        val types = typesMap(
+            variableTypes = mapOf(shed to MetaType(shapeType))
+        )
+
+        val node = generateCode(shed, context(types = types)).single()
+
+        assertThat(node, isPythonClass(
+            name = equalTo("OneTwoThree"),
+            body = isSequence(
+                isPythonAssignment("b", isPythonIntegerLiteral(0))
+            )
+        ))
+    }
+
+    @Test
     fun functionDeclarationGeneratesFunctionWithPythonisedName() {
         val shed = function(
             name = "oneTwoThree",

@@ -131,22 +131,28 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
         .values
         .partition { field -> field.isConstant }
 
-    val init = PythonFunctionNode(
-        name = "__init__",
-        parameters = listOf("self") + variableFields.map({ field -> pythoniseName(field.name) }),
-        body = variableFields.map({ field ->
-            PythonAssignmentNode(
-                target = PythonAttributeAccessNode(
-                    receiver = PythonVariableReferenceNode("self", source = NodeSource(node)),
-                    attributeName = pythoniseName(field.name),
-                    source = NodeSource(node)
-                ),
-                expression = PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
+    val init = if (variableFields.isEmpty()) {
+        listOf()
+    } else {
+        listOf(
+            PythonFunctionNode(
+                name = "__init__",
+                parameters = listOf("self") + variableFields.map({ field -> pythoniseName(field.name) }),
+                body = variableFields.map({ field ->
+                    PythonAssignmentNode(
+                        target = PythonAttributeAccessNode(
+                            receiver = PythonVariableReferenceNode("self", source = NodeSource(node)),
+                            attributeName = pythoniseName(field.name),
+                            source = NodeSource(node)
+                        ),
+                        expression = PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
+                        source = NodeSource(node)
+                    )
+                }),
                 source = NodeSource(node)
             )
-        }),
-        source = NodeSource(node)
-    )
+        )
+    }
     val body = constantFields.map { field ->
         val fieldValueNode = node.fields
             .find { fieldNode -> fieldNode.name == field.name }
@@ -165,7 +171,7 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
             value,
             source = NodeSource(node)
         )
-    } + listOf(init)
+    } + init
     return PythonClassNode(
         // TODO: test renaming
         name = context.name(node),
