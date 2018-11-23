@@ -5,6 +5,7 @@ import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.findDiscriminator
+import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.SymbolType
@@ -755,30 +756,34 @@ private fun generateWhenCode(
     context: CodeGenerationContext,
     returnValue: ReturnValue
 ): List<PythonStatementNode> {
-    val expressionName = context.freshName()
-    val expressionCode = generateExpressionCode(node.expression, context)
-    val branches = node.branches.map { branch ->
-        PythonConditionalBranchNode(
-            condition = generateTypeCondition(
-                expression = PythonVariableReferenceNode(
-                    name = expressionName,
+    return generateExpressionCode(node.expression, context).toStatements { expression ->
+        val (assignment, expressionName) = if (expression is PythonVariableReferenceNode) {
+            Pair(null, expression.name)
+        } else {
+            val expressionName = context.freshName()
+            Pair(assign(expressionName, expression, NodeSource(node)), expressionName)
+        }
+
+        val branches = node.branches.map { branch ->
+            PythonConditionalBranchNode(
+                condition = generateTypeCondition(
+                    expression = PythonVariableReferenceNode(
+                        name = expressionName,
+                        source = NodeSource(branch)
+                    ),
+                    discriminator = findDiscriminator(node, branch, types = context.types),
                     source = NodeSource(branch)
                 ),
-                discriminator = findDiscriminator(node, branch, types = context.types),
+                body = generateBlockCode(
+                    branch.body,
+                    context,
+                    returnValue = returnValue
+                ),
                 source = NodeSource(branch)
-            ),
-            body = generateBlockCode(
-                branch.body,
-                context,
-                returnValue = returnValue
-            ),
-            source = NodeSource(branch)
-        )
-    }
+            )
+        }
 
-    return expressionCode.toStatements { expression ->
-        listOf(
-            assign(expressionName, expression, NodeSource(node)),
+        assignment.nullableToList() + listOf(
             PythonIfStatementNode(
                 conditionalBranches = branches,
                 elseBranch = listOf(),

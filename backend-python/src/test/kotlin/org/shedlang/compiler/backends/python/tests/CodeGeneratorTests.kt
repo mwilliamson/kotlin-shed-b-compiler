@@ -308,6 +308,64 @@ class CodeGeneratorTests {
         val variableDeclaration = valStatement("x")
         val variableReference = variableReference("x")
         val typeReference = staticReference("T")
+        val conditionExpression = fieldAccess(variableReference, "f")
+        val shed = whenExpression(
+            conditionExpression,
+            listOf(
+                whenBranch(
+                    typeReference,
+                    listOf(
+                        expressionStatement(literalInt(42), isReturn = true)
+                    )
+                )
+            )
+        )
+
+        val generatedExpression = generateExpressionCode(shed, context(
+            references = mapOf(
+                variableReference to variableDeclaration
+            ),
+            types = typesMap(
+                discriminators = mapOf(
+                    Pair(conditionExpression, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                )
+            )
+        ))
+        val reference = generatedExpression.value as PythonVariableReferenceNode
+
+        assertThat(generatedExpression.statements, isSequence(
+            isPythonAssignment(
+                target = isPythonVariableReference("anonymous_1"),
+                expression = isPythonAttributeAccess(
+                    receiver = isPythonVariableReference("x"),
+                    attributeName = equalTo("f")
+                )
+            ),
+            isPythonIfStatement(
+                conditionalBranches = isSequence(
+                    isPythonConditionalBranch(
+                        condition = isPythonTypeCondition(
+                            expression = isPythonVariableReference("anonymous_1"),
+                            discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
+                        ),
+                        body = isSequence(
+                            isPythonAssignment(
+                                target = isPythonVariableReference(reference.name),
+                                expression = isPythonIntegerLiteral(42)
+                            )
+                        )
+                    )
+                ),
+                elseBranch = isSequence()
+            )
+        ))
+    }
+
+    @Test
+    fun variableReferenceInWhenIsUsedWithoutAssignmentToTemporaryVariable() {
+        val variableDeclaration = valStatement("x")
+        val variableReference = variableReference("x")
+        val typeReference = staticReference("T")
         val shed = whenExpression(
             variableReference,
             listOf(
@@ -333,15 +391,11 @@ class CodeGeneratorTests {
         val reference = generatedExpression.value as PythonVariableReferenceNode
 
         assertThat(generatedExpression.statements, isSequence(
-            isPythonAssignment(
-                target = isPythonVariableReference("anonymous_1"),
-                expression = isPythonVariableReference("x")
-            ),
             isPythonIfStatement(
                 conditionalBranches = isSequence(
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
-                            expression = isPythonVariableReference("anonymous_1"),
+                            expression = isPythonVariableReference("x"),
                             discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
                         ),
                         body = isSequence(
@@ -399,15 +453,11 @@ class CodeGeneratorTests {
 
         assertThat(generatedCode.single(), isPythonFunction(
             body = isSequence(
-                isPythonAssignment(
-                    target = isPythonVariableReference("anonymous"),
-                    expression = isPythonVariableReference("x")
-                ),
                 isPythonIfStatement(
                     conditionalBranches = isSequence(
                         isPythonConditionalBranch(
                             condition = isPythonTypeCondition(
-                                expression = isPythonVariableReference("anonymous"),
+                                expression = isPythonVariableReference("x"),
                                 discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
                             ),
                             body = isSequence(
