@@ -45,9 +45,13 @@ fun parseType(string: String): Type {
     return evalType(node, typeContext)
 }
 
+object Builtins {
+    val intToString = builtinVariable("intToString", parseType("(Int) -> String"))
+}
+
 internal val builtins = coreBuiltins + listOf(
     builtinVariable("print", parseType("(String) !Io -> Unit")),
-    builtinVariable("intToString", parseType("(Int) -> String")),
+    Builtins.intToString,
     builtinVariable("list", ListConstructorType),
 
     builtinVariable("moduleName", StringType)

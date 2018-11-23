@@ -26,7 +26,7 @@ private fun camelCaseToSnakeCase(name: String): String {
 }
 
 private fun isKeyword(name: String): Boolean {
-    return pythonKeywords.contains(name)
+    return reservedNames.contains(name)
 }
 
 private val pythonKeywords = setOf(
@@ -56,8 +56,6 @@ private val pythonKeywords = setOf(
     "lambda",
     "nonlocal",
     "not",
-    // object isn't a keyword, but we rely on it being available
-    "object",
     "or",
     "pass",
     // We add a __future__ statement for print functions, so we don't need to
@@ -70,3 +68,10 @@ private val pythonKeywords = setOf(
     "with",
     "yield"
 )
+
+private val pythonGlobals = setOf(
+    "object",
+    "str"
+)
+
+private val reservedNames = pythonKeywords + pythonGlobals

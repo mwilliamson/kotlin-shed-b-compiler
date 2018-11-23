@@ -94,7 +94,6 @@ private fun compileModule(module: Module.Shed): PythonModule {
         from __future__ import print_function
 
         from shed.builtins import (
-            int_to_string,
             list,
             print,
             partial as _partial,
