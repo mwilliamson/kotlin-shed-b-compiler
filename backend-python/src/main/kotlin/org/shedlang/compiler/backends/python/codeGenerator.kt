@@ -40,8 +40,14 @@ internal class CodeGenerationContext(
         )
     }
 
-    fun freshName(name: String = "anonymous"): String {
-        return generateName(name)
+    fun freshName(name: String? = null, expression: ExpressionNode? = null): String {
+        return generateName(if (name != null) {
+            name
+        } else if (expression is FieldAccessNode) {
+            expression.fieldName.identifier.value
+        } else {
+            "anonymous"
+        })
     }
 
     fun name(node: VariableBindingNode): String {
@@ -760,8 +766,9 @@ private fun generateWhenCode(
         val (assignment, expressionName) = if (expression is PythonVariableReferenceNode) {
             Pair(null, expression.name)
         } else {
-            val expressionName = context.freshName()
-            Pair(assign(expressionName, expression, NodeSource(node)), expressionName)
+            val expressionName = context.freshName(expression = node.expression)
+            val assignment = assign(expressionName, expression, NodeSource(node))
+            Pair(assignment, expressionName)
         }
 
         val branches = node.branches.map { branch ->

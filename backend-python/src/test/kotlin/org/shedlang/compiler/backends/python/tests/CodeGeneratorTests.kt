@@ -335,7 +335,7 @@ class CodeGeneratorTests {
 
         assertThat(generatedExpression.statements, isSequence(
             isPythonAssignment(
-                target = isPythonVariableReference("anonymous_1"),
+                target = isPythonVariableReference("f"),
                 expression = isPythonAttributeAccess(
                     receiver = isPythonVariableReference("x"),
                     attributeName = equalTo("f")
@@ -345,7 +345,7 @@ class CodeGeneratorTests {
                 conditionalBranches = isSequence(
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
-                            expression = isPythonVariableReference("anonymous_1"),
+                            expression = isPythonVariableReference("f"),
                             discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
                         ),
                         body = isSequence(
