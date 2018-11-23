@@ -502,7 +502,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
             val referent = context.references[node]
-            val name = if (referent is BuiltinVariable && referent.name == Identifier("intToString")) {
+            val name = if (isBuiltin(referent, "intToString")) {
                 "str"
             } else {
                 context.name(node)
@@ -923,3 +923,6 @@ internal fun generateCode(node: StaticNode, context: CodeGenerationContext): Pyt
         }
     })
 }
+
+private fun isBuiltin(referent: VariableBindingNode, name: String) =
+    referent is BuiltinVariable && referent.name == Identifier(name)
