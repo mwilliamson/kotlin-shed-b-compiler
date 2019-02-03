@@ -101,5 +101,6 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
 * Change modules to UpperCamelCase
 
 * Optimise directly recursive tail calls
+  * Make opt-in/explicit? Implement using while where possible, fallback to trampolines.
 
 * Check number of static arguments
