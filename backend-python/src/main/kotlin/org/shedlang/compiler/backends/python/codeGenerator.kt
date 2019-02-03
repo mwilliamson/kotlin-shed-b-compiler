@@ -189,7 +189,7 @@ typealias ReturnValue = (ExpressionNode, Source) -> List<PythonStatementNode>
 private fun generateFunction(name: String, node: FunctionNode, context: CodeGenerationContext): PythonFunctionNode {
     val bodyContext = context.enterScope()
     val parameters = generateParameters(node, bodyContext)
-
+    // TODO: test variable capture in tail recursive functions
     var isTailRecursive = false
     val hasFunctionExpressions = hasFunctionExpressions(node)
 
