@@ -2,6 +2,7 @@ import stdlib.Lists;
 import stdlib.Options;
 import stdlib.Sequences;
 import stdlib.strings.CodePoints;
+import stdlib.Unfold;
 
 
 union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
@@ -178,23 +179,6 @@ fun token(tokenType: TokenType, value: String) -> Token {
     Token(tokenType = tokenType, value = value)
 }
 
-fun tokenise(value: String) -> Sequences.Sequence[Token, Pure] {
-    Sequences.Sequence(
-        next = fun () -> Sequences.SequenceIterator[Token, Pure] {
-            val token = nextToken(value);
-            if (token.tokenType is TokenEnd) {
-                Sequences.end
-            } else {
-                val remainder = CodePoints.dropLeft(CodePoints.length(token.value), value);
-                Sequences.SequenceItem(
-                    head = token,
-                    tail = tokenise(remainder),
-                )
-            }
-        },
-    )
-}
-
 fun nextToken(value: String) -> Token {
     val maybeFirst = CodePoints.firstCodePoint(value);
     when (maybeFirst) {
@@ -226,3 +210,13 @@ fun nextToken(value: String) -> Token {
 fun isWhitespace(value: CodePoint) -> Bool {
     value == ' ' || value == '\n' || value == '\r' || value == '\t'
 }
+
+val tokenise = Unfold.unfold ~ (fun (value: String) -> Unfold.Next[Token, String] {
+    val token = nextToken(value);
+    if (token.tokenType is TokenEnd) {
+        Unfold.end
+    } else {
+        val remainder = CodePoints.dropLeft(CodePoints.length(token.value), value);
+        Unfold.continue(token, remainder)
+    }
+});
