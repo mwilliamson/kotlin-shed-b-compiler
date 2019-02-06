@@ -2,17 +2,14 @@ shape Sequence[T, !E] {
     next: () !E -> SequenceIterator[T, E],
 }
 
-shape SequenceEnd {
-}
+union SequenceIterator[T, !E] =
+    | SequenceItem[T, E] {
+        head: T,
+        tail: Sequence[T, E],
+    }
+    | SequenceEnd;
 
 val end = SequenceEnd();
-
-shape SequenceItem[T, !E] {
-    head: T,
-    tail: Sequence[T, E],
-}
-
-union SequenceIterator[T, !E] = SequenceItem[T, E] | SequenceEnd;
 
 fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
     val item = sequence.next();

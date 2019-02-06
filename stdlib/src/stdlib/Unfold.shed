@@ -14,20 +14,22 @@ fun continue[R, T](element: R, remainder: T) -> Continue[R, T] {
 }
 
 fun unfold[R, T, !E](next: (T) -> Next[R, T], value: T) !E -> Sequences.Sequence[R, E] {
-    Sequences.createSequence(fun () -> Sequences.SequenceIterator[R, E] {
-        val result = next(value);
-        when (result) {
-            is Continue[R, T] {
-                Sequences.SequenceItem(
-                    head = result.element,
-                    tail = unfold(next, result.remainder),
-                )
-            }
-            is End {
-                Sequences.end
+    Sequences.Sequence(
+        next = fun () -> Sequences.SequenceIterator[R, E] {
+            val result = next(value);
+            when (result) {
+                is Continue[R, T] {
+                    Sequences.SequenceItem(
+                        head = result.element,
+                        tail = unfold(next, result.remainder),
+                    )
+                }
+                is End {
+                    Sequences.end
+                }
             }
         }
-    })
+    )
 }
 
 

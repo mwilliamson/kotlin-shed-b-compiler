@@ -153,14 +153,6 @@ fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
     }
 }
 
-shape TokenWhitespace {}
-shape TokenNull {}
-shape TokenTrue {}
-shape TokenFalse {}
-shape TokenOpenSquare {}
-shape TokenCloseSquare {}
-shape TokenUnexpected {}
-shape TokenEnd {}
 union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenUnexpected | TokenEnd;
 
 shape Token {

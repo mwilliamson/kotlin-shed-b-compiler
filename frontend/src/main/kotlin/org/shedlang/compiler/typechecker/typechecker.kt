@@ -226,7 +226,10 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
 
     context.undefer()
 
-    return ModuleType(fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
+    // TODO: deduplicate with resolution (to find binders)
+    val bindingNodes = module.body.filterIsInstance<VariableBindingNode>() +
+        module.body.filterIsInstance<UnionNode>().flatMap { union -> union.members }
+    return ModuleType(fields = bindingNodes.associateBy(
         { statement -> statement.name },
         { statement -> context.typeOf(statement) }
     ))
