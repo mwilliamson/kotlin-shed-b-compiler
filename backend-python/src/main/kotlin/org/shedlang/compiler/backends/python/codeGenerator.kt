@@ -117,14 +117,14 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
-        override fun visit(node: ShapeNode) = listOf(generateCode(node, context))
-        override fun visit(node: UnionNode): List<PythonStatementNode> = listOf()
+        override fun visit(node: ShapeNode) = listOf(generateCodeForShape(node, context))
+        override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode) = listOf(generateCode(node, context))
         override fun visit(node: ValNode) = generateCode(node, context)
     })
 }
 
-private fun generateCode(node: ShapeNode, context: CodeGenerationContext): PythonClassNode {
+private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
     // TODO: remove duplication with InterpreterLoader
 
     val (constantFields, variableFields) = context.types.shapeFields(node)
@@ -178,6 +178,10 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext): Pytho
         body = body,
         source = NodeSource(node)
     )
+}
+
+private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext): List<PythonStatementNode> {
+    return node.members.map { member -> generateCodeForShape(member, context) }
 }
 
 private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {

@@ -251,18 +251,24 @@ interface ModuleStatementNode: Node {
 
 data class ShapeNode(
     override val name: Identifier,
-    val staticParameters: List<StaticParameterNode>,
-    val extends: List<StaticNode>,
-    val fields: List<ShapeFieldNode>,
+    override val staticParameters: List<StaticParameterNode>,
+    override val extends: List<StaticNode>,
+    override val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): TypeDeclarationNode, ModuleStatementNode {
+): ShapeBaseNode, ModuleStatementNode {
     override val children: List<Node>
         get() = staticParameters + extends + fields
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+interface ShapeBaseNode: TypeDeclarationNode {
+    val extends: List<StaticNode>
+    val fields: List<ShapeFieldNode>
+    val staticParameters: List<StaticParameterNode>
 }
 
 data class ShapeFieldNode(
@@ -281,7 +287,7 @@ data class UnionNode(
     override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
     val superType: StaticReferenceNode?,
-    val members: List<StaticNode>,
+    val members: List<UnionMemberNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
@@ -291,6 +297,18 @@ data class UnionNode(
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class UnionMemberNode(
+    override val name: Identifier,
+    override val staticParameters: List<StaticParameterNode>,
+    override val extends: List<StaticNode>,
+    override val fields: List<ShapeFieldNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): ShapeBaseNode {
+    override val children: List<Node>
+        get() = staticParameters + fields
 }
 
 interface FunctionNode : Node {

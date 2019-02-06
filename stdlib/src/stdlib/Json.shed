@@ -5,11 +5,23 @@ import stdlib.strings.CodePoints;
 import stdlib.Unfold;
 
 
-union JsonValue = JsonObject | JsonArray | JsonNumber | JsonString | JsonBoolean | JsonNull;
-
-shape JsonObject {
-    properties: List[JsonProperty],
-}
+union JsonValue =
+    | JsonObject {
+        properties: List[JsonProperty],
+    }
+    | JsonArray {
+        elements: List[JsonValue],
+    }
+    | JsonNumber {
+        value: String,
+    }
+    | JsonString {
+        value: String,
+    }
+    | JsonBoolean {
+        value: Bool,
+    }
+    | JsonNull;
 
 fun object(properties: List[JsonProperty]) -> JsonValue {
     JsonObject(properties = properties)
@@ -24,39 +36,20 @@ fun property(key: String, value: JsonValue) -> JsonProperty {
     JsonProperty(key = key, value = value)
 }
 
-shape JsonArray {
-    elements: List[JsonValue],
-}
-
 fun array(elements: List[JsonValue]) -> JsonValue {
     JsonArray(elements = elements)
-}
-
-shape JsonNumber {
-    value: String,
 }
 
 fun number(value: String) -> JsonValue {
     JsonNumber(value = value)
 }
 
-shape JsonString {
-    value: String,
-}
-
 fun string(value: String) -> JsonValue {
     JsonString(value = value)
 }
 
-shape JsonBoolean {
-    value: Bool,
-}
-
 fun boolean(value: Bool) -> JsonValue {
     JsonBoolean(value = value)
-}
-
-shape JsonNull {
 }
 
 val null = JsonNull();

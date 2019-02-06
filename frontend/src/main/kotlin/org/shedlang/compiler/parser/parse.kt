@@ -180,13 +180,7 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
 
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
-    val fields = parseZeroOrMoreNodes(
-        parseElement = ::parseShapeField,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
-        tokens = tokens,
-        allowTrailingSeparator = true
-    )
+    val fields = parseShapeFields(tokens)
 
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return ShapeNode(
@@ -196,6 +190,17 @@ internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>):
         fields = fields,
         source = source
     )
+}
+
+private fun parseShapeFields(tokens: TokenIterator<TokenType>): List<ShapeFieldNode> {
+    val fields = parseZeroOrMoreNodes(
+        parseElement = ::parseShapeField,
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        tokens = tokens,
+        allowTrailingSeparator = true
+    )
+    return fields
 }
 
 private fun parseShapeField(source: StringSource, tokens: TokenIterator<TokenType>): ShapeFieldNode {
@@ -240,9 +245,10 @@ private fun parseUnion(source: StringSource, tokens: TokenIterator<TokenType>): 
     }
 
     tokens.skip(TokenType.SYMBOL_EQUALS)
+    tokens.trySkip(TokenType.SYMBOL_BAR)
 
     val members = parseMany(
-        parseElement = { tokens -> parseStaticExpression(tokens) },
+        parseElement = { tokens -> ::parseUnionMember.parse(tokens) },
         parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_BAR) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         allowZero = false,
@@ -258,6 +264,30 @@ private fun parseUnion(source: StringSource, tokens: TokenIterator<TokenType>): 
         members = members,
         source = source
     )
+}
+
+private fun parseUnionMember(source: StringSource, tokens: TokenIterator<TokenType>): UnionMemberNode {
+    val name = parseIdentifier(tokens)
+    if (tokens.trySkip(TokenType.SYMBOL_OPEN_BRACE)) {
+        val fields = parseShapeFields(tokens)
+        tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
+
+        return UnionMemberNode(
+            name = name,
+            staticParameters = listOf(),
+            extends = listOf(),
+            fields = fields,
+            source = source
+        )
+    } else {
+        return UnionMemberNode(
+            name = name,
+            staticParameters = listOf(),
+            extends = listOf(),
+            fields = listOf(),
+            source = source
+        )
+    }
 }
 
 internal fun parseFunctionDeclaration(source: StringSource, tokens: TokenIterator<TokenType>): FunctionDeclarationNode {

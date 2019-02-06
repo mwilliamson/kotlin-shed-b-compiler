@@ -101,7 +101,7 @@ internal fun isShapeField(
 internal fun isUnion(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    members: Matcher<List<StaticNode>> = anything,
+    members: Matcher<List<UnionMemberNode>> = anything,
     superType: Matcher<StaticReferenceNode?> = anythingOrNull
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
@@ -109,6 +109,20 @@ internal fun isUnion(
         has(UnionNode::staticParameters, staticParameters),
         has(UnionNode::members, members),
         has(UnionNode::superType, superType)
+    ))
+}
+
+internal fun isUnionMember(
+    name: Matcher<Identifier> = anything,
+    staticParameters: Matcher<List<StaticParameterNode>> = anything,
+    extends: Matcher<List<StaticNode>> = anything,
+    fields: Matcher<List<ShapeFieldNode>> = anything
+): Matcher<UnionMemberNode> {
+    return cast(allOf(
+        has(UnionMemberNode::name, name),
+        has(UnionMemberNode::staticParameters, staticParameters),
+        has(UnionMemberNode::extends, extends),
+        has(UnionMemberNode::fields, fields)
     ))
 }
 

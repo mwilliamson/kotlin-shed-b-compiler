@@ -119,10 +119,26 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             context.defer(node, {
                 resolveScope(
                     binders = node.staticParameters,
-                    body = node.superType.nullableToList() + node.members,
+                    body = node.superType.nullableToList(),
                     context = context
                 )
+//                resolveScope(
+//                    binders = node.staticParameters,
+//                    body = node.superType.nullableToList() + node.members,
+//                    context = context
+//                )
             })
+
+            node.members.forEach { member ->
+                context.defer(member, {
+                    // TODO: handle static parameters
+                    resolveScope(
+                        binders = listOf(),
+                        body = member.extends + member.fields,
+                        context = context
+                    )
+                })
+            }
         }
 
         is ValNode -> {
@@ -193,8 +209,9 @@ private fun resolveScope(
     binders: List<VariableBindingNode> = listOf(),
     context: ResolutionContext
 ): ResolutionContext {
+    // TODO: handle this more neatly
     val bodyContext = enterScope(
-        binders + body.filterIsInstance<VariableBindingNode>(),
+        binders + body.filterIsInstance<VariableBindingNode>() + body.filterIsInstance<UnionNode>().flatMap { union -> union.members },
         context
     )
 
