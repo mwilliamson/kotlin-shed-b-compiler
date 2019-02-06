@@ -122,18 +122,12 @@ internal fun resolve(node: Node, context: ResolutionContext) {
                     body = node.superType.nullableToList(),
                     context = context
                 )
-//                resolveScope(
-//                    binders = node.staticParameters,
-//                    body = node.superType.nullableToList() + node.members,
-//                    context = context
-//                )
             })
 
             node.members.forEach { member ->
                 context.defer(member, {
-                    // TODO: handle static parameters
                     resolveScope(
-                        binders = listOf(),
+                        binders = member.staticParameters,
                         body = member.extends + member.fields,
                         context = context
                     )

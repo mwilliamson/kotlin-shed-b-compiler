@@ -248,7 +248,7 @@ private fun parseUnion(source: StringSource, tokens: TokenIterator<TokenType>): 
     tokens.trySkip(TokenType.SYMBOL_BAR)
 
     val members = parseMany(
-        parseElement = { tokens -> ::parseUnionMember.parse(tokens) },
+        parseElement = { tokens -> parseUnionMember(tokens, unionStaticParameters = staticParameters) },
         parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_BAR) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         allowZero = false,
@@ -266,15 +266,40 @@ private fun parseUnion(source: StringSource, tokens: TokenIterator<TokenType>): 
     )
 }
 
-private fun parseUnionMember(source: StringSource, tokens: TokenIterator<TokenType>): UnionMemberNode {
+private fun parseUnionMember(
+    tokens: TokenIterator<TokenType>,
+    unionStaticParameters: List<StaticParameterNode>
+): UnionMemberNode {
+    val source = tokens.location()
     val name = parseIdentifier(tokens)
+
+    val staticParameterNames = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
+         val staticParameterNames = parseMany(
+            parseElement = ::parseIdentifier,
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+            allowZero = false,
+            allowTrailingSeparator = true,
+            tokens = tokens
+        )
+        tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
+        staticParameterNames
+    } else {
+        listOf()
+    }
+
+    val staticParameters = staticParameterNames.map { staticParameterName ->
+        unionStaticParameters.find { parameter -> parameter.name == staticParameterName }!!
+    }
+
+
     if (tokens.trySkip(TokenType.SYMBOL_OPEN_BRACE)) {
         val fields = parseShapeFields(tokens)
         tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
 
         return UnionMemberNode(
             name = name,
-            staticParameters = listOf(),
+            staticParameters = staticParameters,
             extends = listOf(),
             fields = fields,
             source = source
@@ -282,7 +307,7 @@ private fun parseUnionMember(source: StringSource, tokens: TokenIterator<TokenTy
     } else {
         return UnionMemberNode(
             name = name,
-            staticParameters = listOf(),
+            staticParameters = staticParameters,
             extends = listOf(),
             fields = listOf(),
             source = source

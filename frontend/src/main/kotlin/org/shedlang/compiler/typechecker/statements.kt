@@ -248,9 +248,14 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
             context,
             extraFields = listOf(unionField)
         )
-        when (type) {
-            is ShapeType  -> type
-            else -> throw UnsupportedOperationException()
+        if (type is ShapeType) {
+            type
+        } else if (type is TypeFunction) {
+            applyStatic(type, type.parameters.map { shapeParameter ->
+                staticParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
+            }) as ShapeType
+        } else {
+            throw UnsupportedOperationException()
         }
     }
 
