@@ -32,7 +32,7 @@ interface Types {
     fun typeOf(node: ExpressionNode): Type
     fun typeOf(node: StaticNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
-    fun shapeFields(node: ShapeNode): Map<Identifier, Field> {
+    fun shapeFields(node: ShapeBaseNode): Map<Identifier, Field> {
         return (rawType(declaredType(node)) as ShapeType).fields
     }
 

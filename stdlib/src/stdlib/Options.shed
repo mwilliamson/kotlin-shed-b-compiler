@@ -1,9 +1,8 @@
-shape Some[+T] {
-    value: T,
-}
-shape None {
-}
-union Option[+T] = Some[T] | None;
+union Option[+T] =
+    | Some[T] {
+        value: T,
+    }
+    | None;
 
 fun some[T](value: T) -> Option[T] {
     Some(value = value)

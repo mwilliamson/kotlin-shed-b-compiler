@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests
 
 import com.natpryce.hamkrest.*
+import org.shedlang.compiler.ast.Identifier
 
 
 val anythingOrNull = object : Matcher<Any?> {
@@ -50,7 +51,9 @@ fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
     }
 }
 
-fun <T1, T2> isPair(first: Matcher<T1>, second: Matcher<T2>): Matcher<Pair<T1, T2>> {
+fun isIdentifier(name: String) = has(Identifier::value, equalTo(name))
+
+fun <T1, T2> isPair(first: Matcher<T1> = anythingOrNull, second: Matcher<T2>): Matcher<Pair<T1, T2>> {
     return allOf(
         has(Pair<T1, T2>::first, first),
         has(Pair<T1, T2>::second, second)

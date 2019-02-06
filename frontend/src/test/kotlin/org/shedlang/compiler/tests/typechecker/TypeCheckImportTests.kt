@@ -9,9 +9,9 @@ import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.import
+import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.typechecker.ModuleNotFoundError
 import org.shedlang.compiler.typechecker.MultipleModulesWithSameNameFoundError

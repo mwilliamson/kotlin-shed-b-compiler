@@ -1,16 +1,13 @@
 import stdlib.Sequences;
 
-union Next[R, T] = End | Continue[R, T];
-
-shape End {
-}
+union Next[R, T] =
+    | End
+    | Continue[R, T] {
+        element: R,
+        remainder: T,
+    };
 
 val end = End();
-
-shape Continue[R, T] {
-    element: R,
-    remainder: T,
-}
 
 fun continue[R, T](element: R, remainder: T) -> Continue[R, T] {
     Continue(element = element, remainder = remainder)
@@ -31,7 +28,7 @@ fun unfold[R, T, !E](next: (T) -> Next[R, T], value: T) !E -> Sequences.Sequence
                     Sequences.end
                 }
             }
-        },
+        }
     )
 }
 

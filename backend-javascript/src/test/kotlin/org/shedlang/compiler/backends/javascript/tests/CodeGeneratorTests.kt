@@ -116,14 +116,48 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun unionGeneratesStub() {
-        val shed = union("X", listOf())
+    fun unionGeneratesStubForUnionAndShapesForEachMember() {
+        val member1Node = unionMember("Member1")
+        val member2Node = unionMember("Member2")
+        val shed = union("X", listOf(member1Node, member2Node))
 
-        val node = generateCode(shed).single()
+        val member1Type = shapeType("Member1")
+        val member2Type = shapeType("Member2")
 
-        assertThat(node, isJavascriptConst(
-            name = equalTo("X"),
-            expression = isJavascriptNull()
+        val types = typesMap(
+            variableTypes = mapOf(
+                member1Node to MetaType(member1Type),
+                member2Node to MetaType(member2Type)
+            )
+        )
+
+        val nodes = generateCode(shed, context(types = types))
+
+        assertThat(nodes, isSequence(
+            isJavascriptConst(
+                name = equalTo("X"),
+                expression = isJavascriptNull()
+            ),
+            isJavascriptConst(
+                name = equalTo("Member1"),
+                expression = isJavascriptFunctionCall(
+                    isJavascriptVariableReference("\$shed.declareShape"),
+                    isSequence(
+                        isJavascriptStringLiteral("Member1"),
+                        isJavascriptObject(isMap())
+                    )
+                )
+            ),
+            isJavascriptConst(
+                name = equalTo("Member2"),
+                expression = isJavascriptFunctionCall(
+                    isJavascriptVariableReference("\$shed.declareShape"),
+                    isSequence(
+                        isJavascriptStringLiteral("Member2"),
+                        isJavascriptObject(isMap())
+                    )
+                )
+            )
         ))
     }
 

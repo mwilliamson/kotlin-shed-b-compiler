@@ -37,31 +37,28 @@ shape AssertionResult {
     error: Options.Option[AssertionError],
 }
 
-union Test = TestCase | TestSuite;
-union TestResult = TestCaseResult | TestSuiteResult;
+union Test =
+    | TestCase {
+        name: String,
+        run: () -> AssertionResult,
+    }
+    | TestSuite {
+        name: String,
+        tests: List[Test],
+    };
 
-shape TestCase {
-    name: String,
-    run: () -> AssertionResult,
-}
-
-shape TestCaseResult {
-    name: String,
-    error: Options.Option[AssertionError],
-}
+union TestResult =
+    | TestCaseResult {
+        name: String,
+        error: Options.Option[AssertionError],
+    }
+    | TestSuiteResult {
+        name: String,
+        results: List[TestResult],
+    };
 
 fun testCase(name: String, run: () -> AssertionResult) -> TestCase {
     TestCase(name = name, run = run)
-}
-
-shape TestSuite {
-    name: String,
-    tests: List[Test],
-}
-
-shape TestSuiteResult {
-    name: String,
-    results: List[TestResult],
 }
 
 fun suite(name: String, tests: List[Test]) -> Test {

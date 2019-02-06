@@ -22,8 +22,7 @@ internal fun newTypeContext(
         variableTypes = nodeTypes.toMutableMap(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
-        deferred = LinkedList(),
-        unions = mutableListOf()
+        deferred = LinkedList()
     )
 }
 
@@ -34,8 +33,7 @@ internal class TypeContext(
     private val expressionTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleResult,
-    private val deferred: Queue<() -> Unit>,
-    private val unions: MutableList<UnionNode>
+    private val deferred: Queue<() -> Unit>
 ) {
     fun resolveReference(node: ReferenceNode): VariableBindingNode {
         return resolvedReferences[node]
@@ -79,10 +77,6 @@ internal class TypeContext(
         expressionTypes[node.nodeId] = type
     }
 
-    fun addUnion(node: UnionNode) {
-        unions.add(node)
-    }
-
     fun enterFunction(effect: Effect): TypeContext {
         return TypeContext(
             moduleName = moduleName,
@@ -91,8 +85,7 @@ internal class TypeContext(
             variableTypes = variableTypes,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
-            deferred = deferred,
-            unions = unions
+            deferred = deferred
         ).enterScope()
     }
 
@@ -104,8 +97,7 @@ internal class TypeContext(
             variableTypes = HashMap(variableTypes),
             resolvedReferences = resolvedReferences,
             getModule = getModule,
-            deferred = deferred,
-            unions = unions
+            deferred = deferred
         )
     }
 
@@ -117,14 +109,6 @@ internal class TypeContext(
         while (this.deferred.isNotEmpty()) {
             val deferred = this.deferred.poll()
             deferred()
-        }
-    }
-
-    fun findUnionsWithMember(node: ShapeNode): List<UnionNode> {
-        return unions.filter { union ->
-            union.members.any { member ->
-                isShape(member, node)
-            }
         }
     }
 
@@ -242,7 +226,10 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
 
     context.undefer()
 
-    return ModuleType(fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
+    // TODO: deduplicate with resolution (to find binders)
+    val bindingNodes = module.body.filterIsInstance<VariableBindingNode>() +
+        module.body.filterIsInstance<UnionNode>().flatMap { union -> union.members }
+    return ModuleType(fields = bindingNodes.associateBy(
         { statement -> statement.name },
         { statement -> context.typeOf(statement) }
     ))

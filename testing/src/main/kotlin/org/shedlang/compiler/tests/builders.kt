@@ -269,7 +269,7 @@ fun shapeField(
 
 fun union(
     name: String = "Union",
-    members: List<StaticNode> = listOf(),
+    members: List<UnionMemberNode> = listOf(),
     staticParameters: List<StaticParameterNode> = listOf(),
     superType: StaticReferenceNode? = null
 ) = UnionNode(
@@ -277,6 +277,19 @@ fun union(
     staticParameters = staticParameters,
     superType = superType,
     members = members,
+    source = anySource()
+)
+
+fun unionMember(
+    name: String,
+    staticParameters: List<StaticParameterNode> = listOf(),
+    extends: List<StaticNode> = listOf(),
+    fields: List<ShapeFieldNode> = listOf()
+) = UnionMemberNode(
+    name = Identifier(name),
+    staticParameters = staticParameters,
+    extends = extends,
+    fields = fields,
     source = anySource()
 )
 

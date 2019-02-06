@@ -24,11 +24,13 @@ fun isFunctionType(
 fun isShapeType(
     shapeId: Matcher<Int> = anything,
     name: Matcher<Identifier> = anything,
+    staticParameters: Matcher<List<StaticParameter>> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
     fields: Matcher<Collection<Field>> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::name, name),
+    has(ShapeType::staticParameters, staticParameters),
     has(ShapeType::staticArguments, staticArguments),
     has("fields", { type -> type.fields.values }, fields)
 ))

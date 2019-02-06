@@ -17,51 +17,20 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
 }
 
 private fun typeCheck(node: ShapeNode, context: TypeContext) {
-    val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
+    generateShapeType(node, context)
+}
 
-    for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
-        if (fields.size > 1) {
-            throw FieldAlreadyDeclaredError(fieldName = fieldName, source = fields[1].source)
-        }
-    }
+private fun generateShapeType(
+    node: ShapeBaseNode,
+    context: TypeContext,
+    extraFields: List<FieldDefinition> = listOf()
+): Type {
+    val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     val shapeId = freshShapeId()
 
     // TODO: test laziness
-    val fields = lazy({
-        val unions = context.findUnionsWithMember(node)
-
-        val parentFields = node.extends.flatMap { extendNode ->
-            val superType = evalType(extendNode, context)
-            if (superType is ShapeType) {
-                superType.fields.values.map { field ->
-                    FieldDefinition(field, superType.name, extendNode.source)
-                }
-            } else {
-                // TODO: throw a better exception
-                throw NotImplementedError()
-            }
-        }
-
-        val explicitFields = node.fields.map { field ->
-            generateField(field, context, shapeId = shapeId, shapeName = node.name)
-        }
-        val unionFields = unions.map { union ->
-            FieldDefinition(
-                field = Field(
-                    // TODO: this relies on uniqueness with shape and node IDs
-                    shapeId = union.nodeId,
-                    name = Identifier("\$unionTag\$${context.moduleName!!.joinToString(".")}\$${union.name.value}"),
-                    isConstant = true,
-                    type = SymbolType(Symbol(context.moduleName.map(::Identifier), "@" + node.name.value))
-                ),
-                shape = union.name,
-                source = union.source
-            )
-        }
-
-        mergeFields(parentFields, explicitFields + unionFields)
-    })
+    val fields = generateFields(node, context, shapeId, extraFields)
 
     val shapeType = lazyShapeType(
         shapeId = shapeId,
@@ -85,6 +54,40 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
         }
         checkType(type, source = node.source)
     })
+    return type
+}
+
+private fun generateFields(
+    node: ShapeBaseNode,
+    context: TypeContext,
+    shapeId: Int,
+    extraFields: List<FieldDefinition>
+): Lazy<List<Field>> {
+    for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
+        if (fields.size > 1) {
+            throw FieldAlreadyDeclaredError(fieldName = fieldName, source = fields[1].source)
+        }
+    }
+
+    return lazy {
+        val parentFields = node.extends.flatMap { extendNode ->
+            val superType = evalType(extendNode, context)
+            if (superType is ShapeType) {
+                superType.fields.values.map { field ->
+                    FieldDefinition(field, superType.name, extendNode.source)
+                }
+            } else {
+                // TODO: throw a better exception
+                throw NotImplementedError()
+            }
+        }
+
+        val explicitFields = node.fields.map { field ->
+            generateField(field, context, shapeId = shapeId, shapeName = node.name)
+        }
+
+        mergeFields(parentFields, explicitFields + extraFields)
+    }
 }
 
 private data class FieldDefinition(val field: Field, val shape: Identifier, val source: Source)
@@ -212,12 +215,10 @@ private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, ne
 }
 
 private fun typeCheck(node: UnionNode, context: TypeContext) {
-    context.addUnion(node)
     // TODO: check for duplicates in members
     // TODO: check for circularity
     // TODO: test laziness
     // TODO: check members satisfy subtype relation
-    // TODO: check members have common tag field
     val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     val superTypeNode = node.superType
@@ -229,20 +230,38 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     // TODO: check members conform to supertype
 
-    val members = lazy({
-        node.members.map({ member ->
-            val memberType = evalType(member, context)
-            if (memberType is ShapeType) {
-                memberType
-            } else {
-                // TODO: test this, throw a sensible exception
-                throw UnsupportedOperationException()
-            }
-        })
-    })
+    val baseShapeId = freshShapeId()
+
+    val memberTypes = node.members.map { member ->
+        val unionField = FieldDefinition(
+            field = Field(
+                shapeId = baseShapeId,
+                name = Identifier("\$unionTag\$${context.moduleName!!.joinToString(".")}\$${node.name.value}"),
+                isConstant = true,
+                type = SymbolType(Symbol(context.moduleName.map(::Identifier), "@" + member.name.value))
+            ),
+            shape = node.name,
+            source = node.source
+        )
+        val type = generateShapeType(
+            member,
+            context,
+            extraFields = listOf(unionField)
+        )
+        if (type is ShapeType) {
+            type
+        } else if (type is TypeFunction) {
+            applyStatic(type, type.parameters.map { shapeParameter ->
+                staticParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
+            }) as ShapeType
+        } else {
+            throw UnsupportedOperationException()
+        }
+    }
+
     val unionType = LazyUnionType(
         name = node.name,
-        getMembers = members,
+        getMembers = lazy { memberTypes },
         staticArguments = staticParameters
     )
     val type = if (node.staticParameters.isEmpty()) {
@@ -253,7 +272,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     context.addVariableType(node, MetaType(type))
     context.defer({
-        members.value
+        memberTypes.forEach { memberType -> memberType.fields }
         checkType(type, source = node.source)
     })
 }

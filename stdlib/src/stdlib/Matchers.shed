@@ -71,12 +71,14 @@ shape Matcher[-T] {
     match: (T) -> Result,
 }
 
-union Result = Success | Failure;
-shape Success { }
-shape Failure {
-    message: String,
-}
+union Result =
+    | Success
+    | Failure {
+        message: String,
+    };
+
 val success = Success();
+
 fun failure(message: String) -> Failure {
     Failure(message=message)
 }

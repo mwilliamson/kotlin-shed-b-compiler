@@ -30,7 +30,7 @@ internal class CodeGenerationContext(val moduleName: List<Identifier>, private v
 
     fun findDiscriminator(node: IsNode) = findDiscriminator(node, types = types)
     fun findDiscriminator(node: WhenNode, branch: WhenBranchNode) = findDiscriminator(node, branch, types = types)
-    fun shapeFields(node: ShapeNode) = types.shapeFields(node)
+    fun shapeFields(node: ShapeBaseNode) = types.shapeFields(node)
 }
 
 private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
@@ -71,14 +71,14 @@ private fun generateExport(statement: VariableBindingNode): JavascriptExpression
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
-        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
-        override fun visit(node: UnionNode): List<JavascriptStatementNode> = listOf(generateCode(node))
+        override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCodeForShape(node, context))
+        override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
     })
 }
 
-private fun generateCode(node: ShapeNode, context: CodeGenerationContext) : JavascriptStatementNode {
+private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext) : JavascriptStatementNode {
     // TODO: remove duplication with InterpreterLoader and Python code generator
 
     val constantFields = context.shapeFields(node)
@@ -122,13 +122,15 @@ private fun generateCode(node: ShapeNode, context: CodeGenerationContext) : Java
     )
 }
 
-private fun generateCode(node: UnionNode) : JavascriptStatementNode {
+private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext) : List<JavascriptStatementNode> {
     val source = NodeSource(node)
-    return JavascriptConstNode(
-        name = generateName(node.name),
-        expression = JavascriptNullLiteralNode(source = source),
-        source = source
-    )
+    return listOf(
+        JavascriptConstNode(
+            name = generateName(node.name),
+            expression = JavascriptNullLiteralNode(source = source),
+            source = source
+        )
+    ) + node.members.map { member -> generateCodeForShape(member, context) }
 }
 
 private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): JavascriptFunctionDeclarationNode {
