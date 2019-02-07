@@ -379,6 +379,7 @@ data class FunctionDeclarationNode(
 
 interface StaticParameterNode: VariableBindingNode {
     fun <T> accept(visitor: Visitor<T>): T
+    fun copy(): StaticParameterNode
 
     interface Visitor<T> {
         fun visit(node: TypeParameterNode): T
@@ -398,6 +399,10 @@ data class TypeParameterNode(
     override fun <T> accept(visitor: StaticParameterNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    override fun copy(): TypeParameterNode {
+        return copy(nodeId = freshNodeId())
+    }
 }
 
 data class EffectParameterNode(
@@ -410,6 +415,10 @@ data class EffectParameterNode(
 
     override fun <T> accept(visitor: StaticParameterNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun copy(): EffectParameterNode {
+        return copy(nodeId = freshNodeId())
     }
 }
 

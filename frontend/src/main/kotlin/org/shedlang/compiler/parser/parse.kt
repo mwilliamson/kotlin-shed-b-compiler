@@ -289,7 +289,7 @@ private fun parseUnionMember(
     }
 
     val staticParameters = staticParameterNames.map { staticParameterName ->
-        unionStaticParameters.find { parameter -> parameter.name == staticParameterName }!!
+        unionStaticParameters.find { parameter -> parameter.name == staticParameterName }!!.copy()
     }
 
 
