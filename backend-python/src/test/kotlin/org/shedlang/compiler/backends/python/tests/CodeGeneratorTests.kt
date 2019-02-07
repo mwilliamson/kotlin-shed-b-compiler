@@ -164,6 +164,34 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun unionGeneratesShapesForEachMember() {
+        val member1Node = unionMember("Member1")
+        val member2Node = unionMember("Member2")
+        val shed = union("X", listOf(member1Node, member2Node))
+
+        val member1Type = shapeType("Member1")
+        val member2Type = shapeType("Member2")
+
+        val types = typesMap(
+            variableTypes = mapOf(
+                member1Node to MetaType(member1Type),
+                member2Node to MetaType(member2Type)
+            )
+        )
+
+        val nodes = generateCode(shed, context(types = types))
+
+        assertThat(nodes, isSequence(
+            isPythonClass(
+                name = equalTo("Member1")
+            ),
+            isPythonClass(
+                name = equalTo("Member2")
+            )
+        ))
+    }
+
+    @Test
     fun functionDeclarationGeneratesFunctionWithPythonisedName() {
         val shed = function(
             name = "oneTwoThree",
