@@ -3,11 +3,11 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.types.Variance
 
 class ParseUnionTests {
     @Test
@@ -56,30 +56,65 @@ class ParseUnionTests {
     }
 
     @Test
-    @Disabled("WIP")
     fun unionCanHaveTypeParameter() {
-//        val source = "union X[T] = Y | Z;"
-//        val node = parseString(::parseModuleStatement, source)
-//        assertThat(node, isUnion(
-//            name = isIdentifier("X"),
-//            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
-//            members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
-//        ))
+        val source = "union X[T] = Y[T] { y: T };"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            name = isIdentifier("X"),
+            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+            members = isSequence(
+                isUnionMember(
+                    staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+                    fields = isSequence(
+                        isShapeField(name = isIdentifier("y"), type = present(isStaticReference("T")))
+                    )
+                )
+            )
+        ))
     }
 
     @Test
-    @Disabled("WIP")
+    fun typeParametersOnMembersAreDerivedFromUnion() {
+        val source = "union X[+T] = Y[T] { y: T };"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT))),
+            members = isSequence(
+                isUnionMember(
+                    staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT)))
+                )
+            )
+        ))
+    }
+
+    @Test
     fun unionCanHaveManyTypeParameters() {
-//        val source = "union X[T, U] = Y | Z;"
-//        val node = parseString(::parseModuleStatement, source)
-//        assertThat(node, isUnion(
-//            name = isIdentifier("X"),
-//            staticParameters = isSequence(
-//                isTypeParameter(name = isIdentifier("T")),
-//                isTypeParameter(name = isIdentifier("U"))
-//            ),
-//            members = isSequence(isStaticReference("Y"), isStaticReference("Z"))
-//        ))
+        val source = "union X[T, U] = Y | Z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            name = isIdentifier("X"),
+            staticParameters = isSequence(
+                isTypeParameter(name = isIdentifier("T")),
+                isTypeParameter(name = isIdentifier("U"))
+            ),
+            members = isSequence(
+                isUnionMember(name = isIdentifier("Y")),
+                isUnionMember(name = isIdentifier("Z"))
+            )
+        ))
+    }
+
+    @Test
+    fun typeParametersOnMemberCanBeSubsetOfUnionTypeParameters() {
+        val source = "union X[+T1, T2, -T3] = Y[T3] { y: T3 };"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isUnion(
+            members = isSequence(
+                isUnionMember(
+                    staticParameters = isSequence(isTypeParameter(name = isIdentifier("T3"), variance = equalTo(Variance.CONTRAVARIANT)))
+                )
+            )
+        ))
     }
 
     @Test
