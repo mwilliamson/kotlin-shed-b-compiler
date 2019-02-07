@@ -420,18 +420,26 @@ class ResolutionTests {
     }
 
     @Test
-    fun unionTypeParametersAreAddedToScope() {
-        // TODO:
-//        val reference = staticReference("T")
-//        val typeParameter = typeParameter("T")
-//        val node = union(
-//            staticParameters = listOf(typeParameter),
-//            members = listOf(reference)
-//        )
-//
-//        val references = resolve(node, globals = mapOf())
-//
-//        assertThat(references[reference], isVariableBinding(typeParameter))
+    fun unionMemberTypeParametersAreAddedToScope() {
+        val reference = staticReference("T")
+        val unionTypeParameter = typeParameter("T")
+        val shapeTypeParameter = typeParameter("T")
+        val node = union(
+            staticParameters = listOf(unionTypeParameter),
+            members = listOf(
+                unionMember(
+                    "Member1",
+                    staticParameters = listOf(shapeTypeParameter),
+                    fields = listOf(
+                        shapeField(type = reference)
+                    )
+                )
+            )
+        )
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[reference], isVariableBinding(shapeTypeParameter))
     }
 
     private fun resolutionContext(
