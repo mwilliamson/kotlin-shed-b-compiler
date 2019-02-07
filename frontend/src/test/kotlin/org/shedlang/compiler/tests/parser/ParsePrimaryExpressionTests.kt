@@ -6,12 +6,12 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.InvalidCodePoint
 import org.shedlang.compiler.parser.InvalidCodePointLiteral
 import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
 import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.isIdentifier
 
 class ParsePrimaryExpressionTests {
     @Test

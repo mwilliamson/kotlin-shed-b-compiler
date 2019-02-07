@@ -3,7 +3,6 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
 

@@ -3,8 +3,6 @@ package org.shedlang.compiler.frontend.tests
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.Identifier
 
-internal fun isIdentifier(name: String) = has(Identifier::value, equalTo(name))
-
 inline fun <reified T : Throwable> throwsException(exceptionCriteria: Matcher<T>? = null): Matcher<() -> Unit> {
     val exceptionName = T::class.qualifiedName
 

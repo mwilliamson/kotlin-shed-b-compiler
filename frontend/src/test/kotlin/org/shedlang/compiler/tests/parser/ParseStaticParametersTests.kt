@@ -2,14 +2,10 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.TokenType
 import org.shedlang.compiler.parser.parseStaticParameters
-import org.shedlang.compiler.tests.isContravariant
-import org.shedlang.compiler.tests.isCovariant
-import org.shedlang.compiler.tests.isInvariant
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.*
 
 class ParseStaticParametersTests {
     @Test

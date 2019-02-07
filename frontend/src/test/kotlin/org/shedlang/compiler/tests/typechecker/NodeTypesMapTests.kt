@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIdentifier
+import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.parameter
 import org.shedlang.compiler.typechecker.NodeTypesMap
 import org.shedlang.compiler.typechecker.UnknownTypeError

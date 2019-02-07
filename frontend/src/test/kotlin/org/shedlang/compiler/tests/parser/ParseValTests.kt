@@ -5,9 +5,9 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.IntegerLiteralNode
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
+import org.shedlang.compiler.tests.isIdentifier
 
 class ParseValTests {
     @Test

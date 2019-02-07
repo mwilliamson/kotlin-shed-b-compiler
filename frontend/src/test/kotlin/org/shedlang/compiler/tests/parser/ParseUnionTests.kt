@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.parseModuleStatement
+import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.Variance
 

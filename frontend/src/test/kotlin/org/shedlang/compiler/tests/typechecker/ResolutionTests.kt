@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.VariableBindingNode
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 

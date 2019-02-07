@@ -2,9 +2,9 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.anythingOrNull
+import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 

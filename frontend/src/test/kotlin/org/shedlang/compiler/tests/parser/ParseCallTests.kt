@@ -5,10 +5,10 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.isIdentifier
 import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 
 class ParseCallTests {

@@ -52,13 +52,15 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context)
+        val loadedStatement = loadModuleStatement(statement, context).single()
 
-        assertThat(loadedStatement, cast(
-            has(ShapeTypeValue::constantFields, isMap(
-                Identifier("x") to cast(equalTo(IntegerValue(1))),
-                Identifier("y") to cast(equalTo(IntegerValue(2)))
-            ))
+        assertThat(loadedStatement, isPair(
+            second = cast(
+                has(ShapeTypeValue::constantFields, isMap(
+                    Identifier("x") to cast(equalTo(IntegerValue(1))),
+                    Identifier("y") to cast(equalTo(IntegerValue(2)))
+                ))
+            )
         ))
     }
 
@@ -89,10 +91,12 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context)
+        val loadedStatement = loadModuleStatement(statement, context).single()
 
-        assertThat(loadedStatement, cast(
-            has(ShapeTypeValue::constantFields, isMap())
+        assertThat(loadedStatement, isPair(
+            second = cast(
+                has(ShapeTypeValue::constantFields, isMap())
+            )
         ))
     }
 
@@ -118,15 +122,17 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context)
+        val loadedStatement = loadModuleStatement(statement, context).single()
 
-        assertThat(loadedStatement, cast(
-            has(ShapeTypeValue::constantFields, isMap(
-                Identifier("x") to cast(equalTo(symbolValue(
-                    module = listOf("A", "B"),
-                    name = "@C"
-                )))
-            ))
+        assertThat(loadedStatement, isPair(
+            second = cast(
+                has(ShapeTypeValue::constantFields, isMap(
+                    Identifier("x") to cast(equalTo(symbolValue(
+                        module = listOf("A", "B"),
+                        name = "@C"
+                    )))
+                ))
+            )
         ))
     }
 }
