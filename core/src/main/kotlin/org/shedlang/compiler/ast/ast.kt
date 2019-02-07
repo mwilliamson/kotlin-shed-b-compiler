@@ -308,7 +308,7 @@ data class UnionMemberNode(
     override val nodeId: Int = freshNodeId()
 ): ShapeBaseNode {
     override val children: List<Node>
-        get() = staticParameters + fields
+        get() = staticParameters + extends + fields
 }
 
 interface FunctionNode : Node {
