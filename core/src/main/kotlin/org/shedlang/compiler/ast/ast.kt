@@ -196,8 +196,7 @@ data class ModuleNode(
         get() = imports + body
 
     val exports: List<VariableBindingNode>
-        get() = body.filterIsInstance<VariableBindingNode>() +
-            body.filterIsInstance<UnionNode>().flatMap { union -> union.members }
+        get() = body.flatMap { statement -> statement.variableBinders() }
 }
 
 data class TypesModuleNode(
@@ -252,6 +251,7 @@ interface ModuleStatementNode: Node {
     }
 
     fun <T> accept(visitor: Visitor<T>): T
+    fun variableBinders(): List<VariableBindingNode>
 }
 
 data class ShapeNode(
@@ -267,6 +267,10 @@ data class ShapeNode(
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf(this)
     }
 }
 
@@ -301,6 +305,10 @@ data class UnionNode(
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf(this) + members
     }
 }
 
@@ -379,6 +387,10 @@ data class FunctionDeclarationNode(
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf(this)
     }
 }
 
@@ -547,6 +559,10 @@ data class ValNode(
     }
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf(this)
     }
 }
 
