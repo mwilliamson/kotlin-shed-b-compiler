@@ -14,8 +14,7 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
     val body = node.body.flatMap { statement -> generateCode(statement, context)  }
-    val exports = node.body.filterIsInstance<VariableBindingNode>()
-        .map(::generateExport)
+    val exports = node.exports.map(::generateExport)
     return JavascriptModuleNode(
         imports + body + exports,
         source = NodeSource(node)
