@@ -23,8 +23,7 @@ val backend = object: Backend {
             when (module) {
                 is Module.Shed -> {
                     val javascriptModule = compileModule(
-                        module = module,
-                        modules = moduleSet
+                        module = module
                     )
                     writeModule(target, javascriptModule)
                 }
@@ -75,8 +74,8 @@ fun compile(frontendResult: ModuleSet, target: Path) {
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
 
-private fun compileModule(module: Module.Shed, modules: ModuleSet): JavascriptModule {
-    val generateCode = generateCode(module = module, modules = modules)
+private fun compileModule(module: Module.Shed): JavascriptModule {
+    val generateCode = generateCode(module = module)
 
     // TODO: remove duplication with import code in codeGenerator
     val builtinsPath = "./" + "../".repeat(module.name.size - 1) + "builtins"

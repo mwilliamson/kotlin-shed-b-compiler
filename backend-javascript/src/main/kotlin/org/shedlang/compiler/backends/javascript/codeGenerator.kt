@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.javascript
 
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
@@ -9,7 +8,7 @@ import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.types.*
 import java.lang.Exception
 
-internal fun generateCode(module: Module.Shed, modules: ModuleSet): JavascriptModuleNode {
+internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val context = CodeGenerationContext(moduleName = module.name, types = module.types)
 
     val node = module.node

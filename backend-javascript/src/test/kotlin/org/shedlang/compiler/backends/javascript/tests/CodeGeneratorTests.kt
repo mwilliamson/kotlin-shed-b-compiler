@@ -26,7 +26,7 @@ class CodeGeneratorTests {
         val shed = stubbedModule(
             node = module(body = listOf())
         )
-        val node = generateCode(shed, emptyModules)
+        val node = generateCode(shed)
 
         assertThat(node, isJavascriptModule(equalTo(listOf())))
     }
@@ -35,7 +35,7 @@ class CodeGeneratorTests {
     fun moduleImportsGenerateJavascriptImports() {
         val shed = stubbedModule(node = module(imports = listOf(import(ImportPath.relative(listOf("x"))))))
 
-        val node = generateCode(shed, emptyModules)
+        val node = generateCode(shed)
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
@@ -54,7 +54,7 @@ class CodeGeneratorTests {
     fun moduleIncludesBodyAndExports() {
         val shed = stubbedModule(node = module(body = listOf(function(name = "f"))))
 
-        val node = generateCode(shed, emptyModules)
+        val node = generateCode(shed)
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
