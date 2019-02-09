@@ -307,7 +307,7 @@ class CodeGeneratorTests {
     fun valGeneratesConst() {
         val shed = valStatement(name = "x", expression = literalBool(true))
 
-        val node = generateCode(shed as StatementNode)
+        val node = generateCode(shed as FunctionStatementNode)
 
         assertThat(node, isJavascriptConst(equalTo("x"), isJavascriptBooleanLiteral(true)))
     }
@@ -627,7 +627,7 @@ class CodeGeneratorTests {
     }
 
     private fun generateCode(node: ModuleStatementNode) = generateCode(node, context())
-    private fun generateCode(node: StatementNode) = generateCode(node, context())
+    private fun generateCode(node: FunctionStatementNode) = generateCode(node, context())
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
     private fun context(

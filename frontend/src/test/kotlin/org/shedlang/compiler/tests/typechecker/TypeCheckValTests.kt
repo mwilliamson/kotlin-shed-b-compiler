@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.StatementNode
+import org.shedlang.compiler.ast.FunctionStatementNode
 import org.shedlang.compiler.tests.call
 import org.shedlang.compiler.tests.literalInt
 import org.shedlang.compiler.tests.valStatement
@@ -25,7 +25,7 @@ class TypeCheckValTests {
         val functionReference = variableReference("f")
         val node = valStatement(name = "x", expression = call(functionReference))
         assertThat(
-            { typeCheck(node as StatementNode, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
+            { typeCheck(node as FunctionStatementNode, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))
         )
     }
@@ -39,7 +39,7 @@ class TypeCheckValTests {
             resolvedReferences = ResolvedReferencesMap(mapOf()),
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
-        typeCheck(node as StatementNode, typeContext)
+        typeCheck(node as FunctionStatementNode, typeContext)
         assertThat(typeContext.typeOf(node), cast(equalTo(IntType)))
     }
 }

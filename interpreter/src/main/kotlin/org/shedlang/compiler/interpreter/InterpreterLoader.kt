@@ -96,8 +96,8 @@ private fun shapeToExpression(node: ShapeBaseNode, context: LoaderContext): Shap
     return expression
 }
 
-private fun loadStatement(statement: StatementNode, context: LoaderContext): Statement {
-    return statement.accept(object: StatementNode.Visitor<Statement> {
+private fun loadStatement(statement: FunctionStatementNode, context: LoaderContext): Statement {
+    return statement.accept(object: FunctionStatementNode.Visitor<Statement> {
         override fun visit(node: ExpressionStatementNode): Statement {
             return ExpressionStatement(
                 expression = loadExpression(node.expression, context),

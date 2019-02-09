@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.StatementNode
+import org.shedlang.compiler.ast.FunctionStatementNode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.MetaType
@@ -13,7 +13,7 @@ import org.shedlang.compiler.types.UnitType
 class TypeCheckModuleTests {
     @Test
     fun bodyIsTypeChecked() {
-        assertStatementIsTypeChecked(fun(badStatement: StatementNode) {
+        assertStatementIsTypeChecked(fun(badStatement: FunctionStatementNode) {
             val unit = staticReference("Unit")
             val node = module(body = listOf(
                 function(returnType = unit, body = listOf(badStatement))

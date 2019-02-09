@@ -12,7 +12,7 @@ internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
 
 internal fun isIf(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
-    elseBranch: Matcher<List<StatementNode>>
+    elseBranch: Matcher<List<FunctionStatementNode>>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(IfNode::conditionalBranches, conditionalBranches),
     has(IfNode::elseBranch, elseBranch)
@@ -20,7 +20,7 @@ internal fun isIf(
 
 internal fun isConditionalBranch(
     condition: Matcher<ExpressionNode>,
-    body: Matcher<List<StatementNode>>
+    body: Matcher<List<FunctionStatementNode>>
 ): Matcher<ConditionalBranchNode> = cast(allOf(
     has(ConditionalBranchNode::condition, condition),
     has(ConditionalBranchNode::body, body)
@@ -36,7 +36,7 @@ internal fun isWhen(
 
 internal fun isWhenBranch(
     type: Matcher<StaticNode>,
-    body: Matcher<List<StatementNode>>
+    body: Matcher<List<FunctionStatementNode>>
 ): Matcher<WhenBranchNode> = allOf(
     has(WhenBranchNode::type, type),
     has(WhenBranchNode::body, body)
@@ -45,7 +45,7 @@ internal fun isWhenBranch(
 internal fun isExpressionStatement(
     expression: Matcher<ExpressionNode> = anything,
     isReturn: Matcher<Boolean> = anything
-): Matcher<StatementNode> {
+): Matcher<FunctionStatementNode> {
     return cast(allOf(
         has(ExpressionStatementNode::expression, expression),
         has(ExpressionStatementNode::isReturn, isReturn)

@@ -445,11 +445,11 @@ private fun parseEffect(tokens: TokenIterator<TokenType>): StaticNode {
     return parseStaticExpression(tokens)
 }
 
-private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<StatementNode> {
+private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<FunctionStatementNode> {
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
-    val statements = mutableListOf<StatementNode>()
-    var lastStatement: StatementNode? = null
+    val statements = mutableListOf<FunctionStatementNode>()
+    var lastStatement: FunctionStatementNode? = null
 
     while (!(tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || (lastStatement != null && lastStatement.isReturn))) {
         lastStatement = parseFunctionStatement(tokens)
@@ -511,7 +511,7 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
     return parseStaticExpression(tokens)
 }
 
-internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : StatementNode {
+internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : FunctionStatementNode {
     val token = tokens.peek()
     when (token.tokenType) {
         TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
@@ -541,9 +541,9 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Statemen
     }
 }
 
-private fun branchesReturn(expression: Node, branches: Iterable<List<StatementNode>>): Boolean {
+private fun branchesReturn(expression: Node, branches: Iterable<List<FunctionStatementNode>>): Boolean {
     val isReturns = branches.map { body ->
-        body.any(StatementNode::isReturn)
+        body.any(FunctionStatementNode::isReturn)
     }.toSet()
     return if (isReturns.size == 1) {
         isReturns.single()

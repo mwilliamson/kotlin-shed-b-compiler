@@ -11,9 +11,9 @@ fun anySource(): Source {
 
 fun ifStatement(
     condition: ExpressionNode = literalBool(true),
-    trueBranch: List<StatementNode> = listOf(),
-    elseBranch: List<StatementNode> = listOf()
-): StatementNode {
+    trueBranch: List<FunctionStatementNode> = listOf(),
+    elseBranch: List<FunctionStatementNode> = listOf()
+): FunctionStatementNode {
     return ExpressionStatementNode(
         expression = ifExpression(
             condition = condition,
@@ -27,8 +27,8 @@ fun ifStatement(
 
 fun ifExpression(
     condition: ExpressionNode = literalBool(true),
-    trueBranch: List<StatementNode> = listOf(),
-    elseBranch: List<StatementNode> = listOf()
+    trueBranch: List<FunctionStatementNode> = listOf(),
+    elseBranch: List<FunctionStatementNode> = listOf()
 ): IfNode {
     return ifExpression(
         conditionalBranches = listOf(
@@ -43,7 +43,7 @@ fun ifExpression(
 
 fun ifExpression(
     conditionalBranches: List<ConditionalBranchNode>,
-    elseBranch: List<StatementNode> = listOf()
+    elseBranch: List<FunctionStatementNode> = listOf()
 ): IfNode {
     return IfNode(
         conditionalBranches = conditionalBranches,
@@ -54,7 +54,7 @@ fun ifExpression(
 
 fun conditionalBranch(
     condition: ExpressionNode,
-    body: List<StatementNode>
+    body: List<FunctionStatementNode>
 ) = ConditionalBranchNode(
     condition = condition,
     body = body,
@@ -68,7 +68,7 @@ fun whenExpression(
 
 fun whenBranch(
     type: StaticNode,
-    body: List<StatementNode> = listOf()
+    body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,
     body = body,
@@ -195,7 +195,7 @@ fun function(
     namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode = staticReference("Unit"),
-    body: List<StatementNode> = listOf()
+    body: List<FunctionStatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = Identifier(name),
     staticParameters = staticParameters,
@@ -213,7 +213,7 @@ fun functionExpression(
     namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticNode> = listOf(),
     returnType: StaticNode? = null,
-    body: List<StatementNode> = listOf()
+    body: List<FunctionStatementNode> = listOf()
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
     parameters = parameters,

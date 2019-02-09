@@ -335,17 +335,17 @@ interface FunctionNode : Node {
 
 sealed class FunctionBody {
     abstract val nodes: List<Node>
-    abstract val statements: List<StatementNode>
+    abstract val statements: List<FunctionStatementNode>
 
-    data class Statements(override val nodes: List<StatementNode>): FunctionBody() {
-        override val statements: List<StatementNode>
+    data class Statements(override val nodes: List<FunctionStatementNode>): FunctionBody() {
+        override val statements: List<FunctionStatementNode>
             get() = nodes
     }
     data class Expression(val expression: ExpressionNode): FunctionBody() {
         override val nodes: List<Node>
             get() = listOf(expression)
 
-        override val statements: List<StatementNode>
+        override val statements: List<FunctionStatementNode>
             get() = listOf(ExpressionStatementNode(expression, isReturn = true, source = expression.source))
     }
 }
@@ -382,7 +382,7 @@ data class FunctionDeclarationNode(
     override val children: List<Node>
         get() = parameters + namedParameters + effects + returnType + body.nodes
 
-    val bodyStatements: List<StatementNode>
+    val bodyStatements: List<FunctionStatementNode>
         get() = body.nodes
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
@@ -449,7 +449,7 @@ data class ParameterNode(
         get() = listOf(type)
 }
 
-interface StatementNode : Node {
+interface FunctionStatementNode : Node {
     interface Visitor<T> {
         fun visit(node: BadStatementNode): T {
             throw UnsupportedOperationException("not implemented")
@@ -459,27 +459,27 @@ interface StatementNode : Node {
     }
 
     val isReturn: Boolean
-    fun <T> accept(visitor: StatementNode.Visitor<T>): T
+    fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T
 }
 
 data class BadStatementNode(
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : StatementNode {
+) : FunctionStatementNode {
     override val children: List<Node>
         get() = listOf()
 
     override val isReturn: Boolean
         get() = false
 
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class IfNode(
     val conditionalBranches: List<ConditionalBranchNode>,
-    val elseBranch: List<StatementNode>,
+    val elseBranch: List<FunctionStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
@@ -490,13 +490,13 @@ data class IfNode(
         return visitor.visit(this)
     }
 
-    val branchBodies: Iterable<List<StatementNode>>
+    val branchBodies: Iterable<List<FunctionStatementNode>>
         get() = conditionalBranches.map { branch -> branch.body } + listOf(elseBranch)
 }
 
 data class ConditionalBranchNode(
     val condition: ExpressionNode,
-    val body: List<StatementNode>,
+    val body: List<FunctionStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
@@ -520,7 +520,7 @@ data class WhenNode(
 
 data class WhenBranchNode(
     val type: StaticNode,
-    val body: List<StatementNode>,
+    val body: List<FunctionStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
@@ -533,11 +533,11 @@ data class ExpressionStatementNode(
     override val isReturn: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StatementNode {
+): FunctionStatementNode {
     override val children: List<Node>
         get() = listOf(expression)
 
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -547,14 +547,14 @@ data class ValNode(
     val expression: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode, StatementNode, ModuleStatementNode {
+): VariableBindingNode, FunctionStatementNode, ModuleStatementNode {
     override val children: List<Node>
         get() = listOf(expression)
 
     override val isReturn: Boolean
         get() = false
 
-    override fun <T> accept(visitor: StatementNode.Visitor<T>): T {
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {

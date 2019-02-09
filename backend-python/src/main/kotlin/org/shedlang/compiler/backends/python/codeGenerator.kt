@@ -313,7 +313,7 @@ private fun generateParameters(function: FunctionNode, context: CodeGenerationCo
         function.namedParameters.map({ parameter -> context.name(parameter) })
 
 private fun generateBlockCode(
-    statements: List<StatementNode>,
+    statements: List<FunctionStatementNode>,
     context: CodeGenerationContext,
     returnValue: ReturnValue
 ): List<PythonStatementNode> {
@@ -323,11 +323,11 @@ private fun generateBlockCode(
 }
 
 internal fun generateStatementCode(
-    node: StatementNode,
+    node: FunctionStatementNode,
     context: CodeGenerationContext,
     returnValue: ReturnValue
 ): List<PythonStatementNode> {
-    return node.accept(object : StatementNode.Visitor<List<PythonStatementNode>> {
+    return node.accept(object : FunctionStatementNode.Visitor<List<PythonStatementNode>> {
         override fun visit(node: ExpressionStatementNode): List<PythonStatementNode> {
             return generateCode(node, context, returnValue = returnValue)
         }

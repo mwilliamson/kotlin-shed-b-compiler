@@ -283,8 +283,8 @@ private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
 }
 
 
-internal fun typeCheck(statement: StatementNode, context: TypeContext): Type {
-    return statement.accept(object : StatementNode.Visitor<Type> {
+internal fun typeCheck(statement: FunctionStatementNode, context: TypeContext): Type {
+    return statement.accept(object : FunctionStatementNode.Visitor<Type> {
         override fun visit(node: BadStatementNode): Type {
             throw BadStatementError(node.source)
         }
@@ -310,7 +310,7 @@ private fun typeCheck(node: ValNode, context: TypeContext) {
     context.addVariableType(node, type)
 }
 
-internal fun typeCheck(statements: List<StatementNode>, context: TypeContext): Type {
+internal fun typeCheck(statements: List<FunctionStatementNode>, context: TypeContext): Type {
     var type: Type = UnitType
 
     for (statement in statements) {

@@ -171,12 +171,12 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
     }
 }
 
-private fun generateCode(statements: List<StatementNode>, context: CodeGenerationContext): List<JavascriptStatementNode> {
+private fun generateCode(statements: List<FunctionStatementNode>, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return statements.map { statement -> generateCode(statement, context) }
 }
 
-internal fun generateCode(node: StatementNode, context: CodeGenerationContext): JavascriptStatementNode {
-    return node.accept(object : StatementNode.Visitor<JavascriptStatementNode> {
+internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationContext): JavascriptStatementNode {
+    return node.accept(object : FunctionStatementNode.Visitor<JavascriptStatementNode> {
         override fun visit(node: ExpressionStatementNode): JavascriptStatementNode {
             val expression = generateCode(node.expression, context)
             val source = NodeSource(node)
