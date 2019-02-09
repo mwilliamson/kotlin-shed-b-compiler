@@ -522,6 +522,55 @@ private fun generateName(identifier: Identifier): String {
     }.replace("$", "_").replace(".", "_")
 }
 
+val javascriptKeywords = setOf(
+    "await",
+    "break",
+    "case",
+    "catch",
+    "class",
+    "const",
+    "continue",
+    "debugger",
+    "default",
+    "delete",
+    "do",
+    "else",
+    "enum",
+    "export",
+    "extends",
+    "false",
+    "finally",
+    "for",
+    "function",
+    "if",
+    "implements",
+    "import",
+    "in",
+    "instanceof",
+    "interface",
+    "let",
+    "new",
+    "null",
+    "package",
+    "private",
+    "protected",
+    "public",
+    "return",
+    "static",
+    "super",
+    "switch",
+    "this",
+    "throw",
+    "true",
+    "try",
+    "typeof",
+    "var",
+    "void",
+    "while",
+    "with",
+    "yield"
+)
+
 fun isJavascriptKeyword(value: String): Boolean {
-    return value == "null" || value == "default"
+    return value in javascriptKeywords
 }
