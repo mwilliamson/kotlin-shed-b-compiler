@@ -186,6 +186,7 @@ data class FunctionTypeNode(
 }
 
 data class ModuleNode(
+    val exportedNames: List<Identifier>,
     val imports: List<ImportNode>,
     val body: List<ModuleStatementNode>,
     override val source: Source,

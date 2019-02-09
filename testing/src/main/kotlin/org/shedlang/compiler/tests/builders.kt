@@ -322,8 +322,10 @@ fun parameter(
 
 fun module(
     body: List<ModuleStatementNode> = listOf(),
-    imports: List<ImportNode> = listOf()
+    imports: List<ImportNode> = listOf(),
+    exports: List<String> = listOf()
 ) = ModuleNode(
+    exportedNames = exports.map(::Identifier),
     imports = imports,
     body = body,
     source = anySource()

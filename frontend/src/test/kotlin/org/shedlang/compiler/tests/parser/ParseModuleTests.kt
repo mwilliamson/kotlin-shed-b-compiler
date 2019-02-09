@@ -25,6 +25,20 @@ class ParseModuleTests {
     }
 
     @Test
+    fun moduleCanHaveExports() {
+        val source = """
+            export x, y;
+        """.trimIndent()
+
+        val node = parse("<string>", source)
+
+        assertThat(node, has(ModuleNode::exportedNames, isSequence(
+            isIdentifier("x"),
+            isIdentifier("y")
+        )))
+    }
+
+    @Test
     fun moduleCanHaveImports() {
         val source = """
             import .x.y;

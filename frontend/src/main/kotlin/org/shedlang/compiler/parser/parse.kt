@@ -74,6 +74,7 @@ internal fun <T> ((StringSource, TokenIterator<TokenType>) -> T).parse(tokens: T
 }
 
 internal fun parseModule(source: StringSource, tokens: TokenIterator<TokenType>): ModuleNode {
+    val exports = parseExports(tokens)
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
         parseElement = ::parseModuleStatement,
@@ -81,10 +82,28 @@ internal fun parseModule(source: StringSource, tokens: TokenIterator<TokenType>)
         tokens = tokens
     )
     return ModuleNode(
+        exportedNames = exports,
         imports = imports,
         body = body,
         source = source
     )
+}
+
+private fun parseExports(tokens: TokenIterator<TokenType>): List<Identifier> {
+    if (tokens.trySkip(TokenType.KEYWORD_EXPORT)) {
+        val names = parseMany(
+            parseElement = {tokens -> parseIdentifier(tokens)},
+            parseSeparator = {tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
+            allowZero = false,
+            isEnd = {tokens -> tokens.isNext(TokenType.SYMBOL_SEMICOLON)},
+            tokens = tokens
+        )
+        tokens.skip(TokenType.SYMBOL_SEMICOLON)
+
+        return names
+    } else {
+        return listOf()
+    }
 }
 
 internal fun parseTypesModuleTokens(source: StringSource, tokens: TokenIterator<TokenType>): TypesModuleNode {

@@ -14,6 +14,7 @@ val identifierPattern = "[A-Za-z][A-Za-z0-9]*"
 
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     keyword(TokenType.KEYWORD_ELSE, "else"),
+    keyword(TokenType.KEYWORD_EXPORT, "export"),
     keyword(TokenType.KEYWORD_EXTENDS, "extends"),
     keyword(TokenType.KEYWORD_FALSE, "false"),
     keyword(TokenType.KEYWORD_FROM, "from"),
@@ -80,6 +81,7 @@ internal enum class TokenType {
     UNKNOWN,
 
     KEYWORD_ELSE,
+    KEYWORD_EXPORT,
     KEYWORD_EXTENDS,
     KEYWORD_FALSE,
     KEYWORD_FROM,
