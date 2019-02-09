@@ -1,3 +1,17 @@
+export
+    Sequence,
+    SequenceIterator,
+    SequenceItem,
+    SequenceEnd,
+    end,
+
+    all,
+    any,
+    forEach,
+    lazyFilter,
+    lazyMap,
+    reduce;
+
 shape Sequence[T, !E] {
     next: () !E -> SequenceIterator[T, E],
 }

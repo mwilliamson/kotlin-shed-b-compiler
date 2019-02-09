@@ -82,7 +82,7 @@ internal fun parseModule(source: StringSource, tokens: TokenIterator<TokenType>)
         tokens = tokens
     )
     return ModuleNode(
-        exportedNames = exports,
+        exports = exports,
         imports = imports,
         body = body,
         source = source

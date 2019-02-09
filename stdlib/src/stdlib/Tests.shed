@@ -1,3 +1,5 @@
+export assertThat, Test, TestCase, TestSuite, suite, testCase, runTests;
+
 import .Lists;
 import .Matchers;
 import .Options;

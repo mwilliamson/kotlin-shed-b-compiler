@@ -14,7 +14,7 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
     val body = node.body.flatMap { statement -> generateCode(statement, context)  }
-    val exports = node.exports.map(::generateExport)
+    val exports = node.exports.map { export -> generateExport(export, NodeSource(module.node)) }
     return JavascriptModuleNode(
         imports + body + exports,
         source = NodeSource(node)
@@ -52,18 +52,18 @@ private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptSta
     )
 }
 
-private fun generateExport(statement: VariableBindingNode): JavascriptExpressionStatementNode {
+private fun generateExport(name: Identifier, source: Source): JavascriptExpressionStatementNode {
     return JavascriptExpressionStatementNode(
         JavascriptAssignmentNode(
             JavascriptPropertyAccessNode(
-                JavascriptVariableReferenceNode("exports", source = NodeSource(statement)),
-                generateName(statement.name),
-                source = NodeSource(statement)
+                JavascriptVariableReferenceNode("exports", source = source),
+                generateName(name),
+                source = source
             ),
-            JavascriptVariableReferenceNode(generateName(statement.name), source = NodeSource(statement)),
-            source = NodeSource(statement)
+            JavascriptVariableReferenceNode(generateName(name), source = source),
+            source = source
         ),
-        source = NodeSource(statement)
+        source = source
     )
 }
 

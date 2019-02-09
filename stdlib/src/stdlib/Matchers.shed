@@ -1,3 +1,19 @@
+export
+    Matcher,
+
+    Result,
+    Success,
+    Failure,
+    success,
+    failure,
+    isSuccess,
+
+    anything,
+    isInt,
+    isString,
+    isNone,
+    isSome;
+
 import .Options;
 
 fun anything() -> Matcher[Any] {

@@ -1,3 +1,10 @@
+export
+    all,
+    any,
+    forEach,
+    map,
+    reduce;
+
 import stdlib.Sequences;
 import stdlib.platform.Lists;
 

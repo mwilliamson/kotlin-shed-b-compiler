@@ -226,7 +226,10 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
 
     context.undefer()
 
-    return ModuleType(fields = module.exports.associateBy(
+    // TODO: check all names are present
+    val exports = module.variableBinders.filter { binder -> binder.name in module.exports }
+
+    return ModuleType(fields = exports.associateBy(
         { statement -> statement.name },
         { statement -> context.typeOf(statement) }
     ))
@@ -390,9 +393,16 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
         override fun visit(node: StaticFieldAccessNode): Type {
             val staticValue = evalStatic(node.receiver, context)
             // TODO: handle not a module
-            // TODO: handle missing field
+            // TODO: test handling of missing field
             return when (staticValue) {
-                is ModuleType -> staticValue.fields[node.fieldName]!!
+                is ModuleType -> {
+                    val field = staticValue.fields[node.fieldName]
+                    if (field == null) {
+                        throw NoSuchFieldError(node.fieldName, NodeSource(node))
+                    } else {
+                        return field
+                    }
+                }
                 else -> throw CompilerError("TODO", source = node.source)
             }
         }

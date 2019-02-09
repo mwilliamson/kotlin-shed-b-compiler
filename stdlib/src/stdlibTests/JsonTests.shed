@@ -1,3 +1,5 @@
+export testCases;
+
 import stdlib.Json;
 import stdlib.Matchers;
 import stdlib.Options;

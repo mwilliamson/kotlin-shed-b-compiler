@@ -32,7 +32,7 @@ class ParseModuleTests {
 
         val node = parse("<string>", source)
 
-        assertThat(node, has(ModuleNode::exportedNames, isSequence(
+        assertThat(node, has(ModuleNode::exports, isSequence(
             isIdentifier("x"),
             isIdentifier("y")
         )))

@@ -325,7 +325,7 @@ fun module(
     imports: List<ImportNode> = listOf(),
     exports: List<String> = listOf()
 ) = ModuleNode(
-    exportedNames = exports.map(::Identifier),
+    exports = exports.map(::Identifier),
     imports = imports,
     body = body,
     source = anySource()

@@ -1,3 +1,5 @@
+export testCases;
+
 import stdlib.Lists;
 import stdlib.Matchers;
 import stdlib.strings.CodePoints;

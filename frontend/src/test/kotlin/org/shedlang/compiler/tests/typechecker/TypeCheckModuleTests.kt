@@ -3,8 +3,8 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.FunctionStatementNode
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.MetaType
@@ -92,9 +92,15 @@ class TypeCheckModuleTests {
     fun typeOfModuleIsReturned() {
         val unitReference = staticReference("Unit")
         val node = module(
+            exports = listOf("f"),
             body = listOf(
                 function(
                     name = "f",
+                    returnType = unitReference
+                ),
+
+                function(
+                    name = "g",
                     returnType = unitReference
                 )
             )

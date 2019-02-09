@@ -1,3 +1,19 @@
+export
+    codePointToHexString,
+    codePointToString,
+    length,
+    firstCodePoint,
+    mapCodePoints,
+    replace,
+
+    dropLeft,
+    isEmpty,
+    join,
+    left,
+    leftWhile,
+    padLeft,
+    startsWith;
+
 import stdlib.Lists;
 import stdlib.Options;
 import stdlib.platform.Strings;

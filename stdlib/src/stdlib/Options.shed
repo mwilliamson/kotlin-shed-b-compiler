@@ -1,3 +1,5 @@
+export Option, Some, None, some, none, default, map;
+
 union Option[+T] =
     | Some[T] {
         value: T,

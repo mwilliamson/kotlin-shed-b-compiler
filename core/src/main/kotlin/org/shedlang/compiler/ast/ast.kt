@@ -186,7 +186,7 @@ data class FunctionTypeNode(
 }
 
 data class ModuleNode(
-    val exportedNames: List<Identifier>,
+    val exports: List<Identifier>,
     val imports: List<ImportNode>,
     val body: List<ModuleStatementNode>,
     override val source: Source,
@@ -195,7 +195,7 @@ data class ModuleNode(
     override val children: List<Node>
         get() = imports + body
 
-    val exports: List<VariableBindingNode>
+    val variableBinders: List<VariableBindingNode>
         get() = body.flatMap { statement -> statement.variableBinders() }
 }
 
