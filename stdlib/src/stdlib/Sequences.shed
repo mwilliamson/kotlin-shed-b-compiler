@@ -17,8 +17,7 @@ fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
         is SequenceEnd {
             true
         }
-        // TODO: allow "is options.Some" (without type arguments)
-        is SequenceItem[Bool, E] {
+        is SequenceItem {
             if (item.head) {
                 all(item.tail)
             } else {
@@ -34,7 +33,7 @@ fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
         is SequenceEnd {
             false
         }
-        is SequenceItem[Bool, E] {
+        is SequenceItem {
             if (item.head) {
                 true
             } else {
@@ -49,7 +48,7 @@ fun forEach[T, !E](func: (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
     when (item) {
         is SequenceEnd {
         }
-        is SequenceItem[T, E] {
+        is SequenceItem {
             func(item.head);
             forEach(func, item.tail);
         }
@@ -64,7 +63,7 @@ fun lazyFilter[T, !E](predicate: (T) !E -> Bool, sequence: Sequence[T, E]) -> Se
                 is SequenceEnd {
                     end
                 }
-                is SequenceItem[T, E] {
+                is SequenceItem {
                     val tail = lazyFilter(predicate, item.tail);
                     if (predicate(item.head)) {
                         SequenceItem(
@@ -88,7 +87,7 @@ fun lazyMap[T, R, !E](func: (T) !E -> R, sequence: Sequence[T, E]) -> Sequence[R
                 is SequenceEnd {
                     end
                 }
-                is SequenceItem[T, E] {
+                is SequenceItem {
                     SequenceItem(
                         head = func(item.head),
                         tail = lazyMap(func, item.tail),
@@ -105,7 +104,7 @@ fun reduce[T, R, !E](func: (R, T) !E -> R, initial: R, sequence: Sequence[T, E])
         is SequenceEnd {
             initial
         }
-        is SequenceItem[T, E] {
+        is SequenceItem {
             reduce(func, func(initial, item.head), item.tail)
         }
     }
