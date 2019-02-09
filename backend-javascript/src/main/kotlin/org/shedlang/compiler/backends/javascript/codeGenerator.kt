@@ -509,31 +509,6 @@ private fun generateCode(operator: BinaryOperator): JavascriptBinaryOperator {
     }
 }
 
-private fun generateCode(node: StaticNode): JavascriptExpressionNode {
-    // TODO: test this
-    return node.accept(object : StaticNode.Visitor<JavascriptExpressionNode> {
-        override fun visit(node: StaticReferenceNode): JavascriptExpressionNode {
-            return generateCodeForReferenceNode(node)
-        }
-
-        override fun visit(node: StaticFieldAccessNode): JavascriptExpressionNode {
-            return JavascriptPropertyAccessNode(
-                generateCode(node.receiver),
-                generateName(node.fieldName),
-                source = NodeSource(node)
-            )
-        }
-
-        override fun visit(node: StaticApplicationNode): JavascriptExpressionNode {
-            return generateCode(node.receiver)
-        }
-
-        override fun visit(node: FunctionTypeNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
-        }
-    })
-}
-
 private fun generateCodeForReferenceNode(node: ReferenceNode): JavascriptExpressionNode {
     return JavascriptVariableReferenceNode(generateName(node.name), NodeSource(node))
 }
