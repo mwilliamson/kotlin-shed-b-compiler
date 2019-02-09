@@ -193,6 +193,10 @@ data class ModuleNode(
 ) : Node {
     override val children: List<Node>
         get() = imports + body
+
+    val exports: List<VariableBindingNode>
+        get() = body.filterIsInstance<VariableBindingNode>() +
+            body.filterIsInstance<UnionNode>().flatMap { union -> union.members }
 }
 
 data class TypesModuleNode(
