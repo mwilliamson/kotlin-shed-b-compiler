@@ -96,7 +96,7 @@ class CodeGeneratorTests {
     fun typeAliasGeneratesNothing() {
         val shed = typeAliasDeclaration("Size", staticReference("Int"))
 
-        val pythonNodes = generateCode(shed, context())
+        val pythonNodes = generateModuleStatementCode(shed, context())
 
         assertThat(pythonNodes, isSequence())
     }
@@ -121,7 +121,7 @@ class CodeGeneratorTests {
             variableTypes = mapOf(shed to MetaType(shapeType))
         )
 
-        val node = generateCode(shed, context(types = types)).single()
+        val node = generateModuleStatementCode(shed, context(types = types)).single()
 
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
@@ -162,7 +162,7 @@ class CodeGeneratorTests {
             variableTypes = mapOf(shed to MetaType(shapeType))
         )
 
-        val node = generateCode(shed, context(types = types)).single()
+        val node = generateModuleStatementCode(shed, context(types = types)).single()
 
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
@@ -188,7 +188,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val nodes = generateCode(shed, context(types = types))
+        val nodes = generateModuleStatementCode(shed, context(types = types))
 
         assertThat(nodes, isSequence(
             isPythonClass(
@@ -201,7 +201,22 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionDeclarationGeneratesFunctionWithPythonisedName() {
+    fun functionDeclarationAsModuleStatementGeneratesFunctionWithPythonisedName() {
+        assertFunctionDeclarationGeneratesFunctionWithPythonisedName { function ->
+            generateCodeForModuleStatement(function).single()
+        }
+    }
+
+    @Test
+    fun functionDeclarationAsFunctionStatementGeneratesFunctionWithPythonisedName() {
+        assertFunctionDeclarationGeneratesFunctionWithPythonisedName { function ->
+            generateCodeForFunctionStatement(function).single()
+        }
+    }
+
+    fun assertFunctionDeclarationGeneratesFunctionWithPythonisedName(
+        generateCode: (function: FunctionDeclarationNode) -> PythonStatementNode
+    ) {
         val shed = function(
             name = "oneTwoThree",
             parameters = listOf(parameter("x"), parameter("y")),
@@ -209,7 +224,7 @@ class CodeGeneratorTests {
             body = listOf(expressionStatement(literalInt(42)))
         )
 
-        val node = generateCode(shed).single()
+        val node = generateCode(shed)
 
         assertThat(node, isPythonFunction(
             name = equalTo("one_two_three"),
@@ -269,14 +284,14 @@ class CodeGeneratorTests {
     @Test
     fun nonReturningExpressionStatementGeneratesExpressionStatement() {
         val shed = expressionStatement(literalInt(42), isReturn = false)
-        val node = generateCode(shed)
+        val node = generateCodeForFunctionStatement(shed)
         assertThat(node, isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42))))
     }
 
     @Test
     fun returningExpressionStatementGeneratesReturnStatement() {
         val shed = expressionStatement(literalInt(42), isReturn = true)
-        val node = generateCode(shed)
+        val node = generateCodeForFunctionStatement(shed)
         assertThat(node, isSequence(isPythonReturn(isPythonIntegerLiteral(42))))
     }
 
@@ -343,7 +358,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val generatedCode = generateCode(
+        val generatedCode = generateModuleStatementCode(
             shed,
             context()
         )
@@ -501,7 +516,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val generatedCode = generateCode(
+        val generatedCode = generateModuleStatementCode(
             shed,
             context(
                 references = mapOf(
@@ -586,7 +601,7 @@ class CodeGeneratorTests {
     fun valGeneratesAssignmentWithPythonisedName() {
         val shed = valStatement(name = "oneTwoThree", expression = literalInt(42))
 
-        val node = generateCode(shed)
+        val node = generateCodeForFunctionStatement(shed)
 
         assertThat(node, isSequence(
             isPythonAssignment(
@@ -607,7 +622,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val node = generateCode(shed)
+        val node = generateCodeForFunctionStatement(shed)
 
         assertThat("was: " + serialise(node), node, isSequence(
             isPythonIfStatement(
@@ -1101,10 +1116,10 @@ class CodeGeneratorTests {
     }
 
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
-    private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
-    private fun generateCode(node: FunctionStatementNode): List<PythonStatementNode> {
+    private fun generateCodeForModuleStatement(node: ModuleStatementNode) = generateModuleStatementCode(node, context())
+    private fun generateCodeForFunctionStatement(node: FunctionStatementNode): List<PythonStatementNode> {
         val context = context()
-        return generateStatementCode(
+        return generateCodeForFunctionStatement(
             node,
             context,
             returnValue = { expression, source ->

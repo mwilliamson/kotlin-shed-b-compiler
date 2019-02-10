@@ -172,18 +172,20 @@ class CodeGeneratorTests {
 
     @Test
     fun functionDeclarationAsModuleStatementGeneratesFunctionDeclaration() {
-        assertFunctionDeclarationGeneratesFunctionDeclaration(::generateCodeForModuleStatement)
+        assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
+            generateCodeForModuleStatement(function).single()
+        }
     }
 
     @Test
     fun functionDeclarationAsFunctionStatementGeneratesFunctionDeclaration() {
         assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
-            listOf(generateCodeForFunctionStatement(function))
+            generateCodeForFunctionStatement(function)
         }
     }
 
     private fun assertFunctionDeclarationGeneratesFunctionDeclaration(
-        generateCode: (node: FunctionDeclarationNode) -> List<JavascriptStatementNode>
+        generateCode: (node: FunctionDeclarationNode) -> JavascriptStatementNode
     ) {
         val shed = function(
             name = "f",
@@ -194,7 +196,7 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed)
 
-        assertThat(node.single(), isJavascriptFunction(
+        assertThat(node, isJavascriptFunction(
             name = equalTo("f"),
             parameters = isSequence(equalTo("x"), equalTo("y"), equalTo("\$named")),
             body = isSequence(

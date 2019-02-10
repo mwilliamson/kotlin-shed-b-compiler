@@ -89,7 +89,7 @@ internal class CodeGenerationContext(
 
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
     val imports = node.imports.map({ import -> generateCode(import, context) })
-    val body = node.body.flatMap({ child -> generateCode(child, context) })
+    val body = node.body.flatMap({ child -> generateModuleStatementCode(child, context) })
     return PythonModuleNode(
         imports + body,
         source = NodeSource(node)
@@ -115,7 +115,7 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
     )
 }
 
-internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
+internal fun generateModuleStatementCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
         override fun visit(node: TypeAliasNode): List<PythonStatementNode> = listOf()
         override fun visit(node: ShapeNode) = listOf(generateCodeForShape(node, context))
@@ -319,11 +319,11 @@ private fun generateBlockCode(
     returnValue: ReturnValue
 ): List<PythonStatementNode> {
     return statements.flatMap { statement ->
-        generateStatementCode(statement, context, returnValue = returnValue)
+        generateCodeForFunctionStatement(statement, context, returnValue = returnValue)
     }
 }
 
-internal fun generateStatementCode(
+internal fun generateCodeForFunctionStatement(
     node: FunctionStatementNode,
     context: CodeGenerationContext,
     returnValue: ReturnValue
