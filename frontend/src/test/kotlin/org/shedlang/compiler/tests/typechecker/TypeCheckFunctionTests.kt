@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
-import org.shedlang.compiler.frontend.tests.*
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
@@ -28,7 +28,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to MetaType(UnitType))
         )
 
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         typeContext.undefer()
 
         assertThat(typeContext.typeOf(typeParameter), isMetaType(
@@ -65,7 +65,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to MetaType(UnitType))
         )
 
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         typeContext.undefer()
 
         assertThat(typeContext.typeOf(effectParameter), isEffectType(
@@ -95,7 +95,7 @@ class TypeCheckFunctionTests {
                 returnType = unit,
                 body = listOf(badStatement)
             )
-            typeCheckModuleStatement(node, typeContext)
+            typeCheckFunctionDeclaration(node, typeContext)
             typeContext.undefer()
         })
     }
@@ -108,7 +108,7 @@ class TypeCheckFunctionTests {
             returnType = intType,
             body = listOf(expressionStatement(literalBool(true), isReturn = true))
         )
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
 
         assertThat(
             { typeContext.undefer() },
@@ -130,7 +130,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(intType to MetaType(IntType)),
             references = mapOf(parameterReference to parameter)
         )
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         typeContext.undefer()
 
         assertThat(
@@ -156,7 +156,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(intType to MetaType(IntType)),
             references = mapOf(parameterReference to parameter)
         )
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         typeContext.undefer()
 
         assertThat(
@@ -184,7 +184,7 @@ class TypeCheckFunctionTests {
             intType to MetaType(IntType),
             boolType to MetaType(BoolType)
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
             positionalParameters = equalTo(listOf(IntType, BoolType)),
             returnType = equalTo(IntType)
@@ -204,7 +204,7 @@ class TypeCheckFunctionTests {
             unitType to MetaType(UnitType),
             effect to EffectType(IoEffect)
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
             positionalParameters = anything,
             returnType = anything,
@@ -233,7 +233,7 @@ class TypeCheckFunctionTests {
             unitType to MetaType(UnitType),
             effect to EffectType(IoEffect)
         ))
-        typeCheckModuleStatement(node, typeContext)
+        typeCheckFunctionDeclaration(node, typeContext)
         // TODO: come up with a way of ensuring undefer() is eventually called
         typeContext.undefer()
     }
@@ -260,7 +260,7 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             {
-                typeCheckModuleStatement(node, typeContext)
+                typeCheckFunctionDeclaration(node, typeContext)
                 typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
@@ -290,7 +290,7 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             {
-                typeCheckModuleStatement(node, typeContext)
+                typeCheckFunctionDeclaration(node, typeContext)
                 typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))

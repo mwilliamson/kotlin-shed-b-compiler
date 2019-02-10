@@ -293,7 +293,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     })
 }
 
-private fun typeCheckFunctionDeclaration(function: FunctionDeclarationNode, context: TypeContext) {
+internal fun typeCheckFunctionDeclaration(function: FunctionDeclarationNode, context: TypeContext) {
     val type = typeCheckFunction(function, context)
     context.addVariableType(function, type)
 }
