@@ -72,6 +72,16 @@ internal fun isValType(
     ))
 }
 
+internal fun isTypeAlias(
+    name: Matcher<Identifier> = anything,
+    expression: Matcher<StaticExpressionNode> = anything
+): Matcher<ModuleStatementNode> {
+    return cast(allOf(
+        has(TypeAliasNode::name, name),
+        has(TypeAliasNode::expression, expression)
+    ))
+}
+
 internal fun isShape(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,

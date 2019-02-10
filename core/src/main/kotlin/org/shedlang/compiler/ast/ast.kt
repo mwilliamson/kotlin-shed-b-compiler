@@ -254,6 +254,24 @@ interface ModuleStatementNode: Node {
     fun variableBinders(): List<VariableBindingNode>
 }
 
+data class TypeAliasNode(
+    override val name: Identifier,
+    val expression: StaticExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): TypeDeclarationNode, ModuleStatementNode {
+    override val children: List<Node>
+        get() = listOf(expression)
+
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        throw UnsupportedOperationException("not implemented")
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf(this)
+    }
+}
+
 data class ShapeNode(
     override val name: Identifier,
     override val staticParameters: List<StaticParameterNode>,

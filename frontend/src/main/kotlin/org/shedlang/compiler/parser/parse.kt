@@ -162,7 +162,9 @@ internal fun parseImport(source: StringSource, tokens: TokenIterator<TokenType>)
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {
-    if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
+    if (tokens.isNext(TokenType.KEYWORD_TYPE)) {
+        return parseTypeAlias(tokens)
+    } else if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
         return ::parseShape.parse(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_UNION)) {
         return ::parseUnion.parse(tokens)
@@ -177,6 +179,21 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
             location = tokens.location()
         )
     }
+}
+
+private fun parseTypeAlias(tokens: TokenIterator<TokenType>): TypeAliasNode {
+    val source = tokens.location()
+
+    tokens.skip(TokenType.KEYWORD_TYPE)
+    val name = parseIdentifier(tokens)
+    tokens.skip(TokenType.SYMBOL_EQUALS)
+    val expression = parseStaticExpression(tokens)
+
+    return TypeAliasNode(
+        name = name,
+        expression = expression,
+        source = source
+    )
 }
 
 internal fun parseShape(source: StringSource, tokens: TokenIterator<TokenType>): ShapeNode {
