@@ -12,7 +12,7 @@ internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
-        override fun visit(node: FunctionDeclarationNode) = typeCheck(node, context)
+        override fun visit(node: FunctionDeclarationNode) = typeCheckFunctionDeclaration(node, context)
         override fun visit(node: ValNode) = typeCheck(node, context)
     })
 }
@@ -293,7 +293,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     })
 }
 
-private fun typeCheck(function: FunctionDeclarationNode, context: TypeContext) {
+private fun typeCheckFunctionDeclaration(function: FunctionDeclarationNode, context: TypeContext) {
     val type = typeCheckFunction(function, context)
     context.addVariableType(function, type)
 }
