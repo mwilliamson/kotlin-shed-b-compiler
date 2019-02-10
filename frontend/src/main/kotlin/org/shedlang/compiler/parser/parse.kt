@@ -650,7 +650,9 @@ private fun tryParseAdditionalConditionalBranch(
     }
 }
 
-private fun parseWhen(source: StringSource, tokens: TokenIterator<TokenType>): WhenNode {
+private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
+    val source = tokens.location()
+
     tokens.skip(TokenType.KEYWORD_WHEN)
 
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
@@ -1034,7 +1036,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             return parseIf(tokens)
         }
         TokenType.KEYWORD_WHEN -> {
-            return ::parseWhen.parse(tokens)
+            return parseWhen(tokens)
         }
         TokenType.KEYWORD_FUN -> {
             tokens.skip()
