@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
 
@@ -17,7 +17,7 @@ class TypeCheckExpressionStatementTests {
         val functionReference = variableReference("f")
         val node = expressionStatement(call(functionReference))
         assertThat(
-            { typeCheck(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
+            { typeCheckFunctionStatement(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))
         )
     }
@@ -25,14 +25,14 @@ class TypeCheckExpressionStatementTests {
     @Test
     fun nonReturningExpressionStatementHasUnitType() {
         val node = expressionStatement(literalBool(), isReturn = false)
-        val type = typeCheck(node, typeContext())
+        val type = typeCheckFunctionStatement(node, typeContext())
         assertThat(type, isUnitType)
     }
 
     @Test
     fun returningExpressionStatementHasTypeOfExpression() {
         val node = expressionStatement(literalBool(), isReturn = true)
-        val type = typeCheck(node, typeContext())
+        val type = typeCheckFunctionStatement(node, typeContext())
         assertThat(type, isBoolType)
     }
 }

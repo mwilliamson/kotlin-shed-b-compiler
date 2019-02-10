@@ -299,7 +299,7 @@ internal fun typeCheckFunctionDeclaration(function: FunctionDeclarationNode, con
 }
 
 
-internal fun typeCheck(statement: FunctionStatementNode, context: TypeContext): Type {
+internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, context: TypeContext): Type {
     return statement.accept(object : FunctionStatementNode.Visitor<Type> {
         override fun visit(node: BadStatementNode): Type {
             throw BadStatementError(node.source)
@@ -330,7 +330,7 @@ internal fun typeCheck(statements: List<FunctionStatementNode>, context: TypeCon
     var type: Type = UnitType
 
     for (statement in statements) {
-        type = typeCheck(statement, context)
+        type = typeCheckFunctionStatement(statement, context)
     }
 
     return type

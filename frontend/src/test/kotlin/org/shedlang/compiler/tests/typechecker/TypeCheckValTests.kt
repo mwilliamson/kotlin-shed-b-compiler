@@ -14,7 +14,7 @@ import org.shedlang.compiler.tests.variableReference
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.newTypeContext
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
@@ -25,7 +25,7 @@ class TypeCheckValTests {
         val functionReference = variableReference("f")
         val node = valStatement(name = "x", expression = call(functionReference))
         assertThat(
-            { typeCheck(node as FunctionStatementNode, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
+            { typeCheckFunctionStatement(node as FunctionStatementNode, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))
         )
     }
@@ -39,7 +39,7 @@ class TypeCheckValTests {
             resolvedReferences = ResolvedReferencesMap(mapOf()),
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
-        typeCheck(node as FunctionStatementNode, typeContext)
+        typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
         assertThat(typeContext.typeOf(node), cast(equalTo(IntType)))
     }
 }

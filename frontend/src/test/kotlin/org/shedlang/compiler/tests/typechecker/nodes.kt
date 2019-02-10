@@ -52,7 +52,7 @@ internal fun typeContext(
 private val badSource = StringSource("<bad source>", "", 0)
 private val badStatement = BadStatementNode(source = badSource)
 fun assertStatementInStatementIsTypeChecked(build: (FunctionStatementNode) -> FunctionStatementNode) {
-    assertStatementIsTypeChecked({ badStatement -> typeCheck(build(badStatement), emptyTypeContext()) })
+    assertStatementIsTypeChecked({ badStatement -> typeCheckFunctionStatement(build(badStatement), emptyTypeContext()) })
 }
 fun assertStatementIsTypeChecked(typeCheck: (FunctionStatementNode) -> Unit) {
     assertThat(
