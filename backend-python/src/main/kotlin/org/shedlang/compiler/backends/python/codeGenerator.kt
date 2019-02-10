@@ -117,10 +117,7 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
-        override fun visit(node: TypeAliasNode): List<PythonStatementNode> {
-            throw UnsupportedOperationException("not implemented")
-        }
-
+        override fun visit(node: TypeAliasNode): List<PythonStatementNode> = listOf()
         override fun visit(node: ShapeNode) = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode) = listOf(generateCode(node, context))
