@@ -109,7 +109,7 @@ private fun parseExports(tokens: TokenIterator<TokenType>): List<Identifier> {
 internal fun parseTypesModuleTokens(source: StringSource, tokens: TokenIterator<TokenType>): TypesModuleNode {
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
-        parseElement = { tokens -> ::parseValType.parse(tokens) },
+        parseElement = ::parseValType,
         isEnd = { tokens -> tokens.isNext(TokenType.END) },
         tokens = tokens
     )
@@ -129,7 +129,9 @@ private fun parseImports(tokens: TokenIterator<TokenType>): List<ImportNode> {
     )
 }
 
-private fun parseValType(source: StringSource, tokens: TokenIterator<TokenType>): ValTypeNode {
+private fun parseValType(tokens: TokenIterator<TokenType>): ValTypeNode {
+    val source = tokens.location()
+
     tokens.skip(TokenType.KEYWORD_VAL)
     val name = parseIdentifier(tokens)
     tokens.skip(TokenType.SYMBOL_COLON)
