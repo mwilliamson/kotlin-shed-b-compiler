@@ -189,7 +189,13 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("empty array", fun () {
             val text = "[]";
             val value = Json.textToValue(text);
-            Tests.assertThat(value, isJsonArray(Matchers.anything()))
+            Tests.assertThat(Json.valueToText(value), Matchers.isString("[]"))
+        }),
+
+        Tests.testCase("array with single element", fun () {
+            val text = "[true]";
+            val value = Json.textToValue(text);
+            Tests.assertThat(Json.valueToText(value), Matchers.isString("[true]"))
         }),
 
         Tests.testCase("whitespace is ignored", fun () {

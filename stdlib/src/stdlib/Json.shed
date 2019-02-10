@@ -139,54 +139,170 @@ fun textToValue(text: String) -> JsonValue {
 
 fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
     val result = readValue(tokens);
-    result.value
+    when (result) {
+        is Success {
+            result.value
+        }
+        is Failure {
+            null
+        }
+    }
 }
 
-shape ReadValueResult {
-    remainder: Sequences.Sequence[Token, Pure],
-    value: JsonValue,
+type TokenIterator = Sequences.Sequence[Token, Pure];
+
+union ParseResult[+T] =
+    | Success[T] {
+        remainder: TokenIterator,
+        value: T,
+    }
+    | Failure {
+        remainder: TokenIterator,
+    };
+
+fun success[T](remainder: TokenIterator, value: T) -> ParseResult[T] {
+    Success(remainder = remainder, value = value)
 }
 
-fun readValueResult(remainder: Sequences.Sequence[Token, Pure], value: JsonValue) -> ReadValueResult {
-    ReadValueResult(remainder = remainder, value = value)
+fun failure(tokens: TokenIterator) -> ParseResult[Nothing] {
+    Failure(remainder = tokens)
 }
 
-fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ReadValueResult {
+// TODO: use TokenIterator as parameter type
+fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue] {
     val iterator = tokens.next();
     when (iterator) {
         is Sequences.SequenceEnd {
-            readValueResult(tokens, null)
+            failure(tokens)
         }
-        is Sequences.SequenceItem[Token, Pure] {
+        is Sequences.SequenceItem {
             when (iterator.head.tokenType) {
                 is TokenTrue {
-                    readValueResult(iterator.tail, boolean(true))
+                    success(iterator.tail, boolean(true))
                 }
                 is TokenFalse {
-                    readValueResult(iterator.tail, boolean(false))
+                    success(iterator.tail, boolean(false))
                 }
                 is TokenNull {
-                    readValueResult(iterator.tail, null)
+                    success(iterator.tail, null)
                 }
                 is TokenOpenSquare {
-                    readValueResult(iterator.tail, array(list()))
+                    val elementsResult = parseMany(
+                        parseElement = readValue,
+                        parseSeparator = fun (tokens: Sequences.Sequence[Token, Pure]) => success(tokens, unit),
+                        isEnd = fun (tokens: Sequences.Sequence[Token, Pure]) -> Bool {
+                            val iterator = tokens.next();
+                            when (iterator) {
+                                is Sequences.SequenceEnd {
+                                    true
+                                }
+                                is Sequences.SequenceItem {
+                                    iterator.head.tokenType is TokenCloseSquare
+                                }
+                            }
+                        },
+                    )(iterator.tail);
+
+                    when (elementsResult) {
+                        is Success {
+                            // TODO: consume closing square bracket
+                            success(elementsResult.remainder, array(elementsResult.value))
+                        }
+
+                        is Failure {
+                            elementsResult
+                        }
+                    }
                 }
                 is TokenCloseSquare {
-                    readValueResult(iterator.tail, null)
+                    failure(tokens)
                 }
                 is TokenWhitespace {
                     readValue(iterator.tail)
                 }
                 is TokenUnexpected {
-                    readValueResult(iterator.tail, null)
+                    failure(tokens)
                 }
                 is TokenEnd {
-                    readValueResult(iterator.tail, null)
+                    failure(tokens)
                 }
             }
         }
     }
 }
+
+union Position = Start | ElementStart | ElementEnd;
+
+shape State[T] {
+    elements: List[T],
+    position: Position,
+    tokens: TokenIterator,
+}
+
+fun parseMany[T](
+    *,
+    parseElement: (TokenIterator) -> ParseResult[T],
+    parseSeparator: (TokenIterator) -> ParseResult[Unit],
+    isEnd: (TokenIterator) -> Bool,
+) -> (TokenIterator) -> ParseResult[List[T]] {
+    fun parse(state: State[T]) -> ParseResult[List[T]] {
+        when (state.position) {
+            is Start {
+                if (isEnd(state.tokens)) {
+                    success(state.tokens, list())
+                } else {
+                    // TODO: use update()
+                    parse(State(
+                        elements = state.elements,
+                        position = ElementStart(),
+                        tokens = state.tokens
+                    ))
+                }
+            }
+            is ElementStart {
+                val elementResult = parseElement(state.tokens);
+                when (elementResult) {
+                    is Success {
+                        parse(State(
+                            //elements = append(state.elements, elementResult.value),
+                            elements = list(elementResult.value),
+                            position = ElementEnd(),
+                            tokens = elementResult.remainder,
+                        ))
+                    }
+                    is Failure {
+                        elementResult
+                    }
+                }
+            }
+            is ElementEnd {
+                if (isEnd(state.tokens)) {
+                    success(state.tokens, state.elements)
+                } else {
+                    val separatorResult = parseSeparator(state.tokens);
+                    when (separatorResult) {
+                        is Success {
+                            parse(State(
+                                elements = state.elements,
+                                position = ElementStart(),
+                                tokens = separatorResult.remainder,
+                            ))
+                        }
+                        is Failure {
+                            separatorResult
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    (fun (tokens: TokenIterator) -> ParseResult[List[T]] {
+        val initialState = State[T](elements = list(), position = Start(), tokens = tokens);
+        parse(initialState)
+    })
+}
+
 
 union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenUnexpected | TokenEnd;
 
