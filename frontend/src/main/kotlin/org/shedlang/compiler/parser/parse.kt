@@ -444,7 +444,7 @@ internal fun parseStaticParameters(
 ): List<StaticParameterNode> {
     return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
         val typeParameters = parseMany(
-            parseElement = { tokens -> parseStaticParameter(allowVariance = allowVariance).parse(tokens) },
+            parseElement = { tokens -> parseStaticParameter(tokens, allowVariance = allowVariance) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
             allowZero = false,
@@ -491,7 +491,9 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Func
     return statements
 }
 
-private fun parseStaticParameter(allowVariance: Boolean) = fun (source: StringSource, tokens: TokenIterator<TokenType>): StaticParameterNode {
+private fun parseStaticParameter(tokens: TokenIterator<TokenType>, allowVariance: Boolean): StaticParameterNode {
+    val source = tokens.location()
+
     if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
         val name = parseIdentifier(tokens)
         return EffectParameterNode(
