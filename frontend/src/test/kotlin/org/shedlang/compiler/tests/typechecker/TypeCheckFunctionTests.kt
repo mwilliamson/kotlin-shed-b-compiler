@@ -415,4 +415,22 @@ class TypeCheckFunctionTests {
             throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType, source = equalTo(source))
         )
     }
+
+    @Test
+    fun canTypeCheckFunctionDeclarationAsModuleStatement() {
+        val unitReference = staticReference("Unit")
+        val node = function(
+            returnType = unitReference
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        )
+
+        typeCheckModuleStatement(node, typeContext)
+        typeContext.undefer()
+        assertThat(
+            typeContext.typeOf(node),
+            isFunctionType()
+        )
+    }
 }
