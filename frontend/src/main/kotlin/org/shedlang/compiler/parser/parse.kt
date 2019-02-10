@@ -73,7 +73,7 @@ internal fun <T> ((StringSource, TokenIterator<TokenType>) -> T).parse(tokens: T
     return this(source, tokens)
 }
 
-internal fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
+private fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
     val source = tokens.location()
 
     val exports = parseExports(tokens)
