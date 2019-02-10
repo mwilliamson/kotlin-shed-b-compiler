@@ -138,36 +138,50 @@ fun textToValue(text: String) -> JsonValue {
 }
 
 fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
+    val result = readValue(tokens);
+    result.value
+}
+
+shape ReadValueResult {
+    remainder: Sequences.Sequence[Token, Pure],
+    value: JsonValue,
+}
+
+fun readValueResult(remainder: Sequences.Sequence[Token, Pure], value: JsonValue) -> ReadValueResult {
+    ReadValueResult(remainder = remainder, value = value)
+}
+
+fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ReadValueResult {
     val iterator = tokens.next();
     when (iterator) {
         is Sequences.SequenceEnd {
-            null
+            readValueResult(tokens, null)
         }
         is Sequences.SequenceItem[Token, Pure] {
             when (iterator.head.tokenType) {
                 is TokenTrue {
-                    boolean(true)
+                    readValueResult(iterator.tail, boolean(true))
                 }
                 is TokenFalse {
-                    boolean(false)
+                    readValueResult(iterator.tail, boolean(false))
                 }
                 is TokenNull {
-                    null
+                    readValueResult(iterator.tail, null)
                 }
                 is TokenOpenSquare {
-                    array(list())
+                    readValueResult(iterator.tail, array(list()))
                 }
                 is TokenCloseSquare {
-                    null
+                    readValueResult(iterator.tail, null)
                 }
                 is TokenWhitespace {
-                    tokensToValue(iterator.tail)
+                    readValue(iterator.tail)
                 }
                 is TokenUnexpected {
-                    null
+                    readValueResult(iterator.tail, null)
                 }
                 is TokenEnd {
-                    null
+                    readValueResult(iterator.tail, null)
                 }
             }
         }
