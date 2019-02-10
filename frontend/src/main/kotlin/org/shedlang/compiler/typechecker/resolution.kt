@@ -52,9 +52,14 @@ internal class ResolutionContext(
     }
 
     fun undefer() {
-        for (deferredEntry in deferred) {
-            if (!isInitialised.contains(deferredEntry.key)) {
-                undefer(deferredEntry.key, deferredEntry.value)
+        while (deferred.isNotEmpty()) {
+            val nodeId = deferred.keys.first()
+            val deferredInitialisation = deferred.remove(nodeId)
+            if (deferredInitialisation != null) {
+                // TODO: is this check necessary?
+                if (!isInitialised.contains(nodeId)) {
+                    undefer(nodeId, deferredInitialisation)
+                }
             }
         }
     }

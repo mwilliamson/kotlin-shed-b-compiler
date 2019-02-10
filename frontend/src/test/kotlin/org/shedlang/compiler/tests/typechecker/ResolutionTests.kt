@@ -6,14 +6,12 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.BuiltinVariable
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.ast.VariableBindingNode
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.UnitType
 
 class ResolutionTests {
     private val declaration = valStatement("declaration")
@@ -174,6 +172,28 @@ class ResolutionTests {
 
         assertThat(references[positionalReference], isVariableBinding(positionalTypeParameter))
         assertThat(references[namedReference], isVariableBinding(namedTypeParameter))
+    }
+
+    @Test
+    fun nestedFunctionsAreResolved() {
+        val innerUnitReference = staticReference("Unit")
+        val innerFunctionNode = function(
+            name = "inner",
+            returnType = innerUnitReference
+        )
+        val outerFunctionNode = function(
+            returnType = staticReference("Unit"),
+            body = listOf(
+                innerFunctionNode
+            )
+        )
+
+        val unitDeclaration = builtinVariable("Unit", MetaType(UnitType))
+        val references = resolve(module(
+            body = listOf(outerFunctionNode)
+        ), globals = mapOf(Identifier("Unit") to unitDeclaration))
+
+        assertThat(references[innerUnitReference], isVariableBinding(unitDeclaration))
     }
 
     @Test
