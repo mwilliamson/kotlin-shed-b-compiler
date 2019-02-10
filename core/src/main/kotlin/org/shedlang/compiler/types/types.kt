@@ -516,7 +516,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             returns = replaceStaticValuesInType(type.returns, bindings),
             staticParameters = type.staticParameters
         )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CodePointType || type is AnyType || type is SymbolType) {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CodePointType || type is AnyType || type is SymbolType || type is TypeAlias) {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)

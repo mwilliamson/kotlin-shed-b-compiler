@@ -286,6 +286,7 @@ internal data class ShapeTypeValue(
 
 }
 
+internal object TypeAliasTypeValue: InterpreterValue()
 internal object UnionTypeValue: InterpreterValue()
 
 internal data class ShapeValue(

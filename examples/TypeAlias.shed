@@ -1,0 +1,13 @@
+// stdout:
+//   42
+
+fun getSize() -> Size {
+    42
+}
+
+type Size = Int;
+
+fun main() !Io -> Unit {
+    print(intToString(getSize()));
+    print("\n");
+}
