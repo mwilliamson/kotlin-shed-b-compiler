@@ -866,7 +866,7 @@ private fun parseCallFromParens(
 
 private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<ExpressionNode>, List<CallNamedArgumentNode>> {
     val arguments = parseMany(
-        parseElement = { tokens -> ::parseArgument.parse(tokens) },
+        parseElement = ::parseArgument,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         tokens = tokens,
@@ -899,7 +899,9 @@ private sealed class ParsedArgument {
     class Named(val node: CallNamedArgumentNode): ParsedArgument()
 }
 
-private fun parseArgument(source: StringSource, tokens: TokenIterator<TokenType>): ParsedArgument {
+private fun parseArgument(tokens: TokenIterator<TokenType>): ParsedArgument {
+    val source = tokens.location()
+
     if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL_EQUALS, skip = 1)) {
         val name = parseIdentifier(tokens)
         tokens.skip(TokenType.SYMBOL_EQUALS)
