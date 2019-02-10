@@ -240,16 +240,19 @@ private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
 }
 
 private fun parseShapeFields(tokens: TokenIterator<TokenType>): List<ShapeFieldNode> {
-    return parseZeroOrMoreNodes(
+    return parseMany(
         parseElement = ::parseShapeField,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        allowZero = true,
         tokens = tokens,
         allowTrailingSeparator = true
     )
 }
 
-private fun parseShapeField(source: StringSource, tokens: TokenIterator<TokenType>): ShapeFieldNode {
+private fun parseShapeField(tokens: TokenIterator<TokenType>): ShapeFieldNode {
+    val source = tokens.location()
+
     val name = parseIdentifier(tokens)
 
     val shape = if (tokens.trySkip(TokenType.KEYWORD_FROM)) {
@@ -1307,22 +1310,6 @@ private fun <T> parseOneOrMoreWithSeparator(
         elements.add(parseElement(tokens))
     }
     return elements
-}
-
-private fun <T> parseZeroOrMoreNodes(
-    parseElement: (StringSource, TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Unit,
-    isEnd: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>,
-    allowTrailingSeparator: Boolean = false
-) : List<T> {
-    return parseZeroOrMore(
-        { tokens -> parseElement.parse(tokens) },
-        parseSeparator,
-        isEnd,
-        tokens,
-        allowTrailingSeparator = allowTrailingSeparator
-    )
 }
 
 private fun <T> parseZeroOrMore(
