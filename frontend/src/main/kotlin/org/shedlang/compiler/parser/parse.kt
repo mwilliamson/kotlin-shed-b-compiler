@@ -29,7 +29,7 @@ fun parse(filename: String, input: String): ModuleNode {
     return parse(
         filename = filename,
         input = input,
-        rule = { tokens -> ::parseModule.parse(tokens) }
+        rule = ::parseModule
     )
 }
 
@@ -73,7 +73,9 @@ internal fun <T> ((StringSource, TokenIterator<TokenType>) -> T).parse(tokens: T
     return this(source, tokens)
 }
 
-internal fun parseModule(source: StringSource, tokens: TokenIterator<TokenType>): ModuleNode {
+internal fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
+    val source = tokens.location()
+
     val exports = parseExports(tokens)
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
