@@ -112,16 +112,6 @@ internal class TypeContext(
         }
     }
 
-    private fun isShape(member: StaticExpressionNode, shape: ShapeNode): Boolean {
-        return when (member) {
-            is StaticReferenceNode ->
-                resolveReference(member).nodeId == shape.nodeId
-            is StaticApplicationNode ->
-                isShape(member.receiver, shape)
-            else -> false
-        }
-    }
-
     fun toTypes(): Types {
         return TypesMap(
             expressionTypes = expressionTypes,
