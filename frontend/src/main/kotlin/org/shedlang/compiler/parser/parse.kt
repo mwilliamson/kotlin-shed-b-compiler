@@ -585,7 +585,9 @@ private fun branchesReturn(expression: Node, branches: Iterable<List<FunctionSta
     }
 }
 
-private fun parseIf(source: StringSource, tokens: TokenIterator<TokenType>) : IfNode {
+private fun parseIf(tokens: TokenIterator<TokenType>) : IfNode {
+    val source = tokens.location()
+
     val conditionalBranches = parseConditionalBranches(tokens, source)
 
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
@@ -1026,7 +1028,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             return expression
         }
         TokenType.KEYWORD_IF -> {
-            return ::parseIf.parse(tokens)
+            return parseIf(tokens)
         }
         TokenType.KEYWORD_WHEN -> {
             return ::parseWhen.parse(tokens)
