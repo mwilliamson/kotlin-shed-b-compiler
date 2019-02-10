@@ -256,6 +256,22 @@ data class FunctionType(
         }
 }
 
+interface TypeAlias: Type {
+    val name: Identifier
+    val aliasedType: Type
+}
+
+data class LazyTypeAlias(
+    override val name: Identifier,
+    private val getAliasedType: Lazy<Type>
+): TypeAlias {
+    override val aliasedType: Type
+        get() = getAliasedType.value
+
+    override val shortDescription: String
+        get() = name.value
+}
+
 interface ShapeType: Type {
     val name: Identifier
     val shapeId: Int

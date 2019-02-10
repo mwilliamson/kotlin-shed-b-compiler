@@ -9,15 +9,27 @@ import org.shedlang.compiler.types.*
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
-        override fun visit(node: TypeAliasNode) {
-            throw UnsupportedOperationException("not implemented")
-        }
-
+        override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionDeclarationNode) = typeCheck(node, context)
         override fun visit(node: ValNode) = typeCheck(node, context)
     })
+}
+
+private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {
+    // TODO: test laziness
+    val type = LazyTypeAlias(
+        name = node.name,
+        getAliasedType = lazy {
+            evalType(node.expression, context)
+        }
+    )
+    context.addVariableType(node, MetaType(type))
+
+    context.defer {
+        type.aliasedType
+    }
 }
 
 private fun typeCheck(node: ShapeNode, context: TypeContext) {

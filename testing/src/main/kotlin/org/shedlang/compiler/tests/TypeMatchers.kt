@@ -21,6 +21,14 @@ fun isFunctionType(
     has(FunctionType::effect, effect)
 ))
 
+fun isTypeAlias(
+    name: Matcher<Identifier>,
+    aliasedType: Matcher<Type>
+): Matcher<StaticValue> = cast(allOf(
+    has(TypeAlias::name, name),
+    has(TypeAlias::aliasedType, aliasedType)
+))
+
 fun isShapeType(
     shapeId: Matcher<Int> = anything,
     name: Matcher<Identifier> = anything,
