@@ -287,7 +287,7 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
     val explicitTag = if (tokens.trySkip(TokenType.SYMBOL_SUBTYPE)) {
-         ::parseStaticReference.parse(tokens)
+         parseStaticReference(tokens)
     } else {
         null
     }
@@ -1146,7 +1146,7 @@ private fun parseStaticExpression(
     tokens: TokenIterator<TokenType>,
     precedence: Int
 ) : StaticExpressionNode {
-    var left: StaticExpressionNode = ::parsePrimaryStaticExpression.parse(tokens = tokens)
+    var left: StaticExpressionNode  = parsePrimaryStaticExpression(tokens)
     while (true) {
         val next = tokens.peek()
         val operationParser = StaticOperationParser.lookup(next.tokenType)
@@ -1161,22 +1161,25 @@ private fun parseStaticExpression(
 }
 
 private fun parsePrimaryStaticExpression(
-    source: StringSource,
     tokens: TokenIterator<TokenType>
 ): StaticExpressionNode {
     if (tokens.isNext(TokenType.SYMBOL_OPEN_SQUARE_BRACKET) || tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
-        return parseFunctionType(source, tokens)
+        return parseFunctionType(tokens)
     } else {
-        return parseStaticReference(source, tokens)
+        return parseStaticReference(tokens)
     }
 }
 
-private fun parseStaticReference(source: StringSource, tokens: TokenIterator<TokenType>): StaticReferenceNode {
+private fun parseStaticReference(tokens: TokenIterator<TokenType>): StaticReferenceNode {
+    val source = tokens.location()
+
     val name = parseIdentifier(tokens)
     return StaticReferenceNode(name, source)
 }
 
-private fun parseFunctionType(source: StringSource, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    val source = tokens.location()
+
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
     val parameters = parseFunctionTypeParameters(tokens)
 
