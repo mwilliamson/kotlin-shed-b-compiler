@@ -171,7 +171,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
     } else if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
         return parseShape(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_UNION)) {
-        return ::parseUnion.parse(tokens)
+        return parseUnion(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
         return ::parseFunctionDeclaration.parse(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_VAL)) {
@@ -275,7 +275,9 @@ private fun parseShapeField(source: StringSource, tokens: TokenIterator<TokenTyp
     )
 }
 
-private fun parseUnion(source: StringSource, tokens: TokenIterator<TokenType>): UnionNode {
+private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
+    val source = tokens.location()
+
     tokens.skip(TokenType.KEYWORD_UNION)
     val name = parseIdentifier(tokens)
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
