@@ -527,11 +527,13 @@ private fun parseParametersPart(tokens: TokenIterator<TokenType>) : Parameter {
     if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
         return Parameter.StartOfNamedParameters
     } else {
-        return Parameter.Node(::parseParameter.parse(tokens))
+        return Parameter.Node(parseParameter(tokens))
     }
 }
 
-private fun parseParameter(source: StringSource, tokens: TokenIterator<TokenType>): ParameterNode {
+private fun parseParameter(tokens: TokenIterator<TokenType>): ParameterNode {
+    val source = tokens.location()
+
     val name = parseIdentifier(tokens)
     val type = parseTypeSpec(tokens)
     return ParameterNode(name, type, source)
@@ -1219,7 +1221,7 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
         if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
             named = true
         } else if (named) {
-            val parameter = ::parseParameter.parse(tokens)
+            val parameter = parseParameter(tokens)
             namedParameters.add(parameter)
         } else {
             val parameter = parseStaticExpression(tokens)
