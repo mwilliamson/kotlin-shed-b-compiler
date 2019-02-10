@@ -12,7 +12,8 @@ class ParseFieldAccessTests {
         val node = parseString(::parseExpression, source)
         assertThat(node, isFieldAccess(
             receiver = isVariableReference("x"),
-            fieldName = isIdentifier("y")
+            fieldName = isIdentifier("y"),
+            source = isStringSource("x.y", 1)
         ))
     }
 

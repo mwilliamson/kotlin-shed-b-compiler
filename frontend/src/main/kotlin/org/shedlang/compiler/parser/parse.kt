@@ -931,7 +931,7 @@ private object FieldAccessParser : OperationParser {
         return FieldAccessNode(
             receiver = left,
             fieldName = fieldName,
-            source = left.source
+            source = operatorSource
         )
     }
 }

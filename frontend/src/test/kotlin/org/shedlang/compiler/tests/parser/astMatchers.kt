@@ -235,10 +235,12 @@ internal fun isCallNamedArgument(
 
 internal fun isFieldAccess(
     receiver: Matcher<ExpressionNode>,
-    fieldName: Matcher<Identifier>
+    fieldName: Matcher<Identifier>,
+    source: Matcher<Source> = anything
 ): Matcher<ExpressionNode> = cast(allOf(
     has(FieldAccessNode::receiver, receiver),
-    has(FieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName))
+    has(FieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName)),
+    has(FieldAccessNode::source, source)
 ))
 
 internal fun isVariableReference(name: String) : Matcher<ExpressionNode>
@@ -283,3 +285,8 @@ internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))
 
 internal fun isSymbolName(name: String): Matcher<ExpressionNode>
     = cast(has(SymbolNode::name, equalTo(name)))
+
+internal fun isStringSource(contents: String, characterIndex: Int): Matcher<Source> = cast(allOf(
+    has(StringSource::contents, equalTo(contents)),
+    has(StringSource::characterIndex, equalTo(characterIndex))
+))
