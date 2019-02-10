@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
@@ -19,8 +18,6 @@ import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
 class CodeGeneratorTests {
-    private val emptyModules = ModuleSet(modules = listOf())
-
     @Test
     fun emptyModuleGeneratesEmptyModule() {
         val shed = stubbedModule(
