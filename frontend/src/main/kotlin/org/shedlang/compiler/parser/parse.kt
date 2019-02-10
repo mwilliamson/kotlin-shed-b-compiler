@@ -68,11 +68,6 @@ internal fun parserTokenise(filename: String, input: String): TokenIterator<Toke
     )
 }
 
-internal fun <T> ((StringSource, TokenIterator<TokenType>) -> T).parse(tokens: TokenIterator<TokenType>): T {
-    val source = tokens.location()
-    return this(source, tokens)
-}
-
 private fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
     val source = tokens.location()
 

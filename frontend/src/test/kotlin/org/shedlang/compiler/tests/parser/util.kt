@@ -7,11 +7,6 @@ import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parserTokenise
 
 
-internal fun <T> parseString(parser: (StringSource, TokenIterator<TokenType>) -> T, input: String): T {
-    val tokens = tokeniseWithoutWhitespace(input)
-    return parser.parse(tokens)
-}
-
 internal fun <T> parseString(parser: (TokenIterator<TokenType>) -> T, input: String): T {
     val tokens = tokeniseWithoutWhitespace(input)
     return parser(tokens)
