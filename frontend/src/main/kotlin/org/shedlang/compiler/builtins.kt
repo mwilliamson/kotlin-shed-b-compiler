@@ -11,6 +11,7 @@ import org.shedlang.compiler.types.*
 
 private val coreBuiltins = listOf(
     builtinType("Any", AnyType),
+    builtinType("Nothing", NothingType),
     builtinType("Unit", UnitType),
     builtinType("Int", IntType),
     builtinType("String", StringType),
