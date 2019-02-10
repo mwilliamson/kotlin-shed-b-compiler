@@ -7,7 +7,7 @@ import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.*
 
 
-internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
+internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
         override fun visit(node: ShapeNode) = typeCheck(node, context)

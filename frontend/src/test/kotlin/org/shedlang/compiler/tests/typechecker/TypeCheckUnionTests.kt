@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckModuleStatement
 
 class TypeCheckUnionTests {
     @Test
@@ -16,7 +16,7 @@ class TypeCheckUnionTests {
 
 
         val typeContext = typeContext(moduleName = listOf("Example"))
-        typeCheck(node, typeContext)
+        typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             name = isIdentifier("X"),
             members = isSequence(
@@ -36,7 +36,7 @@ class TypeCheckUnionTests {
         val typeContext = typeContext(
             moduleName = listOf("A", "B")
         )
-        typeCheck(node, typeContext)
+        typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             name = isIdentifier("X"),
             members = isSequence(
@@ -86,7 +86,7 @@ class TypeCheckUnionTests {
         )
 
         val typeContext = typeContext(moduleName = listOf("Example"))
-        typeCheck(node, typeContext)
+        typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
             parameters = isSequence(
                 isTypeParameter(name = isIdentifier("T1"), variance = isInvariant),

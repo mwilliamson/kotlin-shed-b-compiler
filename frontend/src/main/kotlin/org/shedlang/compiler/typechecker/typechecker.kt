@@ -217,11 +217,11 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
         .partition({ statement -> statement is TypeDeclarationNode })
 
     for (typeDeclaration in typeDeclarations) {
-        typeCheck(typeDeclaration, context)
+        typeCheckModuleStatement(typeDeclaration, context)
     }
 
     for (statement in otherStatements) {
-        typeCheck(statement, context)
+        typeCheckModuleStatement(statement, context)
     }
 
     context.undefer()
