@@ -1101,7 +1101,6 @@ class CodeGeneratorTests {
     }
 
     private fun generateCode(node: ModuleNode) = generateCode(node, context())
-    private fun generateCode(node: ShapeNode) = generateCode(node, context())
     private fun generateCode(node: FunctionDeclarationNode) = generateCode(node, context())
     private fun generateCode(node: FunctionStatementNode): List<PythonStatementNode> {
         val context = context()
