@@ -385,6 +385,11 @@ fun functionTypeNode(
     source = anySource()
 )
 
+fun typeAlias(
+    name: String,
+    aliasedType: Type
+) = LazyTypeAlias(name = Identifier(name), getAliasedType = lazy { aliasedType })
+
 fun parametrizedShapeType(
     name: String,
     parameters: List<TypeParameter>,

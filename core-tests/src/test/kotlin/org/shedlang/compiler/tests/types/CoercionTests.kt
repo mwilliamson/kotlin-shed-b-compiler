@@ -89,6 +89,22 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceTypeToTypeAlias() {
+        assertThat(
+            canCoerce(from = IntType, to = typeAlias("Size", IntType)),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun canCoerceTypeAliasToType() {
+        assertThat(
+            canCoerce(from = typeAlias("Size", IntType), to = IntType),
+            equalTo(true)
+        )
+    }
+
+    @Test
     fun functionTypesAreContravariantInPositionalArgumentType() {
         assertThat(
             canCoerce(

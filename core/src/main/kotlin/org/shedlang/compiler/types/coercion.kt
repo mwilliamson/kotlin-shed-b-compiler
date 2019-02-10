@@ -99,6 +99,14 @@ class TypeConstraintSolver(
             }
         }
 
+        if (from is TypeAlias) {
+            return coerce(from = from.aliasedType, to = to)
+        }
+
+        if (to is TypeAlias) {
+            return coerce(from = from, to = to.aliasedType)
+        }
+
         // TODO: deal with type parameters
         if (from is UnionType) {
             return from.members.all({ member -> coerce(from = member, to = to) })
