@@ -177,7 +177,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
     } else if (tokens.isNext(TokenType.KEYWORD_UNION)) {
         return parseUnion(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
-        return ::parseFunctionDeclaration.parse(tokens)
+        return parseFunctionDeclaration(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_VAL)) {
         return ::parseVal.parse(tokens)
     } else {
@@ -363,7 +363,9 @@ private fun parseUnionMember(
     }
 }
 
-internal fun parseFunctionDeclaration(source: StringSource, tokens: TokenIterator<TokenType>): FunctionDeclarationNode {
+internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): FunctionDeclarationNode {
+    val source = tokens.location()
+
     tokens.skip(TokenType.KEYWORD_FUN)
     val name = parseIdentifier(tokens)
     val signature = parseFunctionSignature(tokens)
