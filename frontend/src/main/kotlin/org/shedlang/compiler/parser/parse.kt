@@ -108,7 +108,7 @@ private fun parseExports(tokens: TokenIterator<TokenType>): List<Identifier> {
     }
 }
 
-internal fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModuleNode {
+private fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModuleNode {
     val source = tokens.location()
 
     val imports = parseImports(tokens)
