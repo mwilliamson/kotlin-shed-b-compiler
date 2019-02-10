@@ -241,6 +241,15 @@ fun functionExpression(
     source = anySource()
 )
 
+fun typeAlias(
+    name: String,
+    expression: StaticExpressionNode
+) = TypeAliasNode(
+    name = Identifier(name),
+    expression = expression,
+    source = anySource()
+)
+
 fun shape(
     name: String = "Shape",
     staticParameters: List<StaticParameterNode> = listOf(),

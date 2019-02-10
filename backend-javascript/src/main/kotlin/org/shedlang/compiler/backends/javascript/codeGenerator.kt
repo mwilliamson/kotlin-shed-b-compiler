@@ -69,10 +69,7 @@ private fun generateExport(name: Identifier, source: Source): JavascriptExpressi
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
-        override fun visit(node: TypeAliasNode): List<JavascriptStatementNode> {
-            throw UnsupportedOperationException("not implemented")
-        }
-
+        override fun visit(node: TypeAliasNode): List<JavascriptStatementNode> = listOf()
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))

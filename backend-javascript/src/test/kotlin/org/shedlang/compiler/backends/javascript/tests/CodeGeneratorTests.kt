@@ -81,6 +81,15 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun typeAliasGeneratesNothing() {
+        val shed = typeAlias("Size", staticReference("Int"))
+
+        val javascriptNodes = generateCode(shed)
+
+        assertThat(javascriptNodes, isSequence())
+    }
+
+    @Test
     fun shapeGeneratesType() {
         val shed = shape(
             name = "X",
