@@ -37,7 +37,7 @@ internal fun parseTypesModule(filename: String, input: String): TypesModuleNode 
     return parse(
         filename = filename,
         input = input,
-        rule = { tokens -> ::parseTypesModuleTokens.parse(tokens) }
+        rule = ::parseTypesModuleTokens
     )
 }
 
@@ -108,7 +108,9 @@ private fun parseExports(tokens: TokenIterator<TokenType>): List<Identifier> {
     }
 }
 
-internal fun parseTypesModuleTokens(source: StringSource, tokens: TokenIterator<TokenType>): TypesModuleNode {
+internal fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModuleNode {
+    val source = tokens.location()
+
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
         parseElement = ::parseValType,
