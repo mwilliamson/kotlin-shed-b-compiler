@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.UnexpectedTokenException
-import org.shedlang.compiler.parser.parseShape
+import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 
@@ -14,7 +14,7 @@ class ParseShapeTests {
     @Test
     fun emptyShape() {
         val source = "shape X { }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             name = isIdentifier("X"),
             staticParameters = isSequence(),
@@ -27,7 +27,7 @@ class ParseShapeTests {
     fun emptyShapeMayNotHaveTrailingComma() {
         val source = "shape X { , }"
         assertThat(
-            { parseString(::parseShape, source) },
+            { parseString(::parseModuleStatement, source) },
             throws<UnexpectedTokenException>()
         )
     }
@@ -35,7 +35,7 @@ class ParseShapeTests {
     @Test
     fun shapeHasCommaSeparatedFields() {
         val source = "shape X { a: Int, b: String }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
@@ -55,7 +55,7 @@ class ParseShapeTests {
     @Test
     fun fieldMayHaveTrailingComma() {
         val source = "shape X { a: Int, }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
@@ -70,7 +70,7 @@ class ParseShapeTests {
     @Test
     fun fieldMayHaveValueAndType() {
         val source = "shape X { a: Int = 0, }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
@@ -85,7 +85,7 @@ class ParseShapeTests {
     @Test
     fun fieldMayHaveValueWithoutExplicitType() {
         val source = "shape X { a = 0, }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
@@ -100,7 +100,7 @@ class ParseShapeTests {
     @Test
     fun fieldShapeIsNullIfNotExplicitlySet() {
         val source = "shape X { a: Int, }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
@@ -114,7 +114,7 @@ class ParseShapeTests {
     @Test
     fun fieldShapeIsSetUsingFromKeyword() {
         val source = "shape X { a from Y: Int, }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             fields = isSequence(
                 isShapeField(
@@ -128,7 +128,7 @@ class ParseShapeTests {
     @Test
     fun shapeCanExtendSingleShape() {
         val source = "shape X extends Y { }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             extends = isSequence(
                 isStaticReference("Y")
@@ -139,7 +139,7 @@ class ParseShapeTests {
     @Test
     fun shapeCanExtendMultipleShape() {
         val source = "shape X extends Y, Z { }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             extends = isSequence(
                 isStaticReference("Y"),
@@ -151,7 +151,7 @@ class ParseShapeTests {
     @Test
     fun shapeCanHaveTypeParameter() {
         val source = "shape X[T] { }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             name = isIdentifier("X"),
             staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
@@ -162,7 +162,7 @@ class ParseShapeTests {
     @Test
     fun shapeCanHaveManyTypeParameters() {
         val source = "shape X[T, U] { }"
-        val node = parseString(::parseShape, source)
+        val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             name = isIdentifier("X"),
             staticParameters = isSequence(

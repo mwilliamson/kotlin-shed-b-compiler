@@ -201,7 +201,7 @@ private fun parseTypeAlias(tokens: TokenIterator<TokenType>): TypeAliasNode {
     )
 }
 
-internal fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
+private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_SHAPE)
