@@ -944,7 +944,7 @@ private object FieldAccessParser : OperationParser {
         get() = FIELD_ACCESS_PRECEDENCE
 
     override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
-        val fieldName = ::parseFieldName.parse(tokens)
+        val fieldName = parseFieldName(tokens)
         return FieldAccessNode(
             receiver = left,
             fieldName = fieldName,
@@ -953,7 +953,8 @@ private object FieldAccessParser : OperationParser {
     }
 }
 
-private fun parseFieldName(source: StringSource, tokens: TokenIterator<TokenType>): FieldNameNode {
+private fun parseFieldName(tokens: TokenIterator<TokenType>): FieldNameNode {
+    val source = tokens.location()
     val identifier = parseIdentifier(tokens)
     return FieldNameNode(identifier, source = source)
 }
