@@ -621,7 +621,7 @@ private fun parseAdditionalConditionalBranches(tokens: TokenIterator<TokenType>)
     val branches = mutableListOf<ConditionalBranchNode>()
 
     while (true) {
-        val branch = ::tryParseAdditionalConditionalBranch.parse(tokens)
+        val branch = tryParseAdditionalConditionalBranch(tokens)
         if (branch == null) {
             return branches
         } else {
@@ -631,9 +631,10 @@ private fun parseAdditionalConditionalBranches(tokens: TokenIterator<TokenType>)
 }
 
 private fun tryParseAdditionalConditionalBranch(
-    source: StringSource,
     tokens: TokenIterator<TokenType>
 ): ConditionalBranchNode? {
+    val source = tokens.location()
+
     if (tokens.trySkip(listOf(TokenType.KEYWORD_ELSE, TokenType.KEYWORD_IF))) {
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
         val condition = parseExpression(tokens)
