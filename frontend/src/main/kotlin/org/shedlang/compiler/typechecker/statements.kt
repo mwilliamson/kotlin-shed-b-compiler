@@ -9,6 +9,10 @@ import org.shedlang.compiler.types.*
 
 internal fun typeCheck(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
+        override fun visit(node: TypeAliasNode) {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionDeclarationNode) = typeCheck(node, context)

@@ -45,6 +45,10 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
 
 internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): List<Pair<Identifier, Expression>> {
     return statement.accept(object : ModuleStatementNode.Visitor<List<Pair<Identifier, Expression>>> {
+        override fun visit(node: TypeAliasNode): List<Pair<Identifier, Expression>> {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: ShapeNode): List<Pair<Identifier, Expression>> {
             val expression = shapeToExpression(node, context)
             return listOf(

@@ -244,6 +244,7 @@ data class ImportNode(
 
 interface ModuleStatementNode: Node {
     interface Visitor<T> {
+        fun visit(node: TypeAliasNode): T
         fun visit(node: ShapeNode): T
         fun visit(node: UnionNode): T
         fun visit(node: FunctionDeclarationNode): T
@@ -264,7 +265,7 @@ data class TypeAliasNode(
         get() = listOf(expression)
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
-        throw UnsupportedOperationException("not implemented")
+        return visitor.visit(this)
     }
 
     override fun variableBinders(): List<VariableBindingNode> {
