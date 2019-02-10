@@ -236,14 +236,13 @@ private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
 }
 
 private fun parseShapeFields(tokens: TokenIterator<TokenType>): List<ShapeFieldNode> {
-    val fields = parseZeroOrMoreNodes(
+    return parseZeroOrMoreNodes(
         parseElement = ::parseShapeField,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
         tokens = tokens,
         allowTrailingSeparator = true
     )
-    return fields
 }
 
 private fun parseShapeField(source: StringSource, tokens: TokenIterator<TokenType>): ShapeFieldNode {
