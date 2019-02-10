@@ -23,7 +23,7 @@ class ExecutionTests {
                         listOf("python3", "-m", topLevelPythonPackageName + "." + testProgram.mainModule.map(Identifier::value).joinToString(".")),
                         workingDirectory = temporaryDirectory.file
                     )
-                    assertThat("stderr was:\n" + result.stderr, result, testProgram.expectedResult)
+                    assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
                 print(error.source.describe())

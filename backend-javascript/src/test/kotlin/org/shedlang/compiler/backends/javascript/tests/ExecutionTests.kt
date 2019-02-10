@@ -23,7 +23,7 @@ class ExecutionTests {
                         listOf("node", mainJsModule),
                         workingDirectory = temporaryDirectory.file
                     )
-                    assertThat("stderr was:\n" + result.stderr, result, testProgram.expectedResult)
+                    assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
                 print(error.source.describe())
