@@ -341,7 +341,9 @@ data class AnonymousUnionType(
         get() = listOf()
 
     override val shortDescription: String
-        get() = name.value
+        get() = members.joinToString(" | ") {
+            member -> member.shortDescription
+        }
 }
 
 fun union(left: Type, right: Type): Type {
