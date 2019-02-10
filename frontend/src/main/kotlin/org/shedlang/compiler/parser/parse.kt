@@ -401,7 +401,8 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
         parseElement = ::parseParametersPart,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-        tokens = tokens
+        tokens = tokens,
+        allowTrailingSeparator = true
     )
 
     // TODO: make sure there's only one start of named parameters

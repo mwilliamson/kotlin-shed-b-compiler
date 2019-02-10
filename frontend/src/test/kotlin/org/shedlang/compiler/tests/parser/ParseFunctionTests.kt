@@ -71,6 +71,15 @@ class ParseFunctionTests {
     }
 
     @Test
+    fun parametersCanHaveTrailingComma() {
+        val source = "fun f(x: Int, ) -> Unit { }"
+        val function = parseString(::parseFunctionDeclaration, source)
+        assertThat(function, has(FunctionNode::parameters, isSequence(
+            isParameter("x", "Int")
+        )))
+    }
+
+    @Test
     fun canReadTypeParameters() {
         val source = "fun f[T, U](t: T) -> U { }"
         val function = parseString(::parseFunctionDeclaration, source)
