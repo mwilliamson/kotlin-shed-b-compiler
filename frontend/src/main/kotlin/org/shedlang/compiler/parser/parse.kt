@@ -179,7 +179,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
         return parseFunctionDeclaration(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_VAL)) {
-        return ::parseVal.parse(tokens)
+        return parseVal(tokens)
     } else {
         throw UnexpectedTokenException(
             expected = "module statement",
@@ -545,7 +545,7 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNod
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : FunctionStatementNode {
     val token = tokens.peek()
     when (token.tokenType) {
-        TokenType.KEYWORD_VAL -> return ::parseVal.parse(tokens)
+        TokenType.KEYWORD_VAL -> return parseVal(tokens)
         else -> {
             val expression = tryParseExpression(tokens)
             if (expression == null) {
@@ -681,7 +681,9 @@ private fun parseWhenBranch(source: StringSource, tokens: TokenIterator<TokenTyp
     )
 }
 
-private fun parseVal(source: StringSource, tokens: TokenIterator<TokenType>): ValNode {
+private fun parseVal(tokens: TokenIterator<TokenType>): ValNode {
+    val source = tokens.location()
+
     tokens.skip(TokenType.KEYWORD_VAL)
     val name = parseIdentifier(tokens)
     tokens.skip(TokenType.SYMBOL_EQUALS)
