@@ -72,7 +72,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: TypeAliasNode): List<JavascriptStatementNode> = listOf()
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
-        override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
+        override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCodeForFunctionDeclaration(node, context))
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
     })
 }
@@ -132,7 +132,7 @@ private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext
     ) + node.members.map { member -> generateCodeForShape(member, context) }
 }
 
-private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): JavascriptFunctionDeclarationNode {
+private fun generateCodeForFunctionDeclaration(node: FunctionDeclarationNode, context: CodeGenerationContext): JavascriptFunctionDeclarationNode {
     val javascriptFunction = generateFunction(node, context)
     return JavascriptFunctionDeclarationNode(
         name = generateName(node.name),

@@ -120,7 +120,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: TypeAliasNode): List<PythonStatementNode> = listOf()
         override fun visit(node: ShapeNode) = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)
-        override fun visit(node: FunctionDeclarationNode) = listOf(generateCode(node, context))
+        override fun visit(node: FunctionDeclarationNode) = listOf(generateCodeForFunctionDeclaration(node, context))
         override fun visit(node: ValNode) = generateCode(node, context)
     })
 }
@@ -185,7 +185,7 @@ private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext
     return node.members.map { member -> generateCodeForShape(member, context) }
 }
 
-private fun generateCode(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {
+private fun generateCodeForFunctionDeclaration(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {
     return generateFunction(context.name(node), node, context)
 }
 
