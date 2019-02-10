@@ -188,6 +188,7 @@ private fun parseTypeAlias(tokens: TokenIterator<TokenType>): TypeAliasNode {
     val name = parseIdentifier(tokens)
     tokens.skip(TokenType.SYMBOL_EQUALS)
     val expression = parseStaticExpression(tokens)
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
     return TypeAliasNode(
         name = name,
