@@ -318,6 +318,11 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
             typeCheck(node, context)
             return UnitType
         }
+
+        override fun visit(node: FunctionDeclarationNode): Type {
+            typeCheckFunctionDeclaration(node, context)
+            return UnitType
+        }
     })
 }
 

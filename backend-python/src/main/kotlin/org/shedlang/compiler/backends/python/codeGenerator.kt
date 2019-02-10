@@ -196,7 +196,7 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
     val parameters = generateParameters(node, bodyContext)
     // TODO: test variable capture in tail recursive functions
     var isTailRecursive = false
-    val hasFunctionExpressions = hasFunctionExpressions(node)
+    val hasFunctionExpressions = hasFunctions(node)
 
     fun returnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
         val arguments = if (hasFunctionExpressions) {
@@ -246,8 +246,8 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
     )
 }
 
-private fun hasFunctionExpressions(function: FunctionNode): Boolean {
-    return function.descendants().any { descendant -> descendant is FunctionExpressionNode }
+private fun hasFunctions(function: FunctionNode): Boolean {
+    return function.descendants().any { descendant -> descendant is FunctionNode }
 }
 
 private class TailRecursionArgument(val parameter: ParameterNode, val expression: ExpressionNode) {
@@ -335,6 +335,10 @@ internal fun generateStatementCode(
 
         override fun visit(node: ValNode): List<PythonStatementNode> {
             return generateCode(node, context)
+        }
+
+        override fun visit(node: FunctionDeclarationNode): List<PythonStatementNode> {
+            return listOf(generateCodeForFunctionDeclaration(node, context))
         }
     })
 }

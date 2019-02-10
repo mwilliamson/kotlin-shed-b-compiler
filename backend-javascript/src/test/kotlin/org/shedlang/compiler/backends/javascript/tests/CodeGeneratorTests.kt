@@ -179,7 +179,7 @@ class CodeGeneratorTests {
             body = listOf(expressionStatement(literalInt(42)))
         )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed as ModuleStatementNode)
 
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),

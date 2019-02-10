@@ -191,6 +191,10 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
         override fun visit(node: ValNode): JavascriptStatementNode {
             return generateCode(node, context)
         }
+
+        override fun visit(node: FunctionDeclarationNode): JavascriptStatementNode {
+            return generateCodeForFunctionDeclaration(node, context)
+        }
     })
 }
 

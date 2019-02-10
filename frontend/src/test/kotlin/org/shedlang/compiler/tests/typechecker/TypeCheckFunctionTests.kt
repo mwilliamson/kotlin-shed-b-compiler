@@ -433,4 +433,22 @@ class TypeCheckFunctionTests {
             isFunctionType()
         )
     }
+
+    @Test
+    fun canTypeCheckFunctionDeclarationAsFunctionStatement() {
+        val unitReference = staticReference("Unit")
+        val node = function(
+            returnType = unitReference
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+        )
+
+        typeCheckFunctionStatement(node, typeContext)
+        typeContext.undefer()
+        assertThat(
+            typeContext.typeOf(node),
+            isFunctionType()
+        )
+    }
 }

@@ -397,7 +397,10 @@ data class FunctionDeclarationNode(
     override val body: FunctionBody.Statements,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : FunctionNode, VariableBindingNode, ModuleStatementNode {
+) : FunctionNode, VariableBindingNode, ModuleStatementNode, FunctionStatementNode {
+    override val isReturn: Boolean
+        get() = false
+
     override val children: List<Node>
         get() = parameters + namedParameters + effects + returnType + body.nodes
 
@@ -405,6 +408,10 @@ data class FunctionDeclarationNode(
         get() = body.nodes
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -475,6 +482,7 @@ interface FunctionStatementNode : Node {
         }
         fun visit(node: ExpressionStatementNode): T
         fun visit(node: ValNode): T
+        fun visit(node: FunctionDeclarationNode): T
     }
 
     val isReturn: Boolean

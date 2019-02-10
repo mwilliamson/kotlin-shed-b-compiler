@@ -117,6 +117,13 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
                 expression = loadExpression(node.expression, context)
             )
         }
+
+        override fun visit(node: FunctionDeclarationNode): Statement {
+            return Val(
+                name = node.name,
+                expression = functionToExpression(node, context)
+            )
+        }
     })
 }
 

@@ -549,6 +549,8 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
     val token = tokens.peek()
     when (token.tokenType) {
         TokenType.KEYWORD_VAL -> return parseVal(tokens)
+        TokenType.KEYWORD_FUN -> return parseFunctionDeclaration(tokens)
+
         else -> {
             val expression = tryParseExpression(tokens)
             if (expression == null) {

@@ -7,9 +7,7 @@ import org.shedlang.compiler.ast.FunctionBody
 import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.ast.StaticReferenceNode
-import org.shedlang.compiler.parser.UnexpectedTokenException
-import org.shedlang.compiler.parser.parseExpression
-import org.shedlang.compiler.parser.parseFunctionDeclaration
+import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isInvariant
@@ -188,6 +186,24 @@ class ParseFunctionTests {
                 FunctionNode::body,
                 cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4))))
             )
+        )))
+    }
+
+    @Test
+    fun canReadFunctionDeclarationAsModuleStatement() {
+        val source = "fun f() -> Unit { }"
+        val function = parseString(::parseModuleStatement, source)
+        assertThat(function, cast(allOf(
+            has(FunctionDeclarationNode::name, isIdentifier("f"))
+        )))
+    }
+
+    @Test
+    fun canReadFunctionDeclarationAsFunctionStatement() {
+        val source = "fun f() -> Unit { }"
+        val function = parseString(::parseFunctionStatement, source)
+        assertThat(function, cast(allOf(
+            has(FunctionDeclarationNode::name, isIdentifier("f"))
         )))
     }
 }
