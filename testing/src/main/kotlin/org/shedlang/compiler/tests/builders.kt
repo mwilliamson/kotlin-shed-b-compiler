@@ -241,7 +241,7 @@ fun functionExpression(
     source = anySource()
 )
 
-fun typeAlias(
+fun typeAliasDeclaration(
     name: String,
     expression: StaticExpressionNode
 ) = TypeAliasNode(

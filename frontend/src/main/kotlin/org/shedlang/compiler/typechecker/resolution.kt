@@ -105,6 +105,15 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is FunctionTypeNode -> resolveFunctionType(node, context)
 
+        is TypeAliasNode -> {
+            context.defer(node, {
+                resolveScope(
+                    body = listOf(node.expression),
+                    context = context
+                )
+            })
+        }
+
         is ShapeNode -> {
             context.defer(node, {
                 resolveScope(

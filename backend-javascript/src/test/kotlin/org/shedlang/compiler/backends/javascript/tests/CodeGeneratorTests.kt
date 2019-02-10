@@ -82,7 +82,7 @@ class CodeGeneratorTests {
 
     @Test
     fun typeAliasGeneratesNothing() {
-        val shed = typeAlias("Size", staticReference("Int"))
+        val shed = typeAliasDeclaration("Size", staticReference("Int"))
 
         val javascriptNodes = generateCode(shed)
 

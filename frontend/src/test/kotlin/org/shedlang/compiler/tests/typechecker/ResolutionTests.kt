@@ -6,11 +6,14 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.BuiltinVariable
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.MetaType
 
 class ResolutionTests {
     private val declaration = valStatement("declaration")
@@ -440,6 +443,42 @@ class ResolutionTests {
         val references = resolve(node, globals = mapOf())
 
         assertThat(references[reference], isVariableBinding(shapeTypeParameter))
+    }
+
+    @Test
+    fun typeAliasIsAddedToScope() {
+        val typeAliasReference = staticReference("X")
+        val typeAlias = typeAliasDeclaration(name = "X", expression = staticReference("Int"))
+
+        val node = module(body = listOf(
+            function(returnType = typeAliasReference),
+            typeAlias
+        ))
+
+        val references = resolve(node, globals = mapOf(
+            Identifier("Int") to anyDeclaration()
+        ))
+
+        assertThat(references[typeAliasReference], isVariableBinding(typeAlias))
+    }
+
+    @Test
+    fun typeAliasExpressionIsResolved() {
+        val typeAliasExpression = staticReference("Int")
+        val intType = BuiltinVariable(Identifier("Int"), MetaType(IntType))
+        val typeAliasReference = staticReference("X")
+        val typeAlias = typeAliasDeclaration(name = "X", expression = typeAliasExpression)
+
+        val node = module(body = listOf(
+            function(returnType = typeAliasReference),
+            typeAlias
+        ))
+
+        val references = resolve(node, globals = mapOf(
+            Identifier("Int") to intType
+        ))
+
+        assertThat(references[typeAliasExpression], isVariableBinding(intType))
     }
 
     private fun resolutionContext(
