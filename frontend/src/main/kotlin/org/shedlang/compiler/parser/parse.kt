@@ -719,7 +719,7 @@ private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) :
 }
 
 private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int) : ExpressionNode? {
-    val primaryExpression = ::tryParsePrimaryExpression.parse(tokens)
+    val primaryExpression = tryParsePrimaryExpression(tokens)
     if (primaryExpression == null) {
         return null
     }
@@ -974,7 +974,9 @@ private object IsParser : OperationParser {
     }
 }
 
-internal fun tryParsePrimaryExpression(source: StringSource, tokens: TokenIterator<TokenType>) : ExpressionNode? {
+internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : ExpressionNode? {
+    val source = tokens.location()
+
     val tokenType = tokens.peek().tokenType;
     when (tokenType) {
         TokenType.KEYWORD_UNIT -> {
