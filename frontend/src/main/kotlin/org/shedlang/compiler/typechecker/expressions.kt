@@ -133,7 +133,7 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 
 private fun evalTypeCondition(
     expressionType: UnionType,
-    targetTypeNode: StaticNode,
+    targetTypeNode: StaticExpressionNode,
     context: TypeContext
 ): Type {
     val targetType = evalType(targetTypeNode, context)

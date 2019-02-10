@@ -35,7 +35,7 @@ internal fun isWhen(
 ))
 
 internal fun isWhenBranch(
-    type: Matcher<StaticNode>,
+    type: Matcher<StaticExpressionNode>,
     body: Matcher<List<FunctionStatementNode>>
 ): Matcher<WhenBranchNode> = allOf(
     has(WhenBranchNode::type, type),
@@ -64,7 +64,7 @@ inline internal fun <reified T: ExpressionNode> isVal(
 
 internal fun isValType(
     name: Matcher<Identifier>,
-    type: Matcher<StaticNode>
+    type: Matcher<StaticExpressionNode>
 ): Matcher<Node> {
     return cast(allOf(
         has(ValTypeNode::name, name),
@@ -75,7 +75,7 @@ internal fun isValType(
 internal fun isShape(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    extends: Matcher<List<StaticNode>> = anything,
+    extends: Matcher<List<StaticExpressionNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
@@ -88,9 +88,9 @@ internal fun isShape(
 
 internal fun isShapeField(
     name: Matcher<Identifier>,
-    type: Matcher<StaticNode?> = anythingOrNull,
+    type: Matcher<StaticExpressionNode?> = anythingOrNull,
     value: Matcher<ExpressionNode?> = anythingOrNull,
-    shape: Matcher<StaticNode?> = anythingOrNull
+    shape: Matcher<StaticExpressionNode?> = anythingOrNull
 ) = allOf(
     has(ShapeFieldNode::name, name),
     has(ShapeFieldNode::type, type),
@@ -115,7 +115,7 @@ internal fun isUnion(
 internal fun isUnionMember(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    extends: Matcher<List<StaticNode>> = anything,
+    extends: Matcher<List<StaticExpressionNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything
 ): Matcher<UnionMemberNode> {
     return cast(allOf(
@@ -179,7 +179,7 @@ internal fun isBinaryOperation(
 
 internal fun isIsOperation(
     expression: Matcher<ExpressionNode>,
-    type: Matcher<StaticNode>
+    type: Matcher<StaticExpressionNode>
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(IsNode::expression, expression),
@@ -191,7 +191,7 @@ internal fun isCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
-    typeArguments: Matcher<List<StaticNode>> = anything
+    typeArguments: Matcher<List<StaticExpressionNode>> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(CallNode::receiver, receiver),
@@ -205,7 +205,7 @@ internal fun isPartialCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
-    typeArguments: Matcher<List<StaticNode>> = anything
+    typeArguments: Matcher<List<StaticExpressionNode>> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(PartialCallNode::receiver, receiver),
@@ -234,31 +234,31 @@ internal fun isFieldAccess(
 internal fun isVariableReference(name: String) : Matcher<ExpressionNode>
     = cast(has(VariableReferenceNode::name, isIdentifier(name)))
 
-internal fun isStaticReference(name: String) : Matcher<StaticNode>
+internal fun isStaticReference(name: String) : Matcher<StaticExpressionNode>
     = cast(has(StaticReferenceNode::name, isIdentifier(name)))
 
 internal fun isStaticFieldAccess(
-    receiver: Matcher<StaticNode>,
+    receiver: Matcher<StaticExpressionNode>,
     fieldName: Matcher<Identifier>
-): Matcher<StaticNode> = cast(allOf(
+): Matcher<StaticExpressionNode> = cast(allOf(
     has(StaticFieldAccessNode::receiver, receiver),
     has(StaticFieldAccessNode::fieldName, fieldName)
 ))
 
 internal fun isStaticApplication(
-    receiver: Matcher<StaticNode>,
-    arguments: Matcher<List<StaticNode>>
-): Matcher<StaticNode> = cast(allOf(
+    receiver: Matcher<StaticExpressionNode>,
+    arguments: Matcher<List<StaticExpressionNode>>
+): Matcher<StaticExpressionNode> = cast(allOf(
     has(StaticApplicationNode::receiver, receiver),
     has(StaticApplicationNode::arguments, arguments)
 ))
 internal fun isFunctionType(
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    positionalParameters: Matcher<List<StaticNode>> = anything,
+    positionalParameters: Matcher<List<StaticExpressionNode>> = anything,
     namedParameters: Matcher<List<ParameterNode>> = anything,
-    returnType: Matcher<StaticNode> = anything,
-    effects: Matcher<List<StaticNode>> = anything
-): Matcher<StaticNode> = cast(allOf(
+    returnType: Matcher<StaticExpressionNode> = anything,
+    effects: Matcher<List<StaticExpressionNode>> = anything
+): Matcher<StaticExpressionNode> = cast(allOf(
     has(FunctionTypeNode::staticParameters, staticParameters),
     has(FunctionTypeNode::positionalParameters, positionalParameters),
     has(FunctionTypeNode::namedParameters, namedParameters),

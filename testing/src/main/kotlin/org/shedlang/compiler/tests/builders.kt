@@ -67,7 +67,7 @@ fun whenExpression(
 ) = WhenNode(expression = expression, branches = branches, source = anySource())
 
 fun whenBranch(
-    type: StaticNode,
+    type: StaticExpressionNode,
     body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,
@@ -96,7 +96,7 @@ fun variableBinder(
 
 fun valType(
     name: String = "<val name>",
-    type: StaticNode
+    type: StaticExpressionNode
 ) = ValTypeNode(
     name = Identifier(name),
     type = type,
@@ -137,7 +137,7 @@ fun binaryOperation(
 
 fun isOperation(
     expression: ExpressionNode,
-    type: StaticNode
+    type: StaticExpressionNode
 ) = IsNode(
     expression = expression,
     type = type,
@@ -148,7 +148,7 @@ fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<CallNamedArgumentNode> = listOf(),
-    staticArguments: List<StaticNode> = listOf()
+    staticArguments: List<StaticExpressionNode> = listOf()
 ) = CallNode(
     receiver = receiver,
     staticArguments = staticArguments,
@@ -161,7 +161,7 @@ fun partialCall(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<CallNamedArgumentNode> = listOf(),
-    staticArguments: List<StaticNode> = listOf()
+    staticArguments: List<StaticExpressionNode> = listOf()
 ) = PartialCallNode(
     receiver = receiver,
     staticArguments = staticArguments,
@@ -193,8 +193,8 @@ fun function(
     staticParameters: List<StaticParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effects: List<StaticNode> = listOf(),
-    returnType: StaticNode = staticReference("Unit"),
+    effects: List<StaticExpressionNode> = listOf(),
+    returnType: StaticExpressionNode = staticReference("Unit"),
     body: List<FunctionStatementNode> = listOf()
 ) = FunctionDeclarationNode(
     name = Identifier(name),
@@ -211,8 +211,8 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effects: List<StaticNode> = listOf(),
-    returnType: StaticNode? = null,
+    effects: List<StaticExpressionNode> = listOf(),
+    returnType: StaticExpressionNode? = null,
     body: List<FunctionStatementNode> = listOf()
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
@@ -228,8 +228,8 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effects: List<StaticNode> = listOf(),
-    returnType: StaticNode? = staticReference("Unit"),
+    effects: List<StaticExpressionNode> = listOf(),
+    returnType: StaticExpressionNode? = staticReference("Unit"),
     body: ExpressionNode
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
@@ -244,7 +244,7 @@ fun functionExpression(
 fun shape(
     name: String = "Shape",
     staticParameters: List<StaticParameterNode> = listOf(),
-    extends: List<StaticNode> = listOf(),
+    extends: List<StaticExpressionNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
     name = Identifier(name),
@@ -256,9 +256,9 @@ fun shape(
 
 fun shapeField(
     name: String = "field",
-    type: StaticNode? = null,
+    type: StaticExpressionNode? = null,
     value: ExpressionNode? = null,
-    shape: StaticNode? = null
+    shape: StaticExpressionNode? = null
 ) = ShapeFieldNode(
     shape = shape,
     name = Identifier(name),
@@ -283,7 +283,7 @@ fun union(
 fun unionMember(
     name: String,
     staticParameters: List<StaticParameterNode> = listOf(),
-    extends: List<StaticNode> = listOf(),
+    extends: List<StaticExpressionNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = UnionMemberNode(
     name = Identifier(name),
@@ -313,7 +313,7 @@ fun declaration(name: String) = parameter(name)
 
 fun parameter(
     name: String = "x",
-    type: StaticNode = staticReference("Int")
+    type: StaticExpressionNode = staticReference("Int")
 ) = ParameterNode(
     name = Identifier(name),
     type = type,
@@ -346,7 +346,7 @@ fun import(
 
 fun staticReference(name: String) = StaticReferenceNode(Identifier(name), anySource())
 fun staticFieldAccess(
-    receiver: StaticNode,
+    receiver: StaticExpressionNode,
     fieldName: String
 ) = StaticFieldAccessNode(
     receiver = receiver,
@@ -354,8 +354,8 @@ fun staticFieldAccess(
     source = anySource()
 )
 fun staticApplication(
-    receiver: StaticNode,
-    arguments: List<StaticNode>
+    receiver: StaticExpressionNode,
+    arguments: List<StaticExpressionNode>
 ) = StaticApplicationNode(
     receiver = receiver,
     arguments = arguments,
@@ -363,10 +363,10 @@ fun staticApplication(
 )
 fun functionTypeNode(
     staticParameters: List<StaticParameterNode> = listOf(),
-    positionalParameters: List<StaticNode> = listOf(),
+    positionalParameters: List<StaticExpressionNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    returnType: StaticNode,
-    effects: List<StaticNode> = listOf()
+    returnType: StaticExpressionNode,
+    effects: List<StaticExpressionNode> = listOf()
 ) = FunctionTypeNode(
     staticParameters = staticParameters,
     positionalParameters = positionalParameters,
@@ -453,7 +453,7 @@ fun discriminator(symbolType: SymbolType, fieldName: String, targetType: Type = 
 fun typesMap(
     expressionTypes: Map<Node, Type> = mapOf(),
     variableTypes: Map<VariableBindingNode, Type> = mapOf(),
-    discriminators: Map<Pair<ExpressionNode, StaticNode>, Discriminator> = mapOf()
+    discriminators: Map<Pair<ExpressionNode, StaticExpressionNode>, Discriminator> = mapOf()
 ): Types {
     val types = TypesMap(
         expressionTypes = expressionTypes.mapKeys { (key, _) -> key.nodeId },
@@ -461,7 +461,7 @@ fun typesMap(
     )
 
     return object: Types by types {
-        override fun findDiscriminator(expression: ExpressionNode, type: StaticNode): Discriminator {
+        override fun findDiscriminator(expression: ExpressionNode, type: StaticExpressionNode): Discriminator {
             return discriminators[Pair(expression, type)]!!
         }
     }

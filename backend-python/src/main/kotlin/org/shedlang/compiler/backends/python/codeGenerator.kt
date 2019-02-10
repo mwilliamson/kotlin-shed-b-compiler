@@ -920,9 +920,9 @@ private fun generateCode(operator: BinaryOperator): PythonBinaryOperator {
     }
 }
 
-internal fun generateCode(node: StaticNode, context: CodeGenerationContext): PythonExpressionNode {
+internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationContext): PythonExpressionNode {
     // TODO: test code gen for types
-    return node.accept(object : StaticNode.Visitor<PythonExpressionNode> {
+    return node.accept(object : StaticExpressionNode.Visitor<PythonExpressionNode> {
         override fun visit(node: StaticReferenceNode): PythonExpressionNode {
             // TODO: test renaming
             return PythonVariableReferenceNode(context.name(node), NodeSource(node))

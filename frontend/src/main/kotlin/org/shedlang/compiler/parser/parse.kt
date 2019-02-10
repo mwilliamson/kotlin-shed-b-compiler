@@ -360,8 +360,8 @@ private data class FunctionSignature(
     val staticParameters: List<StaticParameterNode>,
     val parameters: List<ParameterNode>,
     val namedParameters: List<ParameterNode>,
-    val effects: List<StaticNode>,
-    val returnType: StaticNode?
+    val effects: List<StaticExpressionNode>,
+    val returnType: StaticExpressionNode?
 )
 
 private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
@@ -427,7 +427,7 @@ internal fun parseStaticParameters(
     }
 }
 
-private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
+private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticExpressionNode> {
     return parseZeroOrMore(
         parseElement = ::parseEffect,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
@@ -440,7 +440,7 @@ private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticNode> {
     )
 }
 
-private fun parseEffect(tokens: TokenIterator<TokenType>): StaticNode {
+private fun parseEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode {
     tokens.skip(TokenType.SYMBOL_BANG)
     return parseStaticExpression(tokens)
 }
@@ -506,7 +506,7 @@ private fun parseParameter(source: StringSource, tokens: TokenIterator<TokenType
     return ParameterNode(name, type, source)
 }
 
-private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticNode {
+private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNode {
     tokens.skip(TokenType.SYMBOL_COLON)
     return parseStaticExpression(tokens)
 }
@@ -818,7 +818,7 @@ private object PartialCallParser : OperationParser {
 
 private fun parseCallFromParens(
     left: ExpressionNode,
-    typeArguments: List<StaticNode>,
+    typeArguments: List<StaticExpressionNode>,
     tokens: TokenIterator<TokenType>
 ): CallNode {
     val (positionalArguments, namedArguments) = parseCallArguments(tokens)
@@ -1093,15 +1093,15 @@ private fun escapeSequence(code: String, source: StringSource): Char {
     }
 }
 
-internal fun parseStaticExpression(tokens: TokenIterator<TokenType>) : StaticNode {
+internal fun parseStaticExpression(tokens: TokenIterator<TokenType>) : StaticExpressionNode {
     return parseStaticExpression(tokens = tokens, precedence = Int.MIN_VALUE)
 }
 
 private fun parseStaticExpression(
     tokens: TokenIterator<TokenType>,
     precedence: Int
-) : StaticNode {
-    var left: StaticNode = ::parsePrimaryStaticExpression.parse(tokens = tokens)
+) : StaticExpressionNode {
+    var left: StaticExpressionNode = ::parsePrimaryStaticExpression.parse(tokens = tokens)
     while (true) {
         val next = tokens.peek()
         val operationParser = StaticOperationParser.lookup(next.tokenType)
@@ -1118,7 +1118,7 @@ private fun parseStaticExpression(
 private fun parsePrimaryStaticExpression(
     source: StringSource,
     tokens: TokenIterator<TokenType>
-): StaticNode {
+): StaticExpressionNode {
     if (tokens.isNext(TokenType.SYMBOL_OPEN_SQUARE_BRACKET) || tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
         return parseFunctionType(source, tokens)
     } else {
@@ -1131,7 +1131,7 @@ private fun parseStaticReference(source: StringSource, tokens: TokenIterator<Tok
     return StaticReferenceNode(name, source)
 }
 
-private fun parseFunctionType(source: StringSource, tokens: TokenIterator<TokenType>): StaticNode {
+private fun parseFunctionType(source: StringSource, tokens: TokenIterator<TokenType>): StaticExpressionNode {
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
     val parameters = parseFunctionTypeParameters(tokens)
 
@@ -1149,14 +1149,14 @@ private fun parseFunctionType(source: StringSource, tokens: TokenIterator<TokenT
 }
 
 private class FunctionTypeParameters(
-    val positional: List<StaticNode>,
+    val positional: List<StaticExpressionNode>,
     val named: List<ParameterNode>
 )
 
 private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): FunctionTypeParameters {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
-    val positionalParameters = mutableListOf<StaticNode>()
+    val positionalParameters = mutableListOf<StaticExpressionNode>()
     val namedParameters = mutableListOf<ParameterNode>()
     var named = false
 
@@ -1189,7 +1189,7 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
     }
 }
 
-private interface StaticOperationParser: ExpressionParser<StaticNode> {
+private interface StaticOperationParser: ExpressionParser<StaticExpressionNode> {
     companion object {
         private val parsers = listOf(
             TypeApplicationParser,
@@ -1213,7 +1213,7 @@ private object TypeApplicationParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
-    override fun parse(left: StaticNode, operatorSource: Source, tokens: TokenIterator<TokenType>): StaticNode {
+    override fun parse(left: StaticExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): StaticExpressionNode {
         val arguments = parseMany(
             parseElement = { tokens -> parseStaticExpression(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
@@ -1234,7 +1234,7 @@ private object StaticFieldAccessParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_DOT
 
-    override fun parse(left: StaticNode, operatorSource: Source, tokens: TokenIterator<TokenType>): StaticNode {
+    override fun parse(left: StaticExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): StaticExpressionNode {
         val fieldName = parseIdentifier(tokens)
         return StaticFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
     }

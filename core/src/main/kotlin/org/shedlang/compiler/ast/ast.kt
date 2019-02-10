@@ -116,7 +116,7 @@ private var nextId = 0
 
 fun freshNodeId() = nextId++
 
-interface StaticNode : Node {
+interface StaticExpressionNode : Node {
     interface Visitor<T> {
         fun visit(node: StaticReferenceNode): T
         fun visit(node: StaticFieldAccessNode): T
@@ -131,56 +131,56 @@ data class StaticReferenceNode(
     override val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ReferenceNode, StaticNode {
+) : ReferenceNode, StaticExpressionNode {
     override val children: List<Node>
         get() = listOf()
 
-    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class StaticFieldAccessNode(
-    val receiver: StaticNode,
+    val receiver: StaticExpressionNode,
     val fieldName: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : StaticNode {
+) : StaticExpressionNode {
     override val children: List<Node>
         get() = listOf(receiver)
 
-    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class StaticApplicationNode(
-    val receiver: StaticNode,
-    val arguments: List<StaticNode>,
+    val receiver: StaticExpressionNode,
+    val arguments: List<StaticExpressionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : StaticNode {
+) : StaticExpressionNode {
     override val children: List<Node>
         get() = listOf(receiver) + arguments
 
-    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class FunctionTypeNode(
     val staticParameters: List<StaticParameterNode>,
-    val positionalParameters: List<StaticNode>,
+    val positionalParameters: List<StaticExpressionNode>,
     val namedParameters: List<ParameterNode>,
-    val returnType: StaticNode,
-    val effects: List<StaticNode>,
+    val returnType: StaticExpressionNode,
+    val effects: List<StaticExpressionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StaticNode {
+): StaticExpressionNode {
     override val children: List<Node>
         get() = staticParameters + positionalParameters + namedParameters + effects + listOf(returnType)
 
-    override fun <T> accept(visitor: StaticNode.Visitor<T>): T {
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -211,7 +211,7 @@ data class TypesModuleNode(
 
 data class ValTypeNode(
     override val name: Identifier,
-    val type: StaticNode,
+    val type: StaticExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): VariableBindingNode {
@@ -257,7 +257,7 @@ interface ModuleStatementNode: Node {
 data class ShapeNode(
     override val name: Identifier,
     override val staticParameters: List<StaticParameterNode>,
-    override val extends: List<StaticNode>,
+    override val extends: List<StaticExpressionNode>,
     override val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -275,15 +275,15 @@ data class ShapeNode(
 }
 
 interface ShapeBaseNode: TypeDeclarationNode {
-    val extends: List<StaticNode>
+    val extends: List<StaticExpressionNode>
     val fields: List<ShapeFieldNode>
     val staticParameters: List<StaticParameterNode>
 }
 
 data class ShapeFieldNode(
-    val shape: StaticNode?,
+    val shape: StaticExpressionNode?,
     val name: Identifier,
-    val type: StaticNode?,
+    val type: StaticExpressionNode?,
     val value: ExpressionNode?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -315,7 +315,7 @@ data class UnionNode(
 data class UnionMemberNode(
     override val name: Identifier,
     override val staticParameters: List<StaticParameterNode>,
-    override val extends: List<StaticNode>,
+    override val extends: List<StaticExpressionNode>,
     override val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -328,8 +328,8 @@ interface FunctionNode : Node {
     val staticParameters: List<StaticParameterNode>
     val parameters: List<ParameterNode>
     val namedParameters: List<ParameterNode>
-    val returnType: StaticNode?
-    val effects: List<StaticNode>
+    val returnType: StaticExpressionNode?
+    val effects: List<StaticExpressionNode>
     val body: FunctionBody
 }
 
@@ -354,8 +354,8 @@ data class FunctionExpressionNode(
     override val staticParameters: List<StaticParameterNode>,
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
-    override val returnType: StaticNode?,
-    override val effects: List<StaticNode>,
+    override val returnType: StaticExpressionNode?,
+    override val effects: List<StaticExpressionNode>,
     override val body: FunctionBody,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -373,8 +373,8 @@ data class FunctionDeclarationNode(
     override val staticParameters: List<StaticParameterNode>,
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
-    override val returnType: StaticNode,
-    override val effects: List<StaticNode>,
+    override val returnType: StaticExpressionNode,
+    override val effects: List<StaticExpressionNode>,
     override val body: FunctionBody.Statements,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -441,7 +441,7 @@ data class EffectParameterNode(
 
 data class ParameterNode(
     override val name: Identifier,
-    val type: StaticNode,
+    val type: StaticExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode, Node {
@@ -519,7 +519,7 @@ data class WhenNode(
 }
 
 data class WhenBranchNode(
-    val type: StaticNode,
+    val type: StaticExpressionNode,
     val body: List<FunctionStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -710,7 +710,7 @@ data class BinaryOperationNode(
 
 data class IsNode(
     val expression: ExpressionNode,
-    val type: StaticNode,
+    val type: StaticExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
@@ -724,14 +724,14 @@ data class IsNode(
 
 interface CallBaseNode: Node {
     val receiver: ExpressionNode
-    val staticArguments: List<StaticNode>
+    val staticArguments: List<StaticExpressionNode>
     val positionalArguments: List<ExpressionNode>
     val namedArguments: List<CallNamedArgumentNode>
 }
 
 data class CallNode(
     override val receiver: ExpressionNode,
-    override val staticArguments: List<StaticNode>,
+    override val staticArguments: List<StaticExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
     override val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,
@@ -747,7 +747,7 @@ data class CallNode(
 
 data class PartialCallNode(
     override val receiver: ExpressionNode,
-    override val staticArguments: List<StaticNode>,
+    override val staticArguments: List<StaticExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
     override val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,

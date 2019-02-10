@@ -188,7 +188,7 @@ private fun checkArguments(
 
 private fun checkArgumentTypes(
     staticParameters: List<StaticParameter>,
-    staticArguments: List<StaticNode>,
+    staticArguments: List<StaticExpressionNode>,
     arguments: List<Pair<ExpressionNode, Type>>,
     source: Source,
     context: TypeContext

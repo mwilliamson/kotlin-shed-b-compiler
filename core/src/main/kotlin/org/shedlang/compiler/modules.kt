@@ -30,13 +30,13 @@ sealed class Module {
 
 interface Types {
     fun typeOf(node: ExpressionNode): Type
-    fun typeOf(node: StaticNode): Type
+    fun typeOf(node: StaticExpressionNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
     fun shapeFields(node: ShapeBaseNode): Map<Identifier, Field> {
         return (rawType(declaredType(node)) as ShapeType).fields
     }
 
-    fun findDiscriminator(expression: ExpressionNode, type: StaticNode): Discriminator {
+    fun findDiscriminator(expression: ExpressionNode, type: StaticExpressionNode): Discriminator {
         val sourceType = typeOf(expression)
         val targetType = metaTypeToType(typeOf(type))!!
         return findDiscriminator(sourceType = sourceType, targetType = targetType)!!
@@ -61,7 +61,7 @@ class TypesMap(
         return expressionTypes[node.nodeId]!!
     }
 
-    override fun typeOf(node: StaticNode): Type {
+    override fun typeOf(node: StaticExpressionNode): Type {
         return expressionTypes[node.nodeId]!!
     }
 

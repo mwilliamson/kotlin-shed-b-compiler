@@ -73,7 +73,7 @@ internal class TypeContext(
         expressionTypes[node.nodeId] = type
     }
 
-    fun addStaticExpressionType(node: StaticNode, type: Type) {
+    fun addStaticExpressionType(node: StaticExpressionNode, type: Type) {
         expressionTypes[node.nodeId] = type
     }
 
@@ -112,7 +112,7 @@ internal class TypeContext(
         }
     }
 
-    private fun isShape(member: StaticNode, shape: ShapeNode): Boolean {
+    private fun isShape(member: StaticExpressionNode, shape: ShapeNode): Boolean {
         return when (member) {
             is StaticReferenceNode ->
                 resolveReference(member).nodeId == shape.nodeId
@@ -338,7 +338,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
     )
 }
 
-private fun evalEffects(effectNodes: List<StaticNode>, context: TypeContext): Effect {
+private fun evalEffects(effectNodes: List<StaticExpressionNode>, context: TypeContext): Effect {
     val effects = effectNodes.map({ effect -> evalEffect(effect, context) }).toSet()
     val effect = if (effects.size == 0) {
         EmptyEffect
@@ -350,11 +350,11 @@ private fun evalEffects(effectNodes: List<StaticNode>, context: TypeContext): Ef
     return effect
 }
 
-private fun typeCheck(type: StaticNode, context: TypeContext) {
+private fun typeCheck(type: StaticExpressionNode, context: TypeContext) {
     evalType(type, context)
 }
 
-internal fun evalType(type: StaticNode, context: TypeContext): Type {
+internal fun evalType(type: StaticExpressionNode, context: TypeContext): Type {
     val staticValue = evalStatic(type, context)
     val metaTypeValue = metaTypeToType(staticValue)
     if (metaTypeValue == null) {
@@ -368,7 +368,7 @@ internal fun evalType(type: StaticNode, context: TypeContext): Type {
     }
 }
 
-private fun evalStaticValue(node: StaticNode, context: TypeContext): StaticValue {
+private fun evalStaticValue(node: StaticExpressionNode, context: TypeContext): StaticValue {
     val staticValue = evalStatic(node, context)
     val metaTypeValue = metaTypeToType(staticValue)
     if (staticValue is EffectType) {
@@ -384,8 +384,8 @@ private fun evalStaticValue(node: StaticNode, context: TypeContext): StaticValue
     }
 }
 
-private fun evalStatic(node: StaticNode, context: TypeContext): Type {
-    val type = node.accept(object : StaticNode.Visitor<Type> {
+private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
+    val type = node.accept(object : StaticExpressionNode.Visitor<Type> {
         override fun visit(node: StaticReferenceNode): Type {
             return inferReferenceType(node, context)
         }
@@ -444,7 +444,7 @@ private fun evalStatic(node: StaticNode, context: TypeContext): Type {
     return type
 }
 
-internal fun evalEffect(node: StaticNode, context: TypeContext): Effect {
+internal fun evalEffect(node: StaticExpressionNode, context: TypeContext): Effect {
     val effectType = evalStatic(node, context)
     if (effectType is EffectType) {
         return effectType.effect
