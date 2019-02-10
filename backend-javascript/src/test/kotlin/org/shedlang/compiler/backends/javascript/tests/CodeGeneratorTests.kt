@@ -84,7 +84,7 @@ class CodeGeneratorTests {
     fun typeAliasGeneratesNothing() {
         val shed = typeAliasDeclaration("Size", staticReference("Int"))
 
-        val javascriptNodes = generateCode(shed)
+        val javascriptNodes = generateCodeForModuleStatement(shed)
 
         assertThat(javascriptNodes, isSequence())
     }
@@ -171,7 +171,20 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionDeclarationGeneratesFunctionDeclaration() {
+    fun functionDeclarationAsModuleStatementGeneratesFunctionDeclaration() {
+        assertFunctionDeclarationGeneratesFunctionDeclaration(::generateCodeForModuleStatement)
+    }
+
+    @Test
+    fun functionDeclarationAsFunctionStatementGeneratesFunctionDeclaration() {
+        assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
+            listOf(generateCodeForFunctionStatement(function))
+        }
+    }
+
+    private fun assertFunctionDeclarationGeneratesFunctionDeclaration(
+        generateCode: (node: FunctionDeclarationNode) -> List<JavascriptStatementNode>
+    ) {
         val shed = function(
             name = "f",
             parameters = listOf(parameter("x"), parameter("y")),
@@ -179,7 +192,7 @@ class CodeGeneratorTests {
             body = listOf(expressionStatement(literalInt(42)))
         )
 
-        val node = generateCode(shed as ModuleStatementNode)
+        val node = generateCode(shed)
 
         assertThat(node.single(), isJavascriptFunction(
             name = equalTo("f"),
@@ -216,7 +229,7 @@ class CodeGeneratorTests {
     fun nonReturningExpressionStatementGeneratesExpressionStatement() {
         val shed = expressionStatement(literalInt(42), isReturn = false)
 
-        val node = generateCode(shed)
+        val node = generateCodeForFunctionStatement(shed)
 
         assertThat(node, cast(has(
             JavascriptExpressionStatementNode::expression,
@@ -228,7 +241,7 @@ class CodeGeneratorTests {
     fun returningExpressionStatementGeneratesReturnStatement() {
         val shed = expressionStatement(literalInt(42), isReturn = true)
 
-        val node = generateCode(shed)
+        val node = generateCodeForFunctionStatement(shed)
 
         assertThat(node, cast(has(
             JavascriptReturnNode::expression,
@@ -316,7 +329,7 @@ class CodeGeneratorTests {
     fun valGeneratesConst() {
         val shed = valStatement(name = "x", expression = literalBool(true))
 
-        val node = generateCode(shed as FunctionStatementNode)
+        val node = generateCodeForFunctionStatement(shed as FunctionStatementNode)
 
         assertThat(node, isJavascriptConst(equalTo("x"), isJavascriptBooleanLiteral(true)))
     }
@@ -635,8 +648,8 @@ class CodeGeneratorTests {
         ))
     }
 
-    private fun generateCode(node: ModuleStatementNode) = generateCode(node, context())
-    private fun generateCode(node: FunctionStatementNode) = generateCode(node, context())
+    private fun generateCodeForModuleStatement(node: ModuleStatementNode) = generateCode(node, context())
+    private fun generateCodeForFunctionStatement(node: FunctionStatementNode) = generateCode(node, context())
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
     private fun context(
