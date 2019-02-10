@@ -19,6 +19,7 @@ export
     valueToText,
     textToValue;
 
+import stdlib.ListBuilder;
 import stdlib.Lists;
 import stdlib.Options;
 import stdlib.Sequences;
@@ -189,7 +190,21 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
                 is TokenOpenSquare {
                     val elementsResult = parseMany(
                         parseElement = readValue,
-                        parseSeparator = fun (tokens: Sequences.Sequence[Token, Pure]) => success(tokens, unit),
+                        parseSeparator = fun (tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[Unit] {
+                            val iterator = tokens.next();
+                            when (iterator) {
+                                is Sequences.SequenceEnd {
+                                    failure(tokens)
+                                }
+                                is Sequences.SequenceItem {
+                                    if (iterator.head.tokenType is TokenComma) {
+                                        success(iterator.tail, unit)
+                                    } else {
+                                        failure(tokens)
+                                    }
+                                }
+                            }
+                        },
                         isEnd = fun (tokens: Sequences.Sequence[Token, Pure]) -> Bool {
                             val iterator = tokens.next();
                             when (iterator) {
@@ -220,6 +235,9 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
                 is TokenWhitespace {
                     readValue(iterator.tail)
                 }
+                is TokenComma {
+                    failure(tokens)
+                }
                 is TokenUnexpected {
                     failure(tokens)
                 }
@@ -234,7 +252,7 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
 union Position = Start | ElementStart | ElementEnd;
 
 shape State[T] {
-    elements: List[T],
+    elements: ListBuilder.Builder[T],
     position: Position,
     tokens: TokenIterator,
 }
@@ -264,8 +282,7 @@ fun parseMany[T](
                 when (elementResult) {
                     is Success {
                         parse(State(
-                            //elements = append(state.elements, elementResult.value),
-                            elements = list(elementResult.value),
+                            elements = ListBuilder.append(state.elements, elementResult.value),
                             position = ElementEnd(),
                             tokens = elementResult.remainder,
                         ))
@@ -277,7 +294,7 @@ fun parseMany[T](
             }
             is ElementEnd {
                 if (isEnd(state.tokens)) {
-                    success(state.tokens, state.elements)
+                    success(state.tokens, ListBuilder.toList(state.elements))
                 } else {
                     val separatorResult = parseSeparator(state.tokens);
                     when (separatorResult) {
@@ -298,13 +315,13 @@ fun parseMany[T](
     }
 
     (fun (tokens: TokenIterator) -> ParseResult[List[T]] {
-        val initialState = State[T](elements = list(), position = Start(), tokens = tokens);
+        val initialState = State[T](elements = ListBuilder.builder(), position = Start(), tokens = tokens);
         parse(initialState)
     })
 }
 
 
-union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenUnexpected | TokenEnd;
+union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenComma | TokenUnexpected | TokenEnd;
 
 shape Token {
     tokenType: TokenType,
@@ -330,6 +347,8 @@ fun nextToken(value: String) -> Token {
                 token(TokenOpenSquare(), "[")
             } else if (first == ']') {
                 token(TokenCloseSquare(), "]")
+            } else if (first == ',') {
+                token(TokenComma(), ",")
             } else if (isWhitespace(first)) {
                 val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
                 token(TokenWhitespace(), whitespace)

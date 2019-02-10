@@ -198,6 +198,18 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(Json.valueToText(value), Matchers.isString("[true]"))
         }),
 
+        Tests.testCase("array with two elements", fun () {
+            val text = "[true, false]";
+            val value = Json.textToValue(text);
+            Tests.assertThat(Json.valueToText(value), Matchers.isString("[true,false]"))
+        }),
+
+        Tests.testCase("array with three elements", fun () {
+            val text = "[true, false, null]";
+            val value = Json.textToValue(text);
+            Tests.assertThat(Json.valueToText(value), Matchers.isString("[true,false,null]"))
+        }),
+
         Tests.testCase("whitespace is ignored", fun () {
             val text = "  \n\r\tfalse";
             val value = Json.textToValue(text);

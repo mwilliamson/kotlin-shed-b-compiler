@@ -1,0 +1,56 @@
+export
+    Builder,
+    builder,
+    append,
+    toList;
+
+import stdlib.Lists;
+import stdlib.Sequences;
+
+union Builder[+T] =
+    | Cons[T] {
+        head: T,
+        tail: Builder[T],
+    }
+    | Nil;
+
+fun builder() -> Builder[Nothing] {
+    Nil()
+}
+
+fun append[T](builder: Builder[T], element: T) -> Builder[T] {
+    Cons(head = element, tail = builder)
+}
+
+fun toList[T](builder: Builder[T]) -> List[T] {
+    Lists.sequenceToList(toSequence(reverse(Nil(), builder)))
+}
+
+fun toSequence[T](builder: Builder[T]) -> Sequences.Sequence[T, Pure] {
+    Sequences.Sequence[T, Pure](
+        next = fun () -> Sequences.SequenceIterator[T, Pure] {
+            when (builder) {
+                is Nil {
+                    Sequences.end
+                }
+                is Cons {
+                    Sequences.SequenceItem(
+                        head = builder.head,
+                        tail = toSequence(builder.tail),
+                    )
+                }
+            }
+        }
+    )
+}
+
+fun reverse[T](reversed: Builder[T], unreversed: Builder[T]) -> Builder[T] {
+    when (unreversed) {
+        is Nil {
+            reversed
+        }
+        is Cons {
+            reverse(Cons(head = unreversed.head, tail = reversed), unreversed.tail)
+        }
+    }
+}

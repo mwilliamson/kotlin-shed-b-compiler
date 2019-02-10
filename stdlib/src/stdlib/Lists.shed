@@ -1,4 +1,6 @@
 export
+    sequenceToList,
+
     all,
     any,
     forEach,
@@ -7,6 +9,8 @@ export
 
 import stdlib.Sequences;
 import stdlib.platform.Lists;
+
+val sequenceToList = Lists.sequenceToList;
 
 // TODO: use function composition
 
