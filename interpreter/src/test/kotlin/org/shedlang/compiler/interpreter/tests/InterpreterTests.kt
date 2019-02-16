@@ -1,7 +1,10 @@
 package org.shedlang.compiler.interpreter.tests
 
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ast.BinaryOperator
@@ -62,10 +65,17 @@ class InterpreterTests {
     private fun fullyEvaluate(
         expression: ExpressionNode,
         context: InterpreterContext = createContext()
-    ): EvaluationResult<InterpreterValue> {
+    ): FullEvaluationResult {
         return fullyEvaluate(
             loadExpression(expression, LoaderContext(moduleName = listOf(), types = EMPTY_TYPES)),
             context
+        )
+    }
+
+    internal inline fun <reified U: InterpreterValue> isPureResult(matcher: Matcher<U>): Matcher<FullEvaluationResult> {
+        return allOf(
+            has(FullEvaluationResult::value, cast(matcher)),
+            has(FullEvaluationResult::stdout, equalTo(""))
         )
     }
 }

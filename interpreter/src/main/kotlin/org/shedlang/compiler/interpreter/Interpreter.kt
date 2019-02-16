@@ -24,7 +24,7 @@ internal data class ModuleReference(val name: List<Identifier>): IncompleteExpre
         }
         val expression = context.moduleExpression(name)
         if (expression != null) {
-            return expression.evaluate(name, context)
+            return expression.evaluate(name, context).map { this }
         }
         throw InterpreterError("Could not find module: " + name)
     }
@@ -444,7 +444,7 @@ internal object ListConstructorValue: Callable() {
 internal object PrintValue: Callable() {
     override fun call(arguments: Arguments): EvaluationResult<Expression> {
         val argument = arguments[0].string()
-        return EvaluationResult.Value(UnitValue, stdout = argument)
+        return EvaluationResult.stdout(argument)
     }
 }
 
@@ -629,7 +629,9 @@ fun fullyEvaluate(modules: ModuleSet, moduleName: List<Identifier>): ModuleEvalu
 
 data class ModuleEvaluationResult(val exitCode: Int, val stdout: String)
 
-internal fun fullyEvaluate(initialExpression: Expression, initialContext: InterpreterContext): EvaluationResult.Value<InterpreterValue> {
+internal data class FullEvaluationResult(val value: InterpreterValue, val stdout: String)
+
+internal fun fullyEvaluate(initialExpression: Expression, initialContext: InterpreterContext): FullEvaluationResult {
     var expression = initialExpression
     var context = initialContext
     val stdout = StringBuilder()
@@ -637,21 +639,18 @@ internal fun fullyEvaluate(initialExpression: Expression, initialContext: Interp
         when (expression) {
             is IncompleteExpression -> {
                 val result = expression.evaluate(context)
-                when (result) {
-                    is EvaluationResult.Value -> {
-                        stdout.append(result.stdout)
-                        expression = result.value
-                    }
-                    is EvaluationResult.ModuleValueUpdate -> {
-                        context = context.updateModule(result.moduleName, result.value)
-                    }
-                    is EvaluationResult.ModuleExpressionUpdate -> {
-                        context = context.updateModule(result.moduleName, result.value)
-                    }
+                stdout.append(result.stdout)
+                expression = result.value
+
+                for ((moduleName, moduleValue) in result.moduleValueUpdates) {
+                    context = context.updateModule(moduleName, moduleValue)
+                }
+                for ((moduleName, moduleExpression) in result.moduleExpressionUpdates) {
+                    context = context.updateModule(moduleName, moduleExpression)
                 }
             }
             is InterpreterValue ->
-                return EvaluationResult.Value(value = expression, stdout = stdout.toString())
+                return FullEvaluationResult(value = expression, stdout = stdout.toString())
         }
     }
 }
@@ -671,36 +670,61 @@ private fun moduleStackFrames(
     return moduleFrames + listOf(builtinStackFrame)
 }
 
-internal sealed class EvaluationResult<out T> {
-    internal abstract fun <R> map(func: (T) -> R): EvaluationResult<R>
-
-    internal data class Value<out T>(val value: T, val stdout: String): EvaluationResult<T>() {
-        override fun <R> map(func: (T) -> R): EvaluationResult<R> {
-            return EvaluationResult.Value(func(value), stdout)
-        }
+internal data class EvaluationResult<out T>(
+    val value: T,
+    val stdout: String,
+    val moduleValueUpdates: List<Pair<List<Identifier>, ModuleValue>>,
+    val moduleExpressionUpdates: List<Pair<List<Identifier>, ModuleExpression>>
+) {
+    internal fun <R> map(func: (T) -> R): EvaluationResult<R> {
+        return EvaluationResult(
+            func(value),
+            stdout = stdout,
+            moduleValueUpdates = moduleValueUpdates,
+            moduleExpressionUpdates = moduleExpressionUpdates
+        )
     }
 
-    internal data class ModuleValueUpdate(
-        val moduleName: List<Identifier>,
-        val value: ModuleValue
-    ): EvaluationResult<Nothing>() {
-        override fun <R> map(func: (Nothing) -> R): EvaluationResult<R> {
-            return this
-        }
-    }
-
-    internal data class ModuleExpressionUpdate(
-        val moduleName: List<Identifier>,
-        val value: ModuleExpression
-    ): EvaluationResult<Nothing>() {
-        override fun <R> map(func: (Nothing) -> R): EvaluationResult<R> {
-            return this
-        }
+    internal fun <R> flatMap(func: (T) -> EvaluationResult<R>): EvaluationResult<R> {
+        val result = func(value)
+        return EvaluationResult(
+            result.value,
+            stdout = stdout + result.stdout,
+            moduleValueUpdates = moduleValueUpdates + result.moduleValueUpdates,
+            moduleExpressionUpdates = moduleExpressionUpdates + result.moduleExpressionUpdates
+        )
     }
 
     companion object {
         internal fun <T> pure(value: T): EvaluationResult<T> {
-            return EvaluationResult.Value(value, stdout = "")
+            return EvaluationResult(value, stdout = "", moduleValueUpdates = listOf(), moduleExpressionUpdates = listOf())
+        }
+
+        internal fun updateModuleValue(moduleName: List<Identifier>, moduleValue: ModuleValue): EvaluationResult<Unit> {
+            return EvaluationResult(
+                Unit,
+                stdout = "",
+                moduleValueUpdates = listOf(moduleName to moduleValue),
+                moduleExpressionUpdates = listOf()
+            )
+        }
+
+        internal fun updateModuleExpression(moduleName: List<Identifier>, moduleExpression: ModuleExpression): EvaluationResult<Unit> {
+            return EvaluationResult(
+                Unit,
+                stdout = "",
+                moduleValueUpdates = listOf(),
+                moduleExpressionUpdates = listOf(moduleName to moduleExpression)
+            )
+        }
+
+        internal fun stdout(stdout: String): EvaluationResult<UnitValue> {
+            return EvaluationResult(
+                UnitValue,
+                stdout = stdout,
+                moduleValueUpdates = listOf(),
+                moduleExpressionUpdates = listOf()
+            )
         }
     }
 }
@@ -709,14 +733,14 @@ internal data class ModuleExpression(
     val fieldExpressions: List<Pair<Identifier, Expression>>,
     val fieldValues: List<Pair<Identifier, InterpreterValue>>
 ) {
-    fun evaluate(moduleName: List<Identifier>, context: InterpreterContext): EvaluationResult<Nothing> {
+    fun evaluate(moduleName: List<Identifier>, context: InterpreterContext): EvaluationResult<Unit> {
         if (fieldExpressions.isEmpty()) {
-            return EvaluationResult.ModuleValueUpdate(moduleName, ModuleValue(fieldValues.toMap()))
+            return EvaluationResult.updateModuleValue(moduleName, ModuleValue(fieldValues.toMap()))
         } else {
             val (fieldName, expression) = fieldExpressions[0]
             when (expression) {
                 is InterpreterValue ->
-                    return EvaluationResult.ModuleExpressionUpdate(
+                    return EvaluationResult.updateModuleExpression(
                         moduleName,
                         ModuleExpression(
                             fieldExpressions = fieldExpressions.drop(1),
@@ -727,24 +751,14 @@ internal data class ModuleExpression(
                     val scope = Scope(
                         frames = moduleStackFrames(moduleName)
                     )
-                    val result = expression.evaluate(context.inScope(scope))
-                    when (result) {
-                        is EvaluationResult.Value -> {
-                            if (result.stdout != "") {
-                                throw InterpreterError("Unexpected side effect")
-                            }
-                            return EvaluationResult.ModuleExpressionUpdate(
-                                moduleName,
-                                ModuleExpression(
-                                    fieldExpressions = listOf(fieldName to result.value) + fieldExpressions.drop(1),
-                                    fieldValues = fieldValues
-                                )
+                    return expression.evaluate(context.inScope(scope)).flatMap { value ->
+                        EvaluationResult.updateModuleExpression(
+                            moduleName,
+                            ModuleExpression(
+                                fieldExpressions = listOf(fieldName to value) + fieldExpressions.drop(1),
+                                fieldValues = fieldValues
                             )
-                        }
-                        is EvaluationResult.ModuleValueUpdate ->
-                            return result
-                        is EvaluationResult.ModuleExpressionUpdate ->
-                            return result
+                        )
                     }
                 }
 

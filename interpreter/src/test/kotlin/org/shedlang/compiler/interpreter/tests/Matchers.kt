@@ -1,18 +1,21 @@
 package org.shedlang.compiler.interpreter.tests
 
-import com.natpryce.hamkrest.Matcher
-import com.natpryce.hamkrest.anything
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.*
 import org.shedlang.compiler.interpreter.Block
 import org.shedlang.compiler.interpreter.EvaluationResult
 import org.shedlang.compiler.interpreter.Scope
 import org.shedlang.compiler.interpreter.Statement
 import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.isSequence
 
 
 internal inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {
-    return cast(has(EvaluationResult.Value<T>::value, cast(matcher)))
+    return allOf(
+        has(EvaluationResult<T>::value, cast(matcher)),
+        has(EvaluationResult<T>::stdout, equalTo("")),
+        has(EvaluationResult<T>::moduleValueUpdates, isSequence()),
+        has(EvaluationResult<T>::moduleExpressionUpdates, isSequence())
+    )
 }
 
 internal fun isBlock(

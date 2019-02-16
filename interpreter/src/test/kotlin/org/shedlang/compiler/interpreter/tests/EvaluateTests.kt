@@ -1,7 +1,6 @@
 package org.shedlang.compiler.interpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
@@ -9,7 +8,8 @@ import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.interpreter.*
-import org.shedlang.compiler.tests.allOf
+import org.shedlang.compiler.tests.isPair
+import org.shedlang.compiler.tests.isSequence
 
 class EvaluateVariableReferenceTests {
     @Test
@@ -67,10 +67,12 @@ class EvaluateModuleReferenceTests {
             )
         )
         val value = ModuleReference(listOf(Identifier("X"))).evaluate(context)
-        assertThat(value, cast(allOf(
-            has(EvaluationResult.ModuleValueUpdate::moduleName, equalTo(listOf(Identifier("X")))),
-            has(EvaluationResult.ModuleValueUpdate::value, equalTo(ModuleValue(mapOf())))
-        )))
+        assertThat(value, has(
+            EvaluationResult<Expression>::moduleValueUpdates,
+            isSequence(
+                isPair(equalTo(listOf(Identifier("X"))), equalTo(ModuleValue(mapOf())))
+            )
+        ))
     }
 
     @Test
@@ -90,16 +92,19 @@ class EvaluateModuleReferenceTests {
             )
         )
         val value = ModuleReference(listOf(Identifier("X"))).evaluate(context)
-        assertThat(value, cast(allOf(
-            has(EvaluationResult.ModuleExpressionUpdate::value, equalTo(ModuleExpression(
-                fieldExpressions = listOf(
-                    Identifier("y") to IntegerValue(1)
-                ),
-                fieldValues = listOf(
-                    Identifier("x") to IntegerValue(1)
-                )
-            )))
-        )))
+        assertThat(value, has(
+            EvaluationResult<Expression>::moduleExpressionUpdates,
+            isSequence(
+                isPair(equalTo(listOf(Identifier("X"))), equalTo(ModuleExpression(
+                    fieldExpressions = listOf(
+                        Identifier("y") to IntegerValue(1)
+                    ),
+                    fieldValues = listOf(
+                        Identifier("x") to IntegerValue(1)
+                    )
+                )))
+            )
+        ))
     }
 }
 
@@ -581,7 +586,7 @@ class EvaluateCallTests {
                 positionalArgumentValues = listOf(StringValue("hello"))
             ),
             context
-        ) as EvaluationResult.Value
+        )
         assertThat(result.stdout, equalTo("hello"))
     }
 
