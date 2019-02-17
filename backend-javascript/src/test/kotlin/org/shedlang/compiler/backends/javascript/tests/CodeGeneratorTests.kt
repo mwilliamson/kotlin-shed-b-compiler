@@ -286,13 +286,16 @@ class CodeGeneratorTests {
         val typeReference = staticReference("T")
         val shed = whenExpression(
             reference,
-            listOf(
+            branches = listOf(
                 whenBranch(
                     typeReference,
                     listOf(
                         expressionStatement(literalInt(42), isReturn = true)
                     )
                 )
+            ),
+            elseBranch = listOf(
+                expressionStatement(literalInt(47), isReturn = true)
             )
         )
 
@@ -321,7 +324,9 @@ class CodeGeneratorTests {
                             )
                         )
                     ),
-                    elseBranch = isSequence()
+                    elseBranch = isSequence(
+                        isJavascriptReturn(isJavascriptIntegerLiteral(47))
+                    )
                 )
             )
         ))

@@ -436,6 +436,8 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
             }
 
+            val elseBranch = generateCode(node.elseBranch, context)
+
             return immediatelyInvokedFunction(
                 body = listOf(
                     JavascriptConstNode(
@@ -445,7 +447,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                     ),
                     JavascriptIfStatementNode(
                         conditionalBranches = branches,
-                        elseBranch = listOf(),
+                        elseBranch = elseBranch,
                         source = source
                     )
                 ),
