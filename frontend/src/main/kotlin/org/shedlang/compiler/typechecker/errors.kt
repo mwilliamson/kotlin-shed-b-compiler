@@ -85,6 +85,10 @@ class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)
         ),
         source = source
     )
+class WhenElseIsNotReachableError(source: Source) : TypeCheckError(
+    "else branch of when is not reachable",
+    source = source
+)
 class ModuleNotFoundError(val name: List<Identifier>, source: Source)
     : TypeCheckError("Module not found: " + name.map(Identifier::value).joinToString("."), source = source)
 class MultipleModulesWithSameNameFoundError(val name: List<Identifier>, source: Source)

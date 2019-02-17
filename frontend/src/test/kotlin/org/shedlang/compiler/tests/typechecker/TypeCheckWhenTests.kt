@@ -5,10 +5,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.CouldNotFindDiscriminator
-import org.shedlang.compiler.typechecker.WhenIsNotExhaustiveError
-import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.freshShapeId
@@ -194,6 +191,38 @@ class TypeCheckWhenTests {
                 WhenIsNotExhaustiveError::unhandledMembers,
                 isSequence(isType(inputMember2))
             ))
+        )
+    }
+
+    @Test
+    fun errorIsThrownWhenElseBranchIsNotReachable() {
+        val variableReference = variableReference("x")
+
+        val expression = whenExpression(
+            expression = variableReference,
+            branches = listOf(
+                whenBranch(
+                    type = inputMember1TypeReference,
+                    body = listOf()
+                ),
+                whenBranch(
+                    type = inputMember2TypeReference,
+                    body = listOf()
+                )
+            ),
+            elseBranch = listOf()
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                variableReference to inputUnion,
+                inputMember1TypeReference to MetaType(inputMember1),
+                inputMember2TypeReference to MetaType(inputMember2)
+            )
+        )
+
+        assertThat(
+            { typeCheck(expression, typeContext) },
+            throws<WhenElseIsNotReachableError>()
         )
     }
 }

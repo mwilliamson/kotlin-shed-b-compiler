@@ -217,16 +217,21 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     var branchTypes = branchResults.map { result -> result.first }
     val caseTypes = branchResults.map { result -> result.second }
 
+    val unhandledMembers = expressionType.members.filter { member ->
+        caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
+    }
+
     val elseBranch = node.elseBranch
     if (elseBranch == null) {
-        val unhandledMembers = expressionType.members.filter { member ->
-            caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
-        }
-
         if (unhandledMembers.isNotEmpty()) {
             throw WhenIsNotExhaustiveError(unhandledMembers, source = node.source)
         }
     } else {
+        if (unhandledMembers.isEmpty()) {
+            // TODO: source should be else symbol
+            throw WhenElseIsNotReachableError(source = node.source)
+        }
+
         val branchContext = context.enterScope()
         val type = typeCheck(elseBranch, branchContext)
         branchTypes += listOf(type)
