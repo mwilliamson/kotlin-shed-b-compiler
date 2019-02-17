@@ -676,6 +676,7 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
     return WhenNode(
         expression = expression,
         branches = branches,
+        elseBranch = listOf(),
         source = source
     )
 }
