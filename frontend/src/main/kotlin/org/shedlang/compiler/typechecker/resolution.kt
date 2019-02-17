@@ -180,6 +180,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
                 resolve(branch.type, context)
                 resolveScope(branch.body, context = context)
             }
+            resolveScope(node.elseBranch, context = context)
         }
 
         else -> {

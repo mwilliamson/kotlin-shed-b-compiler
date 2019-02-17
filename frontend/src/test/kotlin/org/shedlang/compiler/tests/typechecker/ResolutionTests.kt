@@ -382,6 +382,24 @@ class ResolutionTests {
     }
 
     @Test
+    fun whenElseBranchBodyIntroducesScope() {
+        val variableDeclaration = valStatement(name = "x", expression = literalInt())
+        val variableReference = variableReference("x")
+
+        val node = whenExpression(
+            expression = literalInt(),
+            elseBranch = listOf(
+                variableDeclaration,
+                expressionStatement(variableReference)
+            )
+        )
+
+        val references = resolve(node, globals = mapOf())
+
+        assertThat(references[variableReference], isVariableBinding(variableDeclaration))
+    }
+
+    @Test
     fun whenSameNameIsIntroducedTwiceInSameScopeThenErrorIsThrown() {
         val node = module(body = listOf(
             function(name = "f", body = listOf(
