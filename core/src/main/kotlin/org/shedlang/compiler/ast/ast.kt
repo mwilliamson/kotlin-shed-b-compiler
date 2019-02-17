@@ -534,12 +534,12 @@ data class ConditionalBranchNode(
 data class WhenNode(
     val expression: ExpressionNode,
     val branches: List<WhenBranchNode>,
-    val elseBranch: List<FunctionStatementNode>,
+    val elseBranch: List<FunctionStatementNode>?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(expression) + branches + elseBranch
+        get() = listOf(expression) + branches + elseBranch.orEmpty()
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

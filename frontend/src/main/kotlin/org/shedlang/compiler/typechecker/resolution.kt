@@ -180,7 +180,10 @@ internal fun resolve(node: Node, context: ResolutionContext) {
                 resolve(branch.type, context)
                 resolveScope(branch.body, context = context)
             }
-            resolveScope(node.elseBranch, context = context)
+            val elseBranch = node.elseBranch
+            if (elseBranch != null) {
+                resolveScope(elseBranch, context = context)
+            }
         }
 
         else -> {

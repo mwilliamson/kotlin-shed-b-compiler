@@ -436,7 +436,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
             }
 
-            val elseBranch = generateCode(node.elseBranch, context)
+            val elseBranch = generateCode(node.elseBranch.orEmpty(), context)
 
             return immediatelyInvokedFunction(
                 body = listOf(

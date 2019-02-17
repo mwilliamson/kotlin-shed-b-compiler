@@ -805,7 +805,7 @@ private fun generateWhenCode(
             )
         }
 
-        val elseBranch = generateBlockCode(node.elseBranch, context, returnValue = returnValue)
+        val elseBranch = generateBlockCode(node.elseBranch.orEmpty(), context, returnValue = returnValue)
 
         assignment.nullableToList() + listOf(
             PythonIfStatementNode(
