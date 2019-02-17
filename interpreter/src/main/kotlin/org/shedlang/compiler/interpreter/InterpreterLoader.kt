@@ -237,7 +237,9 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                             }
                         )
                     },
-                    elseBranch = listOf()
+                    elseBranch = node.elseBranch.orEmpty().map { statement ->
+                        loadStatement(statement, context)
+                    }
                 ))
             ))
         }
