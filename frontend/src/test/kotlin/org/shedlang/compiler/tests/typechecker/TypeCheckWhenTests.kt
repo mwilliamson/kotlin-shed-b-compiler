@@ -103,6 +103,38 @@ class TypeCheckWhenTests {
     }
 
     @Test
+    fun whenElseBranchIsPresentThenUnionOfTypesIncludesElse() {
+        val variableReference = variableReference("x")
+
+        val expression = whenExpression(
+            expression = variableReference,
+            branches = listOf(
+                whenBranch(
+                    type = inputMember1TypeReference,
+                    body = listOf(
+                        expressionStatement(outputMember1Reference, isReturn = true)
+                    )
+                )
+            ),
+            elseBranch = listOf(
+                expressionStatement(outputMember2Reference, isReturn = true)
+            )
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                variableReference to inputUnion,
+                inputMember1TypeReference to MetaType(inputMember1),
+                inputMember2TypeReference to MetaType(inputMember2),
+                outputMember1Reference to outputMember1,
+                outputMember2Reference to outputMember2
+            )
+        )
+        val type = inferType(expression, typeContext)
+
+        assertThat(type, isUnionType(members = isSequence(isType(outputMember1), isType(outputMember2))))
+    }
+
+    @Test
     fun typeIsRefinedInBranchBodies() {
         val declaration = variableBinder("x")
         val variableReference = variableReference("x")

@@ -214,15 +214,24 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         Pair(type, conditionType)
     }
 
+    var branchTypes = branchResults.map { result -> result.first }
     val caseTypes = branchResults.map { result -> result.second }
-    val unhandledMembers = expressionType.members.filter { member ->
-        caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
-    }
-    if (unhandledMembers.isNotEmpty()) {
-        throw WhenIsNotExhaustiveError(unhandledMembers, source = node.source)
+
+    val elseBranch = node.elseBranch
+    if (elseBranch == null) {
+        val unhandledMembers = expressionType.members.filter { member ->
+            caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
+        }
+
+        if (unhandledMembers.isNotEmpty()) {
+            throw WhenIsNotExhaustiveError(unhandledMembers, source = node.source)
+        }
+    } else {
+        val branchContext = context.enterScope()
+        val type = typeCheck(elseBranch, branchContext)
+        branchTypes += listOf(type)
     }
 
-    val branchTypes = branchResults.map { result -> result.first }
     return branchTypes.reduce(::union)
 }
 
