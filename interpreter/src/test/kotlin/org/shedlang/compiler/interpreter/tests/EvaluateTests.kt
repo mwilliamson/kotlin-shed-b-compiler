@@ -771,7 +771,7 @@ class EvaluateIfTests {
         val expression = evaluate(ifExpression, context = createContext(scope = scope))
         assertThat(expression, isPureResult(isBlock(
             body = equalTo(listOf(returns(IntegerValue(3)))),
-            scope = equalTo(scope.enter())
+            scope = equalTo(scope.enter(ScopeFrame.EMPTY))
         )))
     }
 
@@ -806,7 +806,7 @@ class EvaluateIfTests {
         val expression = evaluate(ifExpression, createContext(scope = scope))
         assertThat(expression, isPureResult(isBlock(
             body = equalTo(listOf(returns(IntegerValue(1)))),
-            scope = equalTo(scope.enter())
+            scope = equalTo(scope.enter(ScopeFrame.EMPTY))
         )))
     }
 

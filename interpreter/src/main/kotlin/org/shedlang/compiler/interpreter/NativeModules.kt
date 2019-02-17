@@ -6,7 +6,7 @@ import kotlin.math.min
 
 
 private object ListsSequenceToListValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val sequence = arguments[0] as ShapeValue
         return EvaluationResult.pure(call(
             ListsSequenceItemToListValue,
@@ -20,7 +20,7 @@ private object ListsSequenceToListValue: Callable() {
 }
 
 private object ListsSequenceItemToListValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val item = arguments[0] as ShapeValue
         // TODO: use proper type check
         val head = item.fields[Identifier("head")]
@@ -43,7 +43,7 @@ private object ListsSequenceItemToListValue: Callable() {
 }
 
 private object ListsConsValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val head = arguments[0]
         val tail = arguments[1] as ListValue
         return EvaluationResult.pure(ListValue(listOf(head) + tail.elements))
@@ -52,14 +52,14 @@ private object ListsConsValue: Callable() {
 }
 
 private object ListsListToSequenceValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val list = arguments[0] as ListValue
         return EvaluationResult.pure(listIndexToSequence(list, 0))
     }
 
     private fun listIndexToSequence(list: ListValue, index: Int): Expression {
         val nextItem = object: Callable() {
-            override fun call(arguments: Arguments): EvaluationResult<Expression> {
+            override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
                 if (index < list.elements.size) {
                     return EvaluationResult.pure(call(
                         sequenceItemTypeReference,
@@ -92,14 +92,14 @@ private val listsModule = ModuleExpression(
 )
 
 private object StringsCodePointToHexStringValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val character = arguments[0] as CodePointValue
         return EvaluationResult.pure(StringValue(character.value.toString(16).toUpperCase()))
     }
 }
 
 private object StringsCodePointToStringValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val character = arguments[0] as CodePointValue
         val builder = StringBuilder()
         builder.appendCodePoint(character.value)
@@ -108,7 +108,7 @@ private object StringsCodePointToStringValue: Callable() {
 }
 
 private object StringsCodePointCountValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val string = arguments[0].string()
         val count = string.codePointCount(0, string.length)
         return EvaluationResult.pure(IntegerValue(count))
@@ -116,7 +116,7 @@ private object StringsCodePointCountValue: Callable() {
 }
 
 private object StringsFirstCodePointValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val string = arguments[0].string()
         val value = if (string.isEmpty()) {
             optionsNoneReference
@@ -134,7 +134,7 @@ private object StringsFirstCodePointValue: Callable() {
 }
 
 private object StringsMapCodePointsValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val func = arguments[0]
         val string = arguments[1].string()
         if (string.isEmpty()) {
@@ -156,7 +156,7 @@ private object StringsMapCodePointsValue: Callable() {
 }
 
 private object StringsRepeatValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val string = arguments[0].string()
         val times = arguments[1].int()
         return EvaluationResult.pure(StringValue(string.repeat(times.intValueExact())))
@@ -164,13 +164,13 @@ private object StringsRepeatValue: Callable() {
 }
 
 private object StringsReplaceValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         throw UnsupportedOperationException("not implemented")
     }
 }
 
 private object StringsSubstringValue: Callable() {
-    override fun call(arguments: Arguments): EvaluationResult<Expression> {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val startIndexValue = arguments[0].int()
         val endIndexValue = arguments[1].int()
         val string = arguments[2].string()

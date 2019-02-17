@@ -3,6 +3,7 @@ package org.shedlang.compiler.interpreter.tests
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.types.Symbol
+import java.util.*
 
 
 internal fun createContext(
@@ -13,7 +14,8 @@ internal fun createContext(
     return InterpreterContext(
         scope = scope,
         moduleValues = moduleValues,
-        moduleExpressions = moduleExpressions
+        moduleExpressions = moduleExpressions,
+        scopeFrames = WeakHashMap()
     )
 }
 
