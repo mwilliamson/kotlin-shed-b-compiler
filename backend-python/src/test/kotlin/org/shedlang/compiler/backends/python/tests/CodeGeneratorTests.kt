@@ -391,13 +391,16 @@ class CodeGeneratorTests {
         val conditionExpression = fieldAccess(variableReference, "f")
         val shed = whenExpression(
             conditionExpression,
-            listOf(
+            branches = listOf(
                 whenBranch(
                     typeReference,
                     listOf(
                         expressionStatement(literalInt(42), isReturn = true)
                     )
                 )
+            ),
+            elseBranch = listOf(
+                expressionStatement(literalInt(47), isReturn = true)
             )
         )
 
@@ -436,7 +439,12 @@ class CodeGeneratorTests {
                         )
                     )
                 ),
-                elseBranch = isSequence()
+                elseBranch = isSequence(
+                    isPythonAssignment(
+                        target = isPythonVariableReference(reference.name),
+                        expression = isPythonIntegerLiteral(47)
+                    )
+                )
             )
         ))
     }
@@ -448,7 +456,7 @@ class CodeGeneratorTests {
         val typeReference = staticReference("T")
         val shed = whenExpression(
             variableReference,
-            listOf(
+            branches = listOf(
                 whenBranch(
                     typeReference,
                     listOf(
@@ -502,13 +510,16 @@ class CodeGeneratorTests {
                 expressionStatement(
                     whenExpression(
                         variableReference,
-                        listOf(
+                        branches = listOf(
                             whenBranch(
                                 typeReference,
                                 listOf(
                                     expressionStatement(literalInt(42), isReturn = true)
                                 )
                             )
+                        ),
+                        elseBranch = listOf(
+                            expressionStatement(literalInt(47), isReturn = true)
                         )
                     ),
                     isReturn = true
@@ -545,7 +556,9 @@ class CodeGeneratorTests {
                             )
                         )
                     ),
-                    elseBranch = isSequence()
+                    elseBranch = isSequence(
+                        isPythonReturn(isPythonIntegerLiteral(47))
+                    )
                 )
             )
         ))

@@ -805,10 +805,12 @@ private fun generateWhenCode(
             )
         }
 
+        val elseBranch = generateBlockCode(node.elseBranch, context, returnValue = returnValue)
+
         assignment.nullableToList() + listOf(
             PythonIfStatementNode(
                 conditionalBranches = branches,
-                elseBranch = listOf(),
+                elseBranch = elseBranch,
                 source = NodeSource(node)
             )
         )
