@@ -28,10 +28,12 @@ internal fun isConditionalBranch(
 
 internal fun isWhen(
     expression: Matcher<ExpressionNode>,
-    branches: Matcher<List<WhenBranchNode>>
+    branches: Matcher<List<WhenBranchNode>>,
+    elseBranch: Matcher<List<FunctionStatementNode>?>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(WhenNode::expression, expression),
-    has(WhenNode::branches, branches)
+    has(WhenNode::branches, branches),
+    has(WhenNode::elseBranch, elseBranch)
 ))
 
 internal fun isWhenBranch(

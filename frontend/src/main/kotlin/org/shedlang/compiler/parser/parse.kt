@@ -667,16 +667,23 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val branches = parseMany(
         parseElement = ::parseWhenBranch,
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || tokens.isNext(TokenType.KEYWORD_ELSE) },
         tokens = tokens,
         allowZero = true
     )
+
+    val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
+        parseFunctionStatements(tokens)
+    } else {
+        null
+    }
+
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
 
     return WhenNode(
         expression = expression,
         branches = branches,
-        elseBranch = null,
+        elseBranch = elseBranch,
         source = source
     )
 }
