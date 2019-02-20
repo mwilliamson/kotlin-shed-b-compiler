@@ -314,10 +314,10 @@ fun parseMany[T](
         }
     }
 
-    (fun (tokens: TokenIterator) -> ParseResult[List[T]] {
+    fun (tokens: TokenIterator) -> ParseResult[List[T]] {
         val initialState = State[T](elements = ListBuilder.builder(), position = Start(), tokens = tokens);
         parse(initialState)
-    })
+    }
 }
 
 

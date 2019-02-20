@@ -3,10 +3,7 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.FunctionBody
-import org.shedlang.compiler.ast.FunctionDeclarationNode
-import org.shedlang.compiler.ast.FunctionNode
-import org.shedlang.compiler.ast.StaticReferenceNode
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isIdentifier
@@ -205,5 +202,14 @@ class ParseFunctionTests {
         assertThat(function, cast(allOf(
             has(FunctionDeclarationNode::name, isIdentifier("f"))
         )))
+    }
+
+    @Test
+    fun canReadFunctionExpressionAsFunctionExpressionStatement() {
+        val source = "fun () -> Unit { }"
+        val function = parseString(::parseFunctionStatement, source)
+        assertThat(function, isExpressionStatement(expression = cast(allOf(
+            has(FunctionExpressionNode::returnType, present(isStaticReference("Unit")))
+        ))))
     }
 }

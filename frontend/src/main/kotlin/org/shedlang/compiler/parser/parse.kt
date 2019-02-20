@@ -547,32 +547,32 @@ private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNod
 
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : FunctionStatementNode {
     val token = tokens.peek()
-    when (token.tokenType) {
-        TokenType.KEYWORD_VAL -> return parseVal(tokens)
-        TokenType.KEYWORD_FUN -> return parseFunctionDeclaration(tokens)
 
-        else -> {
-            val expression = tryParseExpression(tokens)
-            if (expression == null) {
-                throw UnexpectedTokenException(
-                    location = tokens.location(),
-                    expected = "function statement",
-                    actual = token.describe()
-                )
+    if (token.tokenType == TokenType.KEYWORD_VAL) {
+        return parseVal(tokens)
+    } else if (token.tokenType == TokenType.KEYWORD_FUN && tokens.peek(1).tokenType == TokenType.IDENTIFIER) {
+        return parseFunctionDeclaration(tokens)
+    } else {
+        val expression = tryParseExpression(tokens)
+        if (expression == null) {
+            throw UnexpectedTokenException(
+                location = tokens.location(),
+                expected = "function statement",
+                actual = token.describe()
+            )
+        } else {
+            val isReturn = if (expression is IfNode) {
+                branchesReturn(expression, expression.branchBodies)
+            } else if (expression is WhenNode) {
+                branchesReturn(expression, expression.branches.map { branch -> branch.body })
             } else {
-                val isReturn = if (expression is IfNode) {
-                    branchesReturn(expression, expression.branchBodies)
-                } else if (expression is WhenNode) {
-                    branchesReturn(expression, expression.branches.map { branch -> branch.body })
-                } else {
-                    !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
-                }
-                return ExpressionStatementNode(
-                    expression,
-                    isReturn = isReturn,
-                    source = expression.source
-                )
+                !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
             }
+            return ExpressionStatementNode(
+                expression,
+                isReturn = isReturn,
+                source = expression.source
+            )
         }
     }
 }
