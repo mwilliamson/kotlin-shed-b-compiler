@@ -229,19 +229,10 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
                         }
                     }
                 }
-                is TokenCloseSquare {
-                    failure(tokens)
-                }
                 is TokenWhitespace {
                     readValue(iterator.tail)
                 }
-                is TokenComma {
-                    failure(tokens)
-                }
-                is TokenUnexpected {
-                    failure(tokens)
-                }
-                is TokenEnd {
+                else {
                     failure(tokens)
                 }
             }
