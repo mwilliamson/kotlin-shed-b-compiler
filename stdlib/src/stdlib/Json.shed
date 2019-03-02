@@ -191,17 +191,7 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
                     val elementsResult = parseMany(
                         parseElement = readValue,
                         parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
-                        isEnd = fun (tokens: Sequences.Sequence[Token, Pure]) -> Bool {
-                            val iterator = tokens.next();
-                            when (iterator) {
-                                is Sequences.SequenceEnd {
-                                    true
-                                }
-                                is Sequences.SequenceItem {
-                                    iterator.head.tokenType is TokenCloseSquare
-                                }
-                            }
-                        },
+                        isEnd = isNextTokenTypeOrEnd ~ (fun (tokenType: TokenType) => tokenType is TokenCloseSquare),
                     )(iterator.tail);
 
                     when (elementsResult) {
@@ -294,6 +284,18 @@ fun parseMany[T](
     fun (tokens: TokenIterator) -> ParseResult[List[T]] {
         val initialState = State[T](elements = ListBuilder.builder(), position = Start(), tokens = tokens);
         parse(initialState)
+    }
+}
+
+fun isNextTokenTypeOrEnd(predicate: (TokenType) -> Bool, tokens: Sequences.Sequence[Token, Pure]) -> Bool {
+    val iterator = tokens.next();
+    when (iterator) {
+        is Sequences.SequenceEnd {
+            true
+        }
+        is Sequences.SequenceItem {
+            predicate(iterator.head.tokenType)
+        }
     }
 }
 
