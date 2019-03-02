@@ -190,9 +190,7 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
                 is TokenOpenSquare {
                     val elementsResult = parseMany(
                         parseElement = readValue,
-                        parseSeparator = fun (tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[Unit] {
-                            skipTokenType(fun (tokenType: TokenType) => tokenType is TokenComma, tokens)
-                        },
+                        parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
                         isEnd = fun (tokens: Sequences.Sequence[Token, Pure]) -> Bool {
                             val iterator = tokens.next();
                             when (iterator) {
