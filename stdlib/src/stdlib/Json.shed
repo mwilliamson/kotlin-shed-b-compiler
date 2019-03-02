@@ -191,19 +191,7 @@ fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue]
                     val elementsResult = parseMany(
                         parseElement = readValue,
                         parseSeparator = fun (tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[Unit] {
-                            val iterator = tokens.next();
-                            when (iterator) {
-                                is Sequences.SequenceEnd {
-                                    failure(tokens)
-                                }
-                                is Sequences.SequenceItem {
-                                    if (iterator.head.tokenType is TokenComma) {
-                                        success(iterator.tail, unit)
-                                    } else {
-                                        failure(tokens)
-                                    }
-                                }
-                            }
+                            skipTokenType(fun (tokenType: TokenType) => tokenType is TokenComma, tokens)
                         },
                         isEnd = fun (tokens: Sequences.Sequence[Token, Pure]) -> Bool {
                             val iterator = tokens.next();
@@ -311,6 +299,21 @@ fun parseMany[T](
     }
 }
 
+fun skipTokenType(predicate: (TokenType) -> Bool, tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[Unit] {
+    val iterator = tokens.next();
+    when (iterator) {
+        is Sequences.SequenceEnd {
+            failure(tokens)
+        }
+        is Sequences.SequenceItem {
+            if (predicate(iterator.head.tokenType)) {
+                success(iterator.tail, unit)
+            } else {
+                failure(tokens)
+            }
+        }
+    }
+}
 
 union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenComma | TokenUnexpected | TokenEnd;
 
