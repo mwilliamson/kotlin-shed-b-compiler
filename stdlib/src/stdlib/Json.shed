@@ -135,10 +135,10 @@ fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
 
 fun textToValue(text: String) -> JsonValue {
     val tokens = tokenise(text);
-    tokensToValue(tokens)
+    tokensToValue(createTokenIterator(tokens))
 }
 
-fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
+fun tokensToValue(tokens: TokenIterator) -> JsonValue {
     val result = readValue(tokens);
     when (result) {
         is Success {
@@ -150,7 +150,10 @@ fun tokensToValue(tokens: Sequences.Sequence[Token, Pure]) -> JsonValue {
     }
 }
 
-type TokenIterator = Sequences.Sequence[Token, Pure];
+shape TokenIterator {
+    head: Token,
+    tail: () -> TokenIterator,
+}
 
 union ParseResult[+T] =
     | Success[T] {
@@ -169,49 +172,40 @@ fun failure(tokens: TokenIterator) -> ParseResult[Nothing] {
     Failure(remainder = tokens)
 }
 
-// TODO: use TokenIterator as parameter type
-fun readValue(tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[JsonValue] {
-    val iterator = tokens.next();
-    when (iterator) {
-        is Sequences.SequenceEnd {
-            failure(tokens)
+fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
+    when (tokens.head.tokenType) {
+        is TokenTrue {
+            success(tokens.tail(), boolean(true))
         }
-        is Sequences.SequenceItem {
-            when (iterator.head.tokenType) {
-                is TokenTrue {
-                    success(iterator.tail, boolean(true))
-                }
-                is TokenFalse {
-                    success(iterator.tail, boolean(false))
-                }
-                is TokenNull {
-                    success(iterator.tail, null)
-                }
-                is TokenOpenSquare {
-                    val elementsResult = parseMany(
-                        parseElement = readValue,
-                        parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
-                        isEnd = isNextTokenTypeOrEnd ~ (fun (tokenType: TokenType) => tokenType is TokenCloseSquare),
-                    )(iterator.tail);
+        is TokenFalse {
+            success(tokens.tail(), boolean(false))
+        }
+        is TokenNull {
+            success(tokens.tail(), null)
+        }
+        is TokenOpenSquare {
+            val elementsResult = parseMany(
+                parseElement = readValue,
+                parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
+                isEnd = isNextTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenCloseSquare),
+            )(tokens.tail());
 
-                    when (elementsResult) {
-                        is Success {
-                            // TODO: consume closing square bracket
-                            success(elementsResult.remainder, array(elementsResult.value))
-                        }
+            when (elementsResult) {
+                is Success {
+                    // TODO: consume closing square bracket
+                    success(elementsResult.remainder, array(elementsResult.value))
+                }
 
-                        is Failure {
-                            elementsResult
-                        }
-                    }
-                }
-                is TokenWhitespace {
-                    readValue(iterator.tail)
-                }
-                else {
-                    failure(tokens)
+                is Failure {
+                    elementsResult
                 }
             }
+        }
+        is TokenWhitespace {
+            readValue(tokens.tail())
+        }
+        else {
+            failure(tokens)
         }
     }
 }
@@ -287,30 +281,32 @@ fun parseMany[T](
     }
 }
 
-fun isNextTokenTypeOrEnd(predicate: (TokenType) -> Bool, tokens: Sequences.Sequence[Token, Pure]) -> Bool {
-    val iterator = tokens.next();
-    when (iterator) {
-        is Sequences.SequenceEnd {
-            true
-        }
-        is Sequences.SequenceItem {
-            predicate(iterator.head.tokenType)
-        }
+fun isNextTokenType(predicate: (TokenType) -> Bool, tokens: TokenIterator) -> Bool {
+    predicate(tokens.head.tokenType)
+}
+
+fun skipTokenType(predicate: (TokenType) -> Bool, tokens: TokenIterator) -> ParseResult[Unit] {
+    if (predicate(tokens.head.tokenType)) {
+        success(tokens.tail(), unit)
+    } else {
+        failure(tokens)
     }
 }
 
-fun skipTokenType(predicate: (TokenType) -> Bool, tokens: Sequences.Sequence[Token, Pure]) -> ParseResult[Unit] {
+fun createTokenIterator(tokens: Sequences.Sequence[Token, Pure]) -> TokenIterator {
     val iterator = tokens.next();
     when (iterator) {
         is Sequences.SequenceEnd {
-            failure(tokens)
+            TokenIterator(
+                head = token(TokenEnd(), ""),
+                tail = fun () => createTokenIterator(tokens),
+            )
         }
         is Sequences.SequenceItem {
-            if (predicate(iterator.head.tokenType)) {
-                success(iterator.tail, unit)
-            } else {
-                failure(tokens)
-            }
+            TokenIterator(
+                head = iterator.head,
+                tail = fun () => createTokenIterator(iterator.tail),
+            )
         }
     }
 }
