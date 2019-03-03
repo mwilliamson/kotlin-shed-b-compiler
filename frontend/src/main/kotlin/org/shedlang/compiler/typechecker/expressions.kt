@@ -155,13 +155,7 @@ private fun inferFieldAccessType(node: FieldAccessNode, context: TypeContext): T
 
     val identifier = node.fieldName.identifier
 
-    val fieldType = if (receiverType is ShapeType) {
-        receiverType.fields[identifier]?.type
-    } else if (receiverType is ModuleType) {
-        receiverType.fields[identifier]
-    } else {
-        null
-    }
+    val fieldType = receiverType.fieldType(identifier)
 
     if (fieldType == null) {
         throw NoSuchFieldError(

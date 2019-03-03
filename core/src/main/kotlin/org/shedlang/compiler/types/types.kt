@@ -50,12 +50,18 @@ object StaticValueTypeGroup: TypeGroup {
 }
 
 interface Type: StaticValue, TypeGroup {
+    fun fieldType(fieldName: Identifier): Type?
+
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-interface BasicType : Type
+interface BasicType : Type {
+    override fun fieldType(fieldName: Identifier): Type? {
+        return null
+    }
+}
 
 object UnitType: BasicType {
     override val shortDescription = "Unit"
@@ -82,13 +88,21 @@ data class Symbol(val module: List<Identifier>, val name: String) {
 }
 
 object AnySymbolType : Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription: String
         get() = "Symbol"
 }
+
 object AnyType : Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription = "Any"
 }
+
 object NothingType : Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription = "Nothing"
 }
 
@@ -131,6 +145,8 @@ fun rawType(type: Type): Type {
 }
 
 class EffectType(val effect: Effect): Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription: String
         get() = "EffectType(${effect})"
 }
@@ -162,6 +178,8 @@ data class TypeParameter(
     val variance: Variance,
     val typeParameterId: Int = freshTypeParameterId()
 ): StaticParameter, Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription: String
         get() {
             val prefix = when (variance) {
@@ -206,6 +224,8 @@ data class TypeFunction (
     val parameters: List<StaticParameter>,
     val type: Type
 ): Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription: String
     // TODO: should be something like (T, U) => Shape[T, U]
         get() = "TypeFunction(TODO)"
@@ -214,6 +234,10 @@ data class TypeFunction (
 data class ModuleType(
     val fields: Map<Identifier, Type>
 ): Type {
+    override fun fieldType(fieldName: Identifier): Type? {
+        return fields[fieldName]
+    }
+
     override val shortDescription: String
     // TODO: should include name of module
         get() = "ModuleType(TODO)"
@@ -226,6 +250,8 @@ data class FunctionType(
     val returns: Type,
     val effect: Effect
 ): Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription: String
         get() {
             val typeParameters = if (staticParameters.isEmpty()) {
@@ -259,6 +285,10 @@ data class FunctionType(
 interface TypeAlias: Type {
     val name: Identifier
     val aliasedType: Type
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        return aliasedType.fieldType(fieldName)
+    }
 }
 
 data class LazyTypeAlias(
@@ -278,6 +308,10 @@ interface ShapeType: Type {
     val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        return fields[fieldName]?.type
+    }
 }
 
 data class Field(
@@ -330,6 +364,8 @@ interface UnionType: Type {
     val name: Identifier
     val members: List<Type>
     val staticArguments: List<StaticValue>
+
+    override fun fieldType(fieldName: Identifier): Type? = null
 }
 
 
@@ -382,6 +418,8 @@ data class LazyUnionType(
 }
 
 object ListConstructorType : Type {
+    override fun fieldType(fieldName: Identifier): Type? = null
+
     override val shortDescription: String
         get() = "ListConstructor"
 }
