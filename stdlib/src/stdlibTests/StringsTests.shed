@@ -26,4 +26,8 @@ val testCases = Tests.suite(moduleName, list(
         }),
         successTestCases,
     )),
+
+    Tests.testCase("empty string is parsed as none", fun () {
+        Tests.assertThat(Strings.parseInt(""), Matchers.isNone())
+    }),
 ));

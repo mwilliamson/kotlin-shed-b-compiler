@@ -5,21 +5,25 @@ import .Options;
 import .strings.CodePoints;
 
 fun parseInt(text: String) -> Options.Option[Int] {
-    CodePoints.foldLeft(
-        fun (acc: Options.Option[Int], codePoint: CodePoint) -> Options.Option[Int] {
-            Options.flatMap(
-                fun (acc: Int) -> Options.Option[Int] {
-                    if (codePoint >= '0' && codePoint <= '9') {
-                        val digit = CodePoints.codePointToInt(codePoint) - CodePoints.codePointToInt('0');
-                        Options.some(acc * 10 + digit)
-                    } else {
-                        Options.none
-                    }
-                },
-                acc,
-            )
-        },
-        Options.some(0),
-        text
-    )
+    if (CodePoints.isEmpty(text)) {
+        Options.none
+    } else {
+        CodePoints.foldLeft(
+            fun (acc: Options.Option[Int], codePoint: CodePoint) -> Options.Option[Int] {
+                Options.flatMap(
+                    fun (acc: Int) -> Options.Option[Int] {
+                        if (codePoint >= '0' && codePoint <= '9') {
+                            val digit = CodePoints.codePointToInt(codePoint) - CodePoints.codePointToInt('0');
+                            Options.some(acc * 10 + digit)
+                        } else {
+                            Options.none
+                        }
+                    },
+                    acc,
+                )
+            },
+            Options.some(0),
+            text
+        )
+    }
 }
