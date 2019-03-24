@@ -4,7 +4,7 @@ val codePointToHexString: (CodePoint) -> String;
 val codePointToString: (CodePoint) -> String;
 val codePointCount: (String) -> Int;
 val firstCodePoint: (String) -> Options.Option[CodePoint];
-val mapCodePoints: ((CodePoint) -> String, String) -> String;
+val flatMapCodePoints: ((CodePoint) -> String, String) -> String;
 val repeat: (String, Int) -> String;
 val replace: (String, String, String) -> String;
 val substring: (Int, Int, String) -> String;

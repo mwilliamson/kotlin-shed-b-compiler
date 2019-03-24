@@ -3,7 +3,7 @@ export
     codePointToString,
     length,
     first,
-    mapCodePoints,
+    flatMap,
     replace,
 
     dropLeft,
@@ -22,7 +22,7 @@ val codePointToHexString = Strings.codePointToHexString;
 val codePointToString = Strings.codePointToString;
 val length = Strings.codePointCount;
 val first = Strings.firstCodePoint;
-val mapCodePoints = Strings.mapCodePoints;
+val flatMap = Strings.flatMapCodePoints;
 val replace = Strings.replace;
 
 fun dropLeft(count: Int, value: String) -> String {

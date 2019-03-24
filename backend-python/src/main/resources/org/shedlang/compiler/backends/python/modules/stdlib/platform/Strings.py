@@ -22,7 +22,7 @@ def first_code_point(string):
         return Options.some(string[0])
 
 
-def map_code_points(func, string):
+def flat_map_code_points(func, string):
     result = io.StringIO()
     for char in string:
         result.write(func(char))

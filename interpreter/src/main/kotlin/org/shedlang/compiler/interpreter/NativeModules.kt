@@ -133,7 +133,7 @@ private object StringsFirstCodePointValue: Callable() {
     }
 }
 
-private object StringsMapCodePointsValue: Callable() {
+private object StringsFlatMapCodePointsValue: Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val func = arguments[0]
         val string = arguments[1].string()
@@ -144,7 +144,7 @@ private object StringsMapCodePointsValue: Callable() {
                 BinaryOperator.ADD,
                 call(func, positionalArgumentExpressions = listOf(CodePointValue(string.codePointAt(0)))),
                 call(
-                    StringsMapCodePointsValue,
+                    StringsFlatMapCodePointsValue,
                     positionalArgumentValues = listOf(
                         func,
                         StringValue(string.substring(string.offsetByCodePoints(0, 1)))
@@ -190,7 +190,7 @@ private val stringsModule = ModuleExpression(
         Identifier("codePointToString") to StringsCodePointToStringValue,
         Identifier("codePointCount") to StringsCodePointCountValue,
         Identifier("firstCodePoint") to StringsFirstCodePointValue,
-        Identifier("mapCodePoints") to StringsMapCodePointsValue,
+        Identifier("flatMapCodePoints") to StringsFlatMapCodePointsValue,
         Identifier("repeat") to StringsRepeatValue,
         Identifier("replace") to StringsReplaceValue,
         Identifier("substring") to StringsSubstringValue

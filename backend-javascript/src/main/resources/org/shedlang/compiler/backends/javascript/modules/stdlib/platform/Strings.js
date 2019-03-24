@@ -25,7 +25,7 @@ function firstCodePoint(string) {
     }
 }
 
-function mapCodePoints(func, string) {
+function flatMapCodePoints(func, string) {
     let result = "";
     for (const char of string) {
         result += func(char);
@@ -53,7 +53,7 @@ exports.codePointToHexString = codePointToHexString;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
 exports.firstCodePoint = firstCodePoint;
-exports.mapCodePoints = mapCodePoints;
+exports.flatMapCodePoints = flatMapCodePoints;
 exports.repeat = repeat;
 exports.replace = replace;
 exports.substring = substring;

@@ -113,7 +113,7 @@ fun propertyToText(property: JsonProperty) -> String {
 }
 
 fun jsonStringToText(value: String) -> String {
-    val characters = CodePoints.mapCodePoints(jsonStringCodePointToText, value);
+    val characters = CodePoints.flatMap(jsonStringCodePointToText, value);
     "\"" + characters + "\""
 }
 
