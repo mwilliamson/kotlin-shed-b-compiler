@@ -52,8 +52,16 @@ internal data class UnaryOperation(
                 }
             }
             is InterpreterValue -> {
-                val booleanOperand = operand as BooleanValue
-                return EvaluationResult.pure(BooleanValue(!booleanOperand.value))
+                when (operator) {
+                    UnaryOperator.MINUS -> {
+                        val integerOperand = operand as IntegerValue
+                        return EvaluationResult.pure(IntegerValue(-integerOperand.value))
+                    }
+                    UnaryOperator.NOT -> {
+                        val booleanOperand = operand as BooleanValue
+                        return EvaluationResult.pure(BooleanValue(!booleanOperand.value))
+                    }
+                }
             }
         }
     }

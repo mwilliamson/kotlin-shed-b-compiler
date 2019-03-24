@@ -119,6 +119,12 @@ class EvaluateUnaryOperationTests {
     }
 
     @Test
+    fun unaryMinusOfIntegers() {
+        val result = evaluate(UnaryOperation(UnaryOperator.MINUS, IntegerValue(42)))
+        assertThat(result, isPureResult(equalTo(IntegerValue(-42))))
+    }
+
+    @Test
     fun incompleteOperandIsEvaluated() {
         val context = createContext(
             scope = scopeOf(mapOf(
