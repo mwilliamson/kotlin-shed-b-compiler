@@ -98,6 +98,13 @@ private object StringsCodePointToHexStringValue: Callable() {
     }
 }
 
+private object StringsCodePointToIntValue: Callable() {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
+        val character = arguments[0] as CodePointValue
+        return EvaluationResult.pure(IntegerValue(character.value))
+    }
+}
+
 private object StringsCodePointToStringValue: Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val character = arguments[0] as CodePointValue
@@ -155,6 +162,26 @@ private object StringsFlatMapCodePointsValue: Callable() {
     }
 }
 
+private object StringsFoldLeftCodePointsValue: Callable() {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
+        val func = arguments[0]
+        val initial = arguments[1]
+        val string = arguments[2].string()
+        if (string.isEmpty()) {
+            return EvaluationResult.pure(initial)
+        } else {
+            return EvaluationResult.pure(call(
+                StringsFoldLeftCodePointsValue,
+                positionalArgumentExpressions = listOf(
+                    func,
+                    call(func, positionalArgumentExpressions = listOf(initial, CodePointValue(string.codePointAt(0)))),
+                    StringValue(string.substring(string.offsetByCodePoints(0, 1)))
+                )
+            ))
+        }
+    }
+}
+
 private object StringsRepeatValue: Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val string = arguments[0].string()
@@ -187,10 +214,12 @@ private val stringsModule = ModuleExpression(
     fieldExpressions = listOf(),
     fieldValues = listOf(
         Identifier("codePointToHexString") to StringsCodePointToHexStringValue,
+        Identifier("codePointToInt") to StringsCodePointToIntValue,
         Identifier("codePointToString") to StringsCodePointToStringValue,
         Identifier("codePointCount") to StringsCodePointCountValue,
         Identifier("firstCodePoint") to StringsFirstCodePointValue,
         Identifier("flatMapCodePoints") to StringsFlatMapCodePointsValue,
+        Identifier("foldLeftCodePoints") to StringsFoldLeftCodePointsValue,
         Identifier("repeat") to StringsRepeatValue,
         Identifier("replace") to StringsReplaceValue,
         Identifier("substring") to StringsSubstringValue

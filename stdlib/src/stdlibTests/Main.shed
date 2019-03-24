@@ -3,11 +3,13 @@ import stdlib.Tests;
 import .JsonTests;
 import .OptionsTests;
 import .strings.CodePointsTests;
+import .StringsTests;
 
 fun main() !Io -> Int {
     Tests.runTests(list(
         JsonTests.testCases,
         OptionsTests.testCases,
         CodePointsTests.testCases,
+        StringsTests.testCases,
     ))
 }

@@ -1,9 +1,11 @@
 export
     codePointToHexString,
+    codePointToInt,
     codePointToString,
     length,
     first,
     flatMap,
+    foldLeft,
     replace,
 
     dropLeft,
@@ -19,10 +21,12 @@ import stdlib.Options;
 import stdlib.platform.Strings;
 
 val codePointToHexString = Strings.codePointToHexString;
+val codePointToInt = Strings.codePointToInt;
 val codePointToString = Strings.codePointToString;
 val length = Strings.codePointCount;
 val first = Strings.firstCodePoint;
 val flatMap = Strings.flatMapCodePoints;
+val foldLeft = Strings.foldLeftCodePoints;
 val replace = Strings.replace;
 
 fun dropLeft(count: Int, value: String) -> String {

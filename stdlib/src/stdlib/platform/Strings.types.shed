@@ -1,10 +1,12 @@
 import stdlib.Options;
 
 val codePointToHexString: (CodePoint) -> String;
+val codePointToInt: (CodePoint) -> Int;
 val codePointToString: (CodePoint) -> String;
 val codePointCount: (String) -> Int;
 val firstCodePoint: (String) -> Options.Option[CodePoint];
 val flatMapCodePoints: ((CodePoint) -> String, String) -> String;
+val foldLeftCodePoints: [R]((R, CodePoint) -> R, R, String) -> R;
 val repeat: (String, Int) -> String;
 val replace: (String, String, String) -> String;
 val substring: (Int, Int, String) -> String;

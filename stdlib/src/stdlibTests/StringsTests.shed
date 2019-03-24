@@ -1,0 +1,29 @@
+export testCases;
+
+import stdlib.Lists;
+import stdlib.Matchers;
+import stdlib.Strings;
+import stdlib.Tests;
+
+shape SuccessTestCase {
+    text: String,
+    value: Int,
+}
+
+val successTestCases = list(
+    SuccessTestCase(text = "0", value = 0),
+    SuccessTestCase(text = "1", value = 1),
+    SuccessTestCase(text = "2", value = 2),
+    SuccessTestCase(text = "9", value = 9),
+    SuccessTestCase(text = "42", value = 42),
+    SuccessTestCase(text = "192", value = 192),
+);
+
+val testCases = Tests.suite(moduleName, list(
+    Tests.suite("can parse", Lists.map(
+        fun (testCase: SuccessTestCase) => Tests.testCase("can read " + testCase.text, fun () {
+            Tests.assertThat(Strings.parseInt(testCase.text), Matchers.isSome(Matchers.isInt(testCase.value)))
+        }),
+        successTestCases,
+    )),
+));

@@ -1,4 +1,4 @@
-export Option, Some, None, some, none, default, map;
+export Option, Some, None, some, none, default, flatMap, map;
 
 union Option[+T] =
     | Some[T] {
@@ -18,6 +18,17 @@ fun default[T](defaultValue: T, option: Option[T]) -> T {
         }
         is None {
             defaultValue
+        }
+    }
+}
+
+fun flatMap[T, R, !E](func: (T) !E -> Option[R], option: Option[T]) !E -> Option[R] {
+    when (option) {
+        is Some[T] {
+            func(option.value)
+        }
+        is None {
+            none
         }
     }
 }
