@@ -17,6 +17,7 @@ val successTestCases = list(
     SuccessTestCase(text = "9", value = 9),
     SuccessTestCase(text = "42", value = 42),
     SuccessTestCase(text = "192", value = 192),
+    SuccessTestCase(text = "9999999999999999999999999999999999", value = 9999999999999999999999999999999999),
 );
 
 val testCases = Tests.suite(moduleName, list(
