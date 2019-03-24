@@ -143,7 +143,10 @@ union JsonResult =
     | JsonFailure;
 
 fun textToValue(text: String) -> JsonResult {
-    val tokens = tokenise(text);
+    val tokens = Sequences.lazyFilter(
+        fun (token: Token) => not (token.tokenType is TokenWhitespace),
+        tokenise(text),
+    );
     tokensToValue(createTokenIterator(tokens))
 }
 
@@ -226,9 +229,6 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
                     elementsResult
                 }
             }
-        }
-        is TokenWhitespace {
-            readValue(tokens.tail())
         }
         else {
             failure(tokens)

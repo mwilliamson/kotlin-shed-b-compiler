@@ -261,6 +261,12 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
         }),
 
+        Tests.testCase("trailing whitespace is ignored", fun () {
+            val text = "false  \n\r\t";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
+        }),
+
         Tests.testCase("text after top-level failure causes failure", fun () {
             val text = "false true";
             val result = Json.textToValue(text);
