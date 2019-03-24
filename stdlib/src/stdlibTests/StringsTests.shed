@@ -12,12 +12,19 @@ shape SuccessTestCase {
 
 val successTestCases = list(
     SuccessTestCase(text = "0", value = 0),
+    SuccessTestCase(text = "-0", value = 0),
     SuccessTestCase(text = "1", value = 1),
+    SuccessTestCase(text = "-1", value = -1),
     SuccessTestCase(text = "2", value = 2),
+    SuccessTestCase(text = "-2", value = -2),
     SuccessTestCase(text = "9", value = 9),
+    SuccessTestCase(text = "-9", value = -9),
     SuccessTestCase(text = "42", value = 42),
+    SuccessTestCase(text = "-42", value = -42),
     SuccessTestCase(text = "192", value = 192),
+    SuccessTestCase(text = "-192", value = -192),
     SuccessTestCase(text = "9999999999999999999999999999999999", value = 9999999999999999999999999999999999),
+    SuccessTestCase(text = "-9999999999999999999999999999999999", value = -9999999999999999999999999999999999),
 );
 
 val testCases = Tests.suite(moduleName, list(

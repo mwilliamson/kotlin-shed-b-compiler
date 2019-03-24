@@ -5,6 +5,18 @@ import .Options;
 import .strings.CodePoints;
 
 fun parseInt(text: String) -> Options.Option[Int] {
+    val first = CodePoints.first(text);
+    first |> Options.flatMap ~ (fun (codePoint: CodePoint) =>
+        if (codePoint == '-') {
+            parsePositiveInt(CodePoints.dropLeft(1, text))
+                |> Options.map ~ (fun (value: Int) => -value)
+        } else {
+            parsePositiveInt(text)
+        }
+    )
+}
+
+fun parsePositiveInt(text: String) -> Options.Option[Int] {
     if (CodePoints.isEmpty(text)) {
         Options.none
     } else {
