@@ -120,7 +120,11 @@ internal fun serialise(node: PythonExpressionNode): String {
         }
 
         override fun visit(node: PythonUnaryOperationNode): String {
-            return "not " + serialiseSubExpression(node, node.operand, associative = true)
+            val prefix = when (node.operator) {
+                PythonUnaryOperator.MINUS -> "-"
+                PythonUnaryOperator.NOT -> "not "
+            }
+            return prefix + serialiseSubExpression(node, node.operand, associative = true)
         }
 
         override fun visit(node: PythonBinaryOperationNode): String {

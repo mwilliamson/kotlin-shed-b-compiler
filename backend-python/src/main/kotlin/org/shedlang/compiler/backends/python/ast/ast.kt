@@ -215,6 +215,7 @@ data class PythonUnaryOperationNode(
 }
 
 enum class PythonUnaryOperator {
+    MINUS,
     NOT
 }
 

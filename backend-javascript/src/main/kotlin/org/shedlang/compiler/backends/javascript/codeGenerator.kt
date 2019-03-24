@@ -6,7 +6,6 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.types.*
-import java.lang.Exception
 
 internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val context = CodeGenerationContext(moduleName = module.name, types = module.types)
@@ -496,6 +495,7 @@ private fun generateSymbolCode(symbol: Symbol, source: NodeSource): JavascriptEx
 
 private fun generateCode(operator: UnaryOperator): JavascriptUnaryOperator {
     return when (operator) {
+        UnaryOperator.MINUS -> JavascriptUnaryOperator.MINUS
         UnaryOperator.NOT -> JavascriptUnaryOperator.NOT
     }
 }

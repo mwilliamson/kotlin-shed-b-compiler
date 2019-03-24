@@ -228,6 +228,7 @@ data class JavascriptAssignmentNode(
 }
 
 enum class JavascriptUnaryOperator {
+    MINUS,
     NOT
 }
 

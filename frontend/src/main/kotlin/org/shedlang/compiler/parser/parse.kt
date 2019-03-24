@@ -1080,6 +1080,15 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                 source = source
             )
         }
+        TokenType.SYMBOL_MINUS -> {
+            tokens.skip()
+            val operand = parseExpression(tokens, precedence = UNARY_PRECEDENCE)
+            return UnaryOperationNode(
+                operator = UnaryOperator.MINUS,
+                operand = operand,
+                source = source
+            )
+        }
         else -> return null
     }
 }

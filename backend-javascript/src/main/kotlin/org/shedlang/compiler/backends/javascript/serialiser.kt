@@ -101,7 +101,11 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         }
 
         override fun visit(node: JavascriptUnaryOperationNode): String {
-            return "!" + serialiseSubExpression(node, node.operand, associative = true, indentation = indentation)
+            val prefix = when (node.operator) {
+                JavascriptUnaryOperator.MINUS -> "-"
+                JavascriptUnaryOperator.NOT -> "!"
+            }
+            return prefix + serialiseSubExpression(node, node.operand, associative = true, indentation = indentation)
         }
 
         override fun visit(node: JavascriptBinaryOperationNode): String {

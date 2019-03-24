@@ -334,13 +334,23 @@ class SerialiserTests {
     }
 
     @Test
-    fun unaryOperationSerialisation() {
+    fun notOperationSerialisation() {
         val node = pythonUnaryOperation(
             operator = PythonUnaryOperator.NOT,
             operand = pythonVariableReference("x")
         )
         val output = serialise(node)
         assertThat(output, equalTo("not x"))
+    }
+
+    @Test
+    fun unaryMinusSerialisation() {
+        val node = pythonUnaryOperation(
+            operator = PythonUnaryOperator.MINUS,
+            operand = pythonVariableReference("x")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("-x"))
     }
 
     @Test

@@ -8,10 +8,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.InvalidOperationError
-import org.shedlang.compiler.typechecker.ResolvedReferencesMap
-import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.typechecker.newTypeContext
+import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
 
 class TypeCheckExpressionTests {
@@ -95,7 +92,29 @@ class TypeCheckExpressionTests {
         val node = unaryOperation(UnaryOperator.NOT, literalInt(1))
         assertThat(
             { inferType(node, typeContext()) },
-            throwsUnexpectedType(expected = BoolType, actual = IntType)
+            throws(allOf(
+                has(InvalidUnaryOperationError::operator, equalTo(UnaryOperator.NOT)),
+                has(InvalidUnaryOperationError::actualOperandType, isIntType)
+            ))
+        )
+    }
+
+    @Test
+    fun unaryMinusIntReturnsInt() {
+        val node = unaryOperation(UnaryOperator.MINUS, literalInt())
+        val type = inferType(node, typeContext())
+        assertThat(type, isIntType)
+    }
+
+    @Test
+    fun unaryMinusNonIntThrowsError() {
+        val node = unaryOperation(UnaryOperator.MINUS, literalBool())
+        assertThat(
+            { inferType(node, typeContext()) },
+            throws(allOf(
+                has(InvalidUnaryOperationError::operator, equalTo(UnaryOperator.MINUS)),
+                has(InvalidUnaryOperationError::actualOperandType, isBoolType)
+            ))
         )
     }
 

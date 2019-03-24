@@ -823,6 +823,7 @@ data class FieldNameNode(
 }
 
 enum class UnaryOperator {
+    MINUS,
     NOT
 }
 

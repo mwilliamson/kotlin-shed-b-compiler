@@ -397,7 +397,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun unaryOperationGeneratesUnaryOperations() {
+    fun notOperationGeneratesNotOperation() {
         val shed = unaryOperation(
             operator = UnaryOperator.NOT,
             operand= literalBool(true)
@@ -407,6 +407,21 @@ class CodeGeneratorTests {
 
         assertThat(node, isJavascriptUnaryOperation(
             operator = equalTo(JavascriptUnaryOperator.NOT),
+            operand = isJavascriptBooleanLiteral(true)
+        ))
+    }
+
+    @Test
+    fun unaryMinusOperationGeneratesUnaryMinusOperation() {
+        val shed = unaryOperation(
+            operator = UnaryOperator.MINUS,
+            operand= literalBool(true)
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isJavascriptUnaryOperation(
+            operator = equalTo(JavascriptUnaryOperator.MINUS),
             operand = isJavascriptBooleanLiteral(true)
         ))
     }

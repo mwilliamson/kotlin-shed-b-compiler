@@ -73,10 +73,11 @@ private fun inferUnaryOperationType(node: UnaryOperationNode, context: TypeConte
 
     return when (UnaryOperationType(node.operator, operandType)) {
         UnaryOperationType(UnaryOperator.NOT, BoolType) -> BoolType
+        UnaryOperationType(UnaryOperator.MINUS, IntType) -> IntType
 
-        else -> throw UnexpectedTypeError(
-            expected = BoolType,
-            actual = operandType,
+        else -> throw InvalidUnaryOperationError(
+            operator = node.operator,
+            actualOperandType = operandType,
             source = node.operand.source
         )
     }

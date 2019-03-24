@@ -9,7 +9,6 @@ import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.SymbolType
-import java.lang.Exception
 
 // TODO: check that builtins aren't renamed
 // TODO: check imports aren't renamed
@@ -908,6 +907,7 @@ private fun generateTypeCondition(
 
 private fun generateCode(operator: UnaryOperator): PythonUnaryOperator {
     return when (operator) {
+        UnaryOperator.MINUS -> PythonUnaryOperator.MINUS
         UnaryOperator.NOT -> PythonUnaryOperator.NOT
     }
 }

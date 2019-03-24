@@ -726,7 +726,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun unaryOperationGenerateUnaryOperation() {
+    fun notOperationGeneratesNotOperation() {
         val shed = unaryOperation(
             operator = UnaryOperator.NOT,
             operand = literalBool(true)
@@ -736,6 +736,21 @@ class CodeGeneratorTests {
 
         assertThat(node, isGeneratedExpression(isPythonUnaryOperation(
             operator = equalTo(PythonUnaryOperator.NOT),
+            operand = isPythonBooleanLiteral(true)
+        )))
+    }
+
+    @Test
+    fun unaryMinusOperationGeneratesUnaryMinusOperation() {
+        val shed = unaryOperation(
+            operator = UnaryOperator.MINUS,
+            operand = literalBool(true)
+        )
+
+        val node = generateCode(shed)
+
+        assertThat(node, isGeneratedExpression(isPythonUnaryOperation(
+            operator = equalTo(PythonUnaryOperator.MINUS),
             operand = isPythonBooleanLiteral(true)
         )))
     }

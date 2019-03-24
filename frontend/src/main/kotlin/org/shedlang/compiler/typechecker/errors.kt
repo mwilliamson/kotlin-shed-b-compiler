@@ -3,6 +3,7 @@ package org.shedlang.compiler.typechecker
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
+import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.TypeGroup
@@ -48,9 +49,15 @@ class FieldAlreadyDeclaredError(val fieldName: Identifier, source: Source)
     : TypeCheckError("Field has already been declared: ${fieldName.value}", source)
 class UnhandledEffectError(val effect: Effect, source: Source)
     : TypeCheckError("Unhandled effect: ${effect}", source)
+// TODO: specialise name and arguments to binary operations
 class InvalidOperationError(val operator: BinaryOperator, val operands: List<Type>, source: Source)
     : TypeCheckError(
     "Operation ${operator} is not valid for operands ${operands.map({operand -> operand.shortDescription}).joinToString(", ")}",
+    source
+)
+class InvalidUnaryOperationError(val operator: UnaryOperator, val actualOperandType: Type, source: Source)
+    : TypeCheckError(
+    "Operation ${operator} is not valid for operand ${actualOperandType.shortDescription}",
     source
 )
 class FieldDeclarationShapeIdConflictError(val name: Identifier, source: Source)
