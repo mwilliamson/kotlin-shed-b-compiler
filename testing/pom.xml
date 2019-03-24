@@ -17,7 +17,7 @@
         <dependency>
             <groupId>com.natpryce</groupId>
             <artifactId>hamkrest</artifactId>
-            <version>1.2.3.0</version>
+            <version>${hamkrest.version}</version>
         </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>

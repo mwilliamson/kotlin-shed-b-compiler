@@ -4,16 +4,6 @@ import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.Identifier
 
 
-val anythingOrNull = object : Matcher<Any?> {
-    override fun invoke(actual: Any?): MatchResult = MatchResult.Match
-    override val description: String get() = "anything"
-    override val negatedDescription: String get() = "nothing"
-}
-
-fun <T> allOf(vararg matchers: Matcher<T>) : Matcher<T> {
-    return matchers.reduce { first, second -> first and second }
-}
-
 fun <K, V> isMap(vararg matchers: Pair<K, Matcher<V>>): Matcher<Map<K, V>> {
     val entryMatchers = matchers.map({ entry -> allOf(
         has(Map.Entry<K, V>::key, equalTo(entry.first)),
@@ -53,7 +43,7 @@ fun <T> isSequence(vararg matchers: Matcher<T>) : Matcher<Iterable<T>> {
 
 fun isIdentifier(name: String) = has(Identifier::value, equalTo(name))
 
-fun <T1, T2> isPair(first: Matcher<T1> = anythingOrNull, second: Matcher<T2>): Matcher<Pair<T1, T2>> {
+fun <T1, T2> isPair(first: Matcher<T1> = anything, second: Matcher<T2>): Matcher<Pair<T1, T2>> {
     return allOf(
         has(Pair<T1, T2>::first, first),
         has(Pair<T1, T2>::second, second)

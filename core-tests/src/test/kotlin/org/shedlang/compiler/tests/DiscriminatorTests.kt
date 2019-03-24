@@ -1,10 +1,7 @@
 package org.shedlang.compiler.tests
 
-import com.natpryce.hamkrest.absent
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.types.*
 

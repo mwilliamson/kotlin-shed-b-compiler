@@ -2,8 +2,6 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.tests.allOf
-import org.shedlang.compiler.tests.anythingOrNull
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
@@ -100,9 +98,9 @@ internal fun isShape(
 
 internal fun isShapeField(
     name: Matcher<Identifier>,
-    type: Matcher<StaticExpressionNode?> = anythingOrNull,
-    value: Matcher<ExpressionNode?> = anythingOrNull,
-    shape: Matcher<StaticExpressionNode?> = anythingOrNull
+    type: Matcher<StaticExpressionNode?> = anything,
+    value: Matcher<ExpressionNode?> = anything,
+    shape: Matcher<StaticExpressionNode?> = anything
 ) = allOf(
     has(ShapeFieldNode::name, name),
     has(ShapeFieldNode::type, type),
@@ -114,7 +112,7 @@ internal fun isUnion(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     members: Matcher<List<UnionMemberNode>> = anything,
-    superType: Matcher<StaticReferenceNode?> = anythingOrNull
+    superType: Matcher<StaticReferenceNode?> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(UnionNode::name, name),

@@ -1,5 +1,6 @@
 package org.shedlang.compiler.tests.parser
 
+import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
@@ -11,7 +12,6 @@ import org.shedlang.compiler.ast.StringSource
 import org.shedlang.compiler.parser.Token
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.UnexpectedTokenException
-import org.shedlang.compiler.tests.allOf
 
 class TokenIteratorTests {
     enum class TokenType {

@@ -1,5 +1,6 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws

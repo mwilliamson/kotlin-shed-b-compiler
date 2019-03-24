@@ -1,10 +1,7 @@
 package org.shedlang.compiler.interpreter.tests
 
-import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ast.BinaryOperator

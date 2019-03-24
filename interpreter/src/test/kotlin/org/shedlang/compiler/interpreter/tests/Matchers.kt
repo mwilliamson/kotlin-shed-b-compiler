@@ -5,7 +5,6 @@ import org.shedlang.compiler.interpreter.Block
 import org.shedlang.compiler.interpreter.EvaluationResult
 import org.shedlang.compiler.interpreter.Scope
 import org.shedlang.compiler.interpreter.Statement
-import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isSequence
 
 

@@ -1,5 +1,6 @@
 package org.shedlang.compiler.interpreter.tests
 
+import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo

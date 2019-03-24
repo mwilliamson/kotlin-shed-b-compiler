@@ -10,7 +10,6 @@ import org.shedlang.compiler.parser.InvalidCodePoint
 import org.shedlang.compiler.parser.InvalidCodePointLiteral
 import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
-import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.tests.isIdentifier
 
 class ParsePrimaryExpressionTests {

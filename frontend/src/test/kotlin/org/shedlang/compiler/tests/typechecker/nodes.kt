@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.tests.allOf
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.EmptyEffect
