@@ -255,6 +255,12 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(result, isSuccess(hasJsonText("[true,false,null]")))
         }),
 
+        Tests.testCase("unclosed array causes failure", fun () {
+            val text = "[true, false]";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(hasJsonText("[true,false]")))
+        }),
+
         Tests.testCase("leading whitespace is ignored", fun () {
             val text = "  \n\r\tfalse";
             val result = Json.textToValue(text);
@@ -267,7 +273,7 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
         }),
 
-        Tests.testCase("text after top-level failure causes failure", fun () {
+        Tests.testCase("text after top-level value causes failure", fun () {
             val text = "false true";
             val result = Json.textToValue(text);
             Tests.assertThat(result, isFailure)
