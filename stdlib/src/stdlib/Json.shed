@@ -17,6 +17,9 @@ export
     property,
 
     valueToText,
+    JsonResult,
+    JsonSuccess,
+    JsonFailure,
     textToValue;
 
 import stdlib.ListBuilder;
@@ -133,19 +136,25 @@ fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
     }
 }
 
-fun textToValue(text: String) -> JsonValue {
+union JsonResult =
+    | JsonSuccess {
+        value: JsonValue,
+    }
+    | JsonFailure;
+
+fun textToValue(text: String) -> JsonResult {
     val tokens = tokenise(text);
     tokensToValue(createTokenIterator(tokens))
 }
 
-fun tokensToValue(tokens: TokenIterator) -> JsonValue {
+fun tokensToValue(tokens: TokenIterator) -> JsonResult {
     val result = readValue(tokens);
     when (result) {
-        is Success {
-            result.value
+        is ParseSuccess {
+            JsonSuccess(value = result.value)
         }
-        is Failure {
-            null
+        is ParseFailure {
+            JsonFailure()
         }
     }
 }
@@ -156,20 +165,20 @@ shape TokenIterator {
 }
 
 union ParseResult[+T] =
-    | Success[T] {
+    | ParseSuccess[T] {
         remainder: TokenIterator,
         value: T,
     }
-    | Failure {
+    | ParseFailure {
         remainder: TokenIterator,
     };
 
 fun success[T](remainder: TokenIterator, value: T) -> ParseResult[T] {
-    Success(remainder = remainder, value = value)
+    ParseSuccess(remainder = remainder, value = value)
 }
 
 fun failure(tokens: TokenIterator) -> ParseResult[Nothing] {
-    Failure(remainder = tokens)
+    ParseFailure(remainder = tokens)
 }
 
 fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
@@ -191,12 +200,12 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
             )(tokens.tail());
 
             when (elementsResult) {
-                is Success {
+                is ParseSuccess {
                     // TODO: consume closing square bracket
                     success(elementsResult.remainder, array(elementsResult.value))
                 }
 
-                is Failure {
+                is ParseFailure {
                     elementsResult
                 }
             }
@@ -241,14 +250,14 @@ fun parseMany[T](
             is ElementStart {
                 val elementResult = parseElement(state.tokens);
                 when (elementResult) {
-                    is Success {
+                    is ParseSuccess {
                         parse(State(
                             elements = ListBuilder.append(state.elements, elementResult.value),
                             position = ElementEnd(),
                             tokens = elementResult.remainder,
                         ))
                     }
-                    is Failure {
+                    is ParseFailure {
                         elementResult
                     }
                 }
@@ -259,14 +268,14 @@ fun parseMany[T](
                 } else {
                     val separatorResult = parseSeparator(state.tokens);
                     when (separatorResult) {
-                        is Success {
+                        is ParseSuccess {
                             parse(State(
                                 elements = state.elements,
                                 position = ElementStart(),
                                 tokens = separatorResult.remainder,
                             ))
                         }
-                        is Failure {
+                        is ParseFailure {
                             separatorResult
                         }
                     }
