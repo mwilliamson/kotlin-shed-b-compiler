@@ -2,7 +2,7 @@ export
     codePointToHexString,
     codePointToString,
     length,
-    firstCodePoint,
+    first,
     mapCodePoints,
     replace,
 
@@ -21,7 +21,7 @@ import stdlib.platform.Strings;
 val codePointToHexString = Strings.codePointToHexString;
 val codePointToString = Strings.codePointToString;
 val length = Strings.codePointCount;
-val firstCodePoint = Strings.firstCodePoint;
+val first = Strings.firstCodePoint;
 val mapCodePoints = Strings.mapCodePoints;
 val replace = Strings.replace;
 
@@ -53,7 +53,7 @@ fun left(count: Int, value: String) -> String {
 
 fun leftWhile(predicate: (CodePoint) -> Bool, value: String) -> String {
     // TODO: a better implementation
-    val takeNext = firstCodePoint(value)
+    val takeNext = first(value)
         |> Options.map ~ (predicate)
         |> Options.default ~ (false);
     if (takeNext) {
