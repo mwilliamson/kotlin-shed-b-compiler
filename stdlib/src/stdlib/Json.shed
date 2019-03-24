@@ -151,7 +151,14 @@ fun tokensToValue(tokens: TokenIterator) -> JsonResult {
     val result = readValue(tokens);
     when (result) {
         is ParseSuccess {
-            JsonSuccess(value = result.value)
+            if (isNextTokenType(
+                fun (tokenType: TokenType) => tokenType is TokenEnd,
+                result.remainder,
+            )) {
+                JsonSuccess(value = result.value)
+            } else {
+                JsonFailure()
+            }
         }
         is ParseFailure {
             JsonFailure()
@@ -201,8 +208,18 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
 
             when (elementsResult) {
                 is ParseSuccess {
-                    // TODO: consume closing square bracket
-                    success(elementsResult.remainder, array(elementsResult.value))
+                    val closeResult = skipTokenType(
+                        fun (tokenType: TokenType) => tokenType is TokenCloseSquare,
+                        elementsResult.remainder,
+                    );
+                    when (closeResult) {
+                        is ParseSuccess {
+                            success(closeResult.remainder, array(elementsResult.value))
+                        }
+                        is ParseFailure {
+                            failure(closeResult.remainder)
+                        }
+                    }
                 }
 
                 is ParseFailure {

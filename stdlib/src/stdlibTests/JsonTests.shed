@@ -7,6 +7,20 @@ import stdlib.Tests;
 
 type JsonValueMatcher = Matchers.Matcher[Json.JsonValue];
 
+val isFailure = Matchers.Matcher(
+    description = "failure",
+    match = fun (actual: Json.JsonResult) -> Matchers.Result {
+        when (actual) {
+            is Json.JsonSuccess {
+                Matchers.failure("was success")
+            }
+            is Json.JsonFailure {
+                Matchers.success
+            }
+        }
+    },
+);
+
 fun isSuccess(value: JsonValueMatcher) -> Matchers.Matcher[Json.JsonResult] {
     Matchers.Matcher(
         description = "success with value " + value.description,
@@ -241,10 +255,16 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(result, isSuccess(hasJsonText("[true,false,null]")))
         }),
 
-        Tests.testCase("whitespace is ignored", fun () {
+        Tests.testCase("leading whitespace is ignored", fun () {
             val text = "  \n\r\tfalse";
             val result = Json.textToValue(text);
             Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
+        }),
+
+        Tests.testCase("text after top-level failure causes failure", fun () {
+            val text = "false true";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isFailure)
         }),
     )),
 ));
