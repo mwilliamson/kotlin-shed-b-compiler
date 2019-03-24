@@ -6,8 +6,7 @@ function codePointToHexString(char) {
 }
 
 function codePointToInt(char) {
-    // TODO: arbitrary int size
-    return char.codePointAt(0);
+    return BigInt(char.codePointAt(0));
 }
 
 function codePointToString(char) {
@@ -19,7 +18,7 @@ function codePointCount(string) {
     for (const char of string) {
         count++;
     }
-    return count;
+    return BigInt(count);
 }
 
 function firstCodePoint(string) {
@@ -48,7 +47,7 @@ function foldLeftCodePoints(func, initial, string) {
 
 function repeat(string, times) {
     let result = "";
-    for (let i = 0; i < times; i++) {
+    for (let i = 0n; i < times; i++) {
       result += string;
     }
     return result;
@@ -59,7 +58,7 @@ function replace(old, replacement, string) {
 }
 
 function substring(startIndex, endIndex, string) {
-    return string.substring(startIndex, endIndex);
+    return string.substring(Number(startIndex), Number(endIndex));
 }
 
 exports.codePointToHexString = codePointToHexString;

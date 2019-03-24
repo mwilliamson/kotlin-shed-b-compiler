@@ -43,11 +43,11 @@ class SerialiserTests {
     fun functionBodyIsSerialised() {
         assertThat(
             indentedSerialise(jsFunction(name = "f", body = listOf(
-                jsReturn(jsLiteralInt(42))
+                jsReturn(jsLiteralBool(true))
             ))),
             equalTo(listOf(
                 "    function f() {",
-                "        return 42;",
+                "        return true;",
                 "    }",
                 ""
             ).joinToString("\n"))
@@ -114,9 +114,9 @@ class SerialiserTests {
             ),
             equalTo(listOf(
                 "    if (true) {",
-                "        return 0;",
+                "        return 0n;",
                 "    } else {",
-                "        return 1;",
+                "        return 1n;",
                 "    }",
                 ""
             ).joinToString("\n"))
@@ -134,7 +134,7 @@ class SerialiserTests {
             ),
             equalTo(listOf(
                 "    if (true) {",
-                "        return 0;",
+                "        return 0n;",
                 "    }",
                 ""
             ).joinToString("\n"))
@@ -164,11 +164,11 @@ class SerialiserTests {
             ),
             equalTo(listOf(
                 "    if (x) {",
-                "        return 0;",
+                "        return 0n;",
                 "    } else if (y) {",
-                "        return 1;",
+                "        return 1n;",
                 "    } else if (z) {",
-                "        return 2;",
+                "        return 2n;",
                 "    }",
                 ""
             ).joinToString("\n"))
@@ -226,7 +226,7 @@ class SerialiserTests {
     fun integerSerialisation() {
         val node = jsLiteralInt(42)
         val output = serialise(node)
-        assertThat(output, equalTo("42"))
+        assertThat(output, equalTo("42n"))
     }
 
     data class StringTestCase(val name: String, val value: String, val expectedOutput: String)

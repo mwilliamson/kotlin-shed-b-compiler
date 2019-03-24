@@ -88,7 +88,7 @@ private fun compileModule(module: Module.Shed): JavascriptModule {
                 (function() {
                     const exitCode = main();
                     if (exitCode != null) {
-                        process.exit(exitCode);
+                        process.exit(Number(exitCode));
                     }
                 })();
             }

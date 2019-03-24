@@ -89,7 +89,7 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         }
 
         override fun visit(node: JavascriptIntegerLiteralNode): String {
-            return node.value.toString()
+            return node.value.toString() + "n"
         }
 
         override fun visit(node: JavascriptStringLiteralNode): String {
