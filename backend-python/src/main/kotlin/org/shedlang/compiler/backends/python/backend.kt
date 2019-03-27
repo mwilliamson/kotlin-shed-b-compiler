@@ -91,8 +91,6 @@ private fun compileModule(module: Module.Shed): PythonModule {
         types = module.types
     )
     val builtins = """
-        from __future__ import print_function
-
         from shed.builtins import (
             list,
             print,

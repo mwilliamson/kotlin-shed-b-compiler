@@ -58,9 +58,6 @@ private val pythonKeywords = setOf(
     "not",
     "or",
     "pass",
-    // We add a __future__ statement for print functions, so we don't need to
-    // consider print a keyword in any version of Python
-    // "print",
     "raise",
     "return",
     "try",
