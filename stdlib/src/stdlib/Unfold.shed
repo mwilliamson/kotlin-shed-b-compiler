@@ -20,7 +20,7 @@ fun unfold[R, T, !E](next: (T) -> Next[R, T], value: T) !E -> Sequences.Sequence
         next = fun () -> Sequences.SequenceIterator[R, E] {
             val result = next(value);
             when (result) {
-                is Continue[R, T] {
+                is Continue {
                     Sequences.SequenceItem(
                         head = result.element,
                         tail = unfold(next, result.remainder),
