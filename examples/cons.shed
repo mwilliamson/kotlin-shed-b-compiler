@@ -18,12 +18,12 @@ fun cons(head: Int, tail: List) -> List {
 
 fun printInts(list: List) !Io -> Unit {
     if (list is Cons) {
-        print(intToString(list.head) + "\n");
-        printInts(list.tail);
+        print!(intToString(list.head) + "\n");
+        printInts!(list.tail);
     }
 }
 
 fun main() !Io -> Unit {
     val list = cons(1, cons(2, cons(3, nil)));
-    printInts(list);
+    printInts!(list);
 }

@@ -212,6 +212,12 @@ data class EffectParameter(
     override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    fun fresh(): EffectParameter {
+        return EffectParameter(
+            name = name
+        )
+    }
 }
 
 enum class Variance {

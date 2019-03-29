@@ -8,5 +8,5 @@ shape Box {
 
 fun main() !Io -> Unit {
     val box = Box(y = "world\n");
-    print(box.x + box.y);
+    print!(box.x + box.y);
 }

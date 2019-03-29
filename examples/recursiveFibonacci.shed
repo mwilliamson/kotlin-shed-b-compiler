@@ -26,5 +26,5 @@ fun fibonacci2(n: Int) -> FibonacciPair {
 }
 
 fun main() !Io -> Unit {
-    print(intToString(fibonacci(6)) + "\n");
+    print!(intToString(fibonacci(6)) + "\n");
 }

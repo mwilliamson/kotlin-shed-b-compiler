@@ -8,10 +8,10 @@ import .first;
 import .second;
 
 fun main() !Io -> Unit {
-    print("first.x1 == first.x2: " + formatBoolean(first.x1 == first.x2) + "\n");
-    print("first.x1 == second.x: " + formatBoolean(first.x1 == second.x) + "\n");
-    print("first.x1 == first.y: " + formatBoolean(first.x1 == first.y) + "\n");
-    print("first.y == second.x: " + formatBoolean(first.y == second.x) + "\n");
+    print!("first.x1 == first.x2: " + formatBoolean(first.x1 == first.x2) + "\n");
+    print!("first.x1 == second.x: " + formatBoolean(first.x1 == second.x) + "\n");
+    print!("first.x1 == first.y: " + formatBoolean(first.x1 == first.y) + "\n");
+    print!("first.y == second.x: " + formatBoolean(first.y == second.x) + "\n");
 }
 
 fun formatBoolean(value: Bool) -> String {

@@ -222,7 +222,7 @@ class TypeCheckFunctionTests {
             returnType = unitType,
             effects = listOf(effect),
             body = listOf(
-                expressionStatement(call(functionReference))
+                expressionStatement(call(functionReference, hasEffect = true))
             )
         )
         val typeContext = typeContext(referenceTypes = mapOf(

@@ -8,6 +8,6 @@ fun getSize() -> Size {
 type Size = Int;
 
 fun main() !Io -> Unit {
-    print(intToString(getSize()));
-    print("\n");
+    print!(intToString(getSize()));
+    print!("\n");
 }

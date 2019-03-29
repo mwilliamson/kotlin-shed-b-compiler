@@ -61,6 +61,15 @@ private fun inferFunctionCallType(
     )
 
     val effect = replaceEffects(receiverType.effect, bindings)
+
+    if (effect != EmptyEffect && !node.hasEffect) {
+        throw UnhandledEffectError(effect, source = node.source)
+    }
+
+    if (effect == EmptyEffect && node.hasEffect) {
+        throw ReceiverHasNoEffectsError(source = node.source)
+    }
+
     if (!isSubEffect(subEffect = effect, superEffect = context.effect)) {
         throw UnhandledEffectError(effect, source = node.source)
     }
@@ -198,15 +207,16 @@ private fun checkArgumentTypes(
         val effectParameters = staticParameters.filterIsInstance<EffectParameter>()
 
         val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
+        val inferredEffectArguments = effectParameters.map(EffectParameter::fresh)
 
         val constraints = TypeConstraintSolver(
             // TODO: need to regenerate effect parameters in the same way as type positionalParameters
-            parameters = (inferredTypeArguments + effectParameters).toSet()
+            parameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
         for (argument in arguments) {
             val parameterType = replaceStaticValuesInType(
                 argument.second,
-                typeParameters.zip(inferredTypeArguments).toMap()
+                (typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap()
             )
             val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
@@ -219,7 +229,7 @@ private fun checkArgumentTypes(
         }
 
         val typeMap = typeParameters.zip(inferredTypeArguments)
-            .associate({ (parameter, inferredArgument) ->
+            .associate { (parameter, inferredArgument) ->
                 val boundType = constraints.boundTypeFor(inferredArgument)
                 if (boundType == null) {
                     throw CouldNotInferTypeParameterError(
@@ -229,10 +239,11 @@ private fun checkArgumentTypes(
                 } else {
                     parameter to boundType
                 }
-            })
-        val effectMap = effectParameters.associate({ parameter ->
-            parameter to constraints.boundEffectFor(parameter)
-        })
+            }
+        val effectMap = effectParameters.zip(inferredEffectArguments)
+            .associate { (parameter, inferredArgument) ->
+                parameter to constraints.boundEffectFor(inferredArgument)
+            }
         // TODO: handle unbound effects
         return typeMap + effectMap
     } else {

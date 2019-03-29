@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.frontend.tests.*
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
@@ -519,7 +519,7 @@ class TypeCheckCallTests {
     @Test
     fun whenEffectIsInScopeThenCanCallFunctionWithEffect() {
         val functionReference = variableReference("f")
-        val node = call(receiver = functionReference)
+        val node = call(receiver = functionReference, hasEffect = true)
         val functionType = functionType(
             effect = IoEffect,
             returns = UnitType
@@ -535,7 +535,7 @@ class TypeCheckCallTests {
     @Test
     fun whenEffectIsInScopeThenCanCallFunctionWithNoEffects() {
         val functionReference = variableReference("f")
-        val node = call(receiver = functionReference)
+        val node = call(receiver = functionReference, hasEffect = false)
         val functionType = functionType(
             effect = EmptyEffect,
             returns = UnitType
@@ -551,7 +551,7 @@ class TypeCheckCallTests {
     @Test
     fun errorWhenCallingFunctionWithEffectNotInScope() {
         val functionReference = variableReference("f")
-        val node = call(receiver = functionReference)
+        val node = call(receiver = functionReference, hasEffect = true)
         val functionType = functionType(
             effect = IoEffect,
             returns = UnitType
@@ -571,6 +571,44 @@ class TypeCheckCallTests {
     }
 
     @Test
+    fun errorWhenCallingFunctionWithEffectWithoutEffectFlag() {
+        val functionReference = variableReference("f")
+        val node = call(receiver = functionReference, hasEffect = false)
+        val functionType = functionType(
+            effect = IoEffect,
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            effect = IoEffect
+        )
+        assertThat(
+            { inferCallType(node, typeContext) },
+            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+        )
+    }
+
+    @Test
+    fun errorWhenCallingFunctionWithoutEffectWithEffectFlag() {
+        val functionReference = variableReference("f")
+        val node = call(receiver = functionReference, hasEffect = true)
+        val functionType = functionType(
+            effect = EmptyEffect,
+            returns = UnitType
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            effect = EmptyEffect
+        )
+        assertThat(
+            { inferCallType(node, typeContext) },
+            throws(isA<ReceiverHasNoEffectsError>())
+        )
+    }
+
+    @Test
     fun canCallFunctionWithExplicitEffectArgument() {
         val effectParameter = effectParameter("E")
         val effectReference = staticReference("Io")
@@ -579,7 +617,8 @@ class TypeCheckCallTests {
 
         val node = call(
             receiver = functionReference,
-            staticArguments = listOf(effectReference)
+            staticArguments = listOf(effectReference),
+            hasEffect = true
         )
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
@@ -611,7 +650,8 @@ class TypeCheckCallTests {
         val node = call(
             receiver = functionReference,
             staticArguments = listOf(effectReference),
-            positionalArguments = listOf(otherFunctionReference)
+            positionalArguments = listOf(otherFunctionReference),
+            hasEffect = true
         )
         val functionType = functionType(
             staticParameters = listOf(effectParameter),
@@ -650,7 +690,8 @@ class TypeCheckCallTests {
 
         val node = call(
             receiver = functionReference,
-            positionalArguments = listOf(otherFunctionReference)
+            positionalArguments = listOf(otherFunctionReference),
+            hasEffect = true
         )
         val functionType = functionType(
             staticParameters = listOf(effectParameter),

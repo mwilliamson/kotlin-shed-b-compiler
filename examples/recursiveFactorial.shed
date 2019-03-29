@@ -10,5 +10,5 @@ fun fact(n: Int) -> Int {
 }
 
 fun main() !Io -> Unit {
-    print(intToString(fact(5)) + "\n");
+    print!(intToString(fact(5)) + "\n");
 }

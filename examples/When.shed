@@ -7,10 +7,10 @@
 union X = A | B | C | D;
 
 fun main() !Io -> Unit {
-    print(toString(A()) + "\n");
-    print(toString(B()) + "\n");
-    print(toString(C()) + "\n");
-    print(toString(D()) + "\n");
+    print!(toString(A()) + "\n");
+    print!(toString(B()) + "\n");
+    print!(toString(C()) + "\n");
+    print!(toString(D()) + "\n");
 }
 
 fun toString(x : X) -> String {

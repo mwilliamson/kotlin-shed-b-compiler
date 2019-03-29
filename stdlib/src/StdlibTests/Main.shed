@@ -6,7 +6,7 @@ import .Strings.CodePointsTests;
 import .StringsTests;
 
 fun main() !Io -> Int {
-    Tests.runTests(list(
+    Tests.runTests!(list(
         JsonTests.testCases,
         OptionsTests.testCases,
         CodePointsTests.testCases,

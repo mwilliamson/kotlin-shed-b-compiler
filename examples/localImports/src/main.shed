@@ -4,5 +4,5 @@
 import .messages;
 
 fun main() !Io -> Unit {
-    print(messages.message() + "\n");
+    print!(messages.message() + "\n");
 }

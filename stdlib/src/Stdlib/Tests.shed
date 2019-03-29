@@ -72,14 +72,14 @@ val redCode = "\u{1B}[31m";
 val blackCode = "\u{1B}[39m";
 
 fun runTests(tests: List[Test]) !Io -> Int {
-    val results = Lists.map(runTest ~ (parent = Options.none), tests);
-    print("\n");
-    Lists.forEach(printFailures, results);
+    val results = Lists.map!(runTest ~ (parent = Options.none), tests);
+    print!("\n");
+    Lists.forEach!(printFailures, results);
 
     val counts = countTestResults(results);
 
-    print(intToString(counts.successes) + " tests passed, ");
-    print(intToString(counts.failures) + " tests failed\n");
+    print!(intToString(counts.successes) + " tests passed, ");
+    print!(intToString(counts.failures) + " tests failed\n");
 
     if (counts.failures == 0) {
         0
@@ -133,18 +133,18 @@ fun printFailures(result: TestResult) !Io -> Unit {
         is TestCaseResult {
             val error = result.error;
             if (error is Options.Some[AssertionError]) {
-                print("\n");
-                print(redCode);
-                print("✖ ");
-                print(result.name);
-                print(":\n");
-                print(error.value.message);
-                print(blackCode);
-                print("\n\n");
+                print!("\n");
+                print!(redCode);
+                print!("✖ ");
+                print!(result.name);
+                print!(":\n");
+                print!(error.value.message);
+                print!(blackCode);
+                print!("\n\n");
             }
         }
         is TestSuiteResult {
-            Lists.forEach(printFailures, result.results);
+            Lists.forEach!(printFailures, result.results);
         }
     }
 }
@@ -166,21 +166,21 @@ fun runTest(test: Test, *, parent: Options.Option[String]) !Io -> TestResult {
 
             when (error) {
                 is Options.Some[AssertionError] {
-                    print(redCode);
-                    print("✖");
+                    print!(redCode);
+                    print!("✖");
                 }
                 is Options.None {
-                    print(greenCode);
-                    print("✔");
+                    print!(greenCode);
+                    print!("✔");
                 }
             }
-            print(blackCode);
+            print!(blackCode);
             TestCaseResult(name = namePrefix + test.name, error = result.error)
         }
         is TestSuite {
             // TODO: indentation
             val name = namePrefix + test.name;
-            val results = Lists.map(runTest ~ (parent = Options.some(name)), test.tests);
+            val results = Lists.map!(runTest ~ (parent = Options.some(name)), test.tests);
             TestSuiteResult(name = name, results = results)
         }
     }

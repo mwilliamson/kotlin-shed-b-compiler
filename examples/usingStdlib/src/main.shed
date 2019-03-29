@@ -5,8 +5,8 @@
 import Stdlib.Options;
 
 fun main() !Io -> Unit {
-    print(optionToString(Options.some(4)) + "\n");
-    print(optionToString(Options.none) + "\n");
+    print!(optionToString(Options.some(4)) + "\n");
+    print!(optionToString(Options.none) + "\n");
 }
 
 fun optionToString(option: Options.Option[Int]) -> String {
