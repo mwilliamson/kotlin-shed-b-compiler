@@ -28,7 +28,7 @@ val backend = object: Backend {
                 }
                 // TODO: remove duplication with JavaScript backend
                 is Module.Native -> {
-                    moduleWriter(target, shedModuleNameToPythonModuleName(module.name)).use { writer ->
+                    moduleWriter(target, shedModuleNameToPythonModuleName(module.name, moduleSet)).use { writer ->
                         nativeModuleSource(module).reader().use { reader ->
                             reader.copyTo(writer)
                         }
@@ -128,13 +128,19 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
         ""
     }
     return PythonModule(
-        name = shedModuleNameToPythonModuleName(module.name),
+        name = shedModuleNameToPythonModuleName(module.name, moduleSet),
         source = contents + main
     )
 }
 
-internal fun shedModuleNameToPythonModuleName(moduleName: List<Identifier>) =
-    listOf(topLevelPythonPackageName) + moduleName.map(Identifier::value)
+internal fun shedModuleNameToPythonModuleName(moduleName: List<Identifier>, moduleSet: ModuleSet): List<String> {
+    val pythonModuleName = listOf(topLevelPythonPackageName) + moduleName.map(Identifier::value)
+    if (isPackage(moduleSet, moduleName)) {
+        return pythonModuleName + "__init__"
+    } else {
+        return pythonModuleName
+    }
+}
 
 private class PythonModule(val name: List<String>, val source: String)
 
