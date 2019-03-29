@@ -17,6 +17,10 @@ class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode
         }
 
     }
+
+    companion object {
+        val EMPTY = ResolvedReferencesMap(mapOf())
+    }
 }
 
 internal class ResolutionContext(

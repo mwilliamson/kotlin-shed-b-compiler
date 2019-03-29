@@ -6,10 +6,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.Builtins
-import org.shedlang.compiler.EMPTY_TYPES
-import org.shedlang.compiler.ResolvedReferences
-import org.shedlang.compiler.Types
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
@@ -24,6 +21,51 @@ import org.shedlang.compiler.types.UnitType
 import java.math.BigInteger
 
 class CodeGeneratorTests {
+    @Test
+    fun moduleWithoutOtherModulesIsNotPackage() {
+        assertThat(
+            isPackage(listOf(listOf("X", "Y")), listOf("X", "Y")),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun moduleWithOtherModulesInOtherPackagesIsNotPackage() {
+        assertThat(
+            isPackage(listOf(listOf("X", "Y"), listOf("X", "Z"), listOf("A", "B", "C"), listOf("D")), listOf("X", "Y")),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun moduleWithOtherModulesInSubPackageIsPackage() {
+        assertThat(
+            isPackage(listOf(listOf("X", "Y"), listOf("X", "Y", "Z")), listOf("X", "Y")),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun moduleWithOtherModulesInSubSubPackageIsPackage() {
+        assertThat(
+            isPackage(listOf(listOf("X", "Y"), listOf("X", "Y", "Z", "A")), listOf("X", "Y")),
+            equalTo(true)
+        )
+    }
+
+    private fun isPackage(moduleNames: List<List<String>>, moduleName: List<String>): Boolean {
+        val moduleSet = ModuleSet(modules = moduleNames.map { moduleName ->
+            Module.Shed(
+                name = moduleName.map(::Identifier),
+                node = module(),
+                references = ResolvedReferencesMap.EMPTY,
+                type = moduleType(),
+                types = EMPTY_TYPES
+            )
+        })
+        return isPackage(moduleSet, moduleName.map(::Identifier))
+    }
+
     @Test
     fun emptyModuleGeneratesEmptyModule() {
         val shed = module(body = listOf())
@@ -43,6 +85,22 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonImportFrom(
                     module = equalTo(".x"),
+                    names = isSequence(equalTo("y" to "y"))
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun whenModuleIsPackageThenRelativeModuleImportGoesUpOnePackage() {
+        val shed = module(imports = listOf(import(ImportPath.relative(listOf("x", "y")))))
+
+        val node = generateCode(shed, context(isPackage = true))
+
+        assertThat(node, isPythonModule(
+            body = isSequence(
+                isPythonImportFrom(
+                    module = equalTo("..x"),
                     names = isSequence(equalTo("y" to "y"))
                 )
             )
@@ -1137,6 +1195,7 @@ class CodeGeneratorTests {
     private fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
         return generateCode(
             moduleName = listOf(),
+            moduleSet = ModuleSet(listOf()),
             node = node,
             references = references,
             types = EMPTY_TYPES
@@ -1160,10 +1219,12 @@ class CodeGeneratorTests {
     private fun generateCode(node: ExpressionNode) = generateExpressionCode(node, context())
 
     private fun context(
+        isPackage: Boolean = false,
         moduleName: List<String> = listOf(),
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
         types: Types = EMPTY_TYPES
     ) = CodeGenerationContext(
+        isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
         references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value })),
         types = types

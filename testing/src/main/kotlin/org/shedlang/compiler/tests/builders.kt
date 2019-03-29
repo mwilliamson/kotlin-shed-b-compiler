@@ -454,7 +454,7 @@ fun unionType(
     staticArguments = listOf()
 )
 
-fun moduleType(fields: Map<String, Type>) = ModuleType(
+fun moduleType(fields: Map<String, Type> = mapOf()) = ModuleType(
     fields = fields.mapKeys { (name, type) -> Identifier(name) }
 )
 

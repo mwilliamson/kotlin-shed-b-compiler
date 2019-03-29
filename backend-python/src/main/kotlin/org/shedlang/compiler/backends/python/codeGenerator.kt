@@ -1,11 +1,8 @@
 package org.shedlang.compiler.backends.python
 
-import org.shedlang.compiler.ResolvedReferences
-import org.shedlang.compiler.Types
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.python.ast.*
-import org.shedlang.compiler.findDiscriminator
-import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.SymbolType
@@ -15,15 +12,24 @@ import org.shedlang.compiler.types.SymbolType
 
 internal fun generateCode(
     node: ModuleNode,
+    moduleSet: ModuleSet,
     moduleName: List<Identifier>,
     references: ResolvedReferences,
     types: Types
 ): PythonModuleNode {
-    return generateCode(node, CodeGenerationContext(moduleName, references, types))
+    val isPackage = isPackage(moduleSet, moduleName)
+    return generateCode(node, CodeGenerationContext(moduleName, isPackage, references, types))
+}
+
+internal fun isPackage(moduleSet: ModuleSet, moduleName: List<Identifier>): Boolean {
+    return moduleSet.modules.any { module ->
+        module.name.size > moduleName.size && module.name.subList(0, moduleName.size) == moduleName
+    }
 }
 
 internal class CodeGenerationContext(
     val moduleName: List<Identifier>,
+    val isPackage: Boolean,
     val references: ResolvedReferences,
     val types: Types,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
@@ -32,6 +38,7 @@ internal class CodeGenerationContext(
     fun enterScope(): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName,
+            isPackage = isPackage,
             references = references,
             types = types,
             nodeNames = nodeNames,
@@ -101,7 +108,7 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
 
     val pythonPackageName = node.path.parts.take(node.path.parts.size - 1).map { part -> part.value }
     val module = when (node.path.base) {
-        ImportPathBase.Relative -> "." + pythonPackageName.joinToString(".")
+        ImportPathBase.Relative -> if (context.isPackage) { ".." } else { "." } + pythonPackageName.joinToString(".")
         ImportPathBase.Absolute -> (listOf(topLevelPythonPackageName) + pythonPackageName).joinToString(".")
     }
 

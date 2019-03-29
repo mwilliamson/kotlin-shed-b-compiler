@@ -23,7 +23,7 @@ val backend = object: Backend {
         for (module in moduleSet.modules) {
             when (module) {
                 is Module.Shed -> {
-                    val pythonModule = compileModule(module)
+                    val pythonModule = compileModule(module, moduleSet = moduleSet)
                     writeModule(target, pythonModule)
                 }
                 // TODO: remove duplication with JavaScript backend
@@ -83,9 +83,10 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
     }
 }
 
-private fun compileModule(module: Module.Shed): PythonModule {
+private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModule {
     val generateCode = generateCode(
         moduleName = module.name,
+        moduleSet = moduleSet,
         node = module.node,
         references = module.references,
         types = module.types
