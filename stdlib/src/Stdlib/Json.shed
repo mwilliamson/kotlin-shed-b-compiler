@@ -136,6 +136,11 @@ fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
     }
 }
 
+fun stringTextToCodePoints(text: String) -> String {
+    // TODO: handle escape sequences
+    CodePoints.slice(1, CodePoints.length(text) - 1, text)
+}
+
 union JsonResult =
     | JsonSuccess {
         value: JsonValue,
@@ -201,6 +206,9 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
         }
         is TokenNull {
             success(tokens.tail(), null)
+        }
+        is TokenString {
+            success(tokens.tail(), string(stringTextToCodePoints(tokens.head.value)))
         }
         is TokenOpenSquare {
             val elementsResult = parseMany(
@@ -345,6 +353,7 @@ union TokenType =
     | TokenNull
     | TokenTrue
     | TokenFalse
+    | TokenString
     | TokenOpenSquare
     | TokenCloseSquare
     | TokenOpenBrace
@@ -373,6 +382,10 @@ fun nextToken(value: String) -> Token {
                 token(TokenFalse(), "false")
             } else if (first == 'n' && CodePoints.startsWith("null", value)) {
                 token(TokenNull(), "null")
+            } else if (first == '"') {
+                // TODO: use !=
+                val string = CodePoints.leftWhile(fun (codePoint: CodePoint) => not (codePoint == '"'), CodePoints.dropLeft(1, value));
+                token(TokenString(), "\"" + string + "\"")
             } else if (first == '[') {
                 token(TokenOpenSquare(), "[")
             } else if (first == ']') {

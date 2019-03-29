@@ -7,6 +7,7 @@ export
     flatMap,
     foldLeft,
     replace,
+    slice,
 
     dropLeft,
     isEmpty,
@@ -28,6 +29,7 @@ val first = Strings.firstCodePoint;
 val flatMap = Strings.flatMapCodePoints;
 val foldLeft = Strings.foldLeftCodePoints;
 val replace = Strings.replace;
+val slice = Strings.substring;
 
 fun dropLeft(count: Int, value: String) -> String {
     Strings.substring(count, length(value), value)

@@ -97,6 +97,19 @@ fun isJsonArray(elements: Matchers.Matcher[List[Json.JsonValue]]) -> Matchers.Ma
     )
 }
 
+fun isJsonString(value: String) -> Matchers.Matcher[Json.JsonValue] {
+    isJson(
+        description = Json.valueToText(Json.string(value)),
+        predicate = fun (actual: Json.JsonValue) -> Bool {
+            if (actual is Json.JsonString) {
+                actual.value == value
+            } else {
+                false
+            }
+        },
+    )
+}
+
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("valueToText", list(
         Tests.testCase("null", fun () {
@@ -229,6 +242,24 @@ val testCases = Tests.suite(moduleName, list(
             val text = "false";
             val result = Json.textToValue(text);
             Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
+        }),
+
+        Tests.testCase("empty string", fun () {
+            val text = "\"\"";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(isJsonString("")))
+        }),
+
+        Tests.testCase("single character string", fun () {
+            val text = "\"a\"";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(isJsonString("a")))
+        }),
+
+        Tests.testCase("multiple character string", fun () {
+            val text = "\"aasfcasf\"";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(isJsonString("aasfcasf")))
         }),
 
         Tests.testCase("empty array", fun () {
