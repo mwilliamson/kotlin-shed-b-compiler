@@ -23,6 +23,20 @@ val testCases = Tests.suite(moduleName, list(
         )
     }),
 
+    Tests.testCase("flatMap(f, none) is none", fun () {
+        Tests.assertThat(
+            Options.flatMap(fun (value: Int) => Options.some(value + 1), Options.none),
+            Matchers.isNone(),
+        )
+    }),
+
+    Tests.testCase("flatMap(f, some(x)) is f(x)", fun () {
+        Tests.assertThat(
+            Options.flatMap(fun (value: Int) => Options.some(value + 1), Options.some(42)),
+            Matchers.isSome(Matchers.isInt(43))
+        )
+    }),
+
     Tests.testCase("map(f, none) is none", fun () {
         Tests.assertThat(Options.map(addOne, Options.none), Matchers.isNone())
     }),
