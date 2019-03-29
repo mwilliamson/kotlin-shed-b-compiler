@@ -751,9 +751,7 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>, precedence: Int
         if (operationParser == null || operationParser.precedence < precedence) {
             return left
         } else {
-            val operatorSource = tokens.location()
-            tokens.skip()
-            left = operationParser.parse(left, operatorSource, tokens)
+            left = operationParser.parse(left, tokens)
         }
     }
 }
@@ -802,7 +800,8 @@ private class InfixOperationParser(
     override val operatorToken: TokenType,
     override val precedence: Int
 ) : OperationParser {
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        tokens.skip()
         val right = parseExpression(tokens, precedence + 1)
         return BinaryOperationNode(operator, left, right, left.source)
     }
@@ -812,7 +811,8 @@ private object CallWithExplicitTypeArgumentsParser : OperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        tokens.skip()
         val typeArguments = parseMany(
             parseElement = { tokens -> parseStaticExpression(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
@@ -837,7 +837,9 @@ private object CallParser : OperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_PAREN
 
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        tokens.skip()
+
         return parseCallFromParens(
             left = left,
             typeArguments = listOf(),
@@ -853,7 +855,9 @@ private object PartialCallParser : OperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_TILDE
 
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val operatorSource = tokens.location()
+        tokens.skip()
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
         val (positionalArguments, namedArguments) = parseCallArguments(tokens)
         return PartialCallNode(
@@ -945,7 +949,9 @@ private object PipelineParser : OperationParser {
     override val precedence: Int
         get()  = PIPELINE_PRECEDENCE
 
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val operatorSource = tokens.location()
+        tokens.skip()
         val right = parseExpression(tokens, precedence = precedence + 1)
         return CallNode(
             receiver = right,
@@ -965,7 +971,9 @@ private object FieldAccessParser : OperationParser {
     override val precedence: Int
         get() = FIELD_ACCESS_PRECEDENCE
 
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val operatorSource = tokens.location()
+        tokens.skip()
         val fieldName = parseFieldName(tokens)
         return FieldAccessNode(
             receiver = left,
@@ -989,7 +997,8 @@ private object IsParser : OperationParser {
     override val precedence: Int
         get() = IS_PRECEDENCE
 
-    override fun parse(left: ExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): ExpressionNode {
+    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        tokens.skip()
         val type = parseStaticExpression(tokens)
         return IsNode(
             expression = left,
@@ -1177,9 +1186,7 @@ private fun parseStaticExpression(
         if (operationParser == null || operationParser.precedence < precedence) {
             return left
         } else {
-            val operatorSource = tokens.location()
-            tokens.skip()
-            left = operationParser.parse(left, operatorSource, tokens)
+            left = operationParser.parse(left, tokens)
         }
     }
 }
@@ -1278,14 +1285,15 @@ private interface ExpressionParser<T> {
     val precedence: Int
     val operatorToken: TokenType
 
-    fun parse(left: T, operatorSource: Source, tokens: TokenIterator<TokenType>): T
+    fun parse(left: T, tokens: TokenIterator<TokenType>): T
 }
 
 private object TypeApplicationParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
-    override fun parse(left: StaticExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+        tokens.skip()
         val arguments = parseMany(
             parseElement = { tokens -> parseStaticExpression(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
@@ -1306,7 +1314,8 @@ private object StaticFieldAccessParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_DOT
 
-    override fun parse(left: StaticExpressionNode, operatorSource: Source, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+        tokens.skip()
         val fieldName = parseIdentifier(tokens)
         return StaticFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
     }
