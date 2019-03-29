@@ -1,9 +1,9 @@
 export testCases;
 
-import stdlib.Lists;
-import stdlib.Matchers;
-import stdlib.strings.CodePoints;
-import stdlib.Tests;
+import Stdlib.Lists;
+import Stdlib.Matchers;
+import Stdlib.Strings.CodePoints;
+import Stdlib.Tests;
 
 fun lengthTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
     Tests.testCase(string, fun () {

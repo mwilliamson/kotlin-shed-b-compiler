@@ -4,8 +4,8 @@ export
     append,
     toList;
 
-import stdlib.Lists;
-import stdlib.Sequences;
+import .Lists;
+import .Sequences;
 
 union Builder[+T] =
     | Cons[T] {

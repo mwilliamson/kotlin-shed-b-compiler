@@ -7,8 +7,8 @@ export
     map,
     reduce;
 
-import stdlib.Sequences;
-import stdlib.platform.Lists;
+import .Sequences;
+import .Platform.Lists;
 
 val sequenceToList = Lists.sequenceToList;
 

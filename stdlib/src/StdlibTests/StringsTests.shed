@@ -1,9 +1,9 @@
 export testCases;
 
-import stdlib.Lists;
-import stdlib.Matchers;
-import stdlib.Strings;
-import stdlib.Tests;
+import Stdlib.Lists;
+import Stdlib.Matchers;
+import Stdlib.Strings;
+import Stdlib.Tests;
 
 shape SuccessTestCase {
     text: String,

@@ -227,16 +227,16 @@ private val stringsModule = ModuleExpression(
 )
 
 internal val nativeModules: Map<List<Identifier>, ModuleExpression> = mapOf(
-    listOf(Identifier("stdlib"), Identifier("platform"), Identifier("Lists")) to listsModule,
-    listOf(Identifier("stdlib"), Identifier("platform"), Identifier("Strings")) to stringsModule
+    listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Lists")) to listsModule,
+    listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")) to stringsModule
 )
 
 
-private val optionsModuleReference = ModuleReference(listOf(Identifier("stdlib"), Identifier("Options")))
+private val optionsModuleReference = ModuleReference(listOf(Identifier("Stdlib"), Identifier("Options")))
 private val optionsNoneReference = FieldAccess(optionsModuleReference, Identifier("none"))
 private val optionsSomeReference = FieldAccess(optionsModuleReference, Identifier("some"))
 
-private val sequencesModuleReference = ModuleReference(listOf(Identifier("stdlib"), Identifier("Sequences")))
+private val sequencesModuleReference = ModuleReference(listOf(Identifier("Stdlib"), Identifier("Sequences")))
 private val sequenceTypeReference = FieldAccess(sequencesModuleReference, Identifier("Sequence"))
 private val sequenceItemTypeReference = FieldAccess(sequencesModuleReference, Identifier("SequenceItem"))
 private val sequenceEndReference = FieldAccess(sequencesModuleReference, Identifier("end"))

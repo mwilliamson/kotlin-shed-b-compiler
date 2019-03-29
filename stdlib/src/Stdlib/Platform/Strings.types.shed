@@ -1,4 +1,4 @@
-import stdlib.Options;
+import Stdlib.Options;
 
 val codePointToHexString: (CodePoint) -> String;
 val codePointToInt: (CodePoint) -> Int;

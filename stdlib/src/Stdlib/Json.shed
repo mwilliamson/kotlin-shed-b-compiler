@@ -22,12 +22,12 @@ export
     JsonFailure,
     textToValue;
 
-import stdlib.ListBuilder;
-import stdlib.Lists;
-import stdlib.Options;
-import stdlib.Sequences;
-import stdlib.strings.CodePoints;
-import stdlib.Unfold;
+import .ListBuilder;
+import .Lists;
+import .Options;
+import .Sequences;
+import .Strings.CodePoints;
+import .Unfold;
 
 
 union JsonValue =

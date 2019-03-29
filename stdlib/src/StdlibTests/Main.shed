@@ -1,8 +1,8 @@
-import stdlib.Tests;
+import Stdlib.Tests;
 
 import .JsonTests;
 import .OptionsTests;
-import .strings.CodePointsTests;
+import .Strings.CodePointsTests;
 import .StringsTests;
 
 fun main() !Io -> Int {

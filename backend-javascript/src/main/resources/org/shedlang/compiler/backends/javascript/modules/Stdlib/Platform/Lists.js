@@ -25,7 +25,7 @@ function sequenceToList(sequence) {
     
     while (true) {
         var item = sequence.next();
-        if (item._unionTag_stdlib_Sequences_SequenceIterator === "stdlib.Sequences.@SequenceEnd") {
+        if (item._unionTag_Stdlib_Sequences_SequenceIterator === "Stdlib.Sequences.@SequenceEnd") {
             return result;
         } else {
             result.push(item.head);

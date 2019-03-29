@@ -1,4 +1,4 @@
-import stdlib.Sequences;
+import Stdlib.Sequences;
 
 val listToSequence: [T](List[T]) -> Sequences.Sequence[T, Pure];
 val sequenceToList: [T, !E](Sequences.Sequence[T, E]) !E -> List[T];
