@@ -781,8 +781,8 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
             InfixOperationParser(BinaryOperator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
             InfixOperationParser(BinaryOperator.AND, TokenType.SYMBOL_DOUBLE_AMPERSAND, AND_PRECEDENCE),
             InfixOperationParser(BinaryOperator.OR, TokenType.SYMBOL_DOUBLE_VERTICAL_BAR, OR_PRECEDENCE),
-            CallWithExplicitTypeArgumentsParser,
-            CallParser,
+            CallParser(TokenType.SYMBOL_OPEN_PAREN),
+            CallParser(TokenType.SYMBOL_OPEN_SQUARE_BRACKET),
             PartialCallParser,
             PipelineParser,
             FieldAccessParser,
@@ -807,43 +807,30 @@ private class InfixOperationParser(
     }
 }
 
-private object CallWithExplicitTypeArgumentsParser : OperationParser {
-    override val operatorToken: TokenType
-        get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
-
+private class CallParser(override val operatorToken: TokenType) : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
-        tokens.skip()
-        val typeArguments = parseMany(
-            parseElement = { tokens -> parseStaticExpression(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
-            allowZero = false,
-            tokens = tokens
-        )
-        tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-        return parseCallFromParens(
-            left = left,
-            typeArguments = typeArguments,
-            tokens = tokens
-        )
-    }
+        val typeArguments = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
+            val typeArguments = parseMany(
+                parseElement = { tokens -> parseStaticExpression(tokens) },
+                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+                isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+                allowZero = false,
+                tokens = tokens
+            )
+            tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
+            typeArguments
+        } else {
+            listOf()
+        }
 
-    override val precedence: Int
-        get() = CALL_PRECEDENCE
-}
-
-private object CallParser : OperationParser {
-    override val operatorToken: TokenType
-        get() = TokenType.SYMBOL_OPEN_PAREN
-
-    override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
-        tokens.skip()
-
-        return parseCallFromParens(
-            left = left,
-            typeArguments = listOf(),
-            tokens = tokens
+        val (positionalArguments, namedArguments) = parseCallArguments(tokens)
+        return CallNode(
+            receiver = left,
+            staticArguments = typeArguments,
+            positionalArguments = positionalArguments,
+            namedArguments = namedArguments,
+            hasEffect = false,
+            source = left.source
         )
     }
 
@@ -858,7 +845,6 @@ private object PartialCallParser : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         val operatorSource = tokens.location()
         tokens.skip()
-        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
         val (positionalArguments, namedArguments) = parseCallArguments(tokens)
         return PartialCallNode(
             receiver = left,
@@ -873,23 +859,8 @@ private object PartialCallParser : OperationParser {
         get() = CALL_PRECEDENCE
 }
 
-private fun parseCallFromParens(
-    left: ExpressionNode,
-    typeArguments: List<StaticExpressionNode>,
-    tokens: TokenIterator<TokenType>
-): CallNode {
-    val (positionalArguments, namedArguments) = parseCallArguments(tokens)
-    return CallNode(
-        receiver = left,
-        staticArguments = typeArguments,
-        positionalArguments = positionalArguments,
-        namedArguments = namedArguments,
-        hasEffect = false,
-        source = left.source
-    )
-}
-
 private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<ExpressionNode>, List<CallNamedArgumentNode>> {
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseMany(
         parseElement = ::parseArgument,
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
