@@ -762,6 +762,7 @@ data class CallNode(
     override val staticArguments: List<StaticExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
     override val namedArguments: List<CallNamedArgumentNode>,
+    val hasEffect: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : CallBaseNode, ExpressionNode {

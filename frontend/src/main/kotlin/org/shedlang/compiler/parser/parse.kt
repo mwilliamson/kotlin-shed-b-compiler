@@ -880,6 +880,7 @@ private fun parseCallFromParens(
         staticArguments = typeArguments,
         positionalArguments = positionalArguments,
         namedArguments = namedArguments,
+        hasEffect = false,
         source = left.source
     )
 }
@@ -951,6 +952,7 @@ private object PipelineParser : OperationParser {
             positionalArguments = listOf(left),
             namedArguments = listOf(),
             staticArguments = listOf(),
+            hasEffect = false,
             source = operatorSource
         )
     }

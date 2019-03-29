@@ -154,12 +154,14 @@ fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<CallNamedArgumentNode> = listOf(),
-    staticArguments: List<StaticExpressionNode> = listOf()
+    staticArguments: List<StaticExpressionNode> = listOf(),
+    hasEffect: Boolean = false
 ) = CallNode(
     receiver = receiver,
     staticArguments = staticArguments,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
+    hasEffect = hasEffect,
     source = anySource()
 )
 
