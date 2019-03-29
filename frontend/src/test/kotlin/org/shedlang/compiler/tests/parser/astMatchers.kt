@@ -201,13 +201,15 @@ internal fun isCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
-    typeArguments: Matcher<List<StaticExpressionNode>> = anything
+    typeArguments: Matcher<List<StaticExpressionNode>> = anything,
+    hasEffect: Matcher<Boolean> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(CallNode::receiver, receiver),
         has(CallNode::staticArguments, typeArguments),
         has(CallNode::positionalArguments, positionalArguments),
-        has(CallNode::namedArguments, namedArguments)
+        has(CallNode::namedArguments, namedArguments),
+        has(CallNode::hasEffect, hasEffect)
     ))
 }
 

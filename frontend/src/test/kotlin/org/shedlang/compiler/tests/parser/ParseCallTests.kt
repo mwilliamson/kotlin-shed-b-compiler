@@ -95,6 +95,24 @@ class ParseCallTests {
     }
 
     @Test
+    fun callWithoutBangHasNoEffects() {
+        val source = "x()"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isCall(
+            hasEffect = equalTo(false)
+        ))
+    }
+
+    @Test
+    fun callWithBangHasEffects() {
+        val source = "x!()"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isCall(
+            hasEffect = equalTo(true)
+        ))
+    }
+
+    @Test
     fun canParsePartialCall() {
         val source = "f ~ (x, y = z)"
         val node = parseString(::parseExpression, source)

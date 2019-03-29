@@ -781,8 +781,9 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
             InfixOperationParser(BinaryOperator.MULTIPLY, TokenType.SYMBOL_ASTERISK, MULTIPLY_PRECEDENCE),
             InfixOperationParser(BinaryOperator.AND, TokenType.SYMBOL_DOUBLE_AMPERSAND, AND_PRECEDENCE),
             InfixOperationParser(BinaryOperator.OR, TokenType.SYMBOL_DOUBLE_VERTICAL_BAR, OR_PRECEDENCE),
-            CallParser(TokenType.SYMBOL_OPEN_PAREN),
+            CallParser(TokenType.SYMBOL_BANG),
             CallParser(TokenType.SYMBOL_OPEN_SQUARE_BRACKET),
+            CallParser(TokenType.SYMBOL_OPEN_PAREN),
             PartialCallParser,
             PipelineParser,
             FieldAccessParser,
@@ -809,6 +810,8 @@ private class InfixOperationParser(
 
 private class CallParser(override val operatorToken: TokenType) : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
+        val hasEffect = tokens.trySkip(TokenType.SYMBOL_BANG)
+
         val typeArguments = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
             val typeArguments = parseMany(
                 parseElement = { tokens -> parseStaticExpression(tokens) },
@@ -829,7 +832,7 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
             staticArguments = typeArguments,
             positionalArguments = positionalArguments,
             namedArguments = namedArguments,
-            hasEffect = false,
+            hasEffect = hasEffect,
             source = left.source
         )
     }
