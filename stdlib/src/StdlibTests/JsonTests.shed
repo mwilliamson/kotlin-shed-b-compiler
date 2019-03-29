@@ -298,6 +298,24 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(result, isSuccess(hasJsonText("{}")))
         }),
 
+        Tests.testCase("object with one property", fun () {
+            val text = "{\"first\": true}";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(hasJsonText("{\"first\":true}")))
+        }),
+
+        Tests.testCase("object with two properties", fun () {
+            val text = "{\"first\": true, \"second\": false}";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(hasJsonText("{\"first\":true,\"second\":false}")))
+        }),
+
+        Tests.testCase("object with three properties", fun () {
+            val text = "{\"first\": true, \"second\": false, \"third\": null}";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(hasJsonText("{\"first\":true,\"second\":false,\"third\":null}")))
+        }),
+
         Tests.testCase("leading whitespace is ignored", fun () {
             val text = "  \n\r\tfalse";
             val result = Json.textToValue(text);

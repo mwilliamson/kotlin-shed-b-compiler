@@ -69,7 +69,7 @@ fun number(value: String) -> JsonValue {
     JsonNumber(value = value)
 }
 
-fun string(value: String) -> JsonValue {
+fun string(value: String) -> JsonString {
     JsonString(value = value)
 }
 
@@ -208,7 +208,7 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
             success(tokens.tail(), null)
         }
         is TokenString {
-            success(tokens.tail(), string(stringTextToCodePoints(tokens.head.value)))
+            parseStringBody(tokens)
         }
         is TokenOpenSquare {
             val elementsResult = parseMany(
@@ -239,12 +239,78 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
             }
         }
         is TokenOpenBrace {
-            success(tokens.tail().tail(), object(list()))
+            parseObjectBody(tokens)
         }
         else {
             failure(tokens)
         }
     }
+}
+
+fun parseObjectBody(tokens: TokenIterator) -> ParseResult[JsonValue] {
+    val propertiesResult = parseMany(
+        parseElement = parseProperty,
+        parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
+        isEnd = isNextTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenCloseBrace),
+    )(tokens.tail());
+
+    when (propertiesResult) {
+        is ParseSuccess {
+            val closeResult = skipTokenType(
+                fun (tokenType: TokenType) => tokenType is TokenCloseBrace,
+                propertiesResult.remainder,
+            );
+            when (closeResult) {
+                is ParseSuccess {
+                    success(closeResult.remainder, object(propertiesResult.value))
+                }
+                is ParseFailure {
+                    failure(closeResult.remainder)
+                }
+            }
+        }
+
+        is ParseFailure {
+            propertiesResult
+        }
+    }
+}
+
+fun parseProperty(tokens: TokenIterator) -> ParseResult[JsonProperty] {
+    val nameResult = parseString(tokens);
+    when (nameResult) {
+        is ParseSuccess {
+            val name = nameResult.value.value;
+            if (isNextTokenType(fun (tokenType: TokenType) => tokenType is TokenColon, nameResult.remainder)) {
+                val valueResult = readValue(nameResult.remainder.tail());
+                when (valueResult) {
+                    is ParseSuccess {
+                        success(valueResult.remainder, property(name, valueResult.value))
+                    }
+                    is ParseFailure {
+                        valueResult
+                    }
+                }
+            } else {
+                failure(nameResult.remainder)
+            }
+        }
+        is ParseFailure {
+            nameResult
+        }
+    }
+}
+
+fun parseString(tokens: TokenIterator) -> ParseResult[JsonString] {
+    if (tokens.head.tokenType is TokenString) {
+        parseStringBody(tokens)
+    } else {
+        failure(tokens)
+    }
+}
+
+fun parseStringBody(tokens: TokenIterator) -> ParseResult[JsonString] {
+    success(tokens.tail(), string(stringTextToCodePoints(tokens.head.value)))
 }
 
 union Position = Start | ElementStart | ElementEnd;
@@ -358,6 +424,7 @@ union TokenType =
     | TokenCloseSquare
     | TokenOpenBrace
     | TokenCloseBrace
+    | TokenColon
     | TokenComma
     | TokenUnexpected
     | TokenEnd;
@@ -396,6 +463,8 @@ fun nextToken(value: String) -> Token {
                 token(TokenCloseBrace(), "}")
             } else if (first == ',') {
                 token(TokenComma(), ",")
+            } else if (first == ':') {
+                token(TokenColon(), ":")
             } else if (isWhitespace(first)) {
                 val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
                 token(TokenWhitespace(), whitespace)
