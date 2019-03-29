@@ -256,9 +256,9 @@ val testCases = Tests.suite(moduleName, list(
         }),
 
         Tests.testCase("unclosed array causes failure", fun () {
-            val text = "[true, false]";
+            val text = "[true, false";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("[true,false]")))
+            Tests.assertThat(result, isFailure)
         }),
 
         Tests.testCase("leading whitespace is ignored", fun () {
