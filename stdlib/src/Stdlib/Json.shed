@@ -230,6 +230,9 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
                 }
             }
         }
+        is TokenOpenBrace {
+            success(tokens.tail().tail(), object(list()))
+        }
         else {
             failure(tokens)
         }
@@ -337,7 +340,18 @@ fun createTokenIterator(tokens: Sequences.Sequence[Token, Pure]) -> TokenIterato
     }
 }
 
-union TokenType = TokenWhitespace | TokenNull | TokenTrue | TokenFalse | TokenOpenSquare | TokenCloseSquare | TokenComma | TokenUnexpected | TokenEnd;
+union TokenType =
+    | TokenWhitespace
+    | TokenNull
+    | TokenTrue
+    | TokenFalse
+    | TokenOpenSquare
+    | TokenCloseSquare
+    | TokenOpenBrace
+    | TokenCloseBrace
+    | TokenComma
+    | TokenUnexpected
+    | TokenEnd;
 
 shape Token {
     tokenType: TokenType,
@@ -363,6 +377,10 @@ fun nextToken(value: String) -> Token {
                 token(TokenOpenSquare(), "[")
             } else if (first == ']') {
                 token(TokenCloseSquare(), "]")
+            } else if (first == '{') {
+                token(TokenOpenBrace(), "}")
+            } else if (first == '}') {
+                token(TokenCloseBrace(), "}")
             } else if (first == ',') {
                 token(TokenComma(), ",")
             } else if (isWhitespace(first)) {

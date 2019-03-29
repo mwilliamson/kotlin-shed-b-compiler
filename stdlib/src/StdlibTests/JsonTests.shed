@@ -261,6 +261,12 @@ val testCases = Tests.suite(moduleName, list(
             Tests.assertThat(result, isFailure)
         }),
 
+        Tests.testCase("empty object", fun () {
+            val text = "{}";
+            val result = Json.textToValue(text);
+            Tests.assertThat(result, isSuccess(hasJsonText("{}")))
+        }),
+
         Tests.testCase("leading whitespace is ignored", fun () {
             val text = "  \n\r\tfalse";
             val result = Json.textToValue(text);
