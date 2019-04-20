@@ -42,7 +42,7 @@ shape AssertionResult {
 union Test =
     | TestCase {
         name: String,
-        run: () -> AssertionResult,
+        run: Fun () -> AssertionResult,
     }
     | TestSuite {
         name: String,
@@ -59,7 +59,7 @@ union TestResult =
         results: List[TestResult],
     };
 
-fun testCase(name: String, run: () -> AssertionResult) -> TestCase {
+fun testCase(name: String, run: Fun () -> AssertionResult) -> TestCase {
     TestCase(name = name, run = run)
 }
 

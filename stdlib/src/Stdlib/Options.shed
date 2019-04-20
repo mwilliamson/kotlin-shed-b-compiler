@@ -22,7 +22,7 @@ fun default[T](defaultValue: T, option: Option[T]) -> T {
     }
 }
 
-fun flatMap[T, R, !E](func: (T) !E -> Option[R], option: Option[T]) !E -> Option[R] {
+fun flatMap[T, R, !E](func: Fun (T) !E -> Option[R], option: Option[T]) !E -> Option[R] {
     when (option) {
         is Some[T] {
             func!(option.value)
@@ -33,7 +33,7 @@ fun flatMap[T, R, !E](func: (T) !E -> Option[R], option: Option[T]) !E -> Option
     }
 }
 
-fun map[T, R, !E](func: (T) !E -> R, option: Option[T]) !E -> Option[R] {
+fun map[T, R, !E](func: Fun (T) !E -> R, option: Option[T]) !E -> Option[R] {
     when (option) {
         is Some[T] {
             some(func!(option.value))

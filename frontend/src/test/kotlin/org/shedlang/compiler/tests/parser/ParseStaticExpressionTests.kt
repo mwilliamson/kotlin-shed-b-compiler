@@ -39,7 +39,7 @@ class ParseStaticExpressionTests {
 
     @Test
     fun functionTypeIsRepresentedByParenthesisedArgumentsThenArrowThenReturnType() {
-        val source = "(A, B) -> C"
+        val source = "Fun (A, B) -> C"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
@@ -52,7 +52,7 @@ class ParseStaticExpressionTests {
 
     @Test
     fun parametersCanHaveTrailingComma() {
-        val source = "(A,) -> C"
+        val source = "Fun (A,) -> C"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
@@ -64,7 +64,7 @@ class ParseStaticExpressionTests {
 
     @Test
     fun functionTypeCanHaveNamedArguments() {
-        val source = "(A, B, *, c: C) -> C"
+        val source = "Fun (A, B, *, c: C) -> C"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
@@ -80,7 +80,7 @@ class ParseStaticExpressionTests {
 
     @Test
     fun functionTypeCanHaveEffects() {
-        val source = "() !E -> R"
+        val source = "Fun () !E -> R"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
             effects = isSequence(isStaticReference("E"))
@@ -89,7 +89,7 @@ class ParseStaticExpressionTests {
 
     @Test
     fun functionTypeStaticParametersAreRepresentedBySquareBrackets() {
-        val source = "[T, U](T, U) -> R"
+        val source = "Fun [T, U](T, U) -> R"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
 

@@ -57,7 +57,7 @@ fun left(count: Int, value: String) -> String {
     Strings.substring(0, count, value)
 }
 
-fun leftWhile(predicate: (CodePoint) -> Bool, value: String) -> String {
+fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {
     // TODO: a better implementation
     val takeNext = first(value)
         |> Options.map ~ (predicate)

@@ -47,11 +47,11 @@ fun parseType(string: String): Type {
 }
 
 object Builtins {
-    val intToString = builtinVariable("intToString", parseType("(Int) -> String"))
+    val intToString = builtinVariable("intToString", parseType("Fun (Int) -> String"))
 }
 
 internal val builtins = coreBuiltins + listOf(
-    builtinVariable("print", parseType("(String) !Io -> Unit")),
+    builtinVariable("print", parseType("Fun (String) !Io -> Unit")),
     Builtins.intToString,
     builtinVariable("list", ListConstructorType),
 

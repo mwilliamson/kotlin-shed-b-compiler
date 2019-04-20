@@ -1168,7 +1168,7 @@ private fun parseStaticExpression(
 private fun parsePrimaryStaticExpression(
     tokens: TokenIterator<TokenType>
 ): StaticExpressionNode {
-    if (tokens.isNext(TokenType.SYMBOL_OPEN_SQUARE_BRACKET) || tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
+    if (tokens.isNext(TokenType.KEYWORD_FUN_CAPITAL)) {
         return parseFunctionType(tokens)
     } else {
         return parseStaticReference(tokens)
@@ -1185,6 +1185,7 @@ private fun parseStaticReference(tokens: TokenIterator<TokenType>): StaticRefere
 private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressionNode {
     val source = tokens.location()
 
+    tokens.skip(TokenType.KEYWORD_FUN_CAPITAL)
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
     val parameters = parseFunctionTypeParameters(tokens)
 

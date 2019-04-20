@@ -51,7 +51,7 @@ fun hasJsonText(expectedText: String) -> JsonValueMatcher {
     )
 }
 
-fun isJson(*, description: String, predicate: (Json.JsonValue) -> Bool) -> Matchers.Matcher[Json.JsonValue] {
+fun isJson(*, description: String, predicate: Fun (Json.JsonValue) -> Bool) -> Matchers.Matcher[Json.JsonValue] {
     Matchers.Matcher(
         description = description,
         match = fun (actual: Json.JsonValue) -> Matchers.Result {

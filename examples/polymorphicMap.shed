@@ -28,7 +28,7 @@ fun printStrings(list: List[String]) !Io -> Unit {
     }
 }
 
-fun map[T, R, !E](func: (T) !E -> R, list: List[T]) !E -> List[R] {
+fun map[T, R, !E](func: Fun (T) !E -> R, list: List[T]) !E -> List[R] {
     if (list is Cons[T]) {
         cons(func!(list.head), map!(func, list.tail))
     } else {

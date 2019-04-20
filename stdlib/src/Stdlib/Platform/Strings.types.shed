@@ -1,12 +1,12 @@
 import Stdlib.Options;
 
-val codePointToHexString: (CodePoint) -> String;
-val codePointToInt: (CodePoint) -> Int;
-val codePointToString: (CodePoint) -> String;
-val codePointCount: (String) -> Int;
-val firstCodePoint: (String) -> Options.Option[CodePoint];
-val flatMapCodePoints: ((CodePoint) -> String, String) -> String;
-val foldLeftCodePoints: [R]((R, CodePoint) -> R, R, String) -> R;
-val repeat: (String, Int) -> String;
-val replace: (String, String, String) -> String;
-val substring: (Int, Int, String) -> String;
+val codePointToHexString: Fun (CodePoint) -> String;
+val codePointToInt: Fun (CodePoint) -> Int;
+val codePointToString: Fun (CodePoint) -> String;
+val codePointCount: Fun (String) -> Int;
+val firstCodePoint: Fun (String) -> Options.Option[CodePoint];
+val flatMapCodePoints: Fun (Fun (CodePoint) -> String, String) -> String;
+val foldLeftCodePoints: Fun [R](Fun (R, CodePoint) -> R, R, String) -> R;
+val repeat: Fun (String, Int) -> String;
+val replace: Fun (String, String, String) -> String;
+val substring: Fun (Int, Int, String) -> String;

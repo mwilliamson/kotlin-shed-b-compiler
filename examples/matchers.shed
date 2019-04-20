@@ -35,8 +35,8 @@ fun isString(value: String) -> Matcher[String] {
 
 fun describingMatcher[T](
     value: T,
-    toString: (T) -> String,
-    match: (T) -> Bool
+    toString: Fun (T) -> String,
+    match: Fun (T) -> Bool
 ) -> Matcher[T] {
     Matcher(
         description = toString(value),
@@ -52,7 +52,7 @@ fun describingMatcher[T](
 
 shape Matcher[-T] {
     description: String,
-    match: (T) -> Result,
+    match: Fun (T) -> Result,
 }
 
 union Result =

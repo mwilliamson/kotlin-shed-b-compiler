@@ -1052,7 +1052,7 @@ class CodeGeneratorTests {
     @Test
     fun directlyRecursiveFunctionsContainingFunctionExpressionsAreNotConvertedToWhileLoops() {
         val shedSource = """
-            fun f(n: Int, g: () -> Unit) -> Unit {
+            fun f(n: Int, g: Fun () -> Unit) -> Unit {
                 if (n == 1) {
                     g()
                 } else {

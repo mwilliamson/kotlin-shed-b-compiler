@@ -176,7 +176,7 @@ fun tokensToValue(tokens: TokenIterator) -> JsonResult {
 
 shape TokenIterator {
     head: Token,
-    tail: () -> TokenIterator,
+    tail: Fun () -> TokenIterator,
 }
 
 union ParseResult[+T] =
@@ -323,10 +323,10 @@ shape State[T] {
 
 fun parseMany[T](
     *,
-    parseElement: (TokenIterator) -> ParseResult[T],
-    parseSeparator: (TokenIterator) -> ParseResult[Unit],
-    isEnd: (TokenIterator) -> Bool,
-) -> (TokenIterator) -> ParseResult[List[T]] {
+    parseElement: Fun (TokenIterator) -> ParseResult[T],
+    parseSeparator: Fun (TokenIterator) -> ParseResult[Unit],
+    isEnd: Fun (TokenIterator) -> Bool,
+) -> Fun (TokenIterator) -> ParseResult[List[T]] {
     fun parse(state: State[T]) -> ParseResult[List[T]] {
         when (state.position) {
             is Start {
@@ -384,11 +384,11 @@ fun parseMany[T](
     }
 }
 
-fun isNextTokenType(predicate: (TokenType) -> Bool, tokens: TokenIterator) -> Bool {
+fun isNextTokenType(predicate: Fun (TokenType) -> Bool, tokens: TokenIterator) -> Bool {
     predicate(tokens.head.tokenType)
 }
 
-fun skipTokenType(predicate: (TokenType) -> Bool, tokens: TokenIterator) -> ParseResult[Unit] {
+fun skipTokenType(predicate: Fun (TokenType) -> Bool, tokens: TokenIterator) -> ParseResult[Unit] {
     if (predicate(tokens.head.tokenType)) {
         success(tokens.tail(), unit)
     } else {

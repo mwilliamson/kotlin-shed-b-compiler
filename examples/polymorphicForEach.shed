@@ -24,7 +24,7 @@ fun printInt(value: Int) !Io -> Unit {
     print!(intToString(value) + "\n");
 }
 
-fun forEach[T, !E](func: (T) !E -> Unit, list: List[T]) !E -> Unit {
+fun forEach[T, !E](func: Fun (T) !E -> Unit, list: List[T]) !E -> Unit {
     if (list is Cons[T]) {
         func!(list.head);
         forEach!(func, list.tail);
