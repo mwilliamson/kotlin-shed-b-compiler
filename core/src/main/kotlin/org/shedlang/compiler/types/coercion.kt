@@ -128,6 +128,13 @@ class TypeConstraintSolver(
                 )
         }
 
+        if (from is TupleType && to is TupleType) {
+            return from.elementTypes.size == to.elementTypes.size &&
+                from.elementTypes.zip(to.elementTypes).all { (fromElement, toElement) ->
+                    canCoerce(from = fromElement, to = toElement)
+                }
+        }
+
         if (from is ShapeType && to is ShapeType) {
             return from.shapeId == to.shapeId && zip3(
                 from.staticParameters,

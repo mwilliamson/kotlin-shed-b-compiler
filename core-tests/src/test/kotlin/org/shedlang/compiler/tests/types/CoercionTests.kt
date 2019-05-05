@@ -233,6 +233,72 @@ class CoercionTests {
     }
 
     @Test
+    fun tupleTypeCanBeCoercedToSameTupleType() {
+        assertThat(
+            canCoerce(
+                from = TupleType(listOf(IntType, BoolType)),
+                to = TupleType(listOf(IntType, BoolType))
+            ),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun tupleTypeElementsAreCovariant() {
+        assertThat(
+            canCoerce(
+                from = TupleType(listOf(IntType)),
+                to = TupleType(listOf(AnyType))
+            ),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun tupleTypeElementsAreNotContravariant() {
+        assertThat(
+            canCoerce(
+                from = TupleType(listOf(AnyType)),
+                to = TupleType(listOf(IntType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun cannotCoerceTupleTypeToTupleTypeWithDifferentElementTypes() {
+        assertThat(
+            canCoerce(
+                from = TupleType(listOf(IntType, BoolType)),
+                to = TupleType(listOf(BoolType, IntType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun cannotCoerceTupleTypeToTupleTypeWithExtraElementTypes() {
+        assertThat(
+            canCoerce(
+                from = TupleType(listOf(IntType)),
+                to = TupleType(listOf(IntType, BoolType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun cannotCoerceTupleTypeToTupleTypeWithFewerElementTypes() {
+        assertThat(
+            canCoerce(
+                from = TupleType(listOf(IntType, BoolType)),
+                to = TupleType(listOf(IntType))
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
     fun whenTypeIsAMemberOfAUnionThenCanCoerceTypeToUnion() {
         val member1 = shapeType(name = "Member1")
         val member2 = shapeType(name = "Member2")
