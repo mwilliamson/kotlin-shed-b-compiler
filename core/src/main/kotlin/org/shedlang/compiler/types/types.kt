@@ -288,6 +288,16 @@ data class FunctionType(
         }
 }
 
+data class TupleType(val elementTypes: List<Type>): Type {
+    override val shortDescription: String
+        get() = "TODO"
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        return null
+    }
+
+}
+
 interface TypeAlias: Type {
     val name: Identifier
     val aliasedType: Type

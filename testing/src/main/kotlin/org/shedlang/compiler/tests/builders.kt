@@ -393,6 +393,13 @@ fun functionTypeNode(
     source = anySource()
 )
 
+fun tupleTypeNode(
+    elementTypes: List<StaticExpressionNode>
+) = TupleTypeNode(
+    elementTypes = elementTypes,
+    source = anySource()
+)
+
 fun typeAlias(
     name: String,
     aliasedType: Type

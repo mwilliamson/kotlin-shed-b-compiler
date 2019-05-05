@@ -2,6 +2,8 @@ package org.shedlang.compiler.tests
 
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.StaticExpressionNode
+import org.shedlang.compiler.ast.TupleTypeNode
 import org.shedlang.compiler.types.*
 
 
@@ -20,6 +22,12 @@ fun isFunctionType(
     has(FunctionType::returns, returnType),
     has(FunctionType::effect, effect)
 ))
+
+fun isTupleType(
+    elementTypes: Matcher<List<Type>> = anything
+): Matcher<Type> = cast(
+    has(TupleType::elementTypes, elementTypes)
+)
 
 fun isTypeAlias(
     name: Matcher<Identifier>,

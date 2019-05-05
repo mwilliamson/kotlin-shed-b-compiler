@@ -122,6 +122,7 @@ interface StaticExpressionNode : Node {
         fun visit(node: StaticFieldAccessNode): T
         fun visit(node: StaticApplicationNode): T
         fun visit(node: FunctionTypeNode): T
+        fun visit(node: TupleTypeNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -194,7 +195,7 @@ data class TupleTypeNode(
         get() = elementTypes
 
     override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
-        TODO("not implemented")
+        return visitor.visit(this)
     }
 
 }

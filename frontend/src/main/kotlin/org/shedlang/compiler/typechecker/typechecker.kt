@@ -429,6 +429,13 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             checkType(type, source = node.source)
             return MetaType(type)
         }
+
+        override fun visit(node: TupleTypeNode): Type {
+            val elementTypes = node.elementTypes.map { typeNode ->
+                evalType(typeNode, context)
+            }
+            return MetaType(TupleType(elementTypes = elementTypes))
+        }
     })
     context.addStaticExpressionType(node, type)
     return type

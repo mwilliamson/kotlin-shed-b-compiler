@@ -957,6 +957,10 @@ internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationCon
         override fun visit(node: FunctionTypeNode): PythonExpressionNode {
             throw UnsupportedOperationException("not implemented")
         }
+
+        override fun visit(node: TupleTypeNode): PythonExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

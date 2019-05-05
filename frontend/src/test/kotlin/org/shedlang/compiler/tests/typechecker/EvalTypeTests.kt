@@ -159,4 +159,37 @@ class EvalTypeTests {
             throws(has(TypeCheckError::message, equalTo("return type cannot be contravariant")))
         )
     }
+
+    @Test
+    fun canEvaluateEmptyTupleTypeNode() {
+        val node = tupleTypeNode(elementTypes = listOf())
+
+        val type = evalType(
+            node,
+            typeContext()
+        )
+        assertThat(type, isTupleType(elementTypes = isSequence()))
+    }
+
+    @Test
+    fun canEvaluateTupleTypeNodeWithElements() {
+        val boolReference = staticReference("Bool")
+        val intReference = staticReference("Int")
+
+        val node = tupleTypeNode(elementTypes = listOf(
+            boolReference,
+            intReference
+        ))
+
+        val type = evalType(
+            node,
+            typeContext(
+                referenceTypes = mapOf(
+                    boolReference to MetaType(BoolType),
+                    intReference to MetaType(IntType)
+                )
+            )
+        )
+        assertThat(type, isTupleType(elementTypes = isSequence(isBoolType, isIntType)))
+    }
 }
