@@ -290,7 +290,7 @@ data class FunctionType(
 
 data class TupleType(val elementTypes: List<Type>): Type {
     override val shortDescription: String
-        get() = "TODO"
+        get() = "#(${elementTypes.map(Type::shortDescription).joinToString(", ")})"
 
     override fun fieldType(fieldName: Identifier): Type? {
         return null
