@@ -35,4 +35,14 @@ class ParseTupleTypeTests {
             isStaticReference("Z")
         )))
     }
+
+    @Test
+    fun elementsCanHaveTrailingComma() {
+        val source = "#(X,)"
+        val node = parseString(::parseStaticExpression, source)
+
+        assertThat(node, isTupleTypeNode(isSequence(
+            isStaticReference("X")
+        )))
+    }
 }
