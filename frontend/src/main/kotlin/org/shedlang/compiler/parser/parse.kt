@@ -1170,6 +1170,8 @@ private fun parsePrimaryStaticExpression(
 ): StaticExpressionNode {
     if (tokens.isNext(TokenType.KEYWORD_FUN_CAPITAL)) {
         return parseFunctionType(tokens)
+    } else if (tokens.isNext(TokenType.SYMBOL_HASH)) {
+        return parseTupleType(tokens)
     } else {
         return parseStaticReference(tokens)
     }
@@ -1202,7 +1204,16 @@ private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressio
     )
 }
 
-private class FunctionTypeParameters(
+private fun parseTupleType(tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    val source = tokens.location()
+
+    return TupleTypeNode(
+        elementTypes = listOf(),
+        source = source
+    )
+}
+
+    private class FunctionTypeParameters(
     val positional: List<StaticExpressionNode>,
     val named: List<ParameterNode>
 )

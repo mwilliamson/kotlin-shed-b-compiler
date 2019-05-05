@@ -280,6 +280,12 @@ internal fun isFunctionType(
     has(FunctionTypeNode::effects, effects)
 ))
 
+internal fun isTupleTypeNode(
+    elementTypes: Matcher<List<StaticExpressionNode>> = anything
+): Matcher<StaticExpressionNode> = cast(
+    has(TupleTypeNode::elementTypes, elementTypes)
+)
+
 internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
     = cast(has(IntegerLiteralNode::value, has(BigInteger::intValueExact, value)))
 

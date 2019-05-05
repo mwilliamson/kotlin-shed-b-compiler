@@ -185,6 +185,20 @@ data class FunctionTypeNode(
     }
 }
 
+data class TupleTypeNode(
+    val elementTypes: List<StaticExpressionNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): StaticExpressionNode {
+    override val children: List<Node>
+        get() = elementTypes
+
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+        TODO("not implemented")
+    }
+
+}
+
 data class ModuleNode(
     val exports: List<Identifier>,
     val imports: List<ImportNode>,
