@@ -13,4 +13,26 @@ class ParseTupleTypeTests {
 
         assertThat(node, isTupleTypeNode(isSequence()))
     }
+
+    @Test
+    fun singletonTupleType() {
+        val source = "#(X)"
+        val node = parseString(::parseStaticExpression, source)
+
+        assertThat(node, isTupleTypeNode(isSequence(
+            isStaticReference("X")
+        )))
+    }
+
+    @Test
+    fun tupleTypeWithManyElements() {
+        val source = "#(X, Y, Z)"
+        val node = parseString(::parseStaticExpression, source)
+
+        assertThat(node, isTupleTypeNode(isSequence(
+            isStaticReference("X"),
+            isStaticReference("Y"),
+            isStaticReference("Z")
+        )))
+    }
 }

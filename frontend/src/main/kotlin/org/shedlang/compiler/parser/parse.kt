@@ -1207,8 +1207,21 @@ private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressio
 private fun parseTupleType(tokens: TokenIterator<TokenType>): StaticExpressionNode {
     val source = tokens.location()
 
+    tokens.skip(TokenType.SYMBOL_HASH)
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+
+    val elementTypes = parseMany(
+        parseElement = { tokens -> parseStaticExpression(tokens) },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+        allowTrailingSeparator = true,
+        allowZero = true,
+        tokens = tokens
+    )
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+
     return TupleTypeNode(
-        elementTypes = listOf(),
+        elementTypes = elementTypes,
         source = source
     )
 }
