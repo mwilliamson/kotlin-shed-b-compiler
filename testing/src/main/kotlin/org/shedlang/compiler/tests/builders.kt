@@ -119,6 +119,7 @@ fun literalInt(value: Int = 0) = IntegerLiteralNode(value.toBigInteger(), anySou
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
 fun literalCodePoint(value: Char = '!') = CodePointLiteralNode(value.toInt(), anySource())
 fun symbolName(name: String) = SymbolNode(name, anySource())
+fun tupleNode(elements: List<ExpressionNode>) = TupleNode(elements, anySource())
 fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 
 fun unaryOperation(

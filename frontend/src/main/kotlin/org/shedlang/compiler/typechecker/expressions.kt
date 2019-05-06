@@ -28,7 +28,9 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: TupleNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return TupleType(node.elements.map { element ->
+                inferType(element, context)
+            })
         }
 
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
