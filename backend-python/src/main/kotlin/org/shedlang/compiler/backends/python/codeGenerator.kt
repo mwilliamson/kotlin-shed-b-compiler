@@ -529,7 +529,11 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: TupleNode): GeneratedExpression {
-            throw UnsupportedOperationException("not implemented")
+            return GeneratedCode.flatten(node.elements.map { element ->
+                generateExpressionCode(element, context)
+            }).pureMap { elements ->
+                PythonTupleNode(elements, source = NodeSource(node))
+            }
         }
 
         override fun visit(node: VariableReferenceNode): GeneratedExpression {

@@ -765,6 +765,16 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun tupleGeneratesTuple() {
+        val shed = tupleNode(listOf(literalInt(42), literalBool(true)))
+        val node = generateExpressionCode(shed, context())
+        assertThat(node, isGeneratedExpression(isPythonTuple(isSequence(
+            isPythonIntegerLiteral(42),
+            isPythonBooleanLiteral(true)
+        ))))
+    }
+
+    @Test
     fun variableReferenceGeneratesVariableReference() {
         val declaration = parameter("x")
         val shed = variableReference("x")
@@ -1330,6 +1340,10 @@ class CodeGeneratorTests {
     private fun isPythonVariableReference(name: String)
         : Matcher<PythonExpressionNode>
         = cast(has(PythonVariableReferenceNode::name, equalTo(name)))
+
+    private fun isPythonTuple(elements: Matcher<List<PythonExpressionNode>>)
+        : Matcher<PythonExpressionNode>
+        = cast(has(PythonTupleNode::members, elements))
 
     private fun isPythonUnaryOperation(
         operator: Matcher<PythonUnaryOperator>,
