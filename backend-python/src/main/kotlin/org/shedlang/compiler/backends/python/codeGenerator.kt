@@ -445,6 +445,9 @@ internal data class GeneratedCode<out T>(
         fun <T> flatten(codes: List<GeneratedCode<T>>): GeneratedCode<List<T>> {
             val values = codes.map { code -> code.value }
             val statements = codes.flatMap { code -> code.statements }
+            // TODO: we should check that spillage has occurred correctly.
+            // e.g. tuple spillage probably isn't correct
+            // We probably need three states: PureExpression, Spilled, Unspilled
             val spilled = codes.any { code -> code.spilled }
             return GeneratedCode(values, statements, spilled = spilled)
         }
