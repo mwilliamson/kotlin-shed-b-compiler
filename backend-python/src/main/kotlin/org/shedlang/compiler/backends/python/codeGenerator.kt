@@ -528,6 +528,10 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             return GeneratedExpression.pure(symbol(symbol, source))
         }
 
+        override fun visit(node: TupleNode): GeneratedExpression {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
             val referent = context.references[node]
             val name = if (isBuiltin(referent, "intToString")) {

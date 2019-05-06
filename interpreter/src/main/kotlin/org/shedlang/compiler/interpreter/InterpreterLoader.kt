@@ -135,6 +135,11 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         override fun visit(node: StringLiteralNode) = StringValue(node.value)
         override fun visit(node: CodePointLiteralNode) = CodePointValue(node.value)
         override fun visit(node: SymbolNode) = SymbolValue(Symbol(context.moduleName, node.name))
+
+        override fun visit(node: TupleNode): Expression {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)
 
         override fun visit(node: UnaryOperationNode): Expression = UnaryOperation(

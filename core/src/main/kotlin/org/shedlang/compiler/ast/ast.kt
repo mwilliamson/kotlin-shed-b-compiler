@@ -617,6 +617,7 @@ interface ExpressionNode : Node {
         fun visit(node: StringLiteralNode): T
         fun visit(node: CodePointLiteralNode): T
         fun visit(node: SymbolNode): T
+        fun visit(node: TupleNode): T
         fun visit(node: VariableReferenceNode): T
         fun visit(node: UnaryOperationNode): T
         fun visit(node: BinaryOperationNode): T
@@ -703,6 +704,19 @@ data class SymbolNode(
 ) : ExpressionNode {
     override val children: List<Node>
         get() = listOf()
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class TupleNode(
+    val elements: List<ExpressionNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): ExpressionNode {
+    override val children: List<Node>
+        get() = elements
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

@@ -26,6 +26,11 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: SymbolNode): SymbolType {
             return SymbolType(Symbol(context.moduleName!!.map(::Identifier), node.name))
         }
+
+        override fun visit(node: TupleNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
 
         override fun visit(node: UnaryOperationNode): Type {

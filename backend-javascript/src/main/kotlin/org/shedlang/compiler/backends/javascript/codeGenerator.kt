@@ -233,6 +233,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             return generateSymbolCode(symbol, NodeSource(node))
         }
 
+        override fun visit(node: TupleNode): JavascriptExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
             return generateCodeForReferenceNode(node)
         }
