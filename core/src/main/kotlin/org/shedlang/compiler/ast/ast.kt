@@ -257,7 +257,11 @@ data class ImportNode(
         get() = listOf()
 }
 
-interface ModuleStatementNode: Node {
+interface StatementNode: Node {
+    fun variableBinders(): List<VariableBindingNode>
+}
+
+interface ModuleStatementNode: StatementNode {
     interface Visitor<T> {
         fun visit(node: TypeAliasNode): T
         fun visit(node: ShapeNode): T
@@ -267,7 +271,6 @@ interface ModuleStatementNode: Node {
     }
 
     fun <T> accept(visitor: Visitor<T>): T
-    fun variableBinders(): List<VariableBindingNode>
 }
 
 data class TypeAliasNode(
@@ -490,7 +493,7 @@ data class ParameterNode(
         get() = listOf(type)
 }
 
-interface FunctionStatementNode : Node {
+interface FunctionStatementNode : StatementNode {
     interface Visitor<T> {
         fun visit(node: BadStatementNode): T {
             throw UnsupportedOperationException("not implemented")
@@ -516,6 +519,10 @@ data class BadStatementNode(
 
     override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf()
     }
 }
 
@@ -582,6 +589,10 @@ data class ExpressionStatementNode(
 
     override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf()
     }
 }
 

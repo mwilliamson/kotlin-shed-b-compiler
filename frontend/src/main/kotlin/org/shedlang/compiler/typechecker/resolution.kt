@@ -226,11 +226,15 @@ private fun resolveScope(
     context: ResolutionContext
 ): ResolutionContext {
     // TODO: handle this more neatly
+    val bodyBinders = body.flatMap { node ->
+        when (node) {
+            is StatementNode -> node.variableBinders()
+            is VariableBindingNode -> listOf(node)
+            else -> listOf()
+        }
+    }
     val bodyContext = enterScope(
-        binders +
-            body.filterIsInstance<VariableBindingNode>() +
-            body.filterIsInstance<UnionNode>().flatMap { union -> union.members } +
-            body.filterIsInstance<ValNode>().map { node -> node.target },
+        binders + bodyBinders,
         context
     )
 
