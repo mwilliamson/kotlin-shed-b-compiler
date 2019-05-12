@@ -377,13 +377,14 @@ private fun generateCode(
 private fun generateCode(node: ValNode, context: CodeGenerationContext): List<PythonStatementNode> {
     fun expressionReturnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
-            val target = node.target
-            when (target) {
-                is ValTargetNode.Variable ->
-                    listOf(assign(context.name(target), pythonExpression, source = source))
-                is ValTargetNode.Tuple ->
-                    throw NotImplementedError("TODO")
-            }
+            val shedTarget = node.target
+            val pythonTarget = generateValTargetCode(shedTarget, context)
+            val assignment = PythonAssignmentNode(
+                target = pythonTarget,
+                expression = pythonExpression,
+                source = source
+            )
+            listOf(assignment)
         }
     }
 
@@ -393,6 +394,24 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
         returnValue = ::expressionReturnValue,
         source = NodeSource(node)
     )
+}
+
+internal fun generateValTargetCode(shedTarget: ValTargetNode, context: CodeGenerationContext): PythonExpressionNode {
+    val source = NodeSource(shedTarget)
+    return when (shedTarget) {
+        is ValTargetNode.Variable ->
+            PythonVariableReferenceNode(
+                name = context.name(shedTarget),
+                source = source
+            )
+        is ValTargetNode.Tuple ->
+            PythonTupleNode(
+                members = shedTarget.elements.map { element ->
+                    generateValTargetCode(element, context)
+                },
+                source = source
+            )
+    }
 }
 
 private fun generateStatementCodeForExpression(

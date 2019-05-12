@@ -671,7 +671,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun valGeneratesAssignmentWithPythonisedName() {
+    fun valWithTargetVariableGeneratesAssignmentWithPythonisedName() {
         val shed = valStatement(name = "oneTwoThree", expression = literalInt(42))
 
         val node = generateCodeForFunctionStatement(shed)
@@ -679,6 +679,26 @@ class CodeGeneratorTests {
         assertThat(node, isSequence(
             isPythonAssignment(
                 target = isPythonVariableReference("one_two_three"),
+                expression = isPythonIntegerLiteral(42)
+            )
+        ))
+    }
+
+    @Test
+    fun valWithTargetTupleGeneratesAssignmentWithPythonisedNames() {
+        val shed = valStatement(
+            target = valTargetTuple(elements = listOf(valTargetVariable("aB"), valTargetVariable("cD"))),
+            expression = literalInt(42)
+        )
+
+        val node = generateCodeForFunctionStatement(shed)
+
+        assertThat(node, isSequence(
+            isPythonAssignment(
+                target = isPythonTuple(isSequence(
+                    isPythonVariableReference("a_b"),
+                    isPythonVariableReference("c_d")
+                )),
                 expression = isPythonIntegerLiteral(42)
             )
         ))

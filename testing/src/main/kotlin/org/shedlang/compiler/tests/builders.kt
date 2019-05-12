@@ -109,6 +109,11 @@ fun valTargetVariable(name: String = "<target name>") = ValTargetNode.Variable(
     source = anySource()
 )
 
+fun valTargetTuple(elements: List<ValTargetNode>) = ValTargetNode.Tuple(
+    elements,
+    source = anySource()
+)
+
 fun variableBinder(
     name: String
 ): VariableBindingNode = parameter(name = name)
