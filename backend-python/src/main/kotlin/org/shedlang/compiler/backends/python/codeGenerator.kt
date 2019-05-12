@@ -446,7 +446,7 @@ internal data class GeneratedCode<out T>(
             val values = codes.map { code -> code.value }
             val statements = codes.flatMap { code -> code.statements }
             // TODO: we should check that spillage has occurred correctly.
-            // e.g. tuple spillage probably isn't correct
+            // e.g. if spillage probably isn't correct
             // We probably need three states: PureExpression, Spilled, Unspilled
             val spilled = codes.any { code -> code.spilled }
             return GeneratedCode(values, statements, spilled = spilled)
@@ -765,6 +765,7 @@ private fun generateIfCode(
     context: CodeGenerationContext,
     returnValue: ReturnValue
 ): List<PythonStatementNode>{
+    // TODO: handle spillage properly
     return GeneratedCode.flatten(node.conditionalBranches.map { branch ->
         generateExpressionCode(branch.condition, context).pureMap { condition ->
             PythonConditionalBranchNode(
