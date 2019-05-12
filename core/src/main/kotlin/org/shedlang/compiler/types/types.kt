@@ -572,6 +572,12 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             returns = replaceStaticValuesInType(type.returns, bindings),
             staticParameters = type.staticParameters
         )
+    } else if (type is TupleType) {
+        return TupleType(
+            elementTypes = type.elementTypes.map { elementType ->
+                replaceStaticValuesInType(elementType, bindings)
+            }
+        )
     } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is CodePointType || type is AnyType || type is NothingType || type is SymbolType || type is TypeAlias) {
         return type
     } else {

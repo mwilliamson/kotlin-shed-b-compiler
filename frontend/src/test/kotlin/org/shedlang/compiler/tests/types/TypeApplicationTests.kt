@@ -154,4 +154,21 @@ class TypeApplicationTests {
             )
         }
     }
+
+    @Nested
+    class TupleTypeTests {
+        val typeParameter = invariantTypeParameter("T")
+
+        @Test
+        fun elementsAreReplaced() {
+            val tupleType = TupleType(
+                elementTypes = listOf(typeParameter)
+            )
+
+            assertThat(
+                replaceStaticValuesInType(tupleType, mapOf(typeParameter to IntType)),
+                isTupleType(elementTypes = isSequence(isIntType))
+            )
+        }
+    }
 }
