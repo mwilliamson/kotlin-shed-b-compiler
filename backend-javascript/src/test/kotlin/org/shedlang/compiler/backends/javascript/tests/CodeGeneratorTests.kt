@@ -388,6 +388,16 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun tupleGeneratesTuple() {
+        val shed = tupleNode(listOf(literalInt(42), literalBool(true)))
+        val node = generateCode(shed, context())
+        assertThat(node, isJavascriptArray(elements = isSequence(
+            isJavascriptIntegerLiteral(42),
+            isJavascriptBooleanLiteral(true)
+        )))
+    }
+
+    @Test
     fun variableReferenceGenerateVariableReference() {
         val shed = variableReference("x")
 

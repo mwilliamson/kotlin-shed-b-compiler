@@ -234,7 +234,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: TupleNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return JavascriptArrayLiteralNode(
+                elements = node.elements.map { element -> generateCode(element, context) },
+                source = NodeSource(node)
+            )
         }
 
         override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
