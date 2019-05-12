@@ -8,6 +8,7 @@ import org.shedlang.compiler.ast.IntegerLiteralNode
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
+import org.shedlang.compiler.tests.isSequence
 
 class ParseValTests {
     @Test
@@ -16,7 +17,7 @@ class ParseValTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isVal(
             target = isValTargetVariable(name = isIdentifier("x")),
-            expression = has(IntegerLiteralNode::value, equalTo(4.toBigInteger()))
+            expression = isIntLiteral(4)
         ))
     }
 
@@ -26,7 +27,34 @@ class ParseValTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isVal(
             target = isValTargetVariable(name = isIdentifier("x")),
-            expression = has(IntegerLiteralNode::value, equalTo(4.toBigInteger()))
+            expression = isIntLiteral(4)
+        ))
+    }
+
+    @Test
+    fun valTargetCanBeTuple() {
+        val source = "val #(x, y) = z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isVal(
+            target = isValTargetTuple(
+                elements = isSequence(
+                    isValTargetVariable(name = isIdentifier("x")),
+                    isValTargetVariable(name = isIdentifier("y"))
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun targetTupleCanHaveTrailingComma() {
+        val source = "val #(x,) = z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isVal(
+            target = isValTargetTuple(
+                elements = isSequence(
+                    isValTargetVariable(name = isIdentifier("x"))
+                )
+            )
         ))
     }
 }

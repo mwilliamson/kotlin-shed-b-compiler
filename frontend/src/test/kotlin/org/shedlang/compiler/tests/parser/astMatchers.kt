@@ -52,19 +52,23 @@ internal fun isExpressionStatement(
     ))
 }
 
-inline internal fun <reified T: ExpressionNode> isVal(
+inline internal fun isVal(
     target: Matcher<ValTargetNode>,
-    expression: Matcher<T>
+    expression: Matcher<ExpressionNode> = anything
 ): Matcher<Node> {
     return cast(allOf(
         has(ValNode::target, target),
-        has(ValNode::expression, cast(expression))
+        has(ValNode::expression, expression)
     ))
 }
 
 internal fun isValTargetVariable(
     name: Matcher<Identifier>
 ): Matcher<ValTargetNode> = cast(has(ValTargetNode.Variable::name, name))
+
+internal fun isValTargetTuple(
+    elements: Matcher<List<ValTargetNode>>
+): Matcher<ValTargetNode> = cast(has(ValTargetNode.Tuple::elements, elements))
 
 internal fun isValType(
     name: Matcher<Identifier>,

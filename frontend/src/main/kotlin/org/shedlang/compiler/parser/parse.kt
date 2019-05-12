@@ -719,12 +719,31 @@ private fun parseVal(tokens: TokenIterator<TokenType>): ValNode {
 
 private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
     val source = tokens.location()
-    val name = parseIdentifier(tokens)
 
-    return ValTargetNode.Variable(
-        name = name,
-        source = source
-    )
+    if (tokens.trySkip(TokenType.SYMBOL_HASH)) {
+        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+        val elements = parseMany(
+            parseElement = { tokens -> parseValTarget(tokens) },
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+            allowTrailingSeparator = true,
+            allowZero = false,
+            tokens = tokens
+        )
+        tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+
+        return ValTargetNode.Tuple(
+            elements = elements,
+            source = source
+        )
+    } else {
+        val name = parseIdentifier(tokens)
+
+        return ValTargetNode.Variable(
+            name = name,
+            source = source
+        )
+    }
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
