@@ -937,6 +937,15 @@ class CodeGeneratorTests {
                     )
                     generateExpressionCode(shed, context = context(references = references))
                 }
+            ),
+            SpillingOrderTestCase(
+                "tuple",
+                generatedCode = run {
+                    val shed = tupleNode(
+                        elements = listOf(earlierExpression, laterExpression)
+                    )
+                    generateExpressionCode(shed, context = context(references = references))
+                }
             )
         )
 

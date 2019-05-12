@@ -532,9 +532,14 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: TupleNode): GeneratedExpression {
-            return GeneratedCode.flatten(node.elements.map { element ->
-                generateExpressionCode(element, context)
-            }).pureMap { elements ->
+            return GeneratedCode.flatten(
+                node.elements.map { element ->
+                    generateExpressionCode(element, context)
+                },
+                { expression ->
+                    spillExpression(expression, context, source = NodeSource(node))
+                }
+            ).pureMap { elements ->
                 PythonTupleNode(elements, source = NodeSource(node))
             }
         }
