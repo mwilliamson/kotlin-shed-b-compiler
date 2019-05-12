@@ -76,6 +76,7 @@ internal fun loadModuleStatement(statement: ModuleStatementNode, context: Loader
                 is ValTargetNode.Variable -> listOf(
                     target.name to loadExpression(node.expression, context)
                 )
+                is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
             }
         }
     })
@@ -122,6 +123,7 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
                     name = target.name,
                     expression = loadExpression(node.expression, context)
                 )
+                is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
             }
         }
 

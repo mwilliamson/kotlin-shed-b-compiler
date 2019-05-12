@@ -635,6 +635,20 @@ sealed class ValTargetNode: Node {
             return listOf(this)
         }
     }
+
+    data class Tuple(
+        val elements: List<ValTargetNode>,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ): ValTargetNode() {
+        override val children: List<Node>
+            get() = elements
+
+        override fun variableBinders(): List<VariableBindingNode> {
+            return elements.flatMap { element -> variableBinders() }
+        }
+
+    }
 }
 
 interface ExpressionNode : Node {

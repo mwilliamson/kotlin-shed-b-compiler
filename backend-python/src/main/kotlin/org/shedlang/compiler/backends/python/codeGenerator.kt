@@ -381,6 +381,8 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
             when (target) {
                 is ValTargetNode.Variable ->
                     listOf(assign(context.name(target), pythonExpression, source = source))
+                is ValTargetNode.Tuple ->
+                    throw NotImplementedError("TODO")
             }
         }
     }

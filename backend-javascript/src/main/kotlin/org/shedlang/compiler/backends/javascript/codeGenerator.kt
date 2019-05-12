@@ -206,6 +206,7 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): Javascr
             expression = generateCode(node.expression, context),
             source = NodeSource(node)
         )
+        is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
     }
 }
 
