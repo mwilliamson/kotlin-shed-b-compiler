@@ -625,15 +625,17 @@ class CodeGeneratorTests {
     @Test
     @Disabled("TODO: work out what to do with this test")
     fun whenSeparateScopesHaveSameNameInSamePythonScopeThenVariablesAreRenamed() {
-        val trueVal = valStatement(name = "x")
-        val falseVal = valStatement(name = "x")
+        val trueValTarget = valTargetVariable(name = "x")
+        val trueVal = valStatement(target = trueValTarget)
+        val falseValTarget = valTargetVariable(name = "x")
+        val falseVal = valStatement(target = falseValTarget)
 
         val trueReference = variableReference("x")
         val falseReference = variableReference("x")
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
-            trueReference to trueVal.target,
-            falseReference to falseVal.target
+            trueReference to trueValTarget,
+            falseReference to falseValTarget
         )
 
         val shed = ifExpression(

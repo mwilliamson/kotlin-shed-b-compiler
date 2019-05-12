@@ -15,7 +15,7 @@ class ParseValTests {
         val source = "val x = 4;"
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isVal(
-            target = isValTarget(name = isIdentifier("x")),
+            target = isValTargetVariable(name = isIdentifier("x")),
             expression = has(IntegerLiteralNode::value, equalTo(4.toBigInteger()))
         ))
     }
@@ -25,7 +25,7 @@ class ParseValTests {
         val source = "val x = 4;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isVal(
-            target = isValTarget(name = isIdentifier("x")),
+            target = isValTargetVariable(name = isIdentifier("x")),
             expression = has(IntegerLiteralNode::value, equalTo(4.toBigInteger()))
         ))
     }

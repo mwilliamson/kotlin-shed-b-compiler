@@ -198,11 +198,15 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
 }
 
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
-    return JavascriptConstNode(
-        name = generateName(node.target.name),
-        expression = generateCode(node.expression, context),
-        source = NodeSource(node)
-    )
+    val target = node.target
+
+    return when (target) {
+        is ValTargetNode.Variable -> JavascriptConstNode(
+            name = generateName(target.name),
+            expression = generateCode(node.expression, context),
+            source = NodeSource(node)
+        )
+    }
 }
 
 internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext): JavascriptExpressionNode {

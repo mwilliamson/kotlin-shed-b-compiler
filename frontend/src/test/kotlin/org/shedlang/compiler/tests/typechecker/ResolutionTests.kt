@@ -199,7 +199,8 @@ class ResolutionTests {
     @Test
     fun valIntroducesVariableToFunctionScope() {
         val reference = variableReference("x")
-        val valStatement = valStatement(name = "x", expression = literalInt())
+        val target = valTargetVariable(name = "x")
+        val valStatement = valStatement(target = target, expression = literalInt())
         val node = function(
             parameters = listOf(),
             returnType = staticReference("Int"),
@@ -210,7 +211,7 @@ class ResolutionTests {
         )
 
         val references = resolve(node, globals = mapOf(Identifier("Int") to anyDeclaration()))
-        assertThat(references[reference], isVariableBinding(valStatement.target))
+        assertThat(references[reference], isVariableBinding(target))
     }
 
     @Test
@@ -310,9 +311,11 @@ class ResolutionTests {
 
     @Test
     fun ifStatementIntroducesScopes() {
-        val trueVal = valStatement(name = "x", expression = literalInt())
+        val trueValTarget = valTargetVariable(name = "x")
+        val trueVal = valStatement(target = trueValTarget, expression = literalInt())
         val trueReference = variableReference("x")
-        val falseVal = valStatement(name = "x", expression = literalInt())
+        val falseValTarget = valTargetVariable(name = "x")
+        val falseVal = valStatement(target = falseValTarget, expression = literalInt())
         val falseReference = variableReference("x")
 
         val node = ifStatement(
@@ -329,8 +332,8 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[trueReference], isVariableBinding(trueVal.target))
-        assertThat(references[falseReference], isVariableBinding(falseVal.target))
+        assertThat(references[trueReference], isVariableBinding(trueValTarget))
+        assertThat(references[falseReference], isVariableBinding(falseValTarget))
     }
 
     @Test
@@ -360,7 +363,8 @@ class ResolutionTests {
 
     @Test
     fun whenBranchBodiesIntroduceScopes() {
-        val variableDeclaration = valStatement(name = "x", expression = literalInt())
+        val target = valTargetVariable(name = "x")
+        val variableDeclaration = valStatement(target = target, expression = literalInt())
         val variableReference = variableReference("x")
 
         val node = whenExpression(
@@ -378,12 +382,13 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf(Identifier("T") to anyDeclaration()))
 
-        assertThat(references[variableReference], isVariableBinding(variableDeclaration.target))
+        assertThat(references[variableReference], isVariableBinding(target))
     }
 
     @Test
     fun whenElseBranchBodyIntroducesScope() {
-        val variableDeclaration = valStatement(name = "x", expression = literalInt())
+        val target = valTargetVariable(name = "x")
+        val variableDeclaration = valStatement(target = target, expression = literalInt())
         val variableReference = variableReference("x")
 
         val node = whenExpression(
@@ -396,7 +401,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[variableReference], isVariableBinding(variableDeclaration.target))
+        assertThat(references[variableReference], isVariableBinding(target))
     }
 
     @Test

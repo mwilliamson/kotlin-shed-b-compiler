@@ -616,17 +616,25 @@ data class ValNode(
     }
 
     override fun variableBinders(): List<VariableBindingNode> {
-        return listOf(target)
+        return target.variableBinders()
     }
 }
 
-data class ValTargetNode(
-    override val name: Identifier,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-): VariableBindingNode {
-    override val children: List<Node>
-        get() = listOf()
+sealed class ValTargetNode: Node {
+    abstract fun variableBinders(): List<VariableBindingNode>
+
+    data class Variable(
+        override val name: Identifier,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ): VariableBindingNode, ValTargetNode() {
+        override val children: List<Node>
+            get() = listOf()
+
+        override fun variableBinders(): List<VariableBindingNode> {
+            return listOf(this)
+        }
+    }
 }
 
 interface ExpressionNode : Node {

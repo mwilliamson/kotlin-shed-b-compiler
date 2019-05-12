@@ -377,7 +377,11 @@ private fun generateCode(
 private fun generateCode(node: ValNode, context: CodeGenerationContext): List<PythonStatementNode> {
     fun expressionReturnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
-            listOf(assign(context.name(node.target), pythonExpression, source = source))
+            val target = node.target
+            when (target) {
+                is ValTargetNode.Variable ->
+                    listOf(assign(context.name(target), pythonExpression, source = source))
+            }
         }
     }
 

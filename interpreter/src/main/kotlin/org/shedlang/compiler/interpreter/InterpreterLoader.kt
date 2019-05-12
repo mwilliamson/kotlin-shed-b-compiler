@@ -71,9 +71,12 @@ internal fun loadModuleStatement(statement: ModuleStatementNode, context: Loader
         }
 
         override fun visit(node: ValNode): List<Pair<Identifier, Expression>> {
-            return listOf(
-                node.target.name to loadExpression(node.expression, context)
-            )
+            val target = node.target
+            return when (target) {
+                is ValTargetNode.Variable -> listOf(
+                    target.name to loadExpression(node.expression, context)
+                )
+            }
         }
     })
 }
@@ -112,10 +115,14 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
         }
 
         override fun visit(node: ValNode): Statement {
-            return Val(
-                name = node.target.name,
-                expression = loadExpression(node.expression, context)
-            )
+            val target = node.target
+
+            return when (target) {
+                is ValTargetNode.Variable -> Val(
+                    name = target.name,
+                    expression = loadExpression(node.expression, context)
+                )
+            }
         }
 
         override fun visit(node: FunctionDeclarationNode): Statement {

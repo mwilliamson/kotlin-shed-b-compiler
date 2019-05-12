@@ -155,7 +155,9 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is ValNode -> {
             resolve(node.expression, context)
-            context.initialise(node.target)
+            for (target in node.target.variableBinders()) {
+                context.initialise(target)
+            }
         }
 
         is ModuleNode -> {

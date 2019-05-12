@@ -7,10 +7,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.FunctionStatementNode
-import org.shedlang.compiler.tests.call
-import org.shedlang.compiler.tests.literalInt
-import org.shedlang.compiler.tests.valStatement
-import org.shedlang.compiler.tests.variableReference
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.newTypeContext
@@ -31,8 +28,9 @@ class TypeCheckValTests {
     }
 
     @Test
-    fun valTakesTypeOfExpression() {
-        val node = valStatement(name = "x", expression = literalInt())
+    fun targetVariableTakesTypeOfExpression() {
+        val target = valTargetVariable(name = "x")
+        val node = valStatement(target = target, expression = literalInt())
         val typeContext = newTypeContext(
             moduleName = null,
             nodeTypes = mapOf(),
@@ -40,6 +38,6 @@ class TypeCheckValTests {
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
         typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
-        assertThat(typeContext.typeOf(node.target), cast(equalTo(IntType)))
+        assertThat(typeContext.typeOf(target), cast(equalTo(IntType)))
     }
 }

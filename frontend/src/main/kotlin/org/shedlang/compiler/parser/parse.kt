@@ -721,7 +721,7 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
     val source = tokens.location()
     val name = parseIdentifier(tokens)
 
-    return ValTargetNode(
+    return ValTargetNode.Variable(
         name = name,
         source = source
     )

@@ -90,9 +90,22 @@ fun expressionStatement(
 fun valStatement(
     name: String = "<val name>",
     expression: ExpressionNode = expression()
+) = valStatement(
+    target = valTargetVariable(name = name),
+    expression = expression
+)
+
+fun valStatement(
+    target: ValTargetNode,
+    expression: ExpressionNode = expression()
 ) = ValNode(
-    target = ValTargetNode(Identifier(name), source = anySource()),
+    target = target,
     expression = expression,
+    source = anySource()
+)
+
+fun valTargetVariable(name: String = "<target name>") = ValTargetNode.Variable(
+    Identifier(name),
     source = anySource()
 )
 

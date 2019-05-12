@@ -62,9 +62,9 @@ inline internal fun <reified T: ExpressionNode> isVal(
     ))
 }
 
-internal fun isValTarget(
+internal fun isValTargetVariable(
     name: Matcher<Identifier>
-) = has(ValTargetNode::name, name)
+): Matcher<ValTargetNode> = cast(has(ValTargetNode.Variable::name, name))
 
 internal fun isValType(
     name: Matcher<Identifier>,
