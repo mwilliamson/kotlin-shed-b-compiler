@@ -64,7 +64,7 @@ class TypeCheckExpressionTests {
     @Test
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
         val reference = variableReference("x")
-        val declaration = valStatement("x")
+        val declaration = variableBinder("x")
 
         assertThat(
             { inferType(

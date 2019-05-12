@@ -443,7 +443,7 @@ class CodeGeneratorTests {
 
     @Test
     fun whenExpressionGeneratesIfStatementsWithAssignmentToVariable() {
-        val variableDeclaration = valStatement("x")
+        val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
         val typeReference = staticReference("T")
         val conditionExpression = fieldAccess(variableReference, "f")
@@ -509,7 +509,7 @@ class CodeGeneratorTests {
 
     @Test
     fun variableReferenceInWhenIsUsedWithoutAssignmentToTemporaryVariable() {
-        val variableDeclaration = valStatement("x")
+        val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
         val typeReference = staticReference("T")
         val shed = whenExpression(
@@ -559,7 +559,7 @@ class CodeGeneratorTests {
 
     @Test
     fun returningWhenStatementGeneratesIfStatementsWithReturns() {
-        val variableDeclaration = valStatement("x")
+        val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
         val typeDeclaration = typeParameter("T")
         val typeReference = staticReference("T")
@@ -632,8 +632,8 @@ class CodeGeneratorTests {
         val falseReference = variableReference("x")
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
-            trueReference to trueVal,
-            falseReference to falseVal
+            trueReference to trueVal.target,
+            falseReference to falseVal.target
         )
 
         val shed = ifExpression(

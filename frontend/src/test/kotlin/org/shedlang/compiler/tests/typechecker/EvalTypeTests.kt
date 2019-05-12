@@ -34,7 +34,7 @@ class EvalTypeTests {
     @Test
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
         val reference = staticReference("x")
-        val declaration = valStatement("x")
+        val declaration = variableBinder("x")
 
         assertThat(
             { evalType(

@@ -14,10 +14,10 @@ import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.UnitType
 
 class ResolutionTests {
-    private val declaration = valStatement("declaration")
+    private val declaration = variableBinder("declaration")
     private var declarationIndex = 1
     private fun anyDeclaration(): VariableBindingNode {
-        return valStatement("declaration-" + declarationIndex++)
+        return variableBinder("declaration-" + declarationIndex++)
     }
 
     @Test
@@ -210,7 +210,7 @@ class ResolutionTests {
         )
 
         val references = resolve(node, globals = mapOf(Identifier("Int") to anyDeclaration()))
-        assertThat(references[reference], isVariableBinding(valStatement))
+        assertThat(references[reference], isVariableBinding(valStatement.target))
     }
 
     @Test
@@ -329,8 +329,8 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[trueReference], isVariableBinding(trueVal))
-        assertThat(references[falseReference], isVariableBinding(falseVal))
+        assertThat(references[trueReference], isVariableBinding(trueVal.target))
+        assertThat(references[falseReference], isVariableBinding(falseVal.target))
     }
 
     @Test
@@ -378,7 +378,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf(Identifier("T") to anyDeclaration()))
 
-        assertThat(references[variableReference], isVariableBinding(variableDeclaration))
+        assertThat(references[variableReference], isVariableBinding(variableDeclaration.target))
     }
 
     @Test
@@ -396,7 +396,7 @@ class ResolutionTests {
 
         val references = resolve(node, globals = mapOf())
 
-        assertThat(references[variableReference], isVariableBinding(variableDeclaration))
+        assertThat(references[variableReference], isVariableBinding(variableDeclaration.target))
     }
 
     @Test

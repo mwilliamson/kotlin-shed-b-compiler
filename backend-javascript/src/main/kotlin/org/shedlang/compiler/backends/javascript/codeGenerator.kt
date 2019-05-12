@@ -199,7 +199,7 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
 
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
     return JavascriptConstNode(
-        name = generateName(node.name),
+        name = generateName(node.target.name),
         expression = generateCode(node.expression, context),
         source = NodeSource(node)
     )

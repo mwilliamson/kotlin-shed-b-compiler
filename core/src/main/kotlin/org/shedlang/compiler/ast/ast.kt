@@ -586,13 +586,13 @@ data class ExpressionStatementNode(
 }
 
 data class ValNode(
-    override val name: Identifier,
+    val target: ValTargetNode,
     val expression: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode, FunctionStatementNode, ModuleStatementNode {
+): FunctionStatementNode, ModuleStatementNode {
     override val children: List<Node>
-        get() = listOf(expression)
+        get() = listOf(target, expression)
 
     override val isReturn: Boolean
         get() = false
@@ -605,8 +605,17 @@ data class ValNode(
     }
 
     override fun variableBinders(): List<VariableBindingNode> {
-        return listOf(this)
+        return listOf(target)
     }
+}
+
+data class ValTargetNode(
+    override val name: Identifier,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): VariableBindingNode {
+    override val children: List<Node>
+        get() = listOf()
 }
 
 interface ExpressionNode : Node {

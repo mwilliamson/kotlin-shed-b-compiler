@@ -705,14 +705,24 @@ private fun parseVal(tokens: TokenIterator<TokenType>): ValNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_VAL)
-    val name = parseIdentifier(tokens)
+    val target = parseValTarget(tokens)
     tokens.skip(TokenType.SYMBOL_EQUALS)
     val expression = parseExpression(tokens)
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
     return ValNode(
-        name = name,
+        target = target,
         expression = expression,
+        source = source
+    )
+}
+
+private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
+    val source = tokens.location()
+    val name = parseIdentifier(tokens)
+
+    return ValTargetNode(
+        name = name,
         source = source
     )
 }

@@ -53,14 +53,18 @@ internal fun isExpressionStatement(
 }
 
 inline internal fun <reified T: ExpressionNode> isVal(
-    name: Matcher<Identifier>,
+    target: Matcher<ValTargetNode>,
     expression: Matcher<T>
 ): Matcher<Node> {
     return cast(allOf(
-        has(ValNode::name, name),
+        has(ValNode::target, target),
         has(ValNode::expression, cast(expression))
     ))
 }
+
+internal fun isValTarget(
+    name: Matcher<Identifier>
+) = has(ValTargetNode::name, name)
 
 internal fun isValType(
     name: Matcher<Identifier>,

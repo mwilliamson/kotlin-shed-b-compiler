@@ -328,7 +328,7 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
 
 private fun typeCheck(node: ValNode, context: TypeContext) {
     val type = inferType(node.expression, context)
-    context.addVariableType(node, type)
+    context.addVariableType(node.target, type)
 }
 
 internal fun typeCheck(statements: List<FunctionStatementNode>, context: TypeContext): Type {

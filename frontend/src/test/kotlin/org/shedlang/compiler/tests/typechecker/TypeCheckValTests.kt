@@ -40,6 +40,6 @@ class TypeCheckValTests {
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
         typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
-        assertThat(typeContext.typeOf(node), cast(equalTo(IntType)))
+        assertThat(typeContext.typeOf(node.target), cast(equalTo(IntType)))
     }
 }

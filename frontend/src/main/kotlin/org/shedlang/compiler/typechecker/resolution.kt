@@ -155,7 +155,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
 
         is ValNode -> {
             resolve(node.expression, context)
-            context.initialise(node)
+            context.initialise(node.target)
         }
 
         is ModuleNode -> {
@@ -227,7 +227,10 @@ private fun resolveScope(
 ): ResolutionContext {
     // TODO: handle this more neatly
     val bodyContext = enterScope(
-        binders + body.filterIsInstance<VariableBindingNode>() + body.filterIsInstance<UnionNode>().flatMap { union -> union.members },
+        binders +
+            body.filterIsInstance<VariableBindingNode>() +
+            body.filterIsInstance<UnionNode>().flatMap { union -> union.members } +
+            body.filterIsInstance<ValNode>().map { node -> node.target },
         context
     )
 

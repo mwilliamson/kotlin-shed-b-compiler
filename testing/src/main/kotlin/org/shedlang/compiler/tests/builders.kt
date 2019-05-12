@@ -91,14 +91,14 @@ fun valStatement(
     name: String = "<val name>",
     expression: ExpressionNode = expression()
 ) = ValNode(
-    name = Identifier(name),
+    target = ValTargetNode(Identifier(name), source = anySource()),
     expression = expression,
     source = anySource()
 )
 
 fun variableBinder(
     name: String
-) = valStatement(name = name)
+): VariableBindingNode = parameter(name = name)
 
 fun valType(
     name: String = "<val name>",
