@@ -40,4 +40,25 @@ class TypeCheckValTests {
         typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
         assertThat(typeContext.typeOf(target), cast(equalTo(IntType)))
     }
+
+    @Test
+    fun targetTupleTakesTypeOfExpression() {
+        val elementTarget1 = valTargetVariable("x")
+        val elementTarget2 = valTargetVariable("y")
+        val target = valTargetTuple(elements = listOf(
+            elementTarget1,
+            elementTarget2
+        ))
+        val expression = tupleNode(listOf(literalInt(), literalBool()))
+        val node = valStatement(target = target, expression = expression)
+        val typeContext = newTypeContext(
+            moduleName = null,
+            nodeTypes = mapOf(),
+            resolvedReferences = ResolvedReferencesMap(mapOf()),
+            getModule = { moduleName -> throw UnsupportedOperationException() }
+        )
+        typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
+        assertThat(typeContext.typeOf(elementTarget1), isIntType)
+        assertThat(typeContext.typeOf(elementTarget2), isBoolType)
+    }
 }

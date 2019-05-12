@@ -57,7 +57,7 @@ sealed class TestProgramSource {
 }
 
 fun testPrograms(): List<TestProgram> {
-    return findTestFiles().map(fun(source): TestProgram {
+    return findTestFiles().filter({ source -> source.path.endsWith("Tuples.shed") }).map(fun(source): TestProgram {
         val mainPath = when (source) {
             is TestProgramSource.File -> source.path
             is TestProgramSource.Directory -> source.path.resolve("src").resolve(source.mainModule.map(Identifier::value).joinToString("/") + ".shed")

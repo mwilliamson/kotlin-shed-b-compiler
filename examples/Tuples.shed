@@ -1,0 +1,20 @@
+// stdout:
+//   8
+
+fun fibonacci(n: Int) -> Int {
+    val #(first, second) = fibonacci2(n);
+    second
+}
+
+fun fibonacci2(n: Int) -> #(Int, Int) {
+    if (n == 0) {
+        #(1, 0)
+    } else {
+        val #(first, second) = fibonacci2(n - 1);
+        #(second, first + second)
+    }
+}
+
+fun main() !Io -> Unit {
+    print!(intToString(fibonacci(6)) + "\n");
+}

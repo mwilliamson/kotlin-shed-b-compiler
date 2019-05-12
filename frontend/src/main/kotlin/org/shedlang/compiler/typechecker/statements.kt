@@ -330,9 +330,21 @@ private fun typeCheck(node: ValNode, context: TypeContext) {
     val type = inferType(node.expression, context)
     val target = node.target
 
+    return typeCheckValTarget(target, context, type)
+}
+
+private fun typeCheckValTarget(target: ValTargetNode, context: TypeContext, type: Type) {
     when (target) {
         is ValTargetNode.Variable ->
             context.addVariableType(target, type)
+        is ValTargetNode.Tuple -> {
+            // TODO: check is tuple type
+            // TODO: check length
+            val tupleType = type as TupleType
+            for ((elementType, targetElement) in tupleType.elementTypes.zip(target.elements)) {
+                typeCheckValTarget(target)
+            }
+        }
     }
 }
 
