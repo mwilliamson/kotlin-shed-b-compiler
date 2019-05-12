@@ -1009,6 +1009,16 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             tokens.skip()
             return BooleanLiteralNode(false, source)
         }
+        TokenType.SYMBOL_HASH -> {
+            tokens.skip()
+            tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+
+            tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+            return TupleNode(
+                elements = listOf(),
+                source = source
+            )
+        }
         TokenType.STRING -> {
             val token = tokens.next()
             val value = decodeCodePointToken(token.value, source = source)

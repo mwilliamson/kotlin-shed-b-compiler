@@ -245,6 +245,9 @@ internal fun isFieldAccess(
     has(FieldAccessNode::source, source)
 ))
 
+internal fun isTupleNode(elements: Matcher<List<ExpressionNode>>)
+    = cast(has(TupleNode::elements, elements))
+
 internal fun isVariableReference(name: String) : Matcher<ExpressionNode>
     = cast(has(VariableReferenceNode::name, isIdentifier(name)))
 
