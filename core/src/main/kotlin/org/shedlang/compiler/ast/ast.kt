@@ -645,7 +645,7 @@ sealed class ValTargetNode: Node {
             get() = elements
 
         override fun variableBinders(): List<VariableBindingNode> {
-            return elements.flatMap { element -> variableBinders() }
+            return elements.flatMap { element -> element.variableBinders() }
         }
 
     }
