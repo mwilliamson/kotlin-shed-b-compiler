@@ -14,4 +14,31 @@ class ParseTupleTests {
             elements = isSequence()
         ))
     }
+
+    @Test
+    fun canParseSingletonTuple() {
+        val source = "#(1)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isTupleNode(
+            elements = isSequence(isIntLiteral(1))
+        ))
+    }
+
+    @Test
+    fun canParseTuplesWithMultipleElements() {
+        val source = "#(1, 2)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isTupleNode(
+            elements = isSequence(isIntLiteral(1), isIntLiteral(2))
+        ))
+    }
+
+    @Test
+    fun elementsCanHaveTrailingComma() {
+        val source = "#(1,)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isTupleNode(
+            elements = isSequence(isIntLiteral(1))
+        ))
+    }
 }

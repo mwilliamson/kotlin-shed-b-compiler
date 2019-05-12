@@ -1013,9 +1013,18 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             tokens.skip()
             tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
+            val elements = parseMany(
+                parseElement = { tokens -> parseExpression(tokens) },
+                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+                isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+                allowZero = true,
+                allowTrailingSeparator = true,
+                tokens = tokens
+            )
+
             tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
             return TupleNode(
-                elements = listOf(),
+                elements = elements,
                 source = source
             )
         }
