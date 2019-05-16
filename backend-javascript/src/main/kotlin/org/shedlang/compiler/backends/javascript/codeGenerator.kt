@@ -198,15 +198,31 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
 }
 
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
+    val source = NodeSource(node)
     val target = node.target
+    val javascriptTarget = generateCodeForValTarget(target, context)
+    return JavascriptConstNode(
+        target = javascriptTarget,
+        expression = generateCode(node.expression, context),
+        source = source
+    )
+}
 
-    return when (target) {
-        is ValTargetNode.Variable -> javascriptConst(
-            name = generateName(target.name),
-            expression = generateCode(node.expression, context),
-            source = NodeSource(node)
+private fun generateCodeForValTarget(
+    shedTarget: ValTargetNode,
+    context: CodeGenerationContext
+): JavascriptExpressionNode {
+    val source = NodeSource(shedTarget)
+    return when (shedTarget) {
+        is ValTargetNode.Variable -> {
+            JavascriptVariableReferenceNode(generateName(shedTarget.name), source = source)
+        }
+        is ValTargetNode.Tuple -> JavascriptArrayLiteralNode(
+            elements = shedTarget.elements.map { targetElement ->
+                generateCodeForValTarget(targetElement, context)
+            },
+            source = source
         )
-        is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
     }
 }
 

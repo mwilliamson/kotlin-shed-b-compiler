@@ -333,13 +333,33 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun valGeneratesConst() {
+    fun valWithTargetVariableGeneratesConst() {
         val shed = valStatement(name = "x", expression = literalBool(true))
 
-        val node = generateCodeForFunctionStatement(shed as FunctionStatementNode)
+        val node = generateCodeForFunctionStatement(shed)
 
         assertThat(node, isJavascriptConst(
             target = isJavascriptVariableReference("x"),
+            expression = isJavascriptBooleanLiteral(true)
+        ))
+    }
+
+    @Test
+    fun valWithTargetTupleGeneratesConstTargetingArray() {
+        val shed = valStatement(
+            target = valTargetTuple(elements = listOf(valTargetVariable("x"), valTargetVariable("y"))),
+            expression = literalBool(true)
+        )
+
+        val node = generateCodeForFunctionStatement(shed)
+
+        assertThat(node, isJavascriptConst(
+            target = isJavascriptArray(
+                elements = isSequence(
+                    isJavascriptVariableReference("x"),
+                    isJavascriptVariableReference("y")
+                )
+            ),
             expression = isJavascriptBooleanLiteral(true)
         ))
     }
