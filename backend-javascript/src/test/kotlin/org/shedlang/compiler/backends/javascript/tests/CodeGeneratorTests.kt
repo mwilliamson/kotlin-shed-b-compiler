@@ -37,7 +37,7 @@ class CodeGeneratorTests {
         assertThat(node, isJavascriptModule(
             body = isSequence(
                 isJavascriptConst(
-                    name = equalTo("x"),
+                    target = isJavascriptVariableReference("x"),
                     expression = isJavascriptFunctionCall(
                         isJavascriptVariableReference("require"),
                         isSequence(isJavascriptStringLiteral("./x"))
@@ -111,7 +111,7 @@ class CodeGeneratorTests {
         val node = generateCode(shed, context(types = types)).single()
 
         assertThat(node, isJavascriptConst(
-            name = equalTo("X"),
+            target = isJavascriptVariableReference("X"),
             expression = isJavascriptFunctionCall(
                 isJavascriptVariableReference("\$shed.declareShape"),
                 isSequence(
@@ -144,11 +144,11 @@ class CodeGeneratorTests {
 
         assertThat(nodes, isSequence(
             isJavascriptConst(
-                name = equalTo("X"),
+                target = isJavascriptVariableReference("X"),
                 expression = isJavascriptNull()
             ),
             isJavascriptConst(
-                name = equalTo("Member1"),
+                target = isJavascriptVariableReference("Member1"),
                 expression = isJavascriptFunctionCall(
                     isJavascriptVariableReference("\$shed.declareShape"),
                     isSequence(
@@ -158,7 +158,7 @@ class CodeGeneratorTests {
                 )
             ),
             isJavascriptConst(
-                name = equalTo("Member2"),
+                target = isJavascriptVariableReference("Member2"),
                 expression = isJavascriptFunctionCall(
                     isJavascriptVariableReference("\$shed.declareShape"),
                     isSequence(
@@ -201,7 +201,7 @@ class CodeGeneratorTests {
             parameters = isSequence(equalTo("x"), equalTo("y"), equalTo("\$named")),
             body = isSequence(
                 isJavascriptConst(
-                    name = equalTo("z"),
+                    target = isJavascriptVariableReference("z"),
                     expression = isJavascriptPropertyAccess(
                         receiver = isJavascriptVariableReference("\$named"),
                         propertyName = equalTo("z")
@@ -309,7 +309,7 @@ class CodeGeneratorTests {
         assertThat(node, isJavascriptImmediatelyInvokedFunction(
             body = isSequence(
                 isJavascriptConst(
-                    name = equalTo("\$shed_tmp"),
+                    target = isJavascriptVariableReference("\$shed_tmp"),
                     expression = isJavascriptVariableReference("x")
                 ),
                 isJavascriptIfStatement(
@@ -338,7 +338,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed as FunctionStatementNode)
 
-        assertThat(node, isJavascriptConst(equalTo("x"), isJavascriptBooleanLiteral(true)))
+        assertThat(node, isJavascriptConst(
+            target = isJavascriptVariableReference("x"),
+            expression = isJavascriptBooleanLiteral(true)
+        ))
     }
 
     @Test
@@ -715,10 +718,10 @@ class CodeGeneratorTests {
     ))
 
     private fun isJavascriptConst(
-        name: Matcher<String>,
+        target: Matcher<JavascriptExpressionNode>,
         expression: Matcher<JavascriptExpressionNode>
     ): Matcher<JavascriptStatementNode>  = cast(allOf(
-        has(JavascriptConstNode::name, name),
+        has(JavascriptConstNode::target, target),
         has(JavascriptConstNode::expression, expression)
     ))
 

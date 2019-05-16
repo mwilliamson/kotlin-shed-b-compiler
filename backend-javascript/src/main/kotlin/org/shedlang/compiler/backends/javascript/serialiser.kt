@@ -53,8 +53,9 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         }
 
         override fun visit(node: JavascriptConstNode): String {
+            val target = serialise(node.target, indentation = indentation)
             val expression = serialise(node.expression, indentation = indentation)
-            return simpleStatement("const ${node.name} = $expression")
+            return simpleStatement("const $target = $expression")
         }
     })
 }

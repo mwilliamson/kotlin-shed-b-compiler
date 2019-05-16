@@ -85,7 +85,7 @@ interface JavascriptFunctionNode {
 }
 
 data class JavascriptConstNode(
-    val name: String,
+    val target: JavascriptExpressionNode,
     val expression: JavascriptExpressionNode,
     override val source: Source
 ) : JavascriptStatementNode {

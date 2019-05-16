@@ -40,7 +40,7 @@ private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptSta
 
     val importPath = importBase + import.path.parts.map(Identifier::value).joinToString("/")
 
-    return JavascriptConstNode(
+    return javascriptConst(
         name = generateName(import.name),
         expression = JavascriptFunctionCallNode(
             JavascriptVariableReferenceNode("require", source = source),
@@ -84,7 +84,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         .filter { field -> field.isConstant }
 
     val source = NodeSource(node)
-    return JavascriptConstNode(
+    return javascriptConst(
         name = generateName(node.name),
         expression = JavascriptFunctionCallNode(
             JavascriptVariableReferenceNode(
@@ -123,7 +123,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
 private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext) : List<JavascriptStatementNode> {
     val source = NodeSource(node)
     return listOf(
-        JavascriptConstNode(
+        javascriptConst(
             name = generateName(node.name),
             expression = JavascriptNullLiteralNode(source = source),
             source = source
@@ -150,7 +150,7 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
         listOf(namedParameterName)
     }
     val namedParameterAssignments = node.namedParameters.map { parameter ->
-        JavascriptConstNode(
+        javascriptConst(
             name = generateName(parameter.name),
             expression = JavascriptPropertyAccessNode(
                 receiver = JavascriptVariableReferenceNode(
@@ -201,7 +201,7 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): Javascr
     val target = node.target
 
     return when (target) {
-        is ValTargetNode.Variable -> JavascriptConstNode(
+        is ValTargetNode.Variable -> javascriptConst(
             name = generateName(target.name),
             expression = generateCode(node.expression, context),
             source = NodeSource(node)
@@ -451,7 +451,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             return immediatelyInvokedFunction(
                 body = listOf(
-                    JavascriptConstNode(
+                    javascriptConst(
                         name = temporaryName,
                         expression = generateCode(node.expression, context),
                         source = source
@@ -538,6 +538,18 @@ private fun generateName(identifier: Identifier): String {
     } else {
         identifier.value
     }.replace("$", "_").replace(".", "_")
+}
+
+private fun javascriptConst(
+    name: String,
+    expression: JavascriptExpressionNode,
+    source: Source
+): JavascriptConstNode {
+    return JavascriptConstNode(
+        target = JavascriptVariableReferenceNode(name, source = source),
+        expression = expression,
+        source = source
+    )
 }
 
 val javascriptKeywords = setOf(

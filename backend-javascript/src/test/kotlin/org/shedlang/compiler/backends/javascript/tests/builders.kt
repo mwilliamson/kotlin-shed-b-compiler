@@ -140,7 +140,7 @@ fun jsConst(
     name: String,
     expression: JavascriptExpressionNode
 ) = JavascriptConstNode(
-    name = name,
+    target = JavascriptVariableReferenceNode(name, source = anySource()),
     expression = expression,
     source = anySource()
 )
