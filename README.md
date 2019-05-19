@@ -104,3 +104,5 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
   * Make opt-in/explicit? Implement using while where possible, fallback to trampolines.
 
 * Check number of static arguments
+
+* Rename Any type to something else (Top?) to avoid conflation with any in (for instance) TypeScript
