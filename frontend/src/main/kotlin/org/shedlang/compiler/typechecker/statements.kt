@@ -339,7 +339,6 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
             context.addVariableType(target, type)
         is ValTargetNode.Tuple -> {
             // TODO: check is tuple type
-            // TODO: check length
             val tupleType = type as TupleType
 
             if (tupleType.elementTypes.size != target.elements.size) {
