@@ -341,6 +341,18 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
             // TODO: check is tuple type
             // TODO: check length
             val tupleType = type as TupleType
+
+            if (tupleType.elementTypes.size != target.elements.size) {
+                // TODO: should the error be on the target or expression?
+                throw UnexpectedTypeError(
+                    actual = TupleType(
+                        elementTypes = target.elements.map { AnyType }
+                    ),
+                    expected = tupleType,
+                    source = target.source
+                )
+            }
+
             for ((elementType, targetElement) in tupleType.elementTypes.zip(target.elements)) {
                 typeCheckValTarget(targetElement, elementType, context)
             }
