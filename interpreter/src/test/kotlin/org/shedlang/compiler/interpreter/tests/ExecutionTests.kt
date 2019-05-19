@@ -10,9 +10,13 @@ import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
+    private val disabledTests = setOf<String>("Tuples.shed")
+
     @TestFactory
     fun testProgram(): List<DynamicTest> {
-        return testPrograms().mapNotNull { testProgram ->
+        return testPrograms().filter { testProgram ->
+            !disabledTests.contains(testProgram.name)
+        }.mapNotNull { testProgram ->
             DynamicTest.dynamicTest(testProgram.name, {
                 try {
                     val modules = testProgram.load()
