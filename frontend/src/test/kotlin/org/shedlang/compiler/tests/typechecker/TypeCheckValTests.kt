@@ -22,7 +22,7 @@ class TypeCheckValTests {
         val functionReference = variableReference("f")
         val node = valStatement(name = "x", expression = call(functionReference))
         assertThat(
-            { typeCheckFunctionStatement(node as FunctionStatementNode, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
+            { typeCheckFunctionStatement(node, typeContext(referenceTypes = mapOf(functionReference to UnitType))) },
             throws(has(UnexpectedTypeError::actual, equalTo<Type>(UnitType)))
         )
     }
@@ -31,13 +31,10 @@ class TypeCheckValTests {
     fun targetVariableTakesTypeOfExpression() {
         val target = valTargetVariable(name = "x")
         val node = valStatement(target = target, expression = literalInt())
-        val typeContext = newTypeContext(
-            moduleName = null,
-            nodeTypes = mapOf(),
-            resolvedReferences = ResolvedReferencesMap(mapOf()),
-            getModule = { moduleName -> throw UnsupportedOperationException() }
-        )
-        typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
+        val typeContext = typeContext()
+
+        typeCheckFunctionStatement(node, typeContext)
+
         assertThat(typeContext.typeOf(target), cast(equalTo(IntType)))
     }
 
@@ -51,13 +48,10 @@ class TypeCheckValTests {
         ))
         val expression = tupleNode(listOf(literalInt(), literalBool()))
         val node = valStatement(target = target, expression = expression)
-        val typeContext = newTypeContext(
-            moduleName = null,
-            nodeTypes = mapOf(),
-            resolvedReferences = ResolvedReferencesMap(mapOf()),
-            getModule = { moduleName -> throw UnsupportedOperationException() }
-        )
-        typeCheckFunctionStatement(node as FunctionStatementNode, typeContext)
+        val typeContext = typeContext()
+
+        typeCheckFunctionStatement(node, typeContext)
+
         assertThat(typeContext.typeOf(elementTarget1), isIntType)
         assertThat(typeContext.typeOf(elementTarget2), isBoolType)
     }
