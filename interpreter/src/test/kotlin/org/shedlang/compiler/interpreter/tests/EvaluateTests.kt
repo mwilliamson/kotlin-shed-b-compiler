@@ -11,6 +11,7 @@ import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.interpreter.*
+import org.shedlang.compiler.interpreter.Target
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
@@ -989,7 +990,7 @@ class EvaluateBlockTests {
         val expression = evaluate(
             Block(
                 body = listOf(
-                    Val(Identifier("x"), IntegerValue(47)),
+                    Val(Target.Variable(Identifier("x")), IntegerValue(47)),
                     ExpressionStatement(expression = VariableReference("y"), isReturn = false)
                 ),
                 scope = blockScope
@@ -1022,10 +1023,10 @@ class EvaluateValTests {
             )
         )
         val statement = evaluate(
-            Val(Identifier("x"), VariableReference("y")),
+            Val(Target.Variable(Identifier("x")), VariableReference("y")),
             context
         )
-        assertThat(statement, isPureResult(equalTo(Val(Identifier("x"), IntegerValue(42)))))
+        assertThat(statement, isPureResult(equalTo(Val(Target.Variable(Identifier("x")), IntegerValue(42)))))
     }
 }
 

@@ -116,20 +116,22 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
         }
 
         override fun visit(node: ValNode): Statement {
-            val target = node.target
+            val targetNode = node.target
 
-            return when (target) {
-                is ValTargetNode.Variable -> Val(
-                    name = target.name,
-                    expression = loadExpression(node.expression, context)
-                )
+            val target = when (targetNode) {
+                is ValTargetNode.Variable -> Target.Variable(targetNode.name)
                 is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
             }
+
+            return Val(
+                target = target,
+                expression = loadExpression(node.expression, context)
+            )
         }
 
         override fun visit(node: FunctionDeclarationNode): Statement {
             return Val(
-                name = node.name,
+                target = Target.Variable(node.name),
                 expression = functionToExpression(node, context)
             )
         }
@@ -237,7 +239,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             val expressionName = "\$whenExpression"
 
             return DeferredBlock(listOf(
-                Val(Identifier(expressionName), loadExpression(node.expression, context)),
+                Val(Target.Variable(Identifier(expressionName)), loadExpression(node.expression, context)),
                 ExpressionStatement(isReturn = true, expression = If(
                     conditionalBranches = node.branches.map { branch ->
                         val discriminator = findDiscriminator(node, branch, context.types)

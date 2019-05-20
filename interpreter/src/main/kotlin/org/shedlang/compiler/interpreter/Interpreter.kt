@@ -330,7 +330,9 @@ internal data class Block(val body: List<Statement>, val scope: Scope): Incomple
             } else if (statement is Val && statement.expression is InterpreterValue) {
                 return EvaluationResult.updateStackFrame(
                     scope.frameReferences[0] as FrameReference.Local,
-                    listOf(statement.name to statement.expression)
+                    when (statement.target) {
+                        is Target.Variable -> listOf(statement.target.name to statement.expression)
+                    }
                 ).map {
                     Block(
                         body = body.drop(1),
@@ -414,16 +416,20 @@ internal data class ExpressionStatement(val expression: Expression, val isReturn
     }
 }
 
-internal data class Val(val name: Identifier, val expression: Expression): Statement {
+internal data class Val(val target: Target, val expression: Expression): Statement {
     override fun execute(context: InterpreterContext): EvaluationResult<Statement> {
         when (expression) {
             is IncompleteExpression ->
                 return expression.evaluate(context).map { evaluatedExpression ->
-                    Val(name, evaluatedExpression)
+                    Val(target, evaluatedExpression)
                 }
         }
         throw UnsupportedOperationException("not implemented")
     }
+}
+
+internal sealed class Target {
+    internal data class Variable(internal val name: Identifier): Target()
 }
 
 internal data class Arguments(
