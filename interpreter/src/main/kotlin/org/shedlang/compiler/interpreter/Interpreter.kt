@@ -249,6 +249,8 @@ internal data class CodePointValue(val value: Int): InterpreterValue()
 
 internal data class SymbolValue(private val value: Symbol): InterpreterValue()
 
+internal data class TupleValue(val elements: List<InterpreterValue>): InterpreterValue()
+
 internal data class ListValue(val elements: List<InterpreterValue>): InterpreterValue()
 
 internal data class ModuleValue(val fields: Map<Identifier, InterpreterValue>) : InterpreterValue()
@@ -455,6 +457,12 @@ internal object IntToStringValue: Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val argument = arguments[0].int()
         return EvaluationResult.pure(StringValue(argument.toString()))
+    }
+}
+
+internal object TupleConstructorValue: Callable() {
+    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
+        return EvaluationResult.pure(TupleValue(arguments.positionals))
     }
 }
 

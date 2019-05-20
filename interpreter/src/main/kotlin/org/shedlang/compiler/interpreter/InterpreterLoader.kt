@@ -146,7 +146,9 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         override fun visit(node: SymbolNode) = SymbolValue(Symbol(context.moduleName, node.name))
 
         override fun visit(node: TupleNode): Expression {
-            throw UnsupportedOperationException("not implemented")
+            return call(TupleConstructorValue, positionalArgumentExpressions = node.elements.map { element ->
+                loadExpression(element, context)
+            })
         }
 
         override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)

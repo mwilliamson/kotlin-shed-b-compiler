@@ -34,8 +34,8 @@ internal fun isBlock(
     ))
 }
 
-internal fun isIntegerValue(value: Int): Matcher<InterpreterValue> = cast(equalTo(IntegerValue(value)))
-internal fun isStringValue(value: String): Matcher<InterpreterValue> = cast(equalTo(StringValue(value)))
+internal fun isIntegerValue(value: Int): Matcher<Expression> = cast(equalTo(IntegerValue(value)))
+internal fun isStringValue(value: String): Matcher<Expression> = cast(equalTo(StringValue(value)))
 
 internal fun isLocalFrameReference(frameId: LocalFrameId): Matcher<FrameReference> = cast(has(FrameReference.Local::id, equalTo(frameId)))
 

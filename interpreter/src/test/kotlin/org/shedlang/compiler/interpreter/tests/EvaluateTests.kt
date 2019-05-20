@@ -581,6 +581,19 @@ class EvaluateCallTests {
     }
 
     @Test
+    fun callingTupleConstructorCreatesTuple() {
+        val context = createContext()
+        val result = evaluate(
+            call(
+                TupleConstructorValue,
+                positionalArgumentValues = listOf(IntegerValue(42))
+            ),
+            context
+        )
+        assertThat(result, isPureResult(equalTo(TupleValue(listOf(IntegerValue(42))))))
+    }
+
+    @Test
     fun callingListConstructorCreatesList() {
         val context = createContext()
         val result = evaluate(

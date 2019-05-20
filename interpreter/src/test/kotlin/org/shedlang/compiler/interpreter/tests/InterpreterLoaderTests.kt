@@ -171,3 +171,33 @@ class LoadIsTests {
         )))
     }
 }
+
+class LoadTupleTests {
+    @Test
+    fun tupleLiteralIsLoadedAsCallToTupleConstructor() {
+        val node = tupleNode(elements = listOf(literalInt(42)))
+
+        val context = createContext()
+        val expression = loadExpression(node, context = context)
+
+        assertThat(expression, cast(allOf(
+            has(Call::receiver, cast(equalTo(TupleConstructorValue))),
+            has(Call::positionalArgumentExpressions, isSequence(
+                isIntegerValue(42)
+            )),
+            has(Call::positionalArgumentValues, isSequence()),
+            has(Call::namedArgumentExpressions, isSequence()),
+            has(Call::namedArgumentValues, isSequence())
+        )))
+    }
+}
+
+private fun createContext(): LoaderContext {
+    return LoaderContext(
+        moduleName = listOf(),
+        types = TypesMap(
+            expressionTypes = mapOf(),
+            variableTypes = mapOf()
+        )
+    )
+}
