@@ -1026,7 +1026,9 @@ class EvaluateValTests {
             Val(Target.Variable(Identifier("x")), VariableReference("y")),
             context
         )
-        assertThat(statement, isPureResult(equalTo(Val(Target.Variable(Identifier("x")), IntegerValue(42)))))
+        assertThat(statement, isPureResult(equalTo(
+            StatementResult.Update(Val(Target.Variable(Identifier("x")), IntegerValue(42)))
+        )))
     }
 
     @Test
@@ -1112,6 +1114,6 @@ private fun evaluate(
 private fun evaluate(
     statement: Statement,
     context: InterpreterContext = createContext()
-): EvaluationResult<Statement> {
+): EvaluationResult<StatementResult> {
     return statement.execute(context)
 }

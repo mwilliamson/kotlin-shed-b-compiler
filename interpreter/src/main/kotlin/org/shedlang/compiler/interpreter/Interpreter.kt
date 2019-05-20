@@ -320,35 +320,28 @@ internal data class Block(val body: List<Statement>, val scope: Scope): Incomple
             return EvaluationResult.pure(UnitValue)
         } else {
             val statement = body[0]
-            if (statement is ExpressionStatement && statement.expression is InterpreterValue) {
-                if (statement.isReturn) {
-                    return EvaluationResult.pure(statement.expression)
-                } else {
-                    return EvaluationResult.pure(withBody(body.drop(1)))
-                }
-            } else if (statement is Val && statement.expression is InterpreterValue) {
-                return EvaluationResult.updateStackFrame(
-                    scope.frameReferences[0] as FrameReference.Local,
-                    assignExpression(statement.target, statement.expression)
-                ).map {
-                    Block(
-                        body = body.drop(1),
-                        scope = scope
-                    )
-                }
-            } else {
-                return statement.execute(bodyContext).map { evaluatedStatement ->
-                    withBody(listOf(evaluatedStatement) + body.drop(1))
-                }
-            }
-        }
-    }
+            return statement.execute(bodyContext).flatMap { result ->
+                when (result) {
+                    is StatementResult.Assign ->
+                        EvaluationResult.updateStackFrame(
+                            scope.frameReferences[0] as FrameReference.Local,
+                            result.variables
+                        ).map {
+                            Block(
+                                body = body.drop(1),
+                                scope = scope
+                            )
+                        }
 
-    private fun assignExpression(target: Target, value: InterpreterValue): List<Pair<Identifier, InterpreterValue>> {
-        return when (target) {
-            is Target.Variable -> listOf(target.name to value)
-            is Target.Tuple -> target.elements.zip((value as TupleValue).elements).flatMap { (targetElement, valueElement) ->
-                assignExpression(targetElement, valueElement)
+                    is StatementResult.Update ->
+                        EvaluationResult.pure(withBody(listOf(result.statement) + body.drop(1)))
+
+                    is StatementResult.Value ->
+                        EvaluationResult.pure(result.value)
+
+                    is StatementResult.Void ->
+                        EvaluationResult.pure(withBody(body.drop(1)))
+                }
             }
         }
     }
@@ -407,30 +400,54 @@ internal data class ConditionalBranch(
 )
 
 internal interface Statement {
-    fun execute(context: InterpreterContext): EvaluationResult<Statement>
+    fun execute(context: InterpreterContext): EvaluationResult<StatementResult>
+}
+
+internal sealed class StatementResult {
+    internal data class Assign(val variables: List<Pair<Identifier, InterpreterValue>>): StatementResult()
+    internal data class Update(val statement: Statement): StatementResult()
+    internal data class Value(val value: InterpreterValue): StatementResult()
+    internal object Void: StatementResult()
 }
 
 internal data class ExpressionStatement(val expression: Expression, val isReturn: Boolean): Statement {
-    override fun execute(context: InterpreterContext): EvaluationResult<Statement> {
-        if (expression is IncompleteExpression) {
-            return expression.evaluate(context).map { evaluatedExpression ->
-                ExpressionStatement(evaluatedExpression, isReturn = isReturn)
-            }
-        } else {
-            throw NotImplementedError()
+    override fun execute(context: InterpreterContext): EvaluationResult<StatementResult> {
+        return when (expression) {
+            is IncompleteExpression ->
+                expression.evaluate(context).map { evaluatedExpression ->
+                    StatementResult.Update(
+                        copy(expression = evaluatedExpression)
+                    )
+                }
+            is InterpreterValue ->
+                if (isReturn) {
+                    EvaluationResult.pure(StatementResult.Value(expression))
+                } else {
+                    EvaluationResult.pure(StatementResult.Void)
+                }
         }
     }
 }
 
 internal data class Val(val target: Target, val expression: Expression): Statement {
-    override fun execute(context: InterpreterContext): EvaluationResult<Statement> {
-        when (expression) {
+    override fun execute(context: InterpreterContext): EvaluationResult<StatementResult> {
+        return when (expression) {
             is IncompleteExpression ->
-                return expression.evaluate(context).map { evaluatedExpression ->
-                    Val(target, evaluatedExpression)
+                expression.evaluate(context).map { evaluatedExpression ->
+                    StatementResult.Update(Val(target, evaluatedExpression))
                 }
+            is InterpreterValue ->
+                EvaluationResult.pure(StatementResult.Assign(assignExpression(target, expression)))
         }
-        throw UnsupportedOperationException("not implemented")
+    }
+}
+
+private fun assignExpression(target: Target, value: InterpreterValue): List<Pair<Identifier, InterpreterValue>> {
+    return when (target) {
+        is Target.Variable -> listOf(target.name to value)
+        is Target.Tuple -> target.elements.zip((value as TupleValue).elements).flatMap { (targetElement, valueElement) ->
+            assignExpression(targetElement, valueElement)
+        }
     }
 }
 
