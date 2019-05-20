@@ -61,7 +61,7 @@ class EvaluateModuleReferenceTests {
     @Test
     fun moduleReferenceEvaluatesModuleWhenModuleIsNotValue() {
         val module = ModuleExpression(
-            statements = listOf(),
+            body = listOf(),
             fieldValues = listOf()
         )
         val context = createContext(
@@ -83,9 +83,9 @@ class EvaluateModuleReferenceTests {
     @Disabled("TODO: re-enable this test")
     fun expressionsAtTopLevelOfModuleAreEvaluatedInModuleScope() {
         val module = ModuleExpression(
-            statements = listOf(
-                ModuleStatement.declaration(
-                    Identifier("y"),
+            body = listOf(
+                Val(
+                    Target.Variable(Identifier("y")),
                     VariableReference("x")
                 )
             ),
@@ -104,9 +104,9 @@ class EvaluateModuleReferenceTests {
             EvaluationResult<Expression>::moduleExpressionUpdates,
             isSequence(
                 isPair(equalTo(listOf(Identifier("X"))), equalTo(ModuleExpression(
-                    statements = listOf(
-                        ModuleStatement.declaration(
-                            Identifier("y"),
+                    body = listOf(
+                        Val(
+                            Target.Variable(Identifier("y")),
                             IntegerValue(1)
                         )
                     ),

@@ -327,10 +327,7 @@ internal data class Block(val body: List<Statement>, val scope: Scope): Incomple
                             scope.frameReferences[0] as FrameReference.Local,
                             result.variables
                         ).map {
-                            Block(
-                                body = body.drop(1),
-                                scope = scope
-                            )
+                            withBody(body.drop(1))
                         }
 
                     is StatementResult.Update ->
@@ -869,42 +866,47 @@ internal class ModuleStatement(
 }
 
 internal data class ModuleExpression(
-    val statements: List<ModuleStatement>,
+    val body: List<Statement>,
     val fieldValues: List<Pair<Identifier, InterpreterValue>>
 ) {
     fun evaluate(moduleName: List<Identifier>, context: InterpreterContext): EvaluationResult<Unit> {
-        if (statements.isEmpty()) {
+        val scope = Scope(
+            frameReferences = moduleFrameReferences(moduleName)
+        )
+        val moduleContext = context.inScope(scope)
+
+        if (body.isEmpty()) {
             return EvaluationResult.updateModuleValue(moduleName, ModuleValue(fieldValues.toMap()))
         } else {
-            val statement = statements[0]
-            val expression = statement.expression
-
-            when (expression) {
-                is InterpreterValue ->
-                    return EvaluationResult.updateModuleExpression(
-                        moduleName,
+            val statement = body[0]
+            return statement.execute(moduleContext).map { result ->
+                when (result) {
+                    is StatementResult.Assign ->
                         ModuleExpression(
-                            statements = statements.drop(1),
-                            fieldValues = fieldValues + statement.bindings(expression)
+                            body = body.drop(1),
+                            fieldValues = fieldValues + result.variables
                         )
-                    )
-                is IncompleteExpression -> {
-                    val scope = Scope(
-                        frameReferences = moduleFrameReferences(moduleName)
-                    )
-                    return expression.evaluate(context.inScope(scope)).flatMap { value ->
-                        EvaluationResult.updateModuleExpression(
-                            moduleName,
-                            ModuleExpression(
-                                statements = listOf(statement.withExpression(value)) + statements.drop(1),
-                                fieldValues = fieldValues
-                            )
-                        )
-                    }
-                }
 
+                    is StatementResult.Update ->
+                        withBody(listOf(result.statement) + body.drop(1))
+
+                    is StatementResult.Value ->
+                        throw InterpreterError("cannot return from module")
+
+                    is StatementResult.Void ->
+                        withBody(body.drop(1))
+                }
+            }.flatMap { moduleExpression ->
+                EvaluationResult.updateModuleExpression(
+                    moduleName,
+                    moduleExpression
+                )
             }
         }
+    }
+
+    private fun withBody(body: List<Statement>): ModuleExpression {
+        return copy(body = body)
     }
 }
 

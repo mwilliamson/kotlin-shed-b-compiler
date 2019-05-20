@@ -35,50 +35,39 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
     val context = LoaderContext(moduleName = module.name, types = module.types)
 
     val imports = module.node.imports.map { import ->
-        ModuleStatement.declaration(import.name, ModuleReference(resolveImport(module.name, import.path)))
+        Val(Target.Variable(import.name), ModuleReference(resolveImport(module.name, import.path)))
     }
-    val declarations = module.node.body.map { statement ->
+    val declarations = module.node.body.flatMap { statement ->
         loadModuleStatement(statement, context)
     }
-    return ModuleExpression(statements = imports + declarations, fieldValues = listOf())
+    return ModuleExpression(body = imports + declarations, fieldValues = listOf())
 }
 
-internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): ModuleStatement {
-    return statement.accept(object : ModuleStatementNode.Visitor<ModuleStatement> {
-        override fun visit(node: TypeAliasNode) = ModuleStatement.declaration(
-            node.name,
-            TypeAliasTypeValue
+internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): List<Statement> {
+    return statement.accept(object : ModuleStatementNode.Visitor<List<Statement>> {
+        override fun visit(node: TypeAliasNode) = listOf(
+            assign(node.name, TypeAliasTypeValue)
         )
 
-        override fun visit(node: ShapeNode) = ModuleStatement.declaration(
-            node.name,
-            shapeToExpression(node, context)
+        override fun visit(node: ShapeNode) = listOf(
+            assign(node.name, shapeToExpression(node, context))
         )
 
-        override fun visit(node: UnionNode) = ModuleStatement(
-            expression = UnionTypeValue,
-            bindings = { listOf(node.name to UnionTypeValue) + node.members.map { member ->
-                member.name to shapeToExpression(member, context)
-            }}
+        override fun visit(node: UnionNode) = listOf(assign(node.name, UnionTypeValue)) + node.members.map { member ->
+            assign(member.name, shapeToExpression(member, context))
+        }
+
+        override fun visit(node: FunctionDeclarationNode) = listOf(
+            assign(node.name, functionToExpression(node, context))
         )
 
-        override fun visit(node: FunctionDeclarationNode) = ModuleStatement.declaration(
-            node.name,
-            functionToExpression(node, context)
+        override fun visit(node: ValNode) = listOf(
+            loadVal(node, context)
         )
 
-        override fun visit(node: ValNode) = ModuleStatement(
-            expression = loadExpression(node.expression, context),
-            bindings = { value ->
-                val target = node.target
-                when (target) {
-                    is ValTargetNode.Variable -> listOf(
-                        target.name to value
-                    )
-                    is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
-                }
-            }
-        )
+        private fun assign(name: Identifier, value: Expression): Val {
+            return Val(Target.Variable(name), value)
+        }
     })
 }
 
@@ -116,23 +105,7 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
         }
 
         override fun visit(node: ValNode): Statement {
-            val targetNode = node.target
-
-            val target = loadTarget(targetNode)
-
-            return Val(
-                target = target,
-                expression = loadExpression(node.expression, context)
-            )
-        }
-
-        private fun loadTarget(targetNode: ValTargetNode): Target {
-            return when (targetNode) {
-                is ValTargetNode.Variable -> Target.Variable(targetNode.name)
-                is ValTargetNode.Tuple -> Target.Tuple(targetNode.elements.map { targetElement ->
-                    loadTarget(targetElement)
-                })
-            }
+            return loadVal(node, context)
         }
 
         override fun visit(node: FunctionDeclarationNode): Statement {
@@ -142,6 +115,26 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
             )
         }
     })
+}
+
+private fun loadVal(node: ValNode, context: LoaderContext): Val {
+    val targetNode = node.target
+
+    val target = loadTarget(targetNode)
+
+    return Val(
+        target = target,
+        expression = loadExpression(node.expression, context)
+    )
+}
+
+private fun loadTarget(targetNode: ValTargetNode): Target {
+    return when (targetNode) {
+        is ValTargetNode.Variable -> Target.Variable(targetNode.name)
+        is ValTargetNode.Tuple -> Target.Tuple(targetNode.elements.map { targetElement ->
+            loadTarget(targetElement)
+        })
+    }
 }
 
 internal fun loadExpression(expression: ExpressionNode, context: LoaderContext): Expression {

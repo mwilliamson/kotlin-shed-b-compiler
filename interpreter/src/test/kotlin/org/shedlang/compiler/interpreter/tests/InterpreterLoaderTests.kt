@@ -53,12 +53,14 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context)
+        val loadedStatements = loadModuleStatement(statement, context)
 
-        assertThat(loadedStatement.expression, cast(
-            has(ShapeTypeValue::constantFields, isMap(
-                Identifier("x") to cast(equalTo(IntegerValue(1))),
-                Identifier("y") to cast(equalTo(IntegerValue(2)))
+        assertThat(loadedStatements, isSequence(
+            isVal(expression = cast(
+                has(ShapeTypeValue::constantFields, isMap(
+                    Identifier("x") to cast(equalTo(IntegerValue(1))),
+                    Identifier("y") to cast(equalTo(IntegerValue(2)))
+                ))
             ))
         ))
     }
@@ -90,10 +92,12 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context)
+        val loadedStatements = loadModuleStatement(statement, context)
 
-        assertThat(loadedStatement.expression, cast(
-            has(ShapeTypeValue::constantFields, isMap())
+        assertThat(loadedStatements, isSequence(
+            isVal(expression = cast(
+                has(ShapeTypeValue::constantFields, isMap())
+            ))
         ))
     }
 
@@ -119,15 +123,15 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context)
+        val loadedStatements = loadModuleStatement(statement, context)
 
-        assertThat(loadedStatement.expression, cast(
-            has(ShapeTypeValue::constantFields, isMap(
+        assertThat(loadedStatements, isSequence(
+            isVal(expression = cast(has(ShapeTypeValue::constantFields, isMap(
                 Identifier("x") to cast(equalTo(symbolValue(
                     module = listOf("A", "B"),
                     name = "@C"
                 )))
-            ))
+            ))))
         ))
     }
 }

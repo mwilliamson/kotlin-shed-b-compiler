@@ -34,6 +34,8 @@ internal fun isBlock(
     ))
 }
 
+internal fun isVal(expression: Matcher<Expression>): Matcher<Statement> = cast(has(Val::expression, expression))
+
 internal fun isBooleanValue(value: Boolean): Matcher<Expression> = cast(equalTo(BooleanValue(value)))
 internal fun isIntegerValue(value: Int): Matcher<Expression> = cast(equalTo(IntegerValue(value)))
 internal fun isStringValue(value: String): Matcher<Expression> = cast(equalTo(StringValue(value)))
