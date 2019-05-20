@@ -1028,6 +1028,78 @@ class EvaluateValTests {
         )
         assertThat(statement, isPureResult(equalTo(Val(Target.Variable(Identifier("x")), IntegerValue(42)))))
     }
+
+    @Test
+    fun givenTargetIsVariableWhenExpressionIsValueThenTargetVariableIsBound() {
+        val outerFrameId = createLocalFrameId()
+        val frameId = createLocalFrameId()
+
+        val statement = evaluate(
+            Block(
+                listOf(
+                    Val(Target.Variable(Identifier("x")), IntegerValue(42))
+                ),
+                scope = Scope(
+                    frameReferences = listOf(
+                        FrameReference.Local(frameId),
+                        FrameReference.Local(outerFrameId)
+                    )
+                )
+            )
+        )
+        assertThat(statement, isResult(
+            value = isBlock(body = isSequence()),
+            localFrameUpdates = isSequence(
+                isLocalFrameUpdate(
+                    frameId,
+                    isSequence(
+                        isPair(isIdentifier("x"), isIntegerValue(42))
+                    )
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun givenTargetIsTupleWhenExpressionIsValueThenTargetElementVariablesAreBound() {
+        val outerFrameId = createLocalFrameId()
+        val frameId = createLocalFrameId()
+
+        val statement = evaluate(
+            Block(
+                listOf(
+                    Val(
+                        Target.Tuple(listOf(
+                            Target.Variable(Identifier("x")),
+                            Target.Variable(Identifier("y"))
+                        )),
+                        TupleValue(listOf(
+                            IntegerValue(42),
+                            BooleanValue(true)
+                        ))
+                    )
+                ),
+                scope = Scope(
+                    frameReferences = listOf(
+                        FrameReference.Local(frameId),
+                        FrameReference.Local(outerFrameId)
+                    )
+                )
+            )
+        )
+        assertThat(statement, isResult(
+            value = isBlock(body = isSequence()),
+            localFrameUpdates = isSequence(
+                isLocalFrameUpdate(
+                    frameId,
+                    isSequence(
+                        isPair(isIdentifier("x"), isIntegerValue(42)),
+                        isPair(isIdentifier("y"), isBooleanValue(true))
+                    )
+                )
+            )
+        ))
+    }
 }
 
 private fun evaluate(

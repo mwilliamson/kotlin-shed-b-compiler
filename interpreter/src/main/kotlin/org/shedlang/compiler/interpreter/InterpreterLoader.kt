@@ -118,15 +118,21 @@ private fun loadStatement(statement: FunctionStatementNode, context: LoaderConte
         override fun visit(node: ValNode): Statement {
             val targetNode = node.target
 
-            val target = when (targetNode) {
-                is ValTargetNode.Variable -> Target.Variable(targetNode.name)
-                is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
-            }
+            val target = loadTarget(targetNode)
 
             return Val(
                 target = target,
                 expression = loadExpression(node.expression, context)
             )
+        }
+
+        private fun loadTarget(targetNode: ValTargetNode): Target {
+            return when (targetNode) {
+                is ValTargetNode.Variable -> Target.Variable(targetNode.name)
+                is ValTargetNode.Tuple -> Target.Tuple(targetNode.elements.map { targetElement ->
+                    loadTarget(targetElement)
+                })
+            }
         }
 
         override fun visit(node: FunctionDeclarationNode): Statement {

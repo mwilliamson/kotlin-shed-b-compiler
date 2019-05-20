@@ -330,9 +330,7 @@ internal data class Block(val body: List<Statement>, val scope: Scope): Incomple
             } else if (statement is Val && statement.expression is InterpreterValue) {
                 return EvaluationResult.updateStackFrame(
                     scope.frameReferences[0] as FrameReference.Local,
-                    when (statement.target) {
-                        is Target.Variable -> listOf(statement.target.name to statement.expression)
-                    }
+                    assignExpression(statement.target, statement.expression)
                 ).map {
                     Block(
                         body = body.drop(1),
@@ -343,6 +341,15 @@ internal data class Block(val body: List<Statement>, val scope: Scope): Incomple
                 return statement.execute(bodyContext).map { evaluatedStatement ->
                     withBody(listOf(evaluatedStatement) + body.drop(1))
                 }
+            }
+        }
+    }
+
+    private fun assignExpression(target: Target, value: InterpreterValue): List<Pair<Identifier, InterpreterValue>> {
+        return when (target) {
+            is Target.Variable -> listOf(target.name to value)
+            is Target.Tuple -> target.elements.zip((value as TupleValue).elements).flatMap { (targetElement, valueElement) ->
+                assignExpression(targetElement, valueElement)
             }
         }
     }
@@ -430,6 +437,7 @@ internal data class Val(val target: Target, val expression: Expression): Stateme
 
 internal sealed class Target {
     internal data class Variable(internal val name: Identifier): Target()
+    internal data class Tuple(internal val elements: List<Target>): Target()
 }
 
 internal data class Arguments(
