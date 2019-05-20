@@ -1,28 +1,47 @@
 package org.shedlang.compiler.interpreter.tests
 
 import com.natpryce.hamkrest.*
-import org.shedlang.compiler.interpreter.Block
-import org.shedlang.compiler.interpreter.EvaluationResult
-import org.shedlang.compiler.interpreter.Scope
-import org.shedlang.compiler.interpreter.Statement
+import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.interpreter.*
+import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 
 
 internal inline fun <T: Any, reified U: T> isPureResult(matcher: Matcher<U>): Matcher<EvaluationResult<T>> {
+    return isResult(value = cast(matcher))
+}
+
+internal fun <T: Any> isResult(
+    value: Matcher<T>,
+    localFrameUpdates: Matcher<List<Pair<FrameReference.Local, List<Pair<Identifier, InterpreterValue>>>>> = isSequence()
+): Matcher<EvaluationResult<T>> {
     return allOf(
-        has(EvaluationResult<T>::value, cast(matcher)),
+        has(EvaluationResult<T>::value, value),
         has(EvaluationResult<T>::stdout, equalTo("")),
         has(EvaluationResult<T>::moduleValueUpdates, isSequence()),
-        has(EvaluationResult<T>::moduleExpressionUpdates, isSequence())
+        has(EvaluationResult<T>::moduleExpressionUpdates, isSequence()),
+        has(EvaluationResult<T>::localFrameUpdates, localFrameUpdates)
     )
 }
 
 internal fun isBlock(
     body: Matcher<List<Statement>>,
     scope: Matcher<Scope> = anything
-): Matcher<Block> {
-    return allOf(
+): Matcher<Expression> {
+    return cast(allOf(
         has(Block::body, body),
         has(Block::scope, scope)
+    ))
+}
+
+internal fun isIntegerValue(value: Int): Matcher<InterpreterValue> = cast(equalTo(IntegerValue(value)))
+internal fun isStringValue(value: String): Matcher<InterpreterValue> = cast(equalTo(StringValue(value)))
+
+internal fun isLocalFrameReference(frameId: LocalFrameId): Matcher<FrameReference> = cast(has(FrameReference.Local::id, equalTo(frameId)))
+
+internal fun isLocalFrameUpdate(functionFrameId: LocalFrameId, variables: Matcher<Iterable<Pair<Identifier, InterpreterValue>>>): Matcher<Pair<FrameReference.Local, List<Pair<Identifier, InterpreterValue>>>> {
+    return isPair(
+        equalTo(FrameReference.Local(functionFrameId)),
+        variables
     )
 }

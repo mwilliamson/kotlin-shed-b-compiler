@@ -5,9 +5,26 @@ import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.types.Symbol
 import java.util.*
 
+internal fun createLocalContext(vararg variablesInFrames: Map<String, InterpreterValue>): InterpreterContext {
+    val (frameReferences, localFrames) = variablesInFrames.map { variablesInFrame ->
+        val frameId = createLocalFrameId()
+        val frameReference = FrameReference.Local(frameId)
+        frameReference to (frameId to ScopeFrameMap(variablesInFrame))
+    }.unzip()
+
+    val frameId = createLocalFrameId()
+    val frameReference = FrameReference.Local(frameId)
+    return InterpreterContext(
+        scope = Scope(frameReferences = frameReferences),
+        localFrames = WeakHashMap(localFrames.toMap()),
+        moduleExpressions = mapOf(),
+        moduleValues = mapOf()
+    )
+}
 
 internal fun createContext(
     scope: Scope = Scope(listOf()),
+    localFrames: WeakHashMap<LocalFrameId, ScopeFrameMap> = WeakHashMap(),
     moduleValues: Map<List<Identifier>, ModuleValue> = mapOf(),
     moduleExpressions: Map<List<Identifier>, ModuleExpression> = mapOf()
 ): InterpreterContext {
@@ -15,12 +32,8 @@ internal fun createContext(
         scope = scope,
         moduleValues = moduleValues,
         moduleExpressions = moduleExpressions,
-        scopeFrames = WeakHashMap()
+        localFrames = localFrames
     )
-}
-
-internal fun scopeOf(variables: Map<String, InterpreterValue>): Scope {
-    return Scope(listOf(ScopeFrameMap(variables)))
 }
 
 internal fun call(

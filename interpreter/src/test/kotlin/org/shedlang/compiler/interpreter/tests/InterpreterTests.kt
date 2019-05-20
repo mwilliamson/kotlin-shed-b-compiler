@@ -43,14 +43,14 @@ class InterpreterTests {
 
     @Test
     fun variableReferenceEvaluatesToValueOfVariable() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "x" to IntegerValue(42),
                 "y" to IntegerValue(47)
-            ))
+            )
         )
         val value = fullyEvaluate(variableReference("x"), context)
-        assertThat(value, isPureResult(equalTo(IntegerValue(42))))
+        assertThat(value, isPureResult(isIntegerValue(42)))
     }
 
     @Test

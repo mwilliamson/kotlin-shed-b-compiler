@@ -1,6 +1,8 @@
 package org.shedlang.compiler.interpreter.tests
 
+import com.natpryce.hamkrest.anything
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Disabled
@@ -9,17 +11,19 @@ import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.interpreter.*
+import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
+import java.util.*
 
 class EvaluateVariableReferenceTests {
     @Test
     fun variableReferenceEvaluatesToValueOfVariable() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "x" to IntegerValue(42),
                 "y" to IntegerValue(47)
-            ))
+            )
         )
         val value = evaluate(VariableReference("x"), context)
         assertThat(value, isPureResult(equalTo(IntegerValue(42))))
@@ -27,15 +31,13 @@ class EvaluateVariableReferenceTests {
 
     @Test
     fun variablesCanBeOverriddenInInnerScope() {
-        val context = createContext(
-            scope = Scope(listOf(
-                ScopeFrameMap(mapOf(
-                    "x" to IntegerValue(47)
-                )),
-                ScopeFrameMap(mapOf(
-                    "x" to IntegerValue(42)
-                ))
-            ))
+        val context = createLocalContext(
+            mapOf(
+                "x" to IntegerValue(47)
+            ),
+            mapOf(
+                "x" to IntegerValue(42)
+            )
         )
         val value = evaluate(VariableReference("x"), context)
         assertThat(value, isPureResult(equalTo(IntegerValue(47))))
@@ -134,10 +136,10 @@ class EvaluateUnaryOperationTests {
 
     @Test
     fun incompleteOperandIsEvaluated() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "x" to IntegerValue(1)
-            ))
+            )
         )
         val expression = evaluate(UnaryOperation(
             UnaryOperator.NOT,
@@ -365,11 +367,11 @@ class EvaluateBinaryOperationTests {
 
     @Test
     fun binaryOperationLeftOperandIsEvaluatedBeforeRightOperand() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "x" to IntegerValue(1),
                 "y" to IntegerValue(2)
-            ))
+            )
         )
         val expression = evaluate(BinaryOperation(
             BinaryOperator.ADD,
@@ -385,10 +387,10 @@ class EvaluateBinaryOperationTests {
 
     @Test
     fun binaryOperationRightOperandIsEvaluatedWhenLeftOperandIsValue() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "y" to IntegerValue(2)
-            ))
+            )
         )
         val expression = evaluate(BinaryOperation(
             BinaryOperator.ADD,
@@ -406,10 +408,10 @@ class EvaluateBinaryOperationTests {
 class EvaluateCallTests {
     @Test
     fun callReceiverIsEvaluatedFirst() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "x" to IntegerValue(1)
-            ))
+            )
         )
         val expression = evaluate(call(receiver = VariableReference("x")), context)
         assertThat(expression, isPureResult(equalTo(call(
@@ -419,11 +421,11 @@ class EvaluateCallTests {
 
     @Test
     fun callPositionalArgumentsAreEvaluatedInOrder() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "y" to IntegerValue(2),
                 "z" to IntegerValue(3)
-            ))
+            )
         )
         val expression = evaluate(
             Call(
@@ -456,11 +458,11 @@ class EvaluateCallTests {
 
     @Test
     fun callPositionalArgumentsAreMovedToValuesOnceFullyEvaluated() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "y" to IntegerValue(2),
                 "z" to IntegerValue(3)
-            ))
+            )
         )
         val expression = evaluate(
             Call(
@@ -493,11 +495,11 @@ class EvaluateCallTests {
 
     @Test
     fun namedArgumentsAreEvaluatedInOrder() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "y" to IntegerValue(2),
                 "z" to IntegerValue(3)
-            ))
+            )
         )
         val expression = evaluate(
             Call(
@@ -530,11 +532,11 @@ class EvaluateCallTests {
 
     @Test
     fun namedArgumentsAreMovedToValuesOnceFullyEvaluated() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "y" to IntegerValue(2),
                 "z" to IntegerValue(3)
-            ))
+            )
         )
         val expression = evaluate(
             Call(
@@ -686,7 +688,7 @@ class EvaluateCallTests {
             body = listOf(
                 ExpressionStatement(IntegerValue(1), isReturn = false)
             ),
-            scope = scopeOf(mapOf())
+            outerScope = Scope(frameReferences = listOf())
         )
         val expression = evaluate(
             call(
@@ -695,22 +697,29 @@ class EvaluateCallTests {
             ),
             context
         )
-        assertThat(expression, isPureResult(isBlock(
-            body = equalTo(listOf(
-                ExpressionStatement(IntegerValue(1), isReturn = false)
-            ))
-        )))
+        assertThat(expression, isResult(
+            value = isBlock(
+                body = equalTo(listOf(
+                    ExpressionStatement(IntegerValue(1), isReturn = false)
+                ))
+            ),
+            localFrameUpdates = anything
+        ))
     }
 
     @Test
     fun whenCallingFunctionThenBlockHasScopeFromFunction() {
-        val context = createContext()
+        val callSiteFrameId = createLocalFrameId()
+        val outerFrameId = createLocalFrameId()
+        val functionFrameId = LocalFrameId(nextLocalFrameId)
+
+        val context = createContext(
+            Scope(frameReferences = listOf(FrameReference.Local(callSiteFrameId)))
+        )
         val function = FunctionValue(
-            positionalParameterNames = listOf("arg0", "arg1"),
+            positionalParameterNames = listOf(Identifier("arg0"), Identifier("arg1")),
             body = listOf(),
-            scope = Scope(frames = listOf(
-                ScopeFrameMap(variables = mapOf("x" to IntegerValue(42)))
-            ))
+            outerScope = Scope(frameReferences = listOf(FrameReference.Local(outerFrameId)))
         )
         val expression = evaluate(
             call(
@@ -723,29 +732,33 @@ class EvaluateCallTests {
             ),
             context
         )
-        assertThat(expression, isPureResult(isBlock(
-            body = isSequence()
-            // TODO: Work out how to match on scopes
-//            scope = Scope(listOf(
-//                ScopeFrameMap(mapOf(
-//                    "arg0" to StringValue("zero"),
-//                    "arg1" to StringValue("one"),
-//                    "arg2" to StringValue("two"),
-//                    "arg3" to StringValue("three")
-//                )),
-//                ScopeFrameMap(variables = mapOf("x" to IntegerValue(42)))
-//            ))
-        )))
+        assertThat(expression, isResult(
+            value = isBlock(
+                body = isSequence(),
+                scope = has(Scope::frameReferences, isSequence(
+                    isLocalFrameReference(functionFrameId),
+                    isLocalFrameReference(outerFrameId)
+                ))
+            ),
+            localFrameUpdates = isSequence(
+                isLocalFrameUpdate(functionFrameId, isSequence(
+                    isPair(isIdentifier("arg0"), isStringValue("zero")),
+                    isPair(isIdentifier("arg1"), isStringValue("one")),
+                    isPair(isIdentifier("arg2"), isStringValue("two")),
+                    isPair(isIdentifier("arg3"), isStringValue("three"))
+                ))
+            )
+        ))
     }
 }
 
 class EvaluateFieldAccessTests {
     @Test
     fun fieldAccessReceiverIsEvaluatedFirst() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "x" to IntegerValue(1)
-            ))
+            )
         )
         val expression = evaluate(FieldAccess(VariableReference("x"), Identifier("y")), context)
         assertThat(expression, isPureResult(equalTo(FieldAccess(
@@ -778,17 +791,28 @@ class EvaluateFieldAccessTests {
 class EvaluateIfTests {
     @Test
     fun whenConditionalBranchesIsEmptyThenIfEvaluatesToElseBranch() {
+        val outerFrameId = createLocalFrameId()
+        val innerFrameId = LocalFrameId(nextLocalFrameId)
+
         val ifExpression = If(
             conditionalBranches = listOf(),
             elseBranch = listOf(returns(IntegerValue(3)))
         )
-        val scope = Scope(frames = listOf(ScopeFrame.EMPTY))
-        val expression = evaluate(ifExpression, context = createContext(scope = scope))
-        assertThat(expression, isPureResult(isBlock(
-            body = equalTo(listOf(returns(IntegerValue(3))))
-            // TODO: Work out how to match on scopes
-            //scope = equalTo(scope.enter(ScopeFrame.EMPTY))
-        )))
+        val expression = evaluate(ifExpression, context = createContext(
+            scope = Scope(frameReferences = listOf(FrameReference.Local(outerFrameId)))
+        ))
+        assertThat(expression, isResult(
+            value = isBlock(
+                body = equalTo(listOf(returns(IntegerValue(3)))),
+                scope = has(Scope::frameReferences, isSequence(
+                    isLocalFrameReference(innerFrameId),
+                    isLocalFrameReference(outerFrameId)
+                ))
+            ),
+            localFrameUpdates = isSequence(
+                isLocalFrameUpdate(innerFrameId, isSequence())
+            )
+        ))
     }
 
     @Test
@@ -811,6 +835,9 @@ class EvaluateIfTests {
 
     @Test
     fun whenConditionalBranchConditionIsTrueValueThenIfEvaluatesToBranchBody() {
+        val outerFrameId = createLocalFrameId()
+        val innerFrameId = LocalFrameId(nextLocalFrameId)
+
         val ifExpression = If(
             conditionalBranches = listOf(
                 ConditionalBranch(BooleanValue(true), listOf(returns(IntegerValue(1)))),
@@ -818,13 +845,21 @@ class EvaluateIfTests {
             ),
             elseBranch = listOf(returns(IntegerValue(3)))
         )
-        val scope = Scope(frames = listOf(ScopeFrame.EMPTY))
-        val expression = evaluate(ifExpression, createContext(scope = scope))
-        assertThat(expression, isPureResult(isBlock(
-            body = equalTo(listOf(returns(IntegerValue(1))))
-            // TODO: Work out how to match on scopes
-            //scope = equalTo(scope.enter(ScopeFrame.EMPTY))
-        )))
+        val expression = evaluate(ifExpression, createContext(
+            scope = Scope(frameReferences = listOf(FrameReference.Local(outerFrameId)))
+        ))
+        assertThat(expression, isResult(
+            value = isBlock(
+                body = equalTo(listOf(returns(IntegerValue(1)))),
+                scope = has(Scope::frameReferences, isSequence(
+                    isLocalFrameReference(innerFrameId),
+                    isLocalFrameReference(outerFrameId)
+                ))
+            ),
+            localFrameUpdates = isSequence(
+                isLocalFrameUpdate(innerFrameId, isSequence())
+            )
+        ))
     }
 
     @Test
@@ -836,7 +871,7 @@ class EvaluateIfTests {
             ),
             elseBranch = listOf(returns(IntegerValue(3)))
         )
-        val context = createContext(scope = scopeOf(mapOf("x" to BooleanValue(true))))
+        val context = createLocalContext(mapOf("x" to BooleanValue(true)))
         val expression = evaluate(ifExpression, context)
         assertThat(expression, isPureResult(equalTo(If(
             conditionalBranches = listOf(
@@ -862,26 +897,31 @@ class EvaluateBlockTests {
 
     @Test
     fun whenBlockHasStatementThenStatementIsEvaluatedInScope() {
+        val blockFrameId = createLocalFrameId()
+        val blockFrame = ScopeFrameMap(mapOf(
+            "x" to IntegerValue(42)
+        ))
+        val blockScope = Scope(frameReferences = listOf(FrameReference.Local(blockFrameId)))
+
         val expression = evaluate(
             Block(
                 body = listOf(
                     ExpressionStatement(expression = VariableReference("x"), isReturn = false),
                     ExpressionStatement(expression = VariableReference("y"), isReturn = false)
                 ),
-                scope = scopeOf(mapOf(
-                    "x" to IntegerValue(42)
-                ))
-            )
-        )
-        assertThat(expression, isPureResult(equalTo(Block(
-            body = listOf(
-                ExpressionStatement(IntegerValue(42), isReturn = false),
-                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+                scope = blockScope
             ),
-            scope = scopeOf(mapOf(
-                "x" to IntegerValue(42)
+            context = createContext(localFrames = WeakHashMap(mapOf(blockFrameId to blockFrame)))
+        )
+        assertThat(expression, isResult(
+            value = isBlock(
+                body = isSequence(
+                    cast(equalTo(ExpressionStatement(IntegerValue(42), isReturn = false))),
+                    cast(equalTo(ExpressionStatement(expression = VariableReference("y"), isReturn = false)))
+                ),
+                scope = equalTo(blockScope)
             ))
-        ))))
+        )
     }
 
     @Test
@@ -919,46 +959,54 @@ class EvaluateBlockTests {
 
     @Test
     fun whenBlockHasValStatementWithValueThenStatementIsDroppedAndScopeIsUpdated() {
+        val blockFrameId = createLocalFrameId()
+        val blockFrame = ScopeFrameMap(mapOf(
+            "y" to IntegerValue(4)
+        ))
+        val outerFrameId = createLocalFrameId()
+        val outerFrame = ScopeFrameMap(mapOf(
+            "x" to IntegerValue(100)
+        ))
+
+        val context = createContext(
+            localFrames = WeakHashMap(mapOf(blockFrameId to blockFrame, outerFrameId to outerFrame))
+        )
+
+        val blockScope = Scope(listOf(FrameReference.Local(blockFrameId), FrameReference.Local(outerFrameId)))
         val expression = evaluate(
             Block(
                 body = listOf(
                     Val(Identifier("x"), IntegerValue(47)),
                     ExpressionStatement(expression = VariableReference("y"), isReturn = false)
                 ),
-                scope = Scope(listOf(
-                    ScopeFrameMap(mapOf(
-                        "y" to IntegerValue(4)
-                    )),
-                    ScopeFrameMap(mapOf(
-                        "x" to IntegerValue(100)
-                    ))
-                ))
-            )
-        )
-        assertThat(expression, isPureResult(equalTo(Block(
-            body = listOf(
-                ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+                scope = blockScope
             ),
-            scope = Scope(listOf(
-                ScopeFrameMap(mapOf(
-                    "x" to IntegerValue(47),
-                    "y" to IntegerValue(4)
-                )),
-                ScopeFrameMap(mapOf(
-                    "x" to IntegerValue(100)
-                ))
-            ))
-        ))))
+            context
+        )
+        assertThat(expression, isResult(
+            value = cast(equalTo(Block(
+                body = listOf(
+                    ExpressionStatement(expression = VariableReference("y"), isReturn = false)
+                ),
+                scope = blockScope
+            ))),
+            localFrameUpdates = isSequence(
+                isPair(
+                    equalTo(FrameReference.Local(blockFrameId)),
+                    isSequence(isPair(isIdentifier("x"), isIntegerValue(47)))
+                )
+            )
+        ))
     }
 }
 
 class EvaluateValTests {
     @Test
     fun expressionIsEvaluated() {
-        val context = createContext(
-            scope = scopeOf(mapOf(
+        val context = createLocalContext(
+            mapOf(
                 "y" to IntegerValue(42)
-            ))
+            )
         )
         val statement = evaluate(
             Val(Identifier("x"), VariableReference("y")),

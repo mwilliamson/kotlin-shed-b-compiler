@@ -262,7 +262,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
 
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
     return FunctionExpression(
-        positionalParameterNames = node.parameters.map { parameter -> parameter.name.value },
+        positionalParameterNames = node.parameters.map { parameter -> parameter.name },
         body = node.body.statements.map { statement ->
             loadStatement(statement, context)
         }
