@@ -84,7 +84,7 @@ private object ListsListToSequenceValue: Callable() {
 }
 
 private val listsModule = ModuleExpression(
-    fieldExpressions = listOf(),
+    statements = listOf(),
     fieldValues = listOf(
         Identifier("sequenceToList") to ListsSequenceToListValue,
         Identifier("listToSequence") to ListsListToSequenceValue
@@ -211,7 +211,7 @@ private object StringsSubstringValue: Callable() {
 }
 
 private val stringsModule = ModuleExpression(
-    fieldExpressions = listOf(),
+    statements = listOf(),
     fieldValues = listOf(
         Identifier("codePointToHexString") to StringsCodePointToHexStringValue,
         Identifier("codePointToInt") to StringsCodePointToIntValue,

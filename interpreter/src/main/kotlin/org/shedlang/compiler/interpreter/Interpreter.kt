@@ -633,11 +633,6 @@ internal data class ModuleScopeFrame(
                 return value
             }
 
-            val expression = moduleExpression.fieldExpressions.toMap()[identifier]
-            if (expression != null) {
-                throw InterpreterError("module field is not initialised: " + name)
-            }
-
             return null
         }
 
@@ -816,22 +811,41 @@ internal data class EvaluationResult<out T>(
     }
 }
 
+internal class ModuleStatement(
+    val expression: Expression,
+    val bindings: (expression: InterpreterValue) -> List<Pair<Identifier, InterpreterValue>>
+) {
+    internal fun withExpression(expression: Expression): ModuleStatement = ModuleStatement(
+        expression = expression,
+        bindings = bindings
+    )
+
+    companion object {
+        internal fun declaration(name: Identifier, expression: Expression) = ModuleStatement(
+            expression = expression,
+            bindings = { value -> listOf(name to value) }
+        )
+    }
+}
+
 internal data class ModuleExpression(
-    val fieldExpressions: List<Pair<Identifier, Expression>>,
+    val statements: List<ModuleStatement>,
     val fieldValues: List<Pair<Identifier, InterpreterValue>>
 ) {
     fun evaluate(moduleName: List<Identifier>, context: InterpreterContext): EvaluationResult<Unit> {
-        if (fieldExpressions.isEmpty()) {
+        if (statements.isEmpty()) {
             return EvaluationResult.updateModuleValue(moduleName, ModuleValue(fieldValues.toMap()))
         } else {
-            val (fieldName, expression) = fieldExpressions[0]
+            val statement = statements[0]
+            val expression = statement.expression
+
             when (expression) {
                 is InterpreterValue ->
                     return EvaluationResult.updateModuleExpression(
                         moduleName,
                         ModuleExpression(
-                            fieldExpressions = fieldExpressions.drop(1),
-                            fieldValues = fieldValues + listOf(fieldName to expression)
+                            statements = statements.drop(1),
+                            fieldValues = fieldValues + statement.bindings(expression)
                         )
                     )
                 is IncompleteExpression -> {
@@ -842,7 +856,7 @@ internal data class ModuleExpression(
                         EvaluationResult.updateModuleExpression(
                             moduleName,
                             ModuleExpression(
-                                fieldExpressions = listOf(fieldName to value) + fieldExpressions.drop(1),
+                                statements = listOf(statement.withExpression(value)) + statements.drop(1),
                                 fieldValues = fieldValues
                             )
                         )

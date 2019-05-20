@@ -53,15 +53,13 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context).single()
+        val loadedStatement = loadModuleStatement(statement, context)
 
-        assertThat(loadedStatement, isPair(
-            second = cast(
-                has(ShapeTypeValue::constantFields, isMap(
-                    Identifier("x") to cast(equalTo(IntegerValue(1))),
-                    Identifier("y") to cast(equalTo(IntegerValue(2)))
-                ))
-            )
+        assertThat(loadedStatement.expression, cast(
+            has(ShapeTypeValue::constantFields, isMap(
+                Identifier("x") to cast(equalTo(IntegerValue(1))),
+                Identifier("y") to cast(equalTo(IntegerValue(2)))
+            ))
         ))
     }
 
@@ -92,12 +90,10 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context).single()
+        val loadedStatement = loadModuleStatement(statement, context)
 
-        assertThat(loadedStatement, isPair(
-            second = cast(
-                has(ShapeTypeValue::constantFields, isMap())
-            )
+        assertThat(loadedStatement.expression, cast(
+            has(ShapeTypeValue::constantFields, isMap())
         ))
     }
 
@@ -123,17 +119,15 @@ class LoadShapeTests {
             )
         )
 
-        val loadedStatement = loadModuleStatement(statement, context).single()
+        val loadedStatement = loadModuleStatement(statement, context)
 
-        assertThat(loadedStatement, isPair(
-            second = cast(
-                has(ShapeTypeValue::constantFields, isMap(
-                    Identifier("x") to cast(equalTo(symbolValue(
-                        module = listOf("A", "B"),
-                        name = "@C"
-                    )))
-                ))
-            )
+        assertThat(loadedStatement.expression, cast(
+            has(ShapeTypeValue::constantFields, isMap(
+                Identifier("x") to cast(equalTo(symbolValue(
+                    module = listOf("A", "B"),
+                    name = "@C"
+                )))
+            ))
         ))
     }
 }

@@ -35,50 +35,50 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
     val context = LoaderContext(moduleName = module.name, types = module.types)
 
     val imports = module.node.imports.map { import ->
-        import.name to ModuleReference(resolveImport(module.name, import.path))
+        ModuleStatement.declaration(import.name, ModuleReference(resolveImport(module.name, import.path)))
     }
-    val declarations = module.node.body.flatMap { statement ->
+    val declarations = module.node.body.map { statement ->
         loadModuleStatement(statement, context)
     }
-    return ModuleExpression(fieldExpressions = imports + declarations, fieldValues = listOf())
+    return ModuleExpression(statements = imports + declarations, fieldValues = listOf())
 }
 
-internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): List<Pair<Identifier, Expression>> {
-    return statement.accept(object : ModuleStatementNode.Visitor<List<Pair<Identifier, Expression>>> {
-        override fun visit(node: TypeAliasNode): List<Pair<Identifier, Expression>> {
-            return listOf(
-                node.name to TypeAliasTypeValue
-            )
-        }
+internal fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): ModuleStatement {
+    return statement.accept(object : ModuleStatementNode.Visitor<ModuleStatement> {
+        override fun visit(node: TypeAliasNode) = ModuleStatement.declaration(
+            node.name,
+            TypeAliasTypeValue
+        )
 
-        override fun visit(node: ShapeNode): List<Pair<Identifier, Expression>> {
-            val expression = shapeToExpression(node, context)
-            return listOf(
-                node.name to expression
-            )
-        }
+        override fun visit(node: ShapeNode) = ModuleStatement.declaration(
+            node.name,
+            shapeToExpression(node, context)
+        )
 
-        override fun visit(node: UnionNode): List<Pair<Identifier, Expression>> {
-            return listOf(node.name to UnionTypeValue) + node.members.map { member ->
+        override fun visit(node: UnionNode) = ModuleStatement(
+            expression = UnionTypeValue,
+            bindings = { listOf(node.name to UnionTypeValue) + node.members.map { member ->
                 member.name to shapeToExpression(member, context)
-            }
-        }
+            }}
+        )
 
-        override fun visit(node: FunctionDeclarationNode): List<Pair<Identifier, Expression>> {
-            return listOf(
-                node.name to functionToExpression(node, context)
-            )
-        }
+        override fun visit(node: FunctionDeclarationNode) = ModuleStatement.declaration(
+            node.name,
+            functionToExpression(node, context)
+        )
 
-        override fun visit(node: ValNode): List<Pair<Identifier, Expression>> {
-            val target = node.target
-            return when (target) {
-                is ValTargetNode.Variable -> listOf(
-                    target.name to loadExpression(node.expression, context)
-                )
-                is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
+        override fun visit(node: ValNode) = ModuleStatement(
+            expression = loadExpression(node.expression, context),
+            bindings = { value ->
+                val target = node.target
+                when (target) {
+                    is ValTargetNode.Variable -> listOf(
+                        target.name to value
+                    )
+                    is ValTargetNode.Tuple -> throw NotImplementedError("TODO")
+                }
             }
-        }
+        )
     })
 }
 
