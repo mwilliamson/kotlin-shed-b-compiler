@@ -89,10 +89,9 @@ private fun shapeToExpression(node: ShapeBaseNode, context: LoaderContext): Shap
         name to value
     }
 
-    val expression = ShapeTypeValue(
+    return ShapeTypeValue(
         constantFields = constantFields.toMap()
     )
-    return expression
 }
 
 private fun loadStatement(statement: FunctionStatementNode, context: LoaderContext): Statement {
