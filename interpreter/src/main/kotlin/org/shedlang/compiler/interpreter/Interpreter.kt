@@ -275,9 +275,8 @@ internal data class FunctionValue(
 ): Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val positionalBindings = positionalParameterNames.zip(arguments.positionals)
-        val namedBindings = arguments.named.map { (name, argument) -> name to argument }
 
-        return EvaluationResult.createStackFrame((positionalBindings + namedBindings)).map { frameReference ->
+        return EvaluationResult.createStackFrame((positionalBindings + arguments.named)).map { frameReference ->
             val scope = outerScope.enter(frameReference)
             Block(
                 body = body,
