@@ -15,12 +15,12 @@ internal fun createContext(
         scope = scope,
         moduleValues = moduleValues,
         moduleExpressions = moduleExpressions,
-        scopeFrames = WeakHashMap()
+        localFrames = WeakHashMap()
     )
 }
 
 internal fun scopeOf(variables: Map<String, InterpreterValue>): Scope {
-    return Scope(listOf(ScopeFrameMap(variables)))
+    return Scope(listOf())
 }
 
 internal fun call(
