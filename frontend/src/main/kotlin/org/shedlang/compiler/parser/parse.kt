@@ -405,16 +405,14 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
         allowTrailingSeparator = true
     )
 
-    // TODO: make sure there's only one start of named parameters
-
-    val namedStartIndex = parameters.indexOfFirst { parameter ->
-        parameter == Parameter.StartOfNamedParameters
-    }
-
-    val (positionalParameters, namedParameters) = if (namedStartIndex == -1) {
-        Pair(parameters, listOf<ParameterNode>())
-    } else {
-        Pair(parameters.take(namedStartIndex), parameters.drop(namedStartIndex + 1))
+    // TODO: don't allow positional parameter after named
+    val positionalParameters = mutableListOf<ParameterNode>()
+    val namedParameters = mutableListOf<ParameterNode>()
+    for (parameter in parameters) {
+        when (parameter) {
+            is Parameter.Positional -> positionalParameters.add(parameter.node)
+            is Parameter.Named -> namedParameters.add(parameter.node)
+        }
     }
 
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
@@ -430,8 +428,8 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     return FunctionSignature(
         staticParameters = staticParameters,
-        parameters = positionalParameters.map { parameter -> (parameter as Parameter.Node).parameter },
-        namedParameters = namedParameters.map { parameter -> (parameter as Parameter.Node).parameter },
+        parameters = positionalParameters,
+        namedParameters = namedParameters,
         effects = effects,
         returnType = returnType
     )
@@ -520,21 +518,30 @@ private fun parseStaticParameter(tokens: TokenIterator<TokenType>, allowVariance
 }
 
 private sealed class Parameter {
-    class Node(val parameter: ParameterNode): Parameter()
-    object StartOfNamedParameters : Parameter()
+    class Positional(val node: ParameterNode): Parameter()
+    class Named(val node: ParameterNode): Parameter()
 }
 
 private fun parseParametersPart(tokens: TokenIterator<TokenType>) : Parameter {
-    if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
-        return Parameter.StartOfNamedParameters
+    if (tokens.isNext(TokenType.SYMBOL_DOT)) {
+        return Parameter.Named(parseNamedParameter(tokens))
     } else {
-        return Parameter.Node(parseParameter(tokens))
+        return Parameter.Positional(parsePositionalParameter(tokens))
     }
 }
 
-private fun parseParameter(tokens: TokenIterator<TokenType>): ParameterNode {
+private fun parsePositionalParameter(tokens: TokenIterator<TokenType>): ParameterNode {
     val source = tokens.location()
 
+    val name = parseIdentifier(tokens)
+    val type = parseTypeSpec(tokens)
+    return ParameterNode(name, type, source)
+}
+
+private fun parseNamedParameter(tokens: TokenIterator<TokenType>): ParameterNode {
+    val source = tokens.location()
+
+    tokens.skip(TokenType.SYMBOL_DOT)
     val name = parseIdentifier(tokens)
     val type = parseTypeSpec(tokens)
     return ParameterNode(name, type, source)
@@ -1284,7 +1291,6 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
 
     val positionalParameters = mutableListOf<StaticExpressionNode>()
     val namedParameters = mutableListOf<ParameterNode>()
-    var named = false
 
     while (true) {
         if (tokens.trySkip(TokenType.SYMBOL_CLOSE_PAREN)) {
@@ -1294,10 +1300,8 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
             )
         }
 
-        if (tokens.trySkip(TokenType.SYMBOL_ASTERISK)) {
-            named = true
-        } else if (named) {
-            val parameter = parseParameter(tokens)
+        if (tokens.isNext(TokenType.SYMBOL_DOT)) {
+            val parameter = parseNamedParameter(tokens)
             namedParameters.add(parameter)
         } else {
             val parameter = parseStaticExpression(tokens)

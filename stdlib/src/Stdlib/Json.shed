@@ -322,10 +322,9 @@ shape State[T] {
 }
 
 fun parseMany[T](
-    *,
-    parseElement: Fun (TokenIterator) -> ParseResult[T],
-    parseSeparator: Fun (TokenIterator) -> ParseResult[Unit],
-    isEnd: Fun (TokenIterator) -> Bool,
+    .parseElement: Fun (TokenIterator) -> ParseResult[T],
+    .parseSeparator: Fun (TokenIterator) -> ParseResult[Unit],
+    .isEnd: Fun (TokenIterator) -> Bool,
 ) -> Fun (TokenIterator) -> ParseResult[List[T]] {
     fun parse(state: State[T]) -> ParseResult[List[T]] {
         when (state.position) {

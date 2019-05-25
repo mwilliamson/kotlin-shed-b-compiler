@@ -64,7 +64,7 @@ class ParseStaticExpressionTests {
 
     @Test
     fun functionTypeCanHaveNamedArguments() {
-        val source = "Fun (A, B, *, c: C) -> C"
+        val source = "Fun (A, B, .c: C) -> C"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
@@ -77,6 +77,8 @@ class ParseStaticExpressionTests {
             returnType = isStaticReference(name = "C")
         ))
     }
+
+    // TODO: test named parameter cannot be followed by positional
 
     @Test
     fun functionTypeCanHaveEffects() {

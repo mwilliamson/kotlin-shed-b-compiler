@@ -149,7 +149,7 @@ fun printFailures(result: TestResult) !Io -> Unit {
     }
 }
 
-fun runTest(test: Test, *, parent: Options.Option[String]) !Io -> TestResult {
+fun runTest(test: Test, .parent: Options.Option[String]) !Io -> TestResult {
     val namePrefix = when (parent) {
         is Options.Some[String] {
             parent.value + ": "
