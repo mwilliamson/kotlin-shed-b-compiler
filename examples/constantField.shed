@@ -7,6 +7,6 @@ shape Box {
 }
 
 fun main() !Io -> Unit {
-    val box = Box(y = "world\n");
+    val box = Box(.y = "world\n");
     print!(box.x + box.y);
 }

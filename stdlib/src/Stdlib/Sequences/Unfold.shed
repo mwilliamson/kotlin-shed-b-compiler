@@ -12,18 +12,18 @@ union Next[R, T] =
 val end = End();
 
 fun continue[R, T](element: R, remainder: T) -> Next[R, T] {
-    Continue(element = element, remainder = remainder)
+    Continue(.element = element, .remainder = remainder)
 }
 
 fun unfold[R, T, !E](next: Fun (T) -> Next[R, T], value: T) !E -> Sequences.Sequence[R, E] {
     Sequences.Sequence(
-        next = fun () -> Sequences.SequenceIterator[R, E] {
+        .next = fun () -> Sequences.SequenceIterator[R, E] {
             val result = next(value);
             when (result) {
                 is Continue {
                     Sequences.SequenceItem(
-                        head = result.element,
-                        tail = unfold(next, result.remainder),
+                        .head = result.element,
+                        .tail = unfold(next, result.remainder),
                     )
                 }
                 is End {

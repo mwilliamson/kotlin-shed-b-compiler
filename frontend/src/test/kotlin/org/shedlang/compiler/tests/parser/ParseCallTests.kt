@@ -44,7 +44,7 @@ class ParseCallTests {
 
     @Test
     fun canParseFunctionCallWithNamedArgument() {
-        val source = "x(y=z)"
+        val source = "x(.y = z)"
         val node = parseString(::parseExpression, source)
         assertThat(node, isCall(
             receiver = isVariableReference("x"),
@@ -60,7 +60,7 @@ class ParseCallTests {
 
     @Test
     fun positionalArgumentCannotAppearAfterNamedArgument() {
-        val source = "f(x=y, z)"
+        val source = "f(.x = y, z)"
         assertThat(
             { parseString(::parseExpression, source) },
             throws(has(ParseError::message, equalTo("Positional argument cannot appear after named argument")))
@@ -114,7 +114,7 @@ class ParseCallTests {
 
     @Test
     fun canParsePartialCall() {
-        val source = "f ~ (x, y = z)"
+        val source = "f ~ (x, .y = z)"
         val node = parseString(::parseExpression, source)
         assertThat(node, isPartialCall(
             receiver = isVariableReference("f"),

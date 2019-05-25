@@ -49,7 +49,7 @@ union JsonValue =
     | JsonNull;
 
 fun object(properties: List[JsonProperty]) -> JsonValue {
-    JsonObject(properties = properties)
+    JsonObject(.properties = properties)
 }
 
 shape JsonProperty {
@@ -58,23 +58,23 @@ shape JsonProperty {
 }
 
 fun property(key: String, value: JsonValue) -> JsonProperty {
-    JsonProperty(key = key, value = value)
+    JsonProperty(.key = key, .value = value)
 }
 
 fun array(elements: List[JsonValue]) -> JsonValue {
-    JsonArray(elements = elements)
+    JsonArray(.elements = elements)
 }
 
 fun number(value: String) -> JsonValue {
-    JsonNumber(value = value)
+    JsonNumber(.value = value)
 }
 
 fun string(value: String) -> JsonString {
-    JsonString(value = value)
+    JsonString(.value = value)
 }
 
 fun boolean(value: Bool) -> JsonValue {
-    JsonBoolean(value = value)
+    JsonBoolean(.value = value)
 }
 
 val null = JsonNull();
@@ -163,7 +163,7 @@ fun tokensToValue(tokens: TokenIterator) -> JsonResult {
                 fun (tokenType: TokenType) => tokenType is TokenEnd,
                 result.remainder,
             )) {
-                JsonSuccess(value = result.value)
+                JsonSuccess(.value = result.value)
             } else {
                 JsonFailure()
             }
@@ -189,11 +189,11 @@ union ParseResult[+T] =
     };
 
 fun success[T](remainder: TokenIterator, value: T) -> ParseResult[T] {
-    ParseSuccess(remainder = remainder, value = value)
+    ParseSuccess(.remainder = remainder, .value = value)
 }
 
 fun failure(tokens: TokenIterator) -> ParseResult[Nothing] {
-    ParseFailure(remainder = tokens)
+    ParseFailure(.remainder = tokens)
 }
 
 fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
@@ -212,9 +212,9 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
         }
         is TokenOpenSquare {
             val elementsResult = parseMany(
-                parseElement = readValue,
-                parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
-                isEnd = isNextTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenCloseSquare),
+                .parseElement = readValue,
+                .parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
+                .isEnd = isNextTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenCloseSquare),
             )(tokens.tail());
 
             when (elementsResult) {
@@ -249,9 +249,9 @@ fun readValue(tokens: TokenIterator) -> ParseResult[JsonValue] {
 
 fun parseObjectBody(tokens: TokenIterator) -> ParseResult[JsonValue] {
     val propertiesResult = parseMany(
-        parseElement = parseProperty,
-        parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
-        isEnd = isNextTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenCloseBrace),
+        .parseElement = parseProperty,
+        .parseSeparator = skipTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenComma),
+        .isEnd = isNextTokenType ~ (fun (tokenType: TokenType) => tokenType is TokenCloseBrace),
     )(tokens.tail());
 
     when (propertiesResult) {
@@ -335,9 +335,9 @@ fun parseMany[T](
                 } else {
                     // TODO: use update()
                     parse(State(
-                        elements = state.elements,
-                        position = ElementStart(),
-                        tokens = state.tokens
+                        .elements = state.elements,
+                        .position = ElementStart(),
+                        .tokens = state.tokens
                     ))
                 }
             }
@@ -346,9 +346,9 @@ fun parseMany[T](
                 when (elementResult) {
                     is ParseSuccess {
                         parse(State(
-                            elements = ListBuilder.append(state.elements, elementResult.value),
-                            position = ElementEnd(),
-                            tokens = elementResult.remainder,
+                            .elements = ListBuilder.append(state.elements, elementResult.value),
+                            .position = ElementEnd(),
+                            .tokens = elementResult.remainder,
                         ))
                     }
                     is ParseFailure {
@@ -364,9 +364,9 @@ fun parseMany[T](
                     when (separatorResult) {
                         is ParseSuccess {
                             parse(State(
-                                elements = state.elements,
-                                position = ElementStart(),
-                                tokens = separatorResult.remainder,
+                                .elements = state.elements,
+                                .position = ElementStart(),
+                                .tokens = separatorResult.remainder,
                             ))
                         }
                         is ParseFailure {
@@ -379,7 +379,7 @@ fun parseMany[T](
     }
 
     fun (tokens: TokenIterator) -> ParseResult[List[T]] {
-        val initialState = State[T](elements = ListBuilder.builder(), position = Start(), tokens = tokens);
+        val initialState = State[T](.elements = ListBuilder.builder(), .position = Start(), .tokens = tokens);
         parse(initialState)
     }
 }
@@ -401,14 +401,14 @@ fun createTokenIterator(tokens: Sequences.Sequence[Token, Pure]) -> TokenIterato
     when (iterator) {
         is Sequences.SequenceEnd {
             TokenIterator(
-                head = token(TokenEnd(), ""),
-                tail = fun () => createTokenIterator(tokens),
+                .head = token(TokenEnd(), ""),
+                .tail = fun () => createTokenIterator(tokens),
             )
         }
         is Sequences.SequenceItem {
             TokenIterator(
-                head = iterator.head,
-                tail = fun () => createTokenIterator(iterator.tail),
+                .head = iterator.head,
+                .tail = fun () => createTokenIterator(iterator.tail),
             )
         }
     }
@@ -435,7 +435,7 @@ shape Token {
 }
 
 fun token(tokenType: TokenType, value: String) -> Token {
-    Token(tokenType = tokenType, value = value)
+    Token(.tokenType = tokenType, .value = value)
 }
 
 fun nextToken(value: String) -> Token {

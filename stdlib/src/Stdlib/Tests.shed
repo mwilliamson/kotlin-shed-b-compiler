@@ -10,12 +10,12 @@ shape AssertionError {
 }
 
 fun fail(message: String) -> AssertionResult {
-    AssertionResult(error = Options.some(AssertionError(message = message)))
+    AssertionResult(.error = Options.some(AssertionError(.message = message)))
 }
 
 fun assert(value: Bool) -> AssertionResult {
     if (value) {
-        AssertionResult(error = Options.none)
+        AssertionResult(.error = Options.none)
     } else {
         fail("value was false")
     }
@@ -26,11 +26,11 @@ fun assertThat[T](value: T, matcher: Matchers.Matcher[T]) -> AssertionResult {
     when (result) {
         is Matchers.Failure {
             val message = "expected " + matcher.description + "\nbut " + result.message;
-            val error = AssertionError(message = message);
-            AssertionResult(error = Options.some(error))
+            val error = AssertionError(.message = message);
+            AssertionResult(.error = Options.some(error))
         }
         is Matchers.Success {
-            AssertionResult(error = Options.none)
+            AssertionResult(.error = Options.none)
         }
     }
 }
@@ -60,11 +60,11 @@ union TestResult =
     };
 
 fun testCase(name: String, run: Fun () -> AssertionResult) -> TestCase {
-    TestCase(name = name, run = run)
+    TestCase(.name = name, .run = run)
 }
 
 fun suite(name: String, tests: List[Test]) -> Test {
-    TestSuite(name = name, tests = tests)
+    TestSuite(.name = name, .tests = tests)
 }
 
 val greenCode = "\u{1B}[32m";
@@ -72,7 +72,7 @@ val redCode = "\u{1B}[31m";
 val blackCode = "\u{1B}[39m";
 
 fun runTests(tests: List[Test]) !Io -> Int {
-    val results = Lists.map!(runTest ~ (parent = Options.none), tests);
+    val results = Lists.map!(runTest ~ (.parent = Options.none), tests);
     print!("\n");
     Lists.forEach!(printFailures, results);
 
@@ -92,7 +92,7 @@ fun countTestResults(results: List[TestResult]) -> TestCounts {
     Lists.reduce(
         fun (counts: TestCounts, result: TestResult) =>
             addTestCounts(counts, countTestResult(result)),
-        TestCounts(failures = 0, successes = 0),
+        TestCounts(.failures = 0, .successes = 0),
         results,
     )
 }
@@ -102,10 +102,10 @@ fun countTestResult(result: TestResult) -> TestCounts {
         is TestCaseResult {
             when (result.error) {
                 is Options.Some[AssertionError] {
-                    TestCounts(failures = 1, successes = 0)
+                    TestCounts(.failures = 1, .successes = 0)
                 }
                 is Options.None {
-                    TestCounts(failures = 0, successes = 1)
+                    TestCounts(.failures = 0, .successes = 1)
                 }
             }
         }
@@ -117,8 +117,8 @@ fun countTestResult(result: TestResult) -> TestCounts {
 
 fun addTestCounts(counts1: TestCounts, counts2: TestCounts) -> TestCounts {
     TestCounts(
-        failures = counts1.failures + counts2.failures,
-        successes = counts1.successes + counts2.successes,
+        .failures = counts1.failures + counts2.failures,
+        .successes = counts1.successes + counts2.successes,
     )
 }
 
@@ -175,13 +175,13 @@ fun runTest(test: Test, *, parent: Options.Option[String]) !Io -> TestResult {
                 }
             }
             print!(blackCode);
-            TestCaseResult(name = namePrefix + test.name, error = result.error)
+            TestCaseResult(.name = namePrefix + test.name, .error = result.error)
         }
         is TestSuite {
             // TODO: indentation
             val name = namePrefix + test.name;
-            val results = Lists.map!(runTest ~ (parent = Options.some(name)), test.tests);
-            TestSuiteResult(name = name, results = results)
+            val results = Lists.map!(runTest ~ (.parent = Options.some(name)), test.tests);
+            TestSuiteResult(.name = name, .results = results)
         }
     }
 }

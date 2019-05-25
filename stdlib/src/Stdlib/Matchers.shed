@@ -18,8 +18,8 @@ import .Options;
 
 fun anything() -> Matcher[Any] {
     Matcher(
-        description = "anything",
-        match = fun (x: Any) => success,
+        .description = "anything",
+        .match = fun (x: Any) => success,
     )
 }
 
@@ -41,8 +41,8 @@ fun isString(value: String) -> Matcher[String] {
 
 fun isNone() -> Matcher[Options.Option[Any]] {
     Matcher(
-        description = "none",
-        match = fun (actual: Options.Option[Any]) -> Result {
+        .description = "none",
+        .match = fun (actual: Options.Option[Any]) -> Result {
             if (actual is Options.None) {
                 success
             } else {
@@ -54,8 +54,8 @@ fun isNone() -> Matcher[Options.Option[Any]] {
 
 fun isSome[T](matcher: Matcher[T]) -> Matcher[Options.Option[T]] {
     Matcher(
-        description = "option with value " + matcher.description,
-        match = fun (actual: Options.Option[T]) -> Result {
+        .description = "option with value " + matcher.description,
+        .match = fun (actual: Options.Option[T]) -> Result {
             if (actual is Options.Some[T]) {
                 matcher.match(actual.value)
             } else {
@@ -71,8 +71,8 @@ fun describingMatcher[T](
     match: Fun (T) -> Bool
 ) -> Matcher[T] {
     Matcher(
-        description = toString(value),
-        match = fun (actual: T) -> Result {
+        .description = toString(value),
+        .match = fun (actual: T) -> Result {
             if (match(actual)) {
                 success
             } else {
@@ -96,7 +96,7 @@ union Result =
 val success = Success();
 
 fun failure(message: String) -> Failure {
-    Failure(message=message)
+    Failure(.message = message)
 }
 
 fun isSuccess(result: Result) -> Bool {

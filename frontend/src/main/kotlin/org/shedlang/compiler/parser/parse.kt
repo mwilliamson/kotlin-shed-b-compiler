@@ -930,7 +930,7 @@ private sealed class ParsedArgument {
 private fun parseArgument(tokens: TokenIterator<TokenType>): ParsedArgument {
     val source = tokens.location()
 
-    if (tokens.isNext(TokenType.IDENTIFIER) && tokens.isNext(TokenType.SYMBOL_EQUALS, skip = 1)) {
+    if (tokens.trySkip(TokenType.SYMBOL_DOT)) {
         val name = parseIdentifier(tokens)
         tokens.skip(TokenType.SYMBOL_EQUALS)
         val expression = parseExpression(tokens)

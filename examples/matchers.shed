@@ -12,7 +12,7 @@ fun main() !Io -> Unit {
 fun assertThat[T](value: T, matcher: Matcher[T]) -> Result {
     val result = matcher.match(value);
     if (result is Failure) {
-        Failure(message = "expected " + matcher.description + "\nbut " + result.message)
+        Failure(.message = "expected " + matcher.description + "\nbut " + result.message)
     } else {
         result
     }
@@ -20,8 +20,8 @@ fun assertThat[T](value: T, matcher: Matcher[T]) -> Result {
 
 fun anything() -> Matcher[Any] {
     Matcher(
-        description = "anything",
-        match = fun (x: Any) => success,
+        .description = "anything",
+        .match = fun (x: Any) => success,
     )
 }
 
@@ -39,8 +39,8 @@ fun describingMatcher[T](
     match: Fun (T) -> Bool
 ) -> Matcher[T] {
     Matcher(
-        description = toString(value),
-        match = fun (actual: T) -> Result {
+        .description = toString(value),
+        .match = fun (actual: T) -> Result {
             if (match(actual)) {
                 success
             } else {
@@ -63,5 +63,5 @@ union Result =
 
 val success = Success();
 fun failure(message: String) -> Failure {
-    Failure(message=message)
+    Failure(.message = message)
 }

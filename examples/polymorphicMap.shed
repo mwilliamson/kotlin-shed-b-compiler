@@ -13,7 +13,7 @@ union List[T] =
 val nil = Nil();
 
 fun cons[T](head: T, tail: List[T]) -> List[T] {
-    Cons(head=head, tail=tail)
+    Cons(.head = head, .tail = tail)
 }
 
 fun printInts(list: List[Int]) !Io -> Unit {

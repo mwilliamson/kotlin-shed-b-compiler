@@ -19,7 +19,7 @@ fun builder() -> Builder[Nothing] {
 }
 
 fun append[T](builder: Builder[T], element: T) -> Builder[T] {
-    Cons(head = element, tail = builder)
+    Cons(.head = element, .tail = builder)
 }
 
 fun toList[T](builder: Builder[T]) -> List[T] {
@@ -28,15 +28,15 @@ fun toList[T](builder: Builder[T]) -> List[T] {
 
 fun toSequence[T](builder: Builder[T]) -> Sequences.Sequence[T, Pure] {
     Sequences.Sequence[T, Pure](
-        next = fun () -> Sequences.SequenceIterator[T, Pure] {
+        .next = fun () -> Sequences.SequenceIterator[T, Pure] {
             when (builder) {
                 is Nil {
                     Sequences.end
                 }
                 is Cons {
                     Sequences.SequenceItem(
-                        head = builder.head,
-                        tail = toSequence(builder.tail),
+                        .head = builder.head,
+                        .tail = toSequence(builder.tail),
                     )
                 }
             }
@@ -50,7 +50,7 @@ fun reverse[T](reversed: Builder[T], unreversed: Builder[T]) -> Builder[T] {
             reversed
         }
         is Cons {
-            reverse(Cons(head = unreversed.head, tail = reversed), unreversed.tail)
+            reverse(Cons(.head = unreversed.head, .tail = reversed), unreversed.tail)
         }
     }
 }

@@ -8,8 +8,8 @@ import Stdlib.Tests;
 type JsonValueMatcher = Matchers.Matcher[Json.JsonValue];
 
 val isFailure = Matchers.Matcher(
-    description = "failure",
-    match = fun (actual: Json.JsonResult) -> Matchers.Result {
+    .description = "failure",
+    .match = fun (actual: Json.JsonResult) -> Matchers.Result {
         when (actual) {
             is Json.JsonSuccess {
                 Matchers.failure("was success")
@@ -23,8 +23,8 @@ val isFailure = Matchers.Matcher(
 
 fun isSuccess(value: JsonValueMatcher) -> Matchers.Matcher[Json.JsonResult] {
     Matchers.Matcher(
-        description = "success with value " + value.description,
-        match = fun (actual: Json.JsonResult) -> Matchers.Result {
+        .description = "success with value " + value.description,
+        .match = fun (actual: Json.JsonResult) -> Matchers.Result {
             when (actual) {
                 is Json.JsonSuccess {
                     value.match(actual.value)
@@ -39,8 +39,8 @@ fun isSuccess(value: JsonValueMatcher) -> Matchers.Matcher[Json.JsonResult] {
 
 fun hasJsonText(expectedText: String) -> JsonValueMatcher {
     Matchers.Matcher(
-        description = "has JSON text: " + expectedText,
-        match = fun (actual: Json.JsonValue) -> Matchers.Result {
+        .description = "has JSON text: " + expectedText,
+        .match = fun (actual: Json.JsonValue) -> Matchers.Result {
             val text = Json.valueToText(actual);
             if (text == expectedText) {
                 Matchers.success
@@ -53,8 +53,8 @@ fun hasJsonText(expectedText: String) -> JsonValueMatcher {
 
 fun isJson(*, description: String, predicate: Fun (Json.JsonValue) -> Bool) -> Matchers.Matcher[Json.JsonValue] {
     Matchers.Matcher(
-        description = description,
-        match = fun (actual: Json.JsonValue) -> Matchers.Result {
+        .description = description,
+        .match = fun (actual: Json.JsonValue) -> Matchers.Result {
             if (predicate(actual)) {
                 Matchers.success
             } else {
@@ -65,16 +65,16 @@ fun isJson(*, description: String, predicate: Fun (Json.JsonValue) -> Bool) -> M
 }
 
 val isJsonNull = isJson(
-    description = "null",
-    predicate = fun (actual: Json.JsonValue) -> Bool {
+    .description = "null",
+    .predicate = fun (actual: Json.JsonValue) -> Bool {
         actual is Json.JsonNull
     },
 );
 
 fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
     isJson(
-        description = if (value) { "true" } else { "false" },
-        predicate = fun (actual: Json.JsonValue) -> Bool {
+        .description = if (value) { "true" } else { "false" },
+        .predicate = fun (actual: Json.JsonValue) -> Bool {
             if (actual is Json.JsonBoolean) {
                 actual.value == value
             } else {
@@ -86,8 +86,8 @@ fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
 
 fun isJsonArray(elements: Matchers.Matcher[List[Json.JsonValue]]) -> Matchers.Matcher[Json.JsonValue] {
     isJson(
-        description = "JSON array with elements: " + elements.description,
-        predicate = fun (actual: Json.JsonValue) -> Bool {
+        .description = "JSON array with elements: " + elements.description,
+        .predicate = fun (actual: Json.JsonValue) -> Bool {
             if (actual is Json.JsonArray) {
                 Matchers.isSuccess(elements.match(actual.elements))
             } else {
@@ -99,8 +99,8 @@ fun isJsonArray(elements: Matchers.Matcher[List[Json.JsonValue]]) -> Matchers.Ma
 
 fun isJsonString(value: String) -> Matchers.Matcher[Json.JsonValue] {
     isJson(
-        description = Json.valueToText(Json.string(value)),
-        predicate = fun (actual: Json.JsonValue) -> Bool {
+        .description = Json.valueToText(Json.string(value)),
+        .predicate = fun (actual: Json.JsonValue) -> Bool {
             if (actual is Json.JsonString) {
                 actual.value == value
             } else {
