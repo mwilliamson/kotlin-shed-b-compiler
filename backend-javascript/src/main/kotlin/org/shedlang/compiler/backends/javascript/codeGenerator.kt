@@ -531,6 +531,7 @@ private fun generateCode(operator: UnaryOperator): JavascriptUnaryOperator {
 private fun generateCode(operator: BinaryOperator): JavascriptBinaryOperator {
     return when (operator) {
         BinaryOperator.EQUALS -> JavascriptBinaryOperator.EQUALS
+        BinaryOperator.NOT_EQUAL -> JavascriptBinaryOperator.NOT_EQUAL
         BinaryOperator.LESS_THAN -> JavascriptBinaryOperator.LESS_THAN
         BinaryOperator.LESS_THAN_OR_EQUAL -> JavascriptBinaryOperator.LESS_THAN_OR_EQUAL
         BinaryOperator.GREATER_THAN -> JavascriptBinaryOperator.GREATER_THAN

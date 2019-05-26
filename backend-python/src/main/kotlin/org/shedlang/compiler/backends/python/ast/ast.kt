@@ -232,6 +232,7 @@ data class PythonBinaryOperationNode(
 
 enum class PythonBinaryOperator {
     EQUALS,
+    NOT_EQUAL,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,
     GREATER_THAN,

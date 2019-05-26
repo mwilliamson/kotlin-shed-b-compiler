@@ -852,6 +852,7 @@ class CodeGeneratorTests {
             BinaryOperator.SUBTRACT to PythonBinaryOperator.SUBTRACT,
             BinaryOperator.MULTIPLY to PythonBinaryOperator.MULTIPLY,
             BinaryOperator.EQUALS to PythonBinaryOperator.EQUALS,
+            BinaryOperator.NOT_EQUAL to PythonBinaryOperator.NOT_EQUAL,
             BinaryOperator.LESS_THAN to PythonBinaryOperator.LESS_THAN,
             BinaryOperator.LESS_THAN_OR_EQUAL to PythonBinaryOperator.LESS_THAN_OR_EQUAL,
             BinaryOperator.GREATER_THAN to PythonBinaryOperator.GREATER_THAN,

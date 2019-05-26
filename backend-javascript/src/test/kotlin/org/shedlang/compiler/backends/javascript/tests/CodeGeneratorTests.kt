@@ -466,6 +466,7 @@ class CodeGeneratorTests {
             BinaryOperator.SUBTRACT to JavascriptBinaryOperator.SUBTRACT,
             BinaryOperator.MULTIPLY to JavascriptBinaryOperator.MULTIPLY,
             BinaryOperator.EQUALS to JavascriptBinaryOperator.EQUALS,
+            BinaryOperator.NOT_EQUAL to JavascriptBinaryOperator.NOT_EQUAL,
             BinaryOperator.LESS_THAN to JavascriptBinaryOperator.LESS_THAN,
             BinaryOperator.LESS_THAN_OR_EQUAL to JavascriptBinaryOperator.LESS_THAN_OR_EQUAL,
             BinaryOperator.GREATER_THAN to JavascriptBinaryOperator.GREATER_THAN,

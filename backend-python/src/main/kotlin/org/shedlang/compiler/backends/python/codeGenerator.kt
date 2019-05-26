@@ -964,6 +964,7 @@ private fun generateCode(operator: UnaryOperator): PythonUnaryOperator {
 private fun generateCode(operator: BinaryOperator): PythonBinaryOperator {
     return when (operator) {
         BinaryOperator.EQUALS -> PythonBinaryOperator.EQUALS
+        BinaryOperator.NOT_EQUAL -> PythonBinaryOperator.NOT_EQUAL
         BinaryOperator.LESS_THAN -> PythonBinaryOperator.LESS_THAN
         BinaryOperator.LESS_THAN_OR_EQUAL -> PythonBinaryOperator.LESS_THAN_OR_EQUAL
         BinaryOperator.GREATER_THAN -> PythonBinaryOperator.GREATER_THAN

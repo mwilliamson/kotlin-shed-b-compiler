@@ -171,8 +171,22 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun integerInequalityOperationReturnsBoolean() {
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, literalInt(1), literalInt(2))
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, isBoolType)
+    }
+
+    @Test
     fun stringEqualityOperationReturnsBoolean() {
         val node = binaryOperation(BinaryOperator.EQUALS, literalString(), literalString())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
+    fun stringInequalityOperationReturnsBoolean() {
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, literalString(), literalString())
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(isBoolType))
     }
@@ -188,6 +202,7 @@ class TypeCheckExpressionTests {
     fun codePointComparisonOperationReturnsBoolean(): List<DynamicTest> {
         return listOf(
             BinaryOperator.EQUALS,
+            BinaryOperator.NOT_EQUAL,
             BinaryOperator.LESS_THAN,
             BinaryOperator.LESS_THAN_OR_EQUAL,
             BinaryOperator.GREATER_THAN,
@@ -207,8 +222,22 @@ class TypeCheckExpressionTests {
     }
 
     @Test
+    fun booleanInequalityOperationReturnsBoolean() {
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, literalBool(), literalBool())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
     fun symbolEqualityOperationReturnsBoolean() {
         val node = binaryOperation(BinaryOperator.EQUALS, symbolName("@x"), symbolName("@y"))
+        val type = inferType(node, typeContext(moduleName = listOf("A")))
+        assertThat(type, cast(isBoolType))
+    }
+
+    @Test
+    fun symbolInequalityOperationReturnsBoolean() {
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, symbolName("@x"), symbolName("@y"))
         val type = inferType(node, typeContext(moduleName = listOf("A")))
         assertThat(type, cast(isBoolType))
     }

@@ -164,12 +164,30 @@ class EvaluateBinaryOperationTests {
     }
 
     @Test
+    fun inequalityOfBooleans() {
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, BooleanValue(true), BooleanValue(true)))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, BooleanValue(true), BooleanValue(false)))
+        assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(true))))
+    }
+
+    @Test
     fun equalityOfIntegers() {
         val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, IntegerValue(42), IntegerValue(42)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
         val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, IntegerValue(42), IntegerValue(47)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun inequalityOfIntegers() {
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, IntegerValue(42), IntegerValue(42)))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, IntegerValue(42), IntegerValue(47)))
+        assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(true))))
     }
 
     @Test
@@ -195,9 +213,17 @@ class EvaluateBinaryOperationTests {
         val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, StringValue("a"), StringValue("a")))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
-
         val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, StringValue("a"), StringValue("b")))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun inequalityOfStrings() {
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, StringValue("a"), StringValue("a")))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, StringValue("a"), StringValue("b")))
+        assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(true))))
     }
 
     @Test
@@ -211,9 +237,17 @@ class EvaluateBinaryOperationTests {
         val equalValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CodePointValue(90), CodePointValue(90)))
         assertThat(equalValue, isPureResult(equalTo(BooleanValue(true))))
 
-
         val notEqualValue = evaluate(BinaryOperation(BinaryOperator.EQUALS, CodePointValue(90), CodePointValue(91)))
         assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun inequalityOfCodePoints() {
+        val equalValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, CodePointValue(90), CodePointValue(90)))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val notEqualValue = evaluate(BinaryOperation(BinaryOperator.NOT_EQUAL, CodePointValue(90), CodePointValue(91)))
+        assertThat(notEqualValue, isPureResult(equalTo(BooleanValue(true))))
     }
 
     @Test
@@ -302,6 +336,30 @@ class EvaluateBinaryOperationTests {
             symbolValue(listOf("Y"), "@a")
         ))
         assertThat(differentModule, isPureResult(equalTo(BooleanValue(false))))
+    }
+
+    @Test
+    fun inequalityOfSymbols() {
+        val equalValue = evaluate(BinaryOperation(
+            BinaryOperator.NOT_EQUAL,
+            symbolValue(listOf("X"), "@a"),
+            symbolValue(listOf("X"), "@a")
+        ))
+        assertThat(equalValue, isPureResult(equalTo(BooleanValue(false))))
+
+        val differentName = evaluate(BinaryOperation(
+            BinaryOperator.NOT_EQUAL,
+            symbolValue(listOf("X"), "@a"),
+            symbolValue(listOf("X"), "@b")
+        ))
+        assertThat(differentName, isPureResult(equalTo(BooleanValue(true))))
+
+        val differentModule = evaluate(BinaryOperation(
+            BinaryOperator.NOT_EQUAL,
+            symbolValue(listOf("X"), "@a"),
+            symbolValue(listOf("Y"), "@a")
+        ))
+        assertThat(differentModule, isPureResult(equalTo(BooleanValue(true))))
     }
 
     @Test

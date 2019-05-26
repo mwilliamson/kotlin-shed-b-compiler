@@ -808,6 +808,7 @@ private interface OperationParser: ExpressionParser<ExpressionNode> {
     companion object {
         val parsers = listOf(
             InfixOperationParser(BinaryOperator.EQUALS, TokenType.SYMBOL_DOUBLE_EQUALS, COMPARISON_PRECEDENCE),
+            InfixOperationParser(BinaryOperator.NOT_EQUAL, TokenType.SYMBOL_NOT_EQUAL, COMPARISON_PRECEDENCE),
             InfixOperationParser(BinaryOperator.LESS_THAN, TokenType.SYMBOL_LESS_THAN, COMPARISON_PRECEDENCE),
             InfixOperationParser(BinaryOperator.LESS_THAN_OR_EQUAL, TokenType.SYMBOL_LESS_THAN_OR_EQUAL, COMPARISON_PRECEDENCE),
             InfixOperationParser(BinaryOperator.GREATER_THAN, TokenType.SYMBOL_GREATER_THAN, COMPARISON_PRECEDENCE),

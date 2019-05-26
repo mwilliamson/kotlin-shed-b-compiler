@@ -12,6 +12,7 @@ class ParseBinaryOperationTests {
     fun canParseOperator(): List<DynamicTest> {
         return listOf(
             Pair("==", BinaryOperator.EQUALS),
+            Pair("!=", BinaryOperator.NOT_EQUAL),
             Pair("<", BinaryOperator.LESS_THAN),
             Pair("<=", BinaryOperator.LESS_THAN_OR_EQUAL),
             Pair(">", BinaryOperator.GREATER_THAN),

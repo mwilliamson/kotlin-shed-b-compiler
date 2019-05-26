@@ -901,6 +901,7 @@ enum class UnaryOperator {
 
 enum class BinaryOperator {
     EQUALS,
+    NOT_EQUAL,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,
     GREATER_THAN,

@@ -180,6 +180,7 @@ private fun serialiseSubExpression(
 
 private fun serialise(operator: JavascriptBinaryOperator) = when(operator) {
     JavascriptBinaryOperator.EQUALS -> "==="
+    JavascriptBinaryOperator.NOT_EQUAL -> "!=="
     JavascriptBinaryOperator.LESS_THAN -> "<"
     JavascriptBinaryOperator.LESS_THAN_OR_EQUAL -> "<="
     JavascriptBinaryOperator.GREATER_THAN -> ">"
@@ -230,6 +231,7 @@ private fun precedence(node: JavascriptExpressionNode): Int {
                 JavascriptBinaryOperator.OR -> 5
                 JavascriptBinaryOperator.AND -> 6
                 JavascriptBinaryOperator.EQUALS -> 10
+                JavascriptBinaryOperator.NOT_EQUAL -> 10
                 JavascriptBinaryOperator.LESS_THAN -> 10
                 JavascriptBinaryOperator.LESS_THAN_OR_EQUAL -> 10
                 JavascriptBinaryOperator.GREATER_THAN -> 10

@@ -234,6 +234,7 @@ enum class JavascriptUnaryOperator {
 
 enum class JavascriptBinaryOperator {
     EQUALS,
+    NOT_EQUAL,
     LESS_THAN,
     LESS_THAN_OR_EQUAL,
     GREATER_THAN,

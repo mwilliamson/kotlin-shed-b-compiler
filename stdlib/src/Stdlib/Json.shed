@@ -449,8 +449,7 @@ fun nextToken(value: String) -> Token {
             } else if (first == 'n' && CodePoints.startsWith("null", value)) {
                 token(TokenNull(), "null")
             } else if (first == '"') {
-                // TODO: use !=
-                val string = CodePoints.leftWhile(fun (codePoint: CodePoint) => not (codePoint == '"'), CodePoints.dropLeft(1, value));
+                val string = CodePoints.leftWhile(fun (codePoint: CodePoint) => codePoint != '"', CodePoints.dropLeft(1, value));
                 token(TokenString(), "\"" + string + "\"")
             } else if (first == '[') {
                 token(TokenOpenSquare(), "[")

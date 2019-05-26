@@ -292,6 +292,7 @@ class SerialiserTests {
     fun binaryOperationSerialisation(): List<DynamicTest> {
         return listOf(
             Pair(JavascriptBinaryOperator.EQUALS, "x === y"),
+            Pair(JavascriptBinaryOperator.NOT_EQUAL, "x !== y"),
             Pair(JavascriptBinaryOperator.LESS_THAN, "x < y"),
             Pair(JavascriptBinaryOperator.LESS_THAN_OR_EQUAL, "x <= y"),
             Pair(JavascriptBinaryOperator.GREATER_THAN, "x > y"),

@@ -92,6 +92,8 @@ internal data class BinaryOperation(
                 is InterpreterValue ->
                     if (operator == BinaryOperator.EQUALS && left is BooleanValue && right is BooleanValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
+                    } else if (operator == BinaryOperator.NOT_EQUAL && left is BooleanValue && right is BooleanValue) {
+                        EvaluationResult.pure(BooleanValue(left.value != right.value))
                     } else if (operator == BinaryOperator.AND && left is BooleanValue && right is BooleanValue) {
                         EvaluationResult.pure(BooleanValue(left.value && right.value))
                     } else if (operator == BinaryOperator.OR && left is BooleanValue && right is BooleanValue) {
@@ -99,6 +101,8 @@ internal data class BinaryOperation(
 
                     } else if (operator == BinaryOperator.EQUALS && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
+                    } else if (operator == BinaryOperator.NOT_EQUAL && left is IntegerValue && right is IntegerValue) {
+                        EvaluationResult.pure(BooleanValue(left.value != right.value))
                     } else if (operator == BinaryOperator.ADD && left is IntegerValue && right is IntegerValue) {
                         EvaluationResult.pure(IntegerValue(left.value + right.value))
                     } else if (operator == BinaryOperator.SUBTRACT && left is IntegerValue && right is IntegerValue) {
@@ -108,11 +112,15 @@ internal data class BinaryOperation(
 
                     } else if (operator == BinaryOperator.EQUALS && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
+                    } else if (operator == BinaryOperator.NOT_EQUAL && left is StringValue && right is StringValue) {
+                        EvaluationResult.pure(BooleanValue(left.value != right.value))
                     } else if (operator == BinaryOperator.ADD && left is StringValue && right is StringValue) {
                         EvaluationResult.pure(StringValue(left.value + right.value))
 
                     } else if (operator == BinaryOperator.EQUALS && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value == right.value))
+                    } else if (operator == BinaryOperator.NOT_EQUAL && left is CodePointValue && right is CodePointValue) {
+                        EvaluationResult.pure(BooleanValue(left.value != right.value))
                     } else if (operator == BinaryOperator.LESS_THAN && left is CodePointValue && right is CodePointValue) {
                         EvaluationResult.pure(BooleanValue(left.value < right.value))
                     } else if (operator == BinaryOperator.LESS_THAN_OR_EQUAL && left is CodePointValue && right is CodePointValue) {
@@ -124,6 +132,8 @@ internal data class BinaryOperation(
 
                     } else if (operator == BinaryOperator.EQUALS && left is SymbolValue && right is SymbolValue) {
                         EvaluationResult.pure(BooleanValue(left == right))
+                    } else if (operator == BinaryOperator.NOT_EQUAL && left is SymbolValue && right is SymbolValue) {
+                        EvaluationResult.pure(BooleanValue(left != right))
 
                     } else {
                         throw NotImplementedError(this.toString())

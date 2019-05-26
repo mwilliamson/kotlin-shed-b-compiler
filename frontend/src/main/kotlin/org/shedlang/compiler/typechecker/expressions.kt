@@ -94,26 +94,34 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
     val leftType = inferType(node.left, context)
     val rightType = inferType(node.right, context)
 
-    if (leftType is SymbolType && rightType is SymbolType && node.operator == BinaryOperator.EQUALS) {
+    if (
+        leftType is SymbolType &&
+        rightType is SymbolType &&
+        (node.operator == BinaryOperator.EQUALS || node.operator == BinaryOperator.NOT_EQUAL)
+    ) {
         return BoolType
     }
 
     return when (BinaryOperationType(node.operator, leftType, rightType)) {
         BinaryOperationType(BinaryOperator.EQUALS, IntType, IntType) -> BoolType
+        BinaryOperationType(BinaryOperator.NOT_EQUAL, IntType, IntType) -> BoolType
         BinaryOperationType(BinaryOperator.ADD, IntType, IntType) -> IntType
         BinaryOperationType(BinaryOperator.SUBTRACT, IntType, IntType) -> IntType
         BinaryOperationType(BinaryOperator.MULTIPLY, IntType, IntType) -> IntType
 
         BinaryOperationType(BinaryOperator.EQUALS, StringType, StringType) -> BoolType
+        BinaryOperationType(BinaryOperator.NOT_EQUAL, StringType, StringType) -> BoolType
         BinaryOperationType(BinaryOperator.ADD, StringType, StringType) -> StringType
 
         BinaryOperationType(BinaryOperator.EQUALS, CodePointType, CodePointType) -> BoolType
+        BinaryOperationType(BinaryOperator.NOT_EQUAL, CodePointType, CodePointType) -> BoolType
         BinaryOperationType(BinaryOperator.LESS_THAN, CodePointType, CodePointType) -> BoolType
         BinaryOperationType(BinaryOperator.LESS_THAN_OR_EQUAL, CodePointType, CodePointType) -> BoolType
         BinaryOperationType(BinaryOperator.GREATER_THAN, CodePointType, CodePointType) -> BoolType
         BinaryOperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, CodePointType, CodePointType) -> BoolType
 
         BinaryOperationType(BinaryOperator.EQUALS, BoolType, BoolType) -> BoolType
+        BinaryOperationType(BinaryOperator.NOT_EQUAL, BoolType, BoolType) -> BoolType
         BinaryOperationType(BinaryOperator.AND, BoolType, BoolType) -> BoolType
         BinaryOperationType(BinaryOperator.OR, BoolType, BoolType) -> BoolType
 

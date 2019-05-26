@@ -370,6 +370,7 @@ class SerialiserTests {
     fun binaryOperationSerialisation(): List<DynamicTest> {
         return listOf(
             Pair(PythonBinaryOperator.EQUALS, "x == y"),
+            Pair(PythonBinaryOperator.NOT_EQUAL, "x != y"),
             Pair(PythonBinaryOperator.LESS_THAN, "x < y"),
             Pair(PythonBinaryOperator.LESS_THAN_OR_EQUAL, "x <= y"),
             Pair(PythonBinaryOperator.GREATER_THAN, "x > y"),
