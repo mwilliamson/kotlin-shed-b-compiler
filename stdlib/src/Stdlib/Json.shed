@@ -313,11 +313,8 @@ fun parseStringBody(tokens: TokenIterator) -> ParseResult[JsonString] {
     success(tokens.tail(), string(stringTextToCodePoints(tokens.head.value)))
 }
 
-union Position = Start | ElementStart | ElementEnd;
-
 shape State[T] {
     elements: ListBuilder.Builder[T],
-    position: Position,
     tokens: TokenIterator,
 }
 
@@ -326,60 +323,51 @@ fun parseMany[T](
     .parseSeparator: Fun (TokenIterator) -> ParseResult[Unit],
     .isEnd: Fun (TokenIterator) -> Bool,
 ) -> Fun (TokenIterator) -> ParseResult[List[T]] {
-    fun parse(state: State[T]) -> ParseResult[List[T]] {
-        when (state.position) {
-            is Start {
-                if (isEnd(state.tokens)) {
-                    success(state.tokens, list())
-                } else {
-                    // TODO: use update()
-                    parse(State(
+    fun parseFromStart(state: State[T]) -> ParseResult[List[T]] {
+        if (isEnd(state.tokens)) {
+            success(state.tokens, list())
+        } else {
+            parseFromElementStart(state)
+        }
+    }
+
+    fun parseFromElementStart(state: State[T]) -> ParseResult[List[T]] {
+        val elementResult = parseElement(state.tokens);
+        when (elementResult) {
+            is ParseSuccess {
+                parseFromElementEnd(State(
+                    .elements = ListBuilder.append(state.elements, elementResult.value),
+                    .tokens = elementResult.remainder,
+                ))
+            }
+            is ParseFailure {
+                elementResult
+            }
+        }
+    }
+
+    fun parseFromElementEnd(state: State[T]) -> ParseResult[List[T]] {
+        if (isEnd(state.tokens)) {
+            success(state.tokens, ListBuilder.toList(state.elements))
+        } else {
+            val separatorResult = parseSeparator(state.tokens);
+            when (separatorResult) {
+                is ParseSuccess {
+                    parseFromElementStart(State(
                         .elements = state.elements,
-                        .position = ElementStart(),
-                        .tokens = state.tokens
+                        .tokens = separatorResult.remainder,
                     ))
                 }
-            }
-            is ElementStart {
-                val elementResult = parseElement(state.tokens);
-                when (elementResult) {
-                    is ParseSuccess {
-                        parse(State(
-                            .elements = ListBuilder.append(state.elements, elementResult.value),
-                            .position = ElementEnd(),
-                            .tokens = elementResult.remainder,
-                        ))
-                    }
-                    is ParseFailure {
-                        elementResult
-                    }
-                }
-            }
-            is ElementEnd {
-                if (isEnd(state.tokens)) {
-                    success(state.tokens, ListBuilder.toList(state.elements))
-                } else {
-                    val separatorResult = parseSeparator(state.tokens);
-                    when (separatorResult) {
-                        is ParseSuccess {
-                            parse(State(
-                                .elements = state.elements,
-                                .position = ElementStart(),
-                                .tokens = separatorResult.remainder,
-                            ))
-                        }
-                        is ParseFailure {
-                            separatorResult
-                        }
-                    }
+                is ParseFailure {
+                    separatorResult
                 }
             }
         }
     }
 
     fun (tokens: TokenIterator) -> ParseResult[List[T]] {
-        val initialState = State[T](.elements = ListBuilder.builder(), .position = Start(), .tokens = tokens);
-        parse(initialState)
+        val initialState = State[T](.elements = ListBuilder.builder(), .tokens = tokens);
+        parseFromStart(initialState)
     }
 }
 
