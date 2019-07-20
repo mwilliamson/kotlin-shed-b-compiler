@@ -375,14 +375,7 @@ private fun generateCode(
 private fun generateCode(node: ValNode, context: CodeGenerationContext): List<PythonStatementNode> {
     fun expressionReturnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
-            val shedTarget = node.target
-            val pythonTarget = generateValTargetCode(shedTarget, context)
-            val assignment = PythonAssignmentNode(
-                target = pythonTarget,
-                expression = pythonExpression,
-                source = source
-            )
-            listOf(assignment)
+            generateValTargetAssignment(node.target, pythonExpression, source, context)
         }
     }
 
@@ -394,22 +387,66 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
     )
 }
 
-internal fun generateValTargetCode(shedTarget: ValTargetNode, context: CodeGenerationContext): PythonExpressionNode {
+private fun generateValTargetAssignment(
+    shedTarget: ValTargetNode,
+    pythonExpression: PythonExpressionNode,
+    source: Source,
+    context: CodeGenerationContext
+): List<PythonStatementNode> {
+    val (pythonTarget, statements) = generateValTargetCode(shedTarget, context)
+    val assignment = PythonAssignmentNode(
+        target = pythonTarget,
+        expression = pythonExpression,
+        source = source
+    )
+    return listOf(assignment) + statements
+}
+
+
+internal fun generateValTargetCode(
+    shedTarget: ValTargetNode,
+    context: CodeGenerationContext
+): Pair<PythonExpressionNode, List<PythonStatementNode>> {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
         is ValTargetNode.Variable ->
-            PythonVariableReferenceNode(
-                name = context.name(shedTarget),
-                source = source
+            Pair(
+                PythonVariableReferenceNode(
+                    name = context.name(shedTarget),
+                    source = source
+                ),
+                listOf()
             )
-        is ValTargetNode.Tuple ->
-            PythonTupleNode(
-                members = shedTarget.elements.map { element ->
-                    generateValTargetCode(element, context)
-                },
-                source = source
+        is ValTargetNode.Tuple -> {
+            val (tupleMembers, statements) = shedTarget.elements.map { element ->
+                generateValTargetCode(element, context)
+            }.unzip()
+            Pair(
+                PythonTupleNode(
+                    members = tupleMembers,
+                    source = source
+                ),
+                statements.flatten()
             )
-        is ValTargetNode.Fields -> throw NotImplementedError("TODO")
+        }
+        is ValTargetNode.Fields -> {
+            val temporaryName = context.freshName("target")
+            val temporaryReference = PythonVariableReferenceNode(temporaryName, source = source)
+            val statements = shedTarget.fields.flatMap { (fieldName, fieldTarget) ->
+                generateValTargetAssignment(
+                    fieldTarget,
+                    PythonAttributeAccessNode(
+                        receiver = temporaryReference,
+                        attributeName = pythoniseName(fieldName.identifier),
+                        source = source
+                    ),
+                    source,
+                    context
+                )
+            }
+
+            Pair(temporaryReference, statements)
+        }
     }
 }
 

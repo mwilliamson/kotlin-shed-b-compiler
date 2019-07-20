@@ -717,6 +717,42 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun valWithTargetFieldsGeneratesMultipleAssignments() {
+        val shed = valStatement(
+            target = valTargetFields(
+                fields = listOf(
+                    fieldName("fieldX") to valTargetVariable("targetX"),
+                    fieldName("fieldY") to valTargetVariable("targetY")
+                )
+            ),
+            expression = literalInt(42)
+        )
+
+        val node = generateCodeForFunctionStatement(shed)
+
+        assertThat(node, isSequence(
+            isPythonAssignment(
+                target = isPythonVariableReference("target"),
+                expression = isPythonIntegerLiteral(42)
+            ),
+            isPythonAssignment(
+                target = isPythonVariableReference("target_x"),
+                expression = isPythonAttributeAccess(
+                    receiver = isPythonVariableReference("target"),
+                    attributeName = equalTo("field_x")
+                )
+            ),
+            isPythonAssignment(
+                target = isPythonVariableReference("target_y"),
+                expression = isPythonAttributeAccess(
+                    receiver = isPythonVariableReference("target"),
+                    attributeName = equalTo("field_y")
+                )
+            )
+        ))
+    }
+
+    @Test
     fun whenValStatementHasSpillingExpressionThenTemporaryIsNotUsed() {
         val shed = valStatement(
             name = "x",
