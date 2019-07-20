@@ -150,6 +150,11 @@ fun jsArrayDestructuring(elements: List<JavascriptTargetNode>) = JavascriptArray
     source = anySource()
 )
 
+fun jsObjectDestructuring(properties: List<Pair<String, JavascriptTargetNode>>) = JavascriptObjectDestructuringNode(
+    properties = properties,
+    source = anySource()
+)
+
 fun jsModule(
     body: List<JavascriptStatementNode>
 ) = JavascriptModuleNode(

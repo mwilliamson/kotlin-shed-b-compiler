@@ -496,6 +496,27 @@ class SerialiserTests {
         assertThat(output, equalTo("[x, y]"))
     }
 
+    @Test
+    fun emptyObjectDestructuringSerialisation() {
+        val node = jsObjectDestructuring(listOf())
+        val output = serialiseTarget(node, indentation = 0)
+        assertThat(output, equalTo("{}"))
+    }
+
+    @Test
+    fun singletonObjectDestructuringSerialisation() {
+        val node = jsObjectDestructuring(listOf("x" to jsVariableReference("targetX")))
+        val output = serialiseTarget(node, indentation = 0)
+        assertThat(output, equalTo("{\n    x: targetX\n}"))
+    }
+
+    @Test
+    fun multiplePropertyObjectDestructuringSerialisation() {
+        val node = jsObjectDestructuring(listOf("x" to jsVariableReference("targetX"), "y" to jsVariableReference("targetY")))
+        val output = serialiseTarget(node, indentation = 0)
+        assertThat(output, equalTo("{\n    x: targetX,\n    y: targetY\n}"))
+    }
+
     private fun indentedSerialise(node: JavascriptStatementNode): String {
         return serialise(node, indentation = 1)
     }

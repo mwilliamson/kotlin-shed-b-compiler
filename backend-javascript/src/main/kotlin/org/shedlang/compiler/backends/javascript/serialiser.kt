@@ -135,21 +135,13 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         }
 
         override fun visit(node: JavascriptObjectLiteralNode): String {
-            if (node.properties.isEmpty()) {
-                return "{}"
-            } else {
-                val open = "{\n"
-                val properties = node.properties.entries.mapIndexed(fun(index, property): String {
+            return serialiseObject(
+                node.properties.entries.map { property ->
                     val value = serialise(property.value, indentation = indentation + 1)
-                    val comma = if (index == node.properties.size - 1) "" else ","
-                    return line(
-                        "${property.key}: ${value}${comma}",
-                        indentation = indentation + 1
-                    )
-                }).joinToString("")
-                val close = indent("}", indentation = indentation)
-                return open + properties + close
-            }
+                    property.key to value
+                },
+                indentation = indentation
+            )
         }
 
         override fun visit(node: JavascriptAssignmentNode): String {
@@ -173,11 +165,40 @@ internal fun serialiseTarget(node: JavascriptTargetNode, indentation: Int): Stri
                 element -> serialiseTarget(element, indentation = indentation)
             })
         }
+
+        override fun visit(node: JavascriptObjectDestructuringNode): String {
+            return serialiseObject(
+                node.properties.map { property ->
+                    val value = serialiseTarget(property.second, indentation = indentation + 1)
+                    property.first to value
+                },
+                indentation = indentation
+            )
+        }
     })
 }
 
 private fun serialiseArray(elements: List<String>): String {
     return "[" + elements.joinToString(", ") + "]"
+}
+
+private fun serialiseObject(properties: List<Pair<String, String>>, indentation: Int): String {
+    if (properties.isEmpty()) {
+        return "{}"
+    } else {
+        val open = "{\n"
+        val propertiesString = properties.mapIndexed(fun(index, property): String {
+            val propertyName = property.first
+            val propertyValue = property.second
+            val comma = if (index == properties.size - 1) "" else ","
+            return line(
+                "${propertyName}: ${propertyValue}${comma}",
+                indentation = indentation + 1
+            )
+        }).joinToString("")
+        val close = indent("}", indentation = indentation)
+        return open + propertiesString + close
+    }
 }
 
 private fun serialiseVariableReference(node: JavascriptVariableReferenceNode): String {

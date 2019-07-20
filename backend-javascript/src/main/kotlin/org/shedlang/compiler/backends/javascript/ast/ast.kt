@@ -98,6 +98,7 @@ interface JavascriptTargetNode: JavascriptNode {
     interface Visitor<T> {
         fun visit(node: JavascriptVariableReferenceNode): T
         fun visit(node: JavascriptArrayDestructuringNode): T
+        fun visit(node: JavascriptObjectDestructuringNode): T
     }
 
     fun <T> accept(visitor: JavascriptTargetNode.Visitor<T>): T
@@ -105,6 +106,15 @@ interface JavascriptTargetNode: JavascriptNode {
 
 data class JavascriptArrayDestructuringNode(
     val elements: List<JavascriptTargetNode>,
+    override val source: Source
+): JavascriptTargetNode {
+    override fun <T> accept(visitor: JavascriptTargetNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class JavascriptObjectDestructuringNode(
+    val properties: List<Pair<String, JavascriptTargetNode>>,
     override val source: Source
 ): JavascriptTargetNode {
     override fun <T> accept(visitor: JavascriptTargetNode.Visitor<T>): T {
