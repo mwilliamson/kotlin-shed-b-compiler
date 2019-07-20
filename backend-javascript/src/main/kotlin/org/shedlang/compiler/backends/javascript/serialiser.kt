@@ -53,7 +53,7 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         }
 
         override fun visit(node: JavascriptConstNode): String {
-            val target = serialise(node.target, indentation = indentation)
+            val target = serialiseTarget(node.target, indentation = indentation)
             val expression = serialise(node.expression, indentation = indentation)
             return simpleStatement("const $target = $expression")
         }
@@ -98,7 +98,7 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         }
 
         override fun visit(node: JavascriptVariableReferenceNode): String {
-            return node.name
+            return serialiseVariableReference(node)
         }
 
         override fun visit(node: JavascriptUnaryOperationNode): String {
@@ -131,7 +131,7 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
         }
 
         override fun visit(node: JavascriptArrayLiteralNode): String {
-            return "[" + node.elements.map { element -> serialise(element, indentation = indentation) }.joinToString(", ") + "]"
+            return serialiseArray(node.elements.map { element -> serialise(element, indentation = indentation) })
         }
 
         override fun visit(node: JavascriptObjectLiteralNode): String {
@@ -160,6 +160,28 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
             return "(" + serialiseFunction(name = null, node = node, indentation = indentation) + ")"
         }
     })
+}
+
+internal fun serialiseTarget(node: JavascriptTargetNode, indentation: Int): String {
+    return node.accept(object: JavascriptTargetNode.Visitor<String> {
+        override fun visit(node: JavascriptVariableReferenceNode): String {
+            return serialiseVariableReference(node)
+        }
+
+        override fun visit(node: JavascriptArrayDestructuringNode): String {
+            return serialiseArray(node.elements.map {
+                element -> serialiseTarget(element, indentation = indentation)
+            })
+        }
+    })
+}
+
+private fun serialiseArray(elements: List<String>): String {
+    return "[" + elements.joinToString(", ") + "]"
+}
+
+private fun serialiseVariableReference(node: JavascriptVariableReferenceNode): String {
+    return node.name
 }
 
 private fun serialiseSubExpression(

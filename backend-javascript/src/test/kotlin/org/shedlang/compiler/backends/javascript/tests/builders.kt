@@ -145,6 +145,11 @@ fun jsConst(
     source = anySource()
 )
 
+fun jsArrayDestructuring(elements: List<JavascriptTargetNode>) = JavascriptArrayDestructuringNode(
+    elements = elements,
+    source = anySource()
+)
+
 fun jsModule(
     body: List<JavascriptStatementNode>
 ) = JavascriptModuleNode(

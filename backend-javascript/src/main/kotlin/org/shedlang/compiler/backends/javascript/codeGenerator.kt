@@ -211,13 +211,13 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): Javascr
 private fun generateCodeForValTarget(
     shedTarget: ValTargetNode,
     context: CodeGenerationContext
-): JavascriptExpressionNode {
+): JavascriptTargetNode {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
         is ValTargetNode.Variable -> {
             JavascriptVariableReferenceNode(generateName(shedTarget.name), source = source)
         }
-        is ValTargetNode.Tuple -> JavascriptArrayLiteralNode(
+        is ValTargetNode.Tuple -> JavascriptArrayDestructuringNode(
             elements = shedTarget.elements.map { targetElement ->
                 generateCodeForValTarget(targetElement, context)
             },

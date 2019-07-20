@@ -357,7 +357,7 @@ class CodeGeneratorTests {
         val node = generateCodeForFunctionStatement(shed)
 
         assertThat(node, isJavascriptConst(
-            target = isJavascriptArray(
+            target = isJavascriptArrayDestructuring(
                 elements = isSequence(
                     isJavascriptVariableReference("x"),
                     isJavascriptVariableReference("y")
@@ -742,7 +742,7 @@ class CodeGeneratorTests {
     ))
 
     private fun isJavascriptConst(
-        target: Matcher<JavascriptExpressionNode>,
+        target: Matcher<JavascriptTargetNode>,
         expression: Matcher<JavascriptExpressionNode>
     ): Matcher<JavascriptStatementNode>  = cast(allOf(
         has(JavascriptConstNode::target, target),
@@ -793,7 +793,7 @@ class CodeGeneratorTests {
         = cast(has(JavascriptStringLiteralNode::value, equalTo(value)))
 
     private fun isJavascriptVariableReference(name: String)
-        : Matcher<JavascriptExpressionNode>
+        : Matcher<JavascriptNode>
         = cast(has(JavascriptVariableReferenceNode::name, equalTo(name)))
 
     private fun isJavascriptUnaryOperation(
@@ -851,6 +851,12 @@ class CodeGeneratorTests {
         has(JavascriptAssignmentNode::target, target),
         has(JavascriptAssignmentNode::expression, expression)
     ))
+
+    private fun isJavascriptArrayDestructuring(
+        elements: Matcher<List<JavascriptTargetNode>>
+    ): Matcher<JavascriptTargetNode> = cast(
+        has(JavascriptArrayDestructuringNode::elements, elements)
+    )
 
     private fun isJavascriptAssignmentStatement(
         target: Matcher<JavascriptExpressionNode>,

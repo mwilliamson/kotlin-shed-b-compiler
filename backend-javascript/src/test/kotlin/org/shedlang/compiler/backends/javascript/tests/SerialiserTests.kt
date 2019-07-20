@@ -10,6 +10,7 @@ import org.shedlang.compiler.backends.javascript.ast.JavascriptExpressionNode
 import org.shedlang.compiler.backends.javascript.ast.JavascriptStatementNode
 import org.shedlang.compiler.backends.javascript.ast.JavascriptUnaryOperator
 import org.shedlang.compiler.backends.javascript.serialise
+import org.shedlang.compiler.backends.javascript.serialiseTarget
 
 class SerialiserTests {
     @Test
@@ -472,6 +473,27 @@ class SerialiserTests {
             "        y: false",
             "    }"
         ).joinToString("\n")))
+    }
+
+    @Test
+    fun emptyArrayDestructuringSerialisation() {
+        val node = jsArrayDestructuring(listOf())
+        val output = serialiseTarget(node, indentation = 0)
+        assertThat(output, equalTo("[]"))
+    }
+
+    @Test
+    fun singletonArrayDestructuringSerialisation() {
+        val node = jsArrayDestructuring(listOf(jsVariableReference("x")))
+        val output = serialiseTarget(node, indentation = 0)
+        assertThat(output, equalTo("[x]"))
+    }
+
+    @Test
+    fun multipleElementArrayDestructuringSerialisation() {
+        val node = jsArrayDestructuring(listOf(jsVariableReference("x"), jsVariableReference("y")))
+        val output = serialiseTarget(node, indentation = 0)
+        assertThat(output, equalTo("[x, y]"))
     }
 
     private fun indentedSerialise(node: JavascriptStatementNode): String {

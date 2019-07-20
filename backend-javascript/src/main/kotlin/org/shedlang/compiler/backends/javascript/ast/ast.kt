@@ -85,11 +85,29 @@ interface JavascriptFunctionNode {
 }
 
 data class JavascriptConstNode(
-    val target: JavascriptExpressionNode,
+    val target: JavascriptTargetNode,
     val expression: JavascriptExpressionNode,
     override val source: Source
 ) : JavascriptStatementNode {
     override fun <T> accept(visitor: JavascriptStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+interface JavascriptTargetNode: JavascriptNode {
+    interface Visitor<T> {
+        fun visit(node: JavascriptVariableReferenceNode): T
+        fun visit(node: JavascriptArrayDestructuringNode): T
+    }
+
+    fun <T> accept(visitor: JavascriptTargetNode.Visitor<T>): T
+}
+
+data class JavascriptArrayDestructuringNode(
+    val elements: List<JavascriptTargetNode>,
+    override val source: Source
+): JavascriptTargetNode {
+    override fun <T> accept(visitor: JavascriptTargetNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -152,8 +170,12 @@ data class JavascriptStringLiteralNode(
 data class JavascriptVariableReferenceNode(
     val name: String,
     override val source: Source
-) : JavascriptExpressionNode {
+) : JavascriptExpressionNode, JavascriptTargetNode {
     override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    override fun <T> accept(visitor: JavascriptTargetNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
