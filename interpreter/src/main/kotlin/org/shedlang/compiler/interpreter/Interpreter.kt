@@ -226,12 +226,16 @@ internal data class FieldAccess(
                 FieldAccess(evaluatedReceiver, fieldName)
             }
             is InterpreterValue ->
-                when (receiver) {
-                    is ModuleValue -> EvaluationResult.pure(receiver.fields.getValue(fieldName))
-                    is ShapeValue -> EvaluationResult.pure(receiver.fields.getValue(fieldName))
-                    else -> throw NotImplementedError()
-                }
+                EvaluationResult.pure(fieldValue(receiver, fieldName))
         }
+    }
+}
+
+private fun fieldValue(receiver: InterpreterValue, fieldName: Identifier): InterpreterValue {
+    return when (receiver) {
+        is ModuleValue -> receiver.fields.getValue(fieldName)
+        is ShapeValue -> receiver.fields.getValue(fieldName)
+        else -> throw NotImplementedError()
     }
 }
 
@@ -455,12 +459,16 @@ private fun assignExpression(target: Target, value: InterpreterValue): List<Pair
         is Target.Tuple -> target.elements.zip((value as TupleValue).elements).flatMap { (targetElement, valueElement) ->
             assignExpression(targetElement, valueElement)
         }
+        is Target.Fields -> target.fields.flatMap { (fieldName, fieldTarget) ->
+            assignExpression(fieldTarget, fieldValue(value, fieldName))
+        }
     }
 }
 
 internal sealed class Target {
     internal data class Variable(internal val name: Identifier): Target()
     internal data class Tuple(internal val elements: List<Target>): Target()
+    internal data class Fields(internal val fields: List<Pair<Identifier, Target>>): Target()
 }
 
 internal data class Arguments(

@@ -133,7 +133,9 @@ private fun loadTarget(targetNode: ValTargetNode): Target {
         is ValTargetNode.Tuple -> Target.Tuple(targetNode.elements.map { targetElement ->
             loadTarget(targetElement)
         })
-        is ValTargetNode.Fields -> throw NotImplementedError("TODO")
+        is ValTargetNode.Fields -> Target.Fields(targetNode.fields.map { (fieldName, fieldTarget) ->
+            fieldName.identifier to loadTarget(fieldTarget)
+        })
     }
 }
 
