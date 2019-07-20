@@ -2,11 +2,10 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
-import org.shedlang.compiler.tests.isMap
+import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 
 class ParseValTests {
@@ -63,9 +62,9 @@ class ParseValTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isVal(
             target = isValTargetFields(
-                fields = isMap(
-                    Identifier("x") to isValTargetVariable(name = isIdentifier("targetX")),
-                    Identifier("y") to isValTargetVariable(name = isIdentifier("targetY"))
+                fields = isSequence(
+                    isPair(isFieldName("x"), isValTargetVariable(name = isIdentifier("targetX"))),
+                    isPair(isFieldName("y"), isValTargetVariable(name = isIdentifier("targetY")))
                 )
             )
         ))
@@ -77,8 +76,8 @@ class ParseValTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isVal(
             target = isValTargetFields(
-                fields = isMap(
-                    Identifier("x") to isValTargetVariable(name = isIdentifier("targetX"))
+                fields = isSequence(
+                    isPair(isFieldName("x"), isValTargetVariable(name = isIdentifier("targetX")))
                 )
             )
         ))

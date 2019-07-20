@@ -114,7 +114,7 @@ fun valTargetTuple(elements: List<ValTargetNode>) = ValTargetNode.Tuple(
     source = anySource()
 )
 
-fun valTargetFields(fields: Map<Identifier, ValTargetNode>) = ValTargetNode.Fields(
+fun valTargetFields(fields: List<Pair<FieldNameNode, ValTargetNode>>) = ValTargetNode.Fields(
     fields,
     source = anySource()
 )
@@ -216,9 +216,13 @@ fun fieldAccess(
     fieldName: String
 ) = FieldAccessNode(
     receiver = receiver,
-    fieldName = FieldNameNode(Identifier(fieldName), source = anySource()),
+    fieldName = fieldName(fieldName),
     source = anySource()
 )
+
+fun fieldName(
+    name: String
+) = FieldNameNode(Identifier(name), source = anySource())
 
 fun function(
     name: String = "f",

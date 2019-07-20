@@ -77,7 +77,7 @@ internal fun isValTargetTuple(
 ): Matcher<ValTargetNode> = cast(has(ValTargetNode.Tuple::elements, elements))
 
 internal fun isValTargetFields(
-    fields: Matcher<Map<Identifier, ValTargetNode>>
+    fields: Matcher<List<Pair<FieldNameNode, ValTargetNode>>>
 ): Matcher<ValTargetNode> = cast(has(ValTargetNode.Fields::fields, fields))
 
 internal fun isValType(
@@ -262,6 +262,8 @@ internal fun isFieldAccess(
     has(FieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName)),
     has(FieldAccessNode::source, source)
 ))
+
+internal fun isFieldName(name: String) = has(FieldNameNode::identifier, isIdentifier(name))
 
 internal fun isTupleNode(elements: Matcher<List<ExpressionNode>>)
     = cast(has(TupleNode::elements, elements))

@@ -6,7 +6,6 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
@@ -99,9 +98,9 @@ class TypeCheckValTests {
     fun fieldTargetsTakeTypeOfField() {
         val elementTarget1 = valTargetVariable("targetX")
         val elementTarget2 = valTargetVariable("targetY")
-        val target = valTargetFields(fields = mapOf(
-            Identifier("x") to elementTarget1,
-            Identifier("y") to elementTarget2
+        val target = valTargetFields(fields = listOf(
+            fieldName("x") to elementTarget1,
+            fieldName("y") to elementTarget2
         ))
         val expressionDeclaration = declaration("e")
         val expression = variableReference("e")

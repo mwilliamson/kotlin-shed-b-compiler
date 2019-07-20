@@ -753,7 +753,7 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
         val fields = parseMany(
             parseElement = { tokens ->
                 tokens.skip(TokenType.SYMBOL_DOT)
-                val fieldName = parseIdentifier(tokens)
+                val fieldName = parseFieldName(tokens)
                 tokens.skip(TokenType.KEYWORD_AS)
                 val target = parseValTarget(tokens)
                 fieldName to target
@@ -767,7 +767,7 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
         tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
         return ValTargetNode.Fields(
-            fields = fields.toMap(),
+            fields = fields,
             source = source
         )
     } else {
