@@ -147,6 +147,11 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_IMPORT)
+
+    val name = parseIdentifier(tokens)
+
+    tokens.skip(TokenType.KEYWORD_FROM)
+
     val isLocal = tokens.trySkip(TokenType.SYMBOL_DOT)
 
     val moduleNameParts = parseMany(
@@ -161,7 +166,7 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
         base = if (isLocal) ImportPathBase.Relative else ImportPathBase.Absolute,
         parts = moduleNameParts
     )
-    return ImportNode(name = path.parts.last(), path = path, source = source)
+    return ImportNode(name = name, path = path, source = source)
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {

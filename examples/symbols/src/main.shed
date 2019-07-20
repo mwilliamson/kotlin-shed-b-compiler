@@ -4,8 +4,8 @@
 //   first.x1 == first.y: false
 //   first.y == second.x: false
 
-import .first;
-import .second;
+import first from .first;
+import second from .second;
 
 fun main() !Io -> Unit {
     print!("first.x1 == first.x2: " + formatBoolean(first.x1 == first.x2) + "\n");

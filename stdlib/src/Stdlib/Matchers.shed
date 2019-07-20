@@ -14,7 +14,7 @@ export
     isNone,
     isSome;
 
-import .Options;
+import Options from .Options;
 
 fun anything() -> Matcher[Any] {
     Matcher(

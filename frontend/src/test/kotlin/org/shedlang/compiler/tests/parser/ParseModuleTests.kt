@@ -41,7 +41,7 @@ class ParseModuleTests {
     @Test
     fun moduleCanHaveImports() {
         val source = """
-            import .x.y;
+            import y from .x.y;
         """.trimIndent()
 
         val node = parse("<string>", source)

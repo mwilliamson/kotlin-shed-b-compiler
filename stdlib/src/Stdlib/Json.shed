@@ -22,12 +22,12 @@ export
     JsonFailure,
     textToValue;
 
-import .ListBuilder;
-import .Lists;
-import .Options;
-import .Sequences;
-import .Sequences.Unfold;
-import .Strings.CodePoints;
+import ListBuilder from .ListBuilder;
+import Lists from .Lists;
+import Options from .Options;
+import Sequences from .Sequences;
+import Unfold from .Sequences.Unfold;
+import CodePoints from .Strings.CodePoints;
 
 
 union JsonValue =

@@ -27,7 +27,7 @@ class ParseTypesModuleTests {
     @Test
     fun typesModuleCanHaveImports() {
         val source = """
-            import .x.y;
+            import y from .x.y;
         """.trimIndent()
 
         val node = parseTypesModule("<string>", source)

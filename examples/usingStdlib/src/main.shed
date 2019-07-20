@@ -2,7 +2,7 @@
 //   Some 4
 //   None
 
-import Stdlib.Options;
+import Options from Stdlib.Options;
 
 fun main() !Io -> Unit {
     print!(optionToString(Options.some(4)) + "\n");

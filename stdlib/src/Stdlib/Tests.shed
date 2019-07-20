@@ -1,8 +1,8 @@
 export assertThat, Test, TestCase, TestSuite, suite, testCase, runTests;
 
-import .Lists;
-import .Matchers;
-import .Options;
+import Lists from .Lists;
+import Matchers from .Matchers;
+import Options from .Options;
 
 
 shape AssertionError {

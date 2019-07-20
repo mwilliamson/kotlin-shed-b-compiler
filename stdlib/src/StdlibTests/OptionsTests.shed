@@ -1,8 +1,8 @@
 export testCases;
 
-import Stdlib.Matchers;
-import Stdlib.Options;
-import Stdlib.Tests;
+import Matchers from Stdlib.Matchers;
+import Options from Stdlib.Options;
+import Tests from Stdlib.Tests;
 
 fun addOne(value: Int) -> Int {
     value + 1

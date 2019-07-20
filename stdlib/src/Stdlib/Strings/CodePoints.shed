@@ -17,9 +17,9 @@ export
     padLeft,
     startsWith;
 
-import Stdlib.Lists;
-import Stdlib.Options;
-import Stdlib.Platform.Strings;
+import Lists from Stdlib.Lists;
+import Options from Stdlib.Options;
+import Strings from Stdlib.Platform.Strings;
 
 val codePointToHexString = Strings.codePointToHexString;
 val codePointToInt = Strings.codePointToInt;

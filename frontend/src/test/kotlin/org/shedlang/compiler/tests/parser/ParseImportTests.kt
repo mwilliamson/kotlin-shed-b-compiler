@@ -10,10 +10,10 @@ import org.shedlang.compiler.tests.isIdentifier
 class ParseImportTests {
     @Test
     fun moduleNameIsParsedFromImport() {
-        val source = "import example.x;"
+        val source = "import a from example.x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(
-            name = isIdentifier("x"),
+            name = isIdentifier("a"),
             path = equalTo(
                 ImportPath.absolute(listOf("example", "x"))
             )
@@ -22,10 +22,10 @@ class ParseImportTests {
 
     @Test
     fun moduleNameIsNormalised() {
-        val source = "import example .  x;"
+        val source = "import a from example .  x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(
-            name = isIdentifier("x"),
+            name = isIdentifier("a"),
             path = equalTo(
                 ImportPath.absolute(listOf("example", "x"))
             )
@@ -34,10 +34,10 @@ class ParseImportTests {
 
     @Test
     fun relativeImportsStartWithDot() {
-        val source = "import .example.x;"
+        val source = "import a from .example.x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(
-            name = isIdentifier("x"),
+            name = isIdentifier("a"),
             path = equalTo(
                 ImportPath.relative(listOf("example", "x"))
             )

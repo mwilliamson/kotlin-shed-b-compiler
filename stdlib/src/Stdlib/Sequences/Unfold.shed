@@ -1,6 +1,6 @@
 export unfold, continue, end, Next;
 
-import Stdlib.Sequences;
+import Sequences from Stdlib.Sequences;
 
 union Next[R, T] =
     | End

@@ -1,9 +1,9 @@
-import Stdlib.Tests;
+import Tests from Stdlib.Tests;
 
-import .JsonTests;
-import .OptionsTests;
-import .Strings.CodePointsTests;
-import .StringsTests;
+import JsonTests from .JsonTests;
+import OptionsTests from .OptionsTests;
+import CodePointsTests from .Strings.CodePointsTests;
+import StringsTests from .StringsTests;
 
 fun main() !Io -> Int {
     Tests.runTests!(list(

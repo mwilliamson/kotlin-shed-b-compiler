@@ -1,8 +1,8 @@
 export parseInt;
 
-import .Options;
+import Options from .Options;
 // TODO: Use Bytes instead
-import .Strings.CodePoints;
+import CodePoints from .Strings.CodePoints;
 
 fun parseInt(text: String) -> Options.Option[Int] {
     val first = CodePoints.first(text);
