@@ -389,7 +389,19 @@ fun typesModule(
 fun import(
     name: Identifier,
     path: ImportPath = ImportPath.absolute(listOf("Module"))
-) = ImportNode(name = name, path = path, source = anySource())
+) = import(
+    target = TargetNode.Variable(name, source = anySource()),
+    path = path
+)
+
+fun import(
+    target: TargetNode,
+    path: ImportPath = ImportPath.absolute(listOf("Module"))
+) = ImportNode(
+    target = target,
+    path = path,
+    source = anySource()
+)
 
 fun staticReference(name: String) = StaticReferenceNode(Identifier(name), anySource())
 fun staticFieldAccess(

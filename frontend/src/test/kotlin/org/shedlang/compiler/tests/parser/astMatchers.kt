@@ -7,10 +7,10 @@ import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 
 internal fun isImport(
-    name: Matcher<Identifier>,
+    target: Matcher<TargetNode>,
     path: Matcher<ImportPath>
 ) = allOf(
-    has(ImportNode::name, name),
+    has(ImportNode::target, target),
     has(ImportNode::path, path)
 )
 
@@ -67,6 +67,8 @@ inline internal fun isVal(
         has(ValNode::expression, expression)
     ))
 }
+
+internal fun isTargetVariable(name: String) = isTargetVariable(isIdentifier(name))
 
 internal fun isTargetVariable(
     name: Matcher<Identifier>

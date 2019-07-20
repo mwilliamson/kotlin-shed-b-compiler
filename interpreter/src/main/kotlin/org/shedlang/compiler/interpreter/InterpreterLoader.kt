@@ -35,7 +35,7 @@ internal fun loadModule(module: Module.Shed): ModuleExpression {
     val context = LoaderContext(moduleName = module.name, types = module.types)
 
     val imports = module.node.imports.map { import ->
-        Val(Target.Variable(import.name), ModuleReference(resolveImport(module.name, import.path)))
+        Val(loadTarget(import.target), ModuleReference(resolveImport(module.name, import.path)))
     }
     val declarations = module.node.body.flatMap { statement ->
         loadModuleStatement(statement, context)

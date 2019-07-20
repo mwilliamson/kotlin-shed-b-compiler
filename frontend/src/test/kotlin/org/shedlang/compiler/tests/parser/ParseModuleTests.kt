@@ -48,7 +48,7 @@ class ParseModuleTests {
 
         assertThat(node, has(ModuleNode::imports, isSequence(
             isImport(
-                name = isIdentifier("y"),
+                target = isTargetVariable("y"),
                 path = equalTo(ImportPath.relative(listOf("x", "y")))
             )
         )))

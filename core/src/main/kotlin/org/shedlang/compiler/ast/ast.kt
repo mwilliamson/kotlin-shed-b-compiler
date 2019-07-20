@@ -246,13 +246,13 @@ sealed class ImportPathBase {
 }
 
 data class ImportNode(
-    override val name: Identifier,
+    val target: TargetNode,
     val path: ImportPath,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : VariableBindingNode {
+) : Node {
     override val children: List<Node>
-        get() = listOf()
+        get() = listOf(target)
 }
 
 interface StatementNode: Node {

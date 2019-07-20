@@ -13,6 +13,7 @@ import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.import
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.targetVariable
 import org.shedlang.compiler.typechecker.ModuleNotFoundError
 import org.shedlang.compiler.typechecker.MultipleModulesWithSameNameFoundError
 import org.shedlang.compiler.typechecker.typeCheck
@@ -22,7 +23,11 @@ class TypeCheckImportTests {
     @Test
     fun importIntroducesModuleIntoScope() {
         val path = ImportPath.relative(listOf("Messages"))
-        val node = import(name = Identifier("M"), path = path)
+        val target = targetVariable("M")
+        val node = import(
+            target = target,
+            path = path
+        )
         val moduleType = ModuleType(fields = mapOf())
         val typeContext = typeContext(
             modules = mapOf(
@@ -33,7 +38,7 @@ class TypeCheckImportTests {
             )
         )
         typeCheck(node, typeContext)
-        assertThat(typeContext.typeOf(node), cast(equalTo(moduleType)))
+        assertThat(typeContext.typeOf(target), cast(equalTo(moduleType)))
     }
 
     @Test

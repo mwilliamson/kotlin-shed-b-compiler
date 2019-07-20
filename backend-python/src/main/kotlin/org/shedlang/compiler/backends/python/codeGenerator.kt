@@ -94,15 +94,15 @@ internal class CodeGenerationContext(
 }
 
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
-    val imports = node.imports.map({ import -> generateCode(import, context) })
-    val body = node.body.flatMap({ child -> generateModuleStatementCode(child, context) })
+    val imports = node.imports.flatMap{ import -> generateImportCode(import, context) }
+    val body = node.body.flatMap{ child -> generateModuleStatementCode(child, context) }
     return PythonModuleNode(
         imports + body,
         source = NodeSource(node)
     )
 }
 
-private fun generateCode(node: ImportNode, context: CodeGenerationContext): PythonStatementNode {
+private fun generateImportCode(node: ImportNode, context: CodeGenerationContext): List<PythonStatementNode> {
     // TODO: assign names properly using context
     val source = NodeSource(node)
 
@@ -111,12 +111,32 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
         ImportPathBase.Relative -> if (context.isPackage) { ".." } else { "." } + pythonPackageName.joinToString(".")
         ImportPathBase.Absolute -> (listOf(topLevelPythonPackageName) + pythonPackageName).joinToString(".")
     }
+    val importName = node.path.parts.last().value
 
-    return PythonImportFromNode(
-        module = module,
-        names = listOf(node.path.parts.last().value to pythoniseName(node.name)),
-        source = source
-    )
+    val target = node.target
+    if (target is TargetNode.Variable) {
+        return listOf(
+            PythonImportFromNode(
+                module = module,
+                names = listOf(importName to pythoniseName(target.name)),
+                source = source
+            )
+        )
+    } else {
+        val targetName = context.freshName("import_target")
+        return listOf(
+            PythonImportFromNode(
+                module = module,
+                names = listOf(importName to targetName),
+                source = source
+            )
+        ) + generateTargetAssignment(
+            target,
+            PythonVariableReferenceNode(targetName, source = NodeSource(target)),
+            source = NodeSource(target),
+            context = context
+        )
+    }
 }
 
 internal fun generateModuleStatementCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {

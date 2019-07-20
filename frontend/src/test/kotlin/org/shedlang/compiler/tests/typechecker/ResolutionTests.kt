@@ -224,9 +224,13 @@ class ResolutionTests {
     }
 
     @Test
-    fun importInModuleIntroducesVariable() {
-        val import = import(
+    fun importInModuleBindsTargets() {
+        val target = TargetNode.Variable(
             name = Identifier("a"),
+            source = anySource()
+        )
+        val import = import(
+            target = target,
             path = ImportPath.absolute(listOf("x", "y", "z"))
         )
         val reference = variableReference("a")
@@ -242,13 +246,14 @@ class ResolutionTests {
 
         val references = resolve(module, globals = mapOf(Identifier("Unit") to anyDeclaration()))
 
-        assertThat(references[reference], isVariableBinding(import))
+        assertThat(references[reference], isVariableBinding(target))
     }
 
     @Test
     fun importInTypesModuleIntroducesVariable() {
+        val target = targetVariable("A")
         val import = import(
-            name = Identifier("A"),
+            target = target,
             path = ImportPath.absolute(listOf("T"))
         )
         val reference = staticReference("A")
@@ -261,7 +266,7 @@ class ResolutionTests {
 
         val references = resolve(module, globals = mapOf())
 
-        assertThat(references[reference], isVariableBinding(import))
+        assertThat(references[reference], isVariableBinding(target))
     }
 
     @Test

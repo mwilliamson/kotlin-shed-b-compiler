@@ -40,8 +40,8 @@ private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptSta
 
     val importPath = importBase + import.path.parts.map(Identifier::value).joinToString("/")
 
-    return javascriptConst(
-        name = generateName(import.name),
+    return JavascriptConstNode(
+        target = generateCodeForTarget(import.target),
         expression = JavascriptFunctionCallNode(
             JavascriptVariableReferenceNode("require", source = source),
             listOf(JavascriptStringLiteralNode(importPath, source = source)),
@@ -200,7 +200,7 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
     val source = NodeSource(node)
     val target = node.target
-    val javascriptTarget = generateCodeForTarget(target, context)
+    val javascriptTarget = generateCodeForTarget(target)
     return JavascriptConstNode(
         target = javascriptTarget,
         expression = generateCode(node.expression, context),
@@ -209,8 +209,7 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): Javascr
 }
 
 private fun generateCodeForTarget(
-    shedTarget: TargetNode,
-    context: CodeGenerationContext
+    shedTarget: TargetNode
 ): JavascriptTargetNode {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
@@ -219,13 +218,13 @@ private fun generateCodeForTarget(
         }
         is TargetNode.Tuple -> JavascriptArrayDestructuringNode(
             elements = shedTarget.elements.map { targetElement ->
-                generateCodeForTarget(targetElement, context)
+                generateCodeForTarget(targetElement)
             },
             source = source
         )
         is TargetNode.Fields -> JavascriptObjectDestructuringNode(
             properties = shedTarget.fields.map { (fieldName, fieldTarget) ->
-                generateFieldName(fieldName) to generateCodeForTarget(fieldTarget, context)
+                generateFieldName(fieldName) to generateCodeForTarget(fieldTarget)
             },
             source = source
         )

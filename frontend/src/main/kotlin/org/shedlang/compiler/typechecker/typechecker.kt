@@ -250,7 +250,7 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
         is ModuleResult.FoundMany ->
             throw MultipleModulesWithSameNameFoundError(name = result.name, source = import.source)
     }
-    context.addVariableType(import, type)
+    typeCheckTarget(import.target, type, context)
 }
 
 internal fun typeCheck(valType: ValTypeNode, context: TypeContext) {

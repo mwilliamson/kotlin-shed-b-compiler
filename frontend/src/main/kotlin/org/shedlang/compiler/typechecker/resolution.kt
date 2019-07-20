@@ -161,15 +161,25 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         }
 
         is ModuleNode -> {
-            resolveScope(body = node.imports + node.body, context = context)
+            resolveScope(
+                binders = node.imports.flatMap { import -> import.target.variableBinders() },
+                body = node.body,
+                context = context
+            )
         }
 
         is TypesModuleNode -> {
-            resolveScope(body = node.imports + node.body, context = context)
+            resolveScope(
+                binders = node.imports.flatMap { import -> import.target.variableBinders() },
+                body = node.body,
+                context = context
+            )
         }
 
         is ImportNode -> {
-            context.initialise(node)
+            for (target in node.target.variableBinders()) {
+                context.initialise(target)
+            }
         }
 
         is IfNode -> {

@@ -148,7 +148,7 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
 
     tokens.skip(TokenType.KEYWORD_IMPORT)
 
-    val name = parseIdentifier(tokens)
+    val target = parseTarget(tokens)
 
     tokens.skip(TokenType.KEYWORD_FROM)
 
@@ -166,7 +166,7 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
         base = if (isLocal) ImportPathBase.Relative else ImportPathBase.Absolute,
         parts = moduleNameParts
     )
-    return ImportNode(name = name, path = path, source = source)
+    return ImportNode(target = target, path = path, source = source)
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {

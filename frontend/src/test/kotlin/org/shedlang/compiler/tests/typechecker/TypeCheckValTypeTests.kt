@@ -2,7 +2,6 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.newTypeContext
@@ -29,7 +28,7 @@ class TypeCheckValTypeTests {
 
     @Test
     fun valIsTypedUsingTypeExpression() {
-        val intDeclaration = import(name = Identifier("Int"))
+        val intDeclaration = declaration("Int")
         val intReference = staticReference("Int")
         val node = valType(name = "value", type = intReference)
         val typeContext = newTypeContext(

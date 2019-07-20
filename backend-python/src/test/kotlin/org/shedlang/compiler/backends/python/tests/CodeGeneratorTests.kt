@@ -152,6 +152,46 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun destructuringTargetsCausesImportToBeAssignedToTemporary() {
+        val shed = module(imports = listOf(import(
+            target = targetFields(fields = listOf(
+                fieldName("fieldX") to targetVariable("targetX"),
+                fieldName("fieldY") to targetVariable("targetY")
+            )),
+            path = ImportPath.relative(listOf("A"))
+        )))
+
+        val node = generateCode(shed)
+
+        assertThat(node, isPythonModule(
+            body = isSequence(
+                isPythonImportFrom(
+                    module = equalTo("."),
+                    names = isSequence(equalTo("A" to "import_target"))
+                ),
+                isPythonAssignment(
+                    target = isPythonVariableReference("target"),
+                    expression = isPythonVariableReference("import_target")
+                ),
+                isPythonAssignment(
+                    target = isPythonVariableReference("target_x"),
+                    expression = isPythonAttributeAccess(
+                        receiver = isPythonVariableReference("target"),
+                        attributeName = equalTo("field_x")
+                    )
+                ),
+                isPythonAssignment(
+                    target = isPythonVariableReference("target_y"),
+                    expression = isPythonAttributeAccess(
+                        receiver = isPythonVariableReference("target"),
+                        attributeName = equalTo("field_y")
+                    )
+                )
+            )
+        ))
+    }
+
+    @Test
     fun moduleGeneratesModule() {
         val shed = module(body = listOf(function(name = "f")))
 

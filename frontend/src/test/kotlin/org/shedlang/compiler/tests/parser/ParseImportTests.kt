@@ -5,7 +5,6 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.parser.parseImport
-import org.shedlang.compiler.tests.isIdentifier
 
 class ParseImportTests {
     @Test
@@ -13,7 +12,7 @@ class ParseImportTests {
         val source = "import a from example.x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(
-            name = isIdentifier("a"),
+            target = isTargetVariable("a"),
             path = equalTo(
                 ImportPath.absolute(listOf("example", "x"))
             )
@@ -25,7 +24,7 @@ class ParseImportTests {
         val source = "import a from example .  x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(
-            name = isIdentifier("a"),
+            target = isTargetVariable("a"),
             path = equalTo(
                 ImportPath.absolute(listOf("example", "x"))
             )
@@ -37,7 +36,7 @@ class ParseImportTests {
         val source = "import a from .example.x;"
         val node = parseString(::parseImport, source)
         assertThat(node, isImport(
-            name = isIdentifier("a"),
+            target = isTargetVariable("a"),
             path = equalTo(
                 ImportPath.relative(listOf("example", "x"))
             )
