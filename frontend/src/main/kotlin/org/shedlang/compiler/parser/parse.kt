@@ -748,6 +748,28 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
             elements = elements,
             source = source
         )
+    } else if (tokens.trySkip(TokenType.SYMBOL_AT)) {
+        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+        val fields = parseMany(
+            parseElement = { tokens ->
+                tokens.skip(TokenType.SYMBOL_DOT)
+                val fieldName = parseIdentifier(tokens)
+                tokens.skip(TokenType.KEYWORD_AS)
+                val target = parseValTarget(tokens)
+                fieldName to target
+            },
+            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+            allowTrailingSeparator = true,
+            allowZero = false,
+            tokens = tokens
+        )
+        tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+
+        return ValTargetNode.Fields(
+            fields = fields.toMap(),
+            source = source
+        )
     } else {
         val name = parseIdentifier(tokens)
 

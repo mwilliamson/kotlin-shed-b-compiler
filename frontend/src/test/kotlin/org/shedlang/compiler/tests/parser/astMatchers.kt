@@ -76,6 +76,10 @@ internal fun isValTargetTuple(
     elements: Matcher<List<ValTargetNode>>
 ): Matcher<ValTargetNode> = cast(has(ValTargetNode.Tuple::elements, elements))
 
+internal fun isValTargetFields(
+    fields: Matcher<Map<Identifier, ValTargetNode>>
+): Matcher<ValTargetNode> = cast(has(ValTargetNode.Fields::fields, fields))
+
 internal fun isValType(
     name: Matcher<Identifier>,
     type: Matcher<StaticExpressionNode>

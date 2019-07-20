@@ -409,6 +409,7 @@ internal fun generateValTargetCode(shedTarget: ValTargetNode, context: CodeGener
                 },
                 source = source
             )
+        is ValTargetNode.Fields -> throw NotImplementedError("TODO")
     }
 }
 

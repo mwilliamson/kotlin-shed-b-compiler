@@ -645,7 +645,19 @@ sealed class ValTargetNode: Node {
         override fun variableBinders(): List<VariableBindingNode> {
             return elements.flatMap { element -> element.variableBinders() }
         }
+    }
 
+    data class Fields(
+        val fields: Map<Identifier, ValTargetNode>,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ): ValTargetNode() {
+        override val children: List<Node>
+            get() = fields.values.toList()
+
+        override fun variableBinders(): List<VariableBindingNode> {
+            return fields.values.flatMap { element -> element.variableBinders() }
+        }
     }
 }
 

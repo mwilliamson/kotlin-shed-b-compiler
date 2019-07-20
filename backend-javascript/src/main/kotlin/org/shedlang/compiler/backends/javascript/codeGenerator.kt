@@ -223,6 +223,7 @@ private fun generateCodeForValTarget(
             },
             source = source
         )
+        is ValTargetNode.Fields -> throw NotImplementedError("TODO")
     }
 }
 

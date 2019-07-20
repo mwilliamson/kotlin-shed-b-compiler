@@ -13,6 +13,7 @@ private val unterminatedStringPattern = "\"(?:[^\\\\\"\n\r]|\\\\.)*"
 val identifierPattern = "[A-Za-z][A-Za-z0-9]*"
 
 private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
+    keyword(TokenType.KEYWORD_AS, "as"),
     keyword(TokenType.KEYWORD_ELSE, "else"),
     keyword(TokenType.KEYWORD_EXPORT, "export"),
     keyword(TokenType.KEYWORD_EXTENDS, "extends"),
@@ -74,7 +75,9 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
     RegexTokeniser.rule(TokenType.CODE_POINT, "'(?:[^\\\\'\n\r]|\\\\.)*'"),
     RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+"),
-    RegexTokeniser.rule(TokenType.COMMENT, "//[^\n]*")
+    RegexTokeniser.rule(TokenType.COMMENT, "//[^\n]*"),
+
+    symbol(TokenType.SYMBOL_AT, "@")
 ))
 
 internal fun tokenise(value: String): List<Token<TokenType>> {
@@ -84,6 +87,7 @@ internal fun tokenise(value: String): List<Token<TokenType>> {
 internal enum class TokenType {
     UNKNOWN,
 
+    KEYWORD_AS,
     KEYWORD_ELSE,
     KEYWORD_EXPORT,
     KEYWORD_EXTENDS,
@@ -138,6 +142,7 @@ internal enum class TokenType {
     SYMBOL_TILDE,
     SYMBOL_BANG,
     SYMBOL_HASH,
+    SYMBOL_AT,
 
     INTEGER,
     STRING,

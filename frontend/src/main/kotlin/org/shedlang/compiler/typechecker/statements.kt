@@ -337,6 +337,7 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
     when (target) {
         is ValTargetNode.Variable ->
             context.addVariableType(target, type)
+
         is ValTargetNode.Tuple -> {
             // TODO: check is tuple type
             val tupleType = type as TupleType
@@ -356,6 +357,9 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
                 typeCheckValTarget(targetElement, elementType, context)
             }
         }
+
+        is ValTargetNode.Fields ->
+            throw NotImplementedError("TODO")
     }
 }
 

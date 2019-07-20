@@ -1,13 +1,12 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.IntegerLiteralNode
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
+import org.shedlang.compiler.tests.isMap
 import org.shedlang.compiler.tests.isSequence
 
 class ParseValTests {
@@ -53,6 +52,33 @@ class ParseValTests {
             target = isValTargetTuple(
                 elements = isSequence(
                     isValTargetVariable(name = isIdentifier("x"))
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun valTargetCanBeFields() {
+        val source = "val @(.x as targetX, .y as targetY) = z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isVal(
+            target = isValTargetFields(
+                fields = isMap(
+                    Identifier("x") to isValTargetVariable(name = isIdentifier("targetX")),
+                    Identifier("y") to isValTargetVariable(name = isIdentifier("targetY"))
+                )
+            )
+        ))
+    }
+
+    @Test
+    fun valTargetFieldsCanHaveTrailingComma() {
+        val source = "val @(.x as targetX,) = z;"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isVal(
+            target = isValTargetFields(
+                fields = isMap(
+                    Identifier("x") to isValTargetVariable(name = isIdentifier("targetX"))
                 )
             )
         ))
