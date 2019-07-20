@@ -223,7 +223,12 @@ private fun generateCodeForValTarget(
             },
             source = source
         )
-        is ValTargetNode.Fields -> throw NotImplementedError("TODO")
+        is ValTargetNode.Fields -> JavascriptObjectDestructuringNode(
+            properties = shedTarget.fields.map { (fieldName, fieldTarget) ->
+                generateFieldName(fieldName) to generateCodeForValTarget(fieldTarget, context)
+            },
+            source = source
+        )
     }
 }
 
@@ -408,7 +413,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
             return JavascriptPropertyAccessNode(
                 generateCode(node.receiver, context),
-                generateName(node.fieldName.identifier),
+                generateFieldName(node.fieldName),
                 source = NodeSource(node)
             )
         }
@@ -547,6 +552,10 @@ private fun generateCode(operator: BinaryOperator): JavascriptBinaryOperator {
 
 private fun generateCodeForReferenceNode(node: ReferenceNode): JavascriptExpressionNode {
     return JavascriptVariableReferenceNode(generateName(node.name), NodeSource(node))
+}
+
+private fun generateFieldName(fieldName: FieldNameNode): String {
+    return generateName(fieldName.identifier)
 }
 
 private fun generateName(identifier: Identifier): String {

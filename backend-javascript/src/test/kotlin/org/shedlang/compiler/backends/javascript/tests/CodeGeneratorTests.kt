@@ -368,6 +368,29 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun valWithTargetFieldsGeneratesDestructuringObjectAssignment() {
+        val shed = valStatement(
+            target = valTargetFields(fields = listOf(
+                fieldName("x") to valTargetVariable("targetX"),
+                fieldName("y") to valTargetVariable("targetY")
+            )),
+            expression = literalBool(true)
+        )
+
+        val node = generateCodeForFunctionStatement(shed)
+
+        assertThat(node, isJavascriptConst(
+            target = isJavascriptObjectDestructuring(
+                properties = isSequence(
+                    isPair(equalTo("x"), isJavascriptVariableReference("targetX")),
+                    isPair(equalTo("y"), isJavascriptVariableReference("targetY"))
+                )
+            ),
+            expression = isJavascriptBooleanLiteral(true)
+        ))
+    }
+
+    @Test
     fun unitLiteralGeneratesNull() {
         val shed = literalUnit()
         val node = generateCode(shed)
@@ -856,6 +879,12 @@ class CodeGeneratorTests {
         elements: Matcher<List<JavascriptTargetNode>>
     ): Matcher<JavascriptTargetNode> = cast(
         has(JavascriptArrayDestructuringNode::elements, elements)
+    )
+
+    private fun isJavascriptObjectDestructuring(
+        properties: Matcher<List<Pair<String, JavascriptTargetNode>>>
+    ): Matcher<JavascriptTargetNode> = cast(
+        has(JavascriptObjectDestructuringNode::properties, properties)
     )
 
     private fun isJavascriptAssignmentStatement(
