@@ -225,8 +225,11 @@ class ResolutionTests {
 
     @Test
     fun importInModuleIntroducesVariable() {
-        val import = import(path = ImportPath.absolute(listOf("x", "y", "z")))
-        val reference = variableReference("z")
+        val import = import(
+            name = Identifier("a"),
+            path = ImportPath.absolute(listOf("x", "y", "z"))
+        )
+        val reference = variableReference("a")
         val module = module(
             imports = listOf(import),
             body = listOf(
@@ -244,8 +247,11 @@ class ResolutionTests {
 
     @Test
     fun importInTypesModuleIntroducesVariable() {
-        val import = import(path = ImportPath.absolute(listOf("T")))
-        val reference = staticReference("T")
+        val import = import(
+            name = Identifier("A"),
+            path = ImportPath.absolute(listOf("T"))
+        )
+        val reference = staticReference("A")
         val module = typesModule(
             imports = listOf(import),
             body = listOf(

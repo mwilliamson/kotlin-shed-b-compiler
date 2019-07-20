@@ -33,7 +33,10 @@ class ParseTypesModuleTests {
         val node = parseTypesModule("<string>", source)
 
         assertThat(node, has(TypesModuleNode::imports, isSequence(
-            isImport(equalTo(ImportPath.relative(listOf("x", "y"))))
+            isImport(
+                name = isIdentifier("y"),
+                path = equalTo(ImportPath.relative(listOf("x", "y")))
+            )
         )))
     }
 

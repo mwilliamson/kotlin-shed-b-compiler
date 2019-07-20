@@ -77,7 +77,10 @@ class CodeGeneratorTests {
 
     @Test
     fun relativeModuleImportsGeneratePythonImports() {
-        val shed = module(imports = listOf(import(ImportPath.relative(listOf("x", "y")))))
+        val shed = module(imports = listOf(import(
+            name = Identifier("a"),
+            path = ImportPath.relative(listOf("x", "y"))
+        )))
 
         val node = generateCode(shed)
 
@@ -85,7 +88,7 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonImportFrom(
                     module = equalTo(".x"),
-                    names = isSequence(equalTo("y" to "y"))
+                    names = isSequence(equalTo("y" to "a"))
                 )
             )
         ))
@@ -93,7 +96,10 @@ class CodeGeneratorTests {
 
     @Test
     fun whenModuleIsPackageThenRelativeModuleImportGoesUpOnePackage() {
-        val shed = module(imports = listOf(import(ImportPath.relative(listOf("x", "y")))))
+        val shed = module(imports = listOf(import(
+            name = Identifier("a"),
+            path = ImportPath.relative(listOf("x", "y"))
+        )))
 
         val node = generateCode(shed, context(isPackage = true))
 
@@ -101,7 +107,7 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonImportFrom(
                     module = equalTo("..x"),
-                    names = isSequence(equalTo("y" to "y"))
+                    names = isSequence(equalTo("y" to "a"))
                 )
             )
         ))
@@ -109,7 +115,10 @@ class CodeGeneratorTests {
 
     @Test
     fun absoluteModuleImportsGeneratePythonImports() {
-        val shed = module(imports = listOf(import(ImportPath.absolute(listOf("x", "y")))))
+        val shed = module(imports = listOf(import(
+            name = Identifier("a"),
+            path = ImportPath.absolute(listOf("x", "y"))
+        )))
 
         val node = generateCode(shed)
 
@@ -117,7 +126,7 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonImportFrom(
                     module = equalTo("shed.x"),
-                    names = isSequence(equalTo("y" to "y"))
+                    names = isSequence(equalTo("y" to "a"))
                 )
             )
         ))
@@ -125,7 +134,10 @@ class CodeGeneratorTests {
 
     @Test
     fun importImportsModuleUsingPythonisedName() {
-        val shed = module(imports = listOf(import(ImportPath.relative(listOf("oneTwo", "threeFour")))))
+        val shed = module(imports = listOf(import(
+            name = Identifier("variableName"),
+            path = ImportPath.relative(listOf("oneTwo", "threeFour"))
+        )))
 
         val node = generateCode(shed)
 
@@ -133,7 +145,7 @@ class CodeGeneratorTests {
             body = isSequence(
                 isPythonImportFrom(
                     module = equalTo(".oneTwo"),
-                    names = isSequence(equalTo("threeFour" to "three_four"))
+                    names = isSequence(equalTo("threeFour" to "variable_name"))
                 )
             )
         ))

@@ -112,11 +112,9 @@ private fun generateCode(node: ImportNode, context: CodeGenerationContext): Pyth
         ImportPathBase.Absolute -> (listOf(topLevelPythonPackageName) + pythonPackageName).joinToString(".")
     }
 
-    val name = node.path.parts.last()
-
     return PythonImportFromNode(
         module = module,
-        names = listOf(name.value to pythoniseName(name)),
+        names = listOf(node.path.parts.last().value to pythoniseName(node.name)),
         source = source
     )
 }

@@ -22,7 +22,7 @@ class TypeCheckImportTests {
     @Test
     fun importIntroducesModuleIntoScope() {
         val path = ImportPath.relative(listOf("Messages"))
-        val node = import(path)
+        val node = import(name = Identifier("M"), path = path)
         val moduleType = ModuleType(fields = mapOf())
         val typeContext = typeContext(
             modules = mapOf(
@@ -39,7 +39,7 @@ class TypeCheckImportTests {
     @Test
     fun whenModuleIsNotFoundThenErrorIsThrown() {
         val path = ImportPath.relative(listOf("Messages"))
-        val node = import(path)
+        val node = import(name = Identifier("M"), path = path)
         val typeContext = typeContext(modules = mapOf(path to ModuleResult.NotFound(name = identifiers("Lib", "Messages"))))
 
         assertThat(
@@ -51,7 +51,7 @@ class TypeCheckImportTests {
     @Test
     fun whenMultipleModulesAreNotFoundThenErrorIsThrown() {
         val path = ImportPath.relative(listOf("Messages"))
-        val node = import(path)
+        val node = import(name = Identifier("M"), path = path)
         val typeContext = typeContext(modules = mapOf(path to ModuleResult.FoundMany(name = identifiers("Lib", "Messages"))))
 
         assertThat(

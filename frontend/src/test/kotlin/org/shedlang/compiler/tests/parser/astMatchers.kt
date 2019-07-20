@@ -6,7 +6,13 @@ import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 
-internal fun isImport(path: Matcher<ImportPath>) = has(ImportNode::path, path)
+internal fun isImport(
+    name: Matcher<Identifier>,
+    path: Matcher<ImportPath>
+) = allOf(
+    has(ImportNode::name, name),
+    has(ImportNode::path, path)
+)
 
 internal fun isIf(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,

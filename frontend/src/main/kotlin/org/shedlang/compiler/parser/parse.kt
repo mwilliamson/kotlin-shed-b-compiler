@@ -161,7 +161,7 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
         base = if (isLocal) ImportPathBase.Relative else ImportPathBase.Absolute,
         parts = moduleNameParts
     )
-    return ImportNode(path = path, source = source)
+    return ImportNode(name = path.parts.last(), path = path, source = source)
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {

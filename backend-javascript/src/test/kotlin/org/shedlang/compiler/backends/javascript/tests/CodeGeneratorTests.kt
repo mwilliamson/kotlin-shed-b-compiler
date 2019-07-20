@@ -30,14 +30,17 @@ class CodeGeneratorTests {
 
     @Test
     fun moduleImportsGenerateJavascriptImports() {
-        val shed = stubbedModule(node = module(imports = listOf(import(ImportPath.relative(listOf("x"))))))
+        val shed = stubbedModule(node = module(imports = listOf(import(
+            name = Identifier("a"),
+            path = ImportPath.relative(listOf("x"))
+        ))))
 
         val node = generateCode(shed)
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
                 isJavascriptConst(
-                    target = isJavascriptVariableReference("x"),
+                    target = isJavascriptVariableReference("a"),
                     expression = isJavascriptFunctionCall(
                         isJavascriptVariableReference("require"),
                         isSequence(isJavascriptStringLiteral("./x"))
