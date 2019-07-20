@@ -1,0 +1,30 @@
+// stdout:
+//   8
+
+fun fibonacci(n: Int) -> Int {
+    fibonacci2(n).second
+}
+
+shape FibonacciPair {
+    first: Int,
+    second: Int,
+}
+
+fun fibonacci2(n: Int) -> FibonacciPair {
+    if (n == 0) {
+        FibonacciPair(
+            .first = 1,
+            .second = 0
+        )
+    } else {
+        val @(.first as prevFirst, .second as prevSecond) = fibonacci2(n - 1);
+        FibonacciPair(
+            .first = prevSecond,
+            .second = prevFirst + prevSecond
+        )
+    }
+}
+
+fun main() !Io -> Unit {
+    print!(intToString(fibonacci(6)) + "\n");
+}
