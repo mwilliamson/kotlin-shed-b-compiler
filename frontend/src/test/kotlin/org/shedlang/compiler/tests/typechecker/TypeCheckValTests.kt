@@ -6,9 +6,11 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.FunctionStatementNode
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.typechecker.UnexpectedTypeError
+import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
+import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
@@ -91,5 +93,36 @@ class TypeCheckValTests {
                 source = equalTo(target.source)
             )
         )
+    }
+
+    @Test
+    fun fieldTargetsTakeTypeOfField() {
+        val elementTarget1 = valTargetVariable("targetX")
+        val elementTarget2 = valTargetVariable("targetY")
+        val target = valTargetFields(fields = mapOf(
+            Identifier("x") to elementTarget1,
+            Identifier("y") to elementTarget2
+        ))
+        val expressionDeclaration = declaration("e")
+        val expression = variableReference("e")
+        val node = valStatement(target = target, expression = expression)
+        val typeContext = typeContext(
+            references = mapOf(
+                expression to expressionDeclaration
+            ),
+            types = mapOf(
+                expressionDeclaration to shapeType(
+                    fields = listOf(
+                        field("x", IntType),
+                        field("y", BoolType)
+                    )
+                )
+            )
+        )
+
+        typeCheckFunctionStatement(node, typeContext)
+
+        assertThat(typeContext.typeOf(elementTarget1), isIntType)
+        assertThat(typeContext.typeOf(elementTarget2), isBoolType)
     }
 }

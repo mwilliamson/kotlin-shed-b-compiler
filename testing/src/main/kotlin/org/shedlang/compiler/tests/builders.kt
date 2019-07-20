@@ -114,6 +114,11 @@ fun valTargetTuple(elements: List<ValTargetNode>) = ValTargetNode.Tuple(
     source = anySource()
 )
 
+fun valTargetFields(fields: Map<Identifier, ValTargetNode>) = ValTargetNode.Fields(
+    fields,
+    source = anySource()
+)
+
 fun variableBinder(
     name: String
 ): VariableBindingNode = parameter(name = name)

@@ -359,7 +359,10 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
         }
 
         is ValTargetNode.Fields ->
-            throw NotImplementedError("TODO")
+            for ((fieldName, fieldTarget) in target.fields) {
+                val fieldType = type.fieldType(fieldName)
+                typeCheckValTarget(fieldTarget, fieldType!!, context)
+            }
     }
 }
 
