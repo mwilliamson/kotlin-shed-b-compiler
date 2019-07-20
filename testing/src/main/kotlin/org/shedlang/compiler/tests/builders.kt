@@ -221,8 +221,9 @@ fun fieldAccess(
 )
 
 fun fieldName(
-    name: String
-) = FieldNameNode(Identifier(name), source = anySource())
+    name: String,
+    source: Source = anySource()
+) = FieldNameNode(Identifier(name), source = source)
 
 fun function(
     name: String = "f",

@@ -168,15 +168,18 @@ private fun evalTypeCondition(
 
 private fun inferFieldAccessType(node: FieldAccessNode, context: TypeContext): Type {
     val receiverType = inferType(node.receiver, context)
+    return inferFieldAccessType(receiverType, node.fieldName)
+}
 
-    val identifier = node.fieldName.identifier
+internal fun inferFieldAccessType(receiverType: Type, fieldName: FieldNameNode): Type {
+    val identifier = fieldName.identifier
 
     val fieldType = receiverType.fieldType(identifier)
 
     if (fieldType == null) {
         throw NoSuchFieldError(
-            fieldName = node.fieldName.identifier,
-            source = node.fieldName.source
+            fieldName = fieldName.identifier,
+            source = fieldName.source
         )
     } else {
         return fieldType

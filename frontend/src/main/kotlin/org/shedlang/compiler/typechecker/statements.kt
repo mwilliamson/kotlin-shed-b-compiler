@@ -360,8 +360,8 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
 
         is ValTargetNode.Fields ->
             for ((fieldName, fieldTarget) in target.fields) {
-                val fieldType = type.fieldType(fieldName.identifier)
-                typeCheckValTarget(fieldTarget, fieldType!!, context)
+                val fieldType = inferFieldAccessType(type, fieldName)
+                typeCheckValTarget(fieldTarget, fieldType, context)
             }
     }
 }
