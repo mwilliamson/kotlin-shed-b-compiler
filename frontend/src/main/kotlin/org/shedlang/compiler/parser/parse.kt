@@ -151,7 +151,7 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
 
     val moduleNameParts = parseMany(
         parseElement = ::parseIdentifier,
-        parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_DOT) },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_DOT) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         tokens = tokens,
         allowZero = false
@@ -295,7 +295,7 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
 
     val members = parseMany(
         parseElement = { tokens -> parseUnionMember(tokens, unionStaticParameters = staticParameters) },
-        parseSeparator = { tokens -> tokens.trySkip(TokenType.SYMBOL_BAR) },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_BAR) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         allowZero = false,
         tokens = tokens
