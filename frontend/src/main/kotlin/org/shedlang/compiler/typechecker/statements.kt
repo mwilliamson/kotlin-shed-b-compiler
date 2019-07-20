@@ -330,15 +330,15 @@ private fun typeCheck(node: ValNode, context: TypeContext) {
     val type = inferType(node.expression, context)
     val target = node.target
 
-    return typeCheckValTarget(target, type, context)
+    return typeCheckTarget(target, type, context)
 }
 
-private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeContext) {
+private fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContext) {
     when (target) {
-        is ValTargetNode.Variable ->
+        is TargetNode.Variable ->
             context.addVariableType(target, type)
 
-        is ValTargetNode.Tuple -> {
+        is TargetNode.Tuple -> {
             // TODO: check is tuple type
             val tupleType = type as TupleType
 
@@ -354,14 +354,14 @@ private fun typeCheckValTarget(target: ValTargetNode, type: Type, context: TypeC
             }
 
             for ((elementType, targetElement) in tupleType.elementTypes.zip(target.elements)) {
-                typeCheckValTarget(targetElement, elementType, context)
+                typeCheckTarget(targetElement, elementType, context)
             }
         }
 
-        is ValTargetNode.Fields ->
+        is TargetNode.Fields ->
             for ((fieldName, fieldTarget) in target.fields) {
                 val fieldType = inferFieldAccessType(type, fieldName)
-                typeCheckValTarget(fieldTarget, fieldType, context)
+                typeCheckTarget(fieldTarget, fieldType, context)
             }
     }
 }

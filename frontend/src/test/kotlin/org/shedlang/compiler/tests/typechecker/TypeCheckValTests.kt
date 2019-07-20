@@ -26,7 +26,7 @@ class TypeCheckValTests {
 
     @Test
     fun targetVariableTakesTypeOfExpression() {
-        val target = valTargetVariable(name = "x")
+        val target = targetVariable(name = "x")
         val node = valStatement(target = target, expression = literalInt())
         val typeContext = typeContext()
 
@@ -37,9 +37,9 @@ class TypeCheckValTests {
 
     @Test
     fun targetTupleTakesTypeOfExpression() {
-        val elementTarget1 = valTargetVariable("x")
-        val elementTarget2 = valTargetVariable("y")
-        val target = valTargetTuple(elements = listOf(
+        val elementTarget1 = targetVariable("x")
+        val elementTarget2 = targetVariable("y")
+        val target = targetTuple(elements = listOf(
             elementTarget1,
             elementTarget2
         ))
@@ -55,8 +55,8 @@ class TypeCheckValTests {
 
     @Test
     fun whenTupleHasMoreElementsThanTargetThenErrorIsThrown() {
-        val elementTarget1 = valTargetVariable("x")
-        val target = valTargetTuple(elements = listOf(elementTarget1))
+        val elementTarget1 = targetVariable("x")
+        val target = targetTuple(elements = listOf(elementTarget1))
         val expression = tupleNode(listOf(literalInt(), literalBool()))
         val node = valStatement(target = target, expression = expression)
         val typeContext = typeContext()
@@ -73,9 +73,9 @@ class TypeCheckValTests {
 
     @Test
     fun whenTupleHasFewerElementsThanTargetThenErrorIsThrown() {
-        val elementTarget1 = valTargetVariable("x")
-        val elementTarget2 = valTargetVariable("y")
-        val target = valTargetTuple(elements = listOf(
+        val elementTarget1 = targetVariable("x")
+        val elementTarget2 = targetVariable("y")
+        val target = targetTuple(elements = listOf(
             elementTarget1,
             elementTarget2
         ))
@@ -95,9 +95,9 @@ class TypeCheckValTests {
 
     @Test
     fun fieldTargetsTakeTypeOfField() {
-        val elementTarget1 = valTargetVariable("targetX")
-        val elementTarget2 = valTargetVariable("targetY")
-        val target = valTargetFields(fields = listOf(
+        val elementTarget1 = targetVariable("targetX")
+        val elementTarget2 = targetVariable("targetY")
+        val target = targetFields(fields = listOf(
             fieldName("x") to elementTarget1,
             fieldName("y") to elementTarget2
         ))
@@ -131,8 +131,8 @@ class TypeCheckValTests {
                 return "<source>"
             }
         }
-        val elementTarget1 = valTargetVariable("targetX")
-        val target = valTargetFields(fields = listOf(
+        val elementTarget1 = targetVariable("targetX")
+        val target = targetFields(fields = listOf(
             fieldName("x", source = source) to elementTarget1
         ))
         val expressionDeclaration = declaration("e")

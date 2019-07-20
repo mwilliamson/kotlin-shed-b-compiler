@@ -637,9 +637,9 @@ class CodeGeneratorTests {
     @Test
     @Disabled("TODO: work out what to do with this test")
     fun whenSeparateScopesHaveSameNameInSamePythonScopeThenVariablesAreRenamed() {
-        val trueValTarget = valTargetVariable(name = "x")
+        val trueValTarget = targetVariable(name = "x")
         val trueVal = valStatement(target = trueValTarget)
-        val falseValTarget = valTargetVariable(name = "x")
+        val falseValTarget = targetVariable(name = "x")
         val falseVal = valStatement(target = falseValTarget)
 
         val trueReference = variableReference("x")
@@ -699,7 +699,7 @@ class CodeGeneratorTests {
     @Test
     fun valWithTargetTupleGeneratesAssignmentWithPythonisedNames() {
         val shed = valStatement(
-            target = valTargetTuple(elements = listOf(valTargetVariable("aB"), valTargetVariable("cD"))),
+            target = targetTuple(elements = listOf(targetVariable("aB"), targetVariable("cD"))),
             expression = literalInt(42)
         )
 
@@ -719,10 +719,10 @@ class CodeGeneratorTests {
     @Test
     fun valWithTargetFieldsGeneratesMultipleAssignments() {
         val shed = valStatement(
-            target = valTargetFields(
+            target = targetFields(
                 fields = listOf(
-                    fieldName("fieldX") to valTargetVariable("targetX"),
-                    fieldName("fieldY") to valTargetVariable("targetY")
+                    fieldName("fieldX") to targetVariable("targetX"),
+                    fieldName("fieldY") to targetVariable("targetY")
                 )
             ),
             expression = literalInt(42)

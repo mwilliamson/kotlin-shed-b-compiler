@@ -127,13 +127,13 @@ private fun loadVal(node: ValNode, context: LoaderContext): Val {
     )
 }
 
-private fun loadTarget(targetNode: ValTargetNode): Target {
+private fun loadTarget(targetNode: TargetNode): Target {
     return when (targetNode) {
-        is ValTargetNode.Variable -> Target.Variable(targetNode.name)
-        is ValTargetNode.Tuple -> Target.Tuple(targetNode.elements.map { targetElement ->
+        is TargetNode.Variable -> Target.Variable(targetNode.name)
+        is TargetNode.Tuple -> Target.Tuple(targetNode.elements.map { targetElement ->
             loadTarget(targetElement)
         })
-        is ValTargetNode.Fields -> Target.Fields(targetNode.fields.map { (fieldName, fieldTarget) ->
+        is TargetNode.Fields -> Target.Fields(targetNode.fields.map { (fieldName, fieldTarget) ->
             fieldName.identifier to loadTarget(fieldTarget)
         })
     }

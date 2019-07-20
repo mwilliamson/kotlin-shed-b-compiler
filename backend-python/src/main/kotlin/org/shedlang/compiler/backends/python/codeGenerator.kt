@@ -375,7 +375,7 @@ private fun generateCode(
 private fun generateCode(node: ValNode, context: CodeGenerationContext): List<PythonStatementNode> {
     fun expressionReturnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
-            generateValTargetAssignment(node.target, pythonExpression, source, context)
+            generateTargetAssignment(node.target, pythonExpression, source, context)
         }
     }
 
@@ -387,13 +387,13 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): List<Py
     )
 }
 
-private fun generateValTargetAssignment(
-    shedTarget: ValTargetNode,
+private fun generateTargetAssignment(
+    shedTarget: TargetNode,
     pythonExpression: PythonExpressionNode,
     source: Source,
     context: CodeGenerationContext
 ): List<PythonStatementNode> {
-    val (pythonTarget, statements) = generateValTargetCode(shedTarget, context)
+    val (pythonTarget, statements) = generateTargetCode(shedTarget, context)
     val assignment = PythonAssignmentNode(
         target = pythonTarget,
         expression = pythonExpression,
@@ -403,13 +403,13 @@ private fun generateValTargetAssignment(
 }
 
 
-internal fun generateValTargetCode(
-    shedTarget: ValTargetNode,
+internal fun generateTargetCode(
+    shedTarget: TargetNode,
     context: CodeGenerationContext
 ): Pair<PythonExpressionNode, List<PythonStatementNode>> {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
-        is ValTargetNode.Variable ->
+        is TargetNode.Variable ->
             Pair(
                 PythonVariableReferenceNode(
                     name = context.name(shedTarget),
@@ -417,9 +417,9 @@ internal fun generateValTargetCode(
                 ),
                 listOf()
             )
-        is ValTargetNode.Tuple -> {
+        is TargetNode.Tuple -> {
             val (tupleMembers, statements) = shedTarget.elements.map { element ->
-                generateValTargetCode(element, context)
+                generateTargetCode(element, context)
             }.unzip()
             Pair(
                 PythonTupleNode(
@@ -429,11 +429,11 @@ internal fun generateValTargetCode(
                 statements.flatten()
             )
         }
-        is ValTargetNode.Fields -> {
+        is TargetNode.Fields -> {
             val temporaryName = context.freshName("target")
             val temporaryReference = PythonVariableReferenceNode(temporaryName, source = source)
             val statements = shedTarget.fields.flatMap { (fieldName, fieldTarget) ->
-                generateValTargetAssignment(
+                generateTargetAssignment(
                     fieldTarget,
                     PythonAttributeAccessNode(
                         receiver = temporaryReference,

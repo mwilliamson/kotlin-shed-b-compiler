@@ -717,7 +717,7 @@ private fun parseVal(tokens: TokenIterator<TokenType>): ValNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_VAL)
-    val target = parseValTarget(tokens)
+    val target = parseTarget(tokens)
     tokens.skip(TokenType.SYMBOL_EQUALS)
     val expression = parseExpression(tokens)
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
@@ -729,13 +729,13 @@ private fun parseVal(tokens: TokenIterator<TokenType>): ValNode {
     )
 }
 
-private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
+internal fun parseTarget(tokens: TokenIterator<TokenType>): TargetNode {
     val source = tokens.location()
 
     if (tokens.trySkip(TokenType.SYMBOL_HASH)) {
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
         val elements = parseMany(
-            parseElement = { tokens -> parseValTarget(tokens) },
+            parseElement = { tokens -> parseTarget(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
             allowTrailingSeparator = true,
@@ -744,7 +744,7 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
-        return ValTargetNode.Tuple(
+        return TargetNode.Tuple(
             elements = elements,
             source = source
         )
@@ -755,7 +755,7 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
                 tokens.skip(TokenType.SYMBOL_DOT)
                 val fieldName = parseFieldName(tokens)
                 tokens.skip(TokenType.KEYWORD_AS)
-                val target = parseValTarget(tokens)
+                val target = parseTarget(tokens)
                 fieldName to target
             },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
@@ -766,14 +766,14 @@ private fun parseValTarget(tokens: TokenIterator<TokenType>): ValTargetNode {
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
-        return ValTargetNode.Fields(
+        return TargetNode.Fields(
             fields = fields,
             source = source
         )
     } else {
         val name = parseIdentifier(tokens)
 
-        return ValTargetNode.Variable(
+        return TargetNode.Variable(
             name = name,
             source = source
         )

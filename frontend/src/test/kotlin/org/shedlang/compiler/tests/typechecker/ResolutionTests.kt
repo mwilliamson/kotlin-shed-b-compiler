@@ -199,7 +199,7 @@ class ResolutionTests {
     @Test
     fun valIntroducesVariableToFunctionScope() {
         val reference = variableReference("x")
-        val target = valTargetVariable(name = "x")
+        val target = targetVariable(name = "x")
         val valStatement = valStatement(target = target, expression = literalInt())
         val node = function(
             parameters = listOf(),
@@ -317,10 +317,10 @@ class ResolutionTests {
 
     @Test
     fun ifStatementIntroducesScopes() {
-        val trueValTarget = valTargetVariable(name = "x")
+        val trueValTarget = targetVariable(name = "x")
         val trueVal = valStatement(target = trueValTarget, expression = literalInt())
         val trueReference = variableReference("x")
-        val falseValTarget = valTargetVariable(name = "x")
+        val falseValTarget = targetVariable(name = "x")
         val falseVal = valStatement(target = falseValTarget, expression = literalInt())
         val falseReference = variableReference("x")
 
@@ -369,7 +369,7 @@ class ResolutionTests {
 
     @Test
     fun whenBranchBodiesIntroduceScopes() {
-        val target = valTargetVariable(name = "x")
+        val target = targetVariable(name = "x")
         val variableDeclaration = valStatement(target = target, expression = literalInt())
         val variableReference = variableReference("x")
 
@@ -393,7 +393,7 @@ class ResolutionTests {
 
     @Test
     fun whenElseBranchBodyIntroducesScope() {
-        val target = valTargetVariable(name = "x")
+        val target = targetVariable(name = "x")
         val variableDeclaration = valStatement(target = target, expression = literalInt())
         val variableReference = variableReference("x")
 

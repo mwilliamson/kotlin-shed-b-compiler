@@ -595,7 +595,7 @@ data class ExpressionStatementNode(
 }
 
 data class ValNode(
-    val target: ValTargetNode,
+    val target: TargetNode,
     val expression: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -618,14 +618,14 @@ data class ValNode(
     }
 }
 
-sealed class ValTargetNode: Node {
+sealed class TargetNode: Node {
     abstract fun variableBinders(): List<VariableBindingNode>
 
     data class Variable(
         override val name: Identifier,
         override val source: Source,
         override val nodeId: Int = freshNodeId()
-    ): VariableBindingNode, ValTargetNode() {
+    ): VariableBindingNode, TargetNode() {
         override val children: List<Node>
             get() = listOf()
 
@@ -635,10 +635,10 @@ sealed class ValTargetNode: Node {
     }
 
     data class Tuple(
-        val elements: List<ValTargetNode>,
+        val elements: List<TargetNode>,
         override val source: Source,
         override val nodeId: Int = freshNodeId()
-    ): ValTargetNode() {
+    ): TargetNode() {
         override val children: List<Node>
             get() = elements
 
@@ -648,10 +648,10 @@ sealed class ValTargetNode: Node {
     }
 
     data class Fields(
-        val fields: List<Pair<FieldNameNode, ValTargetNode>>,
+        val fields: List<Pair<FieldNameNode, TargetNode>>,
         override val source: Source,
         override val nodeId: Int = freshNodeId()
-    ): ValTargetNode() {
+    ): TargetNode() {
         override val children: List<Node>
             get() = fields.flatMap { (l, r) -> listOf(l, r) }
 

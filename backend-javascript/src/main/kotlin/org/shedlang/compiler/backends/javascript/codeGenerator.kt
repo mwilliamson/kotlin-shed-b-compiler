@@ -200,7 +200,7 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
     val source = NodeSource(node)
     val target = node.target
-    val javascriptTarget = generateCodeForValTarget(target, context)
+    val javascriptTarget = generateCodeForTarget(target, context)
     return JavascriptConstNode(
         target = javascriptTarget,
         expression = generateCode(node.expression, context),
@@ -208,24 +208,24 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): Javascr
     )
 }
 
-private fun generateCodeForValTarget(
-    shedTarget: ValTargetNode,
+private fun generateCodeForTarget(
+    shedTarget: TargetNode,
     context: CodeGenerationContext
 ): JavascriptTargetNode {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
-        is ValTargetNode.Variable -> {
+        is TargetNode.Variable -> {
             JavascriptVariableReferenceNode(generateName(shedTarget.name), source = source)
         }
-        is ValTargetNode.Tuple -> JavascriptArrayDestructuringNode(
+        is TargetNode.Tuple -> JavascriptArrayDestructuringNode(
             elements = shedTarget.elements.map { targetElement ->
-                generateCodeForValTarget(targetElement, context)
+                generateCodeForTarget(targetElement, context)
             },
             source = source
         )
-        is ValTargetNode.Fields -> JavascriptObjectDestructuringNode(
+        is TargetNode.Fields -> JavascriptObjectDestructuringNode(
             properties = shedTarget.fields.map { (fieldName, fieldTarget) ->
-                generateFieldName(fieldName) to generateCodeForValTarget(fieldTarget, context)
+                generateFieldName(fieldName) to generateCodeForTarget(fieldTarget, context)
             },
             source = source
         )

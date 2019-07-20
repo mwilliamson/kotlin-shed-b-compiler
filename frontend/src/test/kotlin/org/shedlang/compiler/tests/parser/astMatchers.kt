@@ -59,7 +59,7 @@ internal fun isExpressionStatement(
 }
 
 inline internal fun isVal(
-    target: Matcher<ValTargetNode>,
+    target: Matcher<TargetNode>,
     expression: Matcher<ExpressionNode> = anything
 ): Matcher<Node> {
     return cast(allOf(
@@ -68,17 +68,17 @@ inline internal fun isVal(
     ))
 }
 
-internal fun isValTargetVariable(
+internal fun isTargetVariable(
     name: Matcher<Identifier>
-): Matcher<ValTargetNode> = cast(has(ValTargetNode.Variable::name, name))
+): Matcher<TargetNode> = cast(has(TargetNode.Variable::name, name))
 
-internal fun isValTargetTuple(
-    elements: Matcher<List<ValTargetNode>>
-): Matcher<ValTargetNode> = cast(has(ValTargetNode.Tuple::elements, elements))
+internal fun isTargetTuple(
+    elements: Matcher<List<TargetNode>>
+): Matcher<TargetNode> = cast(has(TargetNode.Tuple::elements, elements))
 
-internal fun isValTargetFields(
-    fields: Matcher<List<Pair<FieldNameNode, ValTargetNode>>>
-): Matcher<ValTargetNode> = cast(has(ValTargetNode.Fields::fields, fields))
+internal fun isTargetFields(
+    fields: Matcher<List<Pair<FieldNameNode, TargetNode>>>
+): Matcher<TargetNode> = cast(has(TargetNode.Fields::fields, fields))
 
 internal fun isValType(
     name: Matcher<Identifier>,

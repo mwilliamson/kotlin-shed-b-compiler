@@ -350,7 +350,7 @@ class CodeGeneratorTests {
     @Test
     fun valWithTargetTupleGeneratesConstTargetingArray() {
         val shed = valStatement(
-            target = valTargetTuple(elements = listOf(valTargetVariable("x"), valTargetVariable("y"))),
+            target = targetTuple(elements = listOf(targetVariable("x"), targetVariable("y"))),
             expression = literalBool(true)
         )
 
@@ -370,9 +370,9 @@ class CodeGeneratorTests {
     @Test
     fun valWithTargetFieldsGeneratesDestructuringObjectAssignment() {
         val shed = valStatement(
-            target = valTargetFields(fields = listOf(
-                fieldName("x") to valTargetVariable("targetX"),
-                fieldName("y") to valTargetVariable("targetY")
+            target = targetFields(fields = listOf(
+                fieldName("x") to targetVariable("targetX"),
+                fieldName("y") to targetVariable("targetY")
             )),
             expression = literalBool(true)
         )

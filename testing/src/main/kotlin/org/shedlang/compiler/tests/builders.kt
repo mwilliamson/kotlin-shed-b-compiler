@@ -91,12 +91,12 @@ fun valStatement(
     name: String = "<val name>",
     expression: ExpressionNode = expression()
 ) = valStatement(
-    target = valTargetVariable(name = name),
+    target = targetVariable(name = name),
     expression = expression
 )
 
 fun valStatement(
-    target: ValTargetNode,
+    target: TargetNode,
     expression: ExpressionNode = expression()
 ) = ValNode(
     target = target,
@@ -104,17 +104,17 @@ fun valStatement(
     source = anySource()
 )
 
-fun valTargetVariable(name: String = "<target name>") = ValTargetNode.Variable(
+fun targetVariable(name: String = "<target name>") = TargetNode.Variable(
     Identifier(name),
     source = anySource()
 )
 
-fun valTargetTuple(elements: List<ValTargetNode>) = ValTargetNode.Tuple(
+fun targetTuple(elements: List<TargetNode>) = TargetNode.Tuple(
     elements,
     source = anySource()
 )
 
-fun valTargetFields(fields: List<Pair<FieldNameNode, ValTargetNode>>) = ValTargetNode.Fields(
+fun targetFields(fields: List<Pair<FieldNameNode, TargetNode>>) = TargetNode.Fields(
     fields,
     source = anySource()
 )
