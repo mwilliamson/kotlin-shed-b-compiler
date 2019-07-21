@@ -8,6 +8,15 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 class CoercionTests {
+    private val readEffect = object: Effect {
+        override val shortDescription: String
+            get() = "!Read"
+    }
+    private val writeEffect = object: Effect {
+        override val shortDescription: String
+            get() = "!Write"
+    }
+
     @Test
     fun canCoerceTypeToItself() {
         assertThat(canCoerce(from = UnitType, to = UnitType), equalTo(true))
@@ -203,15 +212,6 @@ class CoercionTests {
 
     @Test
     fun functionTypeEffectsMustMatch() {
-        val readEffect = object: Effect {
-            override val shortDescription: String
-                get() = "!Read"
-        }
-        val writeEffect = object: Effect {
-            override val shortDescription: String
-                get() = "!Write"
-        }
-
         assertThat(
             canCoerce(
                 from = functionType(effect = readEffect),
@@ -223,11 +223,6 @@ class CoercionTests {
 
     @Test
     fun functionCanBeSubTypeOfOtherFunctionIfEffectIsSubEffect() {
-        val readEffect = object: Effect {
-            override val shortDescription: String
-                get() = "!Read"
-        }
-
         assertThat(
             canCoerce(
                 from = functionType(effect = EmptyEffect),
@@ -239,11 +234,6 @@ class CoercionTests {
 
     @Test
     fun functionCannotBeSubTypeOfOtherFunctionIfEffectIsSuperEffect() {
-        val readEffect = object: Effect {
-            override val shortDescription: String
-                get() = "!Read"
-        }
-
         assertThat(
             canCoerce(
                 from = functionType(effect = readEffect),
@@ -526,6 +516,48 @@ class CoercionTests {
     fun emptyEffectIsNotSuperEffectOfOtherEffects() {
         assertThat(
             isSubEffect(subEffect = IoEffect, superEffect = EmptyEffect),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun whenEffectParameterIsNotInParameterSetThenCoercingEffectToEffectParameterFails() {
+        val effectParameter = effectParameter("E")
+        val solver = TypeConstraintSolver(parameters = setOf())
+        assertThat(
+            solver.coerceEffect(from = IoEffect, to = effectParameter),
+            equalTo(false)
+        )
+        assertThat(solver.effectBindings[effectParameter], absent())
+    }
+
+    @Test
+    fun whenEffectParameterIsInParameterSetThenCoercingEffectToEffectParameterBindsEffectParameter() {
+        val effectParameter = effectParameter("E")
+        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        assertThat(
+            solver.coerceEffect(from = IoEffect, to = effectParameter),
+            equalTo(true)
+        )
+        assertThat(solver.effectBindings[effectParameter], present(cast(equalTo(IoEffect))))
+    }
+
+    @Test
+    fun whenEffectParameterIsBoundThenEffectCanBeCoercedToEffectParameter() {
+        val effectParameter = effectParameter("E")
+        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        solver.coerceEffect(from = IoEffect, to = effectParameter)
+
+        assertThat(
+            solver.coerceEffect(from = IoEffect, to = effectParameter),
+            equalTo(true)
+        )
+        assertThat(
+            solver.coerceEffect(from = EmptyEffect, to = effectParameter),
+            equalTo(true)
+        )
+        assertThat(
+            solver.coerceEffect(from = readEffect, to = effectParameter),
             equalTo(false)
         )
     }
