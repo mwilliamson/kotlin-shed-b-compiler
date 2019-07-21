@@ -1,0 +1,62 @@
+export testCases;
+
+import M from Stdlib.Matchers;
+import Tests from Stdlib.Tests;
+
+val testCases = Tests.suite(moduleName, list(
+    Tests.suite("isInt", list(
+        Tests.testCase("matches when values are equal", fun () {
+            val matcher = M.isInt(42);
+            val result = matcher.match(42);
+            Tests.assert(M.isSuccess(result))
+        }),
+
+        Tests.testCase("mismatches with int string when values are not equal", fun () {
+            val matcher = M.isInt(42);
+            val result = matcher.match(47);
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "was 47")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("description is int string", fun () {
+            val matcher = M.isInt(42);
+
+            Tests.assert(matcher.description == "42")
+        }),
+    )),
+
+    Tests.suite("isString", list(
+        Tests.testCase("matches when values are equal", fun () {
+            val matcher = M.isString("<string>");
+            val result = matcher.match("<string>");
+            Tests.assert(M.isSuccess(result))
+        }),
+
+        Tests.testCase("mismatches with string when values are not equal", fun () {
+            val matcher = M.isString("<expected>");
+            val result = matcher.match("<actual>");
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "was <actual>")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("description is string", fun () {
+            val matcher = M.isString("<string>");
+
+            Tests.assert(matcher.description == "<string>")
+        }),
+    )),
+));

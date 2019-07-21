@@ -1,0 +1,47 @@
+export
+    Matcher,
+    Result,
+    Success,
+    Failure,
+    success,
+    failure,
+    isSuccess,
+    describingMatcher;
+
+shape Matcher[-T] {
+    description: String,
+    match: Fun (T) -> Result,
+}
+
+union Result =
+    | Success
+    | Failure {
+        message: String,
+    };
+
+val success = Success();
+
+fun failure(message: String) -> Failure {
+    Failure(.message = message)
+}
+
+fun isSuccess(result: Result) -> Bool {
+    result is Success
+}
+
+fun describingMatcher[T](
+    value: T,
+    toString: Fun (T) -> String,
+    match: Fun (T) -> Bool
+) -> Matcher[T] {
+    Matcher(
+        .description = toString(value),
+        .match = fun (actual: T) -> Result {
+            if (match(actual)) {
+                success
+            } else {
+                failure("was " + toString(actual))
+            }
+        },
+    )
+}

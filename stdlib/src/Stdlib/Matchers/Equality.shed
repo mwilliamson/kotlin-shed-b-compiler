@@ -1,0 +1,24 @@
+export
+    isInt,
+    isString;
+
+import @(
+    .describingMatcher as describingMatcher,
+    .Matcher as Matcher,
+) from .Core;
+
+fun isInt(value: Int) -> Matcher[Int] {
+    describingMatcher(
+        value,
+        fun (integer: Int) => intToString(integer),
+        fun (actual: Int) => actual == value,
+    )
+}
+
+fun isString(value: String) -> Matcher[String] {
+    describingMatcher(
+        value,
+        fun (string: String) => string,
+        fun (actual: String) => actual == value,
+    )
+}

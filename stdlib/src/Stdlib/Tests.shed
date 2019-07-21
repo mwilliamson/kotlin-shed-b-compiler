@@ -1,4 +1,4 @@
-export assertThat, Test, TestCase, TestSuite, suite, testCase, runTests;
+export assert, assertThat, fail, Test, TestCase, TestSuite, suite, testCase, runTests;
 
 import Lists from .Lists;
 import Matchers from .Matchers;

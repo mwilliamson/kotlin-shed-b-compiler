@@ -15,27 +15,24 @@ export
     isSome;
 
 import Options from .Options;
+import @(
+    .Matcher as Matcher,
+    .Result as Result,
+    .Success as Success,
+    .Failure as Failure,
+    .success as success,
+    .failure as failure,
+    .isSuccess as isSuccess,
+) from .Matchers.Core;
+import @(
+    .isInt as isInt,
+    .isString as isString,
+) from .Matchers.Equality;
 
 fun anything() -> Matcher[Any] {
     Matcher(
         .description = "anything",
         .match = fun (x: Any) => success,
-    )
-}
-
-fun isInt(value: Int) -> Matcher[Int] {
-    describingMatcher(
-        value,
-        fun (integer: Int) => intToString(integer),
-        fun (actual: Int) => actual == value,
-    )
-}
-
-fun isString(value: String) -> Matcher[String] {
-    describingMatcher(
-        value,
-        fun (string: String) => string,
-        fun (actual: String) => actual == value,
     )
 }
 
@@ -63,42 +60,4 @@ fun isSome[T](matcher: Matcher[T]) -> Matcher[Options.Option[T]] {
             }
         }
     )
-}
-
-fun describingMatcher[T](
-    value: T,
-    toString: Fun (T) -> String,
-    match: Fun (T) -> Bool
-) -> Matcher[T] {
-    Matcher(
-        .description = toString(value),
-        .match = fun (actual: T) -> Result {
-            if (match(actual)) {
-                success
-            } else {
-                failure("was " + toString(actual))
-            }
-        },
-    )
-}
-
-shape Matcher[-T] {
-    description: String,
-    match: Fun (T) -> Result,
-}
-
-union Result =
-    | Success
-    | Failure {
-        message: String,
-    };
-
-val success = Success();
-
-fun failure(message: String) -> Failure {
-    Failure(.message = message)
-}
-
-fun isSuccess(result: Result) -> Bool {
-    result is Success
 }
