@@ -217,7 +217,8 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
     context.undefer()
 
     // TODO: check all names are present
-    val exports = module.variableBinders.filter { binder -> binder.name in module.exports }
+    val exportNames = module.exports.map { export -> export.name }
+    val exports = module.variableBinders.filter { binder -> binder.name in exportNames }
 
     return ModuleType(fields = exports.associateBy(
         { statement -> statement.name },

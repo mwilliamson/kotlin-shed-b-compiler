@@ -51,7 +51,8 @@ private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptSta
     )
 }
 
-private fun generateExport(name: Identifier, source: Source): JavascriptExpressionStatementNode {
+private fun generateExport(export: ExportNode, source: Source): JavascriptExpressionStatementNode {
+    val name = export.name
     return JavascriptExpressionStatementNode(
         JavascriptAssignmentNode(
             JavascriptPropertyAccessNode(

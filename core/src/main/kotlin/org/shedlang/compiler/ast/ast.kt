@@ -201,7 +201,7 @@ data class TupleTypeNode(
 }
 
 data class ModuleNode(
-    val exports: List<Identifier>,
+    val exports: List<ExportNode>,
     val imports: List<ImportNode>,
     val body: List<ModuleStatementNode>,
     override val source: Source,
@@ -232,6 +232,15 @@ data class ValTypeNode(
 ): VariableBindingNode {
     override val children: List<Node>
         get() = listOf(type)
+}
+
+data class ExportNode(
+    override val name: Identifier,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ReferenceNode {
+    override val children: List<Node>
+        get() = listOf()
 }
 
 data class ImportPath(val base: ImportPathBase, val parts: List<Identifier>) {
