@@ -91,13 +91,15 @@ class TypeCheckModuleTests {
     @Test
     fun typeOfModuleIsReturned() {
         val unitReference = staticReference("Unit")
+        val export = export("f")
+        val exportedFunction = function(
+            name = "f",
+            returnType = unitReference
+        )
         val node = module(
-            exports = listOf(export("f")),
+            exports = listOf(export),
             body = listOf(
-                function(
-                    name = "f",
-                    returnType = unitReference
-                ),
+                exportedFunction,
 
                 function(
                     name = "g",
@@ -107,6 +109,7 @@ class TypeCheckModuleTests {
         )
 
         val result = typeCheck(node, typeContext(
+            references = mapOf(export to exportedFunction),
             referenceTypes = mapOf(unitReference to MetaType(UnitType))
         ))
         assertThat(result.fields, isMap(
