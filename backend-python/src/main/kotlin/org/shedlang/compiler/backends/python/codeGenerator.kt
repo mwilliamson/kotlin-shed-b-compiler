@@ -206,7 +206,13 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
 }
 
 private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext): List<PythonStatementNode> {
-    return node.members.map { member -> generateCodeForShape(member, context) }
+    val source = NodeSource(node)
+    val assignment = assign(
+        targetName = pythoniseName(node.name),
+        expression = PythonNoneLiteralNode(source = source),
+        source = source
+    )
+    return listOf(assignment) + node.members.map { member -> generateCodeForShape(member, context) }
 }
 
 private fun generateCodeForFunctionDeclaration(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {

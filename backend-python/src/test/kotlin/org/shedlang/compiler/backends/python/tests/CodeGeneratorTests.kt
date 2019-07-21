@@ -283,7 +283,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun unionGeneratesShapesForEachMember() {
+    fun unionGeneratesTypePlaceholderAndShapesForEachMember() {
         val member1Node = unionMember("Member1")
         val member2Node = unionMember("Member2")
         val shed = union("X", listOf(member1Node, member2Node))
@@ -301,6 +301,7 @@ class CodeGeneratorTests {
         val nodes = generateModuleStatementCode(shed, context(types = types))
 
         assertThat(nodes, isSequence(
+            isPythonAssignment("X", isPythonNone()),
             isPythonClass(
                 name = equalTo("Member1")
             ),
