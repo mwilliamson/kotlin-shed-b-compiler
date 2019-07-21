@@ -1,7 +1,7 @@
 import Tests from Stdlib.Tests;
 
 import JsonTests from .JsonTests;
-import MatcherEqualityTests from .Matchers.EqualityTests;
+import MatchersTests from .MatchersTests;
 import OptionsTests from .OptionsTests;
 import CodePointsTests from .Strings.CodePointsTests;
 import StringsTests from .StringsTests;
@@ -9,7 +9,7 @@ import StringsTests from .StringsTests;
 fun main() !Io -> Int {
     Tests.runTests!(list(
         JsonTests.testCases,
-        MatcherEqualityTests.testCases,
+        MatchersTests.testCases,
         OptionsTests.testCases,
         CodePointsTests.testCases,
         StringsTests.testCases,

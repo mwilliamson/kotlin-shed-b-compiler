@@ -1,0 +1,6 @@
+export testCases;
+
+import EqualityTests from .Matchers.EqualityTests;
+
+val testCases = EqualityTests.testCases;
+
