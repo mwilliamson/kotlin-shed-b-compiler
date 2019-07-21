@@ -180,6 +180,16 @@ class TypeConstraintSolver(
             }
         }
 
+        if (from is EffectParameter && from in parameters) {
+            val boundEffect = effectBindings[from]
+            if (boundEffect == null) {
+                effectBindings[from] = to
+                return true
+            } else {
+                return coerceEffect(from = boundEffect, to = to)
+            }
+        }
+
         return false
     }
 

@@ -543,7 +543,7 @@ class CoercionTests {
     }
 
     @Test
-    fun whenEffectParameterIsBoundThenEffectCanBeCoercedToEffectParameter() {
+    fun givenEffectParameterIsBoundWhenCoercingEffectToEffectParameterThenEffectParameterIsTreatedAsBoundEffect() {
         val effectParameter = effectParameter("E")
         val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
         solver.coerceEffect(from = IoEffect, to = effectParameter)
@@ -558,6 +558,48 @@ class CoercionTests {
         )
         assertThat(
             solver.coerceEffect(from = readEffect, to = effectParameter),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun whenEffectParameterIsNotInParameterSetThenCoercingEffectParameterToEffectFails() {
+        val effectParameter = effectParameter("E")
+        val solver = TypeConstraintSolver(parameters = setOf())
+        assertThat(
+            solver.coerceEffect(from = effectParameter, to = IoEffect),
+            equalTo(false)
+        )
+        assertThat(solver.effectBindings[effectParameter], absent())
+    }
+
+    @Test
+    fun whenEffectParameterIsInParameterSetThenCoercingEffectParameterToEffectBindsEffectParameter() {
+        val effectParameter = effectParameter("E")
+        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        assertThat(
+            solver.coerceEffect(from = effectParameter, to = IoEffect),
+            equalTo(true)
+        )
+        assertThat(solver.effectBindings[effectParameter], present(cast(equalTo(IoEffect))))
+    }
+
+    @Test
+    fun givenEffectParameterIsBoundWhenCoercingEffectParameterToEffectThenEffectParameterIsTreatedAsBoundEffect() {
+        val effectParameter = effectParameter("E")
+        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        solver.coerceEffect(from = effectParameter, to = IoEffect)
+
+        assertThat(
+            solver.coerceEffect(from = effectParameter, to = IoEffect),
+            equalTo(true)
+        )
+        assertThat(
+            solver.coerceEffect(from = effectParameter, to = EmptyEffect),
+            equalTo(false)
+        )
+        assertThat(
+            solver.coerceEffect(from = effectParameter, to = readEffect),
             equalTo(false)
         )
     }
