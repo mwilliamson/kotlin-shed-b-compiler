@@ -222,6 +222,38 @@ class CoercionTests {
     }
 
     @Test
+    fun functionCanBeSubTypeOfOtherFunctionIfEffectIsSubEffect() {
+        val readEffect = object: Effect {
+            override val shortDescription: String
+                get() = "!Read"
+        }
+
+        assertThat(
+            canCoerce(
+                from = functionType(effect = EmptyEffect),
+                to = functionType(effect = readEffect)
+            ),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun functionCannotBeSubTypeOfOtherFunctionIfEffectIsSuperEffect() {
+        val readEffect = object: Effect {
+            override val shortDescription: String
+                get() = "!Read"
+        }
+
+        assertThat(
+            canCoerce(
+                from = functionType(effect = readEffect),
+                to = functionType(effect = EmptyEffect)
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
     fun functionTypeWithTypeParametersNeverMatch() {
         assertThat(
             canCoerce(
