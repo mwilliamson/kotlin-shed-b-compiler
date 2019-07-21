@@ -92,7 +92,7 @@ class TypeCheckModuleTests {
     fun typeOfModuleIsReturned() {
         val unitReference = staticReference("Unit")
         val node = module(
-            exports = listOf("f"),
+            exports = listOf(export("f")),
             body = listOf(
                 function(
                     name = "f",

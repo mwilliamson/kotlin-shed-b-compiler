@@ -163,7 +163,7 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is ModuleNode -> {
             resolveScope(
                 binders = node.imports.flatMap { import -> import.target.variableBinders() },
-                body = node.body,
+                body = node.body + node.exports,
                 context = context
             )
         }

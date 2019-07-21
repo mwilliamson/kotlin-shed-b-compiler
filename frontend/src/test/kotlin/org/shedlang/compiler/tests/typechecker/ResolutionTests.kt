@@ -535,6 +535,21 @@ class ResolutionTests {
         assertThat(references[typeAliasExpression], isVariableBinding(intType))
     }
 
+    @Test
+    fun exportsAreResolved() {
+        val target = targetVariable("x")
+        val declaration = valStatement(target, literalUnit())
+        val export = export("x")
+        val module = module(
+            exports = listOf(export),
+            body = listOf(declaration)
+        )
+
+        val references = resolve(module, globals = mapOf())
+
+        assertThat(references[export], isVariableBinding(target))
+    }
+
     private fun resolutionContext(
         bindings: Map<Identifier, VariableBindingNode> = mapOf()
     ) = ResolutionContext(

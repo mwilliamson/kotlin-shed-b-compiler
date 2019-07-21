@@ -53,7 +53,7 @@ class CodeGeneratorTests {
     @Test
     fun moduleIncludesBodyAndExports() {
         val shed = stubbedModule(node = module(
-            exports = listOf("f"),
+            exports = listOf(export("f")),
             body = listOf(function(name = "f"))
         ))
 

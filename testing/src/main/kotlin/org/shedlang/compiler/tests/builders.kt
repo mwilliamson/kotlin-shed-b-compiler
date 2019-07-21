@@ -369,9 +369,9 @@ fun parameter(
 fun module(
     body: List<ModuleStatementNode> = listOf(),
     imports: List<ImportNode> = listOf(),
-    exports: List<String> = listOf()
+    exports: List<ExportNode> = listOf()
 ) = ModuleNode(
-    exports = exports.map { name -> ExportNode(Identifier(name), source = anySource()) },
+    exports = exports,
     imports = imports,
     body = body,
     source = anySource()
@@ -383,6 +383,11 @@ fun typesModule(
 ) = TypesModuleNode(
     imports = imports,
     body = body,
+    source = anySource()
+)
+
+fun export(name: String) = ExportNode(
+    name = Identifier(name),
     source = anySource()
 )
 
