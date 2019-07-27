@@ -40,7 +40,7 @@ val hasSuite = Tests.suite("has", list(
 
 val isTypeMatcher = M.isType[X, Y](
     .description = "Y",
-    .describeType = fun (value: X) {
+    .describeValue = fun (value: X) {
         when (value) {
             is Y { "Y" }
             is Z { "Z" }
@@ -62,7 +62,7 @@ val isTypeSuite = Tests.suite("isType", list(
         Tests.assert(M.isSuccess(result))
     }),
 
-    Tests.testCase("mismatches with type description when cast fails", fun () {
+    Tests.testCase("mismatches with value description when cast fails", fun () {
         val result = isTypeMatcher.match(Z());
 
         when (result) {
@@ -82,7 +82,7 @@ val isTypeSuite = Tests.suite("isType", list(
 
 val isTypeWithMatcher = M.isTypeWith[X, Y](
     .description = "Y",
-    .describeType = fun (value: X) {
+    .describeValue = fun (value: X) {
         when (value) {
             is Y { "Y" }
             is Z { "Z" }
@@ -114,7 +114,7 @@ val isTypeWithSuite = Tests.suite("isTypeWith", list(
         Tests.assert(M.isSuccess(result))
     }),
 
-    Tests.testCase("mismatches with type description when cast fails", fun () {
+    Tests.testCase("mismatches with value description when cast fails", fun () {
         val result = isTypeWithMatcher.match(Z());
 
         when (result) {

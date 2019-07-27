@@ -34,7 +34,7 @@ fun has[T, U](
 
 fun isType[T, U](
     .description: String,
-    .describeType: Fun (T) -> String,
+    .describeValue: Fun (T) -> String,
     .cast: Fun (T) -> Option[U],
 ) -> Matcher[T] {
     Matcher[T](
@@ -46,7 +46,7 @@ fun isType[T, U](
                     success
                 }
                 is None {
-                    failure("was " + describeType(actual))
+                    failure("was " + describeValue(actual))
                 }
             }
         },
@@ -55,7 +55,7 @@ fun isType[T, U](
 
 fun isTypeWith[T, U](
     .description: String,
-    .describeType: Fun (T) -> String,
+    .describeValue: Fun (T) -> String,
     .cast: Fun (T) -> Option[U],
     .with: Matcher[U],
 ) -> Matcher[T] {
@@ -68,7 +68,7 @@ fun isTypeWith[T, U](
                     with.match(result.value)
                 }
                 is None {
-                    failure("was " + describeType(actual))
+                    failure("was " + describeValue(actual))
                 }
             }
         },
