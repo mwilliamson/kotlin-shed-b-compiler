@@ -7,6 +7,7 @@ export
 
     all,
     any,
+    flatten,
     forEach,
     lazyFilter,
     lazyMap,
@@ -53,6 +54,41 @@ fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
             } else {
                 any!(item.tail)
             }
+        }
+    }
+}
+
+fun flatten[T, !E](sequences: Sequence[Sequence[T, E], E]) -> Sequence[T, E] {
+    Sequence(
+        .next = fun() !E -> SequenceIterator[T, E] {
+            val item = sequences.next!();
+            when (item) {
+                is SequenceEnd {
+                    end
+                }
+                is SequenceItem {
+                    flatten2!(item.head, item.tail)
+                }
+            }
+        }
+    )
+}
+
+fun flatten2[T, !E](current: Sequence[T, E], rest: Sequence[Sequence[T, E], E]) !E -> SequenceIterator[T, E] {
+    val item = current.next!();
+    when (item) {
+        is SequenceEnd {
+            flatten(rest).next!()
+        }
+        is SequenceItem {
+            SequenceItem(
+                .head = item.head,
+                .tail = Sequence(
+                    .next = fun() !E -> SequenceIterator[T, E] {
+                        flatten2!(item.tail, rest)
+                    },
+                ),
+            )
         }
     }
 }

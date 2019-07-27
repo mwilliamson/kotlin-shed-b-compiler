@@ -22,6 +22,14 @@ fun any(elements: List[Bool]) -> Bool {
     Sequences.any(Lists.listToSequence(elements))
 }
 
+fun flatten[T](lists: List[List[T]]) -> List[T] {
+    Lists.sequenceToList(
+        Sequences.flatten(
+            Sequences.lazyMap(fun (list: List[T]) => Lists.listToSequence(list), Lists.listToSequence(lists)),
+        ),
+    )
+}
+
 fun forEach[T, !E](func: Fun (T) !E -> Unit, elements: List[T]) !E -> Unit {
     Sequences.forEach!(func, Lists.listToSequence(elements))
 }
