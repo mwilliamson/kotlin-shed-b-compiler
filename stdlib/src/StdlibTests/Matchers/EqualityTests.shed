@@ -4,6 +4,60 @@ import M from Stdlib.Matchers;
 import Tests from Stdlib.Tests;
 
 val testCases = Tests.suite(moduleName, list(
+    Tests.suite("isBool", list(
+        Tests.testCase("isBool(true) matches true", fun () {
+            val matcher = M.isBool(true);
+            val result = matcher.match(true);
+            Tests.assert(M.isSuccess(result))
+        }),
+
+        Tests.testCase("isBool(false) matches false", fun () {
+            val matcher = M.isBool(false);
+            val result = matcher.match(false);
+            Tests.assert(M.isSuccess(result))
+        }),
+
+        Tests.testCase("isBool(true) mismatches false", fun () {
+            val matcher = M.isBool(true);
+            val result = matcher.match(false);
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "was false")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("isBool(false) mismatches true", fun () {
+            val matcher = M.isBool(false);
+            val result = matcher.match(true);
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "was true")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("description of isBool(true) is true", fun () {
+            val matcher = M.isBool(true);
+
+            Tests.assert(matcher.description == "true")
+        }),
+
+        Tests.testCase("description of isBool(false) is false", fun () {
+            val matcher = M.isBool(false);
+
+            Tests.assert(matcher.description == "false")
+        }),
+    )),
+
     Tests.suite("isInt", list(
         Tests.testCase("matches when values are equal", fun () {
             val matcher = M.isInt(42);

@@ -1,4 +1,5 @@
 export
+    isBool,
     isInt,
     isString;
 
@@ -6,6 +7,14 @@ import @(
     .describingMatcher as describingMatcher,
     .Matcher as Matcher,
 ) from .Core;
+
+fun isBool(value: Bool) -> Matcher[Bool] {
+    describingMatcher(
+        value,
+        fun (bool: Bool) => if (bool) { "true" } else { "false" },
+        fun (actual: Bool) => actual == value,
+    )
+}
 
 fun isInt(value: Int) -> Matcher[Int] {
     describingMatcher(
