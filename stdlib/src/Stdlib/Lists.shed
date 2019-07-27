@@ -3,6 +3,7 @@ export
 
     all,
     any,
+    flatten,
     forEach,
     map,
     reduce;

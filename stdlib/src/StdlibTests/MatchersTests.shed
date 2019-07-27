@@ -1,6 +1,9 @@
 export testCases;
 
 import EqualityTests from .Matchers.EqualityTests;
+import TypeTests from .Matchers.TypeTests;
 
-val testCases = EqualityTests.testCases;
-
+val testCases = list(
+    EqualityTests.testCases,
+    TypeTests.testCases,
+);

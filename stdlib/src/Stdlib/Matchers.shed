@@ -8,10 +8,14 @@ export
     failure,
     isSuccess,
 
-    anything,
     isBool,
     isInt,
     isString,
+
+    isType,
+    isTypeWith,
+
+    anything,
     isNone,
     isSome;
 
@@ -30,6 +34,10 @@ import @(
     .isInt as isInt,
     .isString as isString,
 ) from .Matchers.Equality;
+import @(
+    .isType as isType,
+    .isTypeWith as isTypeWith,
+) from .Matchers.Type;
 
 fun anything() -> Matcher[Any] {
     Matcher(

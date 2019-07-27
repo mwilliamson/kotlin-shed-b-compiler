@@ -1,0 +1,121 @@
+export testCases;
+
+import M from Stdlib.Matchers;
+import Options from Stdlib.Options;
+import Tests from Stdlib.Tests;
+
+union X =
+    | Y {
+        value: Int,
+    }
+    | Z {
+    };
+
+val isTypeMatcher = M.isType[X, Y](
+    .description = "Y",
+    .describeType = fun (value: X) {
+        when (value) {
+            is Y { "Y" }
+            is Z { "Z" }
+        }
+    },
+    .cast = fun (value: X) {
+        if (value is Y) {
+            Options.some(value)
+        } else {
+            Options.none
+        }
+    },
+);
+
+val isTypeWithMatcher = M.isTypeWith[X, Y](
+    .description = "Y",
+    .describeType = fun (value: X) {
+        when (value) {
+            is Y { "Y" }
+            is Z { "Z" }
+        }
+    },
+    .cast = fun (value: X) {
+        if (value is Y) {
+            Options.some(value)
+        } else {
+            Options.none
+        }
+    },
+    .with = M.Matcher(
+        .description = "value of 42",
+        .match = fun (value: Y) {
+            if (value.value == 42) {
+                M.success
+            } else {
+                M.failure("value was " + intToString(value.value))
+            }
+        }
+    ),
+);
+
+val testCases = Tests.suite(moduleName, list(
+    Tests.suite("isType", list(
+        Tests.testCase("isType matches when cast succeeds", fun () {
+            val result = isTypeMatcher.match(Y(.value = 42));
+
+            Tests.assert(M.isSuccess(result))
+        }),
+
+        Tests.testCase("isType mismatches with type description when cast fails", fun () {
+            val result = isTypeMatcher.match(Z());
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "was Z")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("description is passed as argument", fun () {
+            Tests.assert(isTypeMatcher.description == "Y")
+        }),
+    )),
+
+    Tests.suite("isTypeWith", list(
+        Tests.testCase("isTypeWith matches when cast and with matcher succeeds", fun () {
+            val result = isTypeWithMatcher.match(Y(.value = 42));
+
+            Tests.assert(M.isSuccess(result))
+        }),
+
+        Tests.testCase("isType mismatches with type description when cast fails", fun () {
+            val result = isTypeWithMatcher.match(Z());
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "was Z")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("isType mismatches with with mismatch description when with fails", fun () {
+            val result = isTypeWithMatcher.match(Y(.value = 47));
+
+            when (result) {
+                is M.Failure {
+                    Tests.assert(result.message == "value was 47")
+                }
+                is M.Success {
+                    Tests.fail("expected failure but was success")
+                }
+            }
+        }),
+
+        Tests.testCase("description has type and with description", fun () {
+            Tests.assert(isTypeWithMatcher.description == "Y: value of 42")
+        }),
+    )),
+));

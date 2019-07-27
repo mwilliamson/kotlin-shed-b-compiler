@@ -1,0 +1,52 @@
+export isType, isTypeWith;
+
+import @(.Option as Option, .Some as Some, .None as None) from Stdlib.Options;
+import @(
+    .Matcher as Matcher,
+    .Result as Result,
+    .success as success,
+    .failure as failure,
+) from .Core;
+
+fun isType[T, U](
+    .description: String,
+    .describeType: Fun (T) -> String,
+    .cast: Fun (T) -> Option[U],
+) -> Matcher[T] {
+    Matcher[T](
+        .description = description,
+        .match = fun (actual: T) -> Result {
+            val result = cast(actual);
+            when (result) {
+                is Some {
+                    success
+                }
+                is None {
+                    failure("was " + describeType(actual))
+                }
+            }
+        },
+    )
+}
+
+fun isTypeWith[T, U](
+    .description: String,
+    .describeType: Fun (T) -> String,
+    .cast: Fun (T) -> Option[U],
+    .with: Matcher[U],
+) -> Matcher[T] {
+    Matcher[T](
+        .description = description + ": " + with.description,
+        .match = fun (actual: T) -> Result {
+            val result = cast(actual);
+            when (result) {
+                is Some {
+                    with.match(result.value)
+                }
+                is None {
+                    failure("was " + describeType(actual))
+                }
+            }
+        },
+    )
+}
