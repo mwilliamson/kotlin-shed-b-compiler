@@ -1,12 +1,36 @@
-export isType, isTypeWith;
+export has, isType, isTypeWith;
 
 import @(.Option as Option, .Some as Some, .None as None) from Stdlib.Options;
 import @(
     .Matcher as Matcher,
     .Result as Result,
+    .Success as Success,
     .success as success,
+    .Failure as Failure,
     .failure as failure,
 ) from .Core;
+
+fun has[T, U](
+    featureName: String,
+    get: Fun (T) -> U,
+    featureMatcher: Matcher[U],
+) -> Matcher[T] {
+    Matcher[T](
+        .description = featureName + " " + featureMatcher.description,
+        .match = fun (actual: T) -> Result {
+            val feature = get(actual);
+            val result = featureMatcher.match(feature);
+            when (result) {
+                is Success {
+                    success
+                }
+                is Failure {
+                    failure(featureName + " " + result.message)
+                }
+            }
+        },
+    )
+}
 
 fun isType[T, U](
     .description: String,

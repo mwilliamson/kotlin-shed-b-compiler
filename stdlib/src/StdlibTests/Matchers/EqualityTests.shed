@@ -48,13 +48,13 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("description of isBool(true) is true", fun () {
             val matcher = M.isBool(true);
 
-            Tests.assert(matcher.description == "true")
+            Tests.assert(matcher.description == "is true")
         }),
 
         Tests.testCase("description of isBool(false) is false", fun () {
             val matcher = M.isBool(false);
 
-            Tests.assert(matcher.description == "false")
+            Tests.assert(matcher.description == "is false")
         }),
     )),
 
@@ -82,7 +82,7 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("description is int string", fun () {
             val matcher = M.isInt(42);
 
-            Tests.assert(matcher.description == "42")
+            Tests.assert(matcher.description == "is 42")
         }),
     )),
 
@@ -110,7 +110,7 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("description is string", fun () {
             val matcher = M.isString("<string>");
 
-            Tests.assert(matcher.description == "<string>")
+            Tests.assert(matcher.description == "is <string>")
         }),
     )),
 ));

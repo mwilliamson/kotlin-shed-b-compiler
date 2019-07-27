@@ -11,6 +11,33 @@ union X =
     | Z {
     };
 
+val hasMatcher = M.has("value", fun (value: Y) => value.value, M.isInt(42));
+
+val hasSuite = Tests.suite("has", list(
+    Tests.testCase("matches when feature matcher matches", fun () {
+        val result = hasMatcher.match(Y(.value = 42));
+
+        Tests.assert(M.isSuccess(result))
+    }),
+
+    Tests.testCase("when feature mismatches then mismatches with feature mismatch description", fun () {
+        val result = hasMatcher.match(Y(.value = 47));
+
+        when (result) {
+            is M.Failure {
+                Tests.assert(result.message == "value was 47")
+            }
+            is M.Success {
+                Tests.fail("expected failure but was success")
+            }
+        }
+    }),
+
+    Tests.testCase("description has feature name and description", fun () {
+        Tests.assert(hasMatcher.description == "value is 42")
+    }),
+));
+
 val isTypeMatcher = M.isType[X, Y](
     .description = "Y",
     .describeType = fun (value: X) {
@@ -119,6 +146,7 @@ val isTypeWithSuite = Tests.suite("isTypeWith", list(
 ));
 
 val testCases = Tests.suite(moduleName, list(
+    hasSuite,
     isTypeSuite,
     isTypeWithSuite,
 ));

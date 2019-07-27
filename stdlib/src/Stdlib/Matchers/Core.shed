@@ -35,7 +35,7 @@ fun describingMatcher[T](
     match: Fun (T) -> Bool
 ) -> Matcher[T] {
     Matcher(
-        .description = toString(value),
+        .description = "is " + toString(value),
         .match = fun (actual: T) -> Result {
             if (match(actual)) {
                 success
