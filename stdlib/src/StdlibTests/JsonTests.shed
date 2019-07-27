@@ -1,36 +1,36 @@
 export testCases;
 
 import Json from Stdlib.Json;
-import Matchers from Stdlib.Matchers;
+import M from Stdlib.Matchers;
 import Options from Stdlib.Options;
 import Tests from Stdlib.Tests;
 
-type JsonValueMatcher = Matchers.Matcher[Json.JsonValue];
+type JsonValueMatcher = M.Matcher[Json.JsonValue];
 
-val isFailure = Matchers.Matcher(
+val isFailure = M.Matcher(
     .description = "failure",
-    .match = fun (actual: Json.JsonResult) -> Matchers.Result {
+    .match = fun (actual: Json.JsonResult) -> M.Result {
         when (actual) {
             is Json.JsonSuccess {
-                Matchers.failure("was success")
+                M.failure("was success")
             }
             is Json.JsonFailure {
-                Matchers.success
+                M.success
             }
         }
     },
 );
 
-fun isSuccess(value: JsonValueMatcher) -> Matchers.Matcher[Json.JsonResult] {
-    Matchers.Matcher(
+fun isSuccess(value: JsonValueMatcher) -> M.Matcher[Json.JsonResult] {
+    M.Matcher(
         .description = "success with value " + value.description,
-        .match = fun (actual: Json.JsonResult) -> Matchers.Result {
+        .match = fun (actual: Json.JsonResult) -> M.Result {
             when (actual) {
                 is Json.JsonSuccess {
                     value.match(actual.value)
                 }
                 is Json.JsonFailure {
-                    Matchers.failure("was failure")
+                    M.failure("was failure")
                 }
             }
         },
@@ -38,27 +38,27 @@ fun isSuccess(value: JsonValueMatcher) -> Matchers.Matcher[Json.JsonResult] {
 }
 
 fun hasJsonText(expectedText: String) -> JsonValueMatcher {
-    Matchers.Matcher(
+    M.Matcher(
         .description = "has JSON text: " + expectedText,
-        .match = fun (actual: Json.JsonValue) -> Matchers.Result {
+        .match = fun (actual: Json.JsonValue) -> M.Result {
             val text = Json.valueToText(actual);
             if (text == expectedText) {
-                Matchers.success
+                M.success
             } else {
-                Matchers.failure("text was: " + text)
+                M.failure("text was: " + text)
             }
         },
     )
 }
 
-fun isJson(.description: String, .predicate: Fun (Json.JsonValue) -> Bool) -> Matchers.Matcher[Json.JsonValue] {
-    Matchers.Matcher(
+fun isJson(.description: String, .predicate: Fun (Json.JsonValue) -> Bool) -> M.Matcher[Json.JsonValue] {
+    M.Matcher(
         .description = description,
-        .match = fun (actual: Json.JsonValue) -> Matchers.Result {
+        .match = fun (actual: Json.JsonValue) -> M.Result {
             if (predicate(actual)) {
-                Matchers.success
+                M.success
             } else {
-                Matchers.failure("was " + Json.valueToText(actual))
+                M.failure("was " + Json.valueToText(actual))
             }
         },
     )
@@ -71,7 +71,7 @@ val isJsonNull = isJson(
     },
 );
 
-fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
+fun isJsonBoolean(value: Bool) -> M.Matcher[Json.JsonValue] {
     isJson(
         .description = if (value) { "true" } else { "false" },
         .predicate = fun (actual: Json.JsonValue) -> Bool {
@@ -84,12 +84,12 @@ fun isJsonBoolean(value: Bool) -> Matchers.Matcher[Json.JsonValue] {
     )
 }
 
-fun isJsonArray(elements: Matchers.Matcher[List[Json.JsonValue]]) -> Matchers.Matcher[Json.JsonValue] {
+fun isJsonArray(elements: M.Matcher[List[Json.JsonValue]]) -> M.Matcher[Json.JsonValue] {
     isJson(
         .description = "JSON array with elements: " + elements.description,
         .predicate = fun (actual: Json.JsonValue) -> Bool {
             if (actual is Json.JsonArray) {
-                Matchers.isSuccess(elements.match(actual.elements))
+                M.isSuccess(elements.match(actual.elements))
             } else {
                 false
             }
@@ -97,7 +97,7 @@ fun isJsonArray(elements: Matchers.Matcher[List[Json.JsonValue]]) -> Matchers.Ma
     )
 }
 
-fun isJsonString(value: String) -> Matchers.Matcher[Json.JsonValue] {
+fun isJsonString(value: String) -> M.Matcher[Json.JsonValue] {
     isJson(
         .description = Json.valueToText(Json.string(value)),
         .predicate = fun (actual: Json.JsonValue) -> Bool {
@@ -115,103 +115,103 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("null", fun () {
             val value = Json.null;
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("null"))
+            Tests.assertThat(text, M.isString("null"))
         }),
 
         Tests.testCase("true", fun () {
             val value = Json.boolean(true);
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("true"))
+            Tests.assertThat(text, M.isString("true"))
         }),
 
         Tests.testCase("false", fun () {
             val value = Json.boolean(false);
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("false"))
+            Tests.assertThat(text, M.isString("false"))
         }),
 
         Tests.testCase("number", fun () {
             val value = Json.number("1.2");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("1.2"))
+            Tests.assertThat(text, M.isString("1.2"))
         }),
 
         Tests.testCase("empty string", fun () {
             val value = Json.string("");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\""))
+            Tests.assertThat(text, M.isString("\"\""))
         }),
 
         Tests.testCase("string without special characters", fun () {
             val value = Json.string("apples");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"apples\""))
+            Tests.assertThat(text, M.isString("\"apples\""))
         }),
 
         Tests.testCase("backslashes are escaped", fun () {
             val value = Json.string("\\ \\");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\\\\ \\\\\""))
+            Tests.assertThat(text, M.isString("\"\\\\ \\\\\""))
         }),
 
         Tests.testCase("double quotes are escaped", fun () {
             val value = Json.string("\" \"");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\\\" \\\"\""))
+            Tests.assertThat(text, M.isString("\"\\\" \\\"\""))
         }),
 
         Tests.testCase("tabs are escaped", fun () {
             val value = Json.string("\t \t");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\\t \\t\""))
+            Tests.assertThat(text, M.isString("\"\\t \\t\""))
         }),
 
         Tests.testCase("line feeds are escaped", fun () {
             val value = Json.string("\n \n");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\\n \\n\""))
+            Tests.assertThat(text, M.isString("\"\\n \\n\""))
         }),
 
         Tests.testCase("carriage returns are escaped", fun () {
             val value = Json.string("\r \r");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\\r \\r\""))
+            Tests.assertThat(text, M.isString("\"\\r \\r\""))
         }),
 
         Tests.testCase("control codes are escaped", fun () {
             val value = Json.string("\u{B}");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("\"\\u000B\""))
+            Tests.assertThat(text, M.isString("\"\\u000B\""))
         }),
 
         Tests.testCase("empty array is serialised to square brackets", fun () {
             val value = Json.array(list());
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("[]"))
+            Tests.assertThat(text, M.isString("[]"))
         }),
 
         Tests.testCase("singleton array is serialised to square brackets containing element", fun () {
             val value = Json.array(list(Json.null));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("[null]"))
+            Tests.assertThat(text, M.isString("[null]"))
         }),
 
         Tests.testCase("array elements are comma separated", fun () {
             val value = Json.array(list(Json.null, Json.boolean(true), Json.boolean(false)));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("[null,true,false]"))
+            Tests.assertThat(text, M.isString("[null,true,false]"))
         }),
 
         Tests.testCase("empty object is serialised to curly braces", fun () {
             val value = Json.object(list());
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("{}"))
+            Tests.assertThat(text, M.isString("{}"))
         }),
 
         Tests.testCase("singleton object is serialised to curly braces containing property", fun () {
             val value = Json.object(list(Json.property("apples", Json.null)));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("{\"apples\":null}"))
+            Tests.assertThat(text, M.isString("{\"apples\":null}"))
         }),
 
         Tests.testCase("object properties are comma separated", fun () {
@@ -221,7 +221,7 @@ val testCases = Tests.suite(moduleName, list(
                 Json.property("coconut", Json.boolean(false)),
             ));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, Matchers.isString("{\"apples\":null,\"bananas\":true,\"coconut\":false}"))
+            Tests.assertThat(text, M.isString("{\"apples\":null,\"bananas\":true,\"coconut\":false}"))
         }),
     )),
 
