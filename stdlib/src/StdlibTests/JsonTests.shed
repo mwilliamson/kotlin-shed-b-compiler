@@ -72,15 +72,17 @@ val isJsonNull = isJson(
 );
 
 fun isJsonBoolean(value: Bool) -> M.Matcher[Json.JsonValue] {
-    isJson(
-        .description = if (value) { "true" } else { "false" },
-        .predicate = fun (actual: Json.JsonValue) -> Bool {
+    M.isTypeWith[Json.JsonValue, Json.JsonBoolean](
+        .description = "JsonBoolean",
+        .describeValue = Json.valueToText,
+        .cast = fun (actual: Json.JsonValue) {
             if (actual is Json.JsonBoolean) {
-                actual.value == value
+                Options.some(actual)
             } else {
-                false
+                Options.none
             }
         },
+        .with = M.has("value", fun (actual: Json.JsonBoolean) => actual.value, M.isBool(value)),
     )
 }
 
