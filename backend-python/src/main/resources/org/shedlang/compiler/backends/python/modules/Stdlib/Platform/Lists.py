@@ -25,7 +25,7 @@ def sequence_to_list(sequence):
     
     while True:
         item = sequence.next()
-        if item._union_tag__stdlib__sequences__sequence_iterator == "Stdlib.Sequences.@SequenceEnd":
+        if item._union_tag__stdlib__sequences__sequence_iterator == "Stdlib.Sequences.`SequenceEnd":
             return result
         else:
             result.append(item.head)

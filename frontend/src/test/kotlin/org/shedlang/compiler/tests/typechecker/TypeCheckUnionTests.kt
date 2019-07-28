@@ -48,7 +48,7 @@ class TypeCheckUnionTests {
                             isConstant = equalTo(true),
                             type = equalTo(symbolType(
                                 module = listOf("A", "B"),
-                                name = "@Member1"
+                                name = "`Member1"
                             ))
                         )
                     )
@@ -61,7 +61,7 @@ class TypeCheckUnionTests {
                             isConstant = equalTo(true),
                             type = equalTo(symbolType(
                                 module = listOf("A", "B"),
-                                name = "@Member2"
+                                name = "`Member2"
                             ))
                         )
                     )

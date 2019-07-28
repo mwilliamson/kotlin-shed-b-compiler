@@ -31,8 +31,8 @@ class CoercionTests {
     fun canCoerceSymbolTypeToSymbolInSameModuleWithSameName() {
         assertThat(
             canCoerce(
-                from = symbolType(listOf("A", "B"), "@x"),
-                to = symbolType(listOf("A", "B"), "@x")
+                from = symbolType(listOf("A", "B"), "`x"),
+                to = symbolType(listOf("A", "B"), "`x")
             ),
             equalTo(true)
         )
@@ -42,8 +42,8 @@ class CoercionTests {
     fun cannotSymbolTypeToSymbolInDifferentModuleWithSameName() {
         assertThat(
             canCoerce(
-                from = symbolType(listOf("A", "B"), "@x"),
-                to = symbolType(listOf("A", "C"), "@x")
+                from = symbolType(listOf("A", "B"), "`x"),
+                to = symbolType(listOf("A", "C"), "`x")
             ),
             equalTo(false)
         )
@@ -53,8 +53,8 @@ class CoercionTests {
     fun cannotSymbolTypeToSymbolInSameModuleWithDifferentName() {
         assertThat(
             canCoerce(
-                from = symbolType(listOf("A", "B"), "@x"),
-                to = symbolType(listOf("A", "B"), "@y")
+                from = symbolType(listOf("A", "B"), "`x"),
+                to = symbolType(listOf("A", "B"), "`y")
             ),
             equalTo(false)
         )

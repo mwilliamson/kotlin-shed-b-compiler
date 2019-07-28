@@ -172,8 +172,8 @@ class ParsePrimaryExpressionTests {
 
     @Test
     fun canParseSymbol() {
-        val source = "@blah"
-        assertThat(parsePrimaryExpression(source), isSymbolName("@blah"))
+        val source = "`blah"
+        assertThat(parsePrimaryExpression(source), isSymbolName("`blah"))
     }
 
     private fun parsePrimaryExpression(source: String): ExpressionNode {

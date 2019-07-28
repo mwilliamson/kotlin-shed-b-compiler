@@ -38,7 +38,7 @@ class InterpreterTests {
 
     @Test
     fun symbolNodeEvaluatesToSymbolValue() {
-        assertThat(fullyEvaluate(symbolName("@cons")), isPureResult(equalTo(symbolValue(listOf(), "@cons"))))
+        assertThat(fullyEvaluate(symbolName("`cons")), isPureResult(equalTo(symbolValue(listOf(), "`cons"))))
     }
 
     @Test

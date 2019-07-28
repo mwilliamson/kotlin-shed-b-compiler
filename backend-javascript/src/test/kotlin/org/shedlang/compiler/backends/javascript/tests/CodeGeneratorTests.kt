@@ -304,7 +304,7 @@ class CodeGeneratorTests {
 
         val types = typesMap(
             discriminators = mapOf(
-                Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
             )
         )
         val node = generateCode(shed, context(types = types))
@@ -320,7 +320,7 @@ class CodeGeneratorTests {
                         isJavascriptConditionalBranch(
                             condition = isJavascriptTypeCondition(
                                 expression = isJavascriptVariableReference("\$shed_tmp"),
-                                discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
+                                discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
                             ),
                             body = isSequence(
                                 isJavascriptReturn(isJavascriptIntegerLiteral(42))
@@ -431,9 +431,9 @@ class CodeGeneratorTests {
 
     @Test
     fun symbolNameGeneratesString() {
-        val shed = symbolName("@blah")
+        val shed = symbolName("`blah")
         val node = generateCode(shed, context(moduleName = listOf("A", "B")))
-        assertThat(node, isJavascriptStringLiteral("A.B.@blah"))
+        assertThat(node, isJavascriptStringLiteral("A.B.`blah"))
     }
 
     @Test
@@ -529,13 +529,13 @@ class CodeGeneratorTests {
         )
 
         val types = typesMap(discriminators = mapOf(
-            Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+            Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
         ))
         val node = generateCode(shed, context(types = types))
 
         assertThat(node, isJavascriptTypeCondition(
             isJavascriptVariableReference("x"),
-            discriminator(symbolType(listOf("M"), "@A"), "tag")
+            discriminator(symbolType(listOf("M"), "`A"), "tag")
         ))
     }
 

@@ -52,7 +52,7 @@ class TypeCheckIsOperationTests {
     @Test
     fun isOperationHasBooleanType() {
         val memberType = shapeType(name = "Member", fields = listOf(
-            field(name = "tag", type = symbolType(listOf(), "@B"))
+            field(name = "tag", type = symbolType(listOf(), "`B"))
         ))
         val unionType = unionType(name = "Union", members = listOf(memberType))
 

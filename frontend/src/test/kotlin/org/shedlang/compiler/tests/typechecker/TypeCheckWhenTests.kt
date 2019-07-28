@@ -16,10 +16,10 @@ class TypeCheckWhenTests {
     private val inputMember1TypeReference = staticReference("Member1")
     private val inputMember2TypeReference = staticReference("Member2")
     private val inputMember1 = shapeType(name = "Member1", fields = listOf(
-        field(name = "tag", type = symbolType(listOf(), "@Member1"), shapeId = shapeId)
+        field(name = "tag", type = symbolType(listOf(), "`Member1"), shapeId = shapeId)
     ))
     private val inputMember2 = shapeType(name = "Member2", fields = listOf(
-        field(name = "tag", type = symbolType(listOf(), "@Member2"), shapeId = shapeId)
+        field(name = "tag", type = symbolType(listOf(), "`Member2"), shapeId = shapeId)
     ))
     private val inputUnion = unionType("Union", members = listOf(inputMember1, inputMember2))
 

@@ -521,7 +521,7 @@ class CodeGeneratorTests {
             ),
             types = typesMap(
                 discriminators = mapOf(
-                    Pair(conditionExpression, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                    Pair(conditionExpression, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
                 )
             )
         ))
@@ -540,7 +540,7 @@ class CodeGeneratorTests {
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
                             expression = isPythonVariableReference("f"),
-                            discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
+                            discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
                         ),
                         body = isSequence(
                             isPythonAssignment(
@@ -583,7 +583,7 @@ class CodeGeneratorTests {
             ),
             types = typesMap(
                 discriminators = mapOf(
-                    Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                    Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
                 )
             )
         ))
@@ -595,7 +595,7 @@ class CodeGeneratorTests {
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
                             expression = isPythonVariableReference("x"),
-                            discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
+                            discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
                         ),
                         body = isSequence(
                             isPythonAssignment(
@@ -647,7 +647,7 @@ class CodeGeneratorTests {
                 ),
                 types = typesMap(
                     discriminators = mapOf(
-                        Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                        Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
                     )
                 )
             )
@@ -660,7 +660,7 @@ class CodeGeneratorTests {
                         isPythonConditionalBranch(
                             condition = isPythonTypeCondition(
                                 expression = isPythonVariableReference("x"),
-                                discriminator = discriminator(symbolType(listOf("M"), "@A"), "tag")
+                                discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
                             ),
                             body = isSequence(
                                 isPythonReturn(isPythonIntegerLiteral(42))
@@ -870,9 +870,9 @@ class CodeGeneratorTests {
 
     @Test
     fun symbolNameGeneratesString() {
-        val shed = symbolName("@blah")
+        val shed = symbolName("`blah")
         val node = generateExpressionCode(shed, context(moduleName = listOf("A", "B")))
-        assertThat(node, isGeneratedExpression(isPythonStringLiteral("A.B.@blah")))
+        assertThat(node, isGeneratedExpression(isPythonStringLiteral("A.B.`blah")))
     }
 
     @Test
@@ -1089,7 +1089,7 @@ class CodeGeneratorTests {
             ),
             types = typesMap(
                 discriminators = mapOf(
-                    Pair(variableReference, shapeReference) to discriminator(symbolType(listOf("M"), "@A"), "tag")
+                    Pair(variableReference, shapeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
                 )
             )
         )
@@ -1097,7 +1097,7 @@ class CodeGeneratorTests {
 
         assertThat(node, isGeneratedExpression(isPythonTypeCondition(
             isPythonVariableReference("x"),
-            discriminator(symbolType(listOf("M"), "@A"), "tag")
+            discriminator(symbolType(listOf("M"), "`A"), "tag")
         )))
     }
 

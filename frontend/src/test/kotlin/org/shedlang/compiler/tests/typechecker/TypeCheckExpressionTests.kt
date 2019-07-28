@@ -49,9 +49,9 @@ class TypeCheckExpressionTests {
 
     @Test
     fun symbolIsTypedAsSymbol() {
-        val node = symbolName("@blah")
+        val node = symbolName("`blah")
         val type = inferType(node, typeContext(moduleName = listOf("Some", "Module")))
-        assertThat(type, isType(symbolType(listOf("Some", "Module"), "@blah")))
+        assertThat(type, isType(symbolType(listOf("Some", "Module"), "`blah")))
     }
 
     @Test
@@ -230,14 +230,14 @@ class TypeCheckExpressionTests {
 
     @Test
     fun symbolEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(BinaryOperator.EQUALS, symbolName("@x"), symbolName("@y"))
+        val node = binaryOperation(BinaryOperator.EQUALS, symbolName("`x"), symbolName("`y"))
         val type = inferType(node, typeContext(moduleName = listOf("A")))
         assertThat(type, cast(isBoolType))
     }
 
     @Test
     fun symbolInequalityOperationReturnsBoolean() {
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, symbolName("@x"), symbolName("@y"))
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, symbolName("`x"), symbolName("`y"))
         val type = inferType(node, typeContext(moduleName = listOf("A")))
         assertThat(type, cast(isBoolType))
     }

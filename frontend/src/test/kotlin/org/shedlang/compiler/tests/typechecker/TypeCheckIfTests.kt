@@ -71,10 +71,10 @@ class TypeCheckIfTests {
         val shapeId = freshShapeId()
         val member1Reference = staticReference("Member1")
         val member1 = shapeType(name = "Member1", fields = listOf(
-            field(name = "tag", shapeId = shapeId, type = symbolType(listOf(), "@member1"))
+            field(name = "tag", shapeId = shapeId, type = symbolType(listOf(), "`member1"))
         ))
         val member2 = shapeType(name = "Member2",fields = listOf(
-            field(name = "tag", shapeId = shapeId, type = symbolType(listOf(), "@Member2"))
+            field(name = "tag", shapeId = shapeId, type = symbolType(listOf(), "`Member2"))
         ))
         val union = unionType("Union", members = listOf(member1, member2))
 
