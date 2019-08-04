@@ -145,26 +145,29 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
     )
 }
 
-private fun shapeFieldInfoType(type: Type, field: Field): Type {
-    val shapeId = freshShapeId()
-    return lazyShapeType(
-        shapeId = shapeId,
-        name = Identifier("Field"),
-        staticParameters = listOf(),
-        staticArguments = listOf(),
+val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
+val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
+val shapeFieldTypeFunctionShapeId = freshShapeId()
+val ShapeFieldTypeFunction = TypeFunction(
+    parameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
+    type = lazyShapeType(
+        shapeId = shapeFieldTypeFunctionShapeId,
+        name = Identifier("ShapeField"),
+        staticParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
+        staticArguments = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
         getFields = lazy {
             listOf(
                 Field(
-                    shapeId = shapeId,
+                    shapeId = shapeFieldTypeFunctionShapeId,
                     name = Identifier("get"),
                     type = functionType(
-                        positionalParameters = listOf(type),
-                        returns = field.type
+                        positionalParameters = listOf(shapeFieldTypeFunctionTypeParameter),
+                        returns = shapeFieldTypeFunctionFieldParameter
                     ),
                     isConstant = false
                 ),
                 Field(
-                    shapeId = shapeId,
+                    shapeId = shapeFieldTypeFunctionShapeId,
                     name = Identifier("name"),
                     type = StringType,
                     isConstant = false
@@ -172,6 +175,10 @@ private fun shapeFieldInfoType(type: Type, field: Field): Type {
             )
         }
     )
+)
+
+private fun shapeFieldInfoType(type: Type, field: Field): Type {
+    return applyStatic(ShapeFieldTypeFunction, listOf(type, field.type))
 }
 
 fun metaTypeToType(type: Type): Type? {
