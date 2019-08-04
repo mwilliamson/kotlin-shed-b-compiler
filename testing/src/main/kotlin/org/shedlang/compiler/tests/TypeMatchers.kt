@@ -2,8 +2,6 @@ package org.shedlang.compiler.tests
 
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.StaticExpressionNode
-import org.shedlang.compiler.ast.TupleTypeNode
 import org.shedlang.compiler.types.*
 
 
