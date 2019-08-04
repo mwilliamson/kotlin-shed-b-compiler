@@ -265,9 +265,10 @@ class TypeCheckShapeTests {
         typeCheckModuleStatement(node, typeContext)
         typeContext.undefer()
 
-        val type = typeContext.typeOf(node)
-        assertThat(type, isMetaType(isShapeType()))
-        return ((type as ShapeType).staticArguments[0] as ShapeType).fields.values.single()
+        val metaType = typeContext.typeOf(node)
+        assertThat(metaType, isMetaType(isShapeType()))
+        val type = metaTypeToType(metaType)
+        return (type as ShapeType).fields.values.single()
     }
 
     @Test
@@ -320,12 +321,12 @@ class TypeCheckShapeTests {
         ))
         typeCheckModuleStatement(node, typeContext)
         typeContext.undefer()
-        val type = typeContext.typeOf(node)
-        assertThat(type, isMetaType(isShapeType()))
-        assertThat(
-            ((type as ShapeType).staticArguments[0] as ShapeType).fields.values.single(),
+        val metaType = typeContext.typeOf(node)
+        assertThat(metaType, isMetaType(isShapeType()))
+        val type = metaTypeToType(metaType)!!
+        assertThat(type, isShapeType(fields = isSequence(
             isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
-        )
+        )))
     }
 
     @Test
