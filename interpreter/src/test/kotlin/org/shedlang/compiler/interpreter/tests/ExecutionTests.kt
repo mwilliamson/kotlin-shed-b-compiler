@@ -10,7 +10,7 @@ import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
-    private val disabledTests = setOf<String>("ShapeTypeInfo.shed")
+    private val disabledTests = setOf<String>()
 
     @TestFactory
     fun testProgram(): List<DynamicTest> {

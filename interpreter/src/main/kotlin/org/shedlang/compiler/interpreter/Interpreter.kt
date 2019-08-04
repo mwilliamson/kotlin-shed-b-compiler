@@ -235,6 +235,7 @@ private fun fieldValue(receiver: InterpreterValue, fieldName: Identifier): Inter
     return when (receiver) {
         is ModuleValue -> receiver.fields.getValue(fieldName)
         is ShapeValue -> receiver.fields.getValue(fieldName)
+        is ShapeTypeValue -> receiver.fields.getValue(fieldName)
         else -> throw NotImplementedError()
     }
 }
@@ -301,7 +302,8 @@ internal data class FunctionValue(
 }
 
 internal data class ShapeTypeValue(
-    val constantFields: Map<Identifier, InterpreterValue>
+    val constantFields: Map<Identifier, InterpreterValue>,
+    val fields: Map<Identifier, InterpreterValue>
 ): Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         val constantFields = constantFields.toMap()

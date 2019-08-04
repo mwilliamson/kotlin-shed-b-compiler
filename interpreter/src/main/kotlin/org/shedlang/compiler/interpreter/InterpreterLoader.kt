@@ -89,8 +89,30 @@ private fun shapeToExpression(node: ShapeBaseNode, context: LoaderContext): Shap
         name to value
     }
 
+    val fieldsValue = ShapeValue(fields = fields.values.associate { field ->
+        field.name to ShapeValue(fields = mapOf(
+            Identifier("get") to FunctionValue(
+                positionalParameterNames = listOf(Identifier("value")),
+                body = listOf(
+                    ExpressionStatement(
+                        expression = FieldAccess(
+                            receiver = VariableReference("value"),
+                            fieldName = field.name
+                        ),
+                        isReturn = true
+                    )
+                ),
+                outerScope = Scope(frameReferences = listOf())
+            ),
+            Identifier("name") to StringValue(field.name.value)
+        ))
+    })
+
     return ShapeTypeValue(
-        constantFields = constantFields.toMap()
+        constantFields = constantFields.toMap(),
+        fields = mapOf(
+            Identifier("fields") to fieldsValue
+        )
     )
 }
 

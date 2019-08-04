@@ -733,7 +733,8 @@ class EvaluateCallTests {
         val shapeType = ShapeTypeValue(
             constantFields = mapOf(
                 Identifier("x") to IntegerValue(1)
-            )
+            ),
+            fields = mapOf()
         )
         val expression = evaluate(
             call(
