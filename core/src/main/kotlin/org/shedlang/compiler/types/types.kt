@@ -107,12 +107,71 @@ object NothingType : Type {
 }
 
 data class MetaType(val type: Type): Type {
+    private val fieldsType = if (type is ShapeType) {
+        shapeFieldsInfoType(type)
+    } else {
+        null
+    }
+
     override val shortDescription: String
         get() = "Type[${type.shortDescription}]"
 
     override fun fieldType(fieldName: Identifier): Type? {
-        return null
+        if (fieldName == Identifier("fields")) {
+            return fieldsType
+        } else {
+            return null
+        }
     }
+}
+
+private fun shapeFieldsInfoType(type: ShapeType): Type {
+    val shapeId = freshShapeId()
+    return lazyShapeType(
+        shapeId = shapeId,
+        name = Identifier("Fields"),
+        staticParameters = listOf(),
+        staticArguments = listOf(),
+        getFields = lazy {
+            type.fields.values.map { field ->
+                Field(
+                    shapeId = shapeId,
+                    name = field.name,
+                    type = shapeFieldInfoType(type, field),
+                    isConstant = false
+                )
+            }
+        }
+    )
+}
+
+private fun shapeFieldInfoType(type: Type, field: Field): Type {
+    val shapeId = freshShapeId()
+    return lazyShapeType(
+        shapeId = shapeId,
+        name = Identifier("Field"),
+        staticParameters = listOf(),
+        staticArguments = listOf(),
+        getFields = lazy {
+            listOf(
+                Field(
+                    shapeId = shapeId,
+                    name = Identifier("get"),
+                    type = functionType(
+                        positionalParameters = listOf(type),
+                        returns = field.type
+                    ),
+                    isConstant = false
+                ),
+                Field(
+                    shapeId = shapeId,
+                    name = Identifier("name"),
+                    type = StringType,
+                    isConstant = false
+                )
+            )
+        }
+    )
 }
 
 fun metaTypeToType(type: Type): Type? {
