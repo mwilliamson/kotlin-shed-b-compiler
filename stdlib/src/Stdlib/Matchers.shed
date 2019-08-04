@@ -13,6 +13,7 @@ export
     isString,
 
     has,
+    hasField,
     isType,
     isTypeWith,
 
@@ -37,6 +38,7 @@ import @(
 ) from .Matchers.Equality;
 import @(
     .has as has,
+    .hasField as hasField,
     .isType as isType,
     .isTypeWith as isTypeWith,
 ) from .Matchers.Type;

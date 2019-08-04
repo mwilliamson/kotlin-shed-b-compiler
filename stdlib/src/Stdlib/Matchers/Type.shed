@@ -1,4 +1,4 @@
-export has, isType, isTypeWith;
+export has, hasField, isType, isTypeWith;
 
 import @(.Option as Option, .Some as Some, .None as None) from Stdlib.Options;
 import @(
@@ -30,6 +30,13 @@ fun has[T, U](
             }
         },
     )
+}
+
+fun hasField[T, U](
+    field: ShapeField[T, U],
+    valueMatcher: Matcher[U],
+) -> Matcher[T] {
+    has(field.name, field.get, valueMatcher)
 }
 
 fun isType[T, U](

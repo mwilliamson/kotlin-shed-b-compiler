@@ -38,6 +38,33 @@ val hasSuite = Tests.suite("has", list(
     }),
 ));
 
+val hasFieldMatcher = M.hasField(Y.fields.value, M.isInt(42));
+
+val hasFieldSuite = Tests.suite("hasField", list(
+    Tests.testCase("matches when field value matcher matches", fun () {
+        val result = hasFieldMatcher.match(Y(.value = 42));
+
+        Tests.assert(M.isSuccess(result))
+    }),
+
+    Tests.testCase("when field value mismatches then mismatches with field value mismatch description", fun () {
+        val result = hasFieldMatcher.match(Y(.value = 47));
+
+        when (result) {
+            is M.Failure {
+                Tests.assert(result.message == "value was 47")
+            }
+            is M.Success {
+                Tests.fail("expected failure but was success")
+            }
+        }
+    }),
+
+    Tests.testCase("description has field name and description", fun () {
+        Tests.assert(hasFieldMatcher.description == "value is 42")
+    }),
+));
+
 val isTypeMatcher = M.isType[X, Y](
     .description = "Y",
     .describeValue = fun (value: X) {
@@ -147,6 +174,7 @@ val isTypeWithSuite = Tests.suite("isTypeWith", list(
 
 val testCases = Tests.suite(moduleName, list(
     hasSuite,
+    hasFieldSuite,
     isTypeSuite,
     isTypeWithSuite,
 ));
