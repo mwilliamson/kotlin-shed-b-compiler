@@ -82,7 +82,7 @@ fun isJsonBoolean(value: Bool) -> M.Matcher[Json.JsonValue] {
                 Options.none
             }
         },
-        .with = M.has("value", fun (actual: Json.JsonBoolean) => actual.value, M.isBool(value)),
+        .with = M.hasField(Json.JsonBoolean.fields.value, M.isBool(value)),
     )
 }
 
