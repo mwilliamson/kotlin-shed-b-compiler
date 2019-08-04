@@ -119,9 +119,7 @@ class CodeGeneratorTests {
                 isJavascriptVariableReference("\$shed.declareShape"),
                 isSequence(
                     isJavascriptStringLiteral("X"),
-                    isJavascriptObject(isMap(
-                        "b" to isJavascriptIntegerLiteral(0)
-                    ))
+                    isJavascriptArray(anything)
                 )
             )
         ))
@@ -156,7 +154,7 @@ class CodeGeneratorTests {
                     isJavascriptVariableReference("\$shed.declareShape"),
                     isSequence(
                         isJavascriptStringLiteral("Member1"),
-                        isJavascriptObject(isMap())
+                        anything
                     )
                 )
             ),
@@ -166,7 +164,7 @@ class CodeGeneratorTests {
                     isJavascriptVariableReference("\$shed.declareShape"),
                     isSequence(
                         isJavascriptStringLiteral("Member2"),
-                        isJavascriptObject(isMap())
+                        anything
                     )
                 )
             )

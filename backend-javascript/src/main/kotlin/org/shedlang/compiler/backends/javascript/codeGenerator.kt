@@ -80,10 +80,6 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext) : JavascriptStatementNode {
     // TODO: remove duplication with InterpreterLoader and Python code generator
 
-    val constantFields = context.shapeFields(node)
-        .values
-        .filter { field -> field.isConstant }
-
     val source = NodeSource(node)
     return javascriptConst(
         name = generateName(node.name),
@@ -94,24 +90,63 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
             ),
             listOf(
                 JavascriptStringLiteralNode(generateName(node.name), source = source),
-                JavascriptObjectLiteralNode(
-                    constantFields.associateBy(
-                        { field -> generateName(field.name) },
-                        { field ->
-                            val fieldValueNode = node.fields
-                                .find { fieldNode -> fieldNode.name == field.name }
-                                ?.value
-                            val fieldType = field.type
-                            if (fieldValueNode != null) {
-                                generateCode(fieldValueNode, context)
-                            } else if (fieldType is SymbolType) {
-                                generateSymbolCode(fieldType.symbol, source = NodeSource(node))
-                            } else {
-                                // TODO: throw better exception
-                                throw Exception("Could not find value for constant field")
-                            }
+                JavascriptArrayLiteralNode(
+                    context.shapeFields(node).values.map { field ->
+                        val fieldNode = node.fields
+                            .find { fieldNode -> fieldNode.name == field.name }
+                        val fieldSource = NodeSource(fieldNode ?: node)
+
+                        val fieldValueNode = fieldNode?.value
+                        val fieldType = field.type
+                        val value = if (fieldValueNode != null) {
+                            generateCode(fieldValueNode, context)
+                        } else if (fieldType is SymbolType) {
+                            generateSymbolCode(fieldType.symbol, source = fieldSource)
+                        } else if (field.isConstant) {
+                            // TODO: throw better exception
+                            throw Exception("Could not find value for constant field")
+                        } else {
+                            // TODO: use undefined
+                            JavascriptNullLiteralNode(source = fieldSource)
                         }
-                    ),
+
+                        val jsFieldName = generateName(field.name)
+                        JavascriptObjectLiteralNode(
+                            properties = mapOf(
+                                "get" to JavascriptFunctionExpressionNode(
+                                    parameters = listOf("value"),
+                                    body = listOf(
+                                        JavascriptReturnNode(
+                                            expression = JavascriptPropertyAccessNode(
+                                                receiver = JavascriptVariableReferenceNode(
+                                                    name = "value",
+                                                    source = fieldSource
+                                                ),
+                                                propertyName = jsFieldName,
+                                                source = fieldSource
+                                            ),
+                                            source = fieldSource
+                                        )
+                                    ),
+                                    source = fieldSource
+                                ),
+                                "isConstant" to JavascriptBooleanLiteralNode(
+                                    field.isConstant,
+                                    source = fieldSource
+                                ),
+                                "jsName" to JavascriptStringLiteralNode(
+                                    jsFieldName,
+                                    source = fieldSource
+                                ),
+                                "name" to JavascriptStringLiteralNode(
+                                    field.name.value,
+                                    source = fieldSource
+                                ),
+                                "value" to value
+                            ),
+                            source = source
+                        )
+                    },
                     source = source
                 )
             ),

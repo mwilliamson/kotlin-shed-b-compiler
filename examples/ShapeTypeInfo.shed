@@ -14,7 +14,11 @@ shape Pair {
 fun main() !Io -> Unit {
     val pair = Pair(.first = 42, .second = 47);
     print!(Pair.fields.first.name);
+    print!("\n");
     print!(intToString(Pair.fields.first.get(pair)));
+    print!("\n");
     print!(Pair.fields.second.name);
+    print!("\n");
     print!(intToString(Pair.fields.second.get(pair)));
+    print!("\n");
 }

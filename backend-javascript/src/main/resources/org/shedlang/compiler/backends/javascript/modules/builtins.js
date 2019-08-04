@@ -10,16 +10,21 @@ function list() {
     return Array.prototype.slice.call(arguments);
 }
 
-function declareShape(name, constantFields) {
-    function shape(fields) {
-        if (fields === undefined) {
-            fields = {};
-        }
-        for (var key in constantFields) {
-            fields[key] = constantFields[key];
-        }
-        return fields;
+function declareShape(name, fields) {
+    function shape(fieldValues = {}) {
+        return {...fieldValues, ...constantFieldValues};
     }
+
+    shape.fields = {};
+
+    const constantFieldValues = {};
+    fields.forEach(field => {
+        if (field.isConstant) {
+            constantFieldValues[field.jsName] = field.value;
+        }
+
+        shape.fields[field.jsName] = field;
+    })
 
     return shape;
 }
