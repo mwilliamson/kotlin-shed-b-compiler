@@ -1,0 +1,20 @@
+// stdout:
+//   first
+//   42
+//   second
+//   47
+
+type Size = Int;
+
+shape Pair {
+    first: Int,
+    second: Int,
+}
+
+fun main() !Io -> Unit {
+    val pair = Pair(.first = 42, .second = 47);
+    print!(Pair.fields.first.name);
+    print!(intToString(Pair.fields.first.get(pair)));
+    print!(Pair.fields.second.name);
+    print!(intToString(Pair.fields.second.get(pair)));
+}

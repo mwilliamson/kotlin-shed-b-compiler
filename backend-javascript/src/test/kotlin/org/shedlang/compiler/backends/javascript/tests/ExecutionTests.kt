@@ -12,9 +12,13 @@ import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
+    private val disabledTests = setOf<String>("ShapeTypeInfo.shed")
+
     @TestFactory
     fun testProgram(): List<DynamicTest> {
-        return testPrograms().map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
+        return testPrograms().filter { testProgram ->
+            !disabledTests.contains(testProgram.name)
+        }.map({ testProgram -> DynamicTest.dynamicTest(testProgram.name, {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     compile(testProgram.load(), target = temporaryDirectory.file.toPath())
