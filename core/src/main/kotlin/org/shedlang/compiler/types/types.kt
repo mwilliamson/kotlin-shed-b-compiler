@@ -106,32 +106,18 @@ object NothingType : Type {
     override val shortDescription = "Nothing"
 }
 
-val metaTypeParameter = covariantTypeParameter("T")
-val metaTypeShapeId = freshShapeId()
-val metaType = TypeFunction(
-    parameters = listOf(metaTypeParameter),
-    type = LazyShapeType(
-        shapeId = metaTypeShapeId,
-        name = Identifier("Type"),
-        staticParameters = listOf(metaTypeParameter),
-        staticArguments = listOf(metaTypeParameter),
-        getFields = lazy({ mapOf<Identifier, Field>() })
-    )
-)
+data class MetaType(val type: Type): Type {
+    override val shortDescription: String
+        get() = "Type[${type.shortDescription}]"
 
-fun MetaType(type: Type): Type {
-    return applyStatic(metaType, listOf(type))
+    override fun fieldType(fieldName: Identifier): Type? {
+        return null
+    }
 }
 
 fun metaTypeToType(type: Type): Type? {
-    if (type is ShapeType && type.shapeId == metaTypeShapeId) {
-        val argument = type.staticArguments[0]
-        if (argument is Type) {
-            return argument
-        } else {
-            // TODO: throw a better exception
-            throw Exception("expected type")
-        }
+    if (type is MetaType) {
+        return type.type
     } else {
         return null
     }

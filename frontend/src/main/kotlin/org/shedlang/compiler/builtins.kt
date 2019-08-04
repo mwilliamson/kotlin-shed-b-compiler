@@ -18,7 +18,6 @@ private val coreBuiltins = listOf(
     builtinType("CodePoint", CodePointType),
     builtinType("Bool", BoolType),
     builtinType("List", ListType),
-    builtinType("Type", metaType),
     builtinType("Symbol", AnySymbolType),
 
     builtinEffect("Io", IoEffect),
