@@ -249,6 +249,9 @@ class CodeGeneratorTests {
                             expression = isPythonVariableReference("a")
                         )
                     )
+                ),
+                isPythonClass(
+                    name = equalTo("fields")
                 )
             )
         ))
@@ -277,7 +280,10 @@ class CodeGeneratorTests {
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
             body = isSequence(
-                isPythonAssignment("b", isPythonIntegerLiteral(0))
+                isPythonAssignment("b", isPythonIntegerLiteral(0)),
+                isPythonClass(
+                    name = equalTo("fields")
+                )
             )
         ))
     }

@@ -93,6 +93,7 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
     )
     val builtins = """
         from shed.builtins import (
+            ShapeField as _create_shape_field,
             list,
             print,
             partial as _partial,

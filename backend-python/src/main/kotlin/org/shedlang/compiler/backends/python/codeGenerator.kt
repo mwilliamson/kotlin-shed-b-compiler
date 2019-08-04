@@ -152,9 +152,12 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
     // TODO: remove duplication with InterpreterLoader
 
-    val (constantFields, variableFields) = context.types.shapeFields(node)
+    val shapeFields = context.types.shapeFields(node)
+    val (constantFields, variableFields) = shapeFields
         .values
         .partition { field -> field.isConstant }
+
+    val shapeSource = NodeSource(node)
 
     val init = if (variableFields.isEmpty()) {
         listOf()
@@ -162,22 +165,68 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         listOf(
             PythonFunctionNode(
                 name = "__init__",
-                parameters = listOf("self") + variableFields.map({ field -> pythoniseName(field.name) }),
-                body = variableFields.map({ field ->
+                parameters = listOf("self") + variableFields.map { field -> pythoniseName(field.name) },
+                body = variableFields.map { field ->
                     PythonAssignmentNode(
                         target = PythonAttributeAccessNode(
-                            receiver = PythonVariableReferenceNode("self", source = NodeSource(node)),
+                            receiver = PythonVariableReferenceNode("self", source = shapeSource),
                             attributeName = pythoniseName(field.name),
-                            source = NodeSource(node)
+                            source = shapeSource
                         ),
-                        expression = PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
-                        source = NodeSource(node)
+                        expression = PythonVariableReferenceNode(pythoniseName(field.name), source = shapeSource),
+                        source = shapeSource
                     )
-                }),
-                source = NodeSource(node)
+                },
+                source = shapeSource
             )
         )
     }
+
+    val fieldsClass = PythonClassNode(
+        // TODO: handle constant field also named fields
+        name = "fields",
+        body = shapeFields.values.map { field ->
+            val fieldNode = node.fields
+                .find { fieldNode -> fieldNode.name == field.name }
+            val fieldSource = NodeSource(fieldNode ?: node)
+
+            PythonAssignmentNode(
+                target = PythonVariableReferenceNode(
+                    name = pythoniseName(field.name),
+                    source = fieldSource
+                ),
+                expression = PythonFunctionCallNode(
+                    function = PythonVariableReferenceNode(
+                        name = "_create_shape_field",
+                        source = fieldSource
+                    ),
+                    arguments = listOf(),
+                    keywordArguments = listOf(
+                        "get" to PythonLambdaNode(
+                            parameters = listOf("value"),
+                            body = PythonAttributeAccessNode(
+                                receiver = PythonVariableReferenceNode(
+                                    "value",
+                                    source = fieldSource
+                                ),
+                                attributeName = pythoniseName(field.name),
+                                source = fieldSource
+                            ),
+                            source = fieldSource
+                        ),
+                        "name" to PythonStringLiteralNode(
+                            value = field.name.value,
+                            source = fieldSource
+                        )
+                    ),
+                    source = fieldSource
+                ),
+                source = fieldSource
+            )
+        },
+        source = shapeSource
+    )
+
     val body = constantFields.map { field ->
         val fieldValueNode = node.fields
             .find { fieldNode -> fieldNode.name == field.name }
@@ -186,22 +235,22 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         val value = if (fieldValueNode != null) {
             generateExpressionCode(fieldValueNode, context).pureExpression()
         } else if (fieldType is SymbolType) {
-            symbol(fieldType.symbol, source = NodeSource(node))
+            symbol(fieldType.symbol, source = shapeSource)
         } else {
             // TODO: throw better exception
             throw Exception("Could not find value for constant field")
         }
         PythonAssignmentNode(
-            PythonVariableReferenceNode(pythoniseName(field.name), source = NodeSource(node)),
+            PythonVariableReferenceNode(pythoniseName(field.name), source = shapeSource),
             value,
-            source = NodeSource(node)
+            source = shapeSource
         )
-    } + init
+    } + init + listOf(fieldsClass)
     return PythonClassNode(
         // TODO: test renaming
         name = context.name(node),
         body = body,
-        source = NodeSource(node)
+        source = shapeSource
     )
 }
 
