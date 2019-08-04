@@ -19,6 +19,7 @@ private val coreBuiltins = listOf(
     builtinType("Bool", BoolType),
     builtinType("List", ListType),
     builtinType("Symbol", AnySymbolType),
+    builtinType("ShapeField", ShapeFieldTypeFunction),
 
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect)

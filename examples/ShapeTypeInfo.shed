@@ -13,12 +13,13 @@ shape Pair {
 
 fun main() !Io -> Unit {
     val pair = Pair(.first = 42, .second = 47);
-    print!(Pair.fields.first.name);
+    printField!(Pair.fields.first, pair);
+    printField!(Pair.fields.second, pair);
+}
+
+fun printField(field: ShapeField[Pair, Int], pair: Pair) !Io -> Unit {
+    print!(field.name);
     print!("\n");
-    print!(intToString(Pair.fields.first.get(pair)));
-    print!("\n");
-    print!(Pair.fields.second.name);
-    print!("\n");
-    print!(intToString(Pair.fields.second.get(pair)));
+    print!(intToString(field.get(pair)));
     print!("\n");
 }
