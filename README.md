@@ -92,6 +92,9 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
 
 ## TODO
 
+* Probably remove symbols unless a compelling use-case presents itself.
+  Handle open unions more directly/explicitly.
+
 * Use ranges for sources
 
 * Add source to types
