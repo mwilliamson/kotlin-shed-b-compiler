@@ -3,7 +3,10 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
@@ -783,5 +786,56 @@ class TypeCheckCallTests {
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isListType(isUnionType(members = isSequence(isType(member1), isType(member2)))))
+    }
+
+    @Test
+    fun castTypeIsFunctionFromUnionToOptionalMember() {
+        val discriminatorShapeId = freshShapeId()
+        val member1 = shapeType(name = "Member1", fields = listOf(
+            field(name = "tag", shapeId = discriminatorShapeId, type = IntType)
+        ))
+        val member2 = shapeType(name = "Member2",fields = listOf(
+            field(name = "tag", shapeId = discriminatorShapeId, type = IntType)
+        ))
+        val union = unionType("Union", members = listOf(member1, member2))
+
+        val optionType = parametrizedShapeType(
+            name = "Option",
+            parameters = listOf(covariantTypeParameter("T"))
+        )
+        val optionsModule = ModuleResult.Found(Module.Native(
+            name = listOf(Identifier("Stdlib"), Identifier("Options")),
+            type = moduleType(fields = mapOf(
+                "Option" to MetaType(optionType)
+            ))
+        ))
+
+        val castReference = variableReference("cast")
+        val unionReference = variableReference("Union")
+        val memberReference = variableReference("Member1")
+        val node = call(
+            receiver = castReference,
+            positionalArguments = listOf(
+                unionReference,
+                memberReference
+            )
+        )
+
+        val typeContext = typeContext(
+            modules = mapOf(
+                ImportPath.absolute(listOf("Stdlib", "Options")) to optionsModule
+            ),
+            referenceTypes = mapOf(
+                castReference to CastType,
+                memberReference to MetaType(member1),
+                unionReference to MetaType(union)
+            )
+        )
+        val type = inferCallType(node, typeContext)
+
+        assertThat(type, isEquivalentType(functionType(
+            positionalParameters = listOf(union),
+            returns = applyStatic(optionType, listOf(member1))
+        )))
     }
 }

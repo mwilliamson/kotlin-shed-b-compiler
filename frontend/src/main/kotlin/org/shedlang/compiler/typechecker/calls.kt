@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
@@ -41,6 +42,8 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
         }
     } else if (receiverType is ListConstructorType) {
         return inferListCall(node, context)
+    } else if (receiverType is CastType) {
+        return inferCastCall(node, context)
     }
 
     return null
@@ -287,6 +290,7 @@ private fun checkArgumentTypes(
 }
 
 private fun inferListCall(node: CallNode, context: TypeContext): Type {
+    // TODO: check other arguments
     val typeParameter = covariantTypeParameter("T")
     val constraints = TypeConstraintSolver(parameters = setOf(typeParameter))
     for (argument in node.positionalArguments) {
@@ -294,4 +298,24 @@ private fun inferListCall(node: CallNode, context: TypeContext): Type {
         constraints.coerce(argumentType, typeParameter)
     }
     return applyStatic(ListType, listOf(constraints.boundTypeFor(typeParameter)!!))
+}
+
+private fun inferCastCall(node: CallNode, context: TypeContext): Type {
+    // TODO: check other arguments
+    val fromType = metaTypeToType(inferType(node.positionalArguments[0], context))
+    val toType = metaTypeToType(inferType(node.positionalArguments[1], context))
+    // TODO: check discriminator exists
+
+    // TODO: failed module lookup
+    val optionsModuleResult = context.module(ImportPath.absolute(listOf("Stdlib", "Options")))
+    when (optionsModuleResult) {
+        is ModuleResult.Found -> {
+            val someType = metaTypeToType(optionsModuleResult.module.type.fieldType(Identifier("Option"))!!) as TypeFunction
+            return functionType(
+                positionalParameters = listOf(fromType!!),
+                returns = applyStatic(someType, listOf(toType!!))
+            )
+        }
+        else -> throw NotImplementedError()
+    }
 }
