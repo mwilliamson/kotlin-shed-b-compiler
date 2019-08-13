@@ -527,6 +527,9 @@ fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), v
 
 fun effectParameter(name: String) = EffectParameter(Identifier(name))
 
+object CastType : BasicType {
+    override val shortDescription = "Cast"
+}
 
 private fun appliedTypeShortDescription(name: Identifier, parameters: List<StaticValue>): String {
     val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })

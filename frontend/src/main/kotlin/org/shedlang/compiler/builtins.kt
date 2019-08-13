@@ -51,6 +51,7 @@ object Builtins {
 }
 
 internal val builtins = coreBuiltins + listOf(
+    builtinVariable("cast", CastType),
     builtinVariable("print", parseType("Fun (String) !Io -> Unit")),
     Builtins.intToString,
     builtinVariable("list", ListConstructorType),
