@@ -1,5 +1,0 @@
-export message;
-
-fun message() -> String {
-   "Hello, world!"
-}

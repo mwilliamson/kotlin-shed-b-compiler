@@ -1,0 +1,23 @@
+// stdout:
+//   First.x1 == First.x2: true
+//   First.x1 == Second.x: false
+//   First.x1 == First.y: false
+//   First.y == Second.x: false
+
+import First from .First;
+import Second from .Second;
+
+fun main() !Io -> Unit {
+    print!("First.x1 == First.x2: " + formatBoolean(First.x1 == First.x2) + "\n");
+    print!("First.x1 == Second.x: " + formatBoolean(First.x1 == Second.x) + "\n");
+    print!("First.x1 == First.y: " + formatBoolean(First.x1 == First.y) + "\n");
+    print!("First.y == Second.x: " + formatBoolean(First.y == Second.x) + "\n");
+}
+
+fun formatBoolean(value: Bool) -> String {
+    if (value) {
+        "true"
+    } else {
+        "false"
+    }
+}

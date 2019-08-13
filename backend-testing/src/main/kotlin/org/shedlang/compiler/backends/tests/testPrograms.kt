@@ -46,7 +46,7 @@ sealed class TestProgramSource {
         override val expectedResult: Matcher<ExecutionResult>?
     ): TestProgramSource() {
         override val mainModule: List<Identifier>
-            get() = listOf(Identifier("main"))
+            get() = listOf(Identifier("Main"))
     }
 
     class Directory(
@@ -100,7 +100,7 @@ private fun findTestFiles(): List<TestProgramSource> {
     return exampleDirectory.toFile().list().mapNotNull(fun(name): TestProgramSource? {
         val file = exampleDirectory.resolve(name)
         if (file.toFile().isDirectory) {
-            return TestProgramSource.Directory(file, listOf(Identifier("main")), null)
+            return TestProgramSource.Directory(file, listOf(Identifier("Main")), null)
         } else {
             return TestProgramSource.File(file, null)
         }

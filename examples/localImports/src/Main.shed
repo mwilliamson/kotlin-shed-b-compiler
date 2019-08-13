@@ -1,7 +1,7 @@
 // stdout:
 //   Hello, world!
 
-import M from .messages;
+import M from .Messages;
 
 fun main() !Io -> Unit {
     print!(M.message() + "\n");

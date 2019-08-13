@@ -17,7 +17,7 @@ import java.nio.file.Paths
 fun readStandalone(path: Path): ModuleSet {
     val module = readModule(
         path = path,
-        name = listOf(Identifier("main")),
+        name = listOf(Identifier("Main")),
         getModule = { throw UnsupportedOperationException("Standalone programs cannot import") }
     )
 
