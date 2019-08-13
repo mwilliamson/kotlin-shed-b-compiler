@@ -8,22 +8,22 @@ import Options from Stdlib.Options;
 union U = A | B;
 
 fun main() !Io -> Unit {
-    f(A());
-    f(B());
+    f!(A());
+    f!(B());
 }
 
-fun f(value: U) -> Unit {
+fun f(value: U) !Io -> Unit {
     val a = cast(U, A)(value);
     if (a is Options.Some) {
-        print("is A\n");
+        print!("is A\n");
     } else {
-        print("is not A\n");
+        print!("is not A\n");
     }
 
     val b = cast(U, B)(value);
     if (b is Options.Some) {
-        print("is B\n");
+        print!("is B\n");
     } else {
-        print("is not B\n");
+        print!("is not B\n");
     }
 }
