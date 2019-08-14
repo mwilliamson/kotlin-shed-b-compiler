@@ -131,6 +131,7 @@ interface JavascriptExpressionNode : JavascriptNode {
         fun visit(node: JavascriptVariableReferenceNode): T
         fun visit(node: JavascriptUnaryOperationNode): T
         fun visit(node: JavascriptBinaryOperationNode): T
+        fun visit(node: JavascriptConditionalOperationNode): T
         fun visit(node: JavascriptFunctionCallNode): T
         fun visit(node: JavascriptPropertyAccessNode): T
         fun visit(node: JavascriptArrayLiteralNode): T
@@ -204,6 +205,17 @@ data class JavascriptBinaryOperationNode(
     val operator: JavascriptBinaryOperator,
     val left: JavascriptExpressionNode,
     val right: JavascriptExpressionNode,
+    override val source: Source
+) : JavascriptExpressionNode {
+    override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class JavascriptConditionalOperationNode(
+    val condition: JavascriptExpressionNode,
+    val trueExpression: JavascriptExpressionNode,
+    val falseExpression: JavascriptExpressionNode,
     override val source: Source
 ) : JavascriptExpressionNode {
     override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {

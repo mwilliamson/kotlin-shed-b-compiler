@@ -375,6 +375,17 @@ class SerialiserTests {
     }
 
     @Test
+    fun conditionalOperationSerialisation() {
+        val node = jsConditionalOperation(
+            condition = jsVariableReference("condition"),
+            trueExpression = jsVariableReference("x"),
+            falseExpression = jsVariableReference("y")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("condition ? (x) : (y)"))
+    }
+
+    @Test
     fun functionCallSerialisation() {
         val node = jsFunctionCall(
             function = jsVariableReference("f"),

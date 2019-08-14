@@ -47,6 +47,17 @@ fun jsBinaryOperation(
     source = anySource()
 )
 
+fun jsConditionalOperation(
+    condition: JavascriptExpressionNode,
+    trueExpression: JavascriptExpressionNode,
+    falseExpression: JavascriptExpressionNode
+) = JavascriptConditionalOperationNode(
+    condition = condition,
+    trueExpression = trueExpression,
+    falseExpression = falseExpression,
+    source = anySource()
+)
+
 fun jsIfStatement(
     condition: JavascriptExpressionNode,
     trueBranch: List<JavascriptStatementNode>,

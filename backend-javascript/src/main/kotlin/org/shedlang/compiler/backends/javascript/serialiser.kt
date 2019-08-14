@@ -117,6 +117,13 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
                 serialiseSubExpression(node, node.right, associative = false, indentation = indentation)
         }
 
+        override fun visit(node: JavascriptConditionalOperationNode): String {
+            val condition = serialise(node.condition, indentation = indentation)
+            val trueExpression = serialise(node.trueExpression, indentation = indentation)
+            val falseExpression = serialise(node.falseExpression, indentation = indentation)
+            return "$condition ? ($trueExpression) : ($falseExpression)"
+        }
+
         override fun visit(node: JavascriptFunctionCallNode): String {
             val function = serialiseSubExpression(node, node.function, associative = true, indentation = indentation)
             val arguments = node.arguments
@@ -283,6 +290,10 @@ private fun precedence(node: JavascriptExpressionNode): Int {
                 JavascriptBinaryOperator.SUBTRACT -> 13
                 JavascriptBinaryOperator.MULTIPLY -> 14
             }
+        }
+
+        override fun visit(node: JavascriptConditionalOperationNode): Int {
+            throw UnsupportedOperationException("not implemented")
         }
 
         override fun visit(node: JavascriptFunctionCallNode): Int {
