@@ -790,7 +790,7 @@ class TypeCheckCallTests {
 
     @Test
     fun castTypeIsFunctionFromUnionToOptionalMember() {
-        val discriminatorShapeId = freshShapeId()
+        val discriminatorShapeId = freshTypeId()
         val member1 = shapeType(name = "Member1", fields = listOf(
             field(name = "tag", shapeId = discriminatorShapeId, type = IntType)
         ))

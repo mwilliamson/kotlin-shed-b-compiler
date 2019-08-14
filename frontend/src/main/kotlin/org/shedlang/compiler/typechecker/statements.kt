@@ -43,7 +43,7 @@ private fun generateShapeType(
 ): Type {
     val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
-    val shapeId = freshShapeId()
+    val shapeId = freshTypeId()
 
     // TODO: test laziness
     val fields = generateFields(node, context, shapeId, extraFields)
@@ -246,7 +246,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     // TODO: check members conform to supertype
 
-    val baseShapeId = freshShapeId()
+    val baseShapeId = freshTypeId()
 
     val memberTypes = node.members.map { member ->
         val unionField = FieldDefinition(

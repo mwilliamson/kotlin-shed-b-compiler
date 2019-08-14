@@ -95,14 +95,14 @@ class TypeCheckShapeTests {
         val extendsShape1Reference = staticReference("Extends1")
         val extendsShape2Reference = staticReference("Extends2")
 
-        val shape1Id = freshShapeId()
+        val shape1Id = freshTypeId()
         val shape1 = shapeType(
             fields = listOf(
                 field(name = "b", type = BoolType, shapeId = shape1Id, isConstant = true)
             )
         )
 
-        val shape2Id = freshShapeId()
+        val shape2Id = freshTypeId()
         val shape2 = shapeType(
             fields = listOf(
                 field(name = "c", type = StringType, shapeId = shape2Id, isConstant = false)
@@ -136,10 +136,10 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenFieldsWithSameNameHaveDifferentShapeIdsThenErrorIsThrown() {
-        val shape1Id = freshShapeId()
+        val shape1Id = freshTypeId()
         val firstField = field(name = "a", type = BoolType, shapeId = shape1Id, isConstant = true)
 
-        val shape2Id = freshShapeId()
+        val shape2Id = freshTypeId()
         val secondField = field(name = "a", type = StringType, shapeId = shape2Id, isConstant = false)
 
         assertThat(
@@ -152,7 +152,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenFieldTypesAreNarrowedThenFinalFieldHasNarrowedType() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId)
 
@@ -168,7 +168,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenFieldTypesAreTheSameThenFinalFieldHasSameType() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val firstField = field(name = "a", type = StringType, shapeId = shapeId)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId)
 
@@ -184,7 +184,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenFieldIsDefinedWithConflictingTypesThenErrorIsThrown() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val firstField = field(name = "a", type = BoolType, shapeId = shapeId)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId)
 
@@ -199,7 +199,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun constantFieldsArePreferredAsBottomFields() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId, isConstant = true)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
 
@@ -214,7 +214,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun cannotMergeConstantFields() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
 
@@ -229,7 +229,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun constantFieldTakesPrecedenceWhenMergingFields() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
 
@@ -273,7 +273,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun shapeCannotOverrideFieldWithDifferentShape() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val stringTypeReference = staticReference("String")
 
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
@@ -301,7 +301,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun shapeCanOverrideFieldWithSubtypeUsingSameShape() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val baseReference = staticReference("Base")
         val base = shapeType(shapeId = shapeId)
         val stringTypeReference = staticReference("String")
@@ -331,7 +331,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun shapeCannotOverrideFieldWithSuperType() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val baseReference = staticReference("Base")
         val base = shapeType(shapeId = shapeId)
         val anyTypeReference = staticReference("Any")
@@ -365,7 +365,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun shapeCannotOverrideConstantField() {
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val baseReference = staticReference("Base")
         val base = shapeType(shapeId = shapeId)
         val stringTypeReference = staticReference("String")

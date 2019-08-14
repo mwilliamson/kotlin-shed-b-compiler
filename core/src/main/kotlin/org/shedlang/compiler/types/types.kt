@@ -126,7 +126,7 @@ data class MetaType(val type: Type): Type {
 }
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {
-    val shapeId = freshShapeId()
+    val shapeId = freshTypeId()
     return lazyShapeType(
         shapeId = shapeId,
         name = Identifier("Fields"),
@@ -147,7 +147,7 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
 
 val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
-val shapeFieldTypeFunctionShapeId = freshShapeId()
+val shapeFieldTypeFunctionShapeId = freshTypeId()
 val ShapeFieldTypeFunction = TypeFunction(
     parameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
     type = lazyShapeType(
@@ -203,16 +203,10 @@ class EffectType(val effect: Effect): Type {
         get() = "EffectType(${effect})"
 }
 
-private var nextTypeParameterId = 0
-fun freshTypeParameterId() = nextTypeParameterId++
-
 private var nextEffectParameterId = 0
 fun freshEffectParameterId() = nextEffectParameterId++
 
-private var nextAnonymousTypeId = 0
-fun freshAnonymousTypeId() = nextAnonymousTypeId++
-
-fun freshShapeId() = freshNodeId()
+fun freshTypeId() = freshNodeId()
 
 interface StaticParameter: StaticValue {
     val name: Identifier
@@ -228,7 +222,7 @@ interface StaticParameter: StaticValue {
 data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
-    val typeParameterId: Int = freshTypeParameterId()
+    val typeParameterId: Int = freshTypeId()
 ): StaticParameter, Type {
     override fun fieldType(fieldName: Identifier): Type? = null
 
@@ -415,7 +409,7 @@ fun lazyShapeType(
 data class LazyShapeType(
     override val name: Identifier,
     private val getFields: Lazy<Map<Identifier, Field>>,
-    override val shapeId: Int = freshShapeId(),
+    override val shapeId: Int = freshTypeId(),
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>
 ): ShapeType {
@@ -438,7 +432,7 @@ interface UnionType: Type {
 
 
 data class AnonymousUnionType(
-    override val name: Identifier = Identifier("_Union" + freshAnonymousTypeId()),
+    override val name: Identifier = Identifier("_Union" + freshTypeId()),
     override val members: List<Type>
 ): UnionType {
     override val staticArguments: List<StaticValue>
@@ -492,7 +486,7 @@ object ListConstructorType : Type {
         get() = "ListConstructor"
 }
 val listTypeParameter = covariantTypeParameter("T")
-val listTypeShapeId = freshShapeId()
+val listTypeShapeId = freshTypeId()
 val ListType = TypeFunction(
     parameters = listOf(listTypeParameter),
     type = LazyShapeType(

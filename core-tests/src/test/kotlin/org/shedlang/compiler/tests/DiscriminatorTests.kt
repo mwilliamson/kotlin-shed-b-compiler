@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.types.*
 
 class DiscriminatorTests {
-    private val discriminatorShapeId = freshShapeId()
+    private val discriminatorShapeId = freshTypeId()
 
     @Test
     fun whenTargetTypeIsNotShapeTypeThenDiscriminatorIsNotFound() {
@@ -97,7 +97,7 @@ class DiscriminatorTests {
             field(name = "tag", shapeId = discriminatorShapeId, type = symbolType(listOf(), "`Member1"))
         ))
         val member2 = shapeType(name = "Member2",fields = listOf(
-            field(name = "tag", shapeId = freshShapeId(), type = symbolType(listOf(), "`Member2"))
+            field(name = "tag", shapeId = freshTypeId(), type = symbolType(listOf(), "`Member2"))
         ))
         val union = unionType("Union", members = listOf(member1, member2))
 

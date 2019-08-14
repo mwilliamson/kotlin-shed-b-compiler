@@ -471,7 +471,7 @@ fun shapeType(
     fields: List<Field> = listOf(),
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf(),
-    shapeId: Int = freshShapeId()
+    shapeId: Int = freshTypeId()
 ) = lazyShapeType(
     shapeId = shapeId,
     name = Identifier(name),
@@ -480,7 +480,7 @@ fun shapeType(
     staticArguments = typeArguments
 )
 
-fun field(name: String, type: Type, isConstant: Boolean = false, shapeId: Int = freshShapeId()) = Field(
+fun field(name: String, type: Type, isConstant: Boolean = false, shapeId: Int = freshTypeId()) = Field(
     shapeId,
     Identifier(name),
     type,
@@ -520,7 +520,7 @@ fun symbolType(module: List<String>, name: String): SymbolType {
 
 fun discriminator(symbolType: SymbolType, fieldName: String, targetType: Type = AnyType): Discriminator {
     return Discriminator(
-        field = field(fieldName, symbolType, shapeId = freshShapeId()),
+        field = field(fieldName, symbolType, shapeId = freshTypeId()),
         symbolType = symbolType,
         targetType = targetType
     )

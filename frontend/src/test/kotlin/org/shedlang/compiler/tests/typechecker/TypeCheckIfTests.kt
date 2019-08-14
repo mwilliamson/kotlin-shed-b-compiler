@@ -10,7 +10,7 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.freshShapeId
+import org.shedlang.compiler.types.freshTypeId
 
 class TypeCheckIfTests {
     @Test
@@ -68,7 +68,7 @@ class TypeCheckIfTests {
         val referenceInTrueBranch = variableReference("x")
         val referenceInFalseBranch = variableReference("x")
 
-        val shapeId = freshShapeId()
+        val shapeId = freshTypeId()
         val member1Reference = staticReference("Member1")
         val member1 = shapeType(name = "Member1", fields = listOf(
             field(name = "tag", shapeId = shapeId, type = symbolType(listOf(), "`member1"))

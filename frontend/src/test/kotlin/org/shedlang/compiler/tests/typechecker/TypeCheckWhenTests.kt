@@ -9,10 +9,10 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.freshShapeId
+import org.shedlang.compiler.types.freshTypeId
 
 class TypeCheckWhenTests {
-    private val shapeId = freshShapeId();
+    private val shapeId = freshTypeId();
     private val inputMember1TypeReference = staticReference("Member1")
     private val inputMember2TypeReference = staticReference("Member2")
     private val inputMember1 = shapeType(name = "Member1", fields = listOf(
