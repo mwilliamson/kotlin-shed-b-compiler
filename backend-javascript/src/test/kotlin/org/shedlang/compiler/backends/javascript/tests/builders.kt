@@ -58,6 +58,15 @@ fun jsConditionalOperation(
     source = anySource()
 )
 
+fun jsAssign(
+    target: JavascriptExpressionNode,
+    expression: JavascriptExpressionNode
+) = JavascriptAssignmentNode(
+    target = target,
+    expression = expression,
+    source = anySource()
+)
+
 fun jsIfStatement(
     condition: JavascriptExpressionNode,
     trueBranch: List<JavascriptStatementNode>,

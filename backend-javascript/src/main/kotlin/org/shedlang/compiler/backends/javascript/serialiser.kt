@@ -119,9 +119,9 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
 
         override fun visit(node: JavascriptConditionalOperationNode): String {
             val condition = serialise(node.condition, indentation = indentation)
-            val trueExpression = serialise(node.trueExpression, indentation = indentation)
-            val falseExpression = serialise(node.falseExpression, indentation = indentation)
-            return "$condition ? ($trueExpression) : ($falseExpression)"
+            val trueExpression = serialiseSubExpression(node, node.trueExpression, indentation = indentation, associative = false)
+            val falseExpression = serialiseSubExpression(node, node.falseExpression, indentation = indentation, associative = true)
+            return "$condition ? $trueExpression : $falseExpression"
         }
 
         override fun visit(node: JavascriptFunctionCallNode): String {
@@ -293,7 +293,7 @@ private fun precedence(node: JavascriptExpressionNode): Int {
         }
 
         override fun visit(node: JavascriptConditionalOperationNode): Int {
-            throw UnsupportedOperationException("not implemented")
+            return 4
         }
 
         override fun visit(node: JavascriptFunctionCallNode): Int {

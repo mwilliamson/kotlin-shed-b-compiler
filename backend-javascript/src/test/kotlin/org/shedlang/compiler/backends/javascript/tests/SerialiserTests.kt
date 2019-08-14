@@ -375,14 +375,50 @@ class SerialiserTests {
     }
 
     @Test
-    fun conditionalOperationSerialisation() {
+    fun whenOperandsHaveHigherPrecedenceThenConditionalOperationSerialisesOperandsWithoutBrackets() {
         val node = jsConditionalOperation(
             condition = jsVariableReference("condition"),
             trueExpression = jsVariableReference("x"),
             falseExpression = jsVariableReference("y")
         )
         val output = serialise(node)
-        assertThat(output, equalTo("condition ? (x) : (y)"))
+        assertThat(output, equalTo("condition ? x : y"))
+    }
+
+    @Test
+    fun whenOperandsHaveSamePrecedenceThenConditionalOperationSerialisesFalseExpressionWithoutBrackets() {
+        val node = jsConditionalOperation(
+            condition = jsVariableReference("condition1"),
+            trueExpression = jsConditionalOperation(
+                condition = jsVariableReference("condition2"),
+                trueExpression = jsVariableReference("a"),
+                falseExpression = jsVariableReference("b")
+            ),
+            falseExpression = jsConditionalOperation(
+                condition = jsVariableReference("condition3"),
+                trueExpression = jsVariableReference("c"),
+                falseExpression = jsVariableReference("d")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("condition1 ? (condition2 ? a : b) : condition3 ? c : d"))
+    }
+
+    @Test
+    fun whenOperandsHaveLowerPrecedenceThenConditionalOperationSerialisesOperandsWithBrackets() {
+        val node = jsConditionalOperation(
+            condition = jsVariableReference("condition1"),
+            trueExpression = jsAssign(
+                target = jsVariableReference("target1"),
+                expression = jsVariableReference("source1")
+            ),
+            falseExpression = jsAssign(
+                target = jsVariableReference("target2"),
+                expression = jsVariableReference("source2")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("condition1 ? (target1 = source1) : (target2 = source2)"))
     }
 
     @Test
