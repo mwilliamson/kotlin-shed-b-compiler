@@ -35,16 +35,6 @@ interface Types {
 
     fun discriminatorForIsExpression(node: IsNode): Discriminator
     fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator
-
-    fun findDiscriminator(expression: ExpressionNode, type: StaticExpressionNode): Discriminator {
-        val sourceType = typeOf(expression)
-        val targetType = metaTypeToType(typeOf(type))!!
-        return findDiscriminator(sourceType = sourceType, targetType = targetType)!!
-    }
-}
-
-fun findDiscriminator(node: WhenNode, branch: WhenBranchNode, types: Types): Discriminator {
-    return types.findDiscriminator(node.expression, branch.type)
 }
 
 fun findDiscriminatorForCast(node: CallBaseNode, types: Types): Discriminator {

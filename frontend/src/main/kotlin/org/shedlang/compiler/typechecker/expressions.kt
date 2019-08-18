@@ -215,11 +215,13 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     val expressionType = checkTypeConditionOperand(node.expression, context)
 
     val branchResults = node.branches.map { branch ->
-        val conditionType = evalTypeCondition(
+        val discriminator = evalTypeCondition(
             expressionType = expressionType,
             targetTypeNode = branch.type,
             context = context
-        ).targetType
+        )
+        context.addDiscriminator(branch, discriminator)
+        val conditionType = discriminator.targetType
         val branchContext = context.enterScope()
         val expression = node.expression
         if (expression is VariableReferenceNode) {

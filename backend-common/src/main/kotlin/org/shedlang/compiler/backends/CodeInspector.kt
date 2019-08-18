@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.*
 
@@ -40,7 +39,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 
     override fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator {
-        return findDiscriminator(node, branch, types = module.types)
+        return module.types.discriminatorForWhenBranch(branch)
     }
 
     override fun isCast(node: CallBaseNode): Boolean {

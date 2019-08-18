@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.freshTypeId
@@ -224,6 +225,44 @@ class TypeCheckWhenTests {
         assertThat(
             { typeCheck(expression, typeContext) },
             throws<WhenElseIsNotReachableError>()
+        )
+    }
+
+    @Test
+    fun discriminatorIsStoredForEachBranch() {
+        val variableReference = variableReference("x")
+
+        val branch1 = whenBranch(
+            type = inputMember1TypeReference,
+            body = listOf()
+        )
+        val branch2 = whenBranch(
+            type = inputMember2TypeReference,
+            body = listOf()
+        )
+        val expression = whenExpression(
+            expression = variableReference,
+            branches = listOf(
+                branch1,
+                branch2
+            )
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                variableReference to inputUnion,
+                inputMember1TypeReference to MetaType(inputMember1),
+                inputMember2TypeReference to MetaType(inputMember2)
+            )
+        )
+        inferType(expression, typeContext)
+
+        assertThat(
+            typeContext.toTypes().discriminatorForWhenBranch(branch1),
+            has(Discriminator::targetType, isType(inputMember1))
+        )
+        assertThat(
+            typeContext.toTypes().discriminatorForWhenBranch(branch2),
+            has(Discriminator::targetType, isType(inputMember2))
         )
     }
 }
