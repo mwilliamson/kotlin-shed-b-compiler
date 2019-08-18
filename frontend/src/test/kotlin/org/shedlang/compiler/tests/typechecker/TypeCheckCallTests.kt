@@ -792,10 +792,10 @@ class TypeCheckCallTests {
     fun castTypeIsFunctionFromUnionToOptionalMember() {
         val discriminatorShapeId = freshTypeId()
         val member1 = shapeType(name = "Member1", fields = listOf(
-            field(name = "tag", shapeId = discriminatorShapeId, type = IntType)
+            field(name = "tag", shapeId = discriminatorShapeId, type = symbolType(listOf(), "`Member1"))
         ))
         val member2 = shapeType(name = "Member2",fields = listOf(
-            field(name = "tag", shapeId = discriminatorShapeId, type = IntType)
+            field(name = "tag", shapeId = discriminatorShapeId, type = symbolType(listOf(), "`Member2"))
         ))
         val union = unionType("Union", members = listOf(member1, member2))
 
@@ -837,5 +837,10 @@ class TypeCheckCallTests {
             positionalParameters = listOf(union),
             returns = applyStatic(optionType, listOf(member1))
         )))
+
+        assertThat(
+            typeContext.toTypes().discriminatorForCast(node),
+            has(Discriminator::targetType, isType(member1))
+        )
     }
 }

@@ -1,7 +1,10 @@
 package org.shedlang.compiler
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.metaTypeToType
 
 class ModuleSet(val modules: Collection<Module>)
 
@@ -33,15 +36,9 @@ interface Types {
     fun typeOf(node: StaticExpressionNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
 
+    fun discriminatorForCast(node: CallBaseNode): Discriminator
     fun discriminatorForIsExpression(node: IsNode): Discriminator
     fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator
-}
-
-fun findDiscriminatorForCast(node: CallBaseNode, types: Types): Discriminator {
-    return findDiscriminator(
-        sourceType = metaTypeToType(types.typeOf(node.positionalArguments[0]))!!,
-        targetType = metaTypeToType(types.typeOf(node.positionalArguments[1]))!!
-    )!!
 }
 
 val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf(), mapOf())
@@ -51,6 +48,10 @@ class TypesMap(
     private val expressionTypes: Map<Int, Type>,
     private val variableTypes: Map<Int, Type>
 ) : Types {
+    override fun discriminatorForCast(node: CallBaseNode): Discriminator {
+        return discriminators[node.nodeId]!!
+    }
+
     override fun discriminatorForIsExpression(node: IsNode): Discriminator {
         return discriminators[node.nodeId]!!
     }

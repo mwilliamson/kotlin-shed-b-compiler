@@ -302,9 +302,15 @@ private fun inferListCall(node: CallNode, context: TypeContext): Type {
 
 private fun inferCastCall(node: CallNode, context: TypeContext): Type {
     // TODO: check other arguments
-    val fromType = metaTypeToType(inferType(node.positionalArguments[0], context))
-    val toType = metaTypeToType(inferType(node.positionalArguments[1], context))
+    val fromType = metaTypeToType(inferType(node.positionalArguments[0], context))!!
+    val toType = metaTypeToType(inferType(node.positionalArguments[1], context))!!
     // TODO: check discriminator exists
+
+    val discriminator = findDiscriminator(
+        sourceType = fromType,
+        targetType = toType
+    )!!
+    context.addDiscriminator(node, discriminator)
 
     // TODO: failed module lookup
     val optionsModuleResult = context.module(ImportPath.absolute(listOf("Stdlib", "Options")))
@@ -312,8 +318,8 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
         is ModuleResult.Found -> {
             val someType = metaTypeToType(optionsModuleResult.module.type.fieldType(Identifier("Option"))!!) as TypeFunction
             return functionType(
-                positionalParameters = listOf(fromType!!),
-                returns = applyStatic(someType, listOf(toType!!))
+                positionalParameters = listOf(fromType),
+                returns = applyStatic(someType, listOf(toType))
             )
         }
         else -> throw NotImplementedError()

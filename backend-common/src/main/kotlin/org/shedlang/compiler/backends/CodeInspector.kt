@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.*
 
 interface CodeInspector {
@@ -31,7 +30,7 @@ sealed class FieldValue {
 
 class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
-        return findDiscriminatorForCast(node, types = module.types)
+        return module.types.discriminatorForCast(node)
     }
 
     override fun discriminatorForIsExpression(node: IsNode): Discriminator {

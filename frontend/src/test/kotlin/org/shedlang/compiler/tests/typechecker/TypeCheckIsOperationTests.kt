@@ -1,7 +1,9 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.*
+import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.CouldNotFindDiscriminator
@@ -89,7 +91,7 @@ class TypeCheckIsOperationTests {
 
         assertThat(
             typeContext.toTypes().discriminatorForIsExpression(expression),
-            has(Discriminator::targetType, cast(equalTo(memberType)))
+            has(Discriminator::targetType, isType(memberType))
         )
     }
 }
