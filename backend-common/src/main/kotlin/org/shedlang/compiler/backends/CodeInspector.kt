@@ -84,7 +84,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 }
 
-class FakeCodeInspector(
+class SimpleCodeInspector(
     private val discriminatorsForCasts: Map<CallBaseNode, Discriminator> = mapOf(),
     private val discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
     private val discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),

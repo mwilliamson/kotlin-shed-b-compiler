@@ -8,7 +8,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.FakeCodeInspector
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
@@ -732,7 +732,7 @@ class CodeGeneratorTests {
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),
-            inspector = FakeCodeInspector(
+            inspector = SimpleCodeInspector(
                 discriminatorsForIsExpressions = discriminatorsForIsExpressions,
                 discriminatorsForWhenBranches = discriminatorsForWhenBranches,
                 expressionTypes = expressionTypes,

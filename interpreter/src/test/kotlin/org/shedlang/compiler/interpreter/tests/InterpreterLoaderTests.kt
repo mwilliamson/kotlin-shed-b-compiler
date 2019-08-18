@@ -8,7 +8,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.backends.FakeCodeInspector
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
@@ -26,7 +26,7 @@ class LoadShapeTests {
         )
         val context = LoaderContext(
             moduleName = listOf(),
-            inspector = FakeCodeInspector(
+            inspector = SimpleCodeInspector(
                 shapeFields = mapOf(
                     statement to listOf(
                         fieldInspector(name = "x", value = FieldValue.Expression(literalInt(1))),
@@ -60,7 +60,7 @@ class LoadShapeTests {
         )
         val context = LoaderContext(
             moduleName = listOf(),
-            inspector = FakeCodeInspector(
+            inspector = SimpleCodeInspector(
                 shapeFields = mapOf(
                     statement to listOf(
                         fieldInspector(name = "x", value = null)
@@ -84,7 +84,7 @@ class LoadShapeTests {
         val symbol = Symbol(module = listOf(Identifier("A"), Identifier("B")), name = "`C")
         val context = LoaderContext(
             moduleName = listOf(),
-            inspector = FakeCodeInspector(
+            inspector = SimpleCodeInspector(
                 shapeFields = mapOf(
                     statement to listOf(
                         fieldInspector(name = "x", value = FieldValue.Symbol(symbol))
@@ -114,7 +114,7 @@ class LoadIsTests {
         val node = isOperation(variableReference, shapeReference)
         val context = LoaderContext(
             moduleName = listOf(),
-            inspector = FakeCodeInspector(
+            inspector = SimpleCodeInspector(
                 discriminatorsForIsExpressions = mapOf(
                     node to discriminator(symbolType(listOf("M"), "`A"), "tag")
                 )
@@ -154,6 +154,6 @@ class LoadTupleTests {
 private fun createContext(): LoaderContext {
     return LoaderContext(
         moduleName = listOf(),
-        inspector = FakeCodeInspector()
+        inspector = SimpleCodeInspector()
     )
 }

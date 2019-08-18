@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.backends.FakeCodeInspector
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
 
@@ -64,7 +64,7 @@ class InterpreterTests {
         context: InterpreterContext = createContext()
     ): FullEvaluationResult {
         return fullyEvaluate(
-            loadExpression(expression, LoaderContext(moduleName = listOf(), inspector = FakeCodeInspector())),
+            loadExpression(expression, LoaderContext(moduleName = listOf(), inspector = SimpleCodeInspector())),
             context
         )
     }
