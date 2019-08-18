@@ -8,16 +8,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.FakeCodeInspector
 import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
-import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
 class CodeGeneratorTests {
@@ -1331,11 +1329,14 @@ class CodeGeneratorTests {
 
     private fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
         return generateCode(
-            moduleName = listOf(),
-            moduleSet = ModuleSet(listOf()),
-            node = node,
-            references = references,
-            types = EMPTY_TYPES
+            module = Module.Shed(
+                name = listOf(),
+                type = ModuleType(mapOf()),
+                types = EMPTY_TYPES,
+                references = references,
+                node = node
+            ),
+            moduleSet = ModuleSet(listOf())
         )
     }
 
@@ -1361,6 +1362,7 @@ class CodeGeneratorTests {
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
         types: Types = EMPTY_TYPES
     ) = CodeGenerationContext(
+        inspector = FakeCodeInspector(),
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
         references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value })),

@@ -85,11 +85,8 @@ private fun addInitFiles(base: Path, pythonPackage: Path) {
 
 private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModule {
     val generateCode = generateCode(
-        moduleName = module.name,
-        moduleSet = moduleSet,
-        node = module.node,
-        references = module.references,
-        types = module.types
+        module = module,
+        moduleSet = moduleSet
     )
     val builtins = """
         from shed.builtins import (

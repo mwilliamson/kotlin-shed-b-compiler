@@ -2,6 +2,8 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
@@ -11,14 +13,19 @@ import org.shedlang.compiler.types.SymbolType
 // TODO: check imports aren't renamed
 
 internal fun generateCode(
-    node: ModuleNode,
-    moduleSet: ModuleSet,
-    moduleName: List<Identifier>,
-    references: ResolvedReferences,
-    types: Types
+    module: Module.Shed,
+    moduleSet: ModuleSet
 ): PythonModuleNode {
-    val isPackage = isPackage(moduleSet, moduleName)
-    return generateCode(node, CodeGenerationContext(moduleName, isPackage, references, types, hasCast = HasCast(false)))
+    val isPackage = isPackage(moduleSet, module.name)
+    val context = CodeGenerationContext(
+        inspector = ModuleCodeInspector(module),
+        moduleName = module.name,
+        isPackage = isPackage,
+        references = module.references,
+        types = module.types,
+        hasCast = HasCast(false)
+    )
+    return generateCode(module.node, context)
 }
 
 internal fun isPackage(moduleSet: ModuleSet, moduleName: List<Identifier>): Boolean {
@@ -30,6 +37,7 @@ internal fun isPackage(moduleSet: ModuleSet, moduleName: List<Identifier>): Bool
 internal data class HasCast(var value: Boolean)
 
 internal class CodeGenerationContext(
+    val inspector: CodeInspector,
     val moduleName: List<Identifier>,
     val isPackage: Boolean,
     val references: ResolvedReferences,
@@ -40,6 +48,7 @@ internal class CodeGenerationContext(
 ) {
     fun enterScope(): CodeGenerationContext {
         return CodeGenerationContext(
+            inspector = inspector,
             moduleName = moduleName,
             isPackage = isPackage,
             references = references,
@@ -786,7 +795,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 positionalArgumentsCode,
                 namedArgumentsCode
             ) { receiver, positionalArguments, namedArguments ->
-                if (isCast(node, references = context.references)) {
+                if (context.inspector.isCast(node)) {
                     context.hasCast.value = true
 
                     val parameterName = "value"
