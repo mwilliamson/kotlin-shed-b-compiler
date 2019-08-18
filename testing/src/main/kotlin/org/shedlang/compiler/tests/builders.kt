@@ -1,7 +1,5 @@
 package org.shedlang.compiler.tests
 
-import org.shedlang.compiler.Types
-import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.backends.FieldValue
@@ -531,21 +529,4 @@ fun discriminator(symbolType: SymbolType, fieldName: String, targetType: Type = 
         symbolType = symbolType,
         targetType = targetType
     )
-}
-
-fun typesMap(
-    expressionTypes: Map<Node, Type> = mapOf(),
-    variableTypes: Map<VariableBindingNode, Type> = mapOf(),
-    discriminators: Map<Pair<ExpressionNode, StaticExpressionNode>, Discriminator> = mapOf()
-): Types {
-    val types = TypesMap(
-        expressionTypes = expressionTypes.mapKeys { (key, _) -> key.nodeId },
-        variableTypes = variableTypes.mapKeys { (key, _) -> key.nodeId }
-    )
-
-    return object: Types by types {
-        override fun findDiscriminator(expression: ExpressionNode, type: StaticExpressionNode): Discriminator {
-            return discriminators[Pair(expression, type)]!!
-        }
-    }
 }
