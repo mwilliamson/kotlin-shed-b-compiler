@@ -108,6 +108,17 @@ fun pythonBinaryOperation(
     source = anySource()
 )
 
+fun pythonConditionalOperation(
+    condition: PythonExpressionNode,
+    trueExpression: PythonExpressionNode,
+    falseExpression: PythonExpressionNode
+) = PythonConditionalOperationNode(
+    condition = condition,
+    trueExpression = trueExpression,
+    falseExpression = falseExpression,
+    source = anySource()
+)
+
 fun pythonFunctionCall(
     function: PythonExpressionNode,
     arguments: List<PythonExpressionNode>,

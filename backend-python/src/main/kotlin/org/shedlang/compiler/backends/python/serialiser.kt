@@ -135,6 +135,14 @@ internal fun serialise(node: PythonExpressionNode): String {
                 serialiseSubExpression(node, node.right, associative = false)
         }
 
+        override fun visit(node: PythonConditionalOperationNode): String {
+            val condition = serialise(node.condition)
+            val trueExpression = serialiseSubExpression(node, node.trueExpression, associative = false)
+            val falseExpression = serialiseSubExpression(node, node.falseExpression, associative = false)
+
+            return "$trueExpression if $condition else $falseExpression"
+        }
+
         override fun visit(node: PythonFunctionCallNode): String {
             val receiver = serialiseSubExpression(node, node.function, associative = true)
             val positionals = node.arguments.map(::serialise)
@@ -244,6 +252,10 @@ private fun precedence(node: PythonExpressionNode): Int {
                 PythonBinaryOperator.SUBTRACT -> 11
                 PythonBinaryOperator.MULTIPLY -> 12
             }
+        }
+
+        override fun visit(node: PythonConditionalOperationNode): Int {
+            return 2
         }
 
         override fun visit(node: PythonFunctionCallNode): Int {

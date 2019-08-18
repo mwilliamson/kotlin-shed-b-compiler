@@ -78,6 +78,10 @@ private fun expressionChildrenEvaluationOrder(expression: PythonExpressionNode):
             return listOf(node.left, node.right)
         }
 
+        override fun visit(node: PythonConditionalOperationNode): List<PythonNode> {
+            return listOf(node.condition, node.trueExpression, node.falseExpression)
+        }
+
         override fun visit(node: PythonFunctionCallNode): List<PythonNode> {
             return listOf(node.function) + node.arguments + node.keywordArguments.map { (_, argument) -> argument }
         }

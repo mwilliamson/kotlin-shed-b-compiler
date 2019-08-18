@@ -482,6 +482,36 @@ class SerialiserTests {
     }
 
     @Test
+    fun conditionalOperationSerialisation() {
+        val node = pythonConditionalOperation(
+            condition = pythonVariableReference("condition"),
+            trueExpression = pythonVariableReference("if_true"),
+            falseExpression = pythonVariableReference("if_false")
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("if_true if condition else if_false"))
+    }
+
+    @Test
+    fun nestedConditionalOperationsAreParenthesised() {
+        val node = pythonConditionalOperation(
+            condition = pythonVariableReference("condition_1"),
+            trueExpression = pythonConditionalOperation(
+                condition = pythonVariableReference("condition_2"),
+                trueExpression = pythonVariableReference("target_1"),
+                falseExpression = pythonVariableReference("target_2")
+            ),
+            falseExpression = pythonConditionalOperation(
+                condition = pythonVariableReference("condition_3"),
+                trueExpression = pythonVariableReference("target_3"),
+                falseExpression = pythonVariableReference("target_4")
+            )
+        )
+        val output = serialise(node)
+        assertThat(output, equalTo("(target_1 if condition_2 else target_2) if condition_1 else (target_3 if condition_3 else target_4)"))
+    }
+
+    @Test
     fun functionCallSerialisation() {
         val node = pythonFunctionCall(
             function = pythonVariableReference("f"),
