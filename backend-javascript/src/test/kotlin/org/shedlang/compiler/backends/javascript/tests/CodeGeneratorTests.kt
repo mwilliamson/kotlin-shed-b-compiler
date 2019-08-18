@@ -539,9 +539,14 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val shed = call(variableReference("f"), listOf(literalInt(42)))
+        val receiver = variableReference("f")
+        val shed = call(receiver, listOf(literalInt(42)))
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context(
+            types = typesMap(
+                expressionTypes = mapOf(receiver to AnyType)
+            )
+        ))
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -551,12 +556,17 @@ class CodeGeneratorTests {
 
     @Test
     fun namedArgumentsArePassedAsObject() {
+        val receiver = variableReference("f")
         val shed = call(
-            variableReference("f"),
+            receiver,
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context(
+            types = typesMap(
+                expressionTypes = mapOf(receiver to AnyType)
+            )
+        ))
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -566,13 +576,18 @@ class CodeGeneratorTests {
 
     @Test
     fun whenThereAreBothPositionalAndNamedArgumentsThenNamedArgumentsObjectIsLastArgument() {
+        val receiver = variableReference("f")
         val shed = call(
-            variableReference("f"),
+            receiver,
             positionalArguments = listOf(literalInt(1)),
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context(
+            types = typesMap(
+                expressionTypes = mapOf(receiver to AnyType)
+            )
+        ))
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),

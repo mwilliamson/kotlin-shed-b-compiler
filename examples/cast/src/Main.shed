@@ -1,7 +1,8 @@
 // stdout:
-//   1
-//   2
-//   3
+//   is A
+//   is not B
+//   is not A
+//   is B
 
 import Options from Stdlib.Options;
 

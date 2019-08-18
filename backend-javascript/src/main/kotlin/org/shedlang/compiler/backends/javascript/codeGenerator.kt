@@ -14,13 +14,16 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
     val body = node.body.flatMap { statement -> generateCode(statement, context)  }
     val exports = node.exports.map { export -> generateExport(export, NodeSource(module.node)) }
+
+    val castImports = generateCastImports(module, context)
+
     return JavascriptModuleNode(
-        imports + body + exports,
+        imports + castImports + body + exports,
         source = NodeSource(node)
     )
 }
 
-internal class CodeGenerationContext(val moduleName: List<Identifier>, private val types: Types) {
+internal class CodeGenerationContext(val moduleName: List<Identifier>, val types: Types, var hasCast: Boolean = false) {
     fun typeOfExpression(node: ExpressionNode): Type {
         return types.typeOf(node)
     }
@@ -32,21 +35,52 @@ internal class CodeGenerationContext(val moduleName: List<Identifier>, private v
 
 private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
     val source = NodeSource(import)
+    val expression = generateImportExpression(importPath = import.path, module = module, source = source)
 
-    val importBase = when (import.path.base) {
+    return JavascriptConstNode(
+        target = generateCodeForTarget(import.target),
+        expression = expression,
+        source = source
+    )
+}
+
+private fun generateCastImports(module: Module.Shed, context: CodeGenerationContext): List<JavascriptStatementNode> {
+    val source = NodeSource(module.node)
+    return if (context.hasCast) {
+        val listOf = listOf(
+            JavascriptConstNode(
+                target = JavascriptObjectDestructuringNode(
+                    properties = listOf(
+                        "none" to JavascriptVariableReferenceNode("\$none", source = source),
+                        "some" to JavascriptVariableReferenceNode("\$some", source = source)
+                    ),
+                    source = source
+                ),
+                expression = generateImportExpression(
+                    importPath = ImportPath.absolute(listOf("Stdlib", "Options")),
+                    module = module,
+                    source = source
+                ),
+                source = source
+            )
+        )
+        listOf
+    } else {
+        listOf()
+    }
+}
+
+private fun generateImportExpression(importPath: ImportPath, module: Module.Shed, source: NodeSource): JavascriptFunctionCallNode {
+    val importBase = when (importPath.base) {
         ImportPathBase.Relative -> "./"
         ImportPathBase.Absolute -> "./" + "../".repeat(module.name.size - 1)
     }
 
-    val importPath = importBase + import.path.parts.map(Identifier::value).joinToString("/")
+    val javascriptImportPath = importBase + importPath.parts.map(Identifier::value).joinToString("/")
 
-    return JavascriptConstNode(
-        target = generateCodeForTarget(import.target),
-        expression = JavascriptFunctionCallNode(
-            JavascriptVariableReferenceNode("require", source = source),
-            listOf(JavascriptStringLiteralNode(importPath, source = source)),
-            source = source
-        ),
+    return JavascriptFunctionCallNode(
+        JavascriptVariableReferenceNode("require", source = source),
+        listOf(JavascriptStringLiteralNode(javascriptImportPath, source = source)),
         source = source
     )
 }
@@ -347,11 +381,54 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 ))
             }
             val arguments = positionalArguments + namedArguments
-            return JavascriptFunctionCallNode(
-                generateCode(node.receiver, context),
-                arguments,
-                source = NodeSource(node)
-            )
+
+            if (context.typeOfExpression(node.receiver) == CastType) {
+                context.hasCast = true
+                val parameterName = "value"
+                val parameterReference = JavascriptVariableReferenceNode(
+                    name = parameterName,
+                    source = NodeSource(node)
+                )
+                val typeCondition = generateTypeCondition(
+                    expression = parameterReference,
+                    discriminator = findDiscriminator(
+                        sourceType = metaTypeToType(context.typeOfExpression(node.positionalArguments[0]))!!,
+                        targetType = metaTypeToType(context.typeOfExpression(node.positionalArguments[1]))!!
+                    )!!,
+                    source = NodeSource(node)
+                )
+                return JavascriptFunctionExpressionNode(
+                    parameters = listOf(parameterName),
+                    body = listOf(
+                        JavascriptReturnNode(
+                            expression = JavascriptConditionalOperationNode(
+                                condition = typeCondition,
+                                trueExpression = JavascriptFunctionCallNode(
+                                    function = JavascriptVariableReferenceNode(
+                                        name = "\$some",
+                                        source = NodeSource(node)
+                                    ),
+                                    arguments = listOf(parameterReference),
+                                    source = NodeSource(node)
+                                ),
+                                falseExpression = JavascriptVariableReferenceNode(
+                                    name = "\$none",
+                                    source = NodeSource(node)
+                                ),
+                                source = NodeSource(node)
+                            ),
+                            source = NodeSource(node)
+                        )
+                    ),
+                    source = NodeSource(node)
+                )
+            } else {
+                return JavascriptFunctionCallNode(
+                    generateCode(node.receiver, context),
+                    arguments,
+                    source = NodeSource(node)
+                )
+            }
         }
 
         override fun visit(node: PartialCallNode): JavascriptExpressionNode {
