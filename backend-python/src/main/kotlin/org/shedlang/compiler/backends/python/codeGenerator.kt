@@ -90,7 +90,7 @@ internal class CodeGenerationContext(
     }
 
     private fun generateName(originalName: String): String {
-        var name = uniquifyName(originalName)
+        val name = uniquifyName(originalName)
         namesInScope.add(name)
         return name
     }
