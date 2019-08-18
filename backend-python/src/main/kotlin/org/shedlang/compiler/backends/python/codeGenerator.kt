@@ -21,7 +21,6 @@ internal fun generateCode(
         inspector = ModuleCodeInspector(module),
         moduleName = module.name,
         isPackage = isPackage,
-        references = module.references,
         types = module.types,
         hasCast = HasCast(false)
     )
@@ -40,7 +39,6 @@ internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: List<Identifier>,
     val isPackage: Boolean,
-    val references: ResolvedReferences,
     val types: Types,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf(),
@@ -51,7 +49,6 @@ internal class CodeGenerationContext(
             inspector = inspector,
             moduleName = moduleName,
             isPackage = isPackage,
-            references = references,
             types = types,
             nodeNames = nodeNames,
             namesInScope = namesInScope.toMutableSet(),
@@ -74,7 +71,7 @@ internal class CodeGenerationContext(
     }
 
     fun name(node: ReferenceNode): String {
-        return name(references[node])
+        return name(inspector.resolve(node))
     }
 
     private fun name(nodeId: Int, name: Identifier): String {
@@ -369,7 +366,7 @@ private fun findTailRecursionArguments(
 ): List<TailRecursionArgument>? {
     if (expression is CallNode) {
         val receiver = expression.receiver
-        if (receiver is VariableReferenceNode && context.references[receiver].nodeId == function.nodeId) {
+        if (receiver is VariableReferenceNode && context.inspector.resolve(receiver).nodeId == function.nodeId) {
             return findTailRecursionArguments(function, expression, context)
         } else {
             return null
@@ -396,7 +393,7 @@ private fun findTailRecursionArguments(
         )
     }).filterNot { argument ->
         val expression = argument.expression
-        expression is VariableReferenceNode && context.references[expression].nodeId == argument.parameter.nodeId
+        expression is VariableReferenceNode && context.inspector.resolve(expression).nodeId == argument.parameter.nodeId
     }
 }
 
@@ -709,7 +706,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: VariableReferenceNode): GeneratedExpression {
-            val referent = context.references[node]
+            val referent = context.inspector.resolve(node)
             val name = if (isBuiltin(referent, "intToString")) {
                 "str"
             } else {

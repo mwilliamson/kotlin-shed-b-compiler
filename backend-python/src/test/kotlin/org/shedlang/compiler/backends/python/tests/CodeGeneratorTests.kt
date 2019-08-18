@@ -1362,10 +1362,9 @@ class CodeGeneratorTests {
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
         types: Types = EMPTY_TYPES
     ) = CodeGenerationContext(
-        inspector = FakeCodeInspector(),
+        inspector = FakeCodeInspector(references = references),
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
-        references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value })),
         types = types,
         hasCast = HasCast(false)
     )
