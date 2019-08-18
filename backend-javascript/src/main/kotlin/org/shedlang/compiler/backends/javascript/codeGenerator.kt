@@ -6,8 +6,6 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.backends.javascript.ast.*
-import org.shedlang.compiler.findDiscriminator
-import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.Symbol
@@ -36,11 +34,9 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: List<Identifier>,
-    val types: Types,
+    private val types: Types,
     var hasCast: Boolean = false
 ) {
-    fun findDiscriminator(node: IsNode) = findDiscriminator(node, types = types)
-    fun findDiscriminator(node: WhenNode, branch: WhenBranchNode) = findDiscriminator(node, branch, types = types)
     fun shapeFields(node: ShapeBaseNode) = types.shapeFields(node)
 }
 
@@ -369,7 +365,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: IsNode): JavascriptExpressionNode {
-            val discriminator = context.findDiscriminator(node)
+            val discriminator = context.inspector.discriminatorForIsExpression(node)
             return generateTypeCondition(
                 expression = generateCode(node.expression, context),
                 discriminator = discriminator,
@@ -402,7 +398,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
                 val typeCondition = generateTypeCondition(
                     expression = parameterReference,
-                    discriminator = findDiscriminatorForCast(node, types = context.types),
+                    discriminator = context.inspector.discriminatorForCast(node),
                     source = NodeSource(node)
                 )
                 return JavascriptFunctionExpressionNode(
@@ -573,7 +569,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             val branches = node.branches.map { branch ->
                 val expression = NodeSource(branch)
-                val discriminator = context.findDiscriminator(node, branch)
+                val discriminator = context.inspector.discriminatorForWhenBranch(node, branch)
                 val condition = generateTypeCondition(
                     JavascriptVariableReferenceNode(
                         name = temporaryName,

@@ -284,29 +284,28 @@ class CodeGeneratorTests {
 
     @Test
     fun whenExpressionGeneratesImmediatelyEvaluatedIfStatement() {
-        val reference = variableReference("x")
-        val typeReference = staticReference("T")
+        val whenBranch = whenBranch(
+            staticReference("T"),
+            listOf(
+                expressionStatement(literalInt(42), isReturn = true)
+            )
+        )
         val shed = whenExpression(
-            reference,
+            variableReference("x"),
             branches = listOf(
-                whenBranch(
-                    typeReference,
-                    listOf(
-                        expressionStatement(literalInt(42), isReturn = true)
-                    )
-                )
+                whenBranch
             ),
             elseBranch = listOf(
                 expressionStatement(literalInt(47), isReturn = true)
             )
         )
 
-        val types = typesMap(
-            discriminators = mapOf(
-                Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
+        val context = context(
+            discriminatorsForWhenBranches = mapOf(
+                Pair(shed, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
             )
         )
-        val node = generateCode(shed, context(types = types))
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptImmediatelyInvokedFunction(
             body = isSequence(
@@ -519,18 +518,17 @@ class CodeGeneratorTests {
 
     @Test
     fun isOperationGeneratesTypeCheck() {
-        val reference = variableReference("x")
-        val typeReference = staticReference("X")
-
         val shed = isOperation(
-            expression = reference,
-            type = typeReference
+            expression = variableReference("x"),
+            type = staticReference("X")
         )
 
-        val types = typesMap(discriminators = mapOf(
-            Pair(reference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
-        ))
-        val node = generateCode(shed, context(types = types))
+        val context = context(
+            discriminatorsForIsExpressions = mapOf(
+                shed to discriminator(symbolType(listOf("M"), "`A"), "tag")
+            )
+        )
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptTypeCondition(
             isJavascriptVariableReference("x"),
@@ -731,12 +729,18 @@ class CodeGeneratorTests {
 
     private fun context(
         moduleName: List<String> = listOf(),
+        discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
+        discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         expressionTypes: Map<ExpressionNode, Type> = mapOf(),
         types: Types = typesMap()
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),
-            inspector = FakeCodeInspector(expressionTypes = expressionTypes),
+            inspector = FakeCodeInspector(
+                discriminatorsForIsExpressions = discriminatorsForIsExpressions,
+                discriminatorsForWhenBranches = discriminatorsForWhenBranches,
+                expressionTypes = expressionTypes
+            ),
             types = types
         )
     }
