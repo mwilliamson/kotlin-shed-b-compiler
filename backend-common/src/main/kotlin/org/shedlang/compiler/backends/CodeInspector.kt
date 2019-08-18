@@ -4,9 +4,7 @@ import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.findDiscriminatorForCast
-import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.SymbolType
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.*
 
 interface CodeInspector {
     fun discriminatorForCast(node: CallBaseNode): Discriminator
@@ -54,7 +52,8 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 
     override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
-        return module.types.shapeFields(node).values.map { field ->
+        val shapeType = rawType(module.types.declaredType(node)) as ShapeType
+        return shapeType.fields.values.map { field ->
             val fieldNode = node.fields
                 .find { fieldNode -> fieldNode.name == field.name }
             val fieldSource = NodeSource(fieldNode ?: node)

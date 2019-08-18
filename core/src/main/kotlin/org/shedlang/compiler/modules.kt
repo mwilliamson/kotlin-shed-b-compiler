@@ -32,9 +32,6 @@ interface Types {
     fun typeOf(node: ExpressionNode): Type
     fun typeOf(node: StaticExpressionNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
-    fun shapeFields(node: ShapeBaseNode): Map<Identifier, Field> {
-        return (rawType(declaredType(node)) as ShapeType).fields
-    }
 
     fun discriminatorForIsExpression(node: IsNode): Discriminator
     fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator
