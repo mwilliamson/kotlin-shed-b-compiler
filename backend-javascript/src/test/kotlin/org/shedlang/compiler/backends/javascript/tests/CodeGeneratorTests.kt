@@ -590,10 +590,8 @@ class CodeGeneratorTests {
         val shed = partialCall(reference, listOf(literalInt(42), literalBool(false)))
 
         val node = generateCode(shed, context(
-            types = typesMap(
-                expressionTypes = mapOf(
-                    reference to functionType(positionalParameters = listOf(IntType, BoolType, IntType, IntType))
-                )
+            expressionTypes = mapOf(
+                reference to functionType(positionalParameters = listOf(IntType, BoolType, IntType, IntType))
             )
         ))
 
@@ -634,11 +632,11 @@ class CodeGeneratorTests {
         val reference = variableReference("f")
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
-        val node = generateCode(shed, context(types = typesMap(
+        val node = generateCode(shed, context(
             expressionTypes = mapOf(
                 reference to functionType(namedParameters = mapOf(Identifier("x") to IntType))
             )
-        )))
+        ))
 
         assertThat(node, isJavascriptFunctionCall(
             function = isJavascriptFunctionExpression(
@@ -676,10 +674,8 @@ class CodeGeneratorTests {
         val shed = partialCall(reference, namedArguments = listOf(callNamedArgument("x", literalInt(42))))
 
         val node = generateCode(shed, context(
-            types = typesMap(
-                expressionTypes = mapOf(
-                    reference to functionType(namedParameters = mapOf(Identifier("x") to IntType, Identifier("y") to IntType))
-                )
+            expressionTypes = mapOf(
+                reference to functionType(namedParameters = mapOf(Identifier("x") to IntType, Identifier("y") to IntType))
             )
         ))
 
@@ -735,11 +731,12 @@ class CodeGeneratorTests {
 
     private fun context(
         moduleName: List<String> = listOf(),
+        expressionTypes: Map<ExpressionNode, Type> = mapOf(),
         types: Types = typesMap()
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),
-            inspector = FakeCodeInspector(),
+            inspector = FakeCodeInspector(expressionTypes = expressionTypes),
             types = types
         )
     }

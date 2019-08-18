@@ -8,7 +8,10 @@ import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.findDiscriminatorForCast
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.FunctionType
+import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.SymbolType
 
 internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val context = CodeGenerationContext(
@@ -36,10 +39,6 @@ internal class CodeGenerationContext(
     val types: Types,
     var hasCast: Boolean = false
 ) {
-    fun typeOfExpression(node: ExpressionNode): Type {
-        return types.typeOf(node)
-    }
-
     fun findDiscriminator(node: IsNode) = findDiscriminator(node, types = types)
     fun findDiscriminator(node: WhenNode, branch: WhenBranchNode) = findDiscriminator(node, branch, types = types)
     fun shapeFields(node: ShapeBaseNode) = types.shapeFields(node)
@@ -449,7 +448,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 .sortedBy { argument -> argument.name }
                 .map { argument -> argument.name to generateCode(argument.expression, context) }
 
-            val functionType = context.typeOfExpression(node.receiver) as FunctionType
+            val functionType = context.inspector.typeOfExpression(node.receiver) as FunctionType
 
             val partialArguments = listOf(receiver) +
                 positionalArguments +
