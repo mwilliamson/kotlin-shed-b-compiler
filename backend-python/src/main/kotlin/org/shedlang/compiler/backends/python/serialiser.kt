@@ -267,7 +267,7 @@ private fun precedence(node: PythonExpressionNode): Int {
         }
 
         override fun visit(node: PythonLambdaNode): Int {
-            throw UnsupportedOperationException()
+            return 1
         }
     })
 }

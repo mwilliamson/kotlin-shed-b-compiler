@@ -1364,7 +1364,8 @@ class CodeGeneratorTests {
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
         references = ResolvedReferencesMap(references.entries.associate({ entry -> entry.key.nodeId to entry.value })),
-        types = types
+        types = types,
+        hasCast = HasCast(false)
     )
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)

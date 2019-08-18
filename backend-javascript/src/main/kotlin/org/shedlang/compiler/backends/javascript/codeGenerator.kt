@@ -5,6 +5,7 @@ import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.findDiscriminator
+import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.*
 
 internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
@@ -391,10 +392,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
                 val typeCondition = generateTypeCondition(
                     expression = parameterReference,
-                    discriminator = findDiscriminator(
-                        sourceType = metaTypeToType(context.typeOfExpression(node.positionalArguments[0]))!!,
-                        targetType = metaTypeToType(context.typeOfExpression(node.positionalArguments[1]))!!
-                    )!!,
+                    discriminator = findDiscriminatorForCast(node, types = context.types),
                     source = NodeSource(node)
                 )
                 return JavascriptFunctionExpressionNode(

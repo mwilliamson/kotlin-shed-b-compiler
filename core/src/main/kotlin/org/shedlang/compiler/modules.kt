@@ -51,6 +51,13 @@ fun findDiscriminator(node: WhenNode, branch: WhenBranchNode, types: Types): Dis
     return types.findDiscriminator(node.expression, branch.type)
 }
 
+fun findDiscriminatorForCast(node: CallBaseNode, types: Types): Discriminator {
+    return findDiscriminator(
+        sourceType = metaTypeToType(types.typeOf(node.positionalArguments[0]))!!,
+        targetType = metaTypeToType(types.typeOf(node.positionalArguments[1]))!!
+    )!!
+}
+
 val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf())
 
 class TypesMap(

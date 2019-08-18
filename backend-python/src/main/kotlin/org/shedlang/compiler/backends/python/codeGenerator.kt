@@ -18,7 +18,7 @@ internal fun generateCode(
     types: Types
 ): PythonModuleNode {
     val isPackage = isPackage(moduleSet, moduleName)
-    return generateCode(node, CodeGenerationContext(moduleName, isPackage, references, types))
+    return generateCode(node, CodeGenerationContext(moduleName, isPackage, references, types, hasCast = HasCast(false)))
 }
 
 internal fun isPackage(moduleSet: ModuleSet, moduleName: List<Identifier>): Boolean {
@@ -27,13 +27,16 @@ internal fun isPackage(moduleSet: ModuleSet, moduleName: List<Identifier>): Bool
     }
 }
 
+internal data class HasCast(var value: Boolean)
+
 internal class CodeGenerationContext(
     val moduleName: List<Identifier>,
     val isPackage: Boolean,
     val references: ResolvedReferences,
     val types: Types,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
-    private val namesInScope: MutableSet<String> = mutableSetOf()
+    private val namesInScope: MutableSet<String> = mutableSetOf(),
+    val hasCast: HasCast
 ) {
     fun enterScope(): CodeGenerationContext {
         return CodeGenerationContext(
@@ -42,7 +45,8 @@ internal class CodeGenerationContext(
             references = references,
             types = types,
             nodeNames = nodeNames,
-            namesInScope = namesInScope.toMutableSet()
+            namesInScope = namesInScope.toMutableSet(),
+            hasCast = hasCast
         )
     }
 
@@ -96,8 +100,9 @@ internal class CodeGenerationContext(
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
     val imports = node.imports.flatMap{ import -> generateImportCode(import, context) }
     val body = node.body.flatMap{ child -> generateModuleStatementCode(child, context) }
+    val castImports = generateCastImports(node, context)
     return PythonModuleNode(
-        imports + body,
+        imports + castImports + body,
         source = NodeSource(node)
     )
 }
@@ -136,6 +141,20 @@ private fun generateImportCode(node: ImportNode, context: CodeGenerationContext)
             source = NodeSource(target),
             context = context
         )
+    }
+}
+
+private fun generateCastImports(node: ModuleNode, context: CodeGenerationContext): List<PythonStatementNode> {
+    return if (context.hasCast.value) {
+        listOf(
+            PythonImportFromNode(
+                module = listOf(topLevelPythonPackageName, "Stdlib", "Options").joinToString("."),
+                names = listOf("none" to "_none", "some" to "_some"),
+                source = NodeSource(node)
+            )
+        )
+    } else {
+        listOf()
     }
 }
 
@@ -740,6 +759,8 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         private fun generatedCallCode(node: CallBaseNode, isPartial: Boolean): GeneratedExpression {
+            val source = NodeSource(node)
+
             val unspilledReceiverCode = generateExpressionCode(node.receiver, context)
             val unspilledPositionalArgumentsCode = generatePositionalArguments(node)
             val namedArgumentsCode = generateNamedArguments(node)
@@ -748,7 +769,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 unspilledPositionalArgumentsCode,
                 listOf(namedArgumentsCode),
                 spill = { expressions ->
-                    spillExpressions(expressions, context, source = NodeSource(node))
+                    spillExpressions(expressions, context, source = source)
                 }
             )
 
@@ -756,18 +777,44 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 unspilledReceiverCode,
                 listOf(positionalArgumentsCode, namedArgumentsCode),
                 spill = { expression ->
-                    spillExpression(expression, context, source = NodeSource(node))
+                    spillExpression(expression, context, source = source)
                 }
             )
 
             return GeneratedCode.pureMap(
                 receiverCode,
                 positionalArgumentsCode,
-                namedArgumentsCode,
-                { receiver, positionalArguments, namedArguments ->
+                namedArgumentsCode
+            ) { receiver, positionalArguments, namedArguments ->
+                val shedReceiver = node.receiver
+                val isCast = shedReceiver is VariableReferenceNode && context.references[shedReceiver] == castBuiltin
+                if (isCast) {
+                    context.hasCast.value = true
+
+                    val parameterName = "value"
+                    PythonLambdaNode(
+                        parameters = listOf(parameterName),
+                        body = PythonConditionalOperationNode(
+                            condition = generateTypeCondition(
+                                expression = PythonVariableReferenceNode(parameterName, source = source),
+                                discriminator = findDiscriminatorForCast(node, types = context.types),
+                                source = source
+                            ),
+                            trueExpression = PythonFunctionCallNode(
+                                function = PythonVariableReferenceNode("_some", source = source),
+                                arguments = listOf(PythonVariableReferenceNode(parameterName, source = source)),
+                                keywordArguments = listOf(),
+                                source = source
+                            ),
+                            falseExpression = PythonVariableReferenceNode("_none", source = source),
+                            source = source
+                        ),
+                        source = source
+                    )
+                } else {
                     val partialArguments = if (isPartial) {
                         // TODO: better handling of builtin
-                        listOf(PythonVariableReferenceNode("_partial", source = NodeSource(node)))
+                        listOf(PythonVariableReferenceNode("_partial", source = source))
                     } else {
                         listOf()
                     }
@@ -778,10 +825,10 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                         pythonPositionalArguments.first(),
                         pythonPositionalArguments.drop(1),
                         namedArguments,
-                        source = NodeSource(node)
+                        source = source
                     )
                 }
-            )
+            }
         }
 
         private fun generatePositionalArguments(node: CallBaseNode): GeneratedExpressions {
