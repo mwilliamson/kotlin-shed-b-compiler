@@ -218,18 +218,16 @@ class CodeGeneratorTests {
                 shapeField("b", staticReference("Int"), value = literalInt(0))
             )
         )
-        val shapeType = shapeType(
-            fields = listOf(
-                field("a", type = IntType, isConstant = false),
-                field("b", type = IntType, isConstant = true)
+
+        val context = context(
+            shapeFields = mapOf(
+                shed to listOf(
+                    field("a", type = IntType, isConstant = false),
+                    field("b", type = IntType, isConstant = true)
+                )
             )
         )
-
-        val types = typesMap(
-            variableTypes = mapOf(shed to MetaType(shapeType))
-        )
-
-        val node = generateModuleStatementCode(shed, context(types = types)).single()
+        val node = generateModuleStatementCode(shed, context).single()
 
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
@@ -263,17 +261,15 @@ class CodeGeneratorTests {
                 shapeField("b", staticReference("Int"), value = literalInt(0))
             )
         )
-        val shapeType = shapeType(
-            fields = listOf(
-                field("b", type = IntType, isConstant = true)
+
+        val context = context(
+            shapeFields = mapOf(
+                shed to listOf(
+                    field("b", type = IntType, isConstant = true)
+                )
             )
         )
-
-        val types = typesMap(
-            variableTypes = mapOf(shed to MetaType(shapeType))
-        )
-
-        val node = generateModuleStatementCode(shed, context(types = types)).single()
+        val node = generateModuleStatementCode(shed, context).single()
 
         assertThat(node, isPythonClass(
             name = equalTo("OneTwoThree"),
@@ -292,17 +288,13 @@ class CodeGeneratorTests {
         val member2Node = unionMember("Member2")
         val shed = union("X", listOf(member1Node, member2Node))
 
-        val member1Type = shapeType("Member1")
-        val member2Type = shapeType("Member2")
-
-        val types = typesMap(
-            variableTypes = mapOf(
-                member1Node to MetaType(member1Type),
-                member2Node to MetaType(member2Type)
+        val context = context(
+            shapeFields = mapOf(
+                member1Node to listOf(),
+                member2Node to listOf()
             )
         )
-
-        val nodes = generateModuleStatementCode(shed, context(types = types))
+        val nodes = generateModuleStatementCode(shed, context)
 
         assertThat(nodes, isSequence(
             isPythonAssignment("X", isPythonNone()),
@@ -1356,16 +1348,16 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-        types: Types = EMPTY_TYPES
+        shapeFields: Map<ShapeBaseNode, List<Field>> = mapOf()
     ) = CodeGenerationContext(
         inspector = FakeCodeInspector(
             discriminatorsForIsExpressions = discriminatorsForIsExpressions,
             discriminatorsForWhenBranches = discriminatorsForWhenBranches,
-            references = references
+            references = references,
+            shapeFields = shapeFields
         ),
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
-        types = types,
         hasCast = HasCast(false)
     )
 

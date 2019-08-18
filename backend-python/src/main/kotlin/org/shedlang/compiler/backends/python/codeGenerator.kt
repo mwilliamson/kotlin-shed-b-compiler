@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.ModuleCodeInspector
@@ -24,7 +23,6 @@ internal fun generateCode(
         inspector = ModuleCodeInspector(module),
         moduleName = module.name,
         isPackage = isPackage,
-        types = module.types,
         hasCast = HasCast(false)
     )
     return generateCode(module.node, context)
@@ -42,7 +40,6 @@ internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: List<Identifier>,
     val isPackage: Boolean,
-    val types: Types,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf(),
     val hasCast: HasCast
@@ -52,7 +49,6 @@ internal class CodeGenerationContext(
             inspector = inspector,
             moduleName = moduleName,
             isPackage = isPackage,
-            types = types,
             nodeNames = nodeNames,
             namesInScope = namesInScope.toMutableSet(),
             hasCast = hasCast
@@ -180,9 +176,8 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
     // TODO: remove duplication with InterpreterLoader
 
-    val shapeFields = context.types.shapeFields(node)
+    val shapeFields = context.inspector.shapeFields(node)
     val (constantFields, variableFields) = shapeFields
-        .values
         .partition { field -> field.isConstant }
 
     val shapeSource = NodeSource(node)
@@ -213,7 +208,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
     val fieldsClass = PythonClassNode(
         // TODO: handle constant field also named fields
         name = "fields",
-        body = shapeFields.values.map { field ->
+        body = shapeFields.map { field ->
             val fieldNode = node.fields
                 .find { fieldNode -> fieldNode.name == field.name }
             val fieldSource = NodeSource(fieldNode ?: node)
