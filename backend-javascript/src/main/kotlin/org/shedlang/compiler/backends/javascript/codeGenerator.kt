@@ -3,12 +3,13 @@ package org.shedlang.compiler.backends.javascript
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.backends.isConstant
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.Symbol
-import org.shedlang.compiler.types.SymbolType
 
 internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val context = CodeGenerationContext(
@@ -128,22 +129,18 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
                 JavascriptStringLiteralNode(generateName(node.name), source = source),
                 JavascriptArrayLiteralNode(
                     context.inspector.shapeFields(node).map { field ->
-                        val fieldNode = node.fields
-                            .find { fieldNode -> fieldNode.name == field.name }
-                        val fieldSource = NodeSource(fieldNode ?: node)
+                        val fieldSource = field.source
+                        val fieldValue = field.value
+                        val value = when (fieldValue) {
+                            null ->
+                                // TODO: use undefined
+                                JavascriptNullLiteralNode(source = fieldSource)
 
-                        val fieldValueNode = fieldNode?.value
-                        val fieldType = field.type
-                        val value = if (fieldValueNode != null) {
-                            generateCode(fieldValueNode, context)
-                        } else if (fieldType is SymbolType) {
-                            generateSymbolCode(fieldType.symbol, source = fieldSource)
-                        } else if (field.isConstant) {
-                            // TODO: throw better exception
-                            throw Exception("Could not find value for constant field")
-                        } else {
-                            // TODO: use undefined
-                            JavascriptNullLiteralNode(source = fieldSource)
+                            is FieldValue.Expression ->
+                                generateCode(fieldValue.expression, context)
+
+                            is FieldValue.Symbol ->
+                                generateSymbolCode(fieldValue.symbol, source = fieldSource)
                         }
 
                         val jsFieldName = generateName(field.name)
@@ -634,7 +631,7 @@ private fun immediatelyInvokedFunction(
     )
 }
 
-private fun generateSymbolCode(symbol: Symbol, source: NodeSource): JavascriptExpressionNode {
+private fun generateSymbolCode(symbol: Symbol, source: Source): JavascriptExpressionNode {
     return JavascriptStringLiteralNode(symbol.fullName, source = source)
 }
 

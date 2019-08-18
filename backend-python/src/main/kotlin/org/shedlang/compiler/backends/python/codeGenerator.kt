@@ -4,12 +4,13 @@ import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.backends.isConstant
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
-import org.shedlang.compiler.types.SymbolType
 
 // TODO: check that builtins aren't renamed
 // TODO: check imports aren't renamed
@@ -177,8 +178,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
     // TODO: remove duplication with InterpreterLoader
 
     val shapeFields = context.inspector.shapeFields(node)
-    val (constantFields, variableFields) = shapeFields
-        .partition { field -> field.isConstant }
+    val variableFields = shapeFields.filter { field -> !field.isConstant }
 
     val shapeSource = NodeSource(node)
 
@@ -250,24 +250,28 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         source = shapeSource
     )
 
-    val body = constantFields.map { field ->
-        val fieldValueNode = node.fields
-            .find { fieldNode -> fieldNode.name == field.name }
-            ?.value
-        val fieldType = field.type
-        val value = if (fieldValueNode != null) {
-            generateExpressionCode(fieldValueNode, context).pureExpression()
-        } else if (fieldType is SymbolType) {
-            symbol(fieldType.symbol, source = shapeSource)
-        } else {
-            // TODO: throw better exception
-            throw Exception("Could not find value for constant field")
+    val body = shapeFields.mapNotNull { field ->
+        val fieldValue = field.value
+
+        val value = when (fieldValue) {
+            null ->
+                null
+
+            is FieldValue.Expression ->
+                generateExpressionCode(fieldValue.expression, context).pureExpression()
+
+            is FieldValue.Symbol ->
+                symbol(fieldValue.symbol, source = shapeSource)
         }
-        PythonAssignmentNode(
-            PythonVariableReferenceNode(pythoniseName(field.name), source = shapeSource),
-            value,
-            source = shapeSource
-        )
+        if (value == null) {
+            null
+        } else {
+            PythonAssignmentNode(
+                PythonVariableReferenceNode(pythoniseName(field.name), source = shapeSource),
+                value,
+                source = shapeSource
+            )
+        }
     } + init + listOf(fieldsClass)
     return PythonClassNode(
         // TODO: test renaming

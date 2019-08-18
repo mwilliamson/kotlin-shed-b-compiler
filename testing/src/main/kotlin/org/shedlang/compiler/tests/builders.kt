@@ -3,6 +3,8 @@ package org.shedlang.compiler.tests
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.FieldInspector
+import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.types.*
 
 fun anySource(): Source {
@@ -487,6 +489,11 @@ fun field(name: String, type: Type, isConstant: Boolean = false, shapeId: Int = 
     isConstant = isConstant
 )
 
+fun fieldInspector(name: String, value: FieldValue?) = FieldInspector(
+    name = Identifier(name),
+    value = value,
+    source = anySource()
+)
 
 fun parametrizedUnionType(
     name: String,

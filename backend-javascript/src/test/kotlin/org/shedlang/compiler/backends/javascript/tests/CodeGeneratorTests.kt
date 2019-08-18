@@ -9,6 +9,8 @@ import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FakeCodeInspector
+import org.shedlang.compiler.backends.FieldInspector
+import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
@@ -105,8 +107,8 @@ class CodeGeneratorTests {
         val context = context(
             shapeFields = mapOf(
                 shed to listOf(
-                    field("a", type = IntType, isConstant = false),
-                    field("b", type = IntType, isConstant = true)
+                    fieldInspector(name = "a", value = null),
+                    fieldInspector(name = "b", value = FieldValue.Expression(literalInt(0)))
                 )
             )
         )
@@ -726,7 +728,7 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         expressionTypes: Map<ExpressionNode, Type> = mapOf(),
-        shapeFields: Map<ShapeBaseNode, List<Field>> = mapOf()
+        shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf()
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),

@@ -5,7 +5,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.Field
+import org.shedlang.compiler.types.SymbolType
 import org.shedlang.compiler.types.Type
 
 interface CodeInspector {
@@ -14,8 +14,22 @@ interface CodeInspector {
     fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator
     fun isCast(node: CallBaseNode): Boolean
     fun resolve(node: ReferenceNode): VariableBindingNode
-    fun shapeFields(node: ShapeBaseNode): Collection<Field>
+    fun shapeFields(node: ShapeBaseNode): List<FieldInspector>
     fun typeOfExpression(node: ExpressionNode): Type
+}
+
+data class FieldInspector(
+    val name: Identifier,
+    val value: FieldValue?,
+    val source: Source
+)
+
+val FieldInspector.isConstant: Boolean
+    get() = value != null
+
+sealed class FieldValue {
+    data class Expression(val expression: ExpressionNode): FieldValue()
+    data class Symbol(val symbol: org.shedlang.compiler.types.Symbol): FieldValue()
 }
 
 class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
@@ -39,8 +53,30 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
         return module.references[node]
     }
 
-    override fun shapeFields(node: ShapeBaseNode): Collection<Field> {
-        return module.types.shapeFields(node).values
+    override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
+        return module.types.shapeFields(node).values.map { field ->
+            val fieldNode = node.fields
+                .find { fieldNode -> fieldNode.name == field.name }
+            val fieldSource = NodeSource(fieldNode ?: node)
+
+            val fieldValueNode = fieldNode?.value
+            val fieldType = field.type
+            val value = if (fieldValueNode != null) {
+                FieldValue.Expression(fieldValueNode)
+            } else if (fieldType is SymbolType) {
+                FieldValue.Symbol(fieldType.symbol)
+            } else if (field.isConstant) {
+                // TODO: throw better exception
+                throw Exception("Could not find value for constant field")
+            } else {
+                null
+            }
+            FieldInspector(
+                name = field.name,
+                value = value,
+                source = fieldSource
+            )
+        }
     }
 
     override fun typeOfExpression(node: ExpressionNode): Type {
@@ -54,7 +90,7 @@ class FakeCodeInspector(
     private val discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
     private val expressionTypes: Map<ExpressionNode, Type> = mapOf(),
     private val references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-    private val shapeFields: Map<ShapeBaseNode, Collection<Field>> = mapOf()
+    private val shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf()
 ): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
         return discriminatorsForCasts[node] ?: error("missing discriminator for node: $node")
@@ -76,7 +112,7 @@ class FakeCodeInspector(
         return references[node] ?: error("unresolved node: $node")
     }
 
-    override fun shapeFields(node: ShapeBaseNode): Collection<Field> {
+    override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
         return shapeFields[node] ?: error("missing fields for node: $node")
     }
 

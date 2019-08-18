@@ -9,13 +9,18 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FakeCodeInspector
+import org.shedlang.compiler.backends.FieldInspector
+import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.UnitType
 import java.math.BigInteger
 
 class CodeGeneratorTests {
@@ -222,8 +227,8 @@ class CodeGeneratorTests {
         val context = context(
             shapeFields = mapOf(
                 shed to listOf(
-                    field("a", type = IntType, isConstant = false),
-                    field("b", type = IntType, isConstant = true)
+                    fieldInspector(name = "a", value = null),
+                    fieldInspector(name = "b", value = FieldValue.Expression(literalInt(0)))
                 )
             )
         )
@@ -255,17 +260,21 @@ class CodeGeneratorTests {
 
     @Test
     fun shapeWithOnlyConstantFieldsUsesDefaultInit() {
+        val fieldValue = literalInt(0)
         val shed = shape(
             name = "OneTwoThree",
             fields = listOf(
-                shapeField("b", staticReference("Int"), value = literalInt(0))
+                shapeField("b", staticReference("Int"), value = fieldValue)
             )
         )
 
         val context = context(
             shapeFields = mapOf(
                 shed to listOf(
-                    field("b", type = IntType, isConstant = true)
+                    fieldInspector(
+                        name = "b",
+                        value = FieldValue.Expression(fieldValue)
+                    )
                 )
             )
         )
@@ -1348,7 +1357,7 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-        shapeFields: Map<ShapeBaseNode, List<Field>> = mapOf()
+        shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf()
     ) = CodeGenerationContext(
         inspector = FakeCodeInspector(
             discriminatorsForIsExpressions = discriminatorsForIsExpressions,
