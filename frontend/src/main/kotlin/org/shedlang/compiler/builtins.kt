@@ -9,6 +9,8 @@ import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.*
 
+// TODO: move builtins to core (or otherwise avoid current split)
+
 private val coreBuiltins = listOf(
     builtinType("Any", AnyType),
     builtinType("Nothing", NothingType),

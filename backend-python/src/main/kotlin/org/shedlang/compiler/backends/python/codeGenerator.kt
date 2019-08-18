@@ -786,9 +786,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 positionalArgumentsCode,
                 namedArgumentsCode
             ) { receiver, positionalArguments, namedArguments ->
-                val shedReceiver = node.receiver
-                val isCast = shedReceiver is VariableReferenceNode && context.references[shedReceiver] == castBuiltin
-                if (isCast) {
+                if (isCast(node, references = context.references)) {
                     context.hasCast.value = true
 
                     val parameterName = "value"

@@ -543,9 +543,9 @@ class CodeGeneratorTests {
         val shed = call(receiver, listOf(literalInt(42)))
 
         val node = generateCode(shed, context(
-            types = typesMap(
-                expressionTypes = mapOf(receiver to AnyType)
-            )
+            references = ResolvedReferencesMap(mapOf(
+                receiver.nodeId to declaration("f")
+            ))
         ))
 
         assertThat(node, isJavascriptFunctionCall(
@@ -563,9 +563,9 @@ class CodeGeneratorTests {
         )
 
         val node = generateCode(shed, context(
-            types = typesMap(
-                expressionTypes = mapOf(receiver to AnyType)
-            )
+            references = ResolvedReferencesMap(mapOf(
+                receiver.nodeId to declaration("f")
+            ))
         ))
 
         assertThat(node, isJavascriptFunctionCall(
@@ -584,9 +584,9 @@ class CodeGeneratorTests {
         )
 
         val node = generateCode(shed, context(
-            types = typesMap(
-                expressionTypes = mapOf(receiver to AnyType)
-            )
+            references = ResolvedReferencesMap(mapOf(
+                receiver.nodeId to declaration("f")
+            ))
         ))
 
         assertThat(node, isJavascriptFunctionCall(
@@ -749,9 +749,14 @@ class CodeGeneratorTests {
 
     private fun context(
         moduleName: List<String> = listOf(),
+        references: ResolvedReferencesMap = ResolvedReferencesMap.EMPTY,
         types: Types = typesMap()
     ): CodeGenerationContext {
-        return CodeGenerationContext(moduleName = moduleName.map(::Identifier), types = types)
+        return CodeGenerationContext(
+            moduleName = moduleName.map(::Identifier),
+            references = references,
+            types = types
+        )
     }
 
     private fun isJavascriptModule(body: Matcher<List<JavascriptStatementNode>>)
