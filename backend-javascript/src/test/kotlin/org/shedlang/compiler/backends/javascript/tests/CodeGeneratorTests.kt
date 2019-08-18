@@ -9,6 +9,7 @@ import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.FakeCodeInspector
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
@@ -539,14 +540,9 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val receiver = variableReference("f")
-        val shed = call(receiver, listOf(literalInt(42)))
+        val shed = call(variableReference("f"), listOf(literalInt(42)))
 
-        val node = generateCode(shed, context(
-            references = ResolvedReferencesMap(mapOf(
-                receiver.nodeId to declaration("f")
-            ))
-        ))
+        val node = generateCode(shed)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -556,17 +552,12 @@ class CodeGeneratorTests {
 
     @Test
     fun namedArgumentsArePassedAsObject() {
-        val receiver = variableReference("f")
         val shed = call(
-            receiver,
+            variableReference("f"),
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
 
-        val node = generateCode(shed, context(
-            references = ResolvedReferencesMap(mapOf(
-                receiver.nodeId to declaration("f")
-            ))
-        ))
+        val node = generateCode(shed)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -576,18 +567,13 @@ class CodeGeneratorTests {
 
     @Test
     fun whenThereAreBothPositionalAndNamedArgumentsThenNamedArgumentsObjectIsLastArgument() {
-        val receiver = variableReference("f")
         val shed = call(
-            receiver,
+            variableReference("f"),
             positionalArguments = listOf(literalInt(1)),
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
 
-        val node = generateCode(shed, context(
-            references = ResolvedReferencesMap(mapOf(
-                receiver.nodeId to declaration("f")
-            ))
-        ))
+        val node = generateCode(shed)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -749,12 +735,11 @@ class CodeGeneratorTests {
 
     private fun context(
         moduleName: List<String> = listOf(),
-        references: ResolvedReferencesMap = ResolvedReferencesMap.EMPTY,
         types: Types = typesMap()
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),
-            references = references,
+            inspector = FakeCodeInspector(),
             types = types
         )
     }

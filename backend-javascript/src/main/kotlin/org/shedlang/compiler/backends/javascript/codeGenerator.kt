@@ -1,12 +1,21 @@
 package org.shedlang.compiler.backends.javascript
 
-import org.shedlang.compiler.*
+import org.shedlang.compiler.Module
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.backends.javascript.ast.*
+import org.shedlang.compiler.findDiscriminator
+import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.*
 
 internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
-    val context = CodeGenerationContext(moduleName = module.name, references = module.references, types = module.types)
+    val context = CodeGenerationContext(
+        inspector = ModuleCodeInspector(module),
+        moduleName = module.name,
+        types = module.types
+    )
 
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
@@ -22,9 +31,9 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 }
 
 internal class CodeGenerationContext(
+    val inspector: CodeInspector,
     val moduleName: List<Identifier>,
     val types: Types,
-    val references: ResolvedReferences,
     var hasCast: Boolean = false
 ) {
     fun typeOfExpression(node: ExpressionNode): Type {
@@ -385,7 +394,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             }
             val arguments = positionalArguments + namedArguments
 
-            if (isCast(node, references = context.references)) {
+            if (context.inspector.isCast(node)) {
                 context.hasCast = true
                 val parameterName = "value"
                 val parameterReference = JavascriptVariableReferenceNode(
