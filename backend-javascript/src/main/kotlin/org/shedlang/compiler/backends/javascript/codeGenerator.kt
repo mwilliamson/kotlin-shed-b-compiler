@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.javascript
 
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.ModuleCodeInspector
@@ -14,8 +13,7 @@ import org.shedlang.compiler.types.SymbolType
 internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val context = CodeGenerationContext(
         inspector = ModuleCodeInspector(module),
-        moduleName = module.name,
-        types = module.types
+        moduleName = module.name
     )
 
     val node = module.node
@@ -34,11 +32,8 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: List<Identifier>,
-    private val types: Types,
     var hasCast: Boolean = false
-) {
-    fun shapeFields(node: ShapeBaseNode) = types.shapeFields(node)
-}
+)
 
 private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
     val source = NodeSource(import)
@@ -132,7 +127,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
             listOf(
                 JavascriptStringLiteralNode(generateName(node.name), source = source),
                 JavascriptArrayLiteralNode(
-                    context.shapeFields(node).values.map { field ->
+                    context.inspector.shapeFields(node).map { field ->
                         val fieldNode = node.fields
                             .find { fieldNode -> fieldNode.name == field.name }
                         val fieldSource = NodeSource(fieldNode ?: node)

@@ -7,7 +7,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FakeCodeInspector
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
@@ -102,17 +101,16 @@ class CodeGeneratorTests {
                 shapeField("b", staticReference("Int"), value = literalInt(0))
             )
         )
-        val shapeType = shapeType(
-            fields = listOf(
-                field("a", type = IntType, isConstant = false),
-                field("b", type = IntType, isConstant = true)
+
+        val context = context(
+            shapeFields = mapOf(
+                shed to listOf(
+                    field("a", type = IntType, isConstant = false),
+                    field("b", type = IntType, isConstant = true)
+                )
             )
         )
-        val types = typesMap(
-            variableTypes = mapOf(shed to MetaType(shapeType))
-        )
-
-        val node = generateCode(shed, context(types = types)).single()
+        val node = generateCode(shed, context).single()
 
         assertThat(node, isJavascriptConst(
             target = isJavascriptVariableReference("X"),
@@ -132,17 +130,13 @@ class CodeGeneratorTests {
         val member2Node = unionMember("Member2")
         val shed = union("X", listOf(member1Node, member2Node))
 
-        val member1Type = shapeType("Member1")
-        val member2Type = shapeType("Member2")
-
-        val types = typesMap(
-            variableTypes = mapOf(
-                member1Node to MetaType(member1Type),
-                member2Node to MetaType(member2Type)
+        val context = context(
+            shapeFields = mapOf(
+                member1Node to listOf(),
+                member2Node to listOf()
             )
         )
-
-        val nodes = generateCode(shed, context(types = types))
+        val nodes = generateCode(shed, context)
 
         assertThat(nodes, isSequence(
             isJavascriptConst(
@@ -732,16 +726,16 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         expressionTypes: Map<ExpressionNode, Type> = mapOf(),
-        types: Types = typesMap()
+        shapeFields: Map<ShapeBaseNode, List<Field>> = mapOf()
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),
             inspector = FakeCodeInspector(
                 discriminatorsForIsExpressions = discriminatorsForIsExpressions,
                 discriminatorsForWhenBranches = discriminatorsForWhenBranches,
-                expressionTypes = expressionTypes
-            ),
-            types = types
+                expressionTypes = expressionTypes,
+                shapeFields = shapeFields
+            )
         )
     }
 

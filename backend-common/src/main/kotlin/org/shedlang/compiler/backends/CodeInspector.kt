@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.findDiscriminator
 import org.shedlang.compiler.findDiscriminatorForCast
 import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.Field
 import org.shedlang.compiler.types.Type
 
 interface CodeInspector {
@@ -13,6 +14,7 @@ interface CodeInspector {
     fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator
     fun isCast(node: CallBaseNode): Boolean
     fun resolve(node: ReferenceNode): VariableBindingNode
+    fun shapeFields(node: ShapeBaseNode): Collection<Field>
     fun typeOfExpression(node: ExpressionNode): Type
 }
 
@@ -37,6 +39,10 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
         return module.references[node]
     }
 
+    override fun shapeFields(node: ShapeBaseNode): Collection<Field> {
+        return module.types.shapeFields(node).values
+    }
+
     override fun typeOfExpression(node: ExpressionNode): Type {
         return module.types.typeOf(node)
     }
@@ -47,7 +53,8 @@ class FakeCodeInspector(
     private val discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
     private val discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
     private val expressionTypes: Map<ExpressionNode, Type> = mapOf(),
-    private val references: Map<ReferenceNode, VariableBindingNode> = mapOf()
+    private val references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
+    private val shapeFields: Map<ShapeBaseNode, Collection<Field>> = mapOf()
 ): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
         return discriminatorsForCasts[node] ?: error("missing discriminator for node: $node")
@@ -67,6 +74,10 @@ class FakeCodeInspector(
 
     override fun resolve(node: ReferenceNode): VariableBindingNode {
         return references[node] ?: error("unresolved node: $node")
+    }
+
+    override fun shapeFields(node: ShapeBaseNode): Collection<Field> {
+        return shapeFields[node] ?: error("missing fields for node: $node")
     }
 
     override fun typeOfExpression(node: ExpressionNode): Type {
