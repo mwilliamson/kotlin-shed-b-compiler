@@ -46,10 +46,6 @@ interface Types {
     }
 }
 
-fun findDiscriminator(node: IsNode, types: Types): Discriminator {
-    return types.findDiscriminator(node.expression, node.type)
-}
-
 fun findDiscriminator(node: WhenNode, branch: WhenBranchNode, types: Types): Discriminator {
     return types.findDiscriminator(node.expression, branch.type)
 }

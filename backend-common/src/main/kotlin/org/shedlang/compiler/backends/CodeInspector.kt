@@ -38,7 +38,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 
     override fun discriminatorForIsExpression(node: IsNode): Discriminator {
-        return findDiscriminator(node, types = module.types)
+        return module.types.discriminatorForIsExpression(node)
     }
 
     override fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator {
