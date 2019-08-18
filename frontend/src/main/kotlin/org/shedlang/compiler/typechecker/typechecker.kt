@@ -20,6 +20,7 @@ internal fun newTypeContext(
         effect = EmptyEffect,
         expressionTypes = expressionTypes,
         variableTypes = nodeTypes.toMutableMap(),
+        discriminators = mutableMapOf(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
         deferred = LinkedList()
@@ -30,6 +31,7 @@ internal class TypeContext(
     val moduleName: List<String>?,
     val effect: Effect,
     private val variableTypes: MutableMap<Int, Type>,
+    private val discriminators: MutableMap<Int, Discriminator>,
     private val expressionTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleResult,
@@ -69,6 +71,10 @@ internal class TypeContext(
         variableTypes[targetNode.nodeId] = type
     }
 
+    fun addDiscriminator(node: Node, discriminator: Discriminator) {
+        discriminators[node.nodeId] = discriminator
+    }
+
     fun addExpressionType(node: ExpressionNode, type: Type) {
         expressionTypes[node.nodeId] = type
     }
@@ -83,6 +89,7 @@ internal class TypeContext(
             effect = effect,
             expressionTypes = expressionTypes,
             variableTypes = variableTypes,
+            discriminators = discriminators,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
             deferred = deferred
@@ -95,6 +102,7 @@ internal class TypeContext(
             effect = effect,
             expressionTypes = expressionTypes,
             variableTypes = HashMap(variableTypes),
+            discriminators = discriminators,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
             deferred = deferred
@@ -114,6 +122,7 @@ internal class TypeContext(
 
     fun toTypes(): Types {
         return TypesMap(
+            discriminators = discriminators,
             expressionTypes = expressionTypes,
             variableTypes = variableTypes
         )

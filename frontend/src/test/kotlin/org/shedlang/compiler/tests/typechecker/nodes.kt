@@ -42,6 +42,7 @@ internal fun typeContext(
         effect = effect,
         expressionTypes = expressionTypes,
         variableTypes = HashMap(finalTypes),
+        discriminators = mutableMapOf(),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),
         getModule = { moduleName -> modules[moduleName]!! }

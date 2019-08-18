@@ -24,5 +24,9 @@ internal fun captureTypes(
     typeCheck(expression, typeContext)
     typeContext.undefer()
 
-    return TypesMap(expressionTypes = expressionTypes, variableTypes = mapOf())
+    return TypesMap(
+        discriminators = mapOf(),
+        expressionTypes = expressionTypes,
+        variableTypes = mapOf()
+    )
 }

@@ -36,6 +36,9 @@ interface Types {
         return (rawType(declaredType(node)) as ShapeType).fields
     }
 
+    fun discriminatorForIsExpression(node: IsNode): Discriminator
+    fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator
+
     fun findDiscriminator(expression: ExpressionNode, type: StaticExpressionNode): Discriminator {
         val sourceType = typeOf(expression)
         val targetType = metaTypeToType(typeOf(type))!!
@@ -58,12 +61,21 @@ fun findDiscriminatorForCast(node: CallBaseNode, types: Types): Discriminator {
     )!!
 }
 
-val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf())
+val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf(), mapOf())
 
 class TypesMap(
+    private val discriminators: Map<Int, Discriminator>,
     private val expressionTypes: Map<Int, Type>,
     private val variableTypes: Map<Int, Type>
 ) : Types {
+    override fun discriminatorForIsExpression(node: IsNode): Discriminator {
+        return discriminators[node.nodeId]!!
+    }
+
+    override fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator {
+        return discriminators[node.nodeId]!!
+    }
+
     override fun typeOf(node: ExpressionNode): Type {
         return expressionTypes[node.nodeId]!!
     }
