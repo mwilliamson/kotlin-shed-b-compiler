@@ -1,10 +1,13 @@
 package org.shedlang.compiler.backends.python
 
-import org.shedlang.compiler.*
+import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.backends.python.ast.*
+import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.SymbolType
@@ -751,7 +754,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
 
         override fun visit(node: IsNode): GeneratedExpression {
             return generateExpressionCode(node.expression, context).pureMap { expression ->
-                val discriminator = findDiscriminator(node, types = context.types)
+                val discriminator = context.inspector.discriminatorForIsExpression(node)
                 generateTypeCondition(expression, discriminator, NodeSource(node))
             }
         }
@@ -801,7 +804,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                         body = PythonConditionalOperationNode(
                             condition = generateTypeCondition(
                                 expression = PythonVariableReferenceNode(parameterName, source = source),
-                                discriminator = findDiscriminatorForCast(node, types = context.types),
+                                discriminator = context.inspector.discriminatorForCast(node),
                                 source = source
                             ),
                             trueExpression = PythonFunctionCallNode(
@@ -1003,7 +1006,7 @@ private fun generateWhenCode(
                         name = expressionName,
                         source = NodeSource(branch)
                     ),
-                    discriminator = findDiscriminator(node, branch, types = context.types),
+                    discriminator = context.inspector.discriminatorForWhenBranch(node, branch),
                     source = NodeSource(branch)
                 ),
                 body = generateBlockCode(

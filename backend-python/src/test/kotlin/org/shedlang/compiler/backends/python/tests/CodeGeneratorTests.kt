@@ -502,33 +502,31 @@ class CodeGeneratorTests {
     fun whenExpressionGeneratesIfStatementsWithAssignmentToVariable() {
         val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
-        val typeReference = staticReference("T")
-        val conditionExpression = fieldAccess(variableReference, "f")
+        val whenBranch = whenBranch(
+            staticReference("T"),
+            listOf(
+                expressionStatement(literalInt(42), isReturn = true)
+            )
+        )
         val shed = whenExpression(
-            conditionExpression,
+            fieldAccess(variableReference, "f"),
             branches = listOf(
-                whenBranch(
-                    typeReference,
-                    listOf(
-                        expressionStatement(literalInt(42), isReturn = true)
-                    )
-                )
+                whenBranch
             ),
             elseBranch = listOf(
                 expressionStatement(literalInt(47), isReturn = true)
             )
         )
 
-        val generatedExpression = generateExpressionCode(shed, context(
+        val context = context(
             references = mapOf(
                 variableReference to variableDeclaration
             ),
-            types = typesMap(
-                discriminators = mapOf(
-                    Pair(conditionExpression, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
-                )
+            discriminatorsForWhenBranches = mapOf(
+                Pair(shed, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
             )
-        ))
+        )
+        val generatedExpression = generateExpressionCode(shed, context)
         val reference = generatedExpression.value as PythonVariableReferenceNode
 
         assertThat(generatedExpression.statements, isSequence(
@@ -568,16 +566,16 @@ class CodeGeneratorTests {
     fun variableReferenceInWhenIsUsedWithoutAssignmentToTemporaryVariable() {
         val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
-        val typeReference = staticReference("T")
+        val whenBranch = whenBranch(
+            staticReference("T"),
+            listOf(
+                expressionStatement(literalInt(42), isReturn = true)
+            )
+        )
         val shed = whenExpression(
             variableReference,
             branches = listOf(
-                whenBranch(
-                    typeReference,
-                    listOf(
-                        expressionStatement(literalInt(42), isReturn = true)
-                    )
-                )
+                whenBranch
             )
         )
 
@@ -585,10 +583,8 @@ class CodeGeneratorTests {
             references = mapOf(
                 variableReference to variableDeclaration
             ),
-            types = typesMap(
-                discriminators = mapOf(
-                    Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
-                )
+            discriminatorsForWhenBranches = mapOf(
+                Pair(shed, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
             )
         ))
         val reference = generatedExpression.value as PythonVariableReferenceNode
@@ -620,23 +616,25 @@ class CodeGeneratorTests {
         val variableReference = variableReference("x")
         val typeDeclaration = typeParameter("T")
         val typeReference = staticReference("T")
+        val whenBranch = whenBranch(
+            typeReference,
+            listOf(
+                expressionStatement(literalInt(42), isReturn = true)
+            )
+        )
+        val whenExpression = whenExpression(
+            variableReference,
+            branches = listOf(
+                whenBranch
+            ),
+            elseBranch = listOf(
+                expressionStatement(literalInt(47), isReturn = true)
+            )
+        )
         val shed = function(
             body = listOf(
                 expressionStatement(
-                    whenExpression(
-                        variableReference,
-                        branches = listOf(
-                            whenBranch(
-                                typeReference,
-                                listOf(
-                                    expressionStatement(literalInt(42), isReturn = true)
-                                )
-                            )
-                        ),
-                        elseBranch = listOf(
-                            expressionStatement(literalInt(47), isReturn = true)
-                        )
-                    ),
+                    whenExpression,
                     isReturn = true
                 )
             )
@@ -649,10 +647,8 @@ class CodeGeneratorTests {
                     variableReference to variableDeclaration,
                     typeReference to typeDeclaration
                 ),
-                types = typesMap(
-                    discriminators = mapOf(
-                        Pair(variableReference, typeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
-                    )
+                discriminatorsForWhenBranches = mapOf(
+                    Pair(whenExpression, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
                 )
             )
         )
@@ -1091,10 +1087,8 @@ class CodeGeneratorTests {
             references = mapOf(
                 variableReference to variableDeclaration
             ),
-            types = typesMap(
-                discriminators = mapOf(
-                    Pair(variableReference, shapeReference) to discriminator(symbolType(listOf("M"), "`A"), "tag")
-                )
+            discriminatorsForIsExpressions = mapOf(
+                shed to discriminator(symbolType(listOf("M"), "`A"), "tag")
             )
         )
         val node = generateExpressionCode(shed, context)
@@ -1359,10 +1353,16 @@ class CodeGeneratorTests {
     private fun context(
         isPackage: Boolean = false,
         moduleName: List<String> = listOf(),
+        discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
+        discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
         types: Types = EMPTY_TYPES
     ) = CodeGenerationContext(
-        inspector = FakeCodeInspector(references = references),
+        inspector = FakeCodeInspector(
+            discriminatorsForIsExpressions = discriminatorsForIsExpressions,
+            discriminatorsForWhenBranches = discriminatorsForWhenBranches,
+            references = references
+        ),
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
         types = types,
