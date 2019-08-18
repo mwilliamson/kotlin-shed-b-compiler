@@ -115,8 +115,6 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 }
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext) : JavascriptStatementNode {
-    // TODO: remove duplication with InterpreterLoader and Python code generator
-
     val source = NodeSource(node)
     return javascriptConst(
         name = generateName(node.name),

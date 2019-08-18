@@ -175,8 +175,6 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
 }
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
-    // TODO: remove duplication with InterpreterLoader
-
     val shapeFields = context.inspector.shapeFields(node)
     val variableFields = shapeFields.filter { field -> !field.isConstant }
 

@@ -6,14 +6,13 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.backends.FakeCodeInspector
+import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.interpreter.*
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.freshTypeId
+import org.shedlang.compiler.types.Symbol
 
 
 class LoadShapeTests {
@@ -21,35 +20,19 @@ class LoadShapeTests {
     fun whenConstantFieldHasExplicitValueThenValueIsLoaded() {
         val statement = shape(
             fields = listOf(
-                shapeField(
-                    name = "x",
-                    value = literalInt(1)
-                ),
-                shapeField(
-                    name = "y",
-                    value = literalInt(2)
-                )
-            )
-        )
-        val shapeType = shapeType(
-            fields = listOf(
-                field(
-                    name = "x",
-                    type = IntType,
-                    isConstant = true
-                ),
-                field(
-                    name = "y",
-                    type = IntType,
-                    isConstant = true
-                )
+                shapeField(name = "x", value = literalInt(1)),
+                shapeField(name = "y", value = literalInt(2))
             )
         )
         val context = LoaderContext(
             moduleName = listOf(),
-            types = TypesMap(
-                expressionTypes = mapOf(),
-                variableTypes = mapOf(statement.nodeId to MetaType(shapeType))
+            inspector = FakeCodeInspector(
+                shapeFields = mapOf(
+                    statement to listOf(
+                        fieldInspector(name = "x", value = FieldValue.Expression(literalInt(1))),
+                        fieldInspector(name = "y", value = FieldValue.Expression(literalInt(2)))
+                    )
+                )
             )
         )
 
@@ -75,20 +58,14 @@ class LoadShapeTests {
                 )
             )
         )
-        val shapeType = shapeType(
-            fields = listOf(
-                field(
-                    name = "x",
-                    type = IntType,
-                    isConstant = false
-                )
-            )
-        )
         val context = LoaderContext(
             moduleName = listOf(),
-            types = TypesMap(
-                expressionTypes = mapOf(),
-                variableTypes = mapOf(statement.nodeId to MetaType(shapeType))
+            inspector = FakeCodeInspector(
+                shapeFields = mapOf(
+                    statement to listOf(
+                        fieldInspector(name = "x", value = null)
+                    )
+                )
             )
         )
 
@@ -103,23 +80,16 @@ class LoadShapeTests {
 
     @Test
     fun whenConstantFieldHasNoExplicitValueThenValueIsInferredFromSymbolType() {
-        val statement = shape(
-            fields = listOf()
-        )
-        val shapeType = shapeType(
-            fields = listOf(
-                field(
-                    name = "x",
-                    type = symbolType(module = listOf("A", "B"), name = "`C"),
-                    isConstant = true
-                )
-            )
-        )
+        val statement = shape(fields = listOf())
+        val symbol = Symbol(module = listOf(Identifier("A"), Identifier("B")), name = "`C")
         val context = LoaderContext(
             moduleName = listOf(),
-            types = TypesMap(
-                expressionTypes = mapOf(),
-                variableTypes = mapOf(statement.nodeId to MetaType(shapeType))
+            inspector = FakeCodeInspector(
+                shapeFields = mapOf(
+                    statement to listOf(
+                        fieldInspector(name = "x", value = FieldValue.Symbol(symbol))
+                    )
+                )
             )
         )
 
@@ -139,30 +109,15 @@ class LoadShapeTests {
 class LoadIsTests {
     @Test
     fun isExpressionIsConvertedToBinaryOperationOnDiscriminatorField() {
-        val shapeId = freshTypeId()
-        val shapeType1 = shapeType(
-            fields = listOf(
-                field("tag", symbolType(listOf("M"), "`A"), shapeId = shapeId)
-            )
-        )
-        val shapeType2 = shapeType(
-            fields = listOf(
-                field("tag", symbolType(listOf("M"), "`B"), shapeId = shapeId)
-            )
-        )
-        val unionType = unionType(members = listOf(shapeType1, shapeType2))
-
         val variableReference = variableReference("x")
         val shapeReference = staticReference("Shape1")
         val node = isOperation(variableReference, shapeReference)
         val context = LoaderContext(
             moduleName = listOf(),
-            types = TypesMap(
-                expressionTypes = mapOf(
-                    variableReference.nodeId to unionType,
-                    shapeReference.nodeId to MetaType(shapeType1)
-                ),
-                variableTypes = mapOf()
+            inspector = FakeCodeInspector(
+                discriminatorsForIsExpressions = mapOf(
+                    node to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                )
             )
         )
 
@@ -199,9 +154,6 @@ class LoadTupleTests {
 private fun createContext(): LoaderContext {
     return LoaderContext(
         moduleName = listOf(),
-        types = TypesMap(
-            expressionTypes = mapOf(),
-            variableTypes = mapOf()
-        )
+        inspector = FakeCodeInspector()
     )
 }

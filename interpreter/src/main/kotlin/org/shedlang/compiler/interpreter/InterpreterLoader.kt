@@ -1,12 +1,16 @@
 package org.shedlang.compiler.interpreter
 
-import org.shedlang.compiler.*
+import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.FieldValue
+import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.resolveImport
 import org.shedlang.compiler.types.Symbol
-import org.shedlang.compiler.types.SymbolType
 
 
-internal class LoaderContext(val moduleName: List<Identifier>, val types: Types)
+internal class LoaderContext(val moduleName: List<Identifier>, val inspector: CodeInspector)
 
 
 internal fun loadModuleSet(modules: ModuleSet): Map<List<Identifier>, ModuleExpression> {
@@ -32,7 +36,7 @@ internal fun loadModule(module: Module): ModuleExpression {
 }
 
 internal fun loadModule(module: Module.Shed): ModuleExpression {
-    val context = LoaderContext(moduleName = module.name, types = module.types)
+    val context = LoaderContext(moduleName = module.name, inspector = ModuleCodeInspector(module))
 
     val imports = module.node.imports.map { import ->
         Val(loadTarget(import.target), ModuleReference(resolveImport(module.name, import.path)))
@@ -72,24 +76,27 @@ internal fun loadModuleStatement(statement: ModuleStatementNode, context: Loader
 }
 
 private fun shapeToExpression(node: ShapeBaseNode, context: LoaderContext): ShapeTypeValue {
-    val fields = context.types.shapeFields(node)
+    val fields = context.inspector.shapeFields(node)
 
-    val constantFields = fields.filter { (_, field) -> field.isConstant }.map { (name, field) ->
-        val fieldValueNode = node.fields
-            .find { fieldNode -> fieldNode.name == name }
-            ?.value
-        val fieldType = field.type
-        val value = if (fieldValueNode != null) {
-            loadExpression(fieldValueNode, context) as InterpreterValue
-        } else if (fieldType is SymbolType) {
-            symbolTypeToValue(fieldType)
-        } else {
-            throw InterpreterError("Could not find value for constant field")
+    val constantFields = fields.mapNotNull { field ->
+        val fieldValue = field.value
+        val value = when (fieldValue) {
+            null -> null
+
+            is FieldValue.Expression ->
+                loadExpression(fieldValue.expression, context) as InterpreterValue
+
+            is FieldValue.Symbol ->
+                SymbolValue(fieldValue.symbol)
         }
-        name to value
+        if (value == null) {
+            null
+        } else {
+            field.name to value
+        }
     }
 
-    val fieldsValue = ShapeValue(fields = fields.values.associate { field ->
+    val fieldsValue = ShapeValue(fields = fields.associate { field ->
         field.name to ShapeValue(fields = mapOf(
             Identifier("get") to FunctionValue(
                 positionalParameterNames = listOf(Identifier("value")),
@@ -191,7 +198,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
         )
 
         override fun visit(node: IsNode): Expression {
-            val discriminator = findDiscriminator(node, context.types)
+            val discriminator = context.inspector.discriminatorForIsExpression(node)
             return BinaryOperation(
                 BinaryOperator.EQUALS,
                 FieldAccess(loadExpression(node.expression, context), discriminator.fieldName),
@@ -265,7 +272,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                 Val(Target.Variable(Identifier(expressionName)), loadExpression(node.expression, context)),
                 ExpressionStatement(isReturn = true, expression = If(
                     conditionalBranches = node.branches.map { branch ->
-                        val discriminator = findDiscriminator(node, branch, context.types)
+                        val discriminator = context.inspector.discriminatorForWhenBranch(node, branch)
                         val condition = BinaryOperation(
                             BinaryOperator.EQUALS,
                             FieldAccess(VariableReference(expressionName), discriminator.fieldName),
