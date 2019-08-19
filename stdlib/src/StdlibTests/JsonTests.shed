@@ -75,13 +75,7 @@ fun isJsonBoolean(value: Bool) -> M.Matcher[Json.JsonValue] {
     M.isTypeWith[Json.JsonValue, Json.JsonBoolean](
         .description = "JsonBoolean",
         .describeValue = Json.valueToText,
-        .cast = fun (actual: Json.JsonValue) {
-            if (actual is Json.JsonBoolean) {
-                Options.some(actual)
-            } else {
-                Options.none
-            }
-        },
+        .cast = cast(Json.JsonValue, Json.JsonBoolean),
         .with = M.hasField(Json.JsonBoolean.fields.value, M.isBool(value)),
     )
 }
