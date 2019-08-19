@@ -7,6 +7,7 @@ import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.resolveImport
+import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.Symbol
 
 
@@ -199,21 +200,56 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
 
         override fun visit(node: IsNode): Expression {
             val discriminator = context.inspector.discriminatorForIsExpression(node)
-            return BinaryOperation(
-                BinaryOperator.EQUALS,
-                FieldAccess(loadExpression(node.expression, context), discriminator.fieldName),
-                symbolTypeToValue(discriminator.symbolType)
-            )
+            return typeCondition(loadExpression(node.expression, context), discriminator)
         }
 
         override fun visit(node: CallNode): Expression {
-            return Call(
-                receiver = loadExpression(node.receiver, context),
-                positionalArgumentExpressions = loadPositionalArguments(node.positionalArguments),
-                positionalArgumentValues = listOf(),
-                namedArgumentExpressions = loadNamedArguments(node.namedArguments),
-                namedArgumentValues = listOf()
-            )
+            if (context.inspector.isCast(node)) {
+                val discriminator = context.inspector.discriminatorForCast(node)
+                val valueReference = VariableReference("value")
+                return FunctionValue(
+                    positionalParameterNames = listOf(Identifier("value")),
+                    body = listOf(
+                        ExpressionStatement(
+                            expression = If(
+                                conditionalBranches = listOf(
+                                    ConditionalBranch(
+                                        condition = typeCondition(valueReference, discriminator),
+                                        body = listOf(
+                                            ExpressionStatement(
+                                                expression = Call(
+                                                    receiver = optionsSomeReference,
+                                                    positionalArgumentExpressions = listOf(valueReference),
+                                                    namedArgumentExpressions = listOf(),
+                                                    positionalArgumentValues = listOf(),
+                                                    namedArgumentValues = listOf()
+                                                ),
+                                                isReturn = true
+                                            )
+                                        )
+                                    )
+                                ),
+                                elseBranch = listOf(
+                                    ExpressionStatement(
+                                        expression = optionsNoneReference,
+                                        isReturn = true
+                                    )
+                                )
+                            ),
+                            isReturn = true
+                        )
+                    ),
+                    outerScope = Scope(listOf())
+                )
+            } else {
+                return Call(
+                    receiver = loadExpression(node.receiver, context),
+                    positionalArgumentExpressions = loadPositionalArguments(node.positionalArguments),
+                    positionalArgumentValues = listOf(),
+                    namedArgumentExpressions = loadNamedArguments(node.namedArguments),
+                    namedArgumentValues = listOf()
+                )
+            }
         }
 
         override fun visit(node: PartialCallNode): Expression {
@@ -273,11 +309,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                 ExpressionStatement(isReturn = true, expression = If(
                     conditionalBranches = node.branches.map { branch ->
                         val discriminator = context.inspector.discriminatorForWhenBranch(node, branch)
-                        val condition = BinaryOperation(
-                            BinaryOperator.EQUALS,
-                            FieldAccess(VariableReference(expressionName), discriminator.fieldName),
-                            symbolTypeToValue(discriminator.symbolType)
-                        )
+                        val condition = typeCondition(VariableReference(expressionName), discriminator)
                         ConditionalBranch(
                             condition,
                             branch.body.map { statement ->
@@ -292,6 +324,17 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             ))
         }
     })
+}
+
+private fun typeCondition(
+    expression: Expression,
+    discriminator: Discriminator
+): BinaryOperation {
+    return BinaryOperation(
+        BinaryOperator.EQUALS,
+        FieldAccess(expression, discriminator.fieldName),
+        symbolTypeToValue(discriminator.symbolType)
+    )
 }
 
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {

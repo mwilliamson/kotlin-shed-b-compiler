@@ -232,9 +232,9 @@ internal val nativeModules: Map<List<Identifier>, ModuleExpression> = mapOf(
 )
 
 
-private val optionsModuleReference = ModuleReference(listOf(Identifier("Stdlib"), Identifier("Options")))
-private val optionsNoneReference = FieldAccess(optionsModuleReference, Identifier("none"))
-private val optionsSomeReference = FieldAccess(optionsModuleReference, Identifier("some"))
+internal val optionsModuleReference = ModuleReference(listOf(Identifier("Stdlib"), Identifier("Options")))
+internal val optionsNoneReference = FieldAccess(optionsModuleReference, Identifier("none"))
+internal val optionsSomeReference = FieldAccess(optionsModuleReference, Identifier("some"))
 
 private val sequencesModuleReference = ModuleReference(listOf(Identifier("Stdlib"), Identifier("Sequences")))
 private val sequenceTypeReference = FieldAccess(sequencesModuleReference, Identifier("Sequence"))
