@@ -163,7 +163,7 @@ class TypeCheckWhenTests {
             types = mapOf(declaration to inputUnion)
         )
 
-        assertThat(types.typeOf(refinedVariableReference), isType(inputMember1))
+        assertThat(types.typeOfExpression(refinedVariableReference), isType(inputMember1))
     }
 
     @Test

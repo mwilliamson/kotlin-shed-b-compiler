@@ -317,7 +317,7 @@ fun union(
     name: String = "Union",
     members: List<UnionMemberNode> = listOf(),
     staticParameters: List<StaticParameterNode> = listOf(),
-    superType: StaticReferenceNode? = null
+    superType: VariableReferenceNode? = null
 ) = UnionNode(
     name = Identifier(name),
     staticParameters = staticParameters,
@@ -408,7 +408,7 @@ fun import(
     source = anySource()
 )
 
-fun staticReference(name: String) = StaticReferenceNode(Identifier(name), anySource())
+fun staticReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
 fun staticFieldAccess(
     receiver: StaticExpressionNode,
     fieldName: String

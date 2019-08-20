@@ -77,7 +77,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 
     override fun typeOfExpression(node: ExpressionNode): Type {
-        return module.types.typeOf(node)
+        return module.types.typeOfExpression(node)
     }
 }
 

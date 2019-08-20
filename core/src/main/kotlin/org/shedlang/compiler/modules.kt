@@ -32,8 +32,8 @@ sealed class Module {
 
 
 interface Types {
-    fun typeOf(node: ExpressionNode): Type
-    fun typeOf(node: StaticExpressionNode): Type
+    fun typeOfExpression(node: ExpressionNode): Type
+    fun typeOfStaticExpression(node: StaticExpressionNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
 
     fun discriminatorForCast(node: CallBaseNode): Discriminator
@@ -60,11 +60,11 @@ class TypesMap(
         return discriminators[node.nodeId]!!
     }
 
-    override fun typeOf(node: ExpressionNode): Type {
+    override fun typeOfExpression(node: ExpressionNode): Type {
         return expressionTypes[node.nodeId]!!
     }
 
-    override fun typeOf(node: StaticExpressionNode): Type {
+    override fun typeOfStaticExpression(node: StaticExpressionNode): Type {
         return expressionTypes[node.nodeId]!!
     }
 

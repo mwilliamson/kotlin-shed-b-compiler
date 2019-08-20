@@ -101,7 +101,7 @@ class TypeCheckIfTests {
             )
         )
 
-        assertThat(types.typeOf(referenceInTrueBranch), isType(member1))
-        assertThat(types.typeOf(referenceInFalseBranch), isType(union))
+        assertThat(types.typeOfExpression(referenceInTrueBranch), isType(member1))
+        assertThat(types.typeOfExpression(referenceInFalseBranch), isType(union))
     }
 }

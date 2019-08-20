@@ -111,7 +111,7 @@ fun freshNodeId() = nextId++
 
 interface StaticExpressionNode : Node {
     interface Visitor<T> {
-        fun visit(node: StaticReferenceNode): T
+        fun visit(node: VariableReferenceNode): T
         fun visit(node: StaticFieldAccessNode): T
         fun visit(node: StaticApplicationNode): T
         fun visit(node: FunctionTypeNode): T
@@ -119,19 +119,6 @@ interface StaticExpressionNode : Node {
     }
 
     fun <T> accept(visitor: Visitor<T>): T
-}
-
-data class StaticReferenceNode(
-    override val name: Identifier,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-) : ReferenceNode, StaticExpressionNode {
-    override val children: List<Node>
-        get() = listOf()
-
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
-        return visitor.visit(this)
-    }
 }
 
 data class StaticFieldAccessNode(
@@ -332,7 +319,7 @@ data class ShapeFieldNode(
 data class UnionNode(
     override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
-    val superType: StaticReferenceNode?,
+    val superType: VariableReferenceNode?,
     val members: List<UnionMemberNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -781,11 +768,15 @@ data class VariableReferenceNode(
     override val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ReferenceNode, ExpressionNode {
+) : ReferenceNode, ExpressionNode, StaticExpressionNode {
     override val children: List<Node>
         get() = listOf()
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }

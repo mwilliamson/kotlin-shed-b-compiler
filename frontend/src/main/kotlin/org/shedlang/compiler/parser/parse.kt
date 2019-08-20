@@ -296,7 +296,7 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
 
     val explicitTag = if (tokens.trySkip(TokenType.SYMBOL_SUBTYPE)) {
-         parseStaticReference(tokens)
+         parseVariableReference(tokens)
     } else {
         null
     }
@@ -1066,7 +1066,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             return IntegerLiteralNode(token.value.toBigInteger(), source)
         }
         TokenType.IDENTIFIER -> {
-            return parseVariableReference(source, tokens)
+            return parseVariableReference(tokens)
         }
         TokenType.SYMBOL_NAME -> {
             return parseSymbolName(source, tokens)
@@ -1167,7 +1167,8 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
     }
 }
 
-private fun parseVariableReference(source: StringSource, tokens: TokenIterator<TokenType>): VariableReferenceNode {
+private fun parseVariableReference(tokens: TokenIterator<TokenType>): VariableReferenceNode {
+    val source = tokens.location()
     val value = parseIdentifier(tokens)
     return VariableReferenceNode(value, source)
 }
@@ -1262,15 +1263,8 @@ private fun parsePrimaryStaticExpression(
     } else if (tokens.isNext(TokenType.SYMBOL_HASH)) {
         return parseTupleType(tokens)
     } else {
-        return parseStaticReference(tokens)
+        return parseVariableReference(tokens)
     }
-}
-
-private fun parseStaticReference(tokens: TokenIterator<TokenType>): StaticReferenceNode {
-    val source = tokens.location()
-
-    val name = parseIdentifier(tokens)
-    return StaticReferenceNode(name, source)
 }
 
 private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressionNode {

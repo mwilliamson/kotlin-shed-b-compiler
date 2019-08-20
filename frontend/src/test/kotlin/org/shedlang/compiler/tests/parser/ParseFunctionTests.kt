@@ -3,7 +3,10 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.ast.FunctionBody
+import org.shedlang.compiler.ast.FunctionDeclarationNode
+import org.shedlang.compiler.ast.FunctionExpressionNode
+import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isInvariant
@@ -19,9 +22,7 @@ class ParseFunctionTests {
             has(FunctionDeclarationNode::name, isIdentifier("f")),
             has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
-            has(FunctionNode::returnType, present(cast(
-                has(StaticReferenceNode::name, isIdentifier("Unit"))
-            )))
+            has(FunctionNode::returnType, present(isStaticReference("Unit")))
         ))
     }
 
@@ -157,9 +158,7 @@ class ParseFunctionTests {
         assertThat(function, cast(allOf(
             has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
-            has(FunctionNode::returnType, present(cast(
-                has(StaticReferenceNode::name, isIdentifier("Unit"))
-            )))
+            has(FunctionNode::returnType, present(isStaticReference("Unit")))
         )))
     }
 

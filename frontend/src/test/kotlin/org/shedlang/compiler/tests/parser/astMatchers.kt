@@ -134,7 +134,7 @@ internal fun isUnion(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     members: Matcher<List<UnionMemberNode>> = anything,
-    superType: Matcher<StaticReferenceNode?> = anything
+    superType: Matcher<VariableReferenceNode?> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(UnionNode::name, name),
@@ -181,9 +181,7 @@ internal fun isEffectParameterNode(
 internal fun isParameter(name: String, typeReference: String): Matcher<ParameterNode> {
     return allOf(
         has(ParameterNode::name, isIdentifier(name)),
-        has(ParameterNode::type, cast(
-            has(StaticReferenceNode::name, isIdentifier(typeReference))
-        ))
+        has(ParameterNode::type, isStaticReference(typeReference))
     )
 }
 
@@ -272,11 +270,11 @@ internal fun isFieldName(name: String) = has(FieldNameNode::identifier, isIdenti
 internal fun isTupleNode(elements: Matcher<List<ExpressionNode>>)
     = cast(has(TupleNode::elements, elements))
 
-internal fun isVariableReference(name: String) : Matcher<ExpressionNode>
+internal fun isVariableReference(name: String) : Matcher<Node>
     = cast(has(VariableReferenceNode::name, isIdentifier(name)))
 
-internal fun isStaticReference(name: String) : Matcher<StaticExpressionNode>
-    = cast(has(StaticReferenceNode::name, isIdentifier(name)))
+internal fun isStaticReference(name: String) : Matcher<Node>
+    = isVariableReference(name)
 
 internal fun isStaticFieldAccess(
     receiver: Matcher<StaticExpressionNode>,
