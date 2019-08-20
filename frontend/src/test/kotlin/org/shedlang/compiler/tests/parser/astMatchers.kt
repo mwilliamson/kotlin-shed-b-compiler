@@ -134,7 +134,7 @@ internal fun isUnion(
     name: Matcher<Identifier> = anything,
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     members: Matcher<List<UnionMemberNode>> = anything,
-    superType: Matcher<VariableReferenceNode?> = anything
+    superType: Matcher<ReferenceNode?> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(UnionNode::name, name),
@@ -271,7 +271,7 @@ internal fun isTupleNode(elements: Matcher<List<ExpressionNode>>)
     = cast(has(TupleNode::elements, elements))
 
 internal fun isVariableReference(name: String) : Matcher<Node>
-    = cast(has(VariableReferenceNode::name, isIdentifier(name)))
+    = cast(has(ReferenceNode::name, isIdentifier(name)))
 
 internal fun isStaticReference(name: String) : Matcher<Node>
     = isVariableReference(name)

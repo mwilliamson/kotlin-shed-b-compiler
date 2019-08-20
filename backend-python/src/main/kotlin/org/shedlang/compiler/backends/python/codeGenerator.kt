@@ -366,7 +366,7 @@ private fun findTailRecursionArguments(
 ): List<TailRecursionArgument>? {
     if (expression is CallNode) {
         val receiver = expression.receiver
-        if (receiver is VariableReferenceNode && context.inspector.resolve(receiver).nodeId == function.nodeId) {
+        if (receiver is ReferenceNode && context.inspector.resolve(receiver).nodeId == function.nodeId) {
             return findTailRecursionArguments(function, expression, context)
         } else {
             return null
@@ -393,7 +393,7 @@ private fun findTailRecursionArguments(
         )
     }).filterNot { argument ->
         val expression = argument.expression
-        expression is VariableReferenceNode && context.inspector.resolve(expression).nodeId == argument.parameter.nodeId
+        expression is ReferenceNode && context.inspector.resolve(expression).nodeId == argument.parameter.nodeId
     }
 }
 
@@ -705,7 +705,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             }
         }
 
-        override fun visit(node: VariableReferenceNode): GeneratedExpression {
+        override fun visit(node: ReferenceNode): GeneratedExpression {
             val referent = context.inspector.resolve(node)
             val name = if (isBuiltin(referent, "intToString")) {
                 "str"
@@ -1143,7 +1143,7 @@ private fun generateCode(operator: BinaryOperator): PythonBinaryOperator {
 internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationContext): PythonExpressionNode {
     // TODO: test code gen for types
     return node.accept(object : StaticExpressionNode.Visitor<PythonExpressionNode> {
-        override fun visit(node: VariableReferenceNode): PythonExpressionNode {
+        override fun visit(node: ReferenceNode): PythonExpressionNode {
             // TODO: test renaming
             return PythonVariableReferenceNode(context.name(node), NodeSource(node))
         }

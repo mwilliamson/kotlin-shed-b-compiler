@@ -143,7 +143,7 @@ fun literalString(value: String = "") = StringLiteralNode(value, anySource())
 fun literalCodePoint(value: Char = '!') = CodePointLiteralNode(value.toInt(), anySource())
 fun symbolName(name: String) = SymbolNode(name, anySource())
 fun tupleNode(elements: List<ExpressionNode>) = TupleNode(elements, anySource())
-fun variableReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
+fun variableReference(name: String) = ReferenceNode(Identifier(name), anySource())
 
 fun unaryOperation(
     operator: UnaryOperator,
@@ -317,7 +317,7 @@ fun union(
     name: String = "Union",
     members: List<UnionMemberNode> = listOf(),
     staticParameters: List<StaticParameterNode> = listOf(),
-    superType: VariableReferenceNode? = null
+    superType: ReferenceNode? = null
 ) = UnionNode(
     name = Identifier(name),
     staticParameters = staticParameters,
@@ -369,7 +369,7 @@ fun parameter(
 fun module(
     body: List<ModuleStatementNode> = listOf(),
     imports: List<ImportNode> = listOf(),
-    exports: List<VariableReferenceNode> = listOf()
+    exports: List<ReferenceNode> = listOf()
 ) = ModuleNode(
     exports = exports,
     imports = imports,
@@ -386,7 +386,7 @@ fun typesModule(
     source = anySource()
 )
 
-fun export(name: String) = VariableReferenceNode(
+fun export(name: String) = ReferenceNode(
     name = Identifier(name),
     source = anySource()
 )
@@ -408,7 +408,7 @@ fun import(
     source = anySource()
 )
 
-fun staticReference(name: String) = VariableReferenceNode(Identifier(name), anySource())
+fun staticReference(name: String) = ReferenceNode(Identifier(name), anySource())
 fun staticFieldAccess(
     receiver: StaticExpressionNode,
     fieldName: String

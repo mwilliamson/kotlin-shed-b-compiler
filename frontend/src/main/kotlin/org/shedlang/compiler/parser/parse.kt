@@ -86,7 +86,7 @@ private fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
     )
 }
 
-private fun parseExports(tokens: TokenIterator<TokenType>): List<VariableReferenceNode> {
+private fun parseExports(tokens: TokenIterator<TokenType>): List<ReferenceNode> {
     if (tokens.trySkip(TokenType.KEYWORD_EXPORT)) {
         val names = parseMany(
             parseElement = {tokens -> parseVariableReference(tokens) },
@@ -1161,10 +1161,10 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
     }
 }
 
-private fun parseVariableReference(tokens: TokenIterator<TokenType>): VariableReferenceNode {
+private fun parseVariableReference(tokens: TokenIterator<TokenType>): ReferenceNode {
     val source = tokens.location()
     val value = parseIdentifier(tokens)
-    return VariableReferenceNode(value, source)
+    return ReferenceNode(value, source)
 }
 
 private fun parseSymbolName(source: StringSource, tokens: TokenIterator<TokenType>): SymbolNode {

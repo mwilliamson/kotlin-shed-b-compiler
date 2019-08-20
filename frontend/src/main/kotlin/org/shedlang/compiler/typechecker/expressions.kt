@@ -33,7 +33,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             })
         }
 
-        override fun visit(node: VariableReferenceNode) = inferReferenceType(node, context)
+        override fun visit(node: ReferenceNode) = inferReferenceType(node, context)
 
         override fun visit(node: UnaryOperationNode): Type {
             return inferUnaryOperationType(node, context)
@@ -197,7 +197,7 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
 
         if (condition is IsNode) {
             val conditionExpression = condition.expression
-            if (conditionExpression is VariableReferenceNode) {
+            if (conditionExpression is ReferenceNode) {
                 val conditionType = evalType(condition.type, context)
                 trueContext.addVariableType(conditionExpression, conditionType)
             }
@@ -224,7 +224,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         val conditionType = discriminator.targetType
         val branchContext = context.enterScope()
         val expression = node.expression
-        if (expression is VariableReferenceNode) {
+        if (expression is ReferenceNode) {
             branchContext.addVariableType(expression, conditionType)
         }
         val type = typeCheck(branch.body, branchContext)

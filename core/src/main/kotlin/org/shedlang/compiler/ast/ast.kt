@@ -54,10 +54,6 @@ fun builtinVariable(name: String, type: Type) = BuiltinVariable(
 
 interface TypeDeclarationNode: VariableBindingNode
 
-interface ReferenceNode: Node {
-    val name: Identifier
-}
-
 interface Source {
     fun describe(): String
 }
@@ -111,7 +107,7 @@ fun freshNodeId() = nextId++
 
 interface StaticExpressionNode : Node {
     interface Visitor<T> {
-        fun visit(node: VariableReferenceNode): T
+        fun visit(node: ReferenceNode): T
         fun visit(node: StaticFieldAccessNode): T
         fun visit(node: StaticApplicationNode): T
         fun visit(node: FunctionTypeNode): T
@@ -181,7 +177,7 @@ data class TupleTypeNode(
 }
 
 data class ModuleNode(
-    val exports: List<VariableReferenceNode>,
+    val exports: List<ReferenceNode>,
     val imports: List<ImportNode>,
     val body: List<ModuleStatementNode>,
     override val source: Source,
@@ -310,7 +306,7 @@ data class ShapeFieldNode(
 data class UnionNode(
     override val name: Identifier,
     val staticParameters: List<StaticParameterNode>,
-    val superType: VariableReferenceNode?,
+    val superType: ReferenceNode?,
     val members: List<UnionMemberNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -650,7 +646,7 @@ interface ExpressionNode : Node {
         fun visit(node: CodePointLiteralNode): T
         fun visit(node: SymbolNode): T
         fun visit(node: TupleNode): T
-        fun visit(node: VariableReferenceNode): T
+        fun visit(node: ReferenceNode): T
         fun visit(node: UnaryOperationNode): T
         fun visit(node: BinaryOperationNode): T
         fun visit(node: IsNode): T
@@ -755,11 +751,11 @@ data class TupleNode(
     }
 }
 
-data class VariableReferenceNode(
-    override val name: Identifier,
+data class ReferenceNode(
+    val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ReferenceNode, ExpressionNode, StaticExpressionNode {
+) : ExpressionNode, StaticExpressionNode {
     override val children: List<Node>
         get() = listOf()
 

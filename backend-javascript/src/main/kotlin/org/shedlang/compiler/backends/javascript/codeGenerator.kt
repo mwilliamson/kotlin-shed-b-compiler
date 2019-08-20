@@ -88,7 +88,7 @@ private fun generateImportExpression(importPath: ImportPath, module: Module.Shed
     )
 }
 
-private fun generateExport(export: VariableReferenceNode, source: Source): JavascriptExpressionStatementNode {
+private fun generateExport(export: ReferenceNode, source: Source): JavascriptExpressionStatementNode {
     val name = export.name
     return JavascriptExpressionStatementNode(
         JavascriptAssignmentNode(
@@ -333,7 +333,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
 
-        override fun visit(node: VariableReferenceNode): JavascriptExpressionNode {
+        override fun visit(node: ReferenceNode): JavascriptExpressionNode {
             return generateCodeForReferenceNode(node)
         }
 

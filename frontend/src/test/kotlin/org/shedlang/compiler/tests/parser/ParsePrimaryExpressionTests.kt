@@ -43,7 +43,7 @@ class ParsePrimaryExpressionTests {
     fun identifierCanBeParsedAsVariableReference() {
         val source = "x"
         val node = parsePrimaryExpression(source)
-        assertThat(node, cast(has(VariableReferenceNode::name, isIdentifier("x"))))
+        assertThat(node, cast(has(ReferenceNode::name, isIdentifier("x"))))
     }
 
     @TestFactory

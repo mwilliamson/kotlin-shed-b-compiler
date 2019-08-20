@@ -184,7 +184,7 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
             })
         }
 
-        override fun visit(node: VariableReferenceNode) = VariableReference(node.name.value)
+        override fun visit(node: ReferenceNode) = VariableReference(node.name.value)
 
         override fun visit(node: UnaryOperationNode): Expression = UnaryOperation(
             node.operator,

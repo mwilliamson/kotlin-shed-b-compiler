@@ -382,7 +382,7 @@ private fun evalStaticValue(node: StaticExpressionNode, context: TypeContext): S
 
 private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
     val type = node.accept(object : StaticExpressionNode.Visitor<Type> {
-        override fun visit(node: VariableReferenceNode): Type {
+        override fun visit(node: ReferenceNode): Type {
             return inferReferenceType(node, context)
         }
 
