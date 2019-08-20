@@ -6,7 +6,7 @@ import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 
-internal fun isExport(name: String)= has(ExportNode::name, isIdentifier(name))
+internal fun isExport(name: String) = isVariableReference(name)
 
 internal fun isImport(
     target: Matcher<TargetNode>,

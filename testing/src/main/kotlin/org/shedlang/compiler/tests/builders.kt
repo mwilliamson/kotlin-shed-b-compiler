@@ -369,7 +369,7 @@ fun parameter(
 fun module(
     body: List<ModuleStatementNode> = listOf(),
     imports: List<ImportNode> = listOf(),
-    exports: List<ExportNode> = listOf()
+    exports: List<VariableReferenceNode> = listOf()
 ) = ModuleNode(
     exports = exports,
     imports = imports,
@@ -386,7 +386,7 @@ fun typesModule(
     source = anySource()
 )
 
-fun export(name: String) = ExportNode(
+fun export(name: String) = VariableReferenceNode(
     name = Identifier(name),
     source = anySource()
 )

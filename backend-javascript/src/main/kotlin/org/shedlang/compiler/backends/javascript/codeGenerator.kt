@@ -88,7 +88,7 @@ private fun generateImportExpression(importPath: ImportPath, module: Module.Shed
     )
 }
 
-private fun generateExport(export: ExportNode, source: Source): JavascriptExpressionStatementNode {
+private fun generateExport(export: VariableReferenceNode, source: Source): JavascriptExpressionStatementNode {
     val name = export.name
     return JavascriptExpressionStatementNode(
         JavascriptAssignmentNode(

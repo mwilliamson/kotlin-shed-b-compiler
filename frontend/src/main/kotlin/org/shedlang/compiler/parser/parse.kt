@@ -86,10 +86,10 @@ private fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
     )
 }
 
-private fun parseExports(tokens: TokenIterator<TokenType>): List<ExportNode> {
+private fun parseExports(tokens: TokenIterator<TokenType>): List<VariableReferenceNode> {
     if (tokens.trySkip(TokenType.KEYWORD_EXPORT)) {
         val names = parseMany(
-            parseElement = {tokens -> parseExport(tokens) },
+            parseElement = {tokens -> parseVariableReference(tokens) },
             parseSeparator = {tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
             allowZero = false,
             isEnd = {tokens -> tokens.isNext(TokenType.SYMBOL_SEMICOLON)},
@@ -101,12 +101,6 @@ private fun parseExports(tokens: TokenIterator<TokenType>): List<ExportNode> {
     } else {
         return listOf()
     }
-}
-
-private fun parseExport(tokens: TokenIterator<TokenType>): ExportNode {
-    val source = tokens.location()
-    val name = parseIdentifier(tokens)
-    return ExportNode(name = name, source = source)
 }
 
 private fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModuleNode {
