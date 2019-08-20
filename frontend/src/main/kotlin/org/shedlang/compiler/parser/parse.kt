@@ -1356,7 +1356,7 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
 private interface StaticOperationParser: ExpressionParser<StaticExpressionNode> {
     companion object {
         private val parsers = listOf(
-            TypeApplicationParser,
+            StaticCallParser,
             StaticFieldAccessParser
         ).associateBy({ parser -> parser.operatorToken })
 
@@ -1373,7 +1373,7 @@ private interface ExpressionParser<T> {
     fun parse(left: T, tokens: TokenIterator<TokenType>): T
 }
 
-private object TypeApplicationParser : StaticOperationParser {
+private object StaticCallParser : StaticOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
