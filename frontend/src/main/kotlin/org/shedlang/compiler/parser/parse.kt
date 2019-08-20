@@ -1315,7 +1315,7 @@ private fun parseTupleType(tokens: TokenIterator<TokenType>): StaticExpressionNo
     )
 }
 
-    private class FunctionTypeParameters(
+private class FunctionTypeParameters(
     val positional: List<StaticExpressionNode>,
     val named: List<ParameterNode>
 )
