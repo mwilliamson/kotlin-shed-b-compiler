@@ -111,3 +111,4 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
 * Rename Any type to something else (Top?) to avoid conflation with any in (for instance) TypeScript
 
 * Don't allow references to compile-time only values
+  * Or don't have a notion of compile-time only values?
