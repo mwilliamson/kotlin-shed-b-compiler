@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.javascript.tests
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
@@ -18,10 +19,7 @@ import org.shedlang.compiler.backends.javascript.serialise
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
-import java.io.InputStream
-import java.io.InputStreamReader
 import java.math.BigInteger
-import java.nio.charset.StandardCharsets
 
 class CodeGeneratorTests {
     @Test
@@ -949,25 +947,11 @@ class CodeGeneratorTests {
             }
         }
     }
-
-    private fun jsFormat(source: String): String {
-        val root = findRoot()
-        val prettierPath = root.resolve("test-utils/node_modules/.bin/prettier")
-
-        val process = ProcessBuilder(prettierPath.toString(), "--stdin-filepath", "input.js")
-            .start()
-        process.outputStream.write(source.toByteArray(StandardCharsets.UTF_8))
-        process.outputStream.close()
-        val exitCode = process.waitFor()
-        if (exitCode == 0) {
-            return readString(process.inputStream)
-        } else {
-            val stderr = readString(process.errorStream)
-            throw Exception("failed to format\n" + stderr)
+    companion object {
+        @AfterAll
+        @JvmStatic
+        fun afterAll() {
+            saveCache()
         }
-    }
-
-    private fun readString(stream: InputStream): String {
-        return InputStreamReader(stream, Charsets.UTF_8).use(InputStreamReader::readText)
     }
 }
