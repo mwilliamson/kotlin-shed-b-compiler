@@ -12,3 +12,4 @@
 /interpreter/target
 /testing/target
 shedDependencies
+/test-utils/node_modules/
