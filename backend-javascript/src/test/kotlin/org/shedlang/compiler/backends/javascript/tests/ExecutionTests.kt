@@ -12,7 +12,7 @@ import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
-    private val disabledTests = setOf<String>()
+    private val disabledTests = setOf<String>("TailRec")
 
     @TestFactory
     fun testProgram(): List<DynamicTest> {

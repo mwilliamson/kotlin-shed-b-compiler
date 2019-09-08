@@ -1,0 +1,14 @@
+// stdout:
+//   10001
+
+fun tailrec slowAdd(a: Int, b: Int) -> Int {
+    if (b == 0) {
+        a
+    } else {
+        slowAdd(a + 1, b - 1)
+    }
+}
+
+fun main() !Io -> Unit {
+    print!(intToString(slowAdd(1, 10000)) + "\n");
+}
