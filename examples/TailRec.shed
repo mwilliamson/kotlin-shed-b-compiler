@@ -1,11 +1,11 @@
 // stdout:
 //   10001
 
-fun tailrec slowAdd(a: Int, b: Int) -> Int {
+fun slowAdd(a: Int, b: Int) -> Int {
     if (b == 0) {
         a
     } else {
-        slowAdd(a + 1, b - 1)
+        tailrec slowAdd(a + 1, b - 1)
     }
 }
 
