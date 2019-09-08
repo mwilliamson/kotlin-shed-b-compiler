@@ -18,6 +18,7 @@ internal fun newTypeContext(
     return TypeContext(
         moduleName = moduleName,
         effect = EmptyEffect,
+        functionNodeId = null,
         expressionTypes = expressionTypes,
         variableTypes = nodeTypes.toMutableMap(),
         discriminators = mutableMapOf(),
@@ -30,6 +31,7 @@ internal fun newTypeContext(
 internal class TypeContext(
     val moduleName: List<String>?,
     val effect: Effect,
+    val functionNodeId: Int?,
     private val variableTypes: MutableMap<Int, Type>,
     private val discriminators: MutableMap<Int, Discriminator>,
     private val expressionTypes: MutableMap<Int, Type>,
@@ -83,10 +85,11 @@ internal class TypeContext(
         expressionTypes[node.nodeId] = type
     }
 
-    fun enterFunction(effect: Effect): TypeContext {
+    fun enterFunction(function: FunctionNode, effect: Effect): TypeContext {
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
+            functionNodeId = function.nodeId,
             expressionTypes = expressionTypes,
             variableTypes = variableTypes,
             discriminators = discriminators,
@@ -100,6 +103,7 @@ internal class TypeContext(
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
+            functionNodeId = functionNodeId,
             expressionTypes = expressionTypes,
             variableTypes = HashMap(variableTypes),
             discriminators = discriminators,
@@ -291,6 +295,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
     val returnType = when (body) {
         is FunctionBody.Expression -> {
             val bodyContext = context.enterFunction(
+                function,
                 effect = effect
             )
             val expressionType = inferType(body.expression, bodyContext)
@@ -312,6 +317,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
             }
             context.defer({
                 val bodyContext = context.enterFunction(
+                    function,
                     effect = effect
                 )
                 val actualReturnType = typeCheck(body.nodes, bodyContext)
