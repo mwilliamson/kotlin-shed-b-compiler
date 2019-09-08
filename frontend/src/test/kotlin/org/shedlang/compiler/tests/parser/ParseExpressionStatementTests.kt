@@ -1,10 +1,12 @@
 package org.shedlang.compiler.tests.parser
 
+import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.typechecker.SourceError
 
@@ -72,5 +74,15 @@ class ParseExpressionStatementTests {
         val source = "tailrec f()"
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isExpressionStatement(isCall(), isReturn = equalTo(true)))
+    }
+
+    @Test
+    fun tailrecModifierMustBeUsedOnCallExpressionStatement() {
+        val source = "tailrec f"
+        assertThat({
+            parseString(::parseFunctionStatement, source)
+        }, throwsException(allOf(
+            has(ParseError::message, equalTo("tailrec expressions must be calls"))
+        )))
     }
 }

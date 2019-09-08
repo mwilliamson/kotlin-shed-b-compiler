@@ -565,8 +565,19 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
     } else if (token.tokenType == TokenType.KEYWORD_FUN && tokens.peek(1).tokenType == TokenType.IDENTIFIER) {
         return parseFunctionDeclaration(tokens)
     } else if (token.tokenType == TokenType.KEYWORD_TAILREC) {
+        val source = tokens.location()
         tokens.skip()
-        return parseFunctionStatement(tokens)
+        val expression = parseExpression(tokens)
+
+        if (expression is CallNode) {
+            return ExpressionStatementNode(
+                isReturn = true,
+                expression = expression,
+                source = source
+            )
+        } else {
+            throw ParseError("tailrec expressions must be calls", location = expression.source)
+        }
     } else {
         val expression = tryParseExpression(tokens)
         if (expression == null) {
