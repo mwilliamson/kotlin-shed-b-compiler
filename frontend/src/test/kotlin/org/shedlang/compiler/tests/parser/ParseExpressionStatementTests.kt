@@ -1,12 +1,11 @@
 package org.shedlang.compiler.tests.parser
 
-import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.frontend.tests.throwsException
-import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.typechecker.SourceError
 
@@ -15,14 +14,30 @@ class ParseExpressionStatementTests {
     fun expressionWithTrailingSemiColonIsReadAsNonReturningExpressionStatement() {
         val source = "4;"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(isIntLiteral(4), isReturn = equalTo(false)))
+        assertThat(node, isExpressionStatement(
+            isIntLiteral(4),
+            type = equalTo(ExpressionStatementNode.Type.NO_RETURN)
+        ))
     }
 
     @Test
     fun expressionWithoutTrailingSemiColonIsReadAsReturningExpressionStatement() {
         val source = "4"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(isIntLiteral(4), isReturn = equalTo(true)))
+        assertThat(node, isExpressionStatement(
+            isIntLiteral(4),
+            type = equalTo(ExpressionStatementNode.Type.RETURN)
+        ))
+    }
+
+    @Test
+    fun expressionWithTailrecPrefixIsReadAsTailrecReturningExpressionStatement() {
+        val source = "tailrec f()"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node, isExpressionStatement(
+            isCall(),
+            type = equalTo(ExpressionStatementNode.Type.TAILREC_RETURN)
+        ))
     }
 
     @Test
@@ -67,22 +82,5 @@ class ParseExpressionStatementTests {
         assertThat({
             parseString(::parseFunctionStatement, source)
         }, throwsException<SourceError>(has(SourceError::message, equalTo("Some branches do not provide a value"))))
-    }
-
-    @Test
-    fun tailrecModifierIsIgnored() {
-        val source = "tailrec f()"
-        val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(isCall(), isReturn = equalTo(true)))
-    }
-
-    @Test
-    fun tailrecModifierMustBeUsedOnCallExpressionStatement() {
-        val source = "tailrec f"
-        assertThat({
-            parseString(::parseFunctionStatement, source)
-        }, throwsException(allOf(
-            has(ParseError::message, equalTo("tailrec expressions must be calls"))
-        )))
     }
 }

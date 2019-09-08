@@ -568,16 +568,11 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
         val source = tokens.location()
         tokens.skip()
         val expression = parseExpression(tokens)
-
-        if (expression is CallNode) {
-            return ExpressionStatementNode(
-                type = ExpressionStatementNode.Type.TAILREC_RETURN,
-                expression = expression,
-                source = source
-            )
-        } else {
-            throw ParseError("tailrec expressions must be calls", location = expression.source)
-        }
+        return ExpressionStatementNode(
+            type = ExpressionStatementNode.Type.TAILREC_RETURN,
+            expression = expression,
+            source = source
+        )
     } else {
         val expression = tryParseExpression(tokens)
         if (expression == null) {

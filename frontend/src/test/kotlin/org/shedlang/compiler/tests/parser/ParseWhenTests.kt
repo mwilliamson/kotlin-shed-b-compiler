@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isSequence
 
@@ -28,13 +29,13 @@ class ParseWhenTests {
                 isWhenBranch(
                     type = isStaticReference("Some"),
                     body = isSequence(
-                        isExpressionStatement(expression = isIntLiteral(1), isReturn = equalTo(true))
+                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.RETURN))
                     )
                 ),
                 isWhenBranch(
                     type = isStaticReference("None"),
                     body = isSequence(
-                        isExpressionStatement(expression = isIntLiteral(2), isReturn = equalTo(true))
+                        isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.RETURN))
                     )
                 )
             ),
@@ -61,12 +62,12 @@ class ParseWhenTests {
                 isWhenBranch(
                     type = isStaticReference("Some"),
                     body = isSequence(
-                        isExpressionStatement(expression = isIntLiteral(1), isReturn = equalTo(true))
+                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.RETURN))
                     )
                 )
             ),
             elseBranch = present(isSequence(
-                isExpressionStatement(expression = isIntLiteral(2), isReturn = equalTo(true))
+                isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.RETURN))
             ))
         ))
     }

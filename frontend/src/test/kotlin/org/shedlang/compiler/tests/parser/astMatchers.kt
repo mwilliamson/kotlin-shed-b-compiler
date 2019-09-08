@@ -52,11 +52,11 @@ internal fun isWhenBranch(
 
 internal fun isExpressionStatement(
     expression: Matcher<ExpressionNode> = anything,
-    isReturn: Matcher<Boolean> = anything
+    type: Matcher<ExpressionStatementNode.Type> = anything
 ): Matcher<FunctionStatementNode> {
     return cast(allOf(
         has(ExpressionStatementNode::expression, expression),
-        has(ExpressionStatementNode::isReturn, isReturn)
+        has(ExpressionStatementNode::type, type)
     ))
 }
 

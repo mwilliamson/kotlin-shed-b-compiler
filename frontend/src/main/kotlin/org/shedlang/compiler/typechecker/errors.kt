@@ -104,3 +104,5 @@ class MultipleModulesWithSameNameFoundError(val name: List<Identifier>, source: 
     : TypeCheckError("More than one module with the name ${name.map(Identifier::value).joinToString(".")} was found", source = source)
 class CouldNotFindDiscriminator(val sourceType: Type, val targetType: Type, source: Source)
     : TypeCheckError("Could not find discriminator from ${sourceType.shortDescription} to ${targetType.shortDescription}", source = source)
+
+class InvalidTailCall(source: Source): TypeCheckError("tail calls must be self-recursive calls", source = source)

@@ -6,10 +6,13 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.InvalidTailCall
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
+import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.functionType
 
 class TypeCheckExpressionStatementTests {
     @Test
@@ -38,8 +41,26 @@ class TypeCheckExpressionStatementTests {
 
     @Test
     fun tailrecExpressionStatementHasTypeOfExpression() {
-        val node = expressionStatementTailRecReturn(literalBool())
-        val type = typeCheckFunctionStatement(node, typeContext())
+        val functionDeclaration = function(name = "f")
+        val functionType = functionType(returns = BoolType)
+
+        val functionReference = variableReference("f")
+        val node = expressionStatementTailRecReturn(call(
+            receiver = functionReference
+        ))
+        val type = typeCheckFunctionStatement(node, typeContext(
+            references = mapOf(functionReference to functionDeclaration),
+            types = mapOf(functionDeclaration to functionType)
+        ))
         assertThat(type, isBoolType)
+    }
+
+    @Test
+    fun whenTailrecExpressionIsNotFunctionCallThenErrorIsThrown() {
+        val node = expressionStatementTailRecReturn(literalBool())
+        assertThat(
+            { typeCheckFunctionStatement(node, typeContext()) },
+            throws<InvalidTailCall>()
+        )
     }
 }

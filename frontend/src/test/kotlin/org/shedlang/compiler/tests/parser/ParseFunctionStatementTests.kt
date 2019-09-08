@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseFunctionStatement
 
@@ -26,13 +27,13 @@ class ParseFunctionStatementTests {
     fun ifStatementReturnsWhenAllBranchesReturns() {
         val source = "if (true) { 1 } else { 2 }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(isReturn = equalTo(true)))
+        assertThat(node, isExpressionStatement(type = equalTo(ExpressionStatementNode.Type.RETURN)))
     }
 
     @Test
     fun ifStatementDoesNotReturnWhenAllBranchesDoNotReturn() {
         val source = "if (true) { 1; } else { 2; }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(isReturn = equalTo(false)))
+        assertThat(node, isExpressionStatement(type = equalTo(ExpressionStatementNode.Type.NO_RETURN)))
     }
 }
