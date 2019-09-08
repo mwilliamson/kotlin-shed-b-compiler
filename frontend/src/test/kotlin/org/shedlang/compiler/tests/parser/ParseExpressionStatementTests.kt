@@ -66,4 +66,11 @@ class ParseExpressionStatementTests {
             parseString(::parseFunctionStatement, source)
         }, throwsException<SourceError>(has(SourceError::message, equalTo("Some branches do not provide a value"))))
     }
+
+    @Test
+    fun tailrecModifierIsIgnored() {
+        val source = "tailrec f()"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node, isExpressionStatement(isCall(), isReturn = equalTo(true)))
+    }
 }

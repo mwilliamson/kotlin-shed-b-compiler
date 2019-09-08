@@ -564,6 +564,9 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
         return parseVal(tokens)
     } else if (token.tokenType == TokenType.KEYWORD_FUN && tokens.peek(1).tokenType == TokenType.IDENTIFIER) {
         return parseFunctionDeclaration(tokens)
+    } else if (token.tokenType == TokenType.KEYWORD_TAILREC) {
+        tokens.skip()
+        return parseFunctionStatement(tokens)
     } else {
         val expression = tryParseExpression(tokens)
         if (expression == null) {
