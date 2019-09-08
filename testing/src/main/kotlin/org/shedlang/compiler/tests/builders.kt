@@ -20,7 +20,7 @@ fun ifStatement(
             trueBranch = trueBranch,
             elseBranch = elseBranch
         ),
-        isReturn = false,
+        type = ExpressionStatementNode.Type.NO_RETURN,
         source = anySource()
     )
 }
@@ -81,11 +81,41 @@ fun whenBranch(
     source = anySource()
 )
 
+fun expressionStatementNoReturn(
+    expression: ExpressionNode = expression(),
+    source: Source = anySource()
+) = ExpressionStatementNode(
+    expression = expression,
+    type = ExpressionStatementNode.Type.NO_RETURN,
+    source = source
+)
+
+fun expressionStatementReturn(
+    expression: ExpressionNode = expression(),
+    source: Source = anySource()
+) = ExpressionStatementNode(
+    expression = expression,
+    type = ExpressionStatementNode.Type.RETURN,
+    source = source
+)
+
+fun expressionStatementTailRecReturn(
+    expression: ExpressionNode = expression(),
+    source: Source = anySource()
+) = ExpressionStatementNode(
+    expression = expression,
+    type = ExpressionStatementNode.Type.TAILREC_RETURN,
+    source = source
+)
+
 fun expressionStatement(
     expression: ExpressionNode = expression(),
-    isReturn: Boolean = false,
     source: Source = anySource()
-) = ExpressionStatementNode(expression, isReturn = isReturn, source = source)
+) = ExpressionStatementNode(
+    expression,
+    type = ExpressionStatementNode.Type.NO_RETURN,
+    source = source
+)
 
 fun valStatement(
     name: String = "<val name>",

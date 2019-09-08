@@ -24,14 +24,21 @@ class TypeCheckExpressionStatementTests {
 
     @Test
     fun nonReturningExpressionStatementHasUnitType() {
-        val node = expressionStatement(literalBool(), isReturn = false)
+        val node = expressionStatementNoReturn(literalBool())
         val type = typeCheckFunctionStatement(node, typeContext())
         assertThat(type, isUnitType)
     }
 
     @Test
     fun returningExpressionStatementHasTypeOfExpression() {
-        val node = expressionStatement(literalBool(), isReturn = true)
+        val node = expressionStatementReturn(literalBool())
+        val type = typeCheckFunctionStatement(node, typeContext())
+        assertThat(type, isBoolType)
+    }
+
+    @Test
+    fun tailrecExpressionStatementHasTypeOfExpression() {
+        val node = expressionStatementTailRecReturn(literalBool())
         val type = typeCheckFunctionStatement(node, typeContext())
         assertThat(type, isBoolType)
     }

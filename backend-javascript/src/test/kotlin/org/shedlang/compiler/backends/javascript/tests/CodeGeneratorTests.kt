@@ -8,9 +8,9 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.backends.FieldValue
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
@@ -227,7 +227,7 @@ class CodeGeneratorTests {
 
     @Test
     fun nonReturningExpressionStatementGeneratesExpressionStatement() {
-        val shed = expressionStatement(literalInt(42), isReturn = false)
+        val shed = expressionStatementNoReturn(literalInt(42))
 
         val node = generateCodeForFunctionStatement(shed)
 
@@ -239,7 +239,7 @@ class CodeGeneratorTests {
 
     @Test
     fun returningExpressionStatementGeneratesReturnStatement() {
-        val shed = expressionStatement(literalInt(42), isReturn = true)
+        val shed = expressionStatementReturn(literalInt(42))
 
         val node = generateCodeForFunctionStatement(shed)
 
@@ -283,7 +283,7 @@ class CodeGeneratorTests {
         val whenBranch = whenBranch(
             staticReference("T"),
             listOf(
-                expressionStatement(literalInt(42), isReturn = true)
+                expressionStatementReturn(literalInt(42))
             )
         )
         val shed = whenExpression(
@@ -292,7 +292,7 @@ class CodeGeneratorTests {
                 whenBranch
             ),
             elseBranch = listOf(
-                expressionStatement(literalInt(47), isReturn = true)
+                expressionStatementReturn(literalInt(47))
             )
         )
 

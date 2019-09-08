@@ -76,13 +76,13 @@ class TypeCheckWhenTests {
                 whenBranch(
                     type = inputMember1TypeReference,
                     body = listOf(
-                        expressionStatement(outputMember1Reference, isReturn = true)
+                        expressionStatementReturn(outputMember1Reference)
                     )
                 ),
                 whenBranch(
                     type = inputMember2TypeReference,
                     body = listOf(
-                        expressionStatement(outputMember2Reference, isReturn = true)
+                        expressionStatementReturn(outputMember2Reference)
                     )
                 )
             )
@@ -111,12 +111,12 @@ class TypeCheckWhenTests {
                 whenBranch(
                     type = inputMember1TypeReference,
                     body = listOf(
-                        expressionStatement(outputMember1Reference, isReturn = true)
+                        expressionStatementReturn(outputMember1Reference)
                     )
                 )
             ),
             elseBranch = listOf(
-                expressionStatement(outputMember2Reference, isReturn = true)
+                expressionStatementReturn(outputMember2Reference)
             )
         )
         val typeContext = typeContext(

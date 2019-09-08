@@ -357,7 +357,14 @@ sealed class FunctionBody {
             get() = listOf(expression)
 
         override val statements: List<FunctionStatementNode>
-            get() = listOf(ExpressionStatementNode(expression, isReturn = true, source = expression.source))
+            get() {
+                val statement = ExpressionStatementNode(
+                    expression,
+                    type = ExpressionStatementNode.Type.RETURN,
+                    source = expression.source
+                )
+                return listOf(statement)
+            }
     }
 }
 
@@ -554,10 +561,19 @@ data class WhenBranchNode(
 
 data class ExpressionStatementNode(
     val expression: ExpressionNode,
-    override val isReturn: Boolean,
+    val type: Type,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): FunctionStatementNode {
+    enum class Type {
+        NO_RETURN,
+        RETURN,
+        TAILREC_RETURN
+    }
+
+    override val isReturn: Boolean
+        get() = type != Type.NO_RETURN
+
     override val children: List<Node>
         get() = listOf(expression)
 

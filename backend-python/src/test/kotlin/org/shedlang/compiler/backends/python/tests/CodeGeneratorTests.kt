@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.backends.FieldValue
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.python.*
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.parser.parse
@@ -399,14 +399,14 @@ class CodeGeneratorTests {
 
     @Test
     fun nonReturningExpressionStatementGeneratesExpressionStatement() {
-        val shed = expressionStatement(literalInt(42), isReturn = false)
+        val shed = expressionStatementNoReturn(literalInt(42))
         val node = generateCodeForFunctionStatement(shed)
         assertThat(node, isSequence(isPythonExpressionStatement(isPythonIntegerLiteral(42))))
     }
 
     @Test
     fun returningExpressionStatementGeneratesReturnStatement() {
-        val shed = expressionStatement(literalInt(42), isReturn = true)
+        val shed = expressionStatementReturn(literalInt(42))
         val node = generateCodeForFunctionStatement(shed)
         assertThat(node, isSequence(isPythonReturn(isPythonIntegerLiteral(42))))
     }
@@ -418,12 +418,12 @@ class CodeGeneratorTests {
                 conditionalBranch(
                     condition = literalInt(42),
                     body = listOf(
-                        expressionStatement(literalInt(0), isReturn = false),
-                        expressionStatement(literalInt(1), isReturn = true)
+                        expressionStatementNoReturn(literalInt(0)),
+                        expressionStatementReturn(literalInt(1))
                     )
                 )
             ),
-            elseBranch = listOf(expressionStatement(literalInt(2), isReturn = true))
+            elseBranch = listOf(expressionStatementReturn(literalInt(2)))
         )
 
         val generatedExpression = generateCode(shed)
@@ -456,20 +456,19 @@ class CodeGeneratorTests {
     fun returningIfStatementGeneratesIfStatementWithReturns() {
         val shed = function(
             body = listOf(
-                expressionStatement(
+                expressionStatementReturn(
                     ifExpression(
                         conditionalBranches = listOf(
                             conditionalBranch(
                                 condition = literalInt(42),
                                 body = listOf(
-                                    expressionStatement(literalInt(0), isReturn = false),
-                                    expressionStatement(literalInt(1), isReturn = true)
+                                    expressionStatementNoReturn(literalInt(0)),
+                                    expressionStatementReturn(literalInt(1))
                                 )
                             )
                         ),
-                        elseBranch = listOf(expressionStatement(literalInt(2), isReturn = true))
-                    ),
-                    isReturn = true
+                        elseBranch = listOf(expressionStatementReturn(literalInt(2)))
+                    )
                 )
             )
         )
@@ -506,7 +505,7 @@ class CodeGeneratorTests {
         val whenBranch = whenBranch(
             staticReference("T"),
             listOf(
-                expressionStatement(literalInt(42), isReturn = true)
+                expressionStatementReturn(literalInt(42))
             )
         )
         val shed = whenExpression(
@@ -515,7 +514,7 @@ class CodeGeneratorTests {
                 whenBranch
             ),
             elseBranch = listOf(
-                expressionStatement(literalInt(47), isReturn = true)
+                expressionStatementReturn(literalInt(47))
             )
         )
 
@@ -570,7 +569,7 @@ class CodeGeneratorTests {
         val whenBranch = whenBranch(
             staticReference("T"),
             listOf(
-                expressionStatement(literalInt(42), isReturn = true)
+                expressionStatementReturn(literalInt(42))
             )
         )
         val shed = whenExpression(
@@ -620,7 +619,7 @@ class CodeGeneratorTests {
         val whenBranch = whenBranch(
             typeReference,
             listOf(
-                expressionStatement(literalInt(42), isReturn = true)
+                expressionStatementReturn(literalInt(42))
             )
         )
         val whenExpression = whenExpression(
@@ -629,15 +628,12 @@ class CodeGeneratorTests {
                 whenBranch
             ),
             elseBranch = listOf(
-                expressionStatement(literalInt(47), isReturn = true)
+                expressionStatementReturn(literalInt(47))
             )
         )
         val shed = function(
             body = listOf(
-                expressionStatement(
-                    whenExpression,
-                    isReturn = true
-                )
+                expressionStatementReturn(whenExpression)
             )
         )
 
@@ -800,8 +796,8 @@ class CodeGeneratorTests {
             name = "x",
             expression = ifExpression(
                 literalBool(true),
-                listOf(expressionStatement(literalInt(0), isReturn = true)),
-                listOf(expressionStatement(literalInt(1), isReturn = true))
+                listOf(expressionStatementReturn(literalInt(0))),
+                listOf(expressionStatementReturn(literalInt(1)))
             )
         )
 
@@ -986,8 +982,8 @@ class CodeGeneratorTests {
         val earlierExpression = call(earlierFunctionReference)
         val laterExpression = ifExpression(
             literalBool(true),
-            listOf(expressionStatement(call(laterFunctionReference), isReturn = true)),
-            listOf(expressionStatement(call(laterFunctionReference), isReturn = true))
+            listOf(expressionStatementReturn(call(laterFunctionReference))),
+            listOf(expressionStatementReturn(call(laterFunctionReference)))
         )
 
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(

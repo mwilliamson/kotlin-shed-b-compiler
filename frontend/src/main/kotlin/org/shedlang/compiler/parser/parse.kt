@@ -571,7 +571,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
 
         if (expression is CallNode) {
             return ExpressionStatementNode(
-                isReturn = true,
+                type = ExpressionStatementNode.Type.TAILREC_RETURN,
                 expression = expression,
                 source = source
             )
@@ -594,9 +594,14 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
             } else {
                 !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
             }
+            val type = if (isReturn) {
+                ExpressionStatementNode.Type.RETURN
+            } else {
+                ExpressionStatementNode.Type.NO_RETURN
+            }
             return ExpressionStatementNode(
                 expression,
-                isReturn = isReturn,
+                type = type,
                 source = expression.source
             )
         }
