@@ -230,7 +230,7 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
             source = NodeSource(parameter)
         )
     }
-    val body = namedParameterAssignments + generateCode(node.body.statements, context)
+    val body = namedParameterAssignments + generateCode(node.body, context)
 
     return object: JavascriptFunctionNode {
         override val parameters = positionalParameters + namedParameters

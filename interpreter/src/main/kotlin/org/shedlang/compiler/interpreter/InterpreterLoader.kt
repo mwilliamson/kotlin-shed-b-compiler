@@ -340,7 +340,7 @@ private fun typeCondition(
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
     return FunctionExpression(
         positionalParameterNames = node.parameters.map { parameter -> parameter.name },
-        body = node.body.statements.map { statement ->
+        body = node.body.map { statement ->
             loadStatement(statement, context)
         }
     )

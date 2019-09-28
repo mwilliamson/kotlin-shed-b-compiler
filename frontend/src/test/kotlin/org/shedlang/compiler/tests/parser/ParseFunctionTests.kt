@@ -3,7 +3,7 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.FunctionBody
+import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.ast.FunctionNode
@@ -167,7 +167,15 @@ class ParseFunctionTests {
         val source = "fun () -> Int => 4"
         val function = parseString(::parseExpression, source)
         assertThat(function, cast(
-            has(FunctionNode::body, cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4)))))
+            has(
+                FunctionNode::body,
+                isSequence(
+                    isExpressionStatement(
+                        expression = isIntLiteral(equalTo(4)),
+                        type = equalTo(ExpressionStatementNode.Type.RETURN)
+                    )
+                )
+            )
         ))
     }
 
@@ -179,7 +187,12 @@ class ParseFunctionTests {
             has(FunctionNode::returnType, absent()),
             has(
                 FunctionNode::body,
-                cast(has(FunctionBody.Expression::expression, isIntLiteral(equalTo(4))))
+                isSequence(
+                    isExpressionStatement(
+                        expression = isIntLiteral(equalTo(4)),
+                        type = equalTo(ExpressionStatementNode.Type.RETURN)
+                    )
+                )
             )
         )))
     }

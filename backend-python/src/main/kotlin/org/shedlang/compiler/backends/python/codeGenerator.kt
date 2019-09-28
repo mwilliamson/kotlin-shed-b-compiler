@@ -324,7 +324,7 @@ private fun generateFunction(name: String, node: FunctionNode, context: CodeGene
     }
 
     val bodyStatements = generateBlockCode(
-        node.body.statements,
+        node.body,
         bodyContext,
         returnValue = ::returnValue
     )
@@ -865,7 +865,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: FunctionExpressionNode): GeneratedExpression {
-            if (node.body.statements.isEmpty()) {
+            if (node.body.isEmpty()) {
                 return GeneratedExpression.pure(
                     PythonLambdaNode(
                         parameters = generateParameters(node, context),
@@ -875,7 +875,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 )
             }
 
-            val statement = node.body.statements.singleOrNull()
+            val statement = node.body.singleOrNull()
             if (statement != null && statement is ExpressionStatementNode) {
                 val result = generateExpressionCode(statement.expression, context)
                     .ifEmpty { expression -> PythonLambdaNode(

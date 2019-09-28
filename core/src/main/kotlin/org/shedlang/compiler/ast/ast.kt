@@ -341,31 +341,8 @@ interface FunctionNode : Node {
     val namedParameters: List<ParameterNode>
     val returnType: StaticExpressionNode?
     val effects: List<StaticExpressionNode>
-    val body: FunctionBody
-}
-
-sealed class FunctionBody {
-    abstract val nodes: List<Node>
-    abstract val statements: List<FunctionStatementNode>
-
-    data class Statements(override val nodes: List<FunctionStatementNode>): FunctionBody() {
-        override val statements: List<FunctionStatementNode>
-            get() = nodes
-    }
-    data class Expression(val expression: ExpressionNode): FunctionBody() {
-        override val nodes: List<Node>
-            get() = listOf(expression)
-
-        override val statements: List<FunctionStatementNode>
-            get() {
-                val statement = ExpressionStatementNode(
-                    expression,
-                    type = ExpressionStatementNode.Type.RETURN,
-                    source = expression.source
-                )
-                return listOf(statement)
-            }
-    }
+    val body: List<FunctionStatementNode>
+    val inferReturnType: Boolean
 }
 
 data class FunctionExpressionNode(
@@ -374,12 +351,13 @@ data class FunctionExpressionNode(
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode?,
     override val effects: List<StaticExpressionNode>,
-    override val body: FunctionBody,
+    override val body: List<FunctionStatementNode>,
+    override val inferReturnType: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, ExpressionNode {
     override val children: List<Node>
-        get() = parameters + namedParameters + effects + listOfNotNull(returnType) + body.nodes
+        get() = parameters + namedParameters + effects + listOfNotNull(returnType) + body
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -393,7 +371,8 @@ data class FunctionDeclarationNode(
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode,
     override val effects: List<StaticExpressionNode>,
-    override val body: FunctionBody.Statements,
+    override val body: List<FunctionStatementNode>,
+    override val inferReturnType: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, VariableBindingNode, ModuleStatementNode, FunctionStatementNode {
@@ -401,10 +380,10 @@ data class FunctionDeclarationNode(
         get() = false
 
     override val children: List<Node>
-        get() = parameters + namedParameters + effects + returnType + body.nodes
+        get() = parameters + namedParameters + effects + returnType + body
 
     val bodyStatements: List<FunctionStatementNode>
-        get() = body.nodes
+        get() = body
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)

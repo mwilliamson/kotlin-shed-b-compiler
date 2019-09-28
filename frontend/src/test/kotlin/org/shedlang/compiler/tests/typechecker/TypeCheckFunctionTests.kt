@@ -337,7 +337,10 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(intType to MetaType(IntType))
         )
         assertThat(
-            { inferType(node, typeContext) },
+            {
+                inferType(node, typeContext)
+                typeContext.undefer()
+            },
             throwsUnexpectedType(expected = cast(isIntType), actual = isBoolType)
         )
     }

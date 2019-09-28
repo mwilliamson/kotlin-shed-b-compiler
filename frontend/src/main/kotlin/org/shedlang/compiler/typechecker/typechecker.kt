@@ -292,41 +292,28 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
         evalType(returnTypeNode, context)
     }
 
-    val returnType = when (body) {
-        is FunctionBody.Expression -> {
-            val bodyContext = context.enterFunction(
-                function,
-                effect = effect
-            )
-            val expressionType = inferType(body.expression, bodyContext)
+    val actualReturnType = lazy {
+        val bodyContext = context.enterFunction(
+            function,
+            effect = effect
+        )
+        typeCheckFunctionStatements(body, bodyContext)
+    }
 
-            if (explicitReturnType != null) {
-                verifyType(expected = explicitReturnType, actual = expressionType, source = body.expression.source)
-            }
-            explicitReturnType ?: expressionType
-        }
-        is FunctionBody.Statements -> {
-            val returnType = if (explicitReturnType == null) {
-                if (hint != null && hint is FunctionType) {
-                    hint.returns
-                } else {
-                    throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
-                }
-            } else {
-                explicitReturnType
-            }
-            context.defer({
-                val bodyContext = context.enterFunction(
-                    function,
-                    effect = effect
-                )
-                val actualReturnType = typeCheckFunctionStatements(body.nodes, bodyContext)
-                val returnSource = (body.statements.lastOrNull() ?: function).source
-                verifyType(expected = returnType, actual = actualReturnType, source = returnSource)
-            })
+    // TODO: test that inference takes precedence over hint
+    val returnType = if (explicitReturnType != null) {
+        explicitReturnType
+    } else if (function.inferReturnType) {
+        actualReturnType.value
+    } else if (hint != null && hint is FunctionType) {
+        hint.returns
+    } else {
+        throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
+    }
 
-            returnType
-        }
+    context.defer {
+        val returnSource = (body.lastOrNull() ?: function).source
+        verifyType(expected = returnType, actual = actualReturnType.value, source = returnSource)
     }
 
     return FunctionType(

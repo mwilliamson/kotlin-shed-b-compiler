@@ -384,7 +384,8 @@ internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): Functio
             namedParameters = signature.namedParameters,
             returnType = signature.returnType,
             effects = signature.effects,
-            body = FunctionBody.Statements(body),
+            body = body,
+            inferReturnType = false,
             source = source
         )
     }
@@ -1137,10 +1138,16 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             tokens.skip()
             val signature = parseFunctionSignature(tokens)
 
-            val body = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
-                FunctionBody.Expression(parseExpression(tokens))
+            val (body, inferReturnType) = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
+                val expression = parseExpression(tokens)
+                val statement = ExpressionStatementNode(
+                    expression = expression,
+                    type = ExpressionStatementNode.Type.RETURN,
+                    source = expression.source
+                )
+                Pair(listOf(statement), true)
             } else {
-                FunctionBody.Statements(parseFunctionStatements(tokens))
+                Pair(parseFunctionStatements(tokens), false)
             }
 
             return FunctionExpressionNode(
@@ -1150,6 +1157,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                 returnType = signature.returnType,
                 effects = signature.effects,
                 body = body,
+                inferReturnType = inferReturnType,
                 source = source
             )
         }

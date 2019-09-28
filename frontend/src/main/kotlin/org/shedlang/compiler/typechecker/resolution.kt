@@ -218,7 +218,7 @@ private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
         context = context
     )
     resolveScope(
-        body = node.body.nodes,
+        body = node.body,
         binders = node.parameters + node.namedParameters,
         context = bodyContext
     )

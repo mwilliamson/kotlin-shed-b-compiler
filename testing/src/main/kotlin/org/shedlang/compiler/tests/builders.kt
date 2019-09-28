@@ -262,7 +262,8 @@ fun function(
     namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticExpressionNode> = listOf(),
     returnType: StaticExpressionNode = staticReference("Unit"),
-    body: List<FunctionStatementNode> = listOf()
+    body: List<FunctionStatementNode> = listOf(),
+    inferReturnType: Boolean = false
 ) = FunctionDeclarationNode(
     name = Identifier(name),
     staticParameters = staticParameters,
@@ -270,7 +271,8 @@ fun function(
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
-    body = FunctionBody.Statements(body),
+    body = body,
+    inferReturnType = inferReturnType,
     source = anySource()
 )
 
@@ -280,14 +282,16 @@ fun functionExpression(
     namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticExpressionNode> = listOf(),
     returnType: StaticExpressionNode? = null,
-    body: List<FunctionStatementNode> = listOf()
+    body: List<FunctionStatementNode> = listOf(),
+    inferReturnType: Boolean = false
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
-    body = FunctionBody.Statements(body),
+    body = body,
+    inferReturnType = inferReturnType,
     source = anySource()
 )
 
@@ -297,14 +301,18 @@ fun functionExpression(
     namedParameters: List<ParameterNode> = listOf(),
     effects: List<StaticExpressionNode> = listOf(),
     returnType: StaticExpressionNode? = staticReference("Unit"),
-    body: ExpressionNode
+    body: ExpressionNode,
+    inferReturnType: Boolean = true
 ) = FunctionExpressionNode(
     staticParameters = typeParameters,
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
-    body = FunctionBody.Expression(body),
+    body = listOf(
+        ExpressionStatementNode(body, type = ExpressionStatementNode.Type.RETURN, source = body.source)
+    ),
+    inferReturnType = inferReturnType,
     source = anySource()
 )
 
