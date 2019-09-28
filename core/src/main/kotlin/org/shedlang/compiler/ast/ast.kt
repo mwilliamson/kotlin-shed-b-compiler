@@ -532,6 +532,9 @@ data class WhenNode(
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    val branchBodies: Iterable<Block>
+        get() = branches.map { branch -> branch.body } + elseBranch.nullableToList()
 }
 
 data class WhenBranchNode(

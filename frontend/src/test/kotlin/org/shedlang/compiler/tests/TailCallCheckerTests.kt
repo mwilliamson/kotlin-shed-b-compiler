@@ -72,6 +72,96 @@ class TailCallCheckerTests {
         )
     }
 
+    @Test
+    fun whenValidTailrecExpressionIsInReturningIfExpressionThenCheckPasses() {
+        val functionReference = variableReference("f")
+        val expressionStatement = expressionStatementReturn(
+            ifExpression(
+                literalBool(),
+                listOf(expressionStatementTailRecReturn(call(receiver = functionReference))),
+                listOf()
+            )
+        )
+        val functionDeclaration = function(
+            name = "f",
+            body = listOf(
+                expressionStatement
+            )
+        )
+
+        val references = createReferences(
+            functionReference to functionDeclaration
+        )
+        checkTailCalls(functionDeclaration, references = references)
+    }
+
+    @Test
+    fun whenInvalidTailrecExpressionIsInReturningIfExpressionThenCheckFails() {
+        val expressionStatement = expressionStatementReturn(
+            ifExpression(
+                literalBool(),
+                listOf(expressionStatementTailRecReturn(literalBool())),
+                listOf()
+            )
+        )
+        val functionDeclaration = function(
+            name = "f",
+            body = listOf(expressionStatement)
+        )
+
+        assertThat(
+            {
+                checkTailCalls(functionDeclaration, references = createReferences())
+            },
+            throws<InvalidTailCall>()
+        )
+    }
+
+    @Test
+    fun whenValidTailrecExpressionIsInReturningWhenExpressionThenCheckPasses() {
+        val functionReference = variableReference("f")
+        val expressionStatement = expressionStatementReturn(
+            whenExpression(
+                expression = literalBool(),
+                branches = listOf(),
+                elseBranch = listOf(expressionStatementTailRecReturn(call(receiver = functionReference)))
+            )
+        )
+        val functionDeclaration = function(
+            name = "f",
+            body = listOf(
+                expressionStatement
+            )
+        )
+
+        val references = createReferences(
+            functionReference to functionDeclaration
+        )
+        checkTailCalls(functionDeclaration, references = references)
+    }
+
+    @Test
+    fun whenInvalidTailrecExpressionIsInReturningWhenExpressionThenCheckFails() {
+        val expressionStatement = expressionStatementReturn(
+            whenExpression(
+                expression = literalBool(),
+                branches = listOf(),
+                elseBranch = listOf(expressionStatementTailRecReturn(literalBool()))
+            )
+        )
+        val functionDeclaration = function(
+            name = "f",
+            body = listOf(expressionStatement)
+        )
+
+        assertThat(
+            {
+                checkTailCalls(functionDeclaration, references = createReferences())
+            },
+            throws<InvalidTailCall>()
+        )
+    }
+
     private fun createReferences(vararg references: Pair<ReferenceNode, VariableBindingNode>): ResolvedReferences {
         return ResolvedReferencesMap(references.associate { (reference, binding) ->
             reference.nodeId to binding
