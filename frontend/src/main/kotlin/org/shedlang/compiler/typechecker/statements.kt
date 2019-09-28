@@ -383,7 +383,7 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
     }
 }
 
-internal fun typeCheck(statements: List<FunctionStatementNode>, context: TypeContext): Type {
+internal fun typeCheckFunctionStatements(statements: List<FunctionStatementNode>, context: TypeContext): Type {
     var type: Type = UnitType
 
     for (statement in statements) {

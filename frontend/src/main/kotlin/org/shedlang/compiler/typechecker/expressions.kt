@@ -203,9 +203,9 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
             }
         }
 
-        typeCheck(branch.body, trueContext)
+        typeCheckFunctionStatements(branch.body, trueContext)
     }
-    val elseBranchType = typeCheck(node.elseBranch, context)
+    val elseBranchType = typeCheckFunctionStatements(node.elseBranch, context)
     val branchTypes = conditionalBranchTypes + listOf(elseBranchType)
 
     return branchTypes.reduce(::union)
@@ -227,7 +227,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         if (expression is ReferenceNode) {
             branchContext.addVariableType(expression, conditionType)
         }
-        val type = typeCheck(branch.body, branchContext)
+        val type = typeCheckFunctionStatements(branch.body, branchContext)
         Pair(type, conditionType)
     }
 
@@ -250,7 +250,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         }
 
         val branchContext = context.enterScope()
-        val type = typeCheck(elseBranch, branchContext)
+        val type = typeCheckFunctionStatements(elseBranch, branchContext)
         branchTypes += listOf(type)
     }
 

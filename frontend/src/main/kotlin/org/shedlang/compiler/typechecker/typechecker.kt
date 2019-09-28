@@ -320,7 +320,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
                     function,
                     effect = effect
                 )
-                val actualReturnType = typeCheck(body.nodes, bodyContext)
+                val actualReturnType = typeCheckFunctionStatements(body.nodes, bodyContext)
                 val returnSource = (body.statements.lastOrNull() ?: function).source
                 verifyType(expected = returnType, actual = actualReturnType, source = returnSource)
             })
