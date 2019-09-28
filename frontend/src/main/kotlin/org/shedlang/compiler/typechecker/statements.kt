@@ -306,22 +306,6 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         }
 
         override fun visit(node: ExpressionStatementNode): Type {
-            if (node.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
-                val expression = node.expression
-                if (expression !is CallNode) {
-                    throw InvalidTailCall(source = node.expression.source)
-                }
-
-                val receiver = expression.receiver
-                if (receiver !is ReferenceNode) {
-                    throw InvalidTailCall(source = node.expression.source)
-                }
-
-                if (context.resolveReference(receiver).nodeId != context.functionNodeId) {
-                    throw InvalidTailCall(source = node.expression.source)
-                }
-            }
-
             val type = inferType(node.expression, context)
 
             return if (node.isReturn) {

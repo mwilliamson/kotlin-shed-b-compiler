@@ -4,6 +4,7 @@ import com.moandjiezana.toml.Toml
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.Node
+import org.shedlang.compiler.frontend.checkTailCalls
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parseTypesModule
 import org.shedlang.compiler.typechecker.resolve
@@ -59,6 +60,7 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
         val moduleNode = parse(filename = path.toString(), input = moduleText)
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
+        checkTailCalls(moduleNode, references = resolvedReferences)
         val typeCheckResult = typeCheck(
             name.map { part -> part.value },
             moduleNode,

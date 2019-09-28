@@ -40,7 +40,6 @@ internal fun typeContext(
     return TypeContext(
         moduleName = moduleName,
         effect = effect,
-        functionNodeId = null,
         expressionTypes = expressionTypes,
         variableTypes = HashMap(finalTypes),
         discriminators = mutableMapOf(),

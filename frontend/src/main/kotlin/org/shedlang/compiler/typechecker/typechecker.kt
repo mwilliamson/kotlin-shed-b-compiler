@@ -18,7 +18,6 @@ internal fun newTypeContext(
     return TypeContext(
         moduleName = moduleName,
         effect = EmptyEffect,
-        functionNodeId = null,
         expressionTypes = expressionTypes,
         variableTypes = nodeTypes.toMutableMap(),
         discriminators = mutableMapOf(),
@@ -31,7 +30,6 @@ internal fun newTypeContext(
 internal class TypeContext(
     val moduleName: List<String>?,
     val effect: Effect,
-    val functionNodeId: Int?,
     private val variableTypes: MutableMap<Int, Type>,
     private val discriminators: MutableMap<Int, Discriminator>,
     private val expressionTypes: MutableMap<Int, Type>,
@@ -89,7 +87,6 @@ internal class TypeContext(
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
-            functionNodeId = function.nodeId,
             expressionTypes = expressionTypes,
             variableTypes = variableTypes,
             discriminators = discriminators,
@@ -103,7 +100,6 @@ internal class TypeContext(
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
-            functionNodeId = functionNodeId,
             expressionTypes = expressionTypes,
             variableTypes = HashMap(variableTypes),
             discriminators = discriminators,
