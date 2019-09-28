@@ -290,12 +290,12 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                 conditionalBranches = node.conditionalBranches.map { branch ->
                     ConditionalBranch(
                         condition = loadExpression(branch.condition, context),
-                        body = branch.body.map { statement ->
+                        body = branch.body.statements.map { statement ->
                             loadStatement(statement, context)
                         }
                     )
                 },
-                elseBranch = node.elseBranch.map { statement ->
+                elseBranch = node.elseBranch.statements.map { statement ->
                     loadStatement(statement, context)
                 }
             )
@@ -312,14 +312,14 @@ internal fun loadExpression(expression: ExpressionNode, context: LoaderContext):
                         val condition = typeCondition(VariableReference(expressionName), discriminator)
                         ConditionalBranch(
                             condition,
-                            branch.body.map { statement ->
+                            branch.body.statements.map { statement ->
                                 loadStatement(statement, context)
                             }
                         )
                     },
-                    elseBranch = node.elseBranch.orEmpty().map { statement ->
+                    elseBranch = node.elseBranch?.statements?.map { statement ->
                         loadStatement(statement, context)
-                    }
+                    } ?: listOf()
                 ))
             ))
         }
@@ -340,7 +340,7 @@ private fun typeCondition(
 private fun functionToExpression(node: FunctionNode, context: LoaderContext): FunctionExpression {
     return FunctionExpression(
         positionalParameterNames = node.parameters.map { parameter -> parameter.name },
-        body = node.body.map { statement ->
+        body = node.body.statements.map { statement ->
             loadStatement(statement, context)
         }
     )

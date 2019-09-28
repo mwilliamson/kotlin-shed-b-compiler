@@ -47,7 +47,7 @@ fun ifExpression(
 ): IfNode {
     return IfNode(
         conditionalBranches = conditionalBranches,
-        elseBranch = elseBranch,
+        elseBranch = Block(elseBranch, source = anySource()),
         source = anySource()
     )
 }
@@ -57,7 +57,7 @@ fun conditionalBranch(
     body: List<FunctionStatementNode>
 ) = ConditionalBranchNode(
     condition = condition,
-    body = body,
+    body = Block(body, source = anySource()),
     source = anySource()
 )
 
@@ -68,7 +68,7 @@ fun whenExpression(
 ) = WhenNode(
     expression = expression,
     branches = branches,
-    elseBranch = elseBranch,
+    elseBranch = if (elseBranch == null) null else Block(elseBranch, source = anySource()),
     source = anySource()
 )
 
@@ -77,7 +77,7 @@ fun whenBranch(
     body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,
-    body = body,
+    body = Block(body, source = anySource()),
     source = anySource()
 )
 
@@ -271,7 +271,7 @@ fun function(
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
-    body = body,
+    body = Block(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
 )
@@ -290,7 +290,7 @@ fun functionExpression(
     namedParameters = namedParameters,
     returnType = returnType,
     effects = effects,
-    body = body,
+    body = Block(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
 )
@@ -303,8 +303,8 @@ fun functionExpression(
     returnType: StaticExpressionNode? = staticReference("Unit"),
     body: ExpressionNode,
     inferReturnType: Boolean = true
-) = FunctionExpressionNode(
-    staticParameters = typeParameters,
+) = functionExpression(
+    typeParameters = typeParameters,
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
@@ -312,8 +312,7 @@ fun functionExpression(
     body = listOf(
         ExpressionStatementNode(body, type = ExpressionStatementNode.Type.RETURN, source = body.source)
     ),
-    inferReturnType = inferReturnType,
-    source = anySource()
+    inferReturnType = inferReturnType
 )
 
 fun typeAliasDeclaration(

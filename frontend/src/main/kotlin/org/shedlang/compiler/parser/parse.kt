@@ -479,7 +479,9 @@ private fun parseEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode 
     return parseStaticExpression(tokens)
 }
 
-private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<FunctionStatementNode> {
+private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): Block {
+    val source = tokens.location()
+
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
 
     val statements = mutableListOf<FunctionStatementNode>()
@@ -491,7 +493,10 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): List<Func
     }
 
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-    return statements
+    return Block(
+        statements = statements,
+        source = source
+    )
 }
 
 private fun parseStaticParameter(tokens: TokenIterator<TokenType>, allowVariance: Boolean): StaticParameterNode {
@@ -604,9 +609,9 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
     }
 }
 
-private fun branchesReturn(expression: Node, branches: Iterable<List<FunctionStatementNode>>): Boolean {
+private fun branchesReturn(expression: Node, branches: Iterable<Block>): Boolean {
     val isReturns = branches.map { body ->
-        body.any(FunctionStatementNode::isReturn)
+        body.statements.any(FunctionStatementNode::isReturn)
     }.toSet()
     return if (isReturns.size == 1) {
         isReturns.single()
@@ -625,7 +630,8 @@ private fun parseIf(tokens: TokenIterator<TokenType>) : IfNode {
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
         parseFunctionStatements(tokens)
     } else {
-        listOf()
+        val elseSource = tokens.location()
+        Block(statements = listOf(), source = elseSource)
     }
 
     return IfNode(
@@ -1145,7 +1151,11 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                     type = ExpressionStatementNode.Type.RETURN,
                     source = expression.source
                 )
-                Pair(listOf(statement), true)
+                val body = Block(
+                    statements = listOf(statement),
+                    source = expression.source
+                )
+                Pair(body, true)
             } else {
                 Pair(parseFunctionStatements(tokens), false)
             }

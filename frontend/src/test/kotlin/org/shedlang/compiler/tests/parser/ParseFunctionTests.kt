@@ -110,7 +110,7 @@ class ParseFunctionTests {
     fun canReadBody() {
         val source = "fun f() -> Int { 1; 2; }"
         val function = parseString(::parseFunctionDeclaration, source)
-        assertThat(function, has(FunctionDeclarationNode::bodyStatements, isSequence(
+        assertThat(function, has(FunctionDeclarationNode::body, isBlock(
             isExpressionStatement(isIntLiteral(equalTo(1))),
             isExpressionStatement(isIntLiteral(equalTo(2)))
         )))
@@ -169,7 +169,7 @@ class ParseFunctionTests {
         assertThat(function, cast(
             has(
                 FunctionNode::body,
-                isSequence(
+                isBlock(
                     isExpressionStatement(
                         expression = isIntLiteral(equalTo(4)),
                         type = equalTo(ExpressionStatementNode.Type.RETURN)
@@ -187,7 +187,7 @@ class ParseFunctionTests {
             has(FunctionNode::returnType, absent()),
             has(
                 FunctionNode::body,
-                isSequence(
+                isBlock(
                     isExpressionStatement(
                         expression = isIntLiteral(equalTo(4)),
                         type = equalTo(ExpressionStatementNode.Type.RETURN)

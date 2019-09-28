@@ -341,8 +341,17 @@ interface FunctionNode : Node {
     val namedParameters: List<ParameterNode>
     val returnType: StaticExpressionNode?
     val effects: List<StaticExpressionNode>
-    val body: List<FunctionStatementNode>
+    val body: Block
     val inferReturnType: Boolean
+}
+
+data class Block(
+    val statements: List<FunctionStatementNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val children: List<Node>
+        get() = statements
 }
 
 data class FunctionExpressionNode(
@@ -351,7 +360,7 @@ data class FunctionExpressionNode(
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode?,
     override val effects: List<StaticExpressionNode>,
-    override val body: List<FunctionStatementNode>,
+    override val body: Block,
     override val inferReturnType: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -371,7 +380,7 @@ data class FunctionDeclarationNode(
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode,
     override val effects: List<StaticExpressionNode>,
-    override val body: List<FunctionStatementNode>,
+    override val body: Block,
     override val inferReturnType: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -381,9 +390,6 @@ data class FunctionDeclarationNode(
 
     override val children: List<Node>
         get() = parameters + namedParameters + effects + returnType + body
-
-    val bodyStatements: List<FunctionStatementNode>
-        get() = body
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -488,7 +494,7 @@ data class BadStatementNode(
 
 data class IfNode(
     val conditionalBranches: List<ConditionalBranchNode>,
-    val elseBranch: List<FunctionStatementNode>,
+    val elseBranch: Block,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
@@ -499,13 +505,13 @@ data class IfNode(
         return visitor.visit(this)
     }
 
-    val branchBodies: Iterable<List<FunctionStatementNode>>
+    val branchBodies: Iterable<Block>
         get() = conditionalBranches.map { branch -> branch.body } + listOf(elseBranch)
 }
 
 data class ConditionalBranchNode(
     val condition: ExpressionNode,
-    val body: List<FunctionStatementNode>,
+    val body: Block,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
@@ -516,12 +522,12 @@ data class ConditionalBranchNode(
 data class WhenNode(
     val expression: ExpressionNode,
     val branches: List<WhenBranchNode>,
-    val elseBranch: List<FunctionStatementNode>?,
+    val elseBranch: Block?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val children: List<Node>
-        get() = listOf(expression) + branches + elseBranch.orEmpty()
+        get() = listOf(expression) + branches + elseBranch.nullableToList()
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -530,7 +536,7 @@ data class WhenNode(
 
 data class WhenBranchNode(
     val type: StaticExpressionNode,
-    val body: List<FunctionStatementNode>,
+    val body: Block,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {

@@ -15,12 +15,12 @@ class ParseIfTests {
             conditionalBranches = isSequence(
                 isConditionalBranch(
                     condition = isVariableReference("x"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(isVariableReference("y"))
                     )
                 )
             ),
-            elseBranch = isSequence(
+            elseBranch = isBlock(
                 isExpressionStatement(isVariableReference("z"))
             )
         ))
@@ -34,12 +34,12 @@ class ParseIfTests {
             conditionalBranches = isSequence(
                 isConditionalBranch(
                     condition = isVariableReference("x"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(isVariableReference("y"))
                     )
                 )
             ),
-            elseBranch = isSequence()
+            elseBranch = isBlock()
         ))
     }
 
@@ -51,19 +51,19 @@ class ParseIfTests {
             conditionalBranches = isSequence(
                 isConditionalBranch(
                     condition = isVariableReference("x"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(isIntLiteral(equalTo(0)))
                     )
                 ),
 
                 isConditionalBranch(
                     condition = isVariableReference("y"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(isIntLiteral(equalTo(1)))
                     )
                 )
             ),
-            elseBranch = isSequence()
+            elseBranch = isBlock()
         ))
     }
 }

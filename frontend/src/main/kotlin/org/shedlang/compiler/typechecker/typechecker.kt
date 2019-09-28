@@ -297,7 +297,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
             function,
             effect = effect
         )
-        typeCheckFunctionStatements(body, bodyContext)
+        typeCheckBlock(body, bodyContext)
     }
 
     // TODO: test that inference takes precedence over hint
@@ -312,7 +312,7 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
     }
 
     context.defer {
-        val returnSource = (body.lastOrNull() ?: function).source
+        val returnSource = (body.statements.lastOrNull() ?: body).source
         verifyType(expected = returnType, actual = actualReturnType.value, source = returnSource)
     }
 

@@ -418,12 +418,16 @@ private fun generateParameters(function: FunctionNode, context: CodeGenerationCo
         function.namedParameters.map({ parameter -> context.name(parameter) })
 
 private fun generateBlockCode(
-    statements: List<FunctionStatementNode>,
+    block: Block?,
     context: CodeGenerationContext,
     returnValue: ReturnValue
 ): List<PythonStatementNode> {
-    return statements.flatMap { statement ->
-        generateCodeForFunctionStatement(statement, context, returnValue = returnValue)
+    if (block == null) {
+        return listOf()
+    } else {
+        return block.statements.flatMap { statement ->
+            generateCodeForFunctionStatement(statement, context, returnValue = returnValue)
+        }
     }
 }
 
@@ -865,7 +869,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: FunctionExpressionNode): GeneratedExpression {
-            if (node.body.isEmpty()) {
+            if (node.body.statements.isEmpty()) {
                 return GeneratedExpression.pure(
                     PythonLambdaNode(
                         parameters = generateParameters(node, context),
@@ -875,7 +879,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 )
             }
 
-            val statement = node.body.singleOrNull()
+            val statement = node.body.statements.singleOrNull()
             if (statement != null && statement is ExpressionStatementNode) {
                 val result = generateExpressionCode(statement.expression, context)
                     .ifEmpty { expression -> PythonLambdaNode(
@@ -1015,7 +1019,7 @@ private fun generateWhenCode(
             )
         }
 
-        val elseBranch = generateBlockCode(node.elseBranch.orEmpty(), context, returnValue = returnValue)
+        val elseBranch = generateBlockCode(node.elseBranch, context, returnValue = returnValue)
 
         assignment.nullableToList() + listOf(
             PythonIfStatementNode(

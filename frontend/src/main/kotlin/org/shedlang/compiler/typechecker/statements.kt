@@ -383,10 +383,10 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
     }
 }
 
-internal fun typeCheckFunctionStatements(statements: List<FunctionStatementNode>, context: TypeContext): Type {
+internal fun typeCheckBlock(block: Block, context: TypeContext): Type {
     var type: Type = UnitType
 
-    for (statement in statements) {
+    for (statement in block.statements) {
         type = typeCheckFunctionStatement(statement, context)
     }
 

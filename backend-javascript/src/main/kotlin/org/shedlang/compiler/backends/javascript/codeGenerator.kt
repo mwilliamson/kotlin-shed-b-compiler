@@ -230,7 +230,7 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
             source = NodeSource(parameter)
         )
     }
-    val body = namedParameterAssignments + generateCode(node.body, context)
+    val body = namedParameterAssignments + generateBlockCode(node.body, context)
 
     return object: JavascriptFunctionNode {
         override val parameters = positionalParameters + namedParameters
@@ -238,8 +238,12 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
     }
 }
 
-private fun generateCode(statements: List<FunctionStatementNode>, context: CodeGenerationContext): List<JavascriptStatementNode> {
-    return statements.map { statement -> generateCode(statement, context) }
+private fun generateBlockCode(block: Block?, context: CodeGenerationContext): List<JavascriptStatementNode> {
+    return if (block == null) {
+        listOf()
+    } else {
+        block.statements.map { statement -> generateCode(statement, context) }
+    }
 }
 
 internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationContext): JavascriptStatementNode {
@@ -541,11 +545,11 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                     conditionalBranches = node.conditionalBranches.map { branch ->
                         JavascriptConditionalBranchNode(
                             condition = generateCode(branch.condition, context),
-                            body = generateCode(branch.body, context),
+                            body = generateBlockCode(branch.body, context),
                             source = NodeSource(branch)
                         )
                     },
-                    elseBranch = generateCode(node.elseBranch, context),
+                    elseBranch = generateBlockCode(node.elseBranch, context),
                     source = source
                 )
             )
@@ -570,12 +574,12 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 )
                 JavascriptConditionalBranchNode(
                     condition = condition,
-                    body = generateCode(branch.body, context),
+                    body = generateBlockCode(branch.body, context),
                     source = NodeSource(branch)
                 )
             }
 
-            val elseBranch = generateCode(node.elseBranch.orEmpty(), context)
+            val elseBranch = generateBlockCode(node.elseBranch, context)
 
             return immediatelyInvokedFunction(
                 body = listOf(

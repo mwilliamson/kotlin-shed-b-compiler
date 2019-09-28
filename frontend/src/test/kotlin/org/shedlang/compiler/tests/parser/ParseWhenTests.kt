@@ -28,13 +28,13 @@ class ParseWhenTests {
             branches = isSequence(
                 isWhenBranch(
                     type = isStaticReference("Some"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.RETURN))
                     )
                 ),
                 isWhenBranch(
                     type = isStaticReference("None"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.RETURN))
                     )
                 )
@@ -61,12 +61,12 @@ class ParseWhenTests {
             branches = isSequence(
                 isWhenBranch(
                     type = isStaticReference("Some"),
-                    body = isSequence(
+                    body = isBlock(
                         isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.RETURN))
                     )
                 )
             ),
-            elseBranch = present(isSequence(
+            elseBranch = present(isBlock(
                 isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.RETURN))
             ))
         ))

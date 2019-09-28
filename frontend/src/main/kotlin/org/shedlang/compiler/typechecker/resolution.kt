@@ -185,20 +185,20 @@ internal fun resolve(node: Node, context: ResolutionContext) {
         is IfNode -> {
             for (conditionalBranch in node.conditionalBranches) {
                 resolve(conditionalBranch.condition, context)
-                resolveScope(body = conditionalBranch.body, context = context)
+                resolveBlock(conditionalBranch.body, context = context)
             }
-            resolveScope(body = node.elseBranch, context = context)
+            resolveBlock(node.elseBranch, context = context)
         }
 
         is WhenNode -> {
             resolve(node.expression, context)
             for (branch in node.branches) {
                 resolve(branch.type, context)
-                resolveScope(branch.body, context = context)
+                resolveBlock(branch.body, context = context)
             }
             val elseBranch = node.elseBranch
             if (elseBranch != null) {
-                resolveScope(elseBranch, context = context)
+                resolveBlock(elseBranch, context = context)
             }
         }
 
@@ -217,8 +217,8 @@ private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
         body = node.effects + listOf(node.returnType).filterNotNull() + node.parameters + node.namedParameters,
         context = context
     )
-    resolveScope(
-        body = node.body,
+    resolveBlock(
+        block = node.body,
         binders = node.parameters + node.namedParameters,
         context = bodyContext
     )
@@ -228,6 +228,18 @@ private fun resolveFunctionType(node: FunctionTypeNode, context: ResolutionConte
     resolveScope(
         binders = node.staticParameters,
         body = node.positionalParameters + node.namedParameters + node.effects + listOf(node.returnType),
+        context = context
+    )
+}
+
+private fun resolveBlock(
+    block: Block,
+    binders: List<VariableBindingNode> = listOf(),
+    context: ResolutionContext
+): ResolutionContext {
+    return resolveScope(
+        body = block.statements,
+        binders = binders,
         context = context
     )
 }

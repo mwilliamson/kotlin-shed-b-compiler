@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.isIdentifier
+import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 
@@ -18,7 +19,7 @@ internal fun isImport(
 
 internal fun isIf(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
-    elseBranch: Matcher<List<FunctionStatementNode>>
+    elseBranch: Matcher<Block>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(IfNode::conditionalBranches, conditionalBranches),
     has(IfNode::elseBranch, elseBranch)
@@ -26,7 +27,7 @@ internal fun isIf(
 
 internal fun isConditionalBranch(
     condition: Matcher<ExpressionNode>,
-    body: Matcher<List<FunctionStatementNode>>
+    body: Matcher<Block>
 ): Matcher<ConditionalBranchNode> = cast(allOf(
     has(ConditionalBranchNode::condition, condition),
     has(ConditionalBranchNode::body, body)
@@ -35,7 +36,7 @@ internal fun isConditionalBranch(
 internal fun isWhen(
     expression: Matcher<ExpressionNode>,
     branches: Matcher<List<WhenBranchNode>>,
-    elseBranch: Matcher<List<FunctionStatementNode>?>
+    elseBranch: Matcher<Block?>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(WhenNode::expression, expression),
     has(WhenNode::branches, branches),
@@ -44,11 +45,13 @@ internal fun isWhen(
 
 internal fun isWhenBranch(
     type: Matcher<StaticExpressionNode>,
-    body: Matcher<List<FunctionStatementNode>>
+    body: Matcher<Block>
 ): Matcher<WhenBranchNode> = allOf(
     has(WhenBranchNode::type, type),
     has(WhenBranchNode::body, body)
 )
+
+internal fun isBlock(vararg statements: Matcher<FunctionStatementNode>) = has(Block::statements, isSequence(*statements))
 
 internal fun isExpressionStatement(
     expression: Matcher<ExpressionNode> = anything,
