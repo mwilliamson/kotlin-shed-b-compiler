@@ -112,3 +112,6 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
 
 * Don't allow references to compile-time only values
   * Or don't have a notion of compile-time only values?
+
+* Check usages of defer() in type-checker
+  * Function bodies can be deferred, but should be checked on first use
