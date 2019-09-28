@@ -23,11 +23,12 @@ class TailCallCheckerTests {
                 expressionStatement
             )
         )
+        val module = module(body = listOf(functionDeclaration))
 
         val references = createReferences(
             functionReference to functionDeclaration
         )
-        checkTailCalls(functionDeclaration, references = references)
+        checkTailCalls(module, references = references)
     }
 
     @Test
@@ -37,10 +38,11 @@ class TailCallCheckerTests {
             name = "f",
             body = listOf(expressionStatement)
         )
+        val module = module(body = listOf(functionDeclaration))
 
         assertThat(
             {
-                checkTailCalls(functionDeclaration, references = createReferences())
+                checkTailCalls(module, references = createReferences())
             },
             throws<InvalidTailCall>()
         )
@@ -56,6 +58,7 @@ class TailCallCheckerTests {
             name = "f",
             body = listOf(expressionStatement)
         )
+        val module = module(body = listOf(functionDeclaration))
         val otherFunctionDeclaration = function(
             name = "other"
         )
@@ -66,7 +69,7 @@ class TailCallCheckerTests {
 
         assertThat(
             {
-                checkTailCalls(functionDeclaration, references = references)
+                checkTailCalls(module, references = references)
             },
             throws<InvalidTailCall>()
         )
@@ -88,11 +91,12 @@ class TailCallCheckerTests {
                 expressionStatement
             )
         )
+        val module = module(body = listOf(functionDeclaration))
 
         val references = createReferences(
             functionReference to functionDeclaration
         )
-        checkTailCalls(functionDeclaration, references = references)
+        checkTailCalls(module, references = references)
     }
 
     @Test
@@ -108,10 +112,11 @@ class TailCallCheckerTests {
             name = "f",
             body = listOf(expressionStatement)
         )
+        val module = module(body = listOf(functionDeclaration))
 
         assertThat(
             {
-                checkTailCalls(functionDeclaration, references = createReferences())
+                checkTailCalls(module, references = createReferences())
             },
             throws<InvalidTailCall>()
         )
@@ -133,11 +138,12 @@ class TailCallCheckerTests {
                 expressionStatement
             )
         )
+        val module = module(body = listOf(functionDeclaration))
 
         val references = createReferences(
             functionReference to functionDeclaration
         )
-        checkTailCalls(functionDeclaration, references = references)
+        checkTailCalls(module, references = references)
     }
 
     @Test
@@ -153,10 +159,41 @@ class TailCallCheckerTests {
             name = "f",
             body = listOf(expressionStatement)
         )
+        val module = module(body = listOf(functionDeclaration))
 
         assertThat(
             {
-                checkTailCalls(functionDeclaration, references = createReferences())
+                checkTailCalls(module, references = createReferences())
+            },
+            throws<InvalidTailCall>()
+        )
+    }
+
+    @Test
+    fun whenValidTailrecExpressionIsInNonReturningIfExpressionThenCheckFails() {
+        val functionReference = variableReference("f")
+        val expressionStatement = expressionStatementNoReturn(
+            ifExpression(
+                literalBool(),
+                listOf(expressionStatementTailRecReturn(call(receiver = functionReference))),
+                listOf()
+            )
+        )
+        val functionDeclaration = function(
+            name = "f",
+            body = listOf(
+                expressionStatement
+            )
+        )
+        val module = module(body = listOf(functionDeclaration))
+
+        val references = createReferences(
+            functionReference to functionDeclaration
+        )
+
+        assertThat(
+            {
+                checkTailCalls(module, references = references)
             },
             throws<InvalidTailCall>()
         )
