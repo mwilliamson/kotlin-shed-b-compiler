@@ -51,10 +51,10 @@ class InterpreterTests {
     }
 
     private fun evaluateExpression(node: ExpressionNode): InterpreterValue {
-        val commands = loadExpression(node)
+        val instructions = loadExpression(node)
 
-        val finalState = commands.fold(state()) { state, command ->
-            command.run(state)
+        val finalState = instructions.fold(state()) { state, instruction ->
+            instruction.run(state)
         }
 
         return finalState.pop().value
