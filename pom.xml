@@ -18,7 +18,8 @@
         <module>core-tests</module>
         <module>frontend</module>
         <module>interpreter</module>
-        <module>testing</module>
+	<module>stack-interpreter</module>
+	<module>testing</module>
     </modules>
 
     <properties>
@@ -27,6 +28,17 @@
         <junit.platform.version>1.4.1</junit.platform.version>
         <hamkrest.version>1.7.0.0</hamkrest.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <id>kotlinx</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/kotlin/kotlinx</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>

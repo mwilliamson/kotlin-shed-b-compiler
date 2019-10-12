@@ -10,5 +10,6 @@
 /core-tests/target
 /frontend/target
 /interpreter/target
+/stack-interpreter/target
 /testing/target
 shedDependencies
