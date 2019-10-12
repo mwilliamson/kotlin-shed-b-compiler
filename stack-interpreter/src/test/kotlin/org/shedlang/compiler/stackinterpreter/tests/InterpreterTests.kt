@@ -9,9 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.stackinterpreter.*
-import org.shedlang.compiler.tests.binaryOperation
-import org.shedlang.compiler.tests.literalBool
-import org.shedlang.compiler.tests.literalInt
+import org.shedlang.compiler.tests.*
 
 class InterpreterTests {
     @Test
@@ -48,6 +46,19 @@ class InterpreterTests {
         val value = evaluateExpression(node)
 
         assertThat(value, isInt(-1))
+    }
+
+    @Test
+    fun whenConditionOfIfIsFalseThenFinalValueIsResultOfFalseBranch() {
+        val node = ifExpression(
+            literalBool(false),
+            listOf(expressionStatementReturn(literalInt(1))),
+            listOf(expressionStatementReturn(literalInt(2)))
+        )
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isInt(2))
     }
 
     private fun evaluateExpression(node: ExpressionNode): InterpreterValue {

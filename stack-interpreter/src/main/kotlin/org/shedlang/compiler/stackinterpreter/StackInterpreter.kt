@@ -2,6 +2,7 @@ package org.shedlang.compiler.stackinterpreter
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import org.shedlang.compiler.ast.*
 import java.math.BigInteger
 
@@ -165,12 +166,35 @@ internal fun loadExpression(expression: ExpressionNode): PersistentList<Interpre
         }
 
         override fun visit(node: IfNode): PersistentList<InterpreterInstruction> {
-            throw UnsupportedOperationException("not implemented")
+            return loadBlock(node.elseBranch)
         }
 
         override fun visit(node: WhenNode): PersistentList<InterpreterInstruction> {
             throw UnsupportedOperationException("not implemented")
         }
+    })
+}
 
+private fun loadBlock(block: Block): PersistentList<InterpreterInstruction> {
+    return block.statements.flatMap { statement -> loadStatement(statement) }.toPersistentList()
+}
+
+fun loadStatement(statement: FunctionStatementNode): PersistentList<InterpreterInstruction> {
+    return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<InterpreterInstruction>> {
+        override fun visit(node: ExpressionStatementNode): PersistentList<InterpreterInstruction> {
+            if (node.type == ExpressionStatementNode.Type.RETURN) {
+                return loadExpression(node.expression)
+            } else {
+                throw UnsupportedOperationException("not implemented")
+            }
+        }
+
+        override fun visit(node: ValNode): PersistentList<InterpreterInstruction> {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: FunctionDeclarationNode): PersistentList<InterpreterInstruction> {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
