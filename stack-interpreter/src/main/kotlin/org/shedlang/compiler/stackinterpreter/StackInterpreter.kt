@@ -6,15 +6,15 @@ import kotlinx.collections.immutable.toPersistentList
 import org.shedlang.compiler.ast.*
 import java.math.BigInteger
 
-interface InterpreterValue {
+internal interface InterpreterValue {
 
 }
 
-data class InterpreterBool(val value: Boolean): InterpreterValue
+internal data class InterpreterBool(val value: Boolean): InterpreterValue
 
-data class InterpreterInt(val value: BigInteger): InterpreterValue
+internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
-class Stack<T>(private val stack: PersistentList<T>) {
+internal class Stack<T>(private val stack: PersistentList<T>) {
     fun pop(): Pair<Stack<T>, T> {
         val value = stack.last()
         val newStack = Stack(stack.removeAt(stack.lastIndex))
@@ -26,7 +26,7 @@ class Stack<T>(private val stack: PersistentList<T>) {
     }
 }
 
-class Pop(val state: InterpreterState, val value: InterpreterValue) {
+internal class Pop(val state: InterpreterState, val value: InterpreterValue) {
     operator fun component1(): InterpreterState {
         return state
     }
@@ -36,7 +36,7 @@ class Pop(val state: InterpreterState, val value: InterpreterValue) {
     }
 }
 
-data class InterpreterState(
+internal data class InterpreterState(
     val instructionIndex: Int,
     private val stack: Stack<InterpreterValue>
 ) {
@@ -61,25 +61,25 @@ data class InterpreterState(
     }
 }
 
-fun initialState(): InterpreterState {
+internal fun initialState(): InterpreterState {
     return InterpreterState(
         instructionIndex = 0,
         stack = Stack(persistentListOf())
     )
 }
 
-interface InterpreterInstruction {
+internal interface InterpreterInstruction {
     fun run(initialState: InterpreterState): InterpreterState
 }
 
 
-class InterpreterPushValue(private val value: InterpreterValue): InterpreterInstruction {
+internal class InterpreterPushValue(private val value: InterpreterValue): InterpreterInstruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.push(value).nextInstruction()
     }
 }
 
-class InterpreterBinaryIntOperation(
+internal class InterpreterBinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
 ): InterpreterInstruction {
     override fun run(initialState: InterpreterState): InterpreterState {
@@ -90,15 +90,15 @@ class InterpreterBinaryIntOperation(
     }
 }
 
-val InterpreterIntAdd = InterpreterBinaryIntOperation { left, right ->
+internal val InterpreterIntAdd = InterpreterBinaryIntOperation { left, right ->
     InterpreterInt(left + right)
 }
 
-val InterpreterIntSubtract = InterpreterBinaryIntOperation { left, right ->
+internal val InterpreterIntSubtract = InterpreterBinaryIntOperation { left, right ->
     InterpreterInt(left - right)
 }
 
-class InterpreterRelativeJumpIfFalse(private val size: Int): InterpreterInstruction {
+internal class InterpreterRelativeJumpIfFalse(private val size: Int): InterpreterInstruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.pop()
         val condition = (value as InterpreterBool).value
@@ -110,7 +110,7 @@ class InterpreterRelativeJumpIfFalse(private val size: Int): InterpreterInstruct
     }
 }
 
-class InterpreterRelativeJump(private val size: Int): InterpreterInstruction {
+internal class InterpreterRelativeJump(private val size: Int): InterpreterInstruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.relativeJump(size + 1)
     }
@@ -227,7 +227,7 @@ private fun loadBlock(block: Block): PersistentList<InterpreterInstruction> {
     return block.statements.flatMap { statement -> loadStatement(statement) }.toPersistentList()
 }
 
-fun loadStatement(statement: FunctionStatementNode): PersistentList<InterpreterInstruction> {
+internal fun loadStatement(statement: FunctionStatementNode): PersistentList<InterpreterInstruction> {
     return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<InterpreterInstruction>> {
         override fun visit(node: ExpressionStatementNode): PersistentList<InterpreterInstruction> {
             if (node.type == ExpressionStatementNode.Type.RETURN) {
