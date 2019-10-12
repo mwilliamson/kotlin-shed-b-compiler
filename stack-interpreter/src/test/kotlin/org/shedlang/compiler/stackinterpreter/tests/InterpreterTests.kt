@@ -5,11 +5,15 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import kotlinx.collections.immutable.PersistentList
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Block
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
 class InterpreterTests {
     @Test
@@ -103,9 +107,41 @@ class InterpreterTests {
         assertThat(value, isInt(2))
     }
 
-    private fun evaluateExpression(node: ExpressionNode): InterpreterValue {
-        val instructions = loadExpression(node)
+    @Test
+    fun variableIntroducedByValCanBeRead() {
+        val target = targetVariable("x")
+        val reference = variableReference("x")
+        val block = block(
+            listOf(
+                valStatement(target = target, expression = literalInt(42)),
+                expressionStatementReturn(reference)
+            )
+        )
 
+        val references = ResolvedReferencesMap(mapOf(
+            reference.nodeId to target
+        ))
+
+        val value = evaluateBlock(block, references = references)
+
+        assertThat(value, isInt(42))
+    }
+
+    private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
+        val instructions = loader(references = references).loadBlock(block)
+        return executeInstructions(instructions)
+    }
+
+    private fun evaluateExpression(node: ExpressionNode): InterpreterValue {
+        val instructions = loader().loadExpression(node)
+        return executeInstructions(instructions)
+    }
+
+    private fun loader(references: ResolvedReferences = ResolvedReferencesMap.EMPTY): Loader {
+        return Loader(references = references)
+    }
+
+    private fun executeInstructions(instructions: PersistentList<Instruction>): InterpreterValue {
         var state = state()
 
         while (state.instructionIndex < instructions.size) {

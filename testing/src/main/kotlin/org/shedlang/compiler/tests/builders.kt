@@ -162,6 +162,11 @@ fun valType(
     source = anySource()
 )
 
+fun block(statements: List<FunctionStatementNode>) = Block(
+    statements,
+    source = anySource()
+)
+
 fun expression() = literalString("<expression>")
 fun literalUnit() = UnitLiteralNode(anySource())
 fun literalBool(
