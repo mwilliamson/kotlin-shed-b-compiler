@@ -68,20 +68,20 @@ internal fun initialState(): InterpreterState {
     )
 }
 
-internal interface InterpreterInstruction {
+internal interface Instruction {
     fun run(initialState: InterpreterState): InterpreterState
 }
 
 
-internal class InterpreterPushValue(private val value: InterpreterValue): InterpreterInstruction {
+internal class PushValue(private val value: InterpreterValue): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.push(value).nextInstruction()
     }
 }
 
-internal class InterpreterBinaryIntOperation(
+internal class BinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
-): InterpreterInstruction {
+): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.pop()
         val (state3, left) = state2.pop()
@@ -90,15 +90,15 @@ internal class InterpreterBinaryIntOperation(
     }
 }
 
-internal val InterpreterIntAdd = InterpreterBinaryIntOperation { left, right ->
+internal val InterpreterIntAdd = BinaryIntOperation { left, right ->
     InterpreterInt(left + right)
 }
 
-internal val InterpreterIntSubtract = InterpreterBinaryIntOperation { left, right ->
+internal val InterpreterIntSubtract = BinaryIntOperation { left, right ->
     InterpreterInt(left - right)
 }
 
-internal class InterpreterRelativeJumpIfFalse(private val size: Int): InterpreterInstruction {
+internal class RelativeJumpIfFalse(private val size: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.pop()
         val condition = (value as InterpreterBool).value
@@ -110,54 +110,54 @@ internal class InterpreterRelativeJumpIfFalse(private val size: Int): Interprete
     }
 }
 
-internal class InterpreterRelativeJump(private val size: Int): InterpreterInstruction {
+internal class RelativeJump(private val size: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.relativeJump(size + 1)
     }
 }
 
 
-internal fun loadExpression(expression: ExpressionNode): PersistentList<InterpreterInstruction> {
-    return expression.accept(object : ExpressionNode.Visitor<PersistentList<InterpreterInstruction>> {
-        override fun visit(node: UnitLiteralNode): PersistentList<InterpreterInstruction> {
+internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
+    return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
+        override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: BooleanLiteralNode): PersistentList<InterpreterInstruction> {
-            val push = InterpreterPushValue(InterpreterBool(node.value))
+        override fun visit(node: BooleanLiteralNode): PersistentList<Instruction> {
+            val push = PushValue(InterpreterBool(node.value))
             return persistentListOf(push)
         }
 
-        override fun visit(node: IntegerLiteralNode): PersistentList<InterpreterInstruction> {
-            val push = InterpreterPushValue(InterpreterInt(node.value))
+        override fun visit(node: IntegerLiteralNode): PersistentList<Instruction> {
+            val push = PushValue(InterpreterInt(node.value))
             return persistentListOf(push)
         }
 
-        override fun visit(node: StringLiteralNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: StringLiteralNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: CodePointLiteralNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: CodePointLiteralNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: SymbolNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: SymbolNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: TupleNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: TupleNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: ReferenceNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: ReferenceNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: UnaryOperationNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: UnaryOperationNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: BinaryOperationNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: BinaryOperationNode): PersistentList<Instruction> {
             val left = loadExpression(node.left)
             val right = loadExpression(node.right)
             val operation = when (node.operator) {
@@ -168,28 +168,28 @@ internal fun loadExpression(expression: ExpressionNode): PersistentList<Interpre
             return left.addAll(right).add(operation)
         }
 
-        override fun visit(node: IsNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: IsNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: CallNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: CallNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: PartialCallNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: PartialCallNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: FieldAccessNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: FunctionExpressionNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: FunctionExpressionNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: IfNode): PersistentList<InterpreterInstruction> {
-            val instructions = mutableListOf<InterpreterInstruction>()
+        override fun visit(node: IfNode): PersistentList<Instruction> {
+            val instructions = mutableListOf<Instruction>()
 
             val conditionInstructions = node.conditionalBranches.map { branch ->
                 loadExpression(branch.condition)
@@ -199,7 +199,7 @@ internal fun loadExpression(expression: ExpressionNode): PersistentList<Interpre
 
             node.conditionalBranches.forEachIndexed { branchIndex, _ ->
                 instructions.addAll(conditionInstructions[branchIndex])
-                instructions.add(InterpreterRelativeJumpIfFalse(bodyInstructions[branchIndex].size + 1))
+                instructions.add(RelativeJumpIfFalse(bodyInstructions[branchIndex].size + 1))
                 instructions.addAll(bodyInstructions[branchIndex])
 
                 val remainingConditionInstructionCount = conditionInstructions.drop(branchIndex + 1)
@@ -210,26 +210,26 @@ internal fun loadExpression(expression: ExpressionNode): PersistentList<Interpre
                     remainingConditionInstructionCount +
                     remainingBodyInstructionCount +
                         (node.conditionalBranches.size - branchIndex - 1) * 2
-                instructions.add(InterpreterRelativeJump(remainingInstructionCount))
+                instructions.add(RelativeJump(remainingInstructionCount))
             }
 
             instructions.addAll(loadBlock(node.elseBranch))
             return instructions.toPersistentList()
         }
 
-        override fun visit(node: WhenNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: WhenNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
     })
 }
 
-private fun loadBlock(block: Block): PersistentList<InterpreterInstruction> {
+private fun loadBlock(block: Block): PersistentList<Instruction> {
     return block.statements.flatMap { statement -> loadStatement(statement) }.toPersistentList()
 }
 
-internal fun loadStatement(statement: FunctionStatementNode): PersistentList<InterpreterInstruction> {
-    return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<InterpreterInstruction>> {
-        override fun visit(node: ExpressionStatementNode): PersistentList<InterpreterInstruction> {
+internal fun loadStatement(statement: FunctionStatementNode): PersistentList<Instruction> {
+    return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<Instruction>> {
+        override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
             if (node.type == ExpressionStatementNode.Type.RETURN) {
                 return loadExpression(node.expression)
             } else {
@@ -237,11 +237,11 @@ internal fun loadStatement(statement: FunctionStatementNode): PersistentList<Int
             }
         }
 
-        override fun visit(node: ValNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: ValNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(node: FunctionDeclarationNode): PersistentList<InterpreterInstruction> {
+        override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
             throw UnsupportedOperationException("not implemented")
         }
     })
