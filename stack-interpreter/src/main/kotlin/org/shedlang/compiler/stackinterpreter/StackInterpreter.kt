@@ -35,22 +35,30 @@ class Pop(val state: InterpreterState, val value: InterpreterValue) {
     }
 }
 
-class InterpreterState(private val stack: Stack<InterpreterValue>) {
+data class InterpreterState(
+    val instructionIndex: Int,
+    private val stack: Stack<InterpreterValue>
+) {
     fun push(value: InterpreterValue): InterpreterState {
-        return InterpreterState(stack.push(value))
+        return copy(stack = stack.push(value))
     }
 
     fun pop(): Pop {
         val (newStack, value) = stack.pop()
         return Pop(
-            state = InterpreterState(stack = newStack),
+            state = copy(stack = newStack),
             value = value
         )
+    }
+
+    fun nextInstruction(): InterpreterState {
+        return copy(instructionIndex = instructionIndex + 1)
     }
 }
 
 fun initialState(): InterpreterState {
     return InterpreterState(
+        instructionIndex = 0,
         stack = Stack(persistentListOf())
     )
 }
@@ -60,9 +68,9 @@ interface InterpreterInstruction {
 }
 
 
-class InterpreterPushValue(val value: InterpreterValue): InterpreterInstruction {
+class InterpreterPushValue(private val value: InterpreterValue): InterpreterInstruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.push(value)
+        return initialState.push(value).nextInstruction()
     }
 }
 
@@ -73,7 +81,7 @@ class InterpreterBinaryIntOperation(
         val (state2, right) = initialState.pop()
         val (state3, left) = state2.pop()
         val result = func((left as InterpreterInt).value, (right as InterpreterInt).value)
-        return state3.push(result)
+        return state3.push(result).nextInstruction()
     }
 }
 
