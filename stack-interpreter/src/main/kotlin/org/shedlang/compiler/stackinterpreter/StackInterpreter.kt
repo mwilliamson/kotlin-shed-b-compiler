@@ -55,6 +55,10 @@ data class InterpreterState(
     fun nextInstruction(): InterpreterState {
         return copy(instructionIndex = instructionIndex + 1)
     }
+
+    fun relativeJump(size: Int): InterpreterState {
+        return copy(instructionIndex = instructionIndex + size)
+    }
 }
 
 fun initialState(): InterpreterState {
@@ -93,6 +97,25 @@ val InterpreterIntAdd = InterpreterBinaryIntOperation { left, right ->
 val InterpreterIntSubtract = InterpreterBinaryIntOperation { left, right ->
     InterpreterInt(left - right)
 }
+
+class InterpreterRelativeJumpIfFalse(private val size: Int): InterpreterInstruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, value) = initialState.pop()
+        val condition = (value as InterpreterBool).value
+        return if (condition) {
+            state2.nextInstruction()
+        } else {
+            state2.relativeJump(size + 1)
+        }
+    }
+}
+
+class InterpreterRelativeJump(private val size: Int): InterpreterInstruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        return initialState.relativeJump(size + 1)
+    }
+}
+
 
 internal fun loadExpression(expression: ExpressionNode): PersistentList<InterpreterInstruction> {
     return expression.accept(object : ExpressionNode.Visitor<PersistentList<InterpreterInstruction>> {
@@ -166,7 +189,32 @@ internal fun loadExpression(expression: ExpressionNode): PersistentList<Interpre
         }
 
         override fun visit(node: IfNode): PersistentList<InterpreterInstruction> {
-            return loadBlock(node.elseBranch)
+            val instructions = mutableListOf<InterpreterInstruction>()
+
+            val conditionInstructions = node.conditionalBranches.map { branch ->
+                loadExpression(branch.condition)
+            }
+
+            val bodyInstructions = node.branchBodies.map { body -> loadBlock(body) }
+
+            node.conditionalBranches.forEachIndexed { branchIndex, _ ->
+                instructions.addAll(conditionInstructions[branchIndex])
+                instructions.add(InterpreterRelativeJumpIfFalse(bodyInstructions[branchIndex].size + 1))
+                instructions.addAll(bodyInstructions[branchIndex])
+
+                val remainingConditionInstructionCount = conditionInstructions.drop(branchIndex + 1)
+                    .fold(0) { total, instructions -> total + instructions.size }
+                val remainingBodyInstructionCount = bodyInstructions.drop(branchIndex + 1)
+                    .fold(0) { total, instructions -> total + instructions.size }
+                val remainingInstructionCount =
+                    remainingConditionInstructionCount +
+                    remainingBodyInstructionCount +
+                        (node.conditionalBranches.size - branchIndex - 1) * 2
+                instructions.add(InterpreterRelativeJump(remainingInstructionCount))
+            }
+
+            instructions.addAll(loadBlock(node.elseBranch))
+            return instructions.toPersistentList()
         }
 
         override fun visit(node: WhenNode): PersistentList<InterpreterInstruction> {

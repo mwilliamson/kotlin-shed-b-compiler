@@ -49,6 +49,48 @@ class InterpreterTests {
     }
 
     @Test
+    fun whenConditionOfIfIsTrueThenFinalValueIsResultOfTrueBranch() {
+        val node = ifExpression(
+            literalBool(true),
+            listOf(expressionStatementReturn(literalInt(1))),
+            listOf(expressionStatementReturn(literalInt(2)))
+        )
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isInt(1))
+    }
+
+    @Test
+    fun firstTrueBranchIsEvaluated() {
+        val node = ifExpression(
+            listOf(
+                conditionalBranch(
+                    literalBool(false),
+                    listOf(expressionStatementReturn(literalInt(1)))
+                ),
+                conditionalBranch(
+                    literalBool(true),
+                    listOf(expressionStatementReturn(literalInt(2)))
+                ),
+                conditionalBranch(
+                    literalBool(true),
+                    listOf(expressionStatementReturn(literalInt(3)))
+                ),
+                conditionalBranch(
+                    literalBool(false),
+                    listOf(expressionStatementReturn(literalInt(4)))
+                )
+            ),
+            listOf(expressionStatementReturn(literalInt(5)))
+        )
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
     fun whenConditionOfIfIsFalseThenFinalValueIsResultOfFalseBranch() {
         val node = ifExpression(
             literalBool(false),
