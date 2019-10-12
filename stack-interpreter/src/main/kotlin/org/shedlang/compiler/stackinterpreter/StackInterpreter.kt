@@ -64,22 +64,23 @@ class InterpreterPushValue(val value: InterpreterValue): InterpreterCommand {
     }
 }
 
-object InterpreterIntAdd: InterpreterCommand {
+class InterpreterBinaryIntOperation(
+    private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
+): InterpreterCommand {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.pop()
         val (state3, left) = state2.pop()
-        val result = InterpreterInt((left as InterpreterInt).value + (right as InterpreterInt).value)
+        val result = func((left as InterpreterInt).value, (right as InterpreterInt).value)
         return state3.push(result)
     }
 }
 
-object InterpreterIntSubtract: InterpreterCommand {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, right) = initialState.pop()
-        val (state3, left) = state2.pop()
-        val result = InterpreterInt((left as InterpreterInt).value - (right as InterpreterInt).value)
-        return state3.push(result)
-    }
+val InterpreterIntAdd = InterpreterBinaryIntOperation { left, right ->
+    InterpreterInt(left + right)
+}
+
+val InterpreterIntSubtract = InterpreterBinaryIntOperation { left, right ->
+    InterpreterInt(left - right)
 }
 
 internal fun loadExpression(expression: ExpressionNode): PersistentList<InterpreterCommand> {
