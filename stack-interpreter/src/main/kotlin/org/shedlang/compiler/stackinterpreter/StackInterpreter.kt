@@ -9,6 +9,8 @@ interface InterpreterValue {
 
 }
 
+data class InterpreterBool(val value: Boolean): InterpreterValue
+
 data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 class Stack<T>(private val stack: PersistentList<T>) {
@@ -90,7 +92,8 @@ internal fun loadExpression(expression: ExpressionNode): PersistentList<Interpre
         }
 
         override fun visit(node: BooleanLiteralNode): PersistentList<InterpreterCommand> {
-            throw UnsupportedOperationException("not implemented")
+            val push = InterpreterPushValue(InterpreterBool(node.value))
+            return persistentListOf(push)
         }
 
         override fun visit(node: IntegerLiteralNode): PersistentList<InterpreterCommand> {

@@ -8,14 +8,21 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.stackinterpreter.InterpreterInt
-import org.shedlang.compiler.stackinterpreter.InterpreterValue
-import org.shedlang.compiler.stackinterpreter.initialState
-import org.shedlang.compiler.stackinterpreter.loadExpression
+import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.binaryOperation
+import org.shedlang.compiler.tests.literalBool
 import org.shedlang.compiler.tests.literalInt
 
 class InterpreterTests {
+    @Test
+    fun booleanLiteralIsEvaluatedToBoolean() {
+        val node = literalBool(true)
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isBool(true))
+    }
+
     @Test
     fun integerLiteralIsEvaluatedToInteger() {
         val node = literalInt(42)
@@ -54,6 +61,10 @@ class InterpreterTests {
     }
 
     private fun state() = initialState()
+
+    private fun isBool(value: Boolean): Matcher<InterpreterValue> {
+        return cast(has(InterpreterBool::value, equalTo(value)))
+    }
 
     private fun isInt(value: Int): Matcher<InterpreterValue> {
         return cast(has(InterpreterInt::value, equalTo(value.toBigInteger())))
