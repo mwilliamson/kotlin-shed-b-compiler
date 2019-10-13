@@ -518,10 +518,7 @@ internal class Loader(private val references: ResolvedReferences) {
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
-                val expressionInstructions = loadExpression(node.expression)
-                val target = node.target as TargetNode.Variable
-                val store = StoreLocal(target.nodeId)
-                return expressionInstructions.add(store)
+                return loadVal(node)
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
@@ -557,9 +554,16 @@ internal class Loader(private val references: ResolvedReferences) {
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return loadVal(node)
             }
         })
+    }
+
+    private fun loadVal(node: ValNode): PersistentList<Instruction> {
+        val expressionInstructions = loadExpression(node.expression)
+        val target = node.target as TargetNode.Variable
+        val store = StoreLocal(target.nodeId)
+        return expressionInstructions.add(store)
     }
 
     private fun resolveReference(reference: ReferenceNode): Int {
