@@ -56,6 +56,24 @@ class InterpreterTests {
     }
 
     @Test
+    fun whenOperandsAreEqualThenIntegerEqualityEvaluatesToTrue() {
+        val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(1))
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenOperandsAreNotEqualThenIntegerEqualityEvaluatesToFalse() {
+        val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(2))
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
     fun whenConditionOfIfIsTrueThenFinalValueIsResultOfTrueBranch() {
         val node = ifExpression(
             literalBool(true),

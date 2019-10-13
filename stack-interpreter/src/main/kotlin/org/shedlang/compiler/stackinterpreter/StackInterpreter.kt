@@ -204,6 +204,10 @@ internal val InterpreterIntSubtract = BinaryIntOperation { left, right ->
     InterpreterInt(left - right)
 }
 
+internal val InterpreterIntEquals = BinaryIntOperation { left, right ->
+    InterpreterBool(left == right)
+}
+
 internal class InterpreterFunction(val bodyInstructions: PersistentList<Instruction>) : InterpreterValue
 
 internal class RelativeJumpIfFalse(private val size: Int): Instruction {
@@ -346,6 +350,7 @@ internal class Loader(private val references: ResolvedReferences) {
                 val operation = when (node.operator) {
                     BinaryOperator.ADD -> InterpreterIntAdd
                     BinaryOperator.SUBTRACT -> InterpreterIntSubtract
+                    BinaryOperator.EQUALS -> InterpreterIntEquals
                     else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                 }
                 return left.addAll(right).add(operation)
