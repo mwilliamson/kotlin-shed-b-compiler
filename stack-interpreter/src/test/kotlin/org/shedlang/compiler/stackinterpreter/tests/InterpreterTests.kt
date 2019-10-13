@@ -177,18 +177,25 @@ class InterpreterTests {
             )
         )
         val moduleName = listOf(Identifier("Example"))
+        val functionReference = export("main")
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function
+        ))
         val module = stubbedModule(
             name = moduleName,
             node = module(
+                exports = listOf(functionReference),
                 body = listOf(function)
-            )
+            ),
+            references = references
         )
 
         val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
                 InitModule(moduleName),
-                LoadGlobal(function.nodeId),
+                LoadModule(moduleName),
+                FieldAccess(Identifier("main")),
                 Call(argumentCount = 0)
             ),
             image = image
@@ -220,13 +227,16 @@ class InterpreterTests {
             )
         )
         val moduleName = listOf(Identifier("Example"))
+        val functionReference = export("main")
         val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
             firstReference.nodeId to firstParameter,
             secondReference.nodeId to secondParameter
         ))
         val module = stubbedModule(
             name = moduleName,
             node = module(
+                exports = listOf(functionReference),
                 body = listOf(function)
             ),
             references = references
@@ -236,7 +246,8 @@ class InterpreterTests {
         val value = executeInstructions(
             persistentListOf(
                 InitModule(moduleName),
-                LoadGlobal(function.nodeId),
+                LoadModule(moduleName),
+                FieldAccess(Identifier("main")),
                 PushValue(InterpreterInt(1.toBigInteger())),
                 PushValue(InterpreterInt(2.toBigInteger())),
                 Call(argumentCount = 2)

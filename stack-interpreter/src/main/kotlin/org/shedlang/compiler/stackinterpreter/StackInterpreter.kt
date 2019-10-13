@@ -15,6 +15,12 @@ internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
 
+internal class InterpreterModule(private val fields: Map<Identifier, InterpreterValue>): InterpreterValue {
+    fun field(fieldName: Identifier): InterpreterValue {
+        return fields[fieldName]!!
+    }
+}
+
 internal class Stack<T>(private val stack: PersistentList<T>) {
     val size: Int
         get() = stack.size
@@ -103,6 +109,7 @@ internal data class InterpreterState(
     private val globals: PersistentMap<Int, InterpreterValue>,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
+    private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
     val stdout: String
 ) {
     fun instruction(): Instruction? {
@@ -156,6 +163,16 @@ internal data class InterpreterState(
         return globals[variableId]!!
     }
 
+    fun storeModule(moduleName: List<Identifier>, value: InterpreterModule): InterpreterState {
+        return copy(
+            modules = modules.put(moduleName, value)
+        )
+    }
+
+    fun loadModule(moduleName: List<Identifier>): InterpreterValue {
+        return modules[moduleName]!!
+    }
+
     fun moduleInitialisation(moduleName: List<Identifier>): List<Instruction> {
         return image.moduleInitialisation(moduleName)
     }
@@ -188,6 +205,7 @@ internal fun initialState(image: Image, instructions: List<Instruction>): Interp
         globals = persistentMapOf(),
         image = image,
         callStack = Stack(persistentListOf(frame)),
+        modules = persistentMapOf(),
         stdout = ""
     )
 }
@@ -233,6 +251,14 @@ internal val InterpreterIntMultiply = BinaryIntOperation { left, right ->
 
 internal val InterpreterIntEquals = BinaryIntOperation { left, right ->
     InterpreterBool(left == right)
+}
+
+internal class FieldAccess(private val fieldName: Identifier): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, receiver) = initialState.popTemporary()
+        val module = receiver as InterpreterModule
+        return state2.pushTemporary(module.field(fieldName)).nextInstruction()
+    }
 }
 
 internal class InterpreterFunction(
@@ -291,16 +317,28 @@ internal class InitModule(private val moduleName: List<Identifier>): Instruction
     }
 }
 
-internal class StoreGlobal(private val nodeId: Int, private val value: InterpreterValue): Instruction {
+internal class StoreModule(
+    private val moduleName: List<Identifier>,
+    private val exports: List<Pair<Identifier, Int>>
+): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.storeGlobal(nodeId, value).nextInstruction()
+        val fields = exports.associate { (name, variableId) ->
+            name to initialState.loadLocal(variableId)
+        }
+        val value = InterpreterModule(fields = fields)
+        return initialState.storeModule(moduleName, value).nextInstruction()
     }
 }
 
-internal class LoadGlobal(private val nodeId: Int): Instruction {
+internal class LoadModule(private val moduleName: List<Identifier>): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        val value = initialState.loadGlobal(nodeId)
-        return initialState.pushTemporary(value).nextInstruction()
+        return initialState.pushTemporary(initialState.loadModule(moduleName)).nextInstruction()
+    }
+}
+
+internal class StoreGlobal(private val nodeId: Int, private val value: InterpreterValue): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        return initialState.storeGlobal(nodeId, value).nextInstruction()
     }
 }
 
@@ -346,9 +384,18 @@ internal fun loadModuleSet(moduleSet: ModuleSet): Image {
 
 private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
     val loader = Loader(references = module.references)
-    val instructions = module.node.body.flatMap { statement ->
-        loader.loadModuleStatement(statement)
-    }.toPersistentList().add(Exit)
+    val instructions = module.node.body
+        .flatMap { statement ->
+            loader.loadModuleStatement(statement)
+        }
+        .toPersistentList()
+        .add(StoreModule(
+            moduleName = module.name,
+            exports = module.node.exports.map { export ->
+                export.name to module.references[export].nodeId
+            }
+        ))
+        .add(Exit)
     return instructions
 }
 
@@ -521,8 +568,7 @@ internal class Loader(private val references: ResolvedReferences) {
                 )
                 return persistentListOf(
                     PushValue(function),
-                    StoreLocal(node.nodeId),
-                    StoreGlobal(node.nodeId, function)
+                    StoreLocal(node.nodeId)
                 )
             }
 

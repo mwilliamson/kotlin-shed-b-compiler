@@ -56,7 +56,8 @@ class ExecutionTests {
                     val finalState = executeInstructions(
                         persistentListOf(
                             InitModule(testProgram.mainModule),
-                            LoadGlobal(mainFunction.nodeId),
+                            LoadModule(testProgram.mainModule),
+                            FieldAccess(Identifier("main")),
                             Call(argumentCount = 0)
                         ),
                         image = image

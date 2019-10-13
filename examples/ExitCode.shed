@@ -1,5 +1,7 @@
 // exitCode: 42
 
+export main;
+
 fun main() -> Int {
     42
 }
