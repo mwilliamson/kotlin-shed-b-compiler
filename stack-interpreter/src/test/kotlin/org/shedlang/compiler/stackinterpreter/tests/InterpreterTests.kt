@@ -406,6 +406,30 @@ class InterpreterTests {
         assertThat(value, isString("42"))
     }
 
+    @Test
+    fun printBuiltinWritesToStdout() {
+        val functionReference = variableReference("print")
+        val call = call(
+            receiver = functionReference,
+            positionalArguments = listOf(
+                literalString("hello")
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to Builtins.print
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadExpression(call)
+        val finalState = executeInstructions(
+            instructions,
+            image = Image.EMPTY,
+            defaultVariables = builtinVariables
+        )
+
+        assertThat(finalState.stdout, equalTo("hello"))
+    }
+
     private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
         val instructions = loader(references = references).loadBlock(block)
         return executeInstructions(instructions)

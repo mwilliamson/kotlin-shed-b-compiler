@@ -244,6 +244,10 @@ internal data class InterpreterState(
     fun currentVariables(): Variables {
         return currentCallFrame().variables
     }
+
+    fun print(string: String): InterpreterState {
+        return copy(stdout = stdout + string)
+    }
 }
 
 internal fun initialState(image: Image, instructions: List<Instruction>, defaultVariables: Variables): InterpreterState {
@@ -676,7 +680,13 @@ private object InterpreterBuiltins {
         val int = (arguments[0] as InterpreterInt).value
         state.pushTemporary(InterpreterString(int.toString()))
     }
+
+    val print = InterpreterBuiltinFunction { state, arguments ->
+        val string = (arguments[0] as InterpreterString).value
+        state.print(string)
+    }
 }
 
 internal val builtinVariables = Variables.EMPTY.createInnerScope()
     .store(Builtins.intToString.nodeId, InterpreterBuiltins.intToString)
+    .store(Builtins.print.nodeId, InterpreterBuiltins.print)
