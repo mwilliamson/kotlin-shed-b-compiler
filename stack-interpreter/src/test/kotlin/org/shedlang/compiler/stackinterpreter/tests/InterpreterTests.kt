@@ -10,6 +10,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackinterpreter.*
@@ -147,7 +148,7 @@ class InterpreterTests {
             )
         )
 
-        val image = loadModule(module)
+        val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
                 InitModule(moduleName),
@@ -156,6 +157,7 @@ class InterpreterTests {
             ),
             image = image
         )
+        // TODO: check call stack is empty
 
         assertThat(value, isInt(42))
     }
@@ -170,25 +172,13 @@ class InterpreterTests {
         return executeInstructions(instructions)
     }
 
+    private fun executeInstructions(instructions: PersistentList<Instruction>, image: Image = Image.EMPTY): InterpreterValue {
+        val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(instructions, image = image)
+        return finalState.popTemporary().second
+    }
+
     private fun loader(references: ResolvedReferences = ResolvedReferencesMap.EMPTY): Loader {
         return Loader(references = references)
-    }
-
-    private fun executeInstructions(instructions: PersistentList<Instruction>, image: Image = Image.EMPTY): InterpreterValue {
-        var state = state(image = image, instructions = instructions)
-
-        while (true) {
-            val instruction = state.instruction()
-            if (instruction == null) {
-                return state.popTemporary().component2()
-            } else {
-                state = instruction.run(state)
-            }
-        }
-    }
-
-    private fun state(image: Image, instructions: PersistentList<Instruction>): InterpreterState {
-        return initialState(image = image, instructions = instructions)
     }
 
     private fun isBool(value: Boolean): Matcher<InterpreterValue> {

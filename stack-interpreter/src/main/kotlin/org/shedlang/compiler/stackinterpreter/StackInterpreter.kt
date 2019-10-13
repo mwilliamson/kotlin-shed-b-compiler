@@ -2,6 +2,7 @@ package org.shedlang.compiler.stackinterpreter
 
 import kotlinx.collections.immutable.*
 import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import java.math.BigInteger
@@ -92,7 +93,8 @@ internal fun createCallFrame(instructions: List<Instruction>): CallFrame {
 internal data class InterpreterState(
     private val globals: PersistentMap<Int, InterpreterValue>,
     private val image: Image,
-    private val callStack: Stack<CallFrame>
+    private val callStack: Stack<CallFrame>,
+    val stdout: String
 ) {
     fun instruction(): Instruction? {
         return currentCallFrame().currentInstruction()
@@ -167,7 +169,8 @@ internal fun initialState(image: Image, instructions: List<Instruction>): Interp
     return InterpreterState(
         globals = persistentMapOf(),
         image = image,
-        callStack = Stack(persistentListOf(frame))
+        callStack = Stack(persistentListOf(frame)),
+        stdout = ""
     )
 }
 
@@ -278,14 +281,22 @@ internal class Image(private val modules: Map<List<Identifier>, PersistentList<I
     }
 }
 
-internal fun loadModule(module: Module.Shed): Image {
+internal fun loadModuleSet(moduleSet: ModuleSet): Image {
+    return Image(moduleSet.modules.associate { module ->
+        val instructions = when (module) {
+            is Module.Shed -> loadModule(module)
+            else -> throw NotImplementedError()
+        }
+        module.name to instructions
+    })
+}
+
+private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
     val loader = Loader(references = module.references)
     val instructions = module.node.body.flatMap { statement ->
         loader.loadModuleStatement(statement)
     }.toPersistentList().add(Return)
-    return Image(persistentMapOf(
-        module.name to instructions
-    ))
+    return instructions
 }
 
 internal class Loader(private val references: ResolvedReferences) {
@@ -335,7 +346,7 @@ internal class Loader(private val references: ResolvedReferences) {
                 val operation = when (node.operator) {
                     BinaryOperator.ADD -> InterpreterIntAdd
                     BinaryOperator.SUBTRACT -> InterpreterIntSubtract
-                    else -> throw UnsupportedOperationException("not implemented")
+                    else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                 }
                 return left.addAll(right).add(operation)
             }
@@ -452,5 +463,18 @@ internal class Loader(private val references: ResolvedReferences) {
 
     private fun resolveReference(reference: ReferenceNode): Int {
         return references[reference].nodeId
+    }
+}
+
+internal fun executeInstructions(instructions: PersistentList<Instruction>, image: Image): InterpreterState {
+    var state = initialState(image = image, instructions = instructions)
+
+    while (true) {
+        val instruction = state.instruction()
+        if (instruction == null) {
+            return state
+        } else {
+            state = instruction.run(state)
+        }
     }
 }
