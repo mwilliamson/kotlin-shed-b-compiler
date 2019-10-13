@@ -158,7 +158,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun canExecuteFunctionInModule() {
+    fun canCallFunctionDefinedInModuleWithZeroArguments() {
         val function = function(
             name = "main",
             body = listOf(
@@ -180,13 +180,62 @@ class InterpreterTests {
             persistentListOf(
                 InitModule(moduleName),
                 LoadGlobal(function.nodeId),
-                Call()
+                Call(argumentCount = 0)
             ),
             image = image
         )
-        // TODO: check call stack is empty
 
         assertThat(value, isInt(42))
+    }
+
+    @Test
+    fun canCallFunctionDefinedInModuleWithPositionalArguments() {
+        val firstParameter = parameter("first")
+        val secondParameter = parameter("second")
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val function = function(
+            name = "subtract",
+            parameters = listOf(
+                firstParameter,
+                secondParameter
+            ),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(
+                        BinaryOperator.SUBTRACT,
+                        firstReference,
+                        secondReference
+                    )
+                )
+            )
+        )
+        val moduleName = listOf(Identifier("Example"))
+        val references = ResolvedReferencesMap(mapOf(
+            firstReference.nodeId to firstParameter,
+            secondReference.nodeId to secondParameter
+        ))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                body = listOf(function)
+            ),
+            references = references
+        )
+
+        val image = loadModuleSet(ModuleSet(listOf(module)))
+        val value = executeInstructions(
+            persistentListOf(
+                InitModule(moduleName),
+                LoadGlobal(function.nodeId),
+                PushValue(InterpreterInt(1.toBigInteger())),
+                PushValue(InterpreterInt(2.toBigInteger())),
+                Call(argumentCount = 2)
+            ),
+            image = image
+        )
+
+        assertThat(value, isInt(-1))
     }
 
     private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
@@ -201,6 +250,7 @@ class InterpreterTests {
 
     private fun executeInstructions(instructions: PersistentList<Instruction>, image: Image = Image.EMPTY): InterpreterValue {
         val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(instructions, image = image)
+        // TODO: check call stack is empty
         return finalState.popTemporary().second
     }
 
@@ -216,12 +266,16 @@ class InterpreterTests {
         return cast(has(InterpreterInt::value, equalTo(value.toBigInteger())))
     }
 
-    private fun stubbedModule(name: List<Identifier>, node: ModuleNode): Module.Shed {
+    private fun stubbedModule(
+        name: List<Identifier>,
+        node: ModuleNode,
+        references: ResolvedReferences = ResolvedReferencesMap.EMPTY
+    ): Module.Shed {
         return Module.Shed(
             name = name,
             type = ModuleType(mapOf()),
             types = EMPTY_TYPES,
-            references = ResolvedReferencesMap(mapOf()),
+            references = references,
             node = node
         )
     }

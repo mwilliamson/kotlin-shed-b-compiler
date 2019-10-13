@@ -72,6 +72,10 @@ internal data class CallFrame(
         )
     }
 
+    fun discardTemporary(): CallFrame {
+        return copy(temporaryStack = temporaryStack.discard())
+    }
+
     fun storeLocal(variableId: Int, value: InterpreterValue): CallFrame {
         return copy(locals = locals.put(variableId, value))
     }
@@ -112,6 +116,10 @@ internal data class InterpreterState(
             copy(callStack = callStack.discard().push(newCallFrame)),
             value
         )
+    }
+
+    fun discardTemporary(): InterpreterState {
+        return updateCurrentCallFrame { frame -> frame.discardTemporary() }
     }
 
     fun nextInstruction(): InterpreterState {
@@ -178,10 +186,15 @@ internal interface Instruction {
     fun run(initialState: InterpreterState): InterpreterState
 }
 
-
 internal class PushValue(private val value: InterpreterValue): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(value).nextInstruction()
+    }
+}
+
+internal object Discard: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        return initialState.discardTemporary()
     }
 }
 
@@ -212,7 +225,10 @@ internal val InterpreterIntEquals = BinaryIntOperation { left, right ->
     InterpreterBool(left == right)
 }
 
-internal class InterpreterFunction(val bodyInstructions: PersistentList<Instruction>) : InterpreterValue
+internal class InterpreterFunction(
+    val bodyInstructions: PersistentList<Instruction>,
+    val parameterIds: List<Int>
+) : InterpreterValue
 
 internal class RelativeJumpIfFalse(private val size: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
@@ -271,11 +287,23 @@ internal class LoadGlobal(private val nodeId: Int): Instruction {
     }
 }
 
-internal class Call(): Instruction {
+internal class Call(private val argumentCount: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, receiver) = initialState.popTemporary()
+        var state = initialState
+        val arguments = mutableListOf<InterpreterValue>()
+        repeat(argumentCount) {
+            val (state2, argument) = state.popTemporary()
+            arguments.add(argument)
+            state = state2
+        }
+        val (state2, receiver) = state.popTemporary()
         val function = receiver as InterpreterFunction
-        return initialState.nextInstruction().enter(function.bodyInstructions)
+        return function.parameterIds.zip(arguments.reversed()).fold(
+            state2.nextInstruction().enter(function.bodyInstructions),
+            { state, (parameterId, argument) ->
+                state.storeLocal(parameterId, argument)
+            }
+        )
     }
 }
 
@@ -366,7 +394,13 @@ internal class Loader(private val references: ResolvedReferences) {
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                // TODO: test
+                val receiverInstructions = loadExpression(node.receiver)
+                val argumentInstructions = node.positionalArguments.flatMap { argument ->
+                    loadExpression(argument)
+                }
+                val call = Call(argumentCount = node.positionalArguments.size)
+                return receiverInstructions.addAll(argumentInstructions).add(call)
             }
 
             override fun visit(node: PartialCallNode): PersistentList<Instruction> {
@@ -425,8 +459,11 @@ internal class Loader(private val references: ResolvedReferences) {
     internal fun loadFunctionStatement(statement: FunctionStatementNode): PersistentList<Instruction> {
         return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
+                val expressionInstructions = loadExpression(node.expression)
                 if (node.type == ExpressionStatementNode.Type.RETURN) {
-                    return loadExpression(node.expression)
+                    return expressionInstructions
+                } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
+                    return expressionInstructions.add(Discard)
                 } else {
                     throw UnsupportedOperationException("not implemented")
                 }
@@ -461,7 +498,11 @@ internal class Loader(private val references: ResolvedReferences) {
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
                 val bodyInstructions = loadBlock(node.body)
-                val instruction = StoreGlobal(node.nodeId, InterpreterFunction(bodyInstructions))
+                val function = InterpreterFunction(
+                    bodyInstructions = bodyInstructions,
+                    parameterIds = node.parameters.map { parameter -> parameter.nodeId }
+                )
+                val instruction = StoreGlobal(node.nodeId, function)
                 return persistentListOf(instruction)
             }
 

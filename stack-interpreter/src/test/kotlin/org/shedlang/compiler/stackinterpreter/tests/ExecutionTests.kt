@@ -57,7 +57,7 @@ class ExecutionTests {
                         persistentListOf(
                             InitModule(testProgram.mainModule),
                             LoadGlobal(mainFunction.nodeId),
-                            Call()
+                            Call(argumentCount = 0)
                         ),
                         image = image
                     )
