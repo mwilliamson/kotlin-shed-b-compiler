@@ -8,15 +8,14 @@ import com.natpryce.hamkrest.has
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.EMPTY_TYPES
-import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.StringType
 
 class InterpreterTests {
     @Test
@@ -47,10 +46,16 @@ class InterpreterTests {
     }
 
     @Test
-    fun additionAddsOperandsTogether() {
-        val node = binaryOperation(BinaryOperator.ADD, literalInt(1), literalInt(2))
+    fun integerAdditionAddsOperandsTogether() {
+        val left = literalInt(1)
+        val node = binaryOperation(BinaryOperator.ADD, left, literalInt(2))
+        val types = TypesMap(
+            discriminators = mapOf(),
+            expressionTypes = mapOf(left.nodeId to IntType),
+            variableTypes = mapOf()
+        )
 
-        val value = evaluateExpression(node)
+        val value = evaluateExpression(node, types = types)
 
         assertThat(value, isInt(3))
     }
@@ -89,6 +94,21 @@ class InterpreterTests {
         val value = evaluateExpression(node)
 
         assertThat(value, isBool(false))
+    }
+
+    @Test
+    fun stringAdditionConcatenatesStrings() {
+        val left = literalString("hello ")
+        val node = binaryOperation(BinaryOperator.ADD, left, literalString("world"))
+        val types = TypesMap(
+            discriminators = mapOf(),
+            expressionTypes = mapOf(left.nodeId to StringType),
+            variableTypes = mapOf()
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isString("hello world"))
     }
 
     @Test
@@ -371,8 +391,8 @@ class InterpreterTests {
         return executeInstructions(instructions)
     }
 
-    private fun evaluateExpression(node: ExpressionNode): InterpreterValue {
-        val instructions = loader().loadExpression(node)
+    private fun evaluateExpression(node: ExpressionNode, types: Types = EMPTY_TYPES): InterpreterValue {
+        val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions)
     }
 
@@ -381,8 +401,11 @@ class InterpreterTests {
         return finalState.popTemporary().second
     }
 
-    private fun loader(references: ResolvedReferences = ResolvedReferencesMap.EMPTY): Loader {
-        return Loader(references = references)
+    private fun loader(
+        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
+        types: Types = EMPTY_TYPES
+    ): Loader {
+        return Loader(references = references, types = types)
     }
 
     private fun isBool(value: Boolean): Matcher<InterpreterValue> {

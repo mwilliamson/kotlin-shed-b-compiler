@@ -4,7 +4,10 @@ import kotlinx.collections.immutable.*
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.StringType
 import java.math.BigInteger
 
 internal interface InterpreterValue
@@ -288,6 +291,21 @@ internal val InterpreterIntEquals = BinaryIntOperation { left, right ->
     InterpreterBool(left == right)
 }
 
+internal class BinaryStringOperation(
+    private val func: (left: String, right: String) -> InterpreterValue
+): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, right) = initialState.popTemporary()
+        val (state3, left) = state2.popTemporary()
+        val result = func((left as InterpreterString).value, (right as InterpreterString).value)
+        return state3.pushTemporary(result).nextInstruction()
+    }
+}
+
+internal val StringAdd = BinaryStringOperation { left, right ->
+    InterpreterString(left + right)
+}
+
 internal class FieldAccess(private val fieldName: Identifier): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, receiver) = initialState.popTemporary()
@@ -419,7 +437,7 @@ internal fun loadModuleSet(moduleSet: ModuleSet): Image {
 }
 
 private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
-    val loader = Loader(references = module.references)
+    val loader = Loader(references = module.references, types = module.types)
     val instructions = module.node.body
         .flatMap { statement ->
             loader.loadModuleStatement(statement)
@@ -435,7 +453,7 @@ private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
     return instructions
 }
 
-internal class Loader(private val references: ResolvedReferences) {
+internal class Loader(private val references: ResolvedReferences, private val types: Types) {
     internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
@@ -481,7 +499,11 @@ internal class Loader(private val references: ResolvedReferences) {
                 val left = loadExpression(node.left)
                 val right = loadExpression(node.right)
                 val operation = when (node.operator) {
-                    BinaryOperator.ADD -> InterpreterIntAdd
+                    BinaryOperator.ADD -> when (types.typeOfExpression(node.left)) {
+                        IntType -> InterpreterIntAdd
+                        StringType -> StringAdd
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
                     BinaryOperator.SUBTRACT -> InterpreterIntSubtract
                     BinaryOperator.MULTIPLY -> InterpreterIntMultiply
                     BinaryOperator.EQUALS -> InterpreterIntEquals
