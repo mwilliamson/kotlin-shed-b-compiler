@@ -204,6 +204,10 @@ internal val InterpreterIntSubtract = BinaryIntOperation { left, right ->
     InterpreterInt(left - right)
 }
 
+internal val InterpreterIntMultiply = BinaryIntOperation { left, right ->
+    InterpreterInt(left * right)
+}
+
 internal val InterpreterIntEquals = BinaryIntOperation { left, right ->
     InterpreterBool(left == right)
 }
@@ -350,6 +354,7 @@ internal class Loader(private val references: ResolvedReferences) {
                 val operation = when (node.operator) {
                     BinaryOperator.ADD -> InterpreterIntAdd
                     BinaryOperator.SUBTRACT -> InterpreterIntSubtract
+                    BinaryOperator.MULTIPLY -> InterpreterIntMultiply
                     BinaryOperator.EQUALS -> InterpreterIntEquals
                     else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                 }

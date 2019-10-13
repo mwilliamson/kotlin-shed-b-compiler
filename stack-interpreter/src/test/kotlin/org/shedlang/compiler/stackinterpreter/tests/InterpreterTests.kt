@@ -56,6 +56,15 @@ class InterpreterTests {
     }
 
     @Test
+    fun multiplyMultipliesOperands() {
+        val node = binaryOperation(BinaryOperator.MULTIPLY, literalInt(3), literalInt(4))
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isInt(12))
+    }
+
+    @Test
     fun whenOperandsAreEqualThenIntegerEqualityEvaluatesToTrue() {
         val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(1))
 
