@@ -9,6 +9,8 @@ import java.math.BigInteger
 
 internal interface InterpreterValue
 
+internal object InterpreterUnit: InterpreterValue
+
 internal data class InterpreterBool(val value: Boolean): InterpreterValue
 
 internal data class InterpreterInt(val value: BigInteger): InterpreterValue
@@ -284,7 +286,7 @@ internal class DeclareFunction(
 
 internal object Discard: Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.discardTemporary()
+        return initialState.discardTemporary().nextInstruction()
     }
 }
 
@@ -601,7 +603,7 @@ internal class Loader(private val references: ResolvedReferences, private val ty
                 if (node.type == ExpressionStatementNode.Type.RETURN) {
                     return expressionInstructions
                 } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
-                    return expressionInstructions.add(Discard)
+                    return expressionInstructions.add(Discard).add(PushValue(InterpreterUnit))
                 } else {
                     throw UnsupportedOperationException("not implemented")
                 }
@@ -633,6 +635,7 @@ internal class Loader(private val references: ResolvedReferences, private val ty
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
                 val bodyInstructions = loadBlock(node.body).add(Return)
+
                 return persistentListOf(
                     DeclareFunction(
                         bodyInstructions = bodyInstructions,
@@ -685,7 +688,7 @@ private object InterpreterBuiltins {
 
     val print = InterpreterBuiltinFunction { state, arguments ->
         val string = (arguments[0] as InterpreterString).value
-        state.print(string)
+        state.print(string).pushTemporary(InterpreterUnit)
     }
 }
 

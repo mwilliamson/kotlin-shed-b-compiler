@@ -30,7 +30,6 @@ class ExecutionTests {
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",
         "PolymorphicMap.shed",
-        "RecursiveFactorial.shed",
         "RecursiveFibonacci.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
@@ -64,10 +63,15 @@ class ExecutionTests {
                         defaultVariables = builtinVariables
                     )
 
-                    val exitCode = finalState.popTemporary().second as InterpreterInt
+                    val finalValue = finalState.popTemporary().second
+                    val exitCode = when (finalValue) {
+                        is InterpreterInt -> finalValue.value.toInt()
+                        is InterpreterUnit -> 0
+                        else -> throw Exception("final value was: $finalValue")
+                    }
 
                     val executionResult = ExecutionResult(
-                        exitCode = exitCode.value.toInt(),
+                        exitCode = exitCode.toInt(),
                         stderr = "",
                         stdout = finalState.stdout
                     )
