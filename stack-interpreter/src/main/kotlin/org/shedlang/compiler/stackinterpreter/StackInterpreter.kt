@@ -18,7 +18,7 @@ internal data class InterpreterString(val value: String): InterpreterValue
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val parameterIds: List<Int>,
-    val variables: PersistentList<PersistentMap<Int, InterpreterValue>>
+    val scopes: PersistentList<ScopeReference>
 ) : InterpreterValue
 
 internal class InterpreterBuiltinFunction(
@@ -59,11 +59,21 @@ internal class Stack<T>(private val stack: PersistentList<T>) {
     }
 }
 
+private var nextScopeId = 1
+
+internal data class ScopeReference(private val scopeId: Int)
+
+internal fun createScopeReference(): ScopeReference {
+    return ScopeReference(nextScopeId++)
+}
+
+internal typealias Bindings = PersistentMap<ScopeReference, PersistentMap<Int, InterpreterValue>>
+
 internal data class CallFrame(
     private val instructionIndex: Int,
     private val instructions: List<Instruction>,
     private val temporaryStack: Stack<InterpreterValue>,
-    internal val variables: PersistentList<PersistentMap<Int, InterpreterValue>>
+    internal val scopes: PersistentList<ScopeReference>
 ) {
     fun currentInstruction(): Instruction? {
         return if (instructionIndex < instructions.size) {
@@ -97,16 +107,17 @@ internal data class CallFrame(
         return copy(temporaryStack = temporaryStack.discard())
     }
 
-    fun storeLocal(variableId: Int, value: InterpreterValue): CallFrame {
-        val newVariables = variables
-            .removeAt(variables.lastIndex)
-            .add(variables.last().put(variableId, value))
-        return copy(variables = newVariables)
+    fun storeLocal(bindings: Bindings, variableId: Int, value: InterpreterValue): Bindings {
+        val scope = scopes.last()
+        return bindings.put(
+            scope,
+            bindings[scope]!!.put(variableId, value)
+        )
     }
 
-    fun loadVariable(variableId: Int): InterpreterValue {
-        for (scope in variables.asReversed()) {
-            val value = scope[variableId]
+    fun loadVariable(bindings: Bindings, variableId: Int): InterpreterValue {
+        for (scope in scopes.asReversed()) {
+            val value = bindings[scope]!!.get(variableId)
             if (value != null) {
                 return value
             }
@@ -115,17 +126,9 @@ internal data class CallFrame(
     }
 }
 
-internal fun createCallFrame(instructions: List<Instruction>, variables: PersistentList<PersistentMap<Int, InterpreterValue>>): CallFrame {
-    return CallFrame(
-        instructionIndex = 0,
-        instructions = instructions,
-        variables = variables.add(persistentMapOf()),
-        temporaryStack = Stack(persistentListOf())
-    )
-}
-
 internal data class InterpreterState(
-    private val defaultVariables: PersistentMap<Int, InterpreterValue>,
+    private val bindings: Bindings,
+    private val defaultScope: ScopeReference,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
@@ -178,11 +181,11 @@ internal data class InterpreterState(
     }
 
     fun storeLocal(variableId: Int, value: InterpreterValue): InterpreterState {
-        return updateCurrentCallFrame { frame -> frame.storeLocal(variableId, value) }
+        return copy(bindings = currentCallFrame().storeLocal(bindings, variableId, value))
     }
 
     fun loadLocal(variableId: Int): InterpreterValue {
-        return currentCallFrame().loadVariable(variableId)
+        return currentCallFrame().loadVariable(bindings, variableId)
     }
 
     fun storeModule(moduleName: List<Identifier>, value: InterpreterModule): InterpreterState {
@@ -200,12 +203,21 @@ internal data class InterpreterState(
     }
 
     fun enterModuleScope(instructions: List<Instruction>): InterpreterState {
-        return enter(instructions = instructions, variables = persistentListOf(defaultVariables))
+        return enter(instructions = instructions, parentScopes = persistentListOf(defaultScope))
     }
 
-    fun enter(instructions: List<Instruction>, variables: PersistentList<PersistentMap<Int, InterpreterValue>>): InterpreterState {
-        val frame = createCallFrame(instructions = instructions, variables = variables)
-        return copy(callStack = callStack.push(frame))
+    fun enter(instructions: List<Instruction>, parentScopes: PersistentList<ScopeReference>): InterpreterState {
+        val newScope = createScopeReference()
+        val frame = CallFrame(
+            instructionIndex = 0,
+            instructions = instructions,
+            scopes = parentScopes.add(newScope),
+            temporaryStack = Stack(persistentListOf())
+        )
+        return copy(
+            bindings = bindings.put(newScope, persistentMapOf()),
+            callStack = callStack.push(frame)
+        )
     }
 
     fun exit(): InterpreterState {
@@ -222,8 +234,8 @@ internal data class InterpreterState(
         return copy(callStack = callStack.replace(update))
     }
 
-    fun currentVariables(): PersistentList<PersistentMap<Int, InterpreterValue>> {
-        return currentCallFrame().variables
+    fun currentScopes(): PersistentList<ScopeReference> {
+        return currentCallFrame().scopes
     }
 
     fun print(string: String): InterpreterState {
@@ -236,8 +248,10 @@ internal fun initialState(
     instructions: List<Instruction>,
     defaultVariables: Map<Int, InterpreterValue>
 ): InterpreterState {
+    val defaultScope = createScopeReference()
     return InterpreterState(
-        defaultVariables = defaultVariables.toPersistentMap(),
+        bindings = persistentMapOf(defaultScope to defaultVariables.toPersistentMap()),
+        defaultScope = defaultScope,
         image = image,
         callStack = Stack(persistentListOf()),
         modules = persistentMapOf(),
@@ -263,7 +277,7 @@ internal class DeclareFunction(
         return initialState.pushTemporary(InterpreterFunction(
             bodyInstructions = bodyInstructions,
             parameterIds = parameterIds,
-            variables = initialState.currentVariables()
+            scopes = initialState.currentScopes()
         )).nextInstruction()
     }
 }
@@ -405,7 +419,7 @@ internal class Call(private val argumentCount: Int): Instruction {
                 return receiver.parameterIds.zip(arguments).fold(
                     state3.nextInstruction().enter(
                         instructions = receiver.bodyInstructions,
-                        variables = receiver.variables
+                        parentScopes = receiver.scopes
                     ),
                     { state, (parameterId, argument) ->
                         state.storeLocal(parameterId, argument)
