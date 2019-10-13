@@ -14,6 +14,9 @@ internal data class InterpreterBool(val value: Boolean): InterpreterValue
 internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal class Stack<T>(private val stack: PersistentList<T>) {
+    val size: Int
+        get() = stack.size
+
     fun last(): T {
         return stack.last()
     }
@@ -101,7 +104,12 @@ internal data class InterpreterState(
     val stdout: String
 ) {
     fun instruction(): Instruction? {
-        return currentCallFrame().currentInstruction()
+        val instruction = currentCallFrame().currentInstruction()
+        if (instruction != null || callStack.size == 1) {
+            return instruction
+        } else {
+            throw Exception("Stuck!")
+        }
     }
 
     fun pushTemporary(value: InterpreterValue): InterpreterState {
@@ -248,9 +256,16 @@ internal class RelativeJump(private val size: Int): Instruction {
     }
 }
 
-internal object Return: Instruction {
+internal object Exit: Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.exit()
+    }
+}
+
+internal object Return: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, value) = initialState.popTemporary()
+        return state2.exit().pushTemporary(value)
     }
 }
 
@@ -336,7 +351,7 @@ private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
     val loader = Loader(references = module.references)
     val instructions = module.node.body.flatMap { statement ->
         loader.loadModuleStatement(statement)
-    }.toPersistentList().add(Return)
+    }.toPersistentList().add(Exit)
     return instructions
 }
 
@@ -501,7 +516,7 @@ internal class Loader(private val references: ResolvedReferences) {
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
-                val bodyInstructions = loadBlock(node.body)
+                val bodyInstructions = loadBlock(node.body).add(Return)
                 val function = InterpreterFunction(
                     bodyInstructions = bodyInstructions,
                     parameterIds = node.parameters.map { parameter -> parameter.nodeId }
