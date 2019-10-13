@@ -263,7 +263,12 @@ internal class StoreLocal(private val variableId: Int): Instruction {
 
 internal class LoadLocal(private val variableId: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        val value = initialState.loadLocal(variableId)
+        // TODO: fix this hack!
+        val value = try {
+            initialState.loadLocal(variableId)
+        } catch (error: NullPointerException) {
+            initialState.loadGlobal(variableId)
+        }
         return initialState.pushTemporary(value).nextInstruction()
     }
 }
@@ -394,7 +399,6 @@ internal class Loader(private val references: ResolvedReferences) {
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
-                // TODO: test
                 val receiverInstructions = loadExpression(node.receiver)
                 val argumentInstructions = node.positionalArguments.flatMap { argument ->
                     loadExpression(argument)

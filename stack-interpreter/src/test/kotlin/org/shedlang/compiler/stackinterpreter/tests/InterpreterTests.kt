@@ -238,6 +238,74 @@ class InterpreterTests {
         assertThat(value, isInt(-1))
     }
 
+    @Test
+    fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithZeroArguments() {
+        val function = function(
+            name = "main",
+            body = listOf(
+                expressionStatementReturn(
+                    literalInt(42)
+                )
+            )
+        )
+        val functionReference = variableReference("main")
+        val call = call(
+            receiver = functionReference
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(42))
+    }
+
+    @Test
+    fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithPositionalArguments() {
+        val firstParameter = parameter("first")
+        val secondParameter = parameter("second")
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val function = function(
+            name = "subtract",
+            parameters = listOf(
+                firstParameter,
+                secondParameter
+            ),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(
+                        BinaryOperator.SUBTRACT,
+                        firstReference,
+                        secondReference
+                    )
+                )
+            )
+        )
+        val functionReference = variableReference("main")
+        val call = call(
+            receiver = functionReference,
+            positionalArguments = listOf(
+                literalInt(1),
+                literalInt(2)
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            firstReference.nodeId to firstParameter,
+            secondReference.nodeId to secondParameter
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(-1))
+    }
+
     private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
         val instructions = loader(references = references).loadBlock(block)
         return executeInstructions(instructions)
