@@ -6,14 +6,16 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.EMPTY_TYPES
+import org.shedlang.compiler.Module
 import org.shedlang.compiler.ResolvedReferences
-import org.shedlang.compiler.ast.BinaryOperator
-import org.shedlang.compiler.ast.Block
-import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.types.ModuleType
 
 class InterpreterTests {
     @Test
@@ -127,6 +129,37 @@ class InterpreterTests {
         assertThat(value, isInt(42))
     }
 
+    @Test
+    fun canExecuteFunctionInModule() {
+        val function = function(
+            name = "main",
+            body = listOf(
+                expressionStatementReturn(
+                    literalInt(42)
+                )
+            )
+        )
+        val moduleName = listOf(Identifier("Example"))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                body = listOf(function)
+            )
+        )
+
+        val image = loadModule(module)
+        val value = executeInstructions(
+            persistentListOf(
+                InitModule(moduleName),
+                LoadGlobal(function.nodeId),
+                Call()
+            ),
+            image = image
+        )
+
+        assertThat(value, isInt(42))
+    }
+
     private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
         val instructions = loader(references = references).loadBlock(block)
         return executeInstructions(instructions)
@@ -141,18 +174,22 @@ class InterpreterTests {
         return Loader(references = references)
     }
 
-    private fun executeInstructions(instructions: PersistentList<Instruction>): InterpreterValue {
-        var state = state()
+    private fun executeInstructions(instructions: PersistentList<Instruction>, image: Image = Image.EMPTY): InterpreterValue {
+        var state = state(image = image, instructions = instructions)
 
-        while (state.instructionIndex < instructions.size) {
-            val instruction = instructions[state.instructionIndex]
-            state = instruction.run(state)
+        while (true) {
+            val instruction = state.instruction()
+            if (instruction == null) {
+                return state.popTemporary().value
+            } else {
+                state = instruction.run(state)
+            }
         }
-
-        return state.pop().value
     }
 
-    private fun state() = initialState()
+    private fun state(image: Image, instructions: PersistentList<Instruction>): InterpreterState {
+        return initialState(image = image, instructions = instructions)
+    }
 
     private fun isBool(value: Boolean): Matcher<InterpreterValue> {
         return cast(has(InterpreterBool::value, equalTo(value)))
@@ -160,5 +197,15 @@ class InterpreterTests {
 
     private fun isInt(value: Int): Matcher<InterpreterValue> {
         return cast(has(InterpreterInt::value, equalTo(value.toBigInteger())))
+    }
+
+    private fun stubbedModule(name: List<Identifier>, node: ModuleNode): Module.Shed {
+        return Module.Shed(
+            name = name,
+            type = ModuleType(mapOf()),
+            types = EMPTY_TYPES,
+            references = ResolvedReferencesMap(mapOf()),
+            node = node
+        )
     }
 }
