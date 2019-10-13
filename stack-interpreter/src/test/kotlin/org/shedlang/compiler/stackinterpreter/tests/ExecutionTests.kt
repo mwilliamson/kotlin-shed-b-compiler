@@ -60,7 +60,8 @@ class ExecutionTests {
                             FieldAccess(Identifier("main")),
                             Call(argumentCount = 0)
                         ),
-                        image = image
+                        image = image,
+                        defaultVariables = builtinVariables
                     )
 
                     val exitCode = finalState.popTemporary().second as InterpreterInt

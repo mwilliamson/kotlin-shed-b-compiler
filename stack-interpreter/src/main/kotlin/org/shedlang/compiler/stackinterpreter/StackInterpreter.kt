@@ -1,10 +1,7 @@
 package org.shedlang.compiler.stackinterpreter
 
 import kotlinx.collections.immutable.*
-import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ResolvedReferences
-import org.shedlang.compiler.Types
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StringType
@@ -17,6 +14,16 @@ internal data class InterpreterBool(val value: Boolean): InterpreterValue
 internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
+
+internal class InterpreterFunction(
+    val bodyInstructions: PersistentList<Instruction>,
+    val parameterIds: List<Int>,
+    val variables: Variables
+) : InterpreterValue
+
+internal class InterpreterBuiltinFunction(
+    val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
+): InterpreterValue
 
 internal class InterpreterModule(private val fields: Map<Identifier, InterpreterValue>): InterpreterValue {
     fun field(fieldName: Identifier): InterpreterValue {
@@ -137,6 +144,7 @@ internal fun createCallFrame(instructions: List<Instruction>, variables: Variabl
 }
 
 internal data class InterpreterState(
+    private val defaultVariables: Variables,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
@@ -155,6 +163,17 @@ internal data class InterpreterState(
         return updateCurrentCallFrame { frame ->
             frame.pushTemporary(value)
         }
+    }
+
+    fun popTemporaries(count: Int): Pair<InterpreterState, List<InterpreterValue>> {
+        var state: InterpreterState = this
+        val arguments = mutableListOf<InterpreterValue>()
+        repeat(count) {
+            val (state2, argument) = state.popTemporary()
+            arguments.add(argument)
+            state = state2
+        }
+        return Pair(state, arguments.reversed())
     }
 
     fun popTemporary(): Pair<InterpreterState, InterpreterValue> {
@@ -199,11 +218,13 @@ internal data class InterpreterState(
         return image.moduleInitialisation(moduleName)
     }
 
+    fun enterModuleScope(instructions: List<Instruction>): InterpreterState {
+        return enter(instructions = instructions, variables = defaultVariables)
+    }
+
     fun enter(instructions: List<Instruction>, variables: Variables): InterpreterState {
         val frame = createCallFrame(instructions = instructions, variables = variables)
-        return copy(
-            callStack = callStack.push(frame)
-        )
+        return copy(callStack = callStack.push(frame))
     }
 
     fun exit(): InterpreterState {
@@ -225,9 +246,10 @@ internal data class InterpreterState(
     }
 }
 
-internal fun initialState(image: Image, instructions: List<Instruction>): InterpreterState {
-    val frame = createCallFrame(instructions = instructions, variables = Variables.EMPTY)
+internal fun initialState(image: Image, instructions: List<Instruction>, defaultVariables: Variables): InterpreterState {
+    val frame = createCallFrame(instructions = instructions, variables = defaultVariables)
     return InterpreterState(
+        defaultVariables = defaultVariables,
         image = image,
         callStack = Stack(persistentListOf(frame)),
         modules = persistentMapOf(),
@@ -314,12 +336,6 @@ internal class FieldAccess(private val fieldName: Identifier): Instruction {
     }
 }
 
-internal class InterpreterFunction(
-    val bodyInstructions: PersistentList<Instruction>,
-    val parameterIds: List<Int>,
-    val variables: Variables
-) : InterpreterValue
-
 internal class RelativeJumpIfFalse(private val size: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
@@ -367,9 +383,8 @@ internal class LoadLocal(private val variableId: Int): Instruction {
 
 internal class InitModule(private val moduleName: List<Identifier>): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.nextInstruction().enter(
-            instructions = initialState.moduleInitialisation(moduleName),
-            variables = Variables.EMPTY
+        return initialState.nextInstruction().enterModuleScope(
+            instructions = initialState.moduleInitialisation(moduleName)
         )
     }
 }
@@ -395,24 +410,23 @@ internal class LoadModule(private val moduleName: List<Identifier>): Instruction
 
 internal class Call(private val argumentCount: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        var state = initialState
-        val arguments = mutableListOf<InterpreterValue>()
-        repeat(argumentCount) {
-            val (state2, argument) = state.popTemporary()
-            arguments.add(argument)
-            state = state2
-        }
-        val (state2, receiver) = state.popTemporary()
-        val function = receiver as InterpreterFunction
-        return function.parameterIds.zip(arguments.reversed()).fold(
-            state2.nextInstruction().enter(
-                instructions = function.bodyInstructions,
-                variables = function.variables
-            ),
-            { state, (parameterId, argument) ->
-                state.storeLocal(parameterId, argument)
+        val (state2, arguments) = initialState.popTemporaries(argumentCount)
+        val (state3, receiver) = state2.popTemporary()
+        return when (receiver) {
+            is InterpreterFunction -> {
+                return receiver.parameterIds.zip(arguments).fold(
+                    state3.nextInstruction().enter(
+                        instructions = receiver.bodyInstructions,
+                        variables = receiver.variables
+                    ),
+                    { state, (parameterId, argument) ->
+                        state.storeLocal(parameterId, argument)
+                    }
+                )
             }
-        )
+            is InterpreterBuiltinFunction -> receiver.func(state3.nextInstruction(), arguments)
+            else -> throw Exception("cannot call: $receiver")
+        }
     }
 }
 
@@ -644,8 +658,8 @@ internal class Loader(private val references: ResolvedReferences, private val ty
     }
 }
 
-internal fun executeInstructions(instructions: PersistentList<Instruction>, image: Image): InterpreterState {
-    var state = initialState(image = image, instructions = instructions)
+internal fun executeInstructions(instructions: PersistentList<Instruction>, image: Image, defaultVariables: Variables): InterpreterState {
+    var state = initialState(image = image, instructions = instructions, defaultVariables = defaultVariables)
 
     while (true) {
         val instruction = state.instruction()
@@ -656,3 +670,13 @@ internal fun executeInstructions(instructions: PersistentList<Instruction>, imag
         }
     }
 }
+
+private object InterpreterBuiltins {
+    val intToString = InterpreterBuiltinFunction { state, arguments ->
+        val int = (arguments[0] as InterpreterInt).value
+        state.pushTemporary(InterpreterString(int.toString()))
+    }
+}
+
+internal val builtinVariables = Variables.EMPTY.createInnerScope()
+    .store(Builtins.intToString.nodeId, InterpreterBuiltins.intToString)

@@ -386,6 +386,26 @@ class InterpreterTests {
         assertThat(value, isInt(-1))
     }
 
+    @Test
+    fun intToStringBuiltinConvertsIntToString() {
+        val functionReference = variableReference("intToString")
+        val call = call(
+            receiver = functionReference,
+            positionalArguments = listOf(
+                literalInt(42)
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to Builtins.intToString
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadExpression(call)
+        val value = executeInstructions(instructions, variables = builtinVariables)
+
+        assertThat(value, isString("42"))
+    }
+
     private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
         val instructions = loader(references = references).loadBlock(block)
         return executeInstructions(instructions)
@@ -396,8 +416,16 @@ class InterpreterTests {
         return executeInstructions(instructions)
     }
 
-    private fun executeInstructions(instructions: PersistentList<Instruction>, image: Image = Image.EMPTY): InterpreterValue {
-        val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(instructions, image = image)
+    private fun executeInstructions(
+        instructions: PersistentList<Instruction>,
+        image: Image = Image.EMPTY,
+        variables: Variables = Variables.EMPTY
+    ): InterpreterValue {
+        val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(
+            instructions,
+            image = image,
+            defaultVariables = variables
+        )
         return finalState.popTemporary().second
     }
 
