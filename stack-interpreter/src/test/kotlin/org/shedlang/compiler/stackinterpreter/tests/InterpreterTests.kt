@@ -259,6 +259,46 @@ class InterpreterTests {
     }
 
     @Test
+    fun functionCanReferenceVariablesFromOuterScope() {
+        val valueTarget = targetVariable("value")
+        val valueDeclaration = valStatement(valueTarget, literalInt(42))
+        val valueReference = variableReference("value")
+        val function = function(
+            name = "main",
+            body = listOf(
+                expressionStatementReturn(valueReference)
+            )
+        )
+        val moduleName = listOf(Identifier("Example"))
+        val functionReference = export("main")
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            valueReference.nodeId to valueTarget
+        ))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                exports = listOf(functionReference),
+                body = listOf(valueDeclaration, function)
+            ),
+            references = references
+        )
+
+        val image = loadModuleSet(ModuleSet(listOf(module)))
+        val value = executeInstructions(
+            persistentListOf(
+                InitModule(moduleName),
+                LoadModule(moduleName),
+                FieldAccess(Identifier("main")),
+                Call(argumentCount = 0)
+            ),
+            image = image
+        )
+
+        assertThat(value, isInt(42))
+    }
+
+    @Test
     fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithZeroArguments() {
         val function = function(
             name = "main",

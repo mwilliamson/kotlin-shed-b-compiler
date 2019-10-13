@@ -49,11 +49,39 @@ internal class Stack<T>(private val stack: PersistentList<T>) {
     }
 }
 
+internal data class Variables(private val variables: PersistentList<PersistentMap<Int, InterpreterValue>>) {
+    companion object {
+        val EMPTY = Variables(variables = persistentListOf())
+    }
+
+    fun store(variableId: Int, value: InterpreterValue): Variables {
+        return copy(
+            variables = variables.removeAt(variables.lastIndex).add(variables.last().put(variableId, value))
+        )
+    }
+
+    fun load(variableId: Int): InterpreterValue {
+        for (scope in variables.asReversed()) {
+            val value = scope[variableId]
+            if (value != null) {
+                return value
+            }
+        }
+        throw Exception("variable not bound: $variableId")
+    }
+
+    fun createInnerScope(): Variables {
+        return Variables(
+            variables = variables.add(persistentMapOf())
+        )
+    }
+}
+
 internal data class CallFrame(
     private val instructionIndex: Int,
     private val instructions: List<Instruction>,
-    private val locals: PersistentMap<Int, InterpreterValue>,
-    private val temporaryStack: Stack<InterpreterValue>
+    private val temporaryStack: Stack<InterpreterValue>,
+    internal val variables: Variables
 ) {
     fun currentInstruction(): Instruction? {
         return if (instructionIndex < instructions.size) {
@@ -88,19 +116,19 @@ internal data class CallFrame(
     }
 
     fun storeLocal(variableId: Int, value: InterpreterValue): CallFrame {
-        return copy(locals = locals.put(variableId, value))
+        return copy(variables = variables.store(variableId, value))
     }
 
-    fun loadLocal(variableId: Int): InterpreterValue {
-        return locals[variableId]!!
+    fun loadVariable(variableId: Int): InterpreterValue {
+        return variables.load(variableId)
     }
 }
 
-internal fun createCallFrame(instructions: List<Instruction>): CallFrame {
+internal fun createCallFrame(instructions: List<Instruction>, variables: Variables): CallFrame {
     return CallFrame(
         instructionIndex = 0,
         instructions = instructions,
-        locals = persistentMapOf(),
+        variables = variables.createInnerScope(),
         temporaryStack = Stack(persistentListOf())
     )
 }
@@ -151,7 +179,7 @@ internal data class InterpreterState(
     }
 
     fun loadLocal(variableId: Int): InterpreterValue {
-        return currentCallFrame().loadLocal(variableId)
+        return currentCallFrame().loadVariable(variableId)
     }
 
     fun storeModule(moduleName: List<Identifier>, value: InterpreterModule): InterpreterState {
@@ -168,8 +196,8 @@ internal data class InterpreterState(
         return image.moduleInitialisation(moduleName)
     }
 
-    fun enter(instructions: List<Instruction>): InterpreterState {
-        val frame = createCallFrame(instructions = instructions)
+    fun enter(instructions: List<Instruction>, variables: Variables): InterpreterState {
+        val frame = createCallFrame(instructions = instructions, variables = variables)
         return copy(
             callStack = callStack.push(frame)
         )
@@ -188,10 +216,14 @@ internal data class InterpreterState(
     private fun updateCurrentCallFrame(update: (CallFrame) -> CallFrame): InterpreterState {
         return copy(callStack = callStack.replace(update))
     }
+
+    fun currentVariables(): Variables {
+        return currentCallFrame().variables
+    }
 }
 
 internal fun initialState(image: Image, instructions: List<Instruction>): InterpreterState {
-    val frame = createCallFrame(instructions = instructions)
+    val frame = createCallFrame(instructions = instructions, variables = Variables.EMPTY)
     return InterpreterState(
         image = image,
         callStack = Stack(persistentListOf(frame)),
@@ -207,6 +239,19 @@ internal interface Instruction {
 internal class PushValue(private val value: InterpreterValue): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(value).nextInstruction()
+    }
+}
+
+internal class DeclareFunction(
+    val bodyInstructions: PersistentList<Instruction>,
+    val parameterIds: List<Int>
+): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        return initialState.pushTemporary(InterpreterFunction(
+            bodyInstructions = bodyInstructions,
+            parameterIds = parameterIds,
+            variables = initialState.currentVariables()
+        )).nextInstruction()
     }
 }
 
@@ -253,7 +298,8 @@ internal class FieldAccess(private val fieldName: Identifier): Instruction {
 
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
-    val parameterIds: List<Int>
+    val parameterIds: List<Int>,
+    val variables: Variables
 ) : InterpreterValue
 
 internal class RelativeJumpIfFalse(private val size: Int): Instruction {
@@ -303,7 +349,10 @@ internal class LoadLocal(private val variableId: Int): Instruction {
 
 internal class InitModule(private val moduleName: List<Identifier>): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.nextInstruction().enter(initialState.moduleInitialisation(moduleName))
+        return initialState.nextInstruction().enter(
+            instructions = initialState.moduleInitialisation(moduleName),
+            variables = Variables.EMPTY
+        )
     }
 }
 
@@ -338,7 +387,10 @@ internal class Call(private val argumentCount: Int): Instruction {
         val (state2, receiver) = state.popTemporary()
         val function = receiver as InterpreterFunction
         return function.parameterIds.zip(arguments.reversed()).fold(
-            state2.nextInstruction().enter(function.bodyInstructions),
+            state2.nextInstruction().enter(
+                instructions = function.bodyInstructions,
+                variables = function.variables
+            ),
             { state, (parameterId, argument) ->
                 state.storeLocal(parameterId, argument)
             }
@@ -543,12 +595,11 @@ internal class Loader(private val references: ResolvedReferences) {
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
                 val bodyInstructions = loadBlock(node.body).add(Return)
-                val function = InterpreterFunction(
-                    bodyInstructions = bodyInstructions,
-                    parameterIds = node.parameters.map { parameter -> parameter.nodeId }
-                )
                 return persistentListOf(
-                    PushValue(function),
+                    DeclareFunction(
+                        bodyInstructions = bodyInstructions,
+                        parameterIds = node.parameters.map { parameter -> parameter.nodeId }
+                    ),
                     StoreLocal(node.nodeId)
                 )
             }
