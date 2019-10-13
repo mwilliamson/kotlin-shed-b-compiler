@@ -106,7 +106,6 @@ internal fun createCallFrame(instructions: List<Instruction>): CallFrame {
 }
 
 internal data class InterpreterState(
-    private val globals: PersistentMap<Int, InterpreterValue>,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
@@ -155,14 +154,6 @@ internal data class InterpreterState(
         return currentCallFrame().loadLocal(variableId)
     }
 
-    fun storeGlobal(nodeId: Int, value: InterpreterValue): InterpreterState {
-        return copy(globals = globals.put(nodeId, value))
-    }
-
-    fun loadGlobal(variableId: Int): InterpreterValue {
-        return globals[variableId]!!
-    }
-
     fun storeModule(moduleName: List<Identifier>, value: InterpreterModule): InterpreterState {
         return copy(
             modules = modules.put(moduleName, value)
@@ -202,7 +193,6 @@ internal data class InterpreterState(
 internal fun initialState(image: Image, instructions: List<Instruction>): InterpreterState {
     val frame = createCallFrame(instructions = instructions)
     return InterpreterState(
-        globals = persistentMapOf(),
         image = image,
         callStack = Stack(persistentListOf(frame)),
         modules = persistentMapOf(),
@@ -333,12 +323,6 @@ internal class StoreModule(
 internal class LoadModule(private val moduleName: List<Identifier>): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(initialState.loadModule(moduleName)).nextInstruction()
-    }
-}
-
-internal class StoreGlobal(private val nodeId: Int, private val value: InterpreterValue): Instruction {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.storeGlobal(nodeId, value).nextInstruction()
     }
 }
 
