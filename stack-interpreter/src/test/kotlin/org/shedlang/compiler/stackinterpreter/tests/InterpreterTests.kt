@@ -38,6 +38,15 @@ class InterpreterTests {
     }
 
     @Test
+    fun stringLiteralIsEvaluatedToString() {
+        val node = literalString("hello")
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isString("hello"))
+    }
+
+    @Test
     fun additionAddsOperandsTogether() {
         val node = binaryOperation(BinaryOperator.ADD, literalInt(1), literalInt(2))
 
@@ -332,6 +341,10 @@ class InterpreterTests {
 
     private fun isInt(value: Int): Matcher<InterpreterValue> {
         return cast(has(InterpreterInt::value, equalTo(value.toBigInteger())))
+    }
+
+    private fun isString(value: String): Matcher<InterpreterValue> {
+        return cast(has(InterpreterString::value, equalTo(value)))
     }
 
     private fun stubbedModule(

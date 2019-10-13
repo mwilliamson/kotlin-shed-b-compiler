@@ -13,6 +13,8 @@ internal data class InterpreterBool(val value: Boolean): InterpreterValue
 
 internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
+internal data class InterpreterString(val value: String): InterpreterValue
+
 internal class Stack<T>(private val stack: PersistentList<T>) {
     val size: Int
         get() = stack.size
@@ -373,7 +375,8 @@ internal class Loader(private val references: ResolvedReferences) {
             }
 
             override fun visit(node: StringLiteralNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val push = PushValue(InterpreterString(node.value))
+                return persistentListOf(push)
             }
 
             override fun visit(node: CodePointLiteralNode): PersistentList<Instruction> {
