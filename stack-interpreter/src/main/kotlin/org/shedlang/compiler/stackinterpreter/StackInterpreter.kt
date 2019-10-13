@@ -37,16 +37,6 @@ internal class Stack<T>(private val stack: PersistentList<T>) {
     }
 }
 
-internal class Pop(val state: InterpreterState, val value: InterpreterValue) {
-    operator fun component1(): InterpreterState {
-        return state
-    }
-
-    operator fun component2(): InterpreterValue {
-        return value
-    }
-}
-
 internal data class CallFrame(
     private val instructionIndex: Int,
     private val instructions: List<Instruction>,
@@ -114,11 +104,11 @@ internal data class InterpreterState(
         }
     }
 
-    fun popTemporary(): Pop {
+    fun popTemporary(): Pair<InterpreterState, InterpreterValue> {
         val (newCallFrame, value) = currentCallFrame().popTemporary()
-        return Pop(
-            state = copy(callStack = callStack.discard().push(newCallFrame)),
-            value = value
+        return Pair(
+            copy(callStack = callStack.discard().push(newCallFrame)),
+            value
         )
     }
 

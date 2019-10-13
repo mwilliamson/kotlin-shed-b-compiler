@@ -180,7 +180,7 @@ class InterpreterTests {
         while (true) {
             val instruction = state.instruction()
             if (instruction == null) {
-                return state.popTemporary().value
+                return state.popTemporary().component2()
             } else {
                 state = instruction.run(state)
             }
