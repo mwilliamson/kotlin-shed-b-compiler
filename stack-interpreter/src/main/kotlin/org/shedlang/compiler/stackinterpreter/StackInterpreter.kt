@@ -7,6 +7,15 @@ import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StringType
 import java.math.BigInteger
 
+internal interface World {
+    fun writeToStdout(value: String)
+}
+
+object NullWorld: World {
+    override fun writeToStdout(value: String) {
+    }
+}
+
 internal interface InterpreterValue
 
 internal object InterpreterUnit: InterpreterValue
@@ -134,7 +143,7 @@ internal data class InterpreterState(
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
-    val stdout: String
+    private val world: World
 ) {
     fun instruction(): Instruction? {
         val instruction = currentCallFrame().currentInstruction()
@@ -240,15 +249,16 @@ internal data class InterpreterState(
         return currentCallFrame().scopes
     }
 
-    fun print(string: String): InterpreterState {
-        return copy(stdout = stdout + string)
+    fun print(string: String) {
+        world.writeToStdout(string)
     }
 }
 
 internal fun initialState(
     image: Image,
     instructions: List<Instruction>,
-    defaultVariables: Map<Int, InterpreterValue>
+    defaultVariables: Map<Int, InterpreterValue>,
+    world: World
 ): InterpreterState {
     val defaultScope = createScopeReference()
     return InterpreterState(
@@ -257,7 +267,7 @@ internal fun initialState(
         image = image,
         callStack = Stack(persistentListOf()),
         modules = persistentMapOf(),
-        stdout = ""
+        world = world
     ).enterModuleScope(instructions)
 }
 
@@ -666,9 +676,15 @@ internal class Loader(private val references: ResolvedReferences, private val ty
 internal fun executeInstructions(
     instructions: PersistentList<Instruction>,
     image: Image,
-    defaultVariables: Map<Int, InterpreterValue>
+    defaultVariables: Map<Int, InterpreterValue>,
+    world: World
 ): InterpreterState {
-    var state = initialState(image = image, instructions = instructions, defaultVariables = defaultVariables)
+    var state = initialState(
+        image = image,
+        instructions = instructions,
+        defaultVariables = defaultVariables,
+        world = world
+    )
 
     while (true) {
         val instruction = state.instruction()
@@ -688,7 +704,8 @@ private object InterpreterBuiltins {
 
     val print = InterpreterBuiltinFunction { state, arguments ->
         val string = (arguments[0] as InterpreterString).value
-        state.print(string).pushTemporary(InterpreterUnit)
+        state.print(string)
+        state.pushTemporary(InterpreterUnit)
     }
 }
 

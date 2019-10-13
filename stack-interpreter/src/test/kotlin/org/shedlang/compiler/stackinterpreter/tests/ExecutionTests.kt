@@ -52,6 +52,7 @@ class ExecutionTests {
                     val modules = testProgram.load()
                     val image = loadModuleSet(modules)
                     val mainFunction = findMainFunction(modules, testProgram)
+                    val world = InMemoryWorld()
                     val finalState = executeInstructions(
                         persistentListOf(
                             InitModule(testProgram.mainModule),
@@ -60,7 +61,8 @@ class ExecutionTests {
                             Call(argumentCount = 0)
                         ),
                         image = image,
-                        defaultVariables = builtinVariables
+                        defaultVariables = builtinVariables,
+                        world = world
                     )
 
                     val finalValue = finalState.popTemporary().second
@@ -71,9 +73,9 @@ class ExecutionTests {
                     }
 
                     val executionResult = ExecutionResult(
-                        exitCode = exitCode.toInt(),
+                        exitCode = exitCode,
                         stderr = "",
-                        stdout = finalState.stdout
+                        stdout = world.stdout
                     )
                     assertThat(executionResult, testProgram.expectedResult)
                 } catch (error: SourceError) {
@@ -95,4 +97,16 @@ class ExecutionTests {
             statement is FunctionDeclarationNode && statement.name == Identifier("main")
         }!!
     }
+}
+
+class InMemoryWorld : World {
+    private val stdoutBuilder: StringBuilder = StringBuilder()
+
+    override fun writeToStdout(value: String) {
+        stdoutBuilder.append(value)
+    }
+
+    val stdout: String
+        get() = stdoutBuilder.toString()
+
 }

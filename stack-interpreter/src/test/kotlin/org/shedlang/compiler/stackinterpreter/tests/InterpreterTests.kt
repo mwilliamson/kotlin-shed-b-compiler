@@ -461,13 +461,15 @@ class InterpreterTests {
 
         val loader = loader(references = references)
         val instructions = loader.loadExpression(call)
+        val world = InMemoryWorld()
         val finalState = executeInstructions(
             instructions,
             image = Image.EMPTY,
-            defaultVariables = builtinVariables
+            defaultVariables = builtinVariables,
+            world = world
         )
 
-        assertThat(finalState.stdout, equalTo("hello"))
+        assertThat(world.stdout, equalTo("hello"))
     }
 
     private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
@@ -488,7 +490,8 @@ class InterpreterTests {
         val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(
             instructions,
             image = image,
-            defaultVariables = variables
+            defaultVariables = variables,
+            world = NullWorld
         )
         return finalState.popTemporary().second
     }
