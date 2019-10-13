@@ -327,7 +327,6 @@ class InterpreterTests {
 
     private fun executeInstructions(instructions: PersistentList<Instruction>, image: Image = Image.EMPTY): InterpreterValue {
         val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(instructions, image = image)
-        // TODO: check call stack is empty
         return finalState.popTemporary().second
     }
 
