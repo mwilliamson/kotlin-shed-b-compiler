@@ -443,7 +443,7 @@ class InterpreterTests {
     private fun executeInstructions(
         instructions: PersistentList<Instruction>,
         image: Image = Image.EMPTY,
-        variables: Variables = Variables.EMPTY
+        variables: Map<Int, InterpreterValue> = mapOf()
     ): InterpreterValue {
         val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(
             instructions,

@@ -18,7 +18,7 @@ internal data class InterpreterString(val value: String): InterpreterValue
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val parameterIds: List<Int>,
-    val variables: Variables
+    val variables: PersistentList<PersistentMap<Int, InterpreterValue>>
 ) : InterpreterValue
 
 internal class InterpreterBuiltinFunction(
@@ -59,39 +59,11 @@ internal class Stack<T>(private val stack: PersistentList<T>) {
     }
 }
 
-internal data class Variables(private val variables: PersistentList<PersistentMap<Int, InterpreterValue>>) {
-    companion object {
-        val EMPTY = Variables(variables = persistentListOf())
-    }
-
-    fun store(variableId: Int, value: InterpreterValue): Variables {
-        return copy(
-            variables = variables.removeAt(variables.lastIndex).add(variables.last().put(variableId, value))
-        )
-    }
-
-    fun load(variableId: Int): InterpreterValue {
-        for (scope in variables.asReversed()) {
-            val value = scope[variableId]
-            if (value != null) {
-                return value
-            }
-        }
-        throw Exception("variable not bound: $variableId")
-    }
-
-    fun createInnerScope(): Variables {
-        return Variables(
-            variables = variables.add(persistentMapOf())
-        )
-    }
-}
-
 internal data class CallFrame(
     private val instructionIndex: Int,
     private val instructions: List<Instruction>,
     private val temporaryStack: Stack<InterpreterValue>,
-    internal val variables: Variables
+    internal val variables: PersistentList<PersistentMap<Int, InterpreterValue>>
 ) {
     fun currentInstruction(): Instruction? {
         return if (instructionIndex < instructions.size) {
@@ -126,25 +98,34 @@ internal data class CallFrame(
     }
 
     fun storeLocal(variableId: Int, value: InterpreterValue): CallFrame {
-        return copy(variables = variables.store(variableId, value))
+        val newVariables = variables
+            .removeAt(variables.lastIndex)
+            .add(variables.last().put(variableId, value))
+        return copy(variables = newVariables)
     }
 
     fun loadVariable(variableId: Int): InterpreterValue {
-        return variables.load(variableId)
+        for (scope in variables.asReversed()) {
+            val value = scope[variableId]
+            if (value != null) {
+                return value
+            }
+        }
+        throw Exception("variable not bound: $variableId")
     }
 }
 
-internal fun createCallFrame(instructions: List<Instruction>, variables: Variables): CallFrame {
+internal fun createCallFrame(instructions: List<Instruction>, variables: PersistentList<PersistentMap<Int, InterpreterValue>>): CallFrame {
     return CallFrame(
         instructionIndex = 0,
         instructions = instructions,
-        variables = variables.createInnerScope(),
+        variables = variables.add(persistentMapOf()),
         temporaryStack = Stack(persistentListOf())
     )
 }
 
 internal data class InterpreterState(
-    private val defaultVariables: Variables,
+    private val defaultVariables: PersistentMap<Int, InterpreterValue>,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
@@ -219,10 +200,10 @@ internal data class InterpreterState(
     }
 
     fun enterModuleScope(instructions: List<Instruction>): InterpreterState {
-        return enter(instructions = instructions, variables = defaultVariables)
+        return enter(instructions = instructions, variables = persistentListOf(defaultVariables))
     }
 
-    fun enter(instructions: List<Instruction>, variables: Variables): InterpreterState {
+    fun enter(instructions: List<Instruction>, variables: PersistentList<PersistentMap<Int, InterpreterValue>>): InterpreterState {
         val frame = createCallFrame(instructions = instructions, variables = variables)
         return copy(callStack = callStack.push(frame))
     }
@@ -241,7 +222,7 @@ internal data class InterpreterState(
         return copy(callStack = callStack.replace(update))
     }
 
-    fun currentVariables(): Variables {
+    fun currentVariables(): PersistentList<PersistentMap<Int, InterpreterValue>> {
         return currentCallFrame().variables
     }
 
@@ -250,15 +231,18 @@ internal data class InterpreterState(
     }
 }
 
-internal fun initialState(image: Image, instructions: List<Instruction>, defaultVariables: Variables): InterpreterState {
-    val frame = createCallFrame(instructions = instructions, variables = defaultVariables)
+internal fun initialState(
+    image: Image,
+    instructions: List<Instruction>,
+    defaultVariables: Map<Int, InterpreterValue>
+): InterpreterState {
     return InterpreterState(
-        defaultVariables = defaultVariables,
+        defaultVariables = defaultVariables.toPersistentMap(),
         image = image,
-        callStack = Stack(persistentListOf(frame)),
+        callStack = Stack(persistentListOf()),
         modules = persistentMapOf(),
         stdout = ""
-    )
+    ).enterModuleScope(instructions)
 }
 
 internal interface Instruction {
@@ -662,7 +646,11 @@ internal class Loader(private val references: ResolvedReferences, private val ty
     }
 }
 
-internal fun executeInstructions(instructions: PersistentList<Instruction>, image: Image, defaultVariables: Variables): InterpreterState {
+internal fun executeInstructions(
+    instructions: PersistentList<Instruction>,
+    image: Image,
+    defaultVariables: Map<Int, InterpreterValue>
+): InterpreterState {
     var state = initialState(image = image, instructions = instructions, defaultVariables = defaultVariables)
 
     while (true) {
@@ -687,6 +675,7 @@ private object InterpreterBuiltins {
     }
 }
 
-internal val builtinVariables = Variables.EMPTY.createInnerScope()
-    .store(Builtins.intToString.nodeId, InterpreterBuiltins.intToString)
-    .store(Builtins.print.nodeId, InterpreterBuiltins.print)
+internal val builtinVariables = mapOf(
+    Builtins.intToString.nodeId to InterpreterBuiltins.intToString,
+    Builtins.print.nodeId to InterpreterBuiltins.print
+)
