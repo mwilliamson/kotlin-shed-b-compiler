@@ -27,7 +27,6 @@ class ExecutionTests {
         "moduleName",
         "PolymorphicCons.shed",
         "PolymorphicForEach.shed",
-        "PolymorphicIdentity.shed",
         "PolymorphicMap.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
