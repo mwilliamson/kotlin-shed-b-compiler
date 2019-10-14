@@ -26,6 +26,8 @@ internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
 
+internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue
+
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val parameterIds: List<Int>,
@@ -319,6 +321,13 @@ internal object Discard: Instruction {
     }
 }
 
+internal class CreateTuple(private val length: Int): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, elements) = initialState.popTemporaries(length)
+        return state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
+    }
+}
+
 internal class DeclareFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val parameterIds: List<Int>
@@ -379,6 +388,14 @@ internal class BinaryStringOperation(
 
 internal val StringAdd = BinaryStringOperation { left, right ->
     InterpreterString(left + right)
+}
+
+internal class TupleAccess(private val elementIndex: Int): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, value) = initialState.popTemporary()
+        val element = (value as InterpreterTuple).elements[elementIndex]
+        return state2.pushTemporary(element).nextInstruction()
+    }
 }
 
 internal class FieldAccess(private val fieldName: Identifier): Instruction {
@@ -559,7 +576,8 @@ internal class Loader(private val references: ResolvedReferences, private val ty
             }
 
             override fun visit(node: TupleNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val elementInstructions = node.elements.flatMap { element -> loadExpression(element) }
+                return elementInstructions.toPersistentList().add(CreateTuple(node.elements.size))
             }
 
             override fun visit(node: ReferenceNode): PersistentList<Instruction> {
@@ -738,7 +756,12 @@ internal class Loader(private val references: ResolvedReferences, private val ty
                 }.toPersistentList().add(Discard)
 
             is TargetNode.Tuple ->
-                throw NotImplementedError()
+                target.elements.mapIndexed { elementIndex, target ->
+                    persistentListOf(
+                        Duplicate,
+                        TupleAccess(elementIndex = elementIndex)
+                    ).addAll(loadTarget(target))
+                }.flatten().toPersistentList().add(Discard)
         }
     }
 
