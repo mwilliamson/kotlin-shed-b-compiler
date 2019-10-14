@@ -22,7 +22,6 @@ class ExecutionTests {
         "Cons.shed",
         "ConstantField.shed",
         "dependencies",
-        "FieldDestructuring.shed",
         "localImports",
         "Matchers.shed",
         "moduleName",

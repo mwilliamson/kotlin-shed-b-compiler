@@ -122,6 +122,10 @@ internal data class CallFrame(
         return copy(temporaryStack = temporaryStack.push(value))
     }
 
+    fun duplicateTemporary(): CallFrame {
+        return pushTemporary(temporaryStack.last())
+    }
+
     fun popTemporary(): Pair<CallFrame, InterpreterValue> {
         val (newStack, value) = temporaryStack.pop()
         return Pair(
@@ -173,6 +177,12 @@ internal data class InterpreterState(
     fun pushTemporary(value: InterpreterValue): InterpreterState {
         return updateCurrentCallFrame { frame ->
             frame.pushTemporary(value)
+        }
+    }
+
+    fun duplicateTemporary(): InterpreterState {
+        return updateCurrentCallFrame { frame ->
+            frame.duplicateTemporary()
         }
     }
 
@@ -297,6 +307,18 @@ internal class PushValue(private val value: InterpreterValue): Instruction {
     }
 }
 
+internal object Duplicate: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        return initialState.duplicateTemporary().nextInstruction()
+    }
+}
+
+internal object Discard: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        return initialState.discardTemporary().nextInstruction()
+    }
+}
+
 internal class DeclareFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val parameterIds: List<Int>
@@ -314,12 +336,6 @@ internal class DeclareShape(): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val value = InterpreterShape()
         return initialState.pushTemporary(value).nextInstruction()
-    }
-}
-
-internal object Discard: Instruction {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.discardTemporary().nextInstruction()
     }
 }
 
@@ -704,9 +720,26 @@ internal class Loader(private val references: ResolvedReferences, private val ty
 
     private fun loadVal(node: ValNode): PersistentList<Instruction> {
         val expressionInstructions = loadExpression(node.expression)
-        val target = node.target as TargetNode.Variable
-        val store = StoreLocal(target.nodeId)
-        return expressionInstructions.add(store)
+        val targetInstructions = loadTarget(node.target)
+        return expressionInstructions.addAll(targetInstructions)
+    }
+
+    private fun loadTarget(target: TargetNode): PersistentList<Instruction> {
+        return when (target) {
+            is TargetNode.Variable ->
+                persistentListOf(StoreLocal(target.nodeId))
+
+            is TargetNode.Fields ->
+                target.fields.flatMap { (fieldName, fieldTarget) ->
+                    persistentListOf(
+                        Duplicate,
+                        FieldAccess(fieldName = fieldName.identifier)
+                    ).addAll(loadTarget(fieldTarget))
+                }.toPersistentList().add(Discard)
+
+            is TargetNode.Tuple ->
+                throw NotImplementedError()
+        }
     }
 
     private fun resolveReference(reference: ReferenceNode): Int {

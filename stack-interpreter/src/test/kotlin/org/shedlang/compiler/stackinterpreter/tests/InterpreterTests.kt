@@ -49,11 +49,7 @@ class InterpreterTests {
     fun integerAdditionAddsOperandsTogether() {
         val left = literalInt(1)
         val node = binaryOperation(BinaryOperator.ADD, left, literalInt(2))
-        val types = TypesMap(
-            discriminators = mapOf(),
-            expressionTypes = mapOf(left.nodeId to IntType),
-            variableTypes = mapOf()
-        )
+        val types = createTypes(expressionTypes = mapOf(left.nodeId to IntType))
 
         val value = evaluateExpression(node, types = types)
 
@@ -145,6 +141,49 @@ class InterpreterTests {
         val value = executeInstructions(instructions)
 
         assertThat(value, isInt(2))
+    }
+
+    @Test
+    fun canDestructureFieldsInVal() {
+        val shapeDeclaration = shape("Pair", fields = listOf(
+            shapeField("first"),
+            shapeField("second")
+        ))
+        val shapeReference = variableReference("Pair")
+
+        val firstTarget = targetVariable("target1")
+        val secondTarget = targetVariable("target2")
+        val receiverDeclaration = valStatement(
+            target = targetFields(listOf(
+                fieldName("first") to firstTarget,
+                fieldName("second") to secondTarget
+            )),
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    callNamedArgument("first", literalInt(1)),
+                    callNamedArgument("second", literalInt(2))
+                )
+            )
+        )
+
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            firstReference.nodeId to firstTarget,
+            secondReference.nodeId to secondTarget
+        ))
+        val types = createTypes(expressionTypes = mapOf(firstReference.nodeId to IntType))
+
+        val loader = loader(references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(addition))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(3))
     }
 
     @Test
@@ -562,6 +601,14 @@ class InterpreterTests {
             types = EMPTY_TYPES,
             references = references,
             node = node
+        )
+    }
+
+    private fun createTypes(expressionTypes: Map<Int, IntType>): Types {
+        return TypesMap(
+            discriminators = mapOf(),
+            expressionTypes = expressionTypes,
+            variableTypes = mapOf()
         )
     }
 }
