@@ -36,8 +36,24 @@ internal class InterpreterBuiltinFunction(
     val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
 ): InterpreterValue
 
-internal class InterpreterModule(private val fields: Map<Identifier, InterpreterValue>): InterpreterValue {
-    fun field(fieldName: Identifier): InterpreterValue {
+internal class InterpreterShape(): InterpreterValue
+
+internal interface InterpreterHasFields {
+    fun field(fieldName: Identifier): InterpreterValue
+}
+
+internal class InterpreterShapeValue(
+    private val fields: Map<Identifier, InterpreterValue>
+): InterpreterValue, InterpreterHasFields {
+    override fun field(fieldName: Identifier): InterpreterValue {
+        return fields[fieldName]!!
+    }
+}
+
+internal class InterpreterModule(
+    private val fields: Map<Identifier, InterpreterValue>
+): InterpreterValue, InterpreterHasFields {
+    override fun field(fieldName: Identifier): InterpreterValue {
         return fields[fieldName]!!
     }
 }
@@ -294,6 +310,13 @@ internal class DeclareFunction(
     }
 }
 
+internal class DeclareShape(): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val value = InterpreterShape()
+        return initialState.pushTemporary(value).nextInstruction()
+    }
+}
+
 internal object Discard: Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.discardTemporary().nextInstruction()
@@ -345,7 +368,7 @@ internal val StringAdd = BinaryStringOperation { left, right ->
 internal class FieldAccess(private val fieldName: Identifier): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, receiver) = initialState.popTemporary()
-        val module = receiver as InterpreterModule
+        val module = receiver as InterpreterHasFields
         return state2.pushTemporary(module.field(fieldName)).nextInstruction()
     }
 }
@@ -422,14 +445,16 @@ internal class LoadModule(private val moduleName: List<Identifier>): Instruction
     }
 }
 
-internal class Call(private val argumentCount: Int): Instruction {
+internal class Call(private val positionalArgumentCount: Int, private val namedArgumentNames: List<Identifier>): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, arguments) = initialState.popTemporaries(argumentCount)
-        val (state3, receiver) = state2.popTemporary()
+        val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
+        val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
+        val (state3, arguments) = state2.popTemporaries(positionalArgumentCount)
+        val (state4, receiver) = state3.popTemporary()
         return when (receiver) {
             is InterpreterFunction -> {
-                return receiver.parameterIds.zip(arguments).fold(
-                    state3.nextInstruction().enter(
+                receiver.parameterIds.zip(arguments).fold(
+                    state4.nextInstruction().enter(
                         instructions = receiver.bodyInstructions,
                         parentScopes = receiver.scopes
                     ),
@@ -438,7 +463,13 @@ internal class Call(private val argumentCount: Int): Instruction {
                     }
                 )
             }
-            is InterpreterBuiltinFunction -> receiver.func(state3.nextInstruction(), arguments)
+
+            is InterpreterBuiltinFunction ->
+                receiver.func(state4.nextInstruction(), arguments)
+
+            is InterpreterShape ->
+                state4.pushTemporary(InterpreterShapeValue(fields = namedArguments)).nextInstruction()
+
             else -> throw Exception("cannot call: $receiver")
         }
     }
@@ -548,8 +579,13 @@ internal class Loader(private val references: ResolvedReferences, private val ty
                 val receiverInstructions = loadExpression(node.receiver)
                 val argumentInstructions = node.positionalArguments.flatMap { argument ->
                     loadExpression(argument)
+                } + node.namedArguments.flatMap { argument ->
+                    loadExpression(argument.expression)
                 }
-                val call = Call(argumentCount = node.positionalArguments.size)
+                val call = Call(
+                    positionalArgumentCount = node.positionalArguments.size,
+                    namedArgumentNames = node.namedArguments.map { argument -> argument.name }
+                )
                 return receiverInstructions.addAll(argumentInstructions).add(call)
             }
 
@@ -558,7 +594,9 @@ internal class Loader(private val references: ResolvedReferences, private val ty
             }
 
             override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val receiverInstructions = loadExpression(node.receiver)
+                val fieldAccess = FieldAccess(fieldName = node.fieldName.identifier)
+                return receiverInstructions.add(fieldAccess)
             }
 
             override fun visit(node: FunctionExpressionNode): PersistentList<Instruction> {
@@ -636,7 +674,10 @@ internal class Loader(private val references: ResolvedReferences, private val ty
             }
 
             override fun visit(node: ShapeNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return persistentListOf(
+                    DeclareShape(),
+                    StoreLocal(node.nodeId)
+                )
             }
 
             override fun visit(node: UnionNode): PersistentList<Instruction> {

@@ -112,6 +112,42 @@ class InterpreterTests {
     }
 
     @Test
+    fun canAccessFieldsOnShapeValue() {
+        val shapeDeclaration = shape("Pair", fields = listOf(
+            shapeField("first"),
+            shapeField("second")
+        ))
+        val shapeReference = variableReference("Pair")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    callNamedArgument("first", literalInt(1)),
+                    callNamedArgument("second", literalInt(2))
+                )
+            )
+        )
+
+        val receiverReference = variableReference("receiver")
+        val fieldAccess = fieldAccess(receiverReference, "second")
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(fieldAccess))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
     fun whenConditionOfIfIsTrueThenFinalValueIsResultOfTrueBranch() {
         val node = ifExpression(
             literalBool(true),
@@ -216,7 +252,7 @@ class InterpreterTests {
                 InitModule(moduleName),
                 LoadModule(moduleName),
                 FieldAccess(Identifier("main")),
-                Call(argumentCount = 0)
+                Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
             image = image
         )
@@ -270,7 +306,7 @@ class InterpreterTests {
                 FieldAccess(Identifier("main")),
                 PushValue(InterpreterInt(1.toBigInteger())),
                 PushValue(InterpreterInt(2.toBigInteger())),
-                Call(argumentCount = 2)
+                Call(positionalArgumentCount = 2, namedArgumentNames = listOf())
             ),
             image = image
         )
@@ -310,7 +346,7 @@ class InterpreterTests {
                 InitModule(moduleName),
                 LoadModule(moduleName),
                 FieldAccess(Identifier("main")),
-                Call(argumentCount = 0)
+                Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
             image = image
         )
@@ -350,7 +386,7 @@ class InterpreterTests {
                 InitModule(moduleName),
                 LoadModule(moduleName),
                 FieldAccess(Identifier("main")),
-                Call(argumentCount = 0)
+                Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
             image = image
         )

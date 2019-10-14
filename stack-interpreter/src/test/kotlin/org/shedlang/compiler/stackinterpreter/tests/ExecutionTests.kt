@@ -30,7 +30,6 @@ class ExecutionTests {
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",
         "PolymorphicMap.shed",
-        "RecursiveFibonacci.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
         "symbols",
@@ -58,7 +57,7 @@ class ExecutionTests {
                             InitModule(testProgram.mainModule),
                             LoadModule(testProgram.mainModule),
                             FieldAccess(Identifier("main")),
-                            Call(argumentCount = 0)
+                            Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
                         ),
                         image = image,
                         defaultVariables = builtinVariables,
