@@ -704,7 +704,7 @@ internal class Loader(private val references: ResolvedReferences, private val ty
     internal fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
         return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: TypeAliasNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return persistentListOf()
             }
 
             override fun visit(node: ShapeNode): PersistentList<Instruction> {

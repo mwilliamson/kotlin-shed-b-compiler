@@ -33,7 +33,6 @@ class ExecutionTests {
         "stdlib",
         "symbols",
         "TailRec.shed",
-        "TypeAlias.shed",
         "usingStdlib",
         "When.shed",
         "WhenElse.shed"
