@@ -167,6 +167,32 @@ class InterpreterTests {
     }
 
     @Test
+    fun whenOperandsAreEqualThenStringInequalityReturnsFalse() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("hello"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
+    fun whenOperandsAreEqualThenStringInequalityReturnsTrue() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("world"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
     fun whenDiscriminatorMatchesThenIsOperationIsTrue() {
         val shapeDeclaration = shape("X")
         val shapeReference = variableReference("X")
