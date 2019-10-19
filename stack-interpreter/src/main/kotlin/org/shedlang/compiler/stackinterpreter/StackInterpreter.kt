@@ -598,11 +598,15 @@ private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
         references = module.references,
         types = module.types
     )
-    return module.node.body
-        .flatMap { statement ->
+    val moduleNameInstructions = persistentListOf(
+        PushValue(InterpreterString(module.name.joinToString(".") { part -> part.value })),
+        StoreLocal(Builtins.moduleName.nodeId)
+    )
+
+    return moduleNameInstructions
+        .addAll(module.node.body.flatMap { statement ->
             loader.loadModuleStatement(statement)
-        }
-        .toPersistentList()
+        })
         .add(StoreModule(
             moduleName = module.name,
             exports = module.node.exports.map { export ->

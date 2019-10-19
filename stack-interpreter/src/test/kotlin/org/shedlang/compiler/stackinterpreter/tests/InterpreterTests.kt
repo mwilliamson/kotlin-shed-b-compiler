@@ -913,6 +913,34 @@ class InterpreterTests {
     }
 
     @Test
+    fun moduleNameIsDefinedInEachModule() {
+        val moduleName = listOf(Identifier("One"), Identifier("Two"), Identifier("Three"))
+        val moduleNameReference = export("moduleName")
+        val references = ResolvedReferencesMap(mapOf(
+            moduleNameReference.nodeId to Builtins.moduleName
+        ))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                exports = listOf(moduleNameReference)
+            ),
+            references = references
+        )
+
+        val image = loadModuleSet(ModuleSet(listOf(module)))
+        val value = executeInstructions(
+            persistentListOf(
+                InitModule(moduleName),
+                LoadModule(moduleName),
+                FieldAccess(Identifier("moduleName"))
+            ),
+            image = image
+        )
+
+        assertThat(value, isString("One.Two.Three"))
+    }
+
+    @Test
     fun intToStringBuiltinConvertsIntToString() {
         val functionReference = variableReference("intToString")
         val call = call(
