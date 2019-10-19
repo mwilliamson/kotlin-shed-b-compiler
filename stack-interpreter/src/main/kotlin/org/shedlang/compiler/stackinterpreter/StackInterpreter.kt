@@ -3,8 +3,12 @@ package org.shedlang.compiler.stackinterpreter
 import kotlinx.collections.immutable.*
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.FieldValue
+import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StringType
+import org.shedlang.compiler.types.Symbol
 import java.math.BigInteger
 
 internal interface World {
@@ -26,6 +30,8 @@ internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
 
+internal data class InterpreterSymbol(val value: Symbol): InterpreterValue
+
 internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue
 
 internal class InterpreterFunction(
@@ -38,7 +44,9 @@ internal class InterpreterBuiltinFunction(
     val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
 ): InterpreterValue
 
-internal class InterpreterShape(): InterpreterValue
+internal class InterpreterShape(
+    val constantFieldValues: PersistentMap<Identifier, InterpreterValue>
+): InterpreterValue
 
 internal interface InterpreterHasFields {
     fun field(fieldName: Identifier): InterpreterValue
@@ -341,9 +349,9 @@ internal class DeclareFunction(
     }
 }
 
-internal class DeclareShape(): Instruction {
+internal class DeclareShape(val constantFieldValues: PersistentMap<Identifier, InterpreterValue>) : Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        val value = InterpreterShape()
+        val value = InterpreterShape(constantFieldValues = constantFieldValues)
         return initialState.pushTemporary(value).nextInstruction()
     }
 }
@@ -485,7 +493,7 @@ internal class Call(private val positionalArgumentCount: Int, private val namedA
         val (state3, arguments) = state2.popTemporaries(positionalArgumentCount)
         val (state4, receiver) = state3.popTemporary()
         return when (receiver) {
-            is InterpreterFunction -> {
+            is InterpreterFunction ->
                 receiver.parameterIds.zip(arguments).fold(
                     state4.nextInstruction().enter(
                         instructions = receiver.bodyInstructions,
@@ -495,13 +503,14 @@ internal class Call(private val positionalArgumentCount: Int, private val namedA
                         state.storeLocal(parameterId, argument)
                     }
                 )
-            }
 
             is InterpreterBuiltinFunction ->
                 receiver.func(state4.nextInstruction(), arguments)
 
-            is InterpreterShape ->
-                state4.pushTemporary(InterpreterShapeValue(fields = namedArguments)).nextInstruction()
+            is InterpreterShape -> {
+                val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
+                state4.pushTemporary(InterpreterShapeValue(fields = fieldValues)).nextInstruction()
+            }
 
             else -> throw Exception("cannot call: $receiver")
         }
@@ -529,8 +538,12 @@ internal fun loadModuleSet(moduleSet: ModuleSet): Image {
 }
 
 private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
-    val loader = Loader(references = module.references, types = module.types)
-    val instructions = module.node.body
+    val loader = Loader(
+        inspector = ModuleCodeInspector(module),
+        references = module.references,
+        types = module.types
+    )
+    return module.node.body
         .flatMap { statement ->
             loader.loadModuleStatement(statement)
         }
@@ -542,10 +555,13 @@ private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
             }
         ))
         .add(Exit)
-    return instructions
 }
 
-internal class Loader(private val references: ResolvedReferences, private val types: Types) {
+internal class Loader(
+    private val references: ResolvedReferences,
+    private val types: Types,
+    private val inspector: CodeInspector
+) {
     internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
@@ -708,8 +724,18 @@ internal class Loader(private val references: ResolvedReferences, private val ty
             }
 
             override fun visit(node: ShapeNode): PersistentList<Instruction> {
+                val constantFieldValues = inspector.shapeFields(node)
+                    .mapNotNull { field ->
+                        when (val fieldValue = field.value) {
+                            null -> null
+                            is FieldValue.Expression -> throw NotImplementedError()
+                            is FieldValue.Symbol -> field.name to InterpreterSymbol(fieldValue.symbol)
+                        }
+                    }
+                    .toMap()
+                    .toPersistentMap()
                 return persistentListOf(
-                    DeclareShape(),
+                    DeclareShape(constantFieldValues = constantFieldValues),
                     StoreLocal(node.nodeId)
                 )
             }

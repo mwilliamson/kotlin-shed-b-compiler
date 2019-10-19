@@ -529,7 +529,7 @@ fun field(name: String, type: Type, isConstant: Boolean = false, shapeId: Int = 
     isConstant = isConstant
 )
 
-fun fieldInspector(name: String, value: FieldValue?) = FieldInspector(
+fun fieldInspector(name: String, value: FieldValue? = null) = FieldInspector(
     name = Identifier(name),
     value = value,
     source = anySource()

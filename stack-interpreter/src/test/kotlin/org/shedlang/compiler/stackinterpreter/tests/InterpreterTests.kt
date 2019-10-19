@@ -10,12 +10,16 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.FieldValue
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.StringType
+import org.shedlang.compiler.types.Symbol
 
 class InterpreterTests {
     @Test
@@ -109,10 +113,7 @@ class InterpreterTests {
 
     @Test
     fun canAccessFieldsOnShapeValue() {
-        val shapeDeclaration = shape("Pair", fields = listOf(
-            shapeField("first"),
-            shapeField("second")
-        ))
+        val shapeDeclaration = shape("Pair")
         val shapeReference = variableReference("Pair")
 
         val receiverTarget = targetVariable("receiver")
@@ -126,15 +127,23 @@ class InterpreterTests {
                 )
             )
         )
-
         val receiverReference = variableReference("receiver")
         val fieldAccess = fieldAccess(receiverReference, "second")
+
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "first"),
+                    fieldInspector(name = "second")
+                )
+            )
+        )
         val references = ResolvedReferencesMap(mapOf(
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
 
-        val loader = loader(references = references)
+        val loader = loader(inspector = inspector, references = references)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
             .addAll(loader.loadFunctionStatement(receiverDeclaration))
             .addAll(loader.loadExpression(fieldAccess))
@@ -144,11 +153,46 @@ class InterpreterTests {
     }
 
     @Test
-    fun canDestructureFieldsInVal() {
-        val shapeDeclaration = shape("Pair", fields = listOf(
-            shapeField("first"),
-            shapeField("second")
+    fun constantSymbolFieldsOnShapesHaveValueSet() {
+        val shapeDeclaration = shape("Pair")
+        val shapeReference = variableReference("Pair")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf()
+            )
+        )
+        val receiverReference = variableReference("receiver")
+        val fieldAccess = fieldAccess(receiverReference, "constantField")
+
+        val symbol = Symbol(listOf(Identifier("A")), "B")
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "constantField", value = FieldValue.Symbol(symbol))
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
         ))
+
+        val loader = loader(inspector = inspector, references = references)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(fieldAccess))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isSymbol(symbol))
+    }
+
+    @Test
+    fun canDestructureFieldsInVal() {
+        val shapeDeclaration = shape("Pair")
         val shapeReference = variableReference("Pair")
 
         val firstTarget = targetVariable("target1")
@@ -170,6 +214,15 @@ class InterpreterTests {
         val firstReference = variableReference("first")
         val secondReference = variableReference("second")
         val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
+
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "first"),
+                    fieldInspector(name = "second")
+                )
+            )
+        )
         val references = ResolvedReferencesMap(mapOf(
             shapeReference.nodeId to shapeDeclaration,
             firstReference.nodeId to firstTarget,
@@ -177,7 +230,7 @@ class InterpreterTests {
         ))
         val types = createTypes(expressionTypes = mapOf(firstReference.nodeId to IntType))
 
-        val loader = loader(references = references, types = types)
+        val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
             .addAll(loader.loadFunctionStatement(receiverDeclaration))
             .addAll(loader.loadExpression(addition))
@@ -597,10 +650,11 @@ class InterpreterTests {
     }
 
     private fun loader(
+        inspector: CodeInspector = SimpleCodeInspector(),
         references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
         types: Types = EMPTY_TYPES
     ): Loader {
-        return Loader(references = references, types = types)
+        return Loader(inspector = inspector, references = references, types = types)
     }
 
     private fun isBool(value: Boolean): Matcher<InterpreterValue> {
@@ -613,6 +667,10 @@ class InterpreterTests {
 
     private fun isString(value: String): Matcher<InterpreterValue> {
         return cast(has(InterpreterString::value, equalTo(value)))
+    }
+
+    private fun isSymbol(value: Symbol): Matcher<InterpreterValue> {
+        return cast(has(InterpreterSymbol::value, equalTo(value)))
     }
 
     private fun stubbedModule(
