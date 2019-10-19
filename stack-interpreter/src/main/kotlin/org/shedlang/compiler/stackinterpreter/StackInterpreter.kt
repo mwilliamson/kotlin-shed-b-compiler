@@ -735,15 +735,49 @@ internal class Loader(
             }
 
             override fun visit(node: IfNode): PersistentList<Instruction> {
-                val instructions = mutableListOf<Instruction>()
-
                 val conditionInstructions = node.conditionalBranches.map { branch ->
                     loadExpression(branch.condition)
                 }
 
-                val bodyInstructions = node.branchBodies.map { body -> loadBlock(body) }
+                return generateBranches(
+                    conditionInstructions = conditionInstructions,
+                    conditionalBodies = node.conditionalBranches.map { branch -> branch.body },
+                    elseBranch = node.elseBranch
+                )
+            }
 
-                node.conditionalBranches.forEachIndexed { branchIndex, _ ->
+            override fun visit(node: WhenNode): PersistentList<Instruction> {
+                val expressionInstructions = loadExpression(node.expression)
+
+                val conditionInstructions = node.branches.map { branch ->
+                    val discriminator = inspector.discriminatorForWhenBranch(node, branch)
+
+                    persistentListOf(
+                        Duplicate,
+                        FieldAccess(discriminator.fieldName),
+                        PushValue(InterpreterSymbol(discriminator.symbolType.symbol)),
+                        SymbolEquals
+                    )
+                }
+
+                return expressionInstructions.addAll(generateBranches(
+                    conditionInstructions = conditionInstructions,
+                    conditionalBodies = node.branches.map { branch -> branch.body },
+                    elseBranch = node.elseBranch
+                ))
+            }
+
+            private fun generateBranches(
+                conditionInstructions: List<PersistentList<Instruction>>,
+                conditionalBodies: List<Block>,
+                elseBranch: Block?
+            ): PersistentList<Instruction> {
+                val instructions = mutableListOf<Instruction>()
+
+                val branchBodies = conditionalBodies + elseBranch.nullableToList()
+                val bodyInstructions = branchBodies.map { body -> loadBlock(body) }
+
+                conditionInstructions.forEachIndexed { branchIndex, _ ->
                     instructions.addAll(conditionInstructions[branchIndex])
                     instructions.add(RelativeJumpIfFalse(bodyInstructions[branchIndex].size + 1))
                     instructions.addAll(bodyInstructions[branchIndex])
@@ -755,16 +789,14 @@ internal class Loader(
                     val remainingInstructionCount =
                         remainingConditionInstructionCount +
                             remainingBodyInstructionCount +
-                            (node.conditionalBranches.size - branchIndex - 1) * 2
+                            (conditionInstructions.size - branchIndex - 1) * 2
                     instructions.add(RelativeJump(remainingInstructionCount))
                 }
 
-                instructions.addAll(loadBlock(node.elseBranch))
+                if (elseBranch != null) {
+                    instructions.addAll(loadBlock(elseBranch))
+                }
                 return instructions.toPersistentList()
-            }
-
-            override fun visit(node: WhenNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
             }
         })
     }

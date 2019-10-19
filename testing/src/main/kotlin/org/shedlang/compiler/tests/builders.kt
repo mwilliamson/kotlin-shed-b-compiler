@@ -73,7 +73,7 @@ fun whenExpression(
 )
 
 fun whenBranch(
-    type: StaticExpressionNode,
+    type: StaticExpressionNode = staticReference("__default__"),
     body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,

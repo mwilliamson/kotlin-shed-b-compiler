@@ -570,6 +570,70 @@ class InterpreterTests {
     }
 
     @Test
+    fun firstMatchingBranchOfWhenIsEvaluated() {
+        val symbol1 = Symbol(listOf(Identifier("Test")), "Symbol1")
+        val symbol2 = Symbol(listOf(Identifier("Test")), "Symbol2")
+        val symbol3 = Symbol(listOf(Identifier("Test")), "Symbol3")
+        val symbol4 = Symbol(listOf(Identifier("Test")), "Symbol4")
+
+        val shape1 = unionMember("Shape1")
+        val shape2 = unionMember("Shape2")
+        val shape3 = unionMember("Shape3")
+        val shape4 = unionMember("Shape4")
+        val unionDeclaration = union(name = "U", members = listOf(shape1, shape2, shape3, shape4))
+        val shape2Reference = variableReference("Shape2")
+
+        val branch1 = whenBranch(
+            body = listOf(expressionStatementReturn(literalInt(1)))
+        )
+        val branch2 = whenBranch(
+            body = listOf(expressionStatementReturn(literalInt(2)))
+        )
+        val branch3 = whenBranch(
+            body = listOf(expressionStatementReturn(literalInt(3)))
+        )
+        val branch4 = whenBranch(
+            body = listOf(expressionStatementReturn(literalInt(4)))
+        )
+        val node = whenExpression(
+            expression = call(shape2Reference),
+            branches = listOf(branch1, branch2, branch3, branch4)
+        )
+
+        val inspector = SimpleCodeInspector(
+            discriminatorsForWhenBranches = mapOf(
+                Pair(node, branch1) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol1)),
+                Pair(node, branch2) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol2)),
+                Pair(node, branch3) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol3)),
+                Pair(node, branch4) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol4))
+            ),
+            shapeFields = mapOf(
+                shape1 to listOf(
+                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol1))
+                ),
+                shape2 to listOf(
+                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol2))
+                ),
+                shape3 to listOf(
+                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol3))
+                ),
+                shape4 to listOf(
+                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol4))
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shape2Reference.nodeId to shape2
+        ))
+        val loader = loader(inspector = inspector, references = references)
+        val instructions = loader.loadModuleStatement(unionDeclaration)
+            .addAll(loader.loadExpression(node))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
     fun variableIntroducedByValCanBeRead() {
         val target = targetVariable("x")
         val reference = variableReference("x")

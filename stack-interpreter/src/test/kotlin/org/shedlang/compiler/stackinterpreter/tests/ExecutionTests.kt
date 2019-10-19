@@ -21,14 +21,13 @@ class ExecutionTests {
         "cast",
         "ConstantField.shed",
         "dependencies",
+        "localImports",
         "moduleName",
         "ShapeTypeInfo.shed",
         "stdlib",
         "symbols",
         "TailRec.shed",
-        "usingStdlib",
-        "When.shed",
-        "WhenElse.shed"
+        "usingStdlib"
     )
 
     @TestFactory

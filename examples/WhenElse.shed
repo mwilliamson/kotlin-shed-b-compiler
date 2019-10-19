@@ -4,6 +4,8 @@
 //   other
 //   other
 
+export main;
+
 union X = A | B | C | D;
 
 fun main() !Io -> Unit {
