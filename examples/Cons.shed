@@ -3,6 +3,8 @@
 //   2
 //   3
 
+export main;
+
 union List =
     | Cons {
         head: Int,

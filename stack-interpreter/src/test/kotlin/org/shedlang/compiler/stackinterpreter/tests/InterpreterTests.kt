@@ -611,6 +611,25 @@ class InterpreterTests {
     }
 
     @Test
+    fun emptyFunctionReturnsUnit() {
+        val function = function(
+            name = "main",
+            body = listOf()
+        )
+        val functionReference = variableReference("main")
+        val call = call(receiver = functionReference)
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isUnit)
+    }
+
+    @Test
     fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithPositionalArguments() {
         val firstParameter = parameter("first")
         val secondParameter = parameter("second")
@@ -746,6 +765,8 @@ class InterpreterTests {
     private fun isSymbol(value: Symbol): Matcher<InterpreterValue> {
         return cast(has(InterpreterSymbol::value, equalTo(value)))
     }
+
+    private val isUnit = cast(equalTo(InterpreterUnit))
 
     private fun stubbedModule(
         name: List<Identifier>,

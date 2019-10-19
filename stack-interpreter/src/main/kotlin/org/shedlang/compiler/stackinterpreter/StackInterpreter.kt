@@ -711,9 +711,20 @@ internal class Loader(
     }
 
     internal fun loadBlock(block: Block): PersistentList<Instruction> {
-        return block.statements.flatMap { statement ->
+        val statementInstructions = block.statements.flatMap { statement ->
             loadFunctionStatement(statement)
         }.toPersistentList()
+
+        return if (blockHasReturnValue(block)) {
+            statementInstructions
+        } else {
+            statementInstructions.add(PushValue(InterpreterUnit))
+        }
+    }
+
+    private fun blockHasReturnValue(block: Block): Boolean {
+        val last = block.statements.lastOrNull()
+        return last != null && last is ExpressionStatementNode && last.isReturn
     }
 
     internal fun loadFunctionStatement(statement: FunctionStatementNode): PersistentList<Instruction> {
@@ -746,24 +757,11 @@ internal class Loader(
             }
 
             override fun visit(node: ShapeNode): PersistentList<Instruction> {
-                val constantFieldValues = inspector.shapeFields(node)
-                    .mapNotNull { field ->
-                        when (val fieldValue = field.value) {
-                            null -> null
-                            is FieldValue.Expression -> throw NotImplementedError()
-                            is FieldValue.Symbol -> field.name to InterpreterSymbol(fieldValue.symbol)
-                        }
-                    }
-                    .toMap()
-                    .toPersistentMap()
-                return persistentListOf(
-                    DeclareShape(constantFieldValues = constantFieldValues),
-                    StoreLocal(node.nodeId)
-                )
+                return loadShape(node)
             }
 
             override fun visit(node: UnionNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return node.members.flatMap { member -> loadShape(member) }.toPersistentList()
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
@@ -782,6 +780,23 @@ internal class Loader(
                 return loadVal(node)
             }
         })
+    }
+
+    private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
+        val constantFieldValues = inspector.shapeFields(node)
+            .mapNotNull { field ->
+                when (val fieldValue = field.value) {
+                    null -> null
+                    is FieldValue.Expression -> throw NotImplementedError()
+                    is FieldValue.Symbol -> field.name to InterpreterSymbol(fieldValue.symbol)
+                }
+            }
+            .toMap()
+            .toPersistentMap()
+        return persistentListOf(
+            DeclareShape(constantFieldValues = constantFieldValues),
+            StoreLocal(node.nodeId)
+        )
     }
 
     private fun loadVal(node: ValNode): PersistentList<Instruction> {
