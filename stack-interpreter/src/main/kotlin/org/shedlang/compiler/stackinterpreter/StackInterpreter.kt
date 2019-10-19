@@ -6,6 +6,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StringType
 import org.shedlang.compiler.types.Symbol
@@ -356,6 +357,21 @@ internal class DeclareShape(val constantFieldValues: PersistentMap<Identifier, I
     }
 }
 
+internal class BinaryBoolOperation(
+    private val func: (left: Boolean, right: Boolean) -> InterpreterValue
+): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, right) = initialState.popTemporary()
+        val (state3, left) = state2.popTemporary()
+        val result = func((left as InterpreterBool).value, (right as InterpreterBool).value)
+        return state3.pushTemporary(result).nextInstruction()
+    }
+}
+
+internal val BoolEquals = BinaryBoolOperation { left, right ->
+    InterpreterBool(left == right)
+}
+
 internal class BinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
 ): Instruction {
@@ -643,6 +659,7 @@ internal class Loader(
                     BinaryOperator.SUBTRACT -> IntSubtract
                     BinaryOperator.MULTIPLY -> IntMultiply
                     BinaryOperator.EQUALS -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> BoolEquals
                         IntType -> IntEquals
                         StringType -> StringEquals
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)

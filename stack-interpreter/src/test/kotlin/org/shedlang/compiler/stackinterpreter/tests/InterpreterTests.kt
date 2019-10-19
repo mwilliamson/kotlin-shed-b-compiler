@@ -47,6 +47,32 @@ class InterpreterTests {
     }
 
     @Test
+    fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
+        val left = literalBool(true)
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to BoolType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenOperandsAreNotEqualThenBooleanEqualityEvaluatesToFalse() {
+        val left = literalBool(true)
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(false))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to BoolType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
     fun integerAdditionAddsOperandsTogether() {
         val left = literalInt(1)
         val node = binaryOperation(BinaryOperator.ADD, left, literalInt(2))
