@@ -398,6 +398,21 @@ internal val StringAdd = BinaryStringOperation { left, right ->
     InterpreterString(left + right)
 }
 
+internal class BinarySymbolOperation(
+    private val func: (left: Symbol, right: Symbol) -> InterpreterValue
+): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, right) = initialState.popTemporary()
+        val (state3, left) = state2.popTemporary()
+        val result = func((left as InterpreterSymbol).value, (right as InterpreterSymbol).value)
+        return state3.pushTemporary(result).nextInstruction()
+    }
+}
+
+internal val SymbolEquals = BinarySymbolOperation { left, right ->
+    InterpreterBool(left == right)
+}
+
 internal class TupleAccess(private val elementIndex: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
@@ -622,7 +637,14 @@ internal class Loader(
             }
 
             override fun visit(node: IsNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val expressionInstructions = loadExpression(node.expression)
+
+                val discriminator = inspector.discriminatorForIsExpression(node)
+
+                return expressionInstructions
+                    .add(FieldAccess(discriminator.fieldName))
+                    .add(PushValue(InterpreterSymbol(discriminator.symbolType.symbol)))
+                    .add(SymbolEquals)
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {

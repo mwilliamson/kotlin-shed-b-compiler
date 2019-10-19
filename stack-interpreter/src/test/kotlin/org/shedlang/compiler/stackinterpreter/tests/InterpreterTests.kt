@@ -16,10 +16,7 @@ import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.StringType
-import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.*
 
 class InterpreterTests {
     @Test
@@ -109,6 +106,83 @@ class InterpreterTests {
         val value = evaluateExpression(node, types = types)
 
         assertThat(value, isString("hello world"))
+    }
+
+    @Test
+    fun whenDiscriminatorMatchesThenIsOperationIsTrue() {
+        val shapeDeclaration = shape("X")
+        val shapeReference = variableReference("X")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(shapeReference)
+        )
+        val receiverReference = variableReference("receiver")
+        val node = isOperation(receiverReference, shapeReference)
+
+        val symbol = Symbol(listOf(Identifier("A")), "B")
+        val inspector = SimpleCodeInspector(
+            discriminatorsForIsExpressions = mapOf(
+                node to discriminator(fieldName = "tag", symbolType = SymbolType(symbol))
+            ),
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol))
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+
+        val loader = loader(inspector = inspector, references = references)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(node))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenDiscriminatorMatchesThenIsOperationIsFalse() {
+        val shapeDeclaration = shape("X")
+        val shapeReference = variableReference("X")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(shapeReference)
+        )
+        val receiverReference = variableReference("receiver")
+        val node = isOperation(receiverReference, shapeReference)
+
+        val shapeSymbol = Symbol(listOf(Identifier("A")), "B")
+        val isSymbol = Symbol(listOf(Identifier("A")), "C")
+        val inspector = SimpleCodeInspector(
+            discriminatorsForIsExpressions = mapOf(
+                node to discriminator(fieldName = "tag", symbolType = SymbolType(isSymbol))
+            ),
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "tag", value = FieldValue.Symbol(shapeSymbol))
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+
+        val loader = loader(inspector = inspector, references = references)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(node))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isBool(false))
     }
 
     @Test
