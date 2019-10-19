@@ -119,7 +119,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun whenEitherOperandIsTrueThenBooleanOrvaluatesToTrue() {
+    fun whenEitherOperandIsTrueThenBooleanOrEvaluatesToTrue() {
         assertBooleanOr(false, false, false)
         assertBooleanOr(false, true, true)
         assertBooleanOr(true, false, true)
