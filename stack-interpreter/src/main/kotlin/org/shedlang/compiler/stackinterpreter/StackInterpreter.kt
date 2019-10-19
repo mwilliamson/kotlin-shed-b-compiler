@@ -372,6 +372,10 @@ internal val BoolEquals = BinaryBoolOperation { left, right ->
     InterpreterBool(left == right)
 }
 
+internal val BoolNotEqual = BinaryBoolOperation { left, right ->
+    InterpreterBool(left != right)
+}
+
 internal class BinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
 ): Instruction {
@@ -665,6 +669,7 @@ internal class Loader(
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.NOT_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> BoolNotEqual
                         IntType -> IntNotEqual
                         StringType -> StringNotEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
