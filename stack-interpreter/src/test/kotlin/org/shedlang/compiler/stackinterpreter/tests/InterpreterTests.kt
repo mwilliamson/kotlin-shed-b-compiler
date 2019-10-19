@@ -884,7 +884,7 @@ class InterpreterTests {
         val loader = loader(references = references)
         val instructions = loader.loadExpression(call)
         val world = InMemoryWorld()
-        val finalState = executeInstructions(
+        executeInstructions(
             instructions,
             image = Image.EMPTY,
             defaultVariables = builtinVariables,
