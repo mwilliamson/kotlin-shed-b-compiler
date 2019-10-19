@@ -22,7 +22,6 @@ class ExecutionTests {
         "ConstantField.shed",
         "dependencies",
         "localImports",
-        "Matchers.shed",
         "moduleName",
         "ShapeTypeInfo.shed",
         "stdlib",

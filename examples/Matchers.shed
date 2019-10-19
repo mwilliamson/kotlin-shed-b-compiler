@@ -2,6 +2,8 @@
 //   expected world
 //   but was hello
 
+export main;
+
 fun main() !Io -> Unit {
     val result = assertThat("hello", isString("world"));
     if (result is Failure) {

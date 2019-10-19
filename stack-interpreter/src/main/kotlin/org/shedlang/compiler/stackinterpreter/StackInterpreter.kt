@@ -680,7 +680,7 @@ internal class Loader(
             }
 
             override fun visit(node: FunctionExpressionNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return persistentListOf(loadFunctionValue(node))
             }
 
             override fun visit(node: IfNode): PersistentList<Instruction> {
@@ -773,13 +773,8 @@ internal class Loader(
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
-                val bodyInstructions = loadBlock(node.body).add(Return)
-
                 return persistentListOf(
-                    DeclareFunction(
-                        bodyInstructions = bodyInstructions,
-                        parameterIds = node.parameters.map { parameter -> parameter.nodeId }
-                    ),
+                    loadFunctionValue(node),
                     StoreLocal(node.nodeId)
                 )
             }
@@ -788,6 +783,14 @@ internal class Loader(
                 return loadVal(node)
             }
         })
+    }
+
+    private fun loadFunctionValue(node: FunctionNode): DeclareFunction {
+        val bodyInstructions = loadBlock(node.body).add(Return)
+        return DeclareFunction(
+            bodyInstructions = bodyInstructions,
+            parameterIds = node.parameters.map { parameter -> parameter.nodeId }
+        )
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
