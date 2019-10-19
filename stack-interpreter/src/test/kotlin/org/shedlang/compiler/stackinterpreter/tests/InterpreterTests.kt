@@ -77,18 +77,26 @@ class InterpreterTests {
 
     @Test
     fun whenOperandsAreEqualThenIntegerEqualityEvaluatesToTrue() {
-        val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(1))
+        val left = literalInt(1)
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalInt(1))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to IntType)
+        )
 
-        val value = evaluateExpression(node)
+        val value = evaluateExpression(node, types = types)
 
         assertThat(value, isBool(true))
     }
 
     @Test
     fun whenOperandsAreNotEqualThenIntegerEqualityEvaluatesToFalse() {
-        val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(2))
+        val left = literalInt(1)
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalInt(2))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to IntType)
+        )
 
-        val value = evaluateExpression(node)
+        val value = evaluateExpression(node, types = types)
 
         assertThat(value, isBool(false))
     }
@@ -97,15 +105,39 @@ class InterpreterTests {
     fun stringAdditionConcatenatesStrings() {
         val left = literalString("hello ")
         val node = binaryOperation(BinaryOperator.ADD, left, literalString("world"))
-        val types = TypesMap(
-            discriminators = mapOf(),
-            expressionTypes = mapOf(left.nodeId to StringType),
-            variableTypes = mapOf()
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
         )
 
         val value = evaluateExpression(node, types = types)
 
         assertThat(value, isString("hello world"))
+    }
+
+    @Test
+    fun whenOperandsAreEqualThenStringEqualityReturnsTrue() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("hello"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenOperandsAreEqualThenStringEqualityReturnsFalse() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("world"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(false))
     }
 
     @Test
@@ -782,7 +814,7 @@ class InterpreterTests {
         )
     }
 
-    private fun createTypes(expressionTypes: Map<Int, IntType>): Types {
+    private fun createTypes(expressionTypes: Map<Int, Type>): Types {
         return TypesMap(
             discriminators = mapOf(),
             expressionTypes = expressionTypes,
