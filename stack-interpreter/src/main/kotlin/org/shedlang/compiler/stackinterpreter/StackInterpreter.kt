@@ -383,6 +383,10 @@ internal val IntEquals = BinaryIntOperation { left, right ->
     InterpreterBool(left == right)
 }
 
+internal val IntNotEqual = BinaryIntOperation { left, right ->
+    InterpreterBool(left != right)
+}
+
 internal class BinaryStringOperation(
     private val func: (left: String, right: String) -> InterpreterValue
 ): Instruction {
@@ -637,6 +641,10 @@ internal class Loader(
                     BinaryOperator.EQUALS -> when (types.typeOfExpression(node.left)) {
                         IntType -> IntEquals
                         StringType -> StringEquals
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.NOT_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        IntType -> IntNotEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)

@@ -21,7 +21,6 @@ class ExecutionTests {
         "cast",
         "ConstantField.shed",
         "dependencies",
-        "localImports",
         "moduleName",
         "ShapeTypeInfo.shed",
         "stdlib",
