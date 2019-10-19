@@ -372,6 +372,10 @@ internal val BoolAnd = BinaryBoolOperation { left, right ->
     InterpreterBool(left && right)
 }
 
+internal val BoolOr = BinaryBoolOperation { left, right ->
+    InterpreterBool(left || right)
+}
+
 internal val BoolEquals = BinaryBoolOperation { left, right ->
     InterpreterBool(left == right)
 }
@@ -680,6 +684,10 @@ internal class Loader(
                         BoolType -> BoolNotEqual
                         IntType -> IntNotEqual
                         StringType -> StringNotEqual
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.OR -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> BoolOr
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)

@@ -119,6 +119,26 @@ class InterpreterTests {
     }
 
     @Test
+    fun whenEitherOperandIsTrueThenBooleanOrvaluatesToTrue() {
+        assertBooleanOr(false, false, false)
+        assertBooleanOr(false, true, true)
+        assertBooleanOr(true, false, true)
+        assertBooleanOr(true, true, true)
+    }
+
+    private fun assertBooleanOr(leftValue: Boolean, rightValue: Boolean, expectedValue: Boolean) {
+        val left = literalBool(leftValue)
+        val node = binaryOperation(BinaryOperator.OR, left, literalBool(rightValue))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to BoolType)
+        )
+
+        val value = evaluateExpression(node, types = types)
+
+        assertThat(value, isBool(expectedValue))
+    }
+
+    @Test
     fun integerAdditionAddsOperandsTogether() {
         val left = literalInt(1)
         val node = binaryOperation(BinaryOperator.ADD, left, literalInt(2))
