@@ -2,6 +2,8 @@
 //   Some 4
 //   None
 
+export main;
+
 import Options from Stdlib.Options;
 
 fun main() !Io -> Unit {

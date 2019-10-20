@@ -23,8 +23,7 @@ class ExecutionTests {
         "ShapeTypeInfo.shed",
         "stdlib",
         "symbols",
-        "TailRec.shed",
-        "usingStdlib"
+        "TailRec.shed"
     )
 
     @TestFactory

@@ -869,7 +869,13 @@ internal class Loader(
             }
 
             override fun visit(node: UnionNode): PersistentList<Instruction> {
-                return node.members.flatMap { member -> loadShape(member) }.toPersistentList()
+                val unionInstructions = persistentListOf(
+                    PushValue(InterpreterUnit),
+                    StoreLocal(node.nodeId)
+                )
+                val memberInstructions = node.members.flatMap { member -> loadShape(member) }
+                
+                return unionInstructions.addAll(memberInstructions)
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
