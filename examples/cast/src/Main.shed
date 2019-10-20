@@ -4,6 +4,8 @@
 //   is not A
 //   is B
 
+export main;
+
 import Options from Stdlib.Options;
 
 union U = A | B;

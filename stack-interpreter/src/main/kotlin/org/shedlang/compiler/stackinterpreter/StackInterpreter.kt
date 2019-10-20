@@ -724,17 +724,53 @@ internal class Loader(
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
-                val receiverInstructions = loadExpression(node.receiver)
-                val argumentInstructions = node.positionalArguments.flatMap { argument ->
-                    loadExpression(argument)
-                } + node.namedArguments.flatMap { argument ->
-                    loadExpression(argument.expression)
+                if (inspector.isCast(node)) {
+                    val optionsModuleName = listOf(Identifier("Stdlib"), Identifier("Options"))
+                    val loadOptionsModuleInstructions = persistentListOf(
+                        InitModule(optionsModuleName),
+                        LoadModule(optionsModuleName)
+                    )
+                    val parameterId = freshNodeId()
+
+                    val failureInstructions = loadOptionsModuleInstructions
+                        .add(FieldAccess(Identifier("none")))
+                        .add(Return)
+                    val successInstructions = loadOptionsModuleInstructions
+                        .add(FieldAccess(Identifier("some")))
+                        .add(LoadLocal(parameterId))
+                        .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
+                        .add(Return)
+
+                    val discriminator = inspector.discriminatorForCast(node)
+                    val bodyInstructions = persistentListOf<Instruction>()
+                        .add(LoadLocal(parameterId))
+                        .add(FieldAccess(discriminator.fieldName))
+                        .add(PushValue(InterpreterSymbol(discriminator.symbolType.symbol)))
+                        .add(SymbolEquals)
+                        .add(RelativeJumpIfFalse(successInstructions.size))
+                        .addAll(successInstructions)
+                        .addAll(failureInstructions)
+
+                    return persistentListOf(
+                        PushValue(InterpreterFunction(
+                            parameterIds = listOf(parameterId),
+                            bodyInstructions = bodyInstructions,
+                            scopes = persistentListOf()
+                        ))
+                    )
+                } else {
+                    val receiverInstructions = loadExpression(node.receiver)
+                    val argumentInstructions = node.positionalArguments.flatMap { argument ->
+                        loadExpression(argument)
+                    } + node.namedArguments.flatMap { argument ->
+                        loadExpression(argument.expression)
+                    }
+                    val call = Call(
+                        positionalArgumentCount = node.positionalArguments.size,
+                        namedArgumentNames = node.namedArguments.map { argument -> argument.name }
+                    )
+                    return receiverInstructions.addAll(argumentInstructions).add(call)
                 }
-                val call = Call(
-                    positionalArgumentCount = node.positionalArguments.size,
-                    namedArgumentNames = node.namedArguments.map { argument -> argument.name }
-                )
-                return receiverInstructions.addAll(argumentInstructions).add(call)
             }
 
             override fun visit(node: PartialCallNode): PersistentList<Instruction> {
@@ -874,7 +910,7 @@ internal class Loader(
                     StoreLocal(node.nodeId)
                 )
                 val memberInstructions = node.members.flatMap { member -> loadShape(member) }
-                
+
                 return unionInstructions.addAll(memberInstructions)
             }
 
