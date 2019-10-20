@@ -598,22 +598,7 @@ private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
         references = module.references,
         types = module.types
     )
-    val moduleNameInstructions = persistentListOf(
-        PushValue(InterpreterString(module.name.joinToString(".") { part -> part.value })),
-        StoreLocal(Builtins.moduleName.nodeId)
-    )
-
-    return moduleNameInstructions
-        .addAll(module.node.body.flatMap { statement ->
-            loader.loadModuleStatement(statement)
-        })
-        .add(StoreModule(
-            moduleName = module.name,
-            exports = module.node.exports.map { export ->
-                export.name to module.references[export].nodeId
-            }
-        ))
-        .add(Exit)
+    return loader.loadModule(module)
 }
 
 internal class Loader(
@@ -621,6 +606,34 @@ internal class Loader(
     private val types: Types,
     private val inspector: CodeInspector
 ) {
+    internal fun loadModule(module: Module.Shed): PersistentList<Instruction> {
+        val moduleNameInstructions = persistentListOf(
+            PushValue(InterpreterString(module.name.joinToString(".") { part -> part.value })),
+            StoreLocal(Builtins.moduleName.nodeId)
+        )
+
+        val importInstructions = module.node.imports.flatMap { import ->
+            val importedModuleName = resolveImport(module.name, import.path)
+            persistentListOf(
+                InitModule(importedModuleName),
+                LoadModule(importedModuleName)
+            ).addAll(loadTarget(import.target))
+        }.toPersistentList()
+
+        return importInstructions
+            .addAll(moduleNameInstructions)
+            .addAll(module.node.body.flatMap { statement ->
+                loadModuleStatement(statement)
+            })
+            .add(StoreModule(
+                moduleName = module.name,
+                exports = module.node.exports.map { export ->
+                    export.name to module.references[export].nodeId
+                }
+            ))
+            .add(Exit)
+    }
+
     internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {

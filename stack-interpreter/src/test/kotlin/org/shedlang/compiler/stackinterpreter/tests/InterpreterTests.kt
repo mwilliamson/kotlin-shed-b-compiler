@@ -913,6 +913,55 @@ class InterpreterTests {
     }
 
     @Test
+    fun moduleCanBeImported() {
+        val exportingModuleName = listOf(Identifier("Exporting"))
+        val exportNode = export("x")
+        val valTarget = targetVariable("x")
+        val exportingModule = stubbedModule(
+            name = exportingModuleName,
+            node = module(
+                exports = listOf(exportNode),
+                body = listOf(
+                    valStatement(valTarget, literalInt(42))
+                )
+            ),
+            references = ResolvedReferencesMap(mapOf(
+                exportNode.nodeId to valTarget
+            ))
+        )
+
+        val importingModuleName = listOf(Identifier("Importing"))
+        val importTarget = targetVariable("x")
+        val importNode = import(
+            targetFields(listOf(fieldName("x") to importTarget)),
+            ImportPath.absolute(exportingModuleName.map(Identifier::value))
+        )
+        val reexportNode = export("x")
+        val importingModule = stubbedModule(
+            name = importingModuleName,
+            node = module(
+                imports = listOf(importNode),
+                exports = listOf(reexportNode)
+            ),
+            references = ResolvedReferencesMap(mapOf(
+                reexportNode.nodeId to importTarget
+            ))
+        )
+
+        val image = loadModuleSet(ModuleSet(listOf(exportingModule, importingModule)))
+        val value = executeInstructions(
+            persistentListOf(
+                InitModule(importingModuleName),
+                LoadModule(importingModuleName),
+                FieldAccess(Identifier("x"))
+            ),
+            image = image
+        )
+
+        assertThat(value, isInt(42))
+    }
+
+    @Test
     fun moduleNameIsDefinedInEachModule() {
         val moduleName = listOf(Identifier("One"), Identifier("Two"), Identifier("Three"))
         val moduleNameReference = export("moduleName")

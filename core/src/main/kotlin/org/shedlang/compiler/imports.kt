@@ -5,10 +5,10 @@ import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ImportPathBase
 
 
-fun resolveImport(name: List<Identifier>, importPath: ImportPath): List<Identifier> {
+fun resolveImport(importingModuleName: List<Identifier>, importPath: ImportPath): List<Identifier> {
     return when (importPath.base) {
         ImportPathBase.Relative -> {
-            name.dropLast(1) + importPath.parts
+            importingModuleName.dropLast(1) + importPath.parts
         }
         ImportPathBase.Absolute -> {
             importPath.parts
