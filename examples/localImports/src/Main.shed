@@ -1,6 +1,8 @@
 // stdout:
 //   Hello, world!
 
+export main;
+
 import M from .Messages;
 
 fun main() !Io -> Unit {

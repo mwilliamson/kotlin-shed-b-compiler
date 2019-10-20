@@ -20,8 +20,6 @@ class ExecutionTests {
     private val disabledTests = setOf<String>(
         "cast",
         "ConstantField.shed",
-        "dependencies",
-        "localImports",
         "moduleName",
         "ShapeTypeInfo.shed",
         "stdlib",
