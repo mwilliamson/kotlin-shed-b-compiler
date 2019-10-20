@@ -1,6 +1,8 @@
 // stdout:
 //   One.Two.Three
 
+export main;
+
 import Three from .One.Two.Three;
 
 fun main() !Io -> Unit {
