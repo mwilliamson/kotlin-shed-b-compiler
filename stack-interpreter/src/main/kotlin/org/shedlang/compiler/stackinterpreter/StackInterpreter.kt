@@ -27,6 +27,8 @@ internal object InterpreterUnit: InterpreterValue
 
 internal data class InterpreterBool(val value: Boolean): InterpreterValue
 
+internal data class InterpreterCodePoint(val value: Int): InterpreterValue
+
 internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
@@ -655,7 +657,8 @@ internal class Loader(
             }
 
             override fun visit(node: CodePointLiteralNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val push = PushValue(InterpreterCodePoint(node.value))
+                return persistentListOf(push)
             }
 
             override fun visit(node: SymbolNode): PersistentList<Instruction> {

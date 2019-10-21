@@ -29,6 +29,15 @@ class InterpreterTests {
     }
 
     @Test
+    fun codePointLiteralIsEvaluatedToCodePoint() {
+        val node = literalCodePoint('X')
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isCodePoint('X'.toInt()))
+    }
+
+    @Test
     fun integerLiteralIsEvaluatedToInteger() {
         val node = literalInt(42)
 
@@ -1078,6 +1087,10 @@ class InterpreterTests {
 
     private fun isBool(value: Boolean): Matcher<InterpreterValue> {
         return cast(has(InterpreterBool::value, equalTo(value)))
+    }
+
+    private fun isCodePoint(value: Int): Matcher<InterpreterValue> {
+        return cast(has(InterpreterCodePoint::value, equalTo(value)))
     }
 
     private fun isInt(value: Int): Matcher<InterpreterValue> {
