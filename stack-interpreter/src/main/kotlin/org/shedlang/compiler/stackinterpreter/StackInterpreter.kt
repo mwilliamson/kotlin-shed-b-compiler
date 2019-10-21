@@ -354,6 +354,14 @@ internal class DeclareFunction(
     }
 }
 
+internal object BoolNot: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, operand) = initialState.popTemporary()
+        val result = InterpreterBool(!(operand as InterpreterBool).value)
+        return state2.pushTemporary(result).nextInstruction()
+    }
+}
+
 internal class BinaryBoolOperation(
     private val func: (left: Boolean, right: Boolean) -> InterpreterValue
 ): Instruction {
@@ -707,7 +715,14 @@ internal class Loader(
             }
 
             override fun visit(node: UnaryOperationNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val operandInstructions = loadExpression(node.operand)
+
+                val operationInstruction = when (node.operator) {
+                    UnaryOperator.NOT -> BoolNot
+                    UnaryOperator.MINUS -> throw NotImplementedError()
+                }
+
+                return operandInstructions.add(operationInstruction)
             }
 
             override fun visit(node: BinaryOperationNode): PersistentList<Instruction> {

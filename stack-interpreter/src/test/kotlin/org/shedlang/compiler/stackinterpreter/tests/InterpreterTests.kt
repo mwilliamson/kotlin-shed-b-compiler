@@ -65,6 +65,20 @@ class InterpreterTests {
     }
 
     @Test
+    fun notOperatorNegatesOperand() {
+        assertNotOperation(true, isBool(false))
+        assertNotOperation(false, isBool(true))
+    }
+
+    private fun assertNotOperation(operand: Boolean, expected: Matcher<InterpreterValue>) {
+        val node = unaryOperation(UnaryOperator.NOT, literalBool(operand))
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, expected)
+    }
+
+    @Test
     fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
         val left = literalBool(true)
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))
