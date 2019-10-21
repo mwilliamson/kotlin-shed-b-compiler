@@ -635,7 +635,8 @@ internal class Loader(
     internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val push = PushValue(InterpreterUnit)
+                return persistentListOf(push)
             }
 
             override fun visit(node: BooleanLiteralNode): PersistentList<Instruction> {

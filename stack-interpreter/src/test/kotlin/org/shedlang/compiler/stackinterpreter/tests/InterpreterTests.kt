@@ -47,6 +47,15 @@ class InterpreterTests {
     }
 
     @Test
+    fun unitLiteralIsEvaluatedToUnit() {
+        val node = literalUnit()
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isUnit)
+    }
+
+    @Test
     fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
         val left = literalBool(true)
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))
