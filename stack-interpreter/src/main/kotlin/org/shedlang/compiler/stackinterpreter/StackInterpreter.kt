@@ -350,13 +350,6 @@ internal class DeclareFunction(
     }
 }
 
-internal class DeclareShape(val constantFieldValues: PersistentMap<Identifier, InterpreterValue>) : Instruction {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val value = InterpreterShape(constantFieldValues = constantFieldValues)
-        return initialState.pushTemporary(value).nextInstruction()
-    }
-}
-
 internal class BinaryBoolOperation(
     private val func: (left: Boolean, right: Boolean) -> InterpreterValue
 ): Instruction {
@@ -946,8 +939,11 @@ internal class Loader(
             }
             .toMap()
             .toPersistentMap()
+
+        val value = InterpreterShape(constantFieldValues = constantFieldValues)
+
         return persistentListOf(
-            DeclareShape(constantFieldValues = constantFieldValues),
+            PushValue(value),
             StoreLocal(node.nodeId)
         )
     }
