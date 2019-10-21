@@ -424,6 +424,14 @@ internal val CodePointGreaterThanOrEqual = BinaryCodePointOperation { left, righ
     InterpreterBool(left >= right)
 }
 
+internal object IntMinus: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, operand) = initialState.popTemporary()
+        val result = InterpreterInt(-(operand as InterpreterInt).value)
+        return state2.pushTemporary(result).nextInstruction()
+    }
+}
+
 internal class BinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
 ): Instruction {
@@ -719,7 +727,7 @@ internal class Loader(
 
                 val operationInstruction = when (node.operator) {
                     UnaryOperator.NOT -> BoolNot
-                    UnaryOperator.MINUS -> throw NotImplementedError()
+                    UnaryOperator.MINUS -> IntMinus
                 }
 
                 return operandInstructions.add(operationInstruction)
