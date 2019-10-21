@@ -162,6 +162,12 @@ class InterpreterTests {
         assertCodePointBinaryOperation(BinaryOperator.EQUALS, 'X', 'Y', isBool(false))
     }
 
+    @Test
+    fun codePointOperandsAreNotEqualIfAndOnlyIfCodePointEqualityEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'X', isBool(false))
+        assertCodePointBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'Y', isBool(true))
+    }
+
     private fun assertCodePointBinaryOperation(operator: BinaryOperator, left: Char, right: Char, expected: Matcher<InterpreterValue>) {
         val left = literalCodePoint(left)
         val node = binaryOperation(operator, left, literalCodePoint(right))
