@@ -19,7 +19,6 @@ import org.shedlang.compiler.typechecker.SourceError
 class ExecutionTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
-        "ShapeTypeInfo.shed",
         "stdlib",
         "symbols",
         "TailRec.shed"

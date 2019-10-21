@@ -4,6 +4,8 @@
 //   second
 //   47
 
+export main;
+
 type Size = Int;
 
 shape Pair {

@@ -46,8 +46,13 @@ internal class InterpreterBuiltinFunction(
 ): InterpreterValue
 
 internal class InterpreterShape(
-    val constantFieldValues: PersistentMap<Identifier, InterpreterValue>
-): InterpreterValue
+    val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
+    val fields: Map<Identifier, InterpreterValue>
+): InterpreterValue, InterpreterHasFields {
+    override fun field(fieldName: Identifier): InterpreterValue {
+        return fields[fieldName]!!
+    }
+}
 
 internal interface InterpreterHasFields {
     fun field(fieldName: Identifier): InterpreterValue
@@ -929,7 +934,8 @@ internal class Loader(
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
-        val constantFieldValues = inspector.shapeFields(node)
+        val shapeFields = inspector.shapeFields(node)
+        val constantFieldValues = shapeFields
             .mapNotNull { field ->
                 when (val fieldValue = field.value) {
                     null -> null
@@ -940,7 +946,30 @@ internal class Loader(
             .toMap()
             .toPersistentMap()
 
-        val value = InterpreterShape(constantFieldValues = constantFieldValues)
+        val runtimeFields = mapOf(
+            Identifier("fields") to InterpreterShapeValue(
+                fields = shapeFields.associate { field ->
+                    val getParameterId = freshNodeId()
+
+                    field.name to InterpreterShapeValue(
+                        fields = mapOf(
+                            Identifier("name") to InterpreterString(field.name.value),
+                            Identifier("get") to InterpreterFunction(
+                                bodyInstructions = persistentListOf(
+                                    LoadLocal(getParameterId),
+                                    FieldAccess(field.name),
+                                    Return
+                                ),
+                                parameterIds = listOf(getParameterId),
+                                scopes = persistentListOf()
+                            )
+                        )
+                    )
+                }
+            )
+        )
+
+        val value = InterpreterShape(constantFieldValues = constantFieldValues, fields = runtimeFields)
 
         return persistentListOf(
             PushValue(value),
