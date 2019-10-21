@@ -175,6 +175,13 @@ class InterpreterTests {
         assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'Z', 'Y', isBool(false))
     }
 
+    @Test
+    fun leftCodePointOperandIsLessThanOrEqualRightOperandIfAndOnlyIfCodePointLessThanOrEqualOperatorEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'X', 'Y', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Z', 'Y', isBool(false))
+    }
+
     private fun assertCodePointBinaryOperation(operator: BinaryOperator, left: Char, right: Char, expected: Matcher<InterpreterValue>) {
         val left = literalCodePoint(left)
         val node = binaryOperation(operator, left, literalCodePoint(right))
