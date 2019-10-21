@@ -408,6 +408,10 @@ internal val CodePointLessThanOrEqual = BinaryCodePointOperation { left, right -
     InterpreterBool(left <= right)
 }
 
+internal val CodePointGreaterThan = BinaryCodePointOperation { left, right ->
+    InterpreterBool(left > right)
+}
+
 internal class BinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
 ): Instruction {
@@ -722,6 +726,10 @@ internal class Loader(
                         CodePointType -> CodePointEquals
                         IntType -> IntEquals
                         StringType -> StringEquals
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.GREATER_THAN -> when (types.typeOfExpression(node.left)) {
+                        CodePointType -> CodePointGreaterThan
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.LESS_THAN -> when (types.typeOfExpression(node.left)) {
