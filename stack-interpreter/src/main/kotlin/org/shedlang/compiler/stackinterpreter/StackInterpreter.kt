@@ -964,7 +964,7 @@ internal class Loader(
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return loadFunctionDeclaration(node)
             }
         })
     }
@@ -990,16 +990,20 @@ internal class Loader(
             }
 
             override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
-                return persistentListOf(
-                    loadFunctionValue(node),
-                    StoreLocal(node.nodeId)
-                )
+                return loadFunctionDeclaration(node)
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
                 return loadVal(node)
             }
         })
+    }
+
+    private fun loadFunctionDeclaration(node: FunctionDeclarationNode): PersistentList<Instruction> {
+        return persistentListOf(
+            loadFunctionValue(node),
+            StoreLocal(node.nodeId)
+        )
     }
 
     private fun loadFunctionValue(node: FunctionNode): DeclareFunction {
