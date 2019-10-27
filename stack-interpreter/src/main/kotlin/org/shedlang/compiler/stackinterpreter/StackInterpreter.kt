@@ -49,7 +49,8 @@ internal class InterpreterBuiltinFunction(
 
 internal class InterpreterPartialCall(
     val receiver: InterpreterValue,
-    val positionalArguments: List<InterpreterValue>
+    val positionalArguments: List<InterpreterValue>,
+    val namedArguments: Map<Identifier, InterpreterValue>
 ) : InterpreterValue
 
 internal class InterpreterShape(
@@ -599,7 +600,10 @@ internal class LoadModule(private val moduleName: List<Identifier>): Instruction
     }
 }
 
-internal class Call(private val positionalArgumentCount: Int, private val namedArgumentNames: List<Identifier>): Instruction {
+internal class Call(
+    private val positionalArgumentCount: Int,
+    private val namedArgumentNames: List<Identifier>
+): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
         val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
@@ -614,13 +618,19 @@ internal class Call(private val positionalArgumentCount: Int, private val namedA
     }
 }
 
-internal class PartialCall(private val positionalArgumentCount: Int): Instruction {
+internal class PartialCall(
+    private val positionalArgumentCount: Int,
+    private val namedArgumentNames: List<Identifier>
+): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, positionalArguments) = initialState.popTemporaries(positionalArgumentCount)
-        val (state3, receiver) = state2.popTemporary()
-        return state3.pushTemporary(InterpreterPartialCall(
+        val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
+        val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
+        val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
+        val (state4, receiver) = state3.popTemporary()
+        return state4.pushTemporary(InterpreterPartialCall(
             receiver = receiver,
-            positionalArguments = positionalArguments
+            positionalArguments = positionalArguments,
+            namedArguments = namedArguments
         )).nextInstruction()
     }
 }
@@ -658,7 +668,7 @@ private fun call(
                 state = state,
                 receiver = receiver.receiver,
                 positionalArguments = receiver.positionalArguments + positionalArguments,
-                namedArguments = mapOf()
+                namedArguments = receiver.namedArguments + namedArguments
             )
 
         is InterpreterShape -> {
@@ -899,7 +909,8 @@ internal class Loader(
                 val receiverInstructions = loadExpression(node.receiver)
                 val argumentInstructions = loadArguments(node)
                 val partialCall = PartialCall(
-                    positionalArgumentCount = node.positionalArguments.size
+                    positionalArgumentCount = node.positionalArguments.size,
+                    namedArgumentNames = node.namedArguments.map { argument -> argument.name }
                 )
                 return receiverInstructions.addAll(argumentInstructions).add(partialCall)
             }
