@@ -44,6 +44,11 @@ internal class InterpreterBuiltinFunction(
     val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
 ): InterpreterValue
 
+internal class InterpreterPartialCall(
+    val receiver: InterpreterValue,
+    val positionalArguments: List<InterpreterValue>
+) : InterpreterValue
+
 internal class InterpreterShape(
     val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
     val fields: Map<Identifier, InterpreterValue>
@@ -593,30 +598,63 @@ internal class Call(private val positionalArgumentCount: Int, private val namedA
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
         val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
-        val (state3, arguments) = state2.popTemporaries(positionalArgumentCount)
+        val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
         val (state4, receiver) = state3.popTemporary()
-        return when (receiver) {
-            is InterpreterFunction ->
-                receiver.parameterIds.zip(arguments).fold(
-                    state4.nextInstruction().enter(
-                        instructions = receiver.bodyInstructions,
-                        parentScopes = receiver.scopes
-                    ),
-                    { state, (parameterId, argument) ->
-                        state.storeLocal(parameterId, argument)
-                    }
-                )
+        return call(
+            state = state4,
+            receiver = receiver,
+            positionalArguments =  positionalArguments,
+            namedArguments =  namedArguments
+        )
+    }
+}
 
-            is InterpreterBuiltinFunction ->
-                receiver.func(state4.nextInstruction(), arguments)
+internal class PartialCall(private val positionalArgumentCount: Int): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, positionalArguments) = initialState.popTemporaries(positionalArgumentCount)
+        val (state3, receiver) = state2.popTemporary()
+        return state3.pushTemporary(InterpreterPartialCall(
+            receiver = receiver,
+            positionalArguments = positionalArguments
+        )).nextInstruction()
+    }
+}
 
-            is InterpreterShape -> {
-                val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
-                state4.pushTemporary(InterpreterShapeValue(fields = fieldValues)).nextInstruction()
-            }
+private fun call(
+    state: InterpreterState,
+    receiver: InterpreterValue,
+    positionalArguments: List<InterpreterValue>,
+    namedArguments: Map<Identifier, InterpreterValue>
+): InterpreterState {
+    return when (receiver) {
+        is InterpreterFunction ->
+            receiver.parameterIds.zip(positionalArguments).fold(
+                state.nextInstruction().enter(
+                    instructions = receiver.bodyInstructions,
+                    parentScopes = receiver.scopes
+                ),
+                { state, (parameterId, argument) ->
+                    state.storeLocal(parameterId, argument)
+                }
+            )
 
-            else -> throw Exception("cannot call: $receiver")
+        is InterpreterBuiltinFunction ->
+            receiver.func(state.nextInstruction(), positionalArguments)
+
+        is InterpreterPartialCall ->
+            call(
+                state = state,
+                receiver = receiver.receiver,
+                positionalArguments = receiver.positionalArguments + positionalArguments,
+                namedArguments = mapOf()
+            )
+
+        is InterpreterShape -> {
+            val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
+            state.pushTemporary(InterpreterShapeValue(fields = fieldValues)).nextInstruction()
         }
+
+        else -> throw Exception("cannot call: $receiver")
     }
 }
 
@@ -835,11 +873,7 @@ internal class Loader(
                     )
                 } else {
                     val receiverInstructions = loadExpression(node.receiver)
-                    val argumentInstructions = node.positionalArguments.flatMap { argument ->
-                        loadExpression(argument)
-                    } + node.namedArguments.flatMap { argument ->
-                        loadExpression(argument.expression)
-                    }
+                    val argumentInstructions = loadArguments(node)
                     val call = Call(
                         positionalArgumentCount = node.positionalArguments.size,
                         namedArgumentNames = node.namedArguments.map { argument -> argument.name }
@@ -849,7 +883,12 @@ internal class Loader(
             }
 
             override fun visit(node: PartialCallNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val receiverInstructions = loadExpression(node.receiver)
+                val argumentInstructions = loadArguments(node)
+                val partialCall = PartialCall(
+                    positionalArgumentCount = node.positionalArguments.size
+                )
+                return receiverInstructions.addAll(argumentInstructions).add(partialCall)
             }
 
             override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
@@ -927,6 +966,14 @@ internal class Loader(
                 return instructions.toPersistentList()
             }
         })
+    }
+
+    private fun loadArguments(node: CallBaseNode): List<Instruction> {
+        return node.positionalArguments.flatMap { argument ->
+            loadExpression(argument)
+        } + node.namedArguments.flatMap { argument ->
+            loadExpression(argument.expression)
+        }
     }
 
     internal fun loadBlock(block: Block): PersistentList<Instruction> {

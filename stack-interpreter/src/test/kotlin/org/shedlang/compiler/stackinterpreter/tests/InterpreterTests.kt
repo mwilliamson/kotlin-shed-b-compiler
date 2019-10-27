@@ -1007,6 +1007,44 @@ class InterpreterTests {
     }
 
     @Test
+    fun partialCallCombinesPositionalArguments() {
+        val parameter1 = parameter("first")
+        val parameter2 = parameter("second")
+        val parameterReference1 = variableReference("first")
+        val parameterReference2 = variableReference("second")
+
+        val function = function(
+            name = "main",
+            parameters = listOf(parameter1, parameter2),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(BinaryOperator.SUBTRACT, parameterReference1, parameterReference2)
+                )
+            )
+        )
+        val functionReference = variableReference("main")
+        val call = call(
+            receiver = partialCall(
+                receiver = functionReference,
+                positionalArguments = listOf(literalInt(1))
+            ),
+            positionalArguments = listOf(literalInt(2))
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            parameterReference1.nodeId to parameter1,
+            parameterReference2.nodeId to parameter2
+        ))
+        val types = createTypes(expressionTypes = mapOf(parameterReference1.nodeId to IntType))
+
+        val loader = loader(references = references, types = types)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(-1))
+    }
+
+    @Test
     fun moduleCanBeImported() {
         val exportingModuleName = listOf(Identifier("Exporting"))
         val exportNode = export("x")
