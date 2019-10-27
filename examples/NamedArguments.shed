@@ -1,0 +1,14 @@
+// stdout:
+//   first: 1
+//   second: 2
+
+export main;
+
+fun main() !Io -> Unit {
+    printValues!(.first = "1", .second = "2");
+}
+
+fun printValues(.first: String, .second: String) !Io -> Unit {
+    print!("first: " + first + "\n");
+    print!("second: " + second + "\n");
+}
