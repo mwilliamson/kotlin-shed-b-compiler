@@ -36,9 +36,12 @@ internal class InterpreterTuple(val elements: List<InterpreterValue>): Interpret
 
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
-    val parameterIds: List<Int>,
+    val positionalParameterIds: List<Int>,
+    val namedParameterIds: List<NamedParameterId>,
     val scopes: PersistentList<ScopeReference>
-) : InterpreterValue
+) : InterpreterValue {
+    data class NamedParameterId(val name: Identifier, val variableId: Int)
+}
 
 internal class InterpreterBuiltinFunction(
     val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
@@ -348,12 +351,14 @@ internal class CreateTuple(private val length: Int): Instruction {
 
 internal class DeclareFunction(
     val bodyInstructions: PersistentList<Instruction>,
-    val parameterIds: List<Int>
+    val positionalParameterIds: List<Int>,
+    val namedParameterIds: List<InterpreterFunction.NamedParameterId>
 ): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(InterpreterFunction(
             bodyInstructions = bodyInstructions,
-            parameterIds = parameterIds,
+            positionalParameterIds = positionalParameterIds,
+            namedParameterIds = namedParameterIds,
             scopes = initialState.currentScopes()
         )).nextInstruction()
     }
@@ -627,8 +632,8 @@ private fun call(
     namedArguments: Map<Identifier, InterpreterValue>
 ): InterpreterState {
     return when (receiver) {
-        is InterpreterFunction ->
-            receiver.parameterIds.zip(positionalArguments).fold(
+        is InterpreterFunction -> {
+            val state2 = receiver.positionalParameterIds.zip(positionalArguments).fold(
                 state.nextInstruction().enter(
                     instructions = receiver.bodyInstructions,
                     parentScopes = receiver.scopes
@@ -637,6 +642,13 @@ private fun call(
                     state.storeLocal(parameterId, argument)
                 }
             )
+            receiver.namedParameterIds.fold(
+                state2,
+                { state, namedParameterId ->
+                    state.storeLocal(namedParameterId.variableId, namedArguments[namedParameterId.name]!!)
+                }
+            )
+        }
 
         is InterpreterBuiltinFunction ->
             receiver.func(state.nextInstruction(), positionalArguments)
@@ -866,8 +878,9 @@ internal class Loader(
 
                     return persistentListOf(
                         PushValue(InterpreterFunction(
-                            parameterIds = listOf(parameterId),
+                            positionalParameterIds = listOf(parameterId),
                             bodyInstructions = bodyInstructions,
+                            namedParameterIds = listOf(),
                             scopes = persistentListOf()
                         ))
                     )
@@ -1057,7 +1070,10 @@ internal class Loader(
         val bodyInstructions = loadBlock(node.body).add(Return)
         return DeclareFunction(
             bodyInstructions = bodyInstructions,
-            parameterIds = node.parameters.map { parameter -> parameter.nodeId }
+            positionalParameterIds = node.parameters.map { parameter -> parameter.nodeId },
+            namedParameterIds = node.namedParameters.map { parameter ->
+                InterpreterFunction.NamedParameterId(parameter.name, parameter.nodeId)
+            }
         )
     }
 
@@ -1088,7 +1104,8 @@ internal class Loader(
                                     FieldAccess(field.name),
                                     Return
                                 ),
-                                parameterIds = listOf(getParameterId),
+                                positionalParameterIds = listOf(getParameterId),
+                                namedParameterIds = listOf(),
                                 scopes = persistentListOf()
                             )
                         )

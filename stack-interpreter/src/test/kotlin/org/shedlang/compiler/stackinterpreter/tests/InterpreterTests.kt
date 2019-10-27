@@ -1007,6 +1007,46 @@ class InterpreterTests {
     }
 
     @Test
+    fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithNamedArguments() {
+        val firstParameter = parameter("first")
+        val secondParameter = parameter("second")
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val function = function(
+            name = "subtract",
+            namedParameters = listOf(firstParameter, secondParameter),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(
+                        BinaryOperator.SUBTRACT,
+                        firstReference,
+                        secondReference
+                    )
+                )
+            )
+        )
+        val functionReference = variableReference("main")
+        val call = call(
+            receiver = functionReference,
+            namedArguments = listOf(
+                callNamedArgument("first", literalInt(1)),
+                callNamedArgument("second", literalInt(2))
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            firstReference.nodeId to firstParameter,
+            secondReference.nodeId to secondParameter
+        ))
+
+        val loader = loader(references = references)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions)
+
+        assertThat(value, isInt(-1))
+    }
+
+    @Test
     fun partialCallCombinesPositionalArguments() {
         val parameter1 = parameter("first")
         val parameter2 = parameter("second")
