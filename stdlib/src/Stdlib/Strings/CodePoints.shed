@@ -20,15 +20,38 @@ export
 import Lists from Stdlib.Lists;
 import Options from Stdlib.Options;
 import Strings from Stdlib.Platform.Strings;
+import Sequences from Stdlib.Sequences;
 
 val codePointToHexString = Strings.codePointToHexString;
 val codePointToInt = Strings.codePointToInt;
 val codePointToString = Strings.codePointToString;
 val length = Strings.codePointCount;
-val flatMap = Strings.flatMapCodePoints;
 val foldLeft = Strings.foldLeftCodePoints;
 val replace = Strings.replace;
 val slice = Strings.substring;
+
+fun stringToSequence(value: String) -> Sequences.Sequence[CodePoint, Pure] {
+    stringToSequenceAtIndex(0, value)
+}
+
+fun stringToSequenceAtIndex(index: Int, value: String) -> Sequences.Sequence[CodePoint, Pure] {
+    Sequences.Sequence[CodePoint, Pure](
+        .next = fun () -> Sequences.SequenceIterator[CodePoint, Pure] {
+            val codePoint = Strings.codePointAt(index, value);
+            when (codePoint) {
+                is Options.None {
+                    Sequences.end
+                }
+                is Options.Some {
+                    Sequences.SequenceItem(
+                        .head = codePoint.value,
+                        .tail = stringToSequenceAtIndex(index + 1, value),
+                    )
+                }
+            }
+        },
+    )
+}
 
 fun dropLeft(count: Int, value: String) -> String {
     Strings.substring(count, length(value), value)
@@ -36,6 +59,14 @@ fun dropLeft(count: Int, value: String) -> String {
 
 fun first(value: String) -> Options.Option[CodePoint] {
     Strings.codePointAt(0, value)
+}
+
+fun flatMap(func: Fun (CodePoint) -> String, value: String) -> String {
+    Sequences.reduce(
+        fun (acc: String, codePoint: CodePoint) => acc + func(codePoint),
+        "",
+        stringToSequence(value),
+    )
 }
 
 fun isEmpty(value: String) -> Bool {
