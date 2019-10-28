@@ -26,7 +26,6 @@ val codePointToHexString = Strings.codePointToHexString;
 val codePointToInt = Strings.codePointToInt;
 val codePointToString = Strings.codePointToString;
 val length = Strings.codePointCount;
-val foldLeft = Strings.foldLeftCodePoints;
 val replace = Strings.replace;
 val slice = Strings.substring;
 
@@ -62,9 +61,17 @@ fun first(value: String) -> Options.Option[CodePoint] {
 }
 
 fun flatMap(func: Fun (CodePoint) -> String, value: String) -> String {
-    Sequences.reduce(
+    foldLeft(
         fun (acc: String, codePoint: CodePoint) => acc + func(codePoint),
         "",
+        value,
+    )
+}
+
+fun foldLeft[T](func: Fun (T, CodePoint) -> T, initial: T, value: String) -> T {
+    Sequences.reduce(
+        func,
+        initial,
         stringToSequence(value),
     )
 }

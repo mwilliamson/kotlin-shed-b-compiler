@@ -25,20 +25,6 @@ def code_point_count(string):
     return len(string)
 
 
-def flat_map_code_points(func, string):
-    result = io.StringIO()
-    for char in string:
-        result.write(func(char))
-    return result.getvalue()
-
-
-def fold_left_code_points(func, initial, string):
-    result = initial
-    for char in string:
-        result = func(result, char)
-    return result
-
-
 def repeat(string, times):
     return string * times
 

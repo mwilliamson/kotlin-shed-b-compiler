@@ -30,22 +30,6 @@ function codePointCount(string) {
     return BigInt(count);
 }
 
-function flatMapCodePoints(func, string) {
-    let result = "";
-    for (const char of string) {
-        result += func(char);
-    }
-    return result;
-}
-
-function foldLeftCodePoints(func, initial, string) {
-    let result = initial;
-    for (const char of string) {
-        result = func(result, char);
-    }
-    return result;
-}
-
 function repeat(string, times) {
     let result = "";
     for (let i = 0n; i < times; i++) {
@@ -67,8 +51,6 @@ exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
-exports.flatMapCodePoints = flatMapCodePoints;
-exports.foldLeftCodePoints = foldLeftCodePoints;
 exports.repeat = repeat;
 exports.replace = replace;
 exports.substring = substring;
