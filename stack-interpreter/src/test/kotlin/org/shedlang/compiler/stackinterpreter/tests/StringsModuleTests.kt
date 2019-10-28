@@ -13,6 +13,13 @@ class StringsModuleTests {
     private val moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))
 
     @Test
+    fun codePointCount() {
+        val value = call("codePointCount", listOf(InterpreterString("hello")))
+
+        assertThat(value, isInt(5))
+    }
+
+    @Test
     fun codePointToHexString() {
         val value = call("codePointToHexString", listOf(InterpreterCodePoint(42)))
 
