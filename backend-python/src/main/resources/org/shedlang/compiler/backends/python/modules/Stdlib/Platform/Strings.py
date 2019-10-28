@@ -25,10 +25,6 @@ def code_point_count(string):
     return len(string)
 
 
-def repeat(string, times):
-    return string * times
-
-
 def replace(old, new, string):
     return string.replace(old, new)
 

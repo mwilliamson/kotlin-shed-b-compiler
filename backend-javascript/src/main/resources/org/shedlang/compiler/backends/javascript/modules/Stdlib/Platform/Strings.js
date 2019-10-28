@@ -30,14 +30,6 @@ function codePointCount(string) {
     return BigInt(count);
 }
 
-function repeat(string, times) {
-    let result = "";
-    for (let i = 0n; i < times; i++) {
-      result += string;
-    }
-    return result;
-}
-
 function replace(old, replacement, string) {
     return string.split(old).join(replacement);
 }
@@ -51,6 +43,5 @@ exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
-exports.repeat = repeat;
 exports.replace = replace;
 exports.substring = substring;

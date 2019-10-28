@@ -111,7 +111,20 @@ fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {
 }
 
 fun padLeft(desiredLength: Int, padding: CodePoint, string: String) -> String {
-    Strings.repeat(codePointToString(padding), desiredLength - length(string)) + string
+    repeat(codePointToString(padding), desiredLength - length(string)) + string
+}
+
+fun repeat(value: String, times: Int) -> String {
+    repeat2("", value, times)
+}
+
+// TODO: tailrec
+fun repeat2(acc: String, value: String, times: Int) -> String {
+    if (times == 0) {
+        acc
+    } else {
+        repeat2(acc + value, value, times - 1)
+    }
 }
 
 fun startsWith(prefix: String, value: String) -> Bool {

@@ -140,56 +140,6 @@ private object StringsFirstCodePointValue: Callable() {
     }
 }
 
-private object StringsFlatMapCodePointsValue: Callable() {
-    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
-        val func = arguments[0]
-        val string = arguments[1].string()
-        if (string.isEmpty()) {
-            return EvaluationResult.pure(StringValue(""))
-        } else {
-            return EvaluationResult.pure(BinaryOperation(
-                BinaryOperator.ADD,
-                call(func, positionalArgumentExpressions = listOf(CodePointValue(string.codePointAt(0)))),
-                call(
-                    StringsFlatMapCodePointsValue,
-                    positionalArgumentValues = listOf(
-                        func,
-                        StringValue(string.substring(string.offsetByCodePoints(0, 1)))
-                    )
-                )
-            ))
-        }
-    }
-}
-
-private object StringsFoldLeftCodePointsValue: Callable() {
-    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
-        val func = arguments[0]
-        val initial = arguments[1]
-        val string = arguments[2].string()
-        if (string.isEmpty()) {
-            return EvaluationResult.pure(initial)
-        } else {
-            return EvaluationResult.pure(call(
-                StringsFoldLeftCodePointsValue,
-                positionalArgumentExpressions = listOf(
-                    func,
-                    call(func, positionalArgumentExpressions = listOf(initial, CodePointValue(string.codePointAt(0)))),
-                    StringValue(string.substring(string.offsetByCodePoints(0, 1)))
-                )
-            ))
-        }
-    }
-}
-
-private object StringsRepeatValue: Callable() {
-    override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
-        val string = arguments[0].string()
-        val times = arguments[1].int()
-        return EvaluationResult.pure(StringValue(string.repeat(times.intValueExact())))
-    }
-}
-
 private object StringsReplaceValue: Callable() {
     override fun call(arguments: Arguments, context: InterpreterContext): EvaluationResult<Expression> {
         throw UnsupportedOperationException("not implemented")
@@ -218,9 +168,6 @@ private val stringsModule = ModuleExpression(
         Identifier("codePointToString") to StringsCodePointToStringValue,
         Identifier("codePointCount") to StringsCodePointCountValue,
         Identifier("firstCodePoint") to StringsFirstCodePointValue,
-        Identifier("flatMapCodePoints") to StringsFlatMapCodePointsValue,
-        Identifier("foldLeftCodePoints") to StringsFoldLeftCodePointsValue,
-        Identifier("repeat") to StringsRepeatValue,
         Identifier("replace") to StringsReplaceValue,
         Identifier("substring") to StringsSubstringValue
     )
