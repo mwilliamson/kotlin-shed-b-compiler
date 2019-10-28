@@ -13,7 +13,6 @@ import java.io.File
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.nio.file.Path
-import java.nio.file.Paths
 
 data class TestProgram(
     val name: String,
@@ -105,15 +104,6 @@ private fun findTestFiles(): List<TestProgramSource> {
             return TestProgramSource.File(file, null)
         }
     }) + listOf(stdlibTestsSource)
-}
-
-private fun findRoot(): Path {
-    val rootFilenames = listOf("examples", "frontend")
-    var directory = Paths.get(System.getProperty("user.dir"))
-    while (!directory.toFile().list().toList().containsAll(rootFilenames)) {
-        directory = directory.parent
-    }
-    return directory
 }
 
 fun run(arguments: List<String>, workingDirectory: File?): ExecutionResult {

@@ -255,7 +255,7 @@ internal data class InterpreterState(
         )
     }
 
-    fun loadModule(moduleName: List<Identifier>): InterpreterValue {
+    fun loadModule(moduleName: List<Identifier>): InterpreterModule {
         val module = modules[moduleName]
         if (module == null) {
             throw Exception("module missing: ${formatModuleName(moduleName)}")
@@ -650,7 +650,7 @@ internal class PartialCall(
     }
 }
 
-private fun call(
+internal fun call(
     state: InterpreterState,
     receiver: InterpreterValue,
     positionalArguments: List<InterpreterValue>,

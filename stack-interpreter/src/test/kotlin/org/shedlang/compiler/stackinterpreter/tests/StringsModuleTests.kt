@@ -1,11 +1,14 @@
 package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.throws
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.backends.tests.findRoot
+import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.moduleType
 
@@ -40,6 +43,24 @@ class StringsModuleTests {
         assertThat(value, isString("*"))
     }
 
+    @Test
+    fun firstCodePoint_whenStringIsEmptyThenNoneIsReturned() {
+        val value = call("firstCodePoint", listOf(InterpreterString("")))
+
+        assertThat(
+            { (value as InterpreterShapeValue).field(Identifier("value")) },
+            throws<Exception>()
+        )
+    }
+
+    @Test
+    fun firstCodePoint_whenStringIsNotEmptyThenFirstCodePointIsReturned() {
+        val value = call("firstCodePoint", listOf(InterpreterString("hello")))
+
+        val codePoint = (value as InterpreterShapeValue).field(Identifier("value"))
+        assertThat(codePoint, isCodePoint('h'))
+    }
+
     private fun call(functionName: String, arguments: List<InterpreterValue>): InterpreterValue {
         val instructions = persistentListOf(
             InitModule(moduleName),
@@ -49,7 +70,12 @@ class StringsModuleTests {
             .addAll(arguments.reversed().map { argument -> PushValue(argument) })
             .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
 
-        val moduleSet = ModuleSet(listOf(
+        val optionsModules = readPackage(
+            base = findRoot().resolve("stdlib"),
+            name = listOf(Identifier("Stdlib"), Identifier("Options"))
+        ).modules
+
+        val moduleSet = ModuleSet(optionsModules + listOf(
             Module.Native(name = moduleName, type = moduleType())
         ))
         val image = loadModuleSet(moduleSet)

@@ -12,6 +12,10 @@ internal fun isBool(value: Boolean): Matcher<InterpreterValue> {
     return cast(has(InterpreterBool::value, equalTo(value)))
 }
 
+internal fun isCodePoint(value: Char): Matcher<InterpreterValue> {
+    return isCodePoint(value.toInt())
+}
+
 internal fun isCodePoint(value: Int): Matcher<InterpreterValue> {
     return cast(has(InterpreterCodePoint::value, equalTo(value)))
 }
