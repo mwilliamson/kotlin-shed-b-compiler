@@ -4,7 +4,7 @@ from .. import Options
 
 def code_point_at(index, string):
     if index < len(string):
-        return Options.some(string[0])
+        return Options.some(string[index])
     else:
         return Options.none
 
