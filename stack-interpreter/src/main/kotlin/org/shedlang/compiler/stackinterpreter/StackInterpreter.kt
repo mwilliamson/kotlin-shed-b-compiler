@@ -263,6 +263,10 @@ internal data class InterpreterState(
         return image.moduleInitialisation(moduleName)
     }
 
+    fun isModuleInitialised(moduleName: List<Identifier>): Boolean {
+        return modules.containsKey(moduleName)
+    }
+
     fun enterModuleScope(instructions: List<Instruction>): InterpreterState {
         return enter(instructions = instructions, parentScopes = persistentListOf(defaultScope))
     }
@@ -575,9 +579,15 @@ internal class LoadLocal(private val variableId: Int): Instruction {
 
 internal class InitModule(private val moduleName: List<Identifier>): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.nextInstruction().enterModuleScope(
-            instructions = initialState.moduleInitialisation(moduleName)
-        )
+        val state2 = initialState.nextInstruction()
+
+        return if (initialState.isModuleInitialised(moduleName)) {
+            state2
+        } else {
+            state2.enterModuleScope(
+                instructions = initialState.moduleInitialisation(moduleName)
+            )
+        }
     }
 }
 
