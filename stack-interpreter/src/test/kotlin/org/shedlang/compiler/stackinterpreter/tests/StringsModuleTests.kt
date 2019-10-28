@@ -14,20 +14,32 @@ class StringsModuleTests {
 
     @Test
     fun codePointToHexString() {
+        val value = call("codePointToHexString", listOf(InterpreterCodePoint(42)))
+
+        assertThat(value, isString("2A"))
+    }
+
+    @Test
+    fun codePointToInt() {
+        val value = call("codePointToInt", listOf(InterpreterCodePoint(42)))
+
+        assertThat(value, isInt(42))
+    }
+
+    private fun call(functionName: String, arguments: List<InterpreterValue>): InterpreterValue {
         val instructions = persistentListOf(
             InitModule(moduleName),
             LoadModule(moduleName),
-            FieldAccess(Identifier("codePointToHexString")),
-            PushValue(InterpreterCodePoint(42)),
-            Call(positionalArgumentCount = 1, namedArgumentNames = listOf())
+            FieldAccess(Identifier(functionName))
         )
+            .addAll(arguments.reversed().map { argument -> PushValue(argument) })
+            .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
+
         val moduleSet = ModuleSet(listOf(
             Module.Native(name = moduleName, type = moduleType())
         ))
         val image = loadModuleSet(moduleSet)
 
-        val value = executeInstructions(instructions, image = image)
-
-        assertThat(value, isString("2A"))
+        return executeInstructions(instructions, image = image)
     }
 }

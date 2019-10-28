@@ -8,6 +8,11 @@ internal val stringsModule = createNativeModule(
         Identifier("codePointToHexString") to InterpreterBuiltinFunction { state, arguments ->
             val codePoint = (arguments[0] as InterpreterCodePoint).value
             state.pushTemporary(InterpreterString(codePoint.toString(16).toUpperCase()))
+        },
+
+        Identifier("codePointToInt") to InterpreterBuiltinFunction { state, arguments ->
+            val codePoint = (arguments[0] as InterpreterCodePoint).value
+            state.pushTemporary(InterpreterInt(codePoint.toBigInteger()))
         }
     )
 )
