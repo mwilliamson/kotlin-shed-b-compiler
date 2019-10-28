@@ -1,6 +1,7 @@
 package org.shedlang.compiler.stackinterpreter
 
 import org.shedlang.compiler.ast.Identifier
+import java.lang.Integer.min
 
 private val optionsModuleName = listOf(Identifier("Stdlib"), Identifier("Options"))
 
@@ -52,7 +53,17 @@ internal val stringsModule = createNativeModule(
             val old = (arguments[0] as InterpreterString).value
             val new = (arguments[1] as InterpreterString).value
             val value = (arguments[2] as InterpreterString).value
+            // TODO: handle code points
             state.pushTemporary(InterpreterString(value.replace(old, new)))
+        },
+
+        Identifier("substring") to InterpreterBuiltinFunction { state, arguments ->
+            val startIndex = (arguments[0] as InterpreterInt).value.intValueExact()
+            val endIndex = (arguments[1] as InterpreterInt).value.intValueExact()
+            val value = (arguments[2] as InterpreterString).value
+            // TODO: handle code points
+            val substring = value.substring(startIndex, min(endIndex, value.length))
+            state.pushTemporary(InterpreterString(substring))
         }
     )
 )

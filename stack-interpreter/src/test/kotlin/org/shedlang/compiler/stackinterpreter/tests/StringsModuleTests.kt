@@ -72,6 +72,17 @@ class StringsModuleTests {
         assertThat(value, isString("ad ad"))
     }
 
+    @Test
+    fun substring() {
+        val value = call("substring", listOf(
+            InterpreterInt(2.toBigInteger()),
+            InterpreterInt(4.toBigInteger()),
+            InterpreterString("hello")
+        ))
+
+        assertThat(value, isString("ll"))
+    }
+
     private fun call(functionName: String, arguments: List<InterpreterValue>): InterpreterValue {
         val instructions = persistentListOf(
             InitModule(moduleName),
