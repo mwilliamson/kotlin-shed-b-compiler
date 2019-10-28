@@ -13,6 +13,14 @@ internal val stringsModule = createNativeModule(
         Identifier("codePointToInt") to InterpreterBuiltinFunction { state, arguments ->
             val codePoint = (arguments[0] as InterpreterCodePoint).value
             state.pushTemporary(InterpreterInt(codePoint.toBigInteger()))
+        },
+
+        Identifier("codePointToString") to InterpreterBuiltinFunction { state, arguments ->
+            val codePoint = (arguments[0] as InterpreterCodePoint).value
+            val builder = StringBuilder()
+            builder.appendCodePoint(codePoint)
+            state.pushTemporary(InterpreterString(builder.toString()))
         }
+
     )
 )

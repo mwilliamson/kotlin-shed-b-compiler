@@ -26,6 +26,13 @@ class StringsModuleTests {
         assertThat(value, isInt(42))
     }
 
+    @Test
+    fun codePointToString() {
+        val value = call("codePointToString", listOf(InterpreterCodePoint(42)))
+
+        assertThat(value, isString("*"))
+    }
+
     private fun call(functionName: String, arguments: List<InterpreterValue>): InterpreterValue {
         val instructions = persistentListOf(
             InitModule(moduleName),
