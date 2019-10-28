@@ -61,6 +61,17 @@ class StringsModuleTests {
         assertThat(value, isString("*"))
     }
 
+    @Test
+    fun replace() {
+        val value = call("replace", listOf(
+            InterpreterString("bc"),
+            InterpreterString("d"),
+            InterpreterString("abc abc")
+        ))
+
+        assertThat(value, isString("ad ad"))
+    }
+
     private fun call(functionName: String, arguments: List<InterpreterValue>): InterpreterValue {
         val instructions = persistentListOf(
             InitModule(moduleName),

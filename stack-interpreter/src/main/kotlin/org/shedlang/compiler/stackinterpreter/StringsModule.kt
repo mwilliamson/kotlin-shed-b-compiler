@@ -46,6 +46,13 @@ internal val stringsModule = createNativeModule(
             val builder = StringBuilder()
             builder.appendCodePoint(codePoint)
             state.pushTemporary(InterpreterString(builder.toString()))
+        },
+
+        Identifier("replace") to InterpreterBuiltinFunction { state, arguments ->
+            val old = (arguments[0] as InterpreterString).value
+            val new = (arguments[1] as InterpreterString).value
+            val value = (arguments[2] as InterpreterString).value
+            state.pushTemporary(InterpreterString(value.replace(old, new)))
         }
     )
 )
