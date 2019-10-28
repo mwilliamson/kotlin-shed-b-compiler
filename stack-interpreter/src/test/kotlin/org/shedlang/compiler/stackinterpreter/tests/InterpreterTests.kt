@@ -2,15 +2,11 @@ package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackinterpreter.*
@@ -1244,60 +1240,6 @@ class InterpreterTests {
 
         assertThat(world.stdout, equalTo("hello"))
     }
-
-    private fun evaluateBlock(block: Block, references: ResolvedReferences): InterpreterValue {
-        val instructions = loader(references = references).loadBlock(block)
-        return executeInstructions(instructions)
-    }
-
-    private fun evaluateExpression(node: ExpressionNode, types: Types = EMPTY_TYPES): InterpreterValue {
-        val instructions = loader(types = types).loadExpression(node)
-        return executeInstructions(instructions)
-    }
-
-    private fun executeInstructions(
-        instructions: PersistentList<Instruction>,
-        image: Image = Image.EMPTY,
-        variables: Map<Int, InterpreterValue> = mapOf()
-    ): InterpreterValue {
-        val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(
-            instructions,
-            image = image,
-            defaultVariables = variables,
-            world = NullWorld
-        )
-        return finalState.popTemporary().second
-    }
-
-    private fun loader(
-        inspector: CodeInspector = SimpleCodeInspector(),
-        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
-        types: Types = EMPTY_TYPES
-    ): Loader {
-        return Loader(inspector = inspector, references = references, types = types)
-    }
-
-    private fun isBool(value: Boolean): Matcher<InterpreterValue> {
-        return cast(has(InterpreterBool::value, equalTo(value)))
-    }
-
-    private fun isCodePoint(value: Int): Matcher<InterpreterValue> {
-        return cast(has(InterpreterCodePoint::value, equalTo(value)))
-    }
-
-    private fun isInt(value: Int): Matcher<InterpreterValue> {
-        return cast(has(InterpreterInt::value, equalTo(value.toBigInteger())))
-    }
-
-    private fun isString(value: String): Matcher<InterpreterValue> {
-        return cast(has(InterpreterString::value, equalTo(value)))
-    }
-
-    private fun isSymbol(value: Symbol): Matcher<InterpreterValue> {
-        return cast(has(InterpreterSymbol::value, equalTo(value)))
-    }
-
-    private val isUnit = cast(equalTo(InterpreterUnit))
 
     private fun stubbedModule(
         name: List<Identifier>,

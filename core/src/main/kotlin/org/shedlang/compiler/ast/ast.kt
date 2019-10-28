@@ -16,6 +16,10 @@ data class Identifier(val value: String) : Comparable<Identifier> {
     }
 }
 
+fun formatModuleName(moduleName: List<Identifier>): String {
+    return moduleName.joinToString(".") { part -> part.value }
+}
+
 fun Node.descendants(): List<Node> {
     return this.children.flatMap { child ->
         listOf(child) + child.descendants()

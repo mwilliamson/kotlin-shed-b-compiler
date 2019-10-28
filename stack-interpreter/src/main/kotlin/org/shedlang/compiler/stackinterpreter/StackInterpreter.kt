@@ -58,7 +58,7 @@ internal class InterpreterShape(
     val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue, InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
-        return fields[fieldName]!!
+        return fields.getValue(fieldName)
     }
 }
 
@@ -70,7 +70,7 @@ internal class InterpreterShapeValue(
     private val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue, InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
-        return fields[fieldName]!!
+        return fields.getValue(fieldName)
     }
 }
 
@@ -78,7 +78,7 @@ internal class InterpreterModule(
     private val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue, InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
-        return fields[fieldName]!!
+        return fields.getValue(fieldName)
     }
 }
 
@@ -256,7 +256,12 @@ internal data class InterpreterState(
     }
 
     fun loadModule(moduleName: List<Identifier>): InterpreterValue {
-        return modules[moduleName]!!
+        val module = modules[moduleName]
+        if (module == null) {
+            throw Exception("module missing: ${formatModuleName(moduleName)}")
+        } else {
+            return module
+        }
     }
 
     fun moduleInitialisation(moduleName: List<Identifier>): List<Instruction> {
@@ -704,7 +709,7 @@ internal fun loadModuleSet(moduleSet: ModuleSet): Image {
     return Image(moduleSet.modules.associate { module ->
         val instructions = when (module) {
             is Module.Shed -> loadModule(module)
-            else -> throw NotImplementedError()
+            else -> loadNativeModule(module.name)
         }
         module.name to instructions
     })
