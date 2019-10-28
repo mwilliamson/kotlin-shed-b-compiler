@@ -2,6 +2,12 @@ import io
 
 from .. import Options
 
+def code_point_at(index, string):
+    if index < len(string):
+        return Options.some(string[0])
+    else:
+        return Options.none
+
 
 def code_point_to_hex_string(char):
     return format(ord(char), "X")
@@ -17,13 +23,6 @@ def code_point_to_string(char):
 
 def code_point_count(string):
     return len(string)
-
-
-def first_code_point(string):
-    if len(string) == 0:
-        return Options.none
-    else:
-        return Options.some(string[0])
 
 
 def flat_map_code_points(func, string):

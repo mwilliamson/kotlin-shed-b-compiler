@@ -1,6 +1,15 @@
 "use strict";
 var Options = require("../Options");
 
+function codePointAt(index, string) {
+    index = Number(index);
+    if (index < string.length) {
+        return Options.some(String.fromCodePoint(string.codePointAt(index)))
+    } else {
+        return Options.none;
+    }
+}
+
 function codePointToHexString(char) {
     return char.codePointAt(0).toString(16).toUpperCase();
 }
@@ -19,14 +28,6 @@ function codePointCount(string) {
         count++;
     }
     return BigInt(count);
-}
-
-function firstCodePoint(string) {
-    if (string.length === 0) {
-        return Options.none;
-    } else {
-        return Options.some(String.fromCodePoint(string.codePointAt(0)))
-    }
 }
 
 function flatMapCodePoints(func, string) {
@@ -61,11 +62,11 @@ function substring(startIndex, endIndex, string) {
     return string.substring(Number(startIndex), Number(endIndex));
 }
 
+exports.codePointAt = codePointAt;
 exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
-exports.firstCodePoint = firstCodePoint;
 exports.flatMapCodePoints = flatMapCodePoints;
 exports.foldLeftCodePoints = foldLeftCodePoints;
 exports.repeat = repeat;

@@ -16,6 +16,24 @@ class StringsModuleTests {
     private val moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))
 
     @Test
+    fun codePointAt_whenStringIsBeforeEndOfStringThenCodePointIsReturned() {
+        val value = call("codePointAt", listOf(InterpreterInt(4.toBigInteger()), InterpreterString("hello")))
+
+        val codePoint = (value as InterpreterShapeValue).field(Identifier("value"))
+        assertThat(codePoint, isCodePoint('o'))
+    }
+
+    @Test
+    fun codePointAt_whenIndexIsAfterEndOfStringThenNoneIsReturned() {
+        val value = call("codePointAt", listOf(InterpreterInt(5.toBigInteger()), InterpreterString("hello")))
+
+        assertThat(
+            { (value as InterpreterShapeValue).field(Identifier("value")) },
+            throws<Exception>()
+        )
+    }
+
+    @Test
     fun codePointCount() {
         val value = call("codePointCount", listOf(InterpreterString("hello")))
 
@@ -43,32 +61,14 @@ class StringsModuleTests {
         assertThat(value, isString("*"))
     }
 
-    @Test
-    fun firstCodePoint_whenStringIsEmptyThenNoneIsReturned() {
-        val value = call("firstCodePoint", listOf(InterpreterString("")))
-
-        assertThat(
-            { (value as InterpreterShapeValue).field(Identifier("value")) },
-            throws<Exception>()
-        )
-    }
-
-    @Test
-    fun firstCodePoint_whenStringIsNotEmptyThenFirstCodePointIsReturned() {
-        val value = call("firstCodePoint", listOf(InterpreterString("hello")))
-
-        val codePoint = (value as InterpreterShapeValue).field(Identifier("value"))
-        assertThat(codePoint, isCodePoint('h'))
-    }
-
     private fun call(functionName: String, arguments: List<InterpreterValue>): InterpreterValue {
         val instructions = persistentListOf(
             InitModule(moduleName),
             LoadModule(moduleName),
             FieldAccess(Identifier(functionName))
         )
-            .addAll(arguments.reversed().map { argument -> PushValue(argument) })
-            .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
+            .addAll(arguments.map { argument -> PushValue(argument) })
+            .add(Call(positionalArgumentCount = arguments.size, namedArgumentNames = listOf()))
 
         val optionsModules = readPackage(
             base = findRoot().resolve("stdlib"),
