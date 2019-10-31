@@ -34,7 +34,7 @@ fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
         }
         is SequenceItem {
             if (item.head) {
-                all!(item.tail)
+                tailrec all!(item.tail)
             } else {
                 false
             }
@@ -52,7 +52,7 @@ fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
             if (item.head) {
                 true
             } else {
-                any!(item.tail)
+                tailrec any!(item.tail)
             }
         }
     }
