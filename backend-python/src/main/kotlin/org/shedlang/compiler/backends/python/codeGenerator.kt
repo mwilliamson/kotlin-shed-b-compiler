@@ -171,6 +171,10 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
         override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode) = listOf(generateCodeForFunctionDeclaration(node, context))
         override fun visit(node: ValNode) = generateCode(node, context)
+
+        override fun visit(node: VarargsDeclarationNode): List<PythonStatementNode> {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

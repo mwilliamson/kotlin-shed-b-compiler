@@ -14,6 +14,9 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
         override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionDeclarationNode) = typeCheckFunctionDeclaration(node, context)
         override fun visit(node: ValNode) = typeCheck(node, context)
+        override fun visit(node: VarargsDeclarationNode) {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

@@ -180,6 +180,8 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
         return parseFunctionDeclaration(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_VAL)) {
         return parseVal(tokens)
+    } else if (tokens.isNext(TokenType.KEYWORD_VARARGS)) {
+        return parseVarargsDeclaration(tokens)
     } else {
         throw UnexpectedTokenException(
             expected = "module statement",
@@ -364,6 +366,27 @@ private fun parseUnionMember(
             source = source
         )
     }
+}
+
+private fun parseVarargsDeclaration(tokens: TokenIterator<TokenType>): VarargsDeclarationNode {
+    val source = tokens.location()
+
+    tokens.skip(TokenType.KEYWORD_VARARGS)
+
+    val name = parseIdentifier(tokens)
+
+    tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+    val cons = parseVariableReference(tokens)
+    tokens.skip(TokenType.SYMBOL_COMMA)
+    val nil = parseVariableReference(tokens)
+    tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+
+    return VarargsDeclarationNode(
+        name = name,
+        cons = cons,
+        nil = nil,
+        source = source
+    )
 }
 
 internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): FunctionDeclarationNode {

@@ -1082,6 +1082,10 @@ internal class Loader(
             override fun visit(node: ValNode): PersistentList<Instruction> {
                 return loadVal(node)
             }
+
+            override fun visit(node: VarargsDeclarationNode): PersistentList<Instruction> {
+                throw UnsupportedOperationException("not implemented")
+            }
         })
     }
 

@@ -111,6 +111,10 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCodeForFunctionDeclaration(node, context))
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
+
+        override fun visit(node: VarargsDeclarationNode): List<JavascriptStatementNode> {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

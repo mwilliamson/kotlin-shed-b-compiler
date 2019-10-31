@@ -246,6 +246,7 @@ interface ModuleStatementNode: StatementNode {
         fun visit(node: UnionNode): T
         fun visit(node: FunctionDeclarationNode): T
         fun visit(node: ValNode): T
+        fun visit(node: VarargsDeclarationNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -337,6 +338,25 @@ data class UnionMemberNode(
 ): ShapeBaseNode {
     override val children: List<Node>
         get() = staticParameters + extends + fields
+}
+
+data class VarargsDeclarationNode(
+    override val name: Identifier,
+    val cons: ReferenceNode,
+    val nil: ReferenceNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): ModuleStatementNode, VariableBindingNode {
+    override val children: List<Node>
+        get() = listOf(cons, nil)
+
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    override fun variableBinders(): List<VariableBindingNode> {
+        return listOf(this)
+    }
 }
 
 interface FunctionNode : Node {

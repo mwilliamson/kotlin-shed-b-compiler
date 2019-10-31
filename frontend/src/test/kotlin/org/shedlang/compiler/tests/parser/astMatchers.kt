@@ -161,6 +161,18 @@ internal fun isUnionMember(
     ))
 }
 
+internal fun isVarargsDeclaration(
+    name: Matcher<Identifier>,
+    cons: Matcher<ReferenceNode>,
+    nil: Matcher<ReferenceNode>
+): Matcher<ModuleStatementNode> {
+    return cast(allOf(
+        has(VarargsDeclarationNode::name, name),
+        has(VarargsDeclarationNode::cons, cons),
+        has(VarargsDeclarationNode::nil, nil)
+    ))
+}
+
 internal fun isFunctionDeclaration(name: Matcher<Identifier>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionDeclarationNode::name, name))
 }
