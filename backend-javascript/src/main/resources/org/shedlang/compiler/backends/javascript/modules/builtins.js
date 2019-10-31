@@ -29,10 +29,21 @@ function declareShape(name, fields) {
     return shape;
 }
 
+function varargs(cons, nil) {
+    return (...args) => {
+        let result = nil;
+        for (let index = args.length; index --> 0;) {
+            result = cons(args[index], result);
+        }
+        return result;
+    };
+}
+
 module.exports = {
     declareShape: declareShape,
 
     intToString: intToString,
     list: list,
     print: print,
+    varargs: varargs,
 };

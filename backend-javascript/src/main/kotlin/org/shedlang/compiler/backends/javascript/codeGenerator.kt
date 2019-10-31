@@ -111,10 +111,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode): List<JavascriptStatementNode> = listOf(generateCodeForFunctionDeclaration(node, context))
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
-
-        override fun visit(node: VarargsDeclarationNode): List<JavascriptStatementNode> {
-            throw UnsupportedOperationException("not implemented")
-        }
+        override fun visit(node: VarargsDeclarationNode) = listOf(generateCodeForVarargsDeclaration(node, context))
     })
 }
 
@@ -200,6 +197,22 @@ private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext
             source = source
         )
     ) + node.members.map { member -> generateCodeForShape(member, context) }
+}
+
+private fun generateCodeForVarargsDeclaration(node: VarargsDeclarationNode, context: CodeGenerationContext): JavascriptStatementNode {
+    val source = NodeSource(node)
+    return javascriptConst(
+        name = generateName(node.name),
+        expression = JavascriptFunctionCallNode(
+            function = JavascriptVariableReferenceNode("\$shed.varargs", source = source),
+            arguments = listOf(
+                generateCodeForReferenceNode(node.cons),
+                generateCodeForReferenceNode(node.nil)
+            ),
+            source = source
+        ),
+        source = source
+    )
 }
 
 private fun generateCodeForFunctionDeclaration(node: FunctionDeclarationNode, context: CodeGenerationContext): JavascriptFunctionDeclarationNode {

@@ -169,6 +169,32 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun varargsCallsVarargsFunction() {
+        val consReference = variableReference("cons")
+        val consDeclaration = declaration("cons")
+        val nilReference = variableReference("nil")
+        val nilDeclaration = declaration("nil")
+        val shed = varargsDeclaration(
+            name = "list",
+            cons = consReference,
+            nil = nilReference
+        )
+
+        val context = context()
+        val nodes = generateCode(shed, context)
+
+        assertThat(nodes, isSequence(
+            isJavascriptConst(
+                isJavascriptVariableReference("list"),
+                isJavascriptFunctionCall(
+                    function = isJavascriptVariableReference("\$shed.varargs"),
+                    arguments = isSequence(isJavascriptVariableReference("cons"), isJavascriptVariableReference("nil"))
+                )
+            )
+        ))
+    }
+
+    @Test
     fun functionDeclarationAsModuleStatementGeneratesFunctionDeclaration() {
         assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
             generateCodeForModuleStatement(function).single()
