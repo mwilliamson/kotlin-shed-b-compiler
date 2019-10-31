@@ -8,7 +8,7 @@ import org.shedlang.compiler.tests.isIdentifier
 class ParseVarargsDeclarationTests {
     @Test
     fun canParseVarargsDeclaration() {
-        val source = "varargs list(cons, nil)"
+        val source = "varargs list(cons, nil);"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isVarargsDeclaration(
             name = isIdentifier("list"),

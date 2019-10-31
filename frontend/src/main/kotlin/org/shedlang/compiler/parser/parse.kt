@@ -380,6 +380,7 @@ private fun parseVarargsDeclaration(tokens: TokenIterator<TokenType>): VarargsDe
     tokens.skip(TokenType.SYMBOL_COMMA)
     val nil = parseVariableReference(tokens)
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+    tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
     return VarargsDeclarationNode(
         name = name,
