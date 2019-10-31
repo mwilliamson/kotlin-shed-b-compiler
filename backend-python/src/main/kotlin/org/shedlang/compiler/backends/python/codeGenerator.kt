@@ -292,11 +292,13 @@ private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext
 
 private fun generateCodeForVarargsDeclaration(node: VarargsDeclarationNode, context: CodeGenerationContext): List<PythonStatementNode> {
     val source = NodeSource(node)
+    val cons = generateExpressionCode(node.cons, context)
+    val nil = generateExpressionCode(node.nil, context)
     val assignment = assign(
         targetName = pythoniseName(node.name),
         expression = PythonFunctionCallNode(
             function = PythonVariableReferenceNode("_varargs", source = source),
-            arguments = listOf(generateCodeForReference(node.cons, context), generateCodeForReference(node.nil, context)),
+            arguments = listOf(cons.pureExpression(), nil.pureExpression()),
             keywordArguments = listOf(),
             source = source
         ),

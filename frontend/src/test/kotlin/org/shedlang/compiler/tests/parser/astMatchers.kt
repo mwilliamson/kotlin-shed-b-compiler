@@ -163,8 +163,8 @@ internal fun isUnionMember(
 
 internal fun isVarargsDeclaration(
     name: Matcher<Identifier>,
-    cons: Matcher<ReferenceNode>,
-    nil: Matcher<ReferenceNode>
+    cons: Matcher<ExpressionNode>,
+    nil: Matcher<ExpressionNode>
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(VarargsDeclarationNode::name, name),

@@ -299,8 +299,8 @@ private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, con
     val type = VarargsType(
         name = declaration.name,
         // TODO: check properly
-        cons = inferReferenceType(declaration.cons, context) as FunctionType,
-        nil = inferReferenceType(declaration.nil, context)
+        cons = inferType(declaration.cons, context) as FunctionType,
+        nil = inferType(declaration.nil, context)
     )
     context.addVariableType(declaration, type)
 }

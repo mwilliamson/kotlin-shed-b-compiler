@@ -342,8 +342,8 @@ data class UnionMemberNode(
 
 data class VarargsDeclarationNode(
     override val name: Identifier,
-    val cons: ReferenceNode,
-    val nil: ReferenceNode,
+    val cons: ExpressionNode,
+    val nil: ExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): ModuleStatementNode, VariableBindingNode {

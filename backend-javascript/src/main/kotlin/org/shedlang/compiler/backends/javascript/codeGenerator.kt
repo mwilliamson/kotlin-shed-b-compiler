@@ -206,8 +206,8 @@ private fun generateCodeForVarargsDeclaration(node: VarargsDeclarationNode, cont
         expression = JavascriptFunctionCallNode(
             function = JavascriptVariableReferenceNode("\$shed.varargs", source = source),
             arguments = listOf(
-                generateCodeForReferenceNode(node.cons),
-                generateCodeForReferenceNode(node.nil)
+                generateCode(node.cons, context),
+                generateCode(node.nil, context)
             ),
             source = source
         ),
