@@ -1,0 +1,34 @@
+// stdout:
+//   1
+//   2
+//   3
+
+export main;
+
+union List =
+    | Cons {
+        head: Int,
+        tail: List,
+    }
+    | Nil;
+
+val nil = Nil();
+
+fun cons(head: Int, tail: List) -> List {
+    Cons(.head = head, .tail = tail)
+}
+
+fun printInts(list: List) !Io -> Unit {
+    if (list is Cons) {
+        print!(intToString(list.head) + "\n");
+        printInts!(list.tail);
+    }
+}
+
+varargs list(cons, nil);
+
+fun main() !Io -> Unit {
+    val ints = list(1, 2, 3);
+    printInts!(ints);
+}
+
