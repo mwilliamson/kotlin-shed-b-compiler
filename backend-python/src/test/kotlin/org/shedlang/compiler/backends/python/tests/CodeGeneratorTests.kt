@@ -317,6 +317,37 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun varargsCallsVarargsFunction() {
+        val consReference = variableReference("cons")
+        val consDeclaration = declaration("cons")
+        val nilReference = variableReference("nil")
+        val nilDeclaration = declaration("nil")
+        val shed = varargsDeclaration(
+            name = "list",
+            cons = consReference,
+            nil = nilReference
+        )
+
+        val context = context(
+            references = mapOf(
+                consReference to consDeclaration,
+                nilReference to nilDeclaration
+            )
+        )
+        val nodes = generateModuleStatementCode(shed, context)
+
+        assertThat(nodes, isSequence(
+            isPythonAssignment(
+                "list",
+                isPythonFunctionCall(
+                    function = isPythonVariableReference("_varargs"),
+                    arguments = isSequence(isPythonVariableReference("cons"), isPythonVariableReference("nil"))
+                )
+            )
+        ))
+    }
+
+    @Test
     fun functionDeclarationAsModuleStatementGeneratesFunctionWithPythonisedName() {
         assertFunctionDeclarationGeneratesFunctionWithPythonisedName { function ->
             generateCodeForModuleStatement(function).single()

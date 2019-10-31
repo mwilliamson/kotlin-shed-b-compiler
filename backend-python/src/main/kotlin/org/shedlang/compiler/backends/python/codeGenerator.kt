@@ -171,10 +171,7 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
         override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)
         override fun visit(node: FunctionDeclarationNode) = listOf(generateCodeForFunctionDeclaration(node, context))
         override fun visit(node: ValNode) = generateCode(node, context)
-
-        override fun visit(node: VarargsDeclarationNode): List<PythonStatementNode> {
-            throw UnsupportedOperationException("not implemented")
-        }
+        override fun visit(node: VarargsDeclarationNode) = generateCodeForVarargsDeclaration(node, context)
     })
 }
 
@@ -291,6 +288,21 @@ private fun generateCodeForUnion(node: UnionNode, context: CodeGenerationContext
         source = source
     )
     return listOf(assignment) + node.members.map { member -> generateCodeForShape(member, context) }
+}
+
+private fun generateCodeForVarargsDeclaration(node: VarargsDeclarationNode, context: CodeGenerationContext): List<PythonStatementNode> {
+    val source = NodeSource(node)
+    val assignment = assign(
+        targetName = pythoniseName(node.name),
+        expression = PythonFunctionCallNode(
+            function = PythonVariableReferenceNode("_varargs", source = source),
+            arguments = listOf(generateCodeForReference(node.cons, context), generateCodeForReference(node.nil, context)),
+            keywordArguments = listOf(),
+            source = source
+        ),
+        source = source
+    )
+    return listOf(assignment)
 }
 
 private fun generateCodeForFunctionDeclaration(node: FunctionDeclarationNode, context: CodeGenerationContext): PythonFunctionNode {
@@ -1153,7 +1165,7 @@ internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationCon
     return node.accept(object : StaticExpressionNode.Visitor<PythonExpressionNode> {
         override fun visit(node: ReferenceNode): PythonExpressionNode {
             // TODO: test renaming
-            return PythonVariableReferenceNode(context.name(node), NodeSource(node))
+            return generateCodeForReference(node, context)
         }
 
         override fun visit(node: StaticFieldAccessNode): PythonExpressionNode {
@@ -1176,6 +1188,10 @@ internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationCon
             throw UnsupportedOperationException("not implemented")
         }
     })
+}
+
+private fun generateCodeForReference(node: ReferenceNode, context: CodeGenerationContext): PythonVariableReferenceNode {
+    return PythonVariableReferenceNode(context.name(node), NodeSource(node))
 }
 
 private fun isBuiltin(referent: VariableBindingNode, name: String) =

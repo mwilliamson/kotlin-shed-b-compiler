@@ -94,6 +94,7 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
             list,
             print,
             partial as _partial,
+            varargs as _varargs,
         )
     """.trimIndent()
 

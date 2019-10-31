@@ -15,3 +15,13 @@ def list(*args):
 _print = print
 def print(value):
     _print(value, end="")
+
+
+def varargs(cons, nil):
+    def f(*args):
+        result = nil
+        for arg in reversed(args):
+            result = cons(arg, result)
+        return result
+
+    return f
