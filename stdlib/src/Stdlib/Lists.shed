@@ -92,14 +92,13 @@ fun reverse[T](elements: List[T]) -> List[T] {
     reverse2(nil, elements)
 }
 
-// TODO: tailrec
 fun reverse2[T](acc: List[T], elements: List[T]) -> List[T] {
     when (elements) {
         is Nil {
             acc
         }
         is Cons {
-            reverse2(cons(elements.head, acc), elements.tail)
+            tailrec reverse2(cons(elements.head, acc), elements.tail)
         }
     }
 }
