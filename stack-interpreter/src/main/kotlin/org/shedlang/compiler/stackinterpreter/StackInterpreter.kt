@@ -656,7 +656,7 @@ internal class Call(
         val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
         val (state4, receiver) = state3.popTemporary()
         return call(
-            state = state4,
+            state = state4.nextInstruction(),
             receiver = receiver,
             positionalArguments =  positionalArguments,
             namedArguments =  namedArguments
@@ -690,7 +690,7 @@ internal fun call(
     return when (receiver) {
         is InterpreterFunction -> {
             val state2 = receiver.positionalParameterIds.zip(positionalArguments).fold(
-                state.nextInstruction().enter(
+                state.enter(
                     instructions = receiver.bodyInstructions,
                     parentScopes = receiver.scopes
                 ),
@@ -707,7 +707,7 @@ internal fun call(
         }
 
         is InterpreterBuiltinFunction ->
-            receiver.func(state.nextInstruction(), positionalArguments)
+            receiver.func(state, positionalArguments)
 
         is InterpreterPartialCall ->
             call(
@@ -719,7 +719,7 @@ internal fun call(
 
         is InterpreterShape -> {
             val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
-            state.pushTemporary(InterpreterShapeValue(fields = fieldValues)).nextInstruction()
+            state.pushTemporary(InterpreterShapeValue(fields = fieldValues))
         }
 
         else -> throw Exception("cannot call: $receiver")
@@ -1084,7 +1084,7 @@ internal class Loader(
         return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
                 val expressionInstructions = loadExpression(node.expression)
-                if (node.type == ExpressionStatementNode.Type.RETURN) {
+                if (node.type == ExpressionStatementNode.Type.RETURN || node.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
                     return expressionInstructions
                 } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
                     return expressionInstructions.add(Discard).add(PushValue(InterpreterUnit))

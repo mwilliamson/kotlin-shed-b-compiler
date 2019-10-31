@@ -1,3 +1,5 @@
+export main;
+
 import Lists from Stdlib.Lists;
 import Tests from Stdlib.Tests;
 
