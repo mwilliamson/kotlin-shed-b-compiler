@@ -41,6 +41,5 @@ internal fun createNativeModule(
 }
 
 private val nativeModules: Map<List<Identifier>, PersistentList<Instruction>> = mapOf(
-    listsModule,
     stringsModule
 )

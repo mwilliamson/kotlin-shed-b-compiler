@@ -479,25 +479,6 @@ data class LazyUnionType(
     override val members: List<Type> by getMembers
 }
 
-object ListConstructorType : Type {
-    override fun fieldType(fieldName: Identifier): Type? = null
-
-    override val shortDescription: String
-        get() = "ListConstructor"
-}
-val listTypeParameter = covariantTypeParameter("T")
-val listTypeShapeId = freshTypeId()
-val ListType = TypeFunction(
-    parameters = listOf(listTypeParameter),
-    type = LazyShapeType(
-        shapeId = listTypeShapeId,
-        name = Identifier("List"),
-        staticParameters = listOf(listTypeParameter),
-        staticArguments = listOf(listTypeParameter),
-        getFields = lazy({ mapOf<Identifier, Field>() })
-    )
-)
-
 fun functionType(
     staticParameters: List<StaticParameter> = listOf(),
     positionalParameters: List<Type> = listOf(),

@@ -40,8 +40,6 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
                 return inferConstructorCallType(node, receiverInnerType, typeFunctionInnerType, context)
             }
         }
-    } else if (receiverType is ListConstructorType) {
-        return inferListCall(node, context)
     } else if (receiverType is CastType) {
         return inferCastCall(node, context)
     } else if (receiverType is VarargsType) {
@@ -289,17 +287,6 @@ private fun checkArgumentTypes(
 
         return bindings
     }
-}
-
-private fun inferListCall(node: CallNode, context: TypeContext): Type {
-    // TODO: check other arguments
-    val typeParameter = covariantTypeParameter("T")
-    val constraints = TypeConstraintSolver(parameters = setOf(typeParameter))
-    for (argument in node.positionalArguments) {
-        val argumentType = inferType(argument, context)
-        constraints.coerce(argumentType, typeParameter)
-    }
-    return applyStatic(ListType, listOf(constraints.boundTypeFor(typeParameter)!!))
 }
 
 private fun inferCastCall(node: CallNode, context: TypeContext): Type {

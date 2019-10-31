@@ -18,6 +18,7 @@ export
     startsWith;
 
 import Lists from Stdlib.Lists;
+import @(.List as List) from Stdlib.Lists;
 import Options from Stdlib.Options;
 import Strings from Stdlib.Platform.Strings;
 import Sequences from Stdlib.Sequences;

@@ -1,6 +1,7 @@
 export testCases;
 
 import Lists from Stdlib.Lists;
+import @(.list as list) from Stdlib.Lists;
 import Matchers from Stdlib.Matchers;
 import Strings from Stdlib.Strings;
 import Tests from Stdlib.Tests;

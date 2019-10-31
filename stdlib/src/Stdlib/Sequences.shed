@@ -148,6 +148,7 @@ fun lazyMap[T, R, !E](func: Fun (T) !E -> R, sequence: Sequence[T, E]) -> Sequen
     )
 }
 
+// TODO: tailrec
 fun reduce[T, R, !E](func: Fun (R, T) !E -> R, initial: R, sequence: Sequence[T, E]) !E -> R {
     val item = sequence.next!();
     when (item) {

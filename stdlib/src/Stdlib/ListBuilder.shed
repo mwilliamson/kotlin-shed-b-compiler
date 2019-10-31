@@ -5,6 +5,7 @@ export
     toList;
 
 import Lists from .Lists;
+import @(.List as List) from Stdlib.Lists;
 import Sequences from .Sequences;
 
 union Builder[+T] =

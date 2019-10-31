@@ -19,7 +19,6 @@ private val coreBuiltins = listOf(
     builtinType("String", StringType),
     builtinType("CodePoint", CodePointType),
     builtinType("Bool", BoolType),
-    builtinType("List", ListType),
     builtinType("Symbol", AnySymbolType),
     builtinType("ShapeField", ShapeFieldTypeFunction),
 
@@ -58,7 +57,6 @@ internal val builtins = coreBuiltins + listOf(
     castBuiltin,
     Builtins.print,
     Builtins.intToString,
-    builtinVariable("list", ListConstructorType),
 
     Builtins.moduleName
 )

@@ -46,7 +46,7 @@ union Test =
     }
     | TestSuite {
         name: String,
-        tests: List[Test],
+        tests: Lists.List[Test],
     };
 
 union TestResult =
@@ -56,14 +56,14 @@ union TestResult =
     }
     | TestSuiteResult {
         name: String,
-        results: List[TestResult],
+        results: Lists.List[TestResult],
     };
 
 fun testCase(name: String, run: Fun () -> AssertionResult) -> TestCase {
     TestCase(.name = name, .run = run)
 }
 
-fun suite(name: String, tests: List[Test]) -> Test {
+fun suite(name: String, tests: Lists.List[Test]) -> Test {
     TestSuite(.name = name, .tests = tests)
 }
 
@@ -71,7 +71,7 @@ val greenCode = "\u{1B}[32m";
 val redCode = "\u{1B}[31m";
 val blackCode = "\u{1B}[39m";
 
-fun runTests(tests: List[Test]) !Io -> Int {
+fun runTests(tests: Lists.List[Test]) !Io -> Int {
     val results = Lists.map!(runTest ~ (.parent = Options.none), tests);
     print!("\n");
     Lists.forEach!(printFailures, results);
@@ -88,7 +88,7 @@ fun runTests(tests: List[Test]) !Io -> Int {
     }
 }
 
-fun countTestResults(results: List[TestResult]) -> TestCounts {
+fun countTestResults(results: Lists.List[TestResult]) -> TestCounts {
     Lists.reduce(
         fun (counts: TestCounts, result: TestResult) =>
             addTestCounts(counts, countTestResult(result)),

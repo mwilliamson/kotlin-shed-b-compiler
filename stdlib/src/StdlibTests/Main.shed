@@ -1,4 +1,4 @@
-import @(.flatten as flatten) from Stdlib.Lists;
+import Lists from Stdlib.Lists;
 import Tests from Stdlib.Tests;
 
 import JsonTests from .JsonTests;
@@ -8,8 +8,8 @@ import CodePointsTests from .Strings.CodePointsTests;
 import StringsTests from .StringsTests;
 
 fun main() !Io -> Int {
-    Tests.runTests!(flatten(list(
-        list(
+    Tests.runTests!(Lists.flatten(Lists.list(
+        Lists.list(
             JsonTests.testCases,
             OptionsTests.testCases,
             CodePointsTests.testCases,

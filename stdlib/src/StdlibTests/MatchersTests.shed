@@ -1,5 +1,6 @@
 export testCases;
 
+import @(.list as list) from Stdlib.Lists;
 import EqualityTests from .Matchers.EqualityTests;
 import TypeTests from .Matchers.TypeTests;
 

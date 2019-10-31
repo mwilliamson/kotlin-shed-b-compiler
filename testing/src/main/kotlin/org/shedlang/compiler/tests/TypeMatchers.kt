@@ -82,11 +82,6 @@ fun isMetaType(type: Matcher<Type>): Matcher<StaticValue> = cast(has(MetaType::t
 
 fun isEffectType(effect: Matcher<Effect>): Matcher<StaticValue> = cast(has(EffectType::effect, effect))
 
-fun isListType(elementType: Matcher<StaticValue>): Matcher<StaticValue> = isShapeType(
-    shapeId = equalTo(listTypeShapeId),
-    staticArguments = isSequence(elementType)
-)
-
 fun isTypeFunction(
     parameters: Matcher<List<StaticParameter>>,
     type: Matcher<Type> = anything

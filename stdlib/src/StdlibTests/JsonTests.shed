@@ -1,6 +1,8 @@
 export testCases;
 
 import Json from Stdlib.Json;
+import Lists from Stdlib.Lists;
+import @(.list as list, .List as List) from Stdlib.Lists;
 import M from Stdlib.Matchers;
 import Options from Stdlib.Options;
 import Tests from Stdlib.Tests;

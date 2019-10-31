@@ -24,11 +24,11 @@ export
 
 import ListBuilder from .ListBuilder;
 import Lists from .Lists;
+import @(.list as list, .List as List) from Stdlib.Lists;
 import Options from .Options;
 import Sequences from .Sequences;
 import Unfold from .Sequences.Unfold;
 import CodePoints from .Strings.CodePoints;
-
 
 union JsonValue =
     | JsonObject {

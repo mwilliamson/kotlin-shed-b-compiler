@@ -1,4 +1,9 @@
 export
+    List,
+    cons,
+    nil,
+    list,
+
     sequenceToList,
 
     all,
@@ -9,35 +14,69 @@ export
     reduce;
 
 import Sequences from .Sequences;
-import Lists from .Platform.Lists;
-
-val sequenceToList = Lists.sequenceToList;
 
 // TODO: use function composition
 
+union List[+T] =
+    | Cons[T] {
+        head: T,
+        tail: List[T],
+    }
+    | Nil;
+
+fun cons[T](head: T, tail: List[T]) -> List[T] {
+    Cons(.head = head, .tail = tail)
+}
+
+val nil = Nil();
+
+varargs list(cons, nil);
+
+fun listToSequence[T](list: List[T]) -> Sequences.Sequence[T, Pure] {
+    Sequences.Sequence[T, Pure](
+        .next = fun() =>
+            when (list) {
+                is Nil {
+                    Sequences.end
+                }
+                is Cons {
+                    Sequences.SequenceItem(.head = list.head, .tail = listToSequence(list.tail))
+                }
+            },
+    )
+}
+
+fun sequenceToList[T, !E](sequence: Sequences.Sequence[T, E]) !E -> List[T] {
+    reverse(Sequences.reduce!(
+        fun(acc: List[T], element: T) => cons(element, acc),
+        nil,
+        sequence,
+    ))
+}
+
 fun all(elements: List[Bool]) -> Bool {
-    Sequences.all(Lists.listToSequence(elements))
+    Sequences.all(listToSequence(elements))
 }
 
 fun any(elements: List[Bool]) -> Bool {
-    Sequences.any(Lists.listToSequence(elements))
+    Sequences.any(listToSequence(elements))
 }
 
 fun flatten[T](lists: List[List[T]]) -> List[T] {
-    Lists.sequenceToList(
+    sequenceToList(
         Sequences.flatten(
-            Sequences.lazyMap(fun (list: List[T]) => Lists.listToSequence(list), Lists.listToSequence(lists)),
+            Sequences.lazyMap(fun (list: List[T]) => listToSequence(list), listToSequence(lists)),
         ),
     )
 }
 
 fun forEach[T, !E](func: Fun (T) !E -> Unit, elements: List[T]) !E -> Unit {
-    Sequences.forEach!(func, Lists.listToSequence(elements))
+    Sequences.forEach!(func, listToSequence(elements))
 }
 
 fun map[T, R, !E](func: Fun (T) !E -> R, elements: List[T]) !E -> List[R] {
-    Lists.sequenceToList!(
-        Sequences.lazyMap(func, Lists.listToSequence(elements)),
+    sequenceToList!(
+        Sequences.lazyMap(func, listToSequence(elements)),
     )
 }
 
@@ -45,6 +84,22 @@ fun reduce[T, R, !E](func: Fun (R, T) !E -> R, initial: R, elements: List[T]) !E
     Sequences.reduce!(
         func,
         initial,
-        Lists.listToSequence(elements),
+        listToSequence(elements),
     )
+}
+
+fun reverse[T](elements: List[T]) -> List[T] {
+    reverse2(nil, elements)
+}
+
+// TODO: tailrec
+fun reverse2[T](acc: List[T], elements: List[T]) -> List[T] {
+    when (elements) {
+        is Nil {
+            acc
+        }
+        is Cons {
+            reverse2(cons(elements.head, acc), elements.tail)
+        }
+    }
 }
