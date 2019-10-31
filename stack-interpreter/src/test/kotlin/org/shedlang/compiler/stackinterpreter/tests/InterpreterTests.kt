@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
@@ -402,8 +403,13 @@ class InterpreterTests {
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType())
+            )
+        )
 
-        val loader = loader(inspector = inspector, references = references)
+        val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
             .addAll(loader.loadFunctionStatement(receiverDeclaration))
             .addAll(loader.loadExpression(node))
@@ -441,8 +447,13 @@ class InterpreterTests {
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType())
+            )
+        )
 
-        val loader = loader(inspector = inspector, references = references)
+        val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
             .addAll(loader.loadFunctionStatement(receiverDeclaration))
             .addAll(loader.loadExpression(node))
@@ -482,8 +493,13 @@ class InterpreterTests {
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType())
+            )
+        )
 
-        val loader = loader(inspector = inspector, references = references)
+        val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
             .addAll(loader.loadFunctionStatement(receiverDeclaration))
             .addAll(loader.loadExpression(fieldAccess))
@@ -520,8 +536,13 @@ class InterpreterTests {
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType())
+            )
+        )
 
-        val loader = loader(inspector = inspector, references = references)
+        val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
             .addAll(loader.loadFunctionStatement(receiverDeclaration))
             .addAll(loader.loadExpression(fieldAccess))
@@ -568,7 +589,12 @@ class InterpreterTests {
             firstReference.nodeId to firstTarget,
             secondReference.nodeId to secondTarget
         ))
-        val types = createTypes(expressionTypes = mapOf(firstReference.nodeId to IntType))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType()),
+                firstReference.nodeId to IntType
+            )
+        )
 
         val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(shapeDeclaration)
@@ -715,7 +741,12 @@ class InterpreterTests {
         val references = ResolvedReferencesMap(mapOf(
             shape2Reference.nodeId to shape2
         ))
-        val loader = loader(inspector = inspector, references = references)
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shape2Reference.nodeId to MetaType(shapeType())
+            )
+        )
+        val loader = loader(inspector = inspector, references = references, types = types)
         val instructions = loader.loadModuleStatement(unionDeclaration)
             .addAll(loader.loadExpression(node))
         val value = executeInstructions(instructions)
@@ -932,8 +963,13 @@ class InterpreterTests {
         val references = ResolvedReferencesMap(mapOf(
             functionReference.nodeId to function
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
 
-        val loader = loader(references = references)
+        val loader = loader(references = references, types = types)
         val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
         val value = executeInstructions(instructions)
 
@@ -951,8 +987,13 @@ class InterpreterTests {
         val references = ResolvedReferencesMap(mapOf(
             functionReference.nodeId to function
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
 
-        val loader = loader(references = references)
+        val loader = loader(references = references, types = types)
         val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
         val value = executeInstructions(instructions)
 
@@ -994,8 +1035,13 @@ class InterpreterTests {
             firstReference.nodeId to firstParameter,
             secondReference.nodeId to secondParameter
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
 
-        val loader = loader(references = references)
+        val loader = loader(references = references, types = types)
         val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
         val value = executeInstructions(instructions)
 
@@ -1034,8 +1080,13 @@ class InterpreterTests {
             firstReference.nodeId to firstParameter,
             secondReference.nodeId to secondParameter
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
 
-        val loader = loader(references = references)
+        val loader = loader(references = references, types = types)
         val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
         val value = executeInstructions(instructions)
 
@@ -1059,11 +1110,12 @@ class InterpreterTests {
             )
         )
         val functionReference = variableReference("main")
+        val partialCall = partialCall(
+            receiver = functionReference,
+            positionalArguments = listOf(literalInt(1))
+        )
         val call = call(
-            receiver = partialCall(
-                receiver = functionReference,
-                positionalArguments = listOf(literalInt(1))
-            ),
+            receiver = partialCall,
             positionalArguments = listOf(literalInt(2))
         )
         val references = ResolvedReferencesMap(mapOf(
@@ -1071,7 +1123,12 @@ class InterpreterTests {
             parameterReference1.nodeId to parameter1,
             parameterReference2.nodeId to parameter2
         ))
-        val types = createTypes(expressionTypes = mapOf(parameterReference1.nodeId to IntType))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                partialCall.nodeId to functionType(),
+                parameterReference1.nodeId to IntType
+            )
+        )
 
         val loader = loader(references = references, types = types)
         val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
@@ -1097,11 +1154,12 @@ class InterpreterTests {
             )
         )
         val functionReference = variableReference("main")
+        val partialCall = partialCall(
+            receiver = functionReference,
+            namedArguments = listOf(callNamedArgument("second", literalInt(2)))
+        )
         val call = call(
-            receiver = partialCall(
-                receiver = functionReference,
-                namedArguments = listOf(callNamedArgument("second", literalInt(2)))
-            ),
+            receiver = partialCall,
             namedArguments = listOf(callNamedArgument("first", literalInt(1)))
         )
         val references = ResolvedReferencesMap(mapOf(
@@ -1109,13 +1167,104 @@ class InterpreterTests {
             parameterReference1.nodeId to parameter1,
             parameterReference2.nodeId to parameter2
         ))
-        val types = createTypes(expressionTypes = mapOf(parameterReference1.nodeId to IntType))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                partialCall.nodeId to functionType(),
+                parameterReference1.nodeId to IntType
+            )
+        )
 
         val loader = loader(references = references, types = types)
         val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
         val value = executeInstructions(instructions)
 
         assertThat(value, isInt(-1))
+    }
+
+    @Nested
+    inner class VarargsTests {
+        private val headParameter = parameter("head")
+        private val tailParameter = parameter("tail")
+
+        private val headReference = variableReference("head")
+        private val tailReference = variableReference("tail")
+
+        private val varargsDeclaration = varargsDeclaration(
+            name = "tuple",
+            cons = functionExpression(
+                parameters = listOf(headParameter, tailParameter),
+                body = tupleNode(elements = listOf(headReference, tailReference))
+            ),
+            nil = literalUnit()
+        )
+
+        private val varargsReference = variableReference("tuple")
+
+        private val references = ResolvedReferencesMap(mapOf(
+            headReference.nodeId to headParameter,
+            tailReference.nodeId to tailParameter,
+            varargsReference.nodeId to varargsDeclaration
+        ))
+        private val types = createTypes(
+            expressionTypes = mapOf(varargsReference.nodeId to varargsType())
+        )
+
+        @Test
+        fun callingVarargsWithNoArgumentsCreatesNil() {
+            val call = call(
+                receiver = varargsReference,
+                positionalArguments = listOf()
+            )
+
+            val loader = loader(references = references, types = types)
+            val instructions = persistentListOf<Instruction>()
+                .addAll(loader.loadModuleStatement(varargsDeclaration))
+                .addAll(loader.loadExpression(call))
+            val value = executeInstructions(instructions)
+
+            assertThat(value, isUnit)
+        }
+
+        @Test
+        fun callingVarargsWithOneArgumentsCallsConsOnce() {
+            val call = call(
+                receiver = varargsReference,
+                positionalArguments = listOf(literalInt(42))
+            )
+
+            val loader = loader(references = references, types = types)
+            val instructions = persistentListOf<Instruction>()
+                .addAll(loader.loadModuleStatement(varargsDeclaration))
+                .addAll(loader.loadExpression(call))
+            val value = executeInstructions(instructions)
+
+            assertThat(value, isTuple(elements = isSequence(
+                isInt(42),
+                isUnit
+            )))
+        }
+
+        @Test
+        fun callingVarargsWithTwoArgumentsCallsConsTwice() {
+            val call = call(
+                receiver = varargsReference,
+                positionalArguments = listOf(literalInt(42), literalString("hello"))
+            )
+
+            val loader = loader(references = references, types = types)
+            val instructions = persistentListOf<Instruction>()
+                .addAll(loader.loadModuleStatement(varargsDeclaration))
+                .addAll(loader.loadExpression(call))
+            val value = executeInstructions(instructions)
+
+            assertThat(value, isTuple(elements = isSequence(
+                isInt(42),
+                isTuple(elements = isSequence(
+                    isString("hello"),
+                    isUnit
+                ))
+            )))
+        }
     }
 
     @Test
@@ -1207,8 +1356,13 @@ class InterpreterTests {
         val references = ResolvedReferencesMap(mapOf(
             functionReference.nodeId to Builtins.intToString
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
 
-        val loader = loader(references = references)
+        val loader = loader(references = references, types = types)
         val instructions = loader.loadExpression(call)
         val value = executeInstructions(instructions, variables = builtinVariables)
 
@@ -1227,8 +1381,13 @@ class InterpreterTests {
         val references = ResolvedReferencesMap(mapOf(
             functionReference.nodeId to Builtins.print
         ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
 
-        val loader = loader(references = references)
+        val loader = loader(references = references, types = types)
         val instructions = loader.loadExpression(call)
         val world = InMemoryWorld()
         executeInstructions(

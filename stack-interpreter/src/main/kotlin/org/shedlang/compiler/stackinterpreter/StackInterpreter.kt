@@ -53,6 +53,20 @@ internal class InterpreterPartialCall(
     val namedArguments: Map<Identifier, InterpreterValue>
 ) : InterpreterValue
 
+internal class InterpreterVarargs(
+    val cons: InterpreterValue,
+    val nil: InterpreterValue
+): InterpreterValue, InterpreterHasFields {
+    override fun field(fieldName: Identifier): InterpreterValue {
+        return when (fieldName.value) {
+            "cons" -> cons
+            "nil" -> nil
+            else -> throw UnsupportedOperationException("no such field: ${fieldName.value}")
+        }
+    }
+
+}
+
 internal class InterpreterShape(
     val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
     val fields: Map<Identifier, InterpreterValue>
@@ -352,6 +366,14 @@ internal object Discard: Instruction {
     }
 }
 
+internal object Swap: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, value1) = initialState.popTemporary()
+        val (state3, value2) = state2.popTemporary()
+        return state3.pushTemporary(value1).pushTemporary(value2).nextInstruction()
+    }
+}
+
 internal class CreateTuple(private val length: Int): Instruction {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, elements) = initialState.popTemporaries(length)
@@ -371,6 +393,15 @@ internal class DeclareFunction(
             namedParameterIds = namedParameterIds,
             scopes = initialState.currentScopes()
         )).nextInstruction()
+    }
+}
+
+internal object DeclareVarargs: Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, arguments) = initialState.popTemporaries(2)
+        val cons = arguments[0]
+        val nil = arguments[1]
+        return state2.pushTemporary(InterpreterVarargs(cons = cons, nil = nil)).nextInstruction()
     }
 }
 
@@ -909,6 +940,23 @@ internal class Loader(
                             scopes = persistentListOf()
                         ))
                     )
+                } else if (types.typeOfExpression(node.receiver) is VarargsType) {
+                    return loadExpression(node.receiver)
+                        .addAll(node.positionalArguments.flatMap { argument ->
+                            persistentListOf<Instruction>()
+                                .add(Duplicate)
+                                .add(FieldAccess(Identifier("cons")))
+                                .add(Swap)
+                                .addAll(loadExpression(argument))
+                                .add(Swap)
+                        })
+                        .add(FieldAccess(Identifier("nil")))
+                        .addAll((0 until node.positionalArguments.size).map {
+                            Call(
+                                positionalArgumentCount = 2,
+                                namedArgumentNames = listOf()
+                            )
+                        })
                 } else {
                     val receiverInstructions = loadExpression(node.receiver)
                     val argumentInstructions = loadArguments(node)
@@ -1084,7 +1132,7 @@ internal class Loader(
             }
 
             override fun visit(node: VarargsDeclarationNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return loadVarargsDeclaration(node)
             }
         })
     }
@@ -1179,6 +1227,13 @@ internal class Loader(
                     ).addAll(loadTarget(target))
                 }.flatten().toPersistentList().add(Discard)
         }
+    }
+
+    private fun loadVarargsDeclaration(node: VarargsDeclarationNode): PersistentList<Instruction> {
+        val consInstructions = loadExpression(node.cons)
+        val nilInstructions = loadExpression(node.nil)
+
+        return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(StoreLocal(node.nodeId))
     }
 
     private fun resolveReference(reference: ReferenceNode): Int {

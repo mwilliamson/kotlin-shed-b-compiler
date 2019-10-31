@@ -383,8 +383,8 @@ fun unionMember(
 
 fun varargsDeclaration(
     name: String,
-    cons: ReferenceNode,
-    nil: ReferenceNode
+    cons: ExpressionNode,
+    nil: ExpressionNode
 ) = VarargsDeclarationNode(
     name = Identifier(name),
     cons = cons,
@@ -566,6 +566,12 @@ fun unionType(
     name = Identifier(name),
     getMembers = lazy { members },
     staticArguments = listOf()
+)
+
+fun varargsType() = VarargsType(
+    name = Identifier("Varargs"),
+    cons = functionType(),
+    nil = UnitType
 )
 
 fun moduleType(fields: Map<String, Type> = mapOf()) = ModuleType(

@@ -32,4 +32,8 @@ internal fun isSymbol(value: Symbol): Matcher<InterpreterValue> {
     return cast(has(InterpreterSymbol::value, equalTo(value)))
 }
 
+internal fun isTuple(elements: Matcher<List<InterpreterValue>>): Matcher<InterpreterValue> {
+    return cast(has(InterpreterTuple::elements, elements))
+}
+
 internal val isUnit = cast(equalTo(InterpreterUnit))
