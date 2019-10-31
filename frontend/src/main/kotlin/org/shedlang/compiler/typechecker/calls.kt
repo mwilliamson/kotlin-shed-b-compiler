@@ -332,23 +332,25 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
     val typeParameters = type.cons.staticParameters.filterIsInstance<TypeParameter>()
     val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
 
-    val headParameterType = inferredTypeArguments[0]
-    val tailParameterType = inferredTypeArguments[1]
+    val headParameterType = type.cons.positionalParameters[0]
+    val tailParameterType = type.cons.positionalParameters[1]
 
     return node.positionalArguments.foldRight(type.nil) { argument, currentType ->
         val constraints = TypeConstraintSolver(
             parameters = inferredTypeArguments.toSet()
         )
-        if (!constraints.coerce(from = currentType, to = tailParameterType)) {
+        fun partialTypeMap(): StaticBindings = typeParameters.zip(inferredTypeArguments).toMap()
+
+        if (!constraints.coerce(from = currentType, to = replaceStaticValuesInType(tailParameterType, partialTypeMap()))) {
             throw CompilerError("failed to type-check varargs call", source = argument.source)
         }
 
         val argumentType = inferType(argument, context)
-        if (!constraints.coerce(from = argumentType, to = headParameterType)) {
+        if (!constraints.coerce(from = argumentType, to = replaceStaticValuesInType(headParameterType, partialTypeMap()))) {
             throw CompilerError("failed to type-check varargs call", source = argument.source)
         }
 
-        val typeMap = typeParameters.zip(inferredTypeArguments)
+        fun typeMap() = typeParameters.zip(inferredTypeArguments)
             .associate { (parameter, inferredArgument) ->
                 val boundType: StaticValue? = constraints.boundTypeFor(inferredArgument)
                 if (boundType == null) {
@@ -361,6 +363,6 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
                 }
             }
 
-        replaceStaticValuesInType(type.cons.returns, typeMap)
+        replaceStaticValuesInType(type.cons.returns, typeMap())
     }
 }
