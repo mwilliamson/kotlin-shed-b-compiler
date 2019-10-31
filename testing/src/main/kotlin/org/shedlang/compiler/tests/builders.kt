@@ -381,6 +381,17 @@ fun unionMember(
     source = anySource()
 )
 
+fun varargsDeclaration(
+    name: String,
+    cons: ReferenceNode,
+    nil: ReferenceNode
+) = VarargsDeclarationNode(
+    name = Identifier(name),
+    cons = cons,
+    nil = nil,
+    source = anySource()
+)
+
 fun typeParameter(
     name: String = "T",
     variance: Variance = Variance.INVARIANT

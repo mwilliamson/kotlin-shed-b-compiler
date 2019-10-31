@@ -14,9 +14,7 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
         override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionDeclarationNode) = typeCheckFunctionDeclaration(node, context)
         override fun visit(node: ValNode) = typeCheck(node, context)
-        override fun visit(node: VarargsDeclarationNode) {
-            throw UnsupportedOperationException("not implemented")
-        }
+        override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node, context)
     })
 }
 
@@ -294,6 +292,15 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         memberTypes.forEach { memberType -> memberType.fields }
         checkType(type, source = node.source)
     })
+}
+
+private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, context: TypeContext) {
+    val type = VarargsType(
+        name = declaration.name,
+        cons = inferReferenceType(declaration.cons, context),
+        nil = inferReferenceType(declaration.nil, context)
+    )
+    context.addVariableType(declaration, type)
 }
 
 internal fun typeCheckFunctionDeclaration(function: FunctionDeclarationNode, context: TypeContext) {

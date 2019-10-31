@@ -515,6 +515,15 @@ fun functionType(
 fun positionalFunctionType(parameters: List<Type>, returns: Type)
     = functionType(positionalParameters = parameters, returns = returns)
 
+data class VarargsType(val name: Identifier, val cons: Type, val nil: Type): Type {
+    override val shortDescription: String
+        get() = "varargs $name(${cons.shortDescription}, ${nil.shortDescription})"
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        return null
+    }
+}
+
 fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT)
 fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT)
 fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT)
