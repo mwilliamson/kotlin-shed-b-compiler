@@ -153,6 +153,12 @@ internal fun resolve(node: Node, context: ResolutionContext) {
             }
         }
 
+        is VarargsDeclarationNode -> {
+            resolve(node.cons, context)
+            resolve(node.nil, context)
+            context.initialise(node)
+        }
+
         is ValNode -> {
             resolve(node.expression, context)
             for (target in node.target.variableBinders()) {
