@@ -44,6 +44,8 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
         return inferListCall(node, context)
     } else if (receiverType is CastType) {
         return inferCastCall(node, context)
+    } else if (receiverType is VarargsType) {
+        return inferVarargsCall(node, receiverType, context)
     }
 
     return null
@@ -323,5 +325,42 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
             )
         }
         else -> throw NotImplementedError()
+    }
+}
+
+private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeContext): Type {
+    val typeParameters = type.cons.staticParameters.filterIsInstance<TypeParameter>()
+    val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
+
+    val headParameterType = inferredTypeArguments[0]
+    val tailParameterType = inferredTypeArguments[1]
+
+    return node.positionalArguments.foldRight(type.nil) { argument, currentType ->
+        val constraints = TypeConstraintSolver(
+            parameters = inferredTypeArguments.toSet()
+        )
+        if (!constraints.coerce(from = currentType, to = tailParameterType)) {
+            throw CompilerError("failed to type-check varargs call", source = argument.source)
+        }
+
+        val argumentType = inferType(argument, context)
+        if (!constraints.coerce(from = argumentType, to = headParameterType)) {
+            throw CompilerError("failed to type-check varargs call", source = argument.source)
+        }
+
+        val typeMap = typeParameters.zip(inferredTypeArguments)
+            .associate { (parameter, inferredArgument) ->
+                val boundType: StaticValue? = constraints.boundTypeFor(inferredArgument)
+                if (boundType == null) {
+                    throw CouldNotInferTypeParameterError(
+                        parameter = parameter,
+                        source = argument.source
+                    )
+                } else {
+                    parameter as StaticParameter to boundType
+                }
+            }
+
+        replaceStaticValuesInType(type.cons.returns, typeMap)
     }
 }

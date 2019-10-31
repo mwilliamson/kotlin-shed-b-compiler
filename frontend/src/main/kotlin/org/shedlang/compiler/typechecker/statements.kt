@@ -295,9 +295,11 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 }
 
 private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, context: TypeContext) {
+    // TODO: check other parts of function type (no effects, no other args, etc.)
     val type = VarargsType(
         name = declaration.name,
-        cons = inferReferenceType(declaration.cons, context),
+        // TODO: check properly
+        cons = inferReferenceType(declaration.cons, context) as FunctionType,
         nil = inferReferenceType(declaration.nil, context)
     )
     context.addVariableType(declaration, type)

@@ -515,7 +515,7 @@ fun functionType(
 fun positionalFunctionType(parameters: List<Type>, returns: Type)
     = functionType(positionalParameters = parameters, returns = returns)
 
-data class VarargsType(val name: Identifier, val cons: Type, val nil: Type): Type {
+data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Type): Type {
     override val shortDescription: String
         get() = "varargs $name(${cons.shortDescription}, ${nil.shortDescription})"
 

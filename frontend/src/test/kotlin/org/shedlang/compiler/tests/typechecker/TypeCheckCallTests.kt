@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleResult
@@ -842,5 +843,88 @@ class TypeCheckCallTests {
             typeContext.toTypes().discriminatorForCast(node),
             has(Discriminator::targetType, isType(member1))
         )
+    }
+
+    @Nested
+    inner class VarargsTests {
+        private val headTypeParameter = invariantTypeParameter("Head")
+        private val tailTypeParameter = invariantTypeParameter("Tail")
+
+        private val consType = functionType(
+            staticParameters = listOf(headTypeParameter, tailTypeParameter),
+            positionalParameters = listOf(headTypeParameter, tailTypeParameter),
+            returns = TupleType(elementTypes = listOf(headTypeParameter, tailTypeParameter))
+        )
+
+        private val varargsType = VarargsType(
+            name = Identifier("list"),
+            cons = consType,
+            nil = UnitType
+        )
+
+        private val receiverReference = variableReference("list")
+
+        @Test
+        fun varargsCallOfZeroArgumentsHasTypeOfNil() {
+            val node = call(receiver = receiverReference)
+
+            val typeContext = typeContext(
+                referenceTypes = mapOf(receiverReference to varargsType)
+            )
+            val type = inferCallType(node, typeContext)
+
+            assertThat(type, isUnitType)
+        }
+
+        @Test
+        fun varargsCallOfOneArgumentAppliesConsOnce() {
+            val argumentReference = variableReference("one")
+
+            val node = call(
+                receiver = receiverReference,
+                positionalArguments = listOf(argumentReference)
+            )
+
+            val typeContext = typeContext(
+                referenceTypes = mapOf(
+                    receiverReference to varargsType,
+                    argumentReference to IntType
+                )
+            )
+            val type = inferCallType(node, typeContext)
+
+            assertThat(type, isTupleType(elementTypes = isSequence(
+                isIntType,
+                isUnitType
+            )))
+        }
+
+        @Test
+        fun varargsCallOfTwoArgumentsAppliesConsTwice() {
+            val argumentReference1 = variableReference("one")
+            val argumentReference2 = variableReference("two")
+
+            val node = call(
+                receiver = receiverReference,
+                positionalArguments = listOf(argumentReference1, argumentReference2)
+            )
+
+            val typeContext = typeContext(
+                referenceTypes = mapOf(
+                    receiverReference to varargsType,
+                    argumentReference1 to IntType,
+                    argumentReference2 to StringType
+                )
+            )
+            val type = inferCallType(node, typeContext)
+
+            assertThat(type, isTupleType(elementTypes = isSequence(
+                isIntType,
+                isTupleType(elementTypes = isSequence(
+                    isStringType,
+                    isUnitType
+                ))
+            )))
+        }
     }
 }
