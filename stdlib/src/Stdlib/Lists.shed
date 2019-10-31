@@ -64,7 +64,7 @@ fun any(elements: List[Bool]) -> Bool {
 
 fun flatten[T](lists: List[List[T]]) -> List[T] {
     sequenceToList(
-        Sequences.flatten(
+        Sequences.lazyFlatten(
             Sequences.lazyMap(fun (list: List[T]) => listToSequence(list), listToSequence(lists)),
         ),
     )
