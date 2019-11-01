@@ -5,8 +5,10 @@ import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.Backend
-import org.shedlang.compiler.interpreter.fullyEvaluate
 import org.shedlang.compiler.readPackage
+import org.shedlang.compiler.stackinterpreter.RealWorld
+import org.shedlang.compiler.stackinterpreter.executeMain
+import org.shedlang.compiler.stackinterpreter.loadModuleSet
 import org.shedlang.compiler.typechecker.SourceError
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -32,10 +34,12 @@ object ShedCli {
             if (backend == null) {
                 return onErrorPrintAndExit {
                     val source = readPackage(base, arguments.mainModule)
-                    val result = fullyEvaluate(source, readMainModuleName(arguments.mainModule))
-                    // TODO: print stdout as it's generated
-                    print(result.stdout)
-                    result.exitCode
+                    val image = loadModuleSet(source)
+                    executeMain(
+                        mainModule = readMainModuleName(arguments.mainModule),
+                        image = image,
+                        world = RealWorld
+                    )
                 }
             } else {
                 compile(

@@ -17,7 +17,6 @@
         <module>core</module>
         <module>core-tests</module>
         <module>frontend</module>
-        <module>interpreter</module>
 	<module>stack-interpreter</module>
 	<module>testing</module>
     </modules>
