@@ -430,10 +430,6 @@ internal class BinaryBoolOperation(
     }
 }
 
-internal val BoolOr = BinaryBoolOperation { left, right ->
-    InterpreterBool(left || right)
-}
-
 internal val BoolEquals = BinaryBoolOperation { left, right ->
     InterpreterBool(left == right)
 }
@@ -578,6 +574,18 @@ internal class RelativeJumpIfFalse(private val size: Int): Instruction {
             state2.nextInstruction()
         } else {
             state2.relativeJump(size + 1)
+        }
+    }
+}
+
+internal class RelativeJumpIfTrue(private val size: Int): Instruction {
+    override fun run(initialState: InterpreterState): InterpreterState {
+        val (state2, value) = initialState.popTemporary()
+        val condition = (value as InterpreterBool).value
+        return if (condition) {
+            state2.relativeJump(size + 1)
+        } else {
+            state2.nextInstruction()
         }
     }
 }
@@ -895,7 +903,15 @@ internal class Loader(
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.OR -> when (types.typeOfExpression(node.left)) {
-                        BoolType -> BoolOr
+                        BoolType -> {
+                            val leftInstructions = loadExpression(node.left)
+                            val rightInstructions = loadExpression(node.right)
+                            return leftInstructions
+                                .add(Duplicate)
+                                .add(RelativeJumpIfTrue(rightInstructions.size + 1))
+                                .add(Discard)
+                                .addAll(rightInstructions)
+                        }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)

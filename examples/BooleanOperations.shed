@@ -4,6 +4,11 @@
 //   f false
 //   tf false
 //   tt true
+//   or
+//   ff false
+//   ft true
+//   t true
+//   t true
 
 export main;
 
@@ -13,6 +18,12 @@ fun main() !Io -> Unit {
     printBool!(f!() && t!());
     printBool!(t!() && f!());
     printBool!(t!() && t!());
+
+    print!("or\n");
+    printBool!(f!() || f!());
+    printBool!(f!() || t!());
+    printBool!(t!() || f!());
+    printBool!(t!() || t!());
 }
 
 fun t() !Io -> Bool {
