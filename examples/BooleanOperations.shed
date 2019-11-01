@@ -1,0 +1,30 @@
+// stdout:
+//   and
+//   f false
+//   f false
+//   tf false
+//   tt true
+
+export main;
+
+fun main() !Io -> Unit {
+    print!("and\n");
+    printBool!(f!() && f!());
+    printBool!(f!() && t!());
+    printBool!(t!() && f!());
+    printBool!(t!() && t!());
+}
+
+fun t() !Io -> Bool {
+    print!("t");
+    true
+}
+
+fun f() !Io -> Bool {
+    print!("f");
+    false
+}
+
+fun printBool(bool: Bool) !Io -> Unit {
+    print!(if (bool) { " true\n" } else { " false\n" });
+}
