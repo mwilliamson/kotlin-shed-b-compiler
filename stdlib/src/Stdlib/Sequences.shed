@@ -7,11 +7,11 @@ export
 
     all,
     any,
+    foldLeft,
     forEach,
     lazyFilter,
     lazyFlatten,
-    lazyMap,
-    reduce;
+    lazyMap;
 
 shape Sequence[T, !E] {
     next: Fun () !E -> SequenceIterator[T, E],
@@ -93,6 +93,19 @@ fun flatten2[T, !E](current: Sequence[T, E], rest: Sequence[Sequence[T, E], E]) 
     }
 }
 
+fun foldLeft[T, R, !E](func: Fun (R, T) !E -> R, initial: R, sequence: Sequence[T, E]) !E -> R {
+    val item = sequence.next!();
+    when (item) {
+        is SequenceEnd {
+            initial
+        }
+        is SequenceItem {
+            tailrec foldLeft!(func, func!(initial, item.head), item.tail)
+        }
+    }
+}
+
+
 fun forEach[T, !E](func: Fun (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
     val item = sequence.next!();
     when (item) {
@@ -147,16 +160,4 @@ fun lazyMap[T, R, !E](func: Fun (T) !E -> R, sequence: Sequence[T, E]) -> Sequen
             }
         }
     )
-}
-
-fun reduce[T, R, !E](func: Fun (R, T) !E -> R, initial: R, sequence: Sequence[T, E]) !E -> R {
-    val item = sequence.next!();
-    when (item) {
-        is SequenceEnd {
-            initial
-        }
-        is SequenceItem {
-            tailrec reduce!(func, func!(initial, item.head), item.tail)
-        }
-    }
 }

@@ -9,9 +9,9 @@ export
     all,
     any,
     flatten,
+    foldLeft,
     forEach,
-    map,
-    reduce;
+    map;
 
 import Sequences from .Sequences;
 
@@ -47,7 +47,7 @@ fun listToSequence[T](list: List[T]) -> Sequences.Sequence[T, Pure] {
 }
 
 fun sequenceToList[T, !E](sequence: Sequences.Sequence[T, E]) !E -> List[T] {
-    reverse(Sequences.reduce!(
+    reverse(Sequences.foldLeft!(
         fun(acc: List[T], element: T) => cons(element, acc),
         nil,
         sequence,
@@ -70,6 +70,14 @@ fun flatten[T](lists: List[List[T]]) -> List[T] {
     )
 }
 
+fun foldLeft[T, R, !E](func: Fun (R, T) !E -> R, initial: R, elements: List[T]) !E -> R {
+    Sequences.foldLeft!(
+        func,
+        initial,
+        listToSequence(elements),
+    )
+}
+
 fun forEach[T, !E](func: Fun (T) !E -> Unit, elements: List[T]) !E -> Unit {
     Sequences.forEach!(func, listToSequence(elements))
 }
@@ -77,14 +85,6 @@ fun forEach[T, !E](func: Fun (T) !E -> Unit, elements: List[T]) !E -> Unit {
 fun map[T, R, !E](func: Fun (T) !E -> R, elements: List[T]) !E -> List[R] {
     sequenceToList!(
         Sequences.lazyMap(func, listToSequence(elements)),
-    )
-}
-
-fun reduce[T, R, !E](func: Fun (R, T) !E -> R, initial: R, elements: List[T]) !E -> R {
-    Sequences.reduce!(
-        func,
-        initial,
-        listToSequence(elements),
     )
 }
 

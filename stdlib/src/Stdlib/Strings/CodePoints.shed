@@ -70,7 +70,7 @@ fun flatMap(func: Fun (CodePoint) -> String, value: String) -> String {
 }
 
 fun foldLeft[T](func: Fun (T, CodePoint) -> T, initial: T, value: String) -> T {
-    Sequences.reduce(
+    Sequences.foldLeft(
         func,
         initial,
         stringToSequence(value),
@@ -82,7 +82,7 @@ fun isEmpty(value: String) -> Bool {
 }
 
 fun join(separator: String, elements: List[String]) -> String {
-    Lists.reduce(
+    Lists.foldLeft(
         fun (text: String, element: String) -> String {
             if (text == "") {
                 element

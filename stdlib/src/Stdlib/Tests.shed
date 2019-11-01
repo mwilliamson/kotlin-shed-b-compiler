@@ -89,7 +89,7 @@ fun runTests(tests: Lists.List[Test]) !Io -> Int {
 }
 
 fun countTestResults(results: Lists.List[TestResult]) -> TestCounts {
-    Lists.reduce(
+    Lists.foldLeft(
         fun (counts: TestCounts, result: TestResult) =>
             addTestCounts(counts, countTestResult(result)),
         TestCounts(.failures = 0, .successes = 0),
