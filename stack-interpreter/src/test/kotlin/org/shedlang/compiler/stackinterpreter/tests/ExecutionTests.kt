@@ -1,7 +1,6 @@
 package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
-import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.Module
@@ -12,7 +11,9 @@ import org.shedlang.compiler.ast.ModuleStatementNode
 import org.shedlang.compiler.backends.tests.ExecutionResult
 import org.shedlang.compiler.backends.tests.TestProgram
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.stackinterpreter.*
+import org.shedlang.compiler.stackinterpreter.World
+import org.shedlang.compiler.stackinterpreter.executeMain
+import org.shedlang.compiler.stackinterpreter.loadModuleSet
 import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
@@ -34,24 +35,11 @@ class ExecutionTests {
                     val image = loadModuleSet(modules)
                     val mainFunction = findMainFunction(modules, testProgram)
                     val world = InMemoryWorld()
-                    val finalState = executeInstructions(
-                        persistentListOf(
-                            InitModule(testProgram.mainModule),
-                            LoadModule(testProgram.mainModule),
-                            FieldAccess(Identifier("main")),
-                            Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
-                        ),
+                    val exitCode = executeMain(
+                        mainModule = testProgram.mainModule,
                         image = image,
-                        defaultVariables = builtinVariables,
                         world = world
                     )
-
-                    val finalValue = finalState.popTemporary().second
-                    val exitCode = when (finalValue) {
-                        is InterpreterInt -> finalValue.value.toInt()
-                        is InterpreterUnit -> 0
-                        else -> throw Exception("final value was: $finalValue")
-                    }
 
                     val executionResult = ExecutionResult(
                         exitCode = exitCode,

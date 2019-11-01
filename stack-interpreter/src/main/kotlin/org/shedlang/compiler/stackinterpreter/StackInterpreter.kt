@@ -9,12 +9,18 @@ import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
-internal interface World {
+interface World {
     fun writeToStdout(value: String)
 }
 
 object NullWorld: World {
     override fun writeToStdout(value: String) {
+    }
+}
+
+object RealWorld: World {
+    override fun writeToStdout(value: String) {
+        print(value)
     }
 }
 
@@ -726,17 +732,17 @@ internal fun call(
     }
 }
 
-internal class Image(private val modules: Map<List<Identifier>, PersistentList<Instruction>>) {
+class Image internal constructor(private val modules: Map<List<Identifier>, PersistentList<Instruction>>) {
     companion object {
         val EMPTY = Image(modules = persistentMapOf())
     }
 
-    fun moduleInitialisation(name: List<Identifier>): List<Instruction> {
+    internal fun moduleInitialisation(name: List<Identifier>): List<Instruction> {
         return modules[name]!!
     }
 }
 
-internal fun loadModuleSet(moduleSet: ModuleSet): Image {
+fun loadModuleSet(moduleSet: ModuleSet): Image {
     return Image(moduleSet.modules.associate { module ->
         val instructions = when (module) {
             is Module.Shed -> loadModule(module)
@@ -1238,6 +1244,26 @@ internal class Loader(
 
     private fun resolveReference(reference: ReferenceNode): Int {
         return references[reference].nodeId
+    }
+}
+
+fun executeMain(mainModule: List<Identifier>, image: Image, world: World): Int {
+    val finalState = executeInstructions(
+        persistentListOf(
+            InitModule(mainModule),
+            LoadModule(mainModule),
+            FieldAccess(Identifier("main")),
+            Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
+        ),
+        image = image,
+        defaultVariables = builtinVariables,
+        world = world
+    )
+    val finalValue = finalState.popTemporary().second
+    return when (finalValue) {
+        is InterpreterInt -> finalValue.value.toInt()
+        is InterpreterUnit -> 0
+        else -> throw Exception("final value was: $finalValue")
     }
 }
 
