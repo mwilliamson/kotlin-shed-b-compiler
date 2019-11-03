@@ -13,15 +13,10 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-fun readStandalone(path: Path): ModuleSet {
-    val module = readModule(
-        path = path,
-        name = listOf(Identifier("Main")),
-        getModule = { throw UnsupportedOperationException("Standalone programs cannot import") },
-        implicitCoreImports = false
-    )
-
-    return ModuleSet(listOf(module))
+fun readStandalone(directory: Path, moduleName: List<Identifier>): ModuleSet {
+    val reader = ModuleReader(sourceDirectories = listOf(directory))
+    reader.load(moduleName)
+    return ModuleSet(reader.modules)
 }
 
 private val sourceDirectoryName = "src"
@@ -33,6 +28,7 @@ fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
         .filter({ file -> file.exists() && file.isDirectory })
         .map({ file -> file.toPath() })
     val sourceDirectories = listOf(base.resolve(sourceDirectoryName)) + dependencies
+
     val reader = ModuleReader(sourceDirectories = sourceDirectories)
     reader.load(name)
     return ModuleSet(reader.modules)
@@ -41,8 +37,7 @@ fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
 private fun readModule(
     path: Path,
     name: List<Identifier>,
-    getModule: (List<Identifier>) -> ModuleResult,
-    implicitCoreImports: Boolean
+    getModule: (List<Identifier>) -> ModuleResult
 ): Module {
     val moduleText = path.toFile().readText()
 
@@ -55,7 +50,7 @@ private fun readModule(
     if (path.toString().endsWith(".types.shed")) {
         val parsedModuleNode = parseTypesModule(filename = path.toString(), input = moduleText)
         // TODO: fix duplication with .shed modules
-        val moduleNode = if (implicitCoreImports && !isCoreModule(name)) {
+        val moduleNode = if (!isCoreModule(name)) {
             val imports = coreImports + parsedModuleNode.imports
             parsedModuleNode.copy(imports = imports)
         } else {
@@ -78,7 +73,7 @@ private fun readModule(
     } else {
         val parsedModuleNode = parse(filename = path.toString(), input = moduleText)
         // TODO: fix duplication with .types.shed modules
-        val moduleNode = if (implicitCoreImports && !isCoreModule(name)) {
+        val moduleNode = if (!isCoreModule(name)) {
             val imports = coreImports + parsedModuleNode.imports
             parsedModuleNode.copy(imports = imports)
         } else {
@@ -147,7 +142,7 @@ private class ModuleReader(private val sourceDirectories: List<Path>) {
     })
 
     internal fun load(name: List<Identifier>) {
-        modulesByName.get(name)
+        modulesByName.get(name) as ModuleResult.Found
     }
 
     internal val modules: Collection<Module>
@@ -177,8 +172,7 @@ private class ModuleReader(private val sourceDirectories: List<Path>) {
                 name = name,
                 getModule = { name ->
                     modulesByName.get(name)
-                },
-                implicitCoreImports = true
+                }
             )
             return ModuleResult.Found(module)
         }
