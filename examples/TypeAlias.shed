@@ -1,15 +1,15 @@
 // stdout:
-//   42
+//   hello
 
 export main;
 
-fun getSize() -> Size {
-    42
+fun getGreeting() -> Greeting {
+    "hello"
 }
 
-type Size = Int;
+type Greeting = String;
 
 fun main() !Io -> Unit {
-    print!(intToString(getSize()));
+    print!(getGreeting());
     print!("\n");
 }
