@@ -8,11 +8,6 @@ class ShapeField(object):
         self.name = name
 
 
-_list = list
-def list(*args):
-    return _list(args)
-
-
 def varargs(cons, nil):
     def f(*args):
         result = nil

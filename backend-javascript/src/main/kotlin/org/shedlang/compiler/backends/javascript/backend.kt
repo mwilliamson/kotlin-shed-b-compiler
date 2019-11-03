@@ -131,6 +131,5 @@ private fun builtinModule(): JavascriptModule {
 }
 
 val builtinNames = listOf(
-    "intToString",
-    "list"
+    "intToString"
 );

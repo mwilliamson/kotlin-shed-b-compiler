@@ -2,10 +2,6 @@ function intToString(value) {
     return value.toString();
 }
 
-function list() {
-    return Array.prototype.slice.call(arguments);
-}
-
 function declareShape(name, fields) {
     function shape(fieldValues = {}) {
         return {...fieldValues, ...constantFieldValues};
@@ -39,6 +35,5 @@ module.exports = {
     declareShape: declareShape,
 
     intToString: intToString,
-    list: list,
     varargs: varargs,
 };
