@@ -104,24 +104,36 @@ private fun isCoreModule(moduleName: List<Identifier>): Boolean {
     return moduleName.isNotEmpty() && moduleName[0] == Identifier("Core")
 }
 
-private val optionsImport = ImportNode(
-    target = TargetNode.Fields(
-        listOf("Option", "Some", "None", "some", "none").map { importName ->
-            FieldNameNode(
-                Identifier(importName),
-                source = BuiltinSource
-            ) to TargetNode.Variable(
-                Identifier(importName),
-                source = BuiltinSource
-            )
-        },
-        source = BuiltinSource
-    ),
-    path = ImportPath.absolute(listOf("Core", "Options")),
-    source = BuiltinSource
+private val ioImport = createCoreImport(
+    "Io",
+    listOf("print")
 )
 
-private val coreImports = listOf(optionsImport)
+private val optionsImport = createCoreImport(
+    "Options",
+    listOf("Option", "Some", "None", "some", "none")
+)
+
+private fun createCoreImport(module: String, names: List<String>): ImportNode {
+    return ImportNode(
+        target = TargetNode.Fields(
+            names.map { importName ->
+                FieldNameNode(
+                    Identifier(importName),
+                    source = BuiltinSource
+                ) to TargetNode.Variable(
+                    Identifier(importName),
+                    source = BuiltinSource
+                )
+            },
+            source = BuiltinSource
+        ),
+        path = ImportPath.absolute(listOf("Core", module)),
+        source = BuiltinSource
+    )
+}
+
+private val coreImports = listOf(ioImport, optionsImport)
 
 private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
     return resolve(

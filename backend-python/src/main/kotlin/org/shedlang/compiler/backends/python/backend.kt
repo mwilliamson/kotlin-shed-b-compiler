@@ -92,7 +92,6 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
         from shed.builtins import (
             ShapeField as _create_shape_field,
             list,
-            print,
             partial as _partial,
             varargs as _varargs,
         )

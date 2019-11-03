@@ -1324,6 +1324,5 @@ private object InterpreterBuiltins {
 }
 
 internal val builtinVariables = mapOf(
-    Builtins.intToString.nodeId to InterpreterBuiltins.intToString,
-    Builtins.print.nodeId to InterpreterBuiltins.print
+    Builtins.intToString.nodeId to InterpreterBuiltins.intToString
 )

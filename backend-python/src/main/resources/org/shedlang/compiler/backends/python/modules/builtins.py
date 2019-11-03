@@ -12,10 +12,6 @@ _list = list
 def list(*args):
     return _list(args)
 
-_print = print
-def print(value):
-    _print(value, end="")
-
 
 def varargs(cons, nil):
     def f(*args):

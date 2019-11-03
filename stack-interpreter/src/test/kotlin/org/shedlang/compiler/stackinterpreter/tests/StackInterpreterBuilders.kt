@@ -32,13 +32,14 @@ internal fun evaluateExpression(node: ExpressionNode, types: Types = EMPTY_TYPES
 internal fun executeInstructions(
     instructions: PersistentList<Instruction>,
     image: Image = Image.EMPTY,
-    variables: Map<Int, InterpreterValue> = mapOf()
+    variables: Map<Int, InterpreterValue> = mapOf(),
+    world: World = NullWorld
 ): InterpreterValue {
     val finalState = org.shedlang.compiler.stackinterpreter.executeInstructions(
         instructions,
         image = image,
         defaultVariables = variables,
-        world = NullWorld
+        world = world
     )
     return finalState.popTemporary().second
 }

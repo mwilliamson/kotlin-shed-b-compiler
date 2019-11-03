@@ -1369,37 +1369,6 @@ class InterpreterTests {
         assertThat(value, isString("42"))
     }
 
-    @Test
-    fun printBuiltinWritesToStdout() {
-        val functionReference = variableReference("print")
-        val call = call(
-            receiver = functionReference,
-            positionalArguments = listOf(
-                literalString("hello")
-            )
-        )
-        val references = ResolvedReferencesMap(mapOf(
-            functionReference.nodeId to Builtins.print
-        ))
-        val types = createTypes(
-            expressionTypes = mapOf(
-                functionReference.nodeId to functionType()
-            )
-        )
-
-        val loader = loader(references = references, types = types)
-        val instructions = loader.loadExpression(call)
-        val world = InMemoryWorld()
-        executeInstructions(
-            instructions,
-            image = Image.EMPTY,
-            defaultVariables = builtinVariables,
-            world = world
-        )
-
-        assertThat(world.stdout, equalTo("hello"))
-    }
-
     private fun stubbedModule(
         name: List<Identifier>,
         node: ModuleNode,

@@ -2,10 +2,6 @@ function intToString(value) {
     return value.toString();
 }
 
-function print(value) {
-    process.stdout.write(value);
-}
-
 function list() {
     return Array.prototype.slice.call(arguments);
 }
@@ -44,6 +40,5 @@ module.exports = {
 
     intToString: intToString,
     list: list,
-    print: print,
     varargs: varargs,
 };
