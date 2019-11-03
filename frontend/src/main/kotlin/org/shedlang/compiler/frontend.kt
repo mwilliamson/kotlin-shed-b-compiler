@@ -24,8 +24,16 @@ fun readStandalone(path: Path): ModuleSet {
     return ModuleSet(listOf(module))
 }
 
+private val sourceDirectoryName = "src"
+
 fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
-    val reader = ModuleReader(root = base)
+    val dependencyDirectories = base.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
+    val dependencies = dependencyDirectories
+        .map({ file -> file.resolve(sourceDirectoryName) })
+        .filter({ file -> file.exists() && file.isDirectory })
+        .map({ file -> file.toPath() })
+    val sourceDirectories = listOf(base.resolve(sourceDirectoryName)) + dependencies
+    val reader = ModuleReader(sourceDirectories = sourceDirectories)
     reader.load(name)
     return ModuleSet(reader.modules)
 }
@@ -133,7 +141,7 @@ internal sealed class ModuleResult(val name: List<Identifier>) {
     class FoundMany(name: List<Identifier>): ModuleResult(name)
 }
 
-private class ModuleReader(private val root: Path) {
+private class ModuleReader(private val sourceDirectories: List<Path>) {
     private val modulesByName = LazyMap<List<Identifier>, ModuleResult>({ name ->
         readModuleInPackage(name = name)
     })
@@ -151,15 +159,8 @@ private class ModuleReader(private val root: Path) {
             }
         }
 
-    private val sourceDirectoryName = "src"
-
     private fun readModuleInPackage(name: List<Identifier>): ModuleResult {
-        val dependencyDirectories = root.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
-        val dependencies = dependencyDirectories
-            .map({ file -> file.resolve(sourceDirectoryName) })
-            .filter({ file -> file.exists() && file.isDirectory })
-            .map({ file -> file.toPath() })
-        val bases = listOf(root.resolve(sourceDirectoryName), findRoot().resolve("corelib").resolve(sourceDirectoryName)) + dependencies
+        val bases = listOf(findRoot().resolve("corelib").resolve(sourceDirectoryName)) + sourceDirectories
         val possiblePaths = bases.flatMap({ base ->
             listOf(".shed", ".types.shed").map { extension ->
                 pathAppend(name.fold(base, { path, part -> path.resolve(part.value) }), extension)
