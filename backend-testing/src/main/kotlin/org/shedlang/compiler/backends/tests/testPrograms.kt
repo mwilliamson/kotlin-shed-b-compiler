@@ -3,11 +3,8 @@ package org.shedlang.compiler.backends.tests
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.installDependencies
-import org.shedlang.compiler.readPackage
-import org.shedlang.compiler.readStandalone
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream

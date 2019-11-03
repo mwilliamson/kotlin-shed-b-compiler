@@ -39,10 +39,10 @@ fun stringToSequenceAtIndex(index: Int, value: String) -> Sequences.Sequence[Cod
         .next = fun () -> Sequences.SequenceIterator[CodePoint, Pure] {
             val codePoint = Strings.codePointAt(index, value);
             when (codePoint) {
-                is Options.None {
+                is None {
                     Sequences.end
                 }
-                is Options.Some {
+                is Some {
                     Sequences.SequenceItem(
                         .head = codePoint.value,
                         .tail = stringToSequenceAtIndex(index + 1, value),
@@ -57,7 +57,7 @@ fun dropLeft(count: Int, value: String) -> String {
     Strings.substring(count, length(value), value)
 }
 
-fun first(value: String) -> Options.Option[CodePoint] {
+fun first(value: String) -> Option[CodePoint] {
     Strings.codePointAt(0, value)
 }
 

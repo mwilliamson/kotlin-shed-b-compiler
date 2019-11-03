@@ -302,7 +302,7 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
     context.addDiscriminator(node, discriminator)
 
     // TODO: failed module lookup
-    val optionsModuleResult = context.module(ImportPath.absolute(listOf("Stdlib", "Options")))
+    val optionsModuleResult = context.module(ImportPath.absolute(listOf("Core", "Options")))
     when (optionsModuleResult) {
         is ModuleResult.Found -> {
             val someType = metaTypeToType(optionsModuleResult.module.type.fieldType(Identifier("Option"))!!) as TypeFunction

@@ -25,7 +25,6 @@ export
 import ListBuilder from .ListBuilder;
 import Lists from .Lists;
 import @(.list as list, .List as List) from Stdlib.Lists;
-import Options from .Options;
 import Sequences from .Sequences;
 import Unfold from .Sequences.Unfold;
 import CodePoints from .Strings.CodePoints;
@@ -440,7 +439,7 @@ fun token(tokenType: TokenType, value: String) -> Token {
 fun nextToken(value: String) -> Token {
     val maybeFirst = CodePoints.first(value);
     when (maybeFirst) {
-        is Options.Some {
+        is Some {
             val first = maybeFirst.value;
             if (first == 't' && CodePoints.startsWith("true", value)) {
                 token(TokenTrue(), "true")
@@ -470,7 +469,7 @@ fun nextToken(value: String) -> Token {
                 token(TokenUnexpected(), CodePoints.left(1, value))
             }
         }
-        is Options.None {
+        is None {
             token(TokenEnd(), "")
         }
     }

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.backends.tests.findRoot
+import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.tests.moduleType

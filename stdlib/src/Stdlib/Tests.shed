@@ -2,20 +2,18 @@ export assert, assertThat, fail, Test, TestCase, TestSuite, suite, testCase, run
 
 import Lists from .Lists;
 import Matchers from .Matchers;
-import Options from .Options;
-
 
 shape AssertionError {
     message: String,
 }
 
 fun fail(message: String) -> AssertionResult {
-    AssertionResult(.error = Options.some(AssertionError(.message = message)))
+    AssertionResult(.error = some(AssertionError(.message = message)))
 }
 
 fun assert(value: Bool) -> AssertionResult {
     if (value) {
-        AssertionResult(.error = Options.none)
+        AssertionResult(.error = none)
     } else {
         fail("value was false")
     }
@@ -27,16 +25,16 @@ fun assertThat[T](value: T, matcher: Matchers.Matcher[T]) -> AssertionResult {
         is Matchers.Failure {
             val message = "expected " + matcher.description + "\nbut " + result.message;
             val error = AssertionError(.message = message);
-            AssertionResult(.error = Options.some(error))
+            AssertionResult(.error = some(error))
         }
         is Matchers.Success {
-            AssertionResult(.error = Options.none)
+            AssertionResult(.error = none)
         }
     }
 }
 
 shape AssertionResult {
-    error: Options.Option[AssertionError],
+    error: Option[AssertionError],
 }
 
 union Test =
@@ -52,7 +50,7 @@ union Test =
 union TestResult =
     | TestCaseResult {
         name: String,
-        error: Options.Option[AssertionError],
+        error: Option[AssertionError],
     }
     | TestSuiteResult {
         name: String,
@@ -72,7 +70,7 @@ val redCode = "\u{1B}[31m";
 val blackCode = "\u{1B}[39m";
 
 fun runTests(tests: Lists.List[Test]) !Io -> Int {
-    val results = Lists.map!(runTest ~ (.parent = Options.none), tests);
+    val results = Lists.map!(runTest ~ (.parent = none), tests);
     print!("\n");
     Lists.forEach!(printFailures, results);
 
@@ -101,10 +99,10 @@ fun countTestResult(result: TestResult) -> TestCounts {
     when (result) {
         is TestCaseResult {
             when (result.error) {
-                is Options.Some[AssertionError] {
+                is Some[AssertionError] {
                     TestCounts(.failures = 1, .successes = 0)
                 }
-                is Options.None {
+                is None {
                     TestCounts(.failures = 0, .successes = 1)
                 }
             }
@@ -132,7 +130,7 @@ fun printFailures(result: TestResult) !Io -> Unit {
     when (result) {
         is TestCaseResult {
             val error = result.error;
-            if (error is Options.Some[AssertionError]) {
+            if (error is Some[AssertionError]) {
                 print!("\n");
                 print!(redCode);
                 print!("✖ ");
@@ -149,12 +147,12 @@ fun printFailures(result: TestResult) !Io -> Unit {
     }
 }
 
-fun runTest(test: Test, .parent: Options.Option[String]) !Io -> TestResult {
+fun runTest(test: Test, .parent: Option[String]) !Io -> TestResult {
     val namePrefix = when (parent) {
-        is Options.Some[String] {
+        is Some[String] {
             parent.value + ": "
         }
-        is Options.None {
+        is None {
             ""
         }
     };
@@ -165,11 +163,11 @@ fun runTest(test: Test, .parent: Options.Option[String]) !Io -> TestResult {
             val error = result.error;
 
             when (error) {
-                is Options.Some[AssertionError] {
+                is Some[AssertionError] {
                     print!(redCode);
                     print!("✖");
                 }
-                is Options.None {
+                is None {
                     print!(greenCode);
                     print!("✔");
                 }
@@ -180,7 +178,7 @@ fun runTest(test: Test, .parent: Options.Option[String]) !Io -> TestResult {
         is TestSuite {
             // TODO: indentation
             val name = namePrefix + test.name;
-            val results = Lists.map!(runTest ~ (.parent = Options.some(name)), test.tests);
+            val results = Lists.map!(runTest ~ (.parent = some(name)), test.tests);
             TestSuiteResult(.name = name, .results = results)
         }
     }

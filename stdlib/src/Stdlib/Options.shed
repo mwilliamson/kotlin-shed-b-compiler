@@ -1,15 +1,4 @@
-export Option, Some, None, some, none, default, flatMap, map;
-
-union Option[+T] =
-    | Some[T] {
-        value: T,
-    }
-    | None;
-
-fun some[T](value: T) -> Option[T] {
-    Some(.value = value)
-}
-val none = None();
+export default, flatMap, map;
 
 fun default[T](defaultValue: T, option: Option[T]) -> T {
     when (option) {

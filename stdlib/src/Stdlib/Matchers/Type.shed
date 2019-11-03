@@ -1,6 +1,5 @@
 export has, hasField, isType, isTypeWith;
 
-import @(.Option as Option, .Some as Some, .None as None) from Stdlib.Options;
 import @(
     .Matcher as Matcher,
     .Result as Result,

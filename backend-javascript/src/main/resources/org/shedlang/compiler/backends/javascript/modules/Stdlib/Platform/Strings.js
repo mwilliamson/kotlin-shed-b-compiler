@@ -1,5 +1,5 @@
 "use strict";
-var Options = require("../Options");
+var Options = require("../../Core/Options");
 
 function codePointAt(index, string) {
     index = Number(index);

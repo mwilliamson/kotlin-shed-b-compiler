@@ -154,7 +154,7 @@ private fun generateCastImports(node: ModuleNode, context: CodeGenerationContext
     return if (context.hasCast.value) {
         listOf(
             PythonImportFromNode(
-                module = listOf(topLevelPythonPackageName, "Stdlib", "Options").joinToString("."),
+                module = listOf(topLevelPythonPackageName, "Core", "Options").joinToString("."),
                 names = listOf("none" to "_none", "some" to "_some"),
                 source = NodeSource(node)
             )

@@ -740,7 +740,7 @@ class TypeCheckCallTests {
             parameters = listOf(covariantTypeParameter("T"))
         )
         val optionsModule = ModuleResult.Found(Module.Native(
-            name = listOf(Identifier("Stdlib"), Identifier("Options")),
+            name = listOf(Identifier("Core"), Identifier("Options")),
             type = moduleType(fields = mapOf(
                 "Option" to MetaType(optionType)
             ))
@@ -759,7 +759,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(
             modules = mapOf(
-                ImportPath.absolute(listOf("Stdlib", "Options")) to optionsModule
+                ImportPath.absolute(listOf("Core", "Options")) to optionsModule
             ),
             referenceTypes = mapOf(
                 castReference to CastType,

@@ -932,7 +932,7 @@ internal class Loader(
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
                 if (inspector.isCast(node)) {
-                    val optionsModuleName = listOf(Identifier("Stdlib"), Identifier("Options"))
+                    val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
                     val loadOptionsModuleInstructions = persistentListOf(
                         InitModule(optionsModuleName),
                         LoadModule(optionsModuleName)

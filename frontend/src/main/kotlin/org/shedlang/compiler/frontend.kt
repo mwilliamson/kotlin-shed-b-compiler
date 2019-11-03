@@ -1,9 +1,7 @@
 package org.shedlang.compiler
 
 import com.moandjiezana.toml.Toml
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.ast.Node
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.checkTailCalls
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parseTypesModule
@@ -19,7 +17,8 @@ fun readStandalone(path: Path): ModuleSet {
     val module = readModule(
         path = path,
         name = listOf(Identifier("Main")),
-        getModule = { throw UnsupportedOperationException("Standalone programs cannot import") }
+        getModule = { throw UnsupportedOperationException("Standalone programs cannot import") },
+        implicitCoreImports = false
     )
 
     return ModuleSet(listOf(module))
@@ -31,7 +30,12 @@ fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
     return ModuleSet(reader.modules)
 }
 
-private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Identifier>) -> ModuleResult): Module {
+private fun readModule(
+    path: Path,
+    name: List<Identifier>,
+    getModule: (List<Identifier>) -> ModuleResult,
+    implicitCoreImports: Boolean
+): Module {
     val moduleText = path.toFile().readText()
 
     val nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type })
@@ -41,7 +45,14 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
     }
 
     if (path.toString().endsWith(".types.shed")) {
-        val moduleNode = parseTypesModule(filename = path.toString(), input = moduleText)
+        val parsedModuleNode = parseTypesModule(filename = path.toString(), input = moduleText)
+        // TODO: fix duplication with .shed modules
+        val moduleNode = if (implicitCoreImports && !isCoreModule(name)) {
+            val imports = coreImports + parsedModuleNode.imports
+            parsedModuleNode.copy(imports = imports)
+        } else {
+            parsedModuleNode
+        }
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         val typeCheckResult = typeCheck(
@@ -57,7 +68,14 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
             type = typeCheckResult.moduleType
         )
     } else {
-        val moduleNode = parse(filename = path.toString(), input = moduleText)
+        val parsedModuleNode = parse(filename = path.toString(), input = moduleText)
+        // TODO: fix duplication with .types.shed modules
+        val moduleNode = if (implicitCoreImports && !isCoreModule(name)) {
+            val imports = coreImports + parsedModuleNode.imports
+            parsedModuleNode.copy(imports = imports)
+        } else {
+            parsedModuleNode
+        }
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         checkTailCalls(moduleNode, references = resolvedReferences)
@@ -78,6 +96,29 @@ private fun readModule(path: Path, name: List<Identifier>, getModule: (List<Iden
         )
     }
 }
+
+private fun isCoreModule(moduleName: List<Identifier>): Boolean {
+    return moduleName.isNotEmpty() && moduleName[0] == Identifier("Core")
+}
+
+private val optionsImport = ImportNode(
+    target = TargetNode.Fields(
+        listOf("Option", "Some", "None", "some", "none").map { importName ->
+            FieldNameNode(
+                Identifier(importName),
+                source = BuiltinSource
+            ) to TargetNode.Variable(
+                Identifier(importName),
+                source = BuiltinSource
+            )
+        },
+        source = BuiltinSource
+    ),
+    path = ImportPath.absolute(listOf("Core", "Options")),
+    source = BuiltinSource
+)
+
+private val coreImports = listOf(optionsImport)
 
 private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
     return resolve(
@@ -110,14 +151,15 @@ private class ModuleReader(private val root: Path) {
             }
         }
 
+    private val sourceDirectoryName = "src"
+
     private fun readModuleInPackage(name: List<Identifier>): ModuleResult {
         val dependencyDirectories = root.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
-        val sourceDirectoryName = "src"
         val dependencies = dependencyDirectories
             .map({ file -> file.resolve(sourceDirectoryName) })
             .filter({ file -> file.exists() && file.isDirectory })
             .map({ file -> file.toPath() })
-        val bases = listOf(root.resolve(sourceDirectoryName)) + dependencies
+        val bases = listOf(root.resolve(sourceDirectoryName), findRoot().resolve("corelib").resolve(sourceDirectoryName)) + dependencies
         val possiblePaths = bases.flatMap({ base ->
             listOf(".shed", ".types.shed").map { extension ->
                 pathAppend(name.fold(base, { path, part -> path.resolve(part.value) }), extension)
@@ -134,7 +176,8 @@ private class ModuleReader(private val root: Path) {
                 name = name,
                 getModule = { name ->
                     modulesByName.get(name)
-                }
+                },
+                implicitCoreImports = true
             )
             return ModuleResult.Found(module)
         }

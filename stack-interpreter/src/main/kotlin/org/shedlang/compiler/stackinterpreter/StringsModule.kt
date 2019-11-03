@@ -3,7 +3,7 @@ package org.shedlang.compiler.stackinterpreter
 import org.shedlang.compiler.ast.Identifier
 import java.lang.Integer.min
 
-private val optionsModuleName = listOf(Identifier("Stdlib"), Identifier("Options"))
+private val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
 
 internal val stringsModule = createNativeModule(
     name = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),

@@ -1,4 +1,4 @@
-package org.shedlang.compiler.backends.tests
+package org.shedlang.compiler
 
 import java.nio.file.Path
 import java.nio.file.Paths

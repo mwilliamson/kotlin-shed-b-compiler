@@ -4,7 +4,7 @@ import Options from .Options;
 // TODO: Use Bytes instead
 import CodePoints from .Strings.CodePoints;
 
-fun parseInt(text: String) -> Options.Option[Int] {
+fun parseInt(text: String) -> Option[Int] {
     val first = CodePoints.first(text);
     first |> Options.flatMap ~ (fun (codePoint: CodePoint) =>
         if (codePoint == '-') {
@@ -16,25 +16,25 @@ fun parseInt(text: String) -> Options.Option[Int] {
     )
 }
 
-fun parsePositiveInt(text: String) -> Options.Option[Int] {
+fun parsePositiveInt(text: String) -> Option[Int] {
     if (CodePoints.isEmpty(text)) {
-        Options.none
+        none
     } else {
         CodePoints.foldLeft(
-            fun (acc: Options.Option[Int], codePoint: CodePoint) -> Options.Option[Int] {
+            fun (acc: Option[Int], codePoint: CodePoint) -> Option[Int] {
                 Options.flatMap(
-                    fun (acc: Int) -> Options.Option[Int] {
+                    fun (acc: Int) -> Option[Int] {
                         if (codePoint >= '0' && codePoint <= '9') {
                             val digit = CodePoints.codePointToInt(codePoint) - CodePoints.codePointToInt('0');
-                            Options.some(acc * 10 + digit)
+                            some(acc * 10 + digit)
                         } else {
-                            Options.none
+                            none
                         }
                     },
                     acc,
                 )
             },
-            Options.some(0),
+            some(0),
             text
         )
     }

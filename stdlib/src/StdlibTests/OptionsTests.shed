@@ -12,39 +12,39 @@ fun addOne(value: Int) -> Int {
 val testCases = Tests.suite(moduleName, list(
     Tests.testCase("default(x, some(y)) is y", fun () {
         Tests.assertThat(
-            Options.default(1, Options.some(2)),
+            Options.default(1, some(2)),
             Matchers.isInt(2)
         )
     }),
 
     Tests.testCase("default(x, none) is x", fun () {
         Tests.assertThat(
-            Options.default(1, Options.none),
+            Options.default(1, none),
             Matchers.isInt(1)
         )
     }),
 
     Tests.testCase("flatMap(f, none) is none", fun () {
         Tests.assertThat(
-            Options.flatMap(fun (value: Int) => Options.some(value + 1), Options.none),
+            Options.flatMap(fun (value: Int) => some(value + 1), none),
             Matchers.isNone(),
         )
     }),
 
     Tests.testCase("flatMap(f, some(x)) is f(x)", fun () {
         Tests.assertThat(
-            Options.flatMap(fun (value: Int) => Options.some(value + 1), Options.some(42)),
+            Options.flatMap(fun (value: Int) => some(value + 1), some(42)),
             Matchers.isSome(Matchers.isInt(43))
         )
     }),
 
     Tests.testCase("map(f, none) is none", fun () {
-        Tests.assertThat(Options.map(addOne, Options.none), Matchers.isNone())
+        Tests.assertThat(Options.map(addOne, none), Matchers.isNone())
     }),
 
     Tests.testCase("map(f, some(x)) is some(f(x))", fun () {
         Tests.assertThat(
-            Options.map(addOne, Options.some(42)),
+            Options.map(addOne, some(42)),
             Matchers.isSome(Matchers.isInt(43))
         )
     }),

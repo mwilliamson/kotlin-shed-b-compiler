@@ -60,7 +60,7 @@ private fun generateCastImports(module: Module.Shed, context: CodeGenerationCont
                     source = source
                 ),
                 expression = generateImportExpression(
-                    importPath = ImportPath.absolute(listOf("Stdlib", "Options")),
+                    importPath = ImportPath.absolute(listOf("Core", "Options")),
                     module = module,
                     source = source
                 ),
