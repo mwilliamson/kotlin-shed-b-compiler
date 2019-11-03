@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.*
+import org.shedlang.compiler.EMPTY_TYPES
+import org.shedlang.compiler.Module
+import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.backends.FieldValue
@@ -921,15 +924,6 @@ class CodeGeneratorTests {
         val node = generateExpressionCode(shed, context(references = mapOf(shed to declaration)))
 
         assertThat(node, isGeneratedExpression(isPythonVariableReference("x")))
-    }
-
-    @Test
-    fun variableReferenceToBuiltinGeneratesEquivalentPythonBuiltin() {
-        val shed = variableReference("intToString")
-
-        val node = generateExpressionCode(shed, context(references = mapOf(shed to Builtins.intToString)))
-
-        assertThat(node, isGeneratedExpression(isPythonVariableReference("str")))
     }
 
     @Test

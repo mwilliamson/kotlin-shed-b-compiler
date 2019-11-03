@@ -1,7 +1,3 @@
-function intToString(value) {
-    return value.toString();
-}
-
 function declareShape(name, fields) {
     function shape(fieldValues = {}) {
         return {...fieldValues, ...constantFieldValues};
@@ -34,6 +30,5 @@ function varargs(cons, nil) {
 module.exports = {
     declareShape: declareShape,
 
-    intToString: intToString,
     varargs: varargs,
 };

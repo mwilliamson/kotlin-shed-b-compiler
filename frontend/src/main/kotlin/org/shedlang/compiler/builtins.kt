@@ -48,13 +48,11 @@ fun parseType(string: String): Type {
 }
 
 object Builtins {
-    val intToString = builtinVariable("intToString", parseType("Fun (Int) -> String"))
     val moduleName = builtinVariable("moduleName", StringType)
 }
 
 internal val builtins = coreBuiltins + listOf(
     castBuiltin,
-    Builtins.intToString,
 
     Builtins.moduleName
 )

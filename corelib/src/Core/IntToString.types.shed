@@ -1,0 +1,1 @@
+val intToString: Fun (Int) -> String;

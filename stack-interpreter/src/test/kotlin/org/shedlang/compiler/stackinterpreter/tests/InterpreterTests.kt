@@ -1344,31 +1344,6 @@ class InterpreterTests {
         assertThat(value, isString("One.Two.Three"))
     }
 
-    @Test
-    fun intToStringBuiltinConvertsIntToString() {
-        val functionReference = variableReference("intToString")
-        val call = call(
-            receiver = functionReference,
-            positionalArguments = listOf(
-                literalInt(42)
-            )
-        )
-        val references = ResolvedReferencesMap(mapOf(
-            functionReference.nodeId to Builtins.intToString
-        ))
-        val types = createTypes(
-            expressionTypes = mapOf(
-                functionReference.nodeId to functionType()
-            )
-        )
-
-        val loader = loader(references = references, types = types)
-        val instructions = loader.loadExpression(call)
-        val value = executeInstructions(instructions, variables = builtinVariables)
-
-        assertThat(value, isString("42"))
-    }
-
     private fun stubbedModule(
         name: List<Identifier>,
         node: ModuleNode,

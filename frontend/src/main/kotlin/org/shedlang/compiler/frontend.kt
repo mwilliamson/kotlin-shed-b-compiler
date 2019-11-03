@@ -104,6 +104,11 @@ private fun isCoreModule(moduleName: List<Identifier>): Boolean {
     return moduleName.isNotEmpty() && moduleName[0] == Identifier("Core")
 }
 
+private val intToStringImport = createCoreImport(
+    "IntToString",
+    listOf("intToString")
+)
+
 private val ioImport = createCoreImport(
     "Io",
     listOf("print")
@@ -133,7 +138,7 @@ private fun createCoreImport(module: String, names: List<String>): ImportNode {
     )
 }
 
-private val coreImports = listOf(ioImport, optionsImport)
+private val coreImports = listOf(intToStringImport, ioImport, optionsImport)
 
 private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
     return resolve(

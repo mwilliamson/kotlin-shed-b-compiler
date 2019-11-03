@@ -1276,7 +1276,7 @@ fun executeMain(mainModule: List<Identifier>, image: Image, world: World): Int {
             Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
         ),
         image = image,
-        defaultVariables = builtinVariables,
+        defaultVariables = mapOf(),
         world = world
     )
     val finalValue = finalState.popTemporary().second
@@ -1309,20 +1309,3 @@ internal fun executeInstructions(
         }
     }
 }
-
-private object InterpreterBuiltins {
-    val intToString = InterpreterBuiltinFunction { state, arguments ->
-        val int = (arguments[0] as InterpreterInt).value
-        state.pushTemporary(InterpreterString(int.toString()))
-    }
-
-    val print = InterpreterBuiltinFunction { state, arguments ->
-        val string = (arguments[0] as InterpreterString).value
-        state.print(string)
-        state.pushTemporary(InterpreterUnit)
-    }
-}
-
-internal val builtinVariables = mapOf(
-    Builtins.intToString.nodeId to InterpreterBuiltins.intToString
-)
