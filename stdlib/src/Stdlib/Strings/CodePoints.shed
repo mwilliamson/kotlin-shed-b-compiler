@@ -116,15 +116,15 @@ fun padLeft(desiredLength: Int, padding: CodePoint, string: String) -> String {
 }
 
 fun repeat(value: String, times: Int) -> String {
-    repeat2("", value, times)
+    repeatAcc("", value, times)
 }
 
 // TODO: tailrec
-fun repeat2(acc: String, value: String, times: Int) -> String {
+fun repeatAcc(acc: String, value: String, times: Int) -> String {
     if (times == 0) {
         acc
     } else {
-        repeat2(acc + value, value, times - 1)
+        repeatAcc(acc + value, value, times - 1)
     }
 }
 
