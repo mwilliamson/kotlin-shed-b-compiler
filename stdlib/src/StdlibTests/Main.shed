@@ -6,6 +6,7 @@ import Tests from Stdlib.Tests;
 import JsonTests from .JsonTests;
 import MatchersTests from .MatchersTests;
 import OptionsTests from .OptionsTests;
+import PlatformStringsTests from .Platform.StringsTests;
 import CodePointsTests from .Strings.CodePointsTests;
 import StringsTests from .StringsTests;
 
@@ -15,6 +16,7 @@ fun main() !Io -> Int {
             JsonTests.testCases,
             OptionsTests.testCases,
             CodePointsTests.testCases,
+            PlatformStringsTests.testCases,
             StringsTests.testCases,
         ),
         MatchersTests.testCases,

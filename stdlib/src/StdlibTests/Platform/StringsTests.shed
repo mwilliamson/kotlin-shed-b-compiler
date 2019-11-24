@@ -1,0 +1,63 @@
+export testCases;
+
+import Lists from Stdlib.Lists;
+import @(.list as list) from Stdlib.Lists;
+import Matchers from Stdlib.Matchers;
+import Strings from Stdlib.Platform.Strings;
+import Tests from Stdlib.Tests;
+
+fun codePointCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
+    Tests.testCase(string, fun () {
+        val count = Strings.codePointCount(string);
+        Tests.assertThat(count, Matchers.isInt(expectedCount))
+    })
+}
+
+val codePointCountTestSuite = Tests.suite("codePointCount", list(
+    codePointCountTestCase("", 0),
+    codePointCountTestCase("a", 1),
+    codePointCountTestCase("abc", 3),
+    codePointCountTestCase("☃", 1),
+    codePointCountTestCase("𝔼", 1),
+    codePointCountTestCase("☃𝔼☃𝔼☃", 5),
+));
+
+val indexAtCodePointCountTestSuite = Tests.suite("indexAtCodePointCount", list(
+    Tests.testCase("characters in BMP, positive index", fun() {
+        val string = "abcdef";
+
+        val index = Strings.indexAtCodePointCount(2, string);
+
+        Tests.assertThat(Strings.substring(Strings.zeroIndex, index, string), Matchers.isString("ab"))
+    }),
+
+    Tests.testCase("characters outside BMP, positive index", fun() {
+        val string = "𝔼bcdef";
+
+        val index = Strings.indexAtCodePointCount(2, string);
+
+        Tests.assertThat(Strings.substring(Strings.zeroIndex, index, string), Matchers.isString("𝔼b"))
+    }),
+
+    Tests.testCase("characters in BMP, negative index", fun() {
+        val string = "abcdef";
+
+        val index = Strings.indexAtCodePointCount(-2, string);
+
+        Tests.assertThat(Strings.substring(Strings.zeroIndex, index, string), Matchers.isString("abcd"))
+    }),
+
+    Tests.testCase("characters outside BMP, negative index", fun() {
+        val string = "abcd𝔼f";
+
+        val index = Strings.indexAtCodePointCount(-2, string);
+
+        Tests.assertThat(Strings.substring(Strings.zeroIndex, index, string), Matchers.isString("abcd"))
+    }),
+));
+
+val testCases = Tests.suite(moduleName, list(
+    codePointCountTestSuite,
+    indexAtCodePointCountTestSuite,
+));
+
