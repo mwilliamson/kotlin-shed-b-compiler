@@ -5,27 +5,10 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackinterpreter.*
+import org.shedlang.compiler.tests.isSequence
 
 class StringsModuleTests {
     private val moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))
-
-    @Test
-    fun codePointAt_whenStringIsBeforeEndOfStringThenCodePointIsReturned() {
-        val value = call("codePointAt", listOf(InterpreterInt(4.toBigInteger()), InterpreterString("hello")))
-
-        val codePoint = (value as InterpreterShapeValue).field(Identifier("value"))
-        assertThat(codePoint, isCodePoint('o'))
-    }
-
-    @Test
-    fun codePointAt_whenIndexIsAfterEndOfStringThenNoneIsReturned() {
-        val value = call("codePointAt", listOf(InterpreterInt(5.toBigInteger()), InterpreterString("hello")))
-
-        assertThat(
-            { (value as InterpreterShapeValue).field(Identifier("value")) },
-            throws<Exception>()
-        )
-    }
 
     @Test
     fun codePointCount() {
@@ -53,6 +36,27 @@ class StringsModuleTests {
         val value = call("codePointToString", listOf(InterpreterCodePoint(42)))
 
         assertThat(value, isString("*"))
+    }
+
+    @Test
+    fun next_whenStringIsBeforeEndOfStringThenCodePointIsReturned() {
+        val value = call("next", listOf(InterpreterInt(4.toBigInteger()), InterpreterString("hello")))
+
+        val tuple = (value as InterpreterShapeValue).field(Identifier("value"))
+        assertThat(tuple, isTuple(isSequence(
+            isCodePoint('o'),
+            isInt(5)
+        )))
+    }
+
+    @Test
+    fun next_whenIndexIsAfterEndOfStringThenNoneIsReturned() {
+        val value = call("next", listOf(InterpreterInt(5.toBigInteger()), InterpreterString("hello")))
+
+        assertThat(
+            { (value as InterpreterShapeValue).field(Identifier("value")) },
+            throws<Exception>()
+        )
     }
 
     @Test

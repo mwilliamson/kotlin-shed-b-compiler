@@ -12,22 +12,6 @@ internal val stringsModule = createNativeModule(
         optionsModuleName
     ),
     fields = listOf(
-        Identifier("codePointAt") to InterpreterBuiltinFunction { state, arguments ->
-            val index = (arguments[0] as InterpreterInt).value.toInt()
-            val string = (arguments[1] as InterpreterString).value
-            val optionsModule = state.loadModule(optionsModuleName)
-            if (index < string.length) {
-                call(
-                    state = state,
-                    receiver = optionsModule.field(Identifier("some")),
-                    positionalArguments = listOf(InterpreterCodePoint(string.codePointAt(index))),
-                    namedArguments = mapOf()
-                )
-            } else {
-                state.pushTemporary(optionsModule.field(Identifier("none")))
-            }
-        },
-
         Identifier("codePointCount") to InterpreterBuiltinFunction { state, arguments ->
             val string = (arguments[0] as InterpreterString).value
             state.pushTemporary(InterpreterInt(string.codePointCount(0, string.length).toBigInteger()))

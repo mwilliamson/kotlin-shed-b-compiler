@@ -1,4 +1,3 @@
-val codePointAt: Fun (Int, String) -> Option[CodePoint];
 val codePointToHexString: Fun (CodePoint) -> String;
 val codePointToInt: Fun (CodePoint) -> Int;
 val codePointToString: Fun (CodePoint) -> String;

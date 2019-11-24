@@ -60,7 +60,16 @@ fun dropLeft(count: Int, value: String) -> String {
 }
 
 fun first(value: String) -> Option[CodePoint] {
-    Strings.codePointAt(0, value)
+    val next = Strings.next(Strings.zeroIndex, value);
+    when (next) {
+        is Some {
+            val #(codePoint, nextIndex) = next.value;
+            some(codePoint)
+        }
+        is None {
+            none
+        }
+    }
 }
 
 fun flatMap(func: Fun (CodePoint) -> String, value: String) -> String {

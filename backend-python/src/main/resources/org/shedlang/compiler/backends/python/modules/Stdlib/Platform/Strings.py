@@ -2,12 +2,6 @@ import io
 
 from .. import Options
 
-def code_point_at(index, string):
-    if index < len(string):
-        return Options.some(string[index])
-    else:
-        return Options.none
-
 
 def code_point_to_hex_string(char):
     return format(ord(char), "X")

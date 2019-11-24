@@ -1,15 +1,6 @@
 "use strict";
 var Options = require("../../Core/Options");
 
-function codePointAt(index, string) {
-    index = Number(index);
-    if (index < string.length) {
-        return Options.some(String.fromCodePoint(string.codePointAt(index)))
-    } else {
-        return Options.none;
-    }
-}
-
 function codePointToHexString(char) {
     return char.codePointAt(0).toString(16).toUpperCase();
 }
@@ -50,7 +41,6 @@ function substring(startIndex, endIndex, string) {
 
 const zeroIndex = 0;
 
-exports.codePointAt = codePointAt;
 exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
