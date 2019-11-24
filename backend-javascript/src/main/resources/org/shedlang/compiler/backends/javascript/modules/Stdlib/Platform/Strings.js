@@ -22,15 +22,27 @@ function codePointCount(string) {
 }
 
 function indexAtCodePointCount(endCount, value) {
-    let index = 0;
-    let count = 0;
-    while (count < endCount && index < value.length) {
-        const codePoint = value.codePointAt(index);
-        const size = codePoint > 0xffff ? 2 : 1;
-        count += 1;
-        index += size;
+    if (endCount >= 0) {
+        let index = 0;
+        let count = 0;
+        while (count < endCount && index < value.length) {
+            const codePoint = value.codePointAt(index);
+            const size = codePoint > 0xffff ? 2 : 1;
+            count += 1;
+            index += size;
+        }
+        return index;
+    } else {
+        let index = value.length;
+        let count = 0;
+        while (count > endCount && index - 1 >= 0) {
+            const codeUnit = value.charCodeAt(index - 1);
+            const size = codeUnit >= 0xdc00 && codeUnit <= 0xdfff ? 2 : 1;
+            count -= 1;
+            index -= size;
+        }
+        return index;
     }
-    return index;
 }
 
 function lastIndex(value) {

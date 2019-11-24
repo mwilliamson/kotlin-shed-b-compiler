@@ -53,6 +53,20 @@ class StringsModuleTests {
     }
 
     @Test
+    fun indexAtCodePointCount_whenCountIsNegativeThenCountIsFromEndOfString() {
+        val value = call("indexAtCodePointCount", listOf(InterpreterInt((-1).toBigInteger()), InterpreterString("abc")))
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
+    fun indexAtCodePointCount_givenCharactersNotInBmpWhenCountIsNegativeThenCountIsFromEndOfString() {
+        val value = call("indexAtCodePointCount", listOf(InterpreterInt((-1).toBigInteger()), InterpreterString("ab\uD835\uDD3C")))
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
     fun lastIndexIsLengthOfString() {
         val value = call("lastIndex", listOf(InterpreterString("\uD835\uDD3Cbc")))
 
