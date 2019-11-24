@@ -1,0 +1,7 @@
+export negate;
+
+fun negate[T](func: Fun (T) -> Bool) -> Fun (T) -> Bool {
+    fun (value: T) -> Bool {
+        not func(value)
+    }
+}
