@@ -36,23 +36,21 @@ fun stringToSequence(value: String) -> Sequences.Sequence[CodePoint, Pure] {
 }
 
 fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequence[CodePoint, Pure] {
-    Sequences.Sequence[CodePoint, Pure](
-        .next = fun () -> Sequences.SequenceIterator[CodePoint, Pure] {
-            val next = Strings.next(index, value);
-            when (next) {
-                is None {
-                    Sequences.end
-                }
-                is Some {
-                    val #(codePoint, nextIndex) = next.value;
-                    Sequences.SequenceItem(
-                        .head = codePoint,
-                        .tail = stringToSequenceAtIndex(nextIndex, value),
-                    )
-                }
+    Sequences.pure[CodePoint](fun () -> Sequences.SequenceIterator[CodePoint, Pure] {
+        val next = Strings.next(index, value);
+        when (next) {
+            is None {
+                Sequences.end
             }
-        },
-    )
+            is Some {
+                val #(codePoint, nextIndex) = next.value;
+                Sequences.SequenceItem(
+                    .head = codePoint,
+                    .tail = stringToSequenceAtIndex(nextIndex, value),
+                )
+            }
+        }
+    })
 }
 
 fun dropLeft(count: Int, value: String) -> String {

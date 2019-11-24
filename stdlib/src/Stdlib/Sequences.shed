@@ -5,6 +5,8 @@ export
     SequenceEnd,
     end,
 
+    pure,
+
     all,
     any,
     foldLeft,
@@ -25,6 +27,10 @@ union SequenceIterator[T, !E] =
     | SequenceEnd;
 
 val end = SequenceEnd();
+
+fun pure[T](next: Fun () -> SequenceIterator[T, Pure]) -> Sequence[T, Pure] {
+    Sequence(.next = next)
+}
 
 fun all[!E](sequence: Sequence[Bool, E]) !E -> Bool {
     val item = sequence.next!();
