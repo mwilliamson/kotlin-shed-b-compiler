@@ -10,6 +10,7 @@ export
 
     all,
     any,
+    findIndex,
     foldLeft,
     forEach,
     lazyFilter,
@@ -64,6 +65,26 @@ fun any[!E](sequence: Sequence[Bool, E]) !E -> Bool {
                 true
             } else {
                 tailrec any!(item.tail)
+            }
+        }
+    }
+}
+
+fun findIndex[T, !E](predicate: Fun (T) -> Bool, sequence: Sequence[T, E]) !E -> Option[Int] {
+    findIndexAcc!(predicate, sequence, 0)
+}
+
+fun findIndexAcc[T, !E](predicate: Fun (T) -> Bool, sequence: Sequence[T, E], acc: Int) !E -> Option[Int] {
+    val next = sequence.next!();
+    when (next) {
+        is SequenceEnd {
+            none
+        }
+        is SequenceItem {
+            if (predicate(next.head)) {
+                some(acc)
+            } else {
+                tailrec findIndexAcc!(predicate, next.tail, acc + 1)
             }
         }
     }

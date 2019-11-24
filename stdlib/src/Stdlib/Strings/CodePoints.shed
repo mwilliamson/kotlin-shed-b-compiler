@@ -21,6 +21,7 @@ import Lists from Stdlib.Lists;
 import @(.List as List) from Stdlib.Lists;
 import Options from Stdlib.Options;
 import Strings from Stdlib.Platform.Strings;
+import Predicates from Stdlib.Predicates;
 import Repeat from Stdlib.Repeat;
 import Sequences from Stdlib.Sequences;
 
@@ -106,14 +107,14 @@ fun left(count: Int, value: String) -> String {
 }
 
 fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {
-    // TODO: a better implementation
-    val takeNext = first(value)
-        |> Options.map ~ (predicate)
-        |> Options.default ~ (false);
-    if (takeNext) {
-        left(1, value) + leftWhile(predicate, dropLeft(1, value))
-    } else {
-        ""
+    val index = Sequences.findIndex(Predicates.negate(predicate), stringToSequence(value));
+    when (index) {
+        is None {
+            value
+        }
+        is Some {
+            left(index.value, value)
+        }
     }
 }
 
