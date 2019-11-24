@@ -2,7 +2,7 @@ export
     codePointToHexString,
     codePointToInt,
     codePointToString,
-    length,
+    count,
     first,
     flatMap,
     foldLeft,
@@ -27,7 +27,7 @@ import Sequences from Stdlib.Sequences;
 val codePointToHexString = Strings.codePointToHexString;
 val codePointToInt = Strings.codePointToInt;
 val codePointToString = Strings.codePointToString;
-val length = Strings.codePointCount;
+val count = Strings.codePointCount;
 val replace = Strings.replace;
 val slice = Strings.substring;
 
@@ -50,8 +50,8 @@ fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequ
     })
 }
 
-fun dropLeft(count: Int, value: String) -> String {
-    Strings.substring(count, length(value), value)
+fun dropLeft(toDrop: Int, value: String) -> String {
+    Strings.substring(toDrop, count(value), value)
 }
 
 fun first(value: String) -> Option[CodePoint] {
@@ -118,7 +118,7 @@ fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {
 }
 
 fun padLeft(desiredLength: Int, padding: CodePoint, string: String) -> String {
-    repeat(codePointToString(padding), desiredLength - length(string)) + string
+    repeat(codePointToString(padding), desiredLength - count(string)) + string
 }
 
 fun repeat(value: String, times: Int) -> String {
@@ -126,5 +126,5 @@ fun repeat(value: String, times: Int) -> String {
 }
 
 fun startsWith(prefix: String, value: String) -> Bool {
-    left(length(prefix), value) == prefix
+    left(count(prefix), value) == prefix
 }

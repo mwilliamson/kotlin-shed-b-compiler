@@ -6,6 +6,22 @@ import Matchers from Stdlib.Matchers;
 import CodePoints from Stdlib.Strings.CodePoints;
 import Tests from Stdlib.Tests;
 
+fun countTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
+    Tests.testCase(string, fun () {
+        val count = CodePoints.count(string);
+        Tests.assertThat(count, Matchers.isInt(expectedCount))
+    })
+}
+
+val countTestSuite = Tests.suite("count", list(
+    countTestCase("", 0),
+    countTestCase("a", 1),
+    countTestCase("abc", 3),
+    countTestCase("☃", 1),
+    countTestCase("𝔼", 1),
+    countTestCase("☃𝔼☃𝔼☃", 5),
+));
+
 val foldLeftTestSuite = Tests.suite("foldLeft", list(
     Tests.testCase("empty string produces initial value", fun () {
         val result = CodePoints.foldLeft(fun (acc: Int, codePoint: CodePoint) => acc + 1, 0, "");
@@ -35,25 +51,9 @@ val joinTestSuite = Tests.suite("join", list(
     }),
 ));
 
-fun lengthTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
-    Tests.testCase(string, fun () {
-        val count = CodePoints.length(string);
-        Tests.assertThat(count, Matchers.isInt(expectedCount))
-    })
-}
-
-val lengthTestSuite = Tests.suite("length", list(
-    lengthTestCase("", 0),
-    lengthTestCase("a", 1),
-    lengthTestCase("abc", 3),
-    lengthTestCase("☃", 1),
-    lengthTestCase("𝔼", 1),
-    lengthTestCase("☃𝔼☃𝔼☃", 5),
-));
-
 val testCases = Tests.suite(moduleName, list(
+    countTestSuite,
     foldLeftTestSuite,
     joinTestSuite,
-    lengthTestSuite,
 ));
 

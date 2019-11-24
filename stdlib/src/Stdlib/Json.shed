@@ -137,7 +137,7 @@ fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
 
 fun stringTextToCodePoints(text: String) -> String {
     // TODO: handle escape sequences
-    CodePoints.slice(1, CodePoints.length(text) - 1, text)
+    CodePoints.slice(1, CodePoints.count(text) - 1, text)
 }
 
 union JsonResult =
@@ -484,7 +484,7 @@ val tokenise = Unfold.unfold ~ (fun (value: String) -> Unfold.Next[Token, String
     if (token.tokenType is TokenEnd) {
         Unfold.end
     } else {
-        val remainder = CodePoints.dropLeft(CodePoints.length(token.value), value);
+        val remainder = CodePoints.dropLeft(CodePoints.count(token.value), value);
         Unfold.continue(token, remainder)
     }
 });
