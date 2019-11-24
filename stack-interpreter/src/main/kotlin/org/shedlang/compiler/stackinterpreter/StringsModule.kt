@@ -34,6 +34,18 @@ internal val stringsModule = createNativeModule(
             state.pushTemporary(InterpreterString(builder.toString()))
         },
 
+        Identifier("indexAtCodePointCount") to InterpreterBuiltinFunction { state, arguments ->
+            val count = (arguments[0] as InterpreterInt).value
+            val string = ((arguments[1]) as InterpreterString).value
+            val index = string.offsetByCodePoints(0, count.intValueExact())
+            state.pushTemporary(InterpreterInt(index.toBigInteger()))
+        },
+
+        Identifier("lastIndex") to InterpreterBuiltinFunction { state, arguments ->
+            val string = ((arguments[0]) as InterpreterString).value
+            state.pushTemporary(InterpreterInt(string.length.toBigInteger()))
+        },
+
         Identifier("next") to InterpreterBuiltinFunction { state, arguments ->
             val index = (arguments[0] as InterpreterInt).value.toInt()
             val string = (arguments[1] as InterpreterString).value

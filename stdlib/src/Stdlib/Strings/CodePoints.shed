@@ -6,6 +6,7 @@ export
     first,
     flatMap,
     foldLeft,
+    indexAtCodePointCount,
     replace,
     slice,
 
@@ -29,6 +30,7 @@ val codePointToHexString = Strings.codePointToHexString;
 val codePointToInt = Strings.codePointToInt;
 val codePointToString = Strings.codePointToString;
 val count = Strings.codePointCount;
+val indexAtCodePointCount = Strings.indexAtCodePointCount;
 val replace = Strings.replace;
 val slice = Strings.substring;
 
@@ -52,7 +54,11 @@ fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequ
 }
 
 fun dropLeft(toDrop: Int, value: String) -> String {
-    Strings.substring(toDrop, count(value), value)
+    Strings.substring(
+        Strings.indexAtCodePointCount(toDrop, value),
+        Strings.lastIndex(value),
+        value,
+    )
 }
 
 fun first(value: String) -> Option[CodePoint] {
@@ -103,7 +109,11 @@ fun join(separator: String, elements: List[String]) -> String {
 }
 
 fun left(count: Int, value: String) -> String {
-    Strings.substring(0, count, value)
+    Strings.substring(
+        Strings.zeroIndex,
+        Strings.indexAtCodePointCount(count, value),
+        value,
+    )
 }
 
 fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {

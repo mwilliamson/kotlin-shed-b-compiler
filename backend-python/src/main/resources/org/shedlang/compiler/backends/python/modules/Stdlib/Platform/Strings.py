@@ -19,6 +19,14 @@ def code_point_count(string):
     return len(string)
 
 
+def index_at_code_point_count(count, value):
+    return count
+
+
+def last_index(value):
+    return len(value)
+
+
 def next(index, value):
     if index < len(value):
         return Options.some((value[index], index + 1))

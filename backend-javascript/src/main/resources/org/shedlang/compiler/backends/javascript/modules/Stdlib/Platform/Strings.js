@@ -21,6 +21,22 @@ function codePointCount(string) {
     return BigInt(count);
 }
 
+function indexAtCodePointCount(endCount, value) {
+    let index = 0;
+    let count = 0;
+    while (count < endCount && index < value.length) {
+        const codePoint = value.codePointAt(index);
+        const size = codePoint > 0xffff ? 2 : 1;
+        count += 1;
+        index += size;
+    }
+    return index;
+}
+
+function lastIndex(value) {
+    return value.length;
+}
+
 function next(index, string) {
     if (index < string.length) {
         const codePoint = string.codePointAt(index);
@@ -45,6 +61,8 @@ exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
+exports.indexAtCodePointCount = indexAtCodePointCount;
+exports.lastIndex = lastIndex;
 exports.next = next;
 exports.replace = replace;
 exports.substring = substring;
