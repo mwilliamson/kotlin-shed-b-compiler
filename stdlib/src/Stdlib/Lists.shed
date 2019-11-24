@@ -89,16 +89,5 @@ fun map[T, R, !E](func: Fun (T) !E -> R, elements: List[T]) !E -> List[R] {
 }
 
 fun reverse[T](elements: List[T]) -> List[T] {
-    reverse2(nil, elements)
-}
-
-fun reverse2[T](acc: List[T], elements: List[T]) -> List[T] {
-    when (elements) {
-        is Nil {
-            acc
-        }
-        is Cons {
-            tailrec reverse2(cons(elements.head, acc), elements.tail)
-        }
-    }
+    foldLeft(fun (acc: List[T], element: T) => cons(element, acc), nil, elements)
 }
