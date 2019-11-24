@@ -1,0 +1,9 @@
+export repeat;
+
+fun repeat[T](func: Fun (T) -> T, times: Int, acc: T) -> T {
+    if (times == 0) {
+        acc
+    } else {
+        tailrec repeat(func, times - 1, func(acc))
+    }
+}

@@ -21,6 +21,7 @@ import Lists from Stdlib.Lists;
 import @(.List as List) from Stdlib.Lists;
 import Options from Stdlib.Options;
 import Strings from Stdlib.Platform.Strings;
+import Repeat from Stdlib.Repeat;
 import Sequences from Stdlib.Sequences;
 
 val codePointToHexString = Strings.codePointToHexString;
@@ -116,16 +117,7 @@ fun padLeft(desiredLength: Int, padding: CodePoint, string: String) -> String {
 }
 
 fun repeat(value: String, times: Int) -> String {
-    repeatAcc("", value, times)
-}
-
-// TODO: tailrec
-fun repeatAcc(acc: String, value: String, times: Int) -> String {
-    if (times == 0) {
-        acc
-    } else {
-        repeatAcc(acc + value, value, times - 1)
-    }
+    Repeat.repeat(fun (acc: String) => acc + value, times, "")
 }
 
 fun startsWith(prefix: String, value: String) -> Bool {
