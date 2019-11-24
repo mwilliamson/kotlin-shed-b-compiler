@@ -44,10 +44,7 @@ fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequ
             }
             is Some {
                 val #(codePoint, nextIndex) = next.value;
-                Sequences.SequenceItem(
-                    .head = codePoint,
-                    .tail = stringToSequenceAtIndex(nextIndex, value),
-                )
+                Sequences.item(codePoint, stringToSequenceAtIndex(nextIndex, value))
             }
         }
     })

@@ -2,6 +2,7 @@ export
     Sequence,
     SequenceIterator,
     SequenceItem,
+    item,
     SequenceEnd,
     end,
 
@@ -25,6 +26,10 @@ union SequenceIterator[T, !E] =
         tail: Sequence[T, E],
     }
     | SequenceEnd;
+
+fun item[T, !E](head: T, tail: Sequence[T, E]) -> SequenceItem[T, E] {
+    SequenceItem(.head = head, .tail = tail)
+}
 
 val end = SequenceEnd();
 
