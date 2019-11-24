@@ -36,7 +36,7 @@ fun stringToSequence(value: String) -> Sequences.Sequence[CodePoint, Pure] {
 }
 
 fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequence[CodePoint, Pure] {
-    Sequences.pure[CodePoint](fun () -> Sequences.SequenceIterator[CodePoint, Pure] {
+    Sequences.pure[CodePoint](fun () {
         val next = Strings.next(index, value);
         when (next) {
             is None {
