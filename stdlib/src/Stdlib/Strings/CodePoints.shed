@@ -32,21 +32,22 @@ val replace = Strings.replace;
 val slice = Strings.substring;
 
 fun stringToSequence(value: String) -> Sequences.Sequence[CodePoint, Pure] {
-    stringToSequenceAtIndex(0, value)
+    stringToSequenceAtIndex(Strings.zeroIndex, value)
 }
 
-fun stringToSequenceAtIndex(index: Int, value: String) -> Sequences.Sequence[CodePoint, Pure] {
+fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequence[CodePoint, Pure] {
     Sequences.Sequence[CodePoint, Pure](
         .next = fun () -> Sequences.SequenceIterator[CodePoint, Pure] {
-            val codePoint = Strings.codePointAt(index, value);
-            when (codePoint) {
+            val next = Strings.next(index, value);
+            when (next) {
                 is None {
                     Sequences.end
                 }
                 is Some {
+                    val #(codePoint, nextIndex) = next.value;
                     Sequences.SequenceItem(
-                        .head = codePoint.value,
-                        .tail = stringToSequenceAtIndex(index + 1, value),
+                        .head = codePoint,
+                        .tail = stringToSequenceAtIndex(nextIndex, value),
                     )
                 }
             }

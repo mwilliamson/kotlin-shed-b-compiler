@@ -30,6 +30,16 @@ function codePointCount(string) {
     return BigInt(count);
 }
 
+function next(index, string) {
+    if (index < string.length) {
+        const codePoint = string.codePointAt(index);
+        const size = codePoint > 0xffff ? 2 : 1;
+        return Options.some([String.fromCodePoint(codePoint), index + size]);
+    } else {
+        return Options.none;
+    }
+}
+
 function replace(old, replacement, string) {
     return string.split(old).join(replacement);
 }
@@ -38,10 +48,14 @@ function substring(startIndex, endIndex, string) {
     return string.substring(Number(startIndex), Number(endIndex));
 }
 
+const zeroIndex = 0;
+
 exports.codePointAt = codePointAt;
 exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
+exports.next = next;
 exports.replace = replace;
 exports.substring = substring;
+exports.zeroIndex = zeroIndex;

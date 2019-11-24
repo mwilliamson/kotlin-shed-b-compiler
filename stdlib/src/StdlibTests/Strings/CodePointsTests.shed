@@ -6,6 +6,18 @@ import Matchers from Stdlib.Matchers;
 import CodePoints from Stdlib.Strings.CodePoints;
 import Tests from Stdlib.Tests;
 
+val foldLeftTestSuite = Tests.suite("foldLeft", list(
+    Tests.testCase("empty string produces initial value", fun () {
+        val result = CodePoints.foldLeft(fun (acc: Int, codePoint: CodePoint) => acc + 1, 0, "");
+        Tests.assertThat(result, Matchers.isInt(0))
+    }),
+
+    Tests.testCase("code points outside BMP are treated as single code point", fun () {
+        val result = CodePoints.foldLeft(fun (acc: Int, codePoint: CodePoint) => acc + 1, 0, "☃𝔼☃𝔼☃");
+        Tests.assertThat(result, Matchers.isInt(5))
+    }),
+));
+
 val joinTestSuite = Tests.suite("join", list(
     Tests.testCase("empty iterable is joined to empty string", fun () {
         val result = CodePoints.join(", ", list());
@@ -40,6 +52,7 @@ val lengthTestSuite = Tests.suite("length", list(
 ));
 
 val testCases = Tests.suite(moduleName, list(
+    foldLeftTestSuite,
     joinTestSuite,
     lengthTestSuite,
 ));

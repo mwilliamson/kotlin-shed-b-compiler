@@ -3,5 +3,7 @@ val codePointToHexString: Fun (CodePoint) -> String;
 val codePointToInt: Fun (CodePoint) -> Int;
 val codePointToString: Fun (CodePoint) -> String;
 val codePointCount: Fun (String) -> Int;
+val next: Fun (StringIndex, String) -> Option[#(CodePoint, StringIndex)];
 val replace: Fun (String, String, String) -> String;
 val substring: Fun (Int, Int, String) -> String;
+val zeroIndex: StringIndex;
