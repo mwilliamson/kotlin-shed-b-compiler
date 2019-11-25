@@ -19,7 +19,7 @@ val builtins = listOf(
     builtinType("Unit", UnitType),
     builtinType("Int", IntType),
     builtinType("String", StringType),
-    builtinType("StringIndex", StringIndexType),
+    builtinType("StringSlice", StringSliceType),
     builtinType("CodePoint", CodePointType),
     builtinType("Bool", BoolType),
     builtinType("Symbol", AnySymbolType),

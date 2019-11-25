@@ -1,11 +1,12 @@
 package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.stackinterpreter.*
-import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.stackinterpreter.InterpreterCodePoint
+import org.shedlang.compiler.stackinterpreter.InterpreterInt
+import org.shedlang.compiler.stackinterpreter.InterpreterString
+import org.shedlang.compiler.stackinterpreter.InterpreterValue
 
 class StringsModuleTests {
     private val moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))
@@ -36,62 +37,6 @@ class StringsModuleTests {
         val value = call("codePointToString", listOf(InterpreterCodePoint(42)))
 
         assertThat(value, isString("*"))
-    }
-
-    @Test
-    fun indexAtCodePointCount_whenCharactersAreInBmpThenIndexIsCount() {
-        val value = call("indexAtCodePointCount", listOf(InterpreterInt(1.toBigInteger()), InterpreterString("abc")))
-
-        assertThat(value, isInt(1))
-    }
-
-    @Test
-    fun indexAtCodePointCount_whenCharactersAreNotInBmpThenIndexIsGreaterThanCount() {
-        val value = call("indexAtCodePointCount", listOf(InterpreterInt(1.toBigInteger()), InterpreterString("\uD835\uDD3Cbc")))
-
-        assertThat(value, isInt(2))
-    }
-
-    @Test
-    fun indexAtCodePointCount_whenCountIsNegativeThenCountIsFromEndOfString() {
-        val value = call("indexAtCodePointCount", listOf(InterpreterInt((-1).toBigInteger()), InterpreterString("abc")))
-
-        assertThat(value, isInt(2))
-    }
-
-    @Test
-    fun indexAtCodePointCount_givenCharactersNotInBmpWhenCountIsNegativeThenCountIsFromEndOfString() {
-        val value = call("indexAtCodePointCount", listOf(InterpreterInt((-1).toBigInteger()), InterpreterString("ab\uD835\uDD3C")))
-
-        assertThat(value, isInt(2))
-    }
-
-    @Test
-    fun lastIndexIsLengthOfString() {
-        val value = call("lastIndex", listOf(InterpreterString("\uD835\uDD3Cbc")))
-
-        assertThat(value, isInt(4))
-    }
-
-    @Test
-    fun next_whenStringIsBeforeEndOfStringThenCodePointIsReturned() {
-        val value = call("next", listOf(InterpreterInt(4.toBigInteger()), InterpreterString("hello")))
-
-        val tuple = (value as InterpreterShapeValue).field(Identifier("value"))
-        assertThat(tuple, isTuple(isSequence(
-            isCodePoint('o'),
-            isInt(5)
-        )))
-    }
-
-    @Test
-    fun next_whenIndexIsAfterEndOfStringThenNoneIsReturned() {
-        val value = call("next", listOf(InterpreterInt(5.toBigInteger()), InterpreterString("hello")))
-
-        assertThat(
-            { (value as InterpreterShapeValue).field(Identifier("value")) },
-            throws<Exception>()
-        )
     }
 
     @Test

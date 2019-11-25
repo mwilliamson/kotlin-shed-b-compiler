@@ -137,11 +137,7 @@ fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
 
 fun stringTextToCodePoints(text: String) -> String {
     // TODO: handle escape sequences
-    CodePoints.slice(
-        CodePoints.indexAtCodePointCount(1, text),
-        CodePoints.indexAtCodePointCount(-1, text),
-        text,
-    )
+    CodePoints.substring(1, -1, text)
 }
 
 union JsonResult =

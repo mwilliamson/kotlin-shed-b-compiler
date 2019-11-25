@@ -19,17 +19,15 @@ def code_point_count(string):
     return len(string)
 
 
-def index_at_code_point_count(count, value):
-    return count
+def drop_left_code_points(count, string):
+    return string[count:]
 
 
-def last_index(value):
-    return len(value)
-
-
-def next(index, value):
-    if index < len(value):
-        return Options.some((value[index], index + 1))
+def next(string_slice):
+    string, start_index, end_index = string_slice
+    if start_index < end_index:
+        result = (string[start_index], (string, start_index + 1, end_index))
+        return Options.some(result)
     else:
         return Options.none
 
@@ -38,8 +36,9 @@ def replace(old, new, string):
     return string.replace(old, new)
 
 
+def slice(string):
+    return (string, 0, len(string))
+
+
 def substring(start_index, end_index, value):
     return value[start_index:end_index]
-
-
-zero_index = 0

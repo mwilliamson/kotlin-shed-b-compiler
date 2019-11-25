@@ -21,6 +21,11 @@ function codePointCount(string) {
     return BigInt(count);
 }
 
+function dropLeftCodePoints(count, string) {
+    const index = indexAtCodePointCount(Number(count), string);
+    return string.substring(index);
+}
+
 function indexAtCodePointCount(endCount, value) {
     if (endCount >= 0) {
         let index = 0;
@@ -45,15 +50,13 @@ function indexAtCodePointCount(endCount, value) {
     }
 }
 
-function lastIndex(value) {
-    return value.length;
-}
-
-function next(index, string) {
-    if (index < string.length) {
-        const codePoint = string.codePointAt(index);
+function next(stringSlice) {
+    const {string, startIndex, endIndex} = stringSlice;
+    if (startIndex < endIndex) {
+        const codePoint = string.codePointAt(startIndex);
         const size = codePoint > 0xffff ? 2 : 1;
-        return Options.some([String.fromCodePoint(codePoint), index + size]);
+        const rest = {string: string, startIndex: startIndex + size, endIndex: endIndex}
+        return Options.some([String.fromCodePoint(codePoint), rest]);
     } else {
         return Options.none;
     }
@@ -63,19 +66,23 @@ function replace(old, replacement, string) {
     return string.split(old).join(replacement);
 }
 
-function substring(startIndex, endIndex, string) {
-    return string.substring(Number(startIndex), Number(endIndex));
+function slice(string) {
+    return {string: string, startIndex: 0, endIndex: string.length};
 }
 
-const zeroIndex = 0;
+function substring(startIndex, endIndex, string) {
+    return string.substring(
+        indexAtCodePointCount(Number(startIndex), string),
+        indexAtCodePointCount(Number(endIndex), string),
+    );
+}
 
 exports.codePointToHexString = codePointToHexString;
 exports.codePointToInt = codePointToInt;
 exports.codePointToString = codePointToString;
 exports.codePointCount = codePointCount;
-exports.indexAtCodePointCount = indexAtCodePointCount;
-exports.lastIndex = lastIndex;
+exports.dropLeftCodePoints = dropLeftCodePoints;
 exports.next = next;
 exports.replace = replace;
+exports.slice = slice;
 exports.substring = substring;
-exports.zeroIndex = zeroIndex;

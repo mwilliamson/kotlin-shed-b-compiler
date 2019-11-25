@@ -78,8 +78,8 @@ object CodePointType : BasicType {
 object StringType : BasicType {
     override val shortDescription = "String"
 }
-object StringIndexType : BasicType {
-    override val shortDescription = "StringIndex"
+object StringSliceType : BasicType {
+    override val shortDescription = "StringSlice"
 }
 data class SymbolType(val symbol: Symbol): BasicType {
     override val shortDescription: String
@@ -620,7 +620,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
                 replaceStaticValuesInType(elementType, bindings)
             }
         )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is StringIndexType || type is CodePointType || type is AnyType || type is NothingType || type is SymbolType || type is TypeAlias) {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is StringSliceType || type is CodePointType || type is AnyType || type is NothingType || type is SymbolType || type is TypeAlias) {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)

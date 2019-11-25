@@ -36,6 +36,8 @@ internal data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
 
+internal data class InterpreterStringSlice(val string: String, val startIndex: Int, val endIndex: Int): InterpreterValue
+
 internal data class InterpreterSymbol(val value: Symbol): InterpreterValue
 
 internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue

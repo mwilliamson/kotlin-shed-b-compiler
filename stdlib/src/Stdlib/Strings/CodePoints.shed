@@ -6,9 +6,8 @@ export
     first,
     flatMap,
     foldLeft,
-    indexAtCodePointCount,
     replace,
-    slice,
+    substring,
 
     dropLeft,
     isEmpty,
@@ -30,42 +29,40 @@ val codePointToHexString = Strings.codePointToHexString;
 val codePointToInt = Strings.codePointToInt;
 val codePointToString = Strings.codePointToString;
 val count = Strings.codePointCount;
-val indexAtCodePointCount = Strings.indexAtCodePointCount;
 val replace = Strings.replace;
-val slice = Strings.substring;
+val substring = Strings.substring;
 
 fun stringToSequence(value: String) -> Sequences.Sequence[CodePoint, Pure] {
-    stringToSequenceAtIndex(Strings.zeroIndex, value)
+    stringSliceToSequence(Strings.slice(value))
 }
 
-fun stringToSequenceAtIndex(index: StringIndex, value: String) -> Sequences.Sequence[CodePoint, Pure] {
+fun stringSliceToSequence(value: StringSlice) -> Sequences.Sequence[CodePoint, Pure] {
     Sequences.pure[CodePoint](fun () {
-        val next = Strings.next(index, value);
+        val next = Strings.next(value);
         when (next) {
             is None {
                 Sequences.end
             }
             is Some {
-                val #(codePoint, nextIndex) = next.value;
-                Sequences.item(codePoint, stringToSequenceAtIndex(nextIndex, value))
+                val #(codePoint, rest) = next.value;
+                Sequences.item(codePoint, stringSliceToSequence(rest))
             }
         }
     })
 }
 
 fun dropLeft(toDrop: Int, value: String) -> String {
-    Strings.substring(
-        Strings.indexAtCodePointCount(toDrop, value),
-        Strings.lastIndex(value),
+    Strings.dropLeftCodePoints(
+        toDrop,
         value,
     )
 }
 
 fun first(value: String) -> Option[CodePoint] {
-    val next = Strings.next(Strings.zeroIndex, value);
+    val next = Strings.next(Strings.slice(value));
     when (next) {
         is Some {
-            val #(codePoint, nextIndex) = next.value;
+            val #(codePoint, rest) = next.value;
             some(codePoint)
         }
         is None {
@@ -109,11 +106,7 @@ fun join(separator: String, elements: List[String]) -> String {
 }
 
 fun left(count: Int, value: String) -> String {
-    Strings.substring(
-        Strings.zeroIndex,
-        Strings.indexAtCodePointCount(count, value),
-        value,
-    )
+    Strings.substring(0, count, value)
 }
 
 fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {

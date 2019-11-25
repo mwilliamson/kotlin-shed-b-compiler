@@ -1,7 +1,6 @@
 package org.shedlang.compiler.stackinterpreter
 
 import org.shedlang.compiler.ast.Identifier
-import java.lang.Integer.min
 import java.math.BigInteger
 
 private val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
@@ -34,43 +33,30 @@ internal val stringsModule = createNativeModule(
             state.pushTemporary(InterpreterString(builder.toString()))
         },
 
-        Identifier("indexAtCodePointCount") to InterpreterBuiltinFunction { state, arguments ->
-            val count = (arguments[0] as InterpreterInt).value.intValueExact()
-            val string = ((arguments[1]) as InterpreterString).value
-            val index = if (count >= 0) {
-                string.offsetByCodePoints(0, count)
-            } else {
-                var index = string.length
-                var currentCount = 0
-                while (currentCount > count && index - 1 >= 0) {
-                    val codeUnit = string[index - 1]
-                    val size = if (codeUnit >= 0xdc00.toChar() && codeUnit <= 0xdfff.toChar()) 2 else 1
-                    index -= size
-                    currentCount -= 1
-                }
-                index
-            }
-            state.pushTemporary(InterpreterInt(index.toBigInteger()))
-        },
-
-        Identifier("lastIndex") to InterpreterBuiltinFunction { state, arguments ->
-            val string = ((arguments[0]) as InterpreterString).value
-            state.pushTemporary(InterpreterInt(string.length.toBigInteger()))
+        Identifier("dropLeftCodePoints") to InterpreterBuiltinFunction { state, arguments ->
+            val count = (arguments[0] as InterpreterInt).value
+            val string = (arguments[1] as InterpreterString).value
+            val result = string.substring(indexAtCodePointCount(string, count))
+            state.pushTemporary(InterpreterString(result))
         },
 
         Identifier("next") to InterpreterBuiltinFunction { state, arguments ->
-            val index = (arguments[0] as InterpreterInt).value.toInt()
-            val string = (arguments[1] as InterpreterString).value
+            val stringSlice = arguments[0] as InterpreterStringSlice
             val optionsModule = state.loadModule(optionsModuleName)
-            if (index < string.length) {
-                val codePoint = string.codePointAt(index)
+            if (stringSlice.startIndex < stringSlice.endIndex) {
+                val codePoint = stringSlice.string.codePointAt(stringSlice.startIndex)
                 val size = if (codePoint > 0xffff) 2 else 1
+                val rest = InterpreterStringSlice(
+                    stringSlice.string,
+                    stringSlice.startIndex + size,
+                    stringSlice.endIndex
+                )
                 call(
                     state = state,
                     receiver = optionsModule.field(Identifier("some")),
                     positionalArguments = listOf(InterpreterTuple(listOf(
                         InterpreterCodePoint(codePoint),
-                        InterpreterInt((index + size).toBigInteger())
+                        rest
                     ))),
                     namedArguments = mapOf()
                 )
@@ -87,15 +73,36 @@ internal val stringsModule = createNativeModule(
             state.pushTemporary(InterpreterString(value.replace(old, new)))
         },
 
-        Identifier("substring") to InterpreterBuiltinFunction { state, arguments ->
-            val startIndex = (arguments[0] as InterpreterInt).value.intValueExact()
-            val endIndex = (arguments[1] as InterpreterInt).value.intValueExact()
-            val value = (arguments[2] as InterpreterString).value
-            // TODO: handle code points
-            val substring = value.substring(startIndex, min(endIndex, value.length))
-            state.pushTemporary(InterpreterString(substring))
+        Identifier("slice") to InterpreterBuiltinFunction { state, arguments ->
+            val string = (arguments[0] as InterpreterString).value
+            state.pushTemporary(InterpreterStringSlice(string, 0, string.length))
         },
 
-        Identifier("zeroIndex") to InterpreterInt(BigInteger.ZERO)
+        Identifier("substring") to InterpreterBuiltinFunction { state, arguments ->
+            val startIndex = (arguments[0] as InterpreterInt).value
+            val endIndex = (arguments[1] as InterpreterInt).value
+            val string = (arguments[2] as InterpreterString).value
+            // TODO: handle bounds
+            val result = string.substring(indexAtCodePointCount(string, startIndex), indexAtCodePointCount(string, endIndex))
+            state.pushTemporary(InterpreterString(result))
+        }
     )
 )
+
+
+fun indexAtCodePointCount(string: String, countBigInt: BigInteger): Int {
+    val count = countBigInt.intValueExact()
+    return if (count >= 0) {
+        string.offsetByCodePoints(0, count)
+    } else {
+        var index = string.length
+        var currentCount = 0
+        while (currentCount > count && index - 1 >= 0) {
+            val codeUnit = string[index - 1]
+            val size = if (codeUnit >= 0xdc00.toChar() && codeUnit <= 0xdfff.toChar()) 2 else 1
+            index -= size
+            currentCount -= 1
+        }
+        index
+    }
+}
