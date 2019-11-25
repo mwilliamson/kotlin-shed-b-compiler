@@ -93,7 +93,11 @@ internal val stringsModule = createNativeModule(
 fun indexAtCodePointCount(string: String, countBigInt: BigInteger): Int {
     val count = countBigInt.intValueExact()
     return if (count >= 0) {
-        string.offsetByCodePoints(0, count)
+        try {
+            string.offsetByCodePoints(0, count)
+        } catch (error: IndexOutOfBoundsException) {
+            string.length
+        }
     } else {
         var index = string.length
         var currentCount = 0

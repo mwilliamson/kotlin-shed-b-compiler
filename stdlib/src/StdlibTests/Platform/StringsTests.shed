@@ -54,6 +54,38 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
 
         Tests.assertThat(result, Matchers.isString("𝔼f"))
     }),
+
+    Tests.testCase("when positive count is equal to string code point count then empty string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.dropLeftCodePoints(6, string);
+
+        Tests.assertThat(result, Matchers.isString(""))
+    }),
+
+    Tests.testCase("when positive count is larger than string then empty string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.dropLeftCodePoints(7, string);
+
+        Tests.assertThat(result, Matchers.isString(""))
+    }),
+
+    Tests.testCase("when negative count is equal to string code point count then entire string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.dropLeftCodePoints(-6, string);
+
+        Tests.assertThat(result, Matchers.isString("abcdef"))
+    }),
+
+    Tests.testCase("when negative count is larger than string then entire string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.dropLeftCodePoints(-7, string);
+
+        Tests.assertThat(result, Matchers.isString("abcdef"))
+    }),
 ));
 
 val testCases = Tests.suite(moduleName, list(
