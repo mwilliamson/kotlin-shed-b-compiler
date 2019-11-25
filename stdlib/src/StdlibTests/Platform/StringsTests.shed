@@ -22,7 +22,42 @@ val codePointCountTestSuite = Tests.suite("codePointCount", list(
     codePointCountTestCase("☃𝔼☃𝔼☃", 5),
 ));
 
+val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
+    Tests.testCase("characters in BMP, positive count", fun() {
+        val string = "abcdef";
+
+        val result = Strings.dropLeftCodePoints(2, string);
+
+        Tests.assertThat(result, Matchers.isString("cdef"))
+    }),
+
+    Tests.testCase("characters outside BMP, positive count", fun() {
+        val string = "𝔼bcdef";
+
+        val result = Strings.dropLeftCodePoints(2, string);
+
+        Tests.assertThat(result, Matchers.isString("cdef"))
+    }),
+
+    Tests.testCase("characters in BMP, negative count", fun() {
+        val string = "abcdef";
+
+        val result = Strings.dropLeftCodePoints(-2, string);
+
+        Tests.assertThat(result, Matchers.isString("ef"))
+    }),
+
+    Tests.testCase("characters outside BMP, negative count", fun() {
+        val string = "abcd𝔼f";
+
+        val result = Strings.dropLeftCodePoints(-2, string);
+
+        Tests.assertThat(result, Matchers.isString("𝔼f"))
+    }),
+));
+
 val testCases = Tests.suite(moduleName, list(
     codePointCountTestSuite,
+    dropLeftCodePointsTestSuite,
 ));
 
