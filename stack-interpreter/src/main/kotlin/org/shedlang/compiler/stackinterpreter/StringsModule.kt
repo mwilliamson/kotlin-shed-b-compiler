@@ -79,11 +79,17 @@ internal val stringsModule = createNativeModule(
         },
 
         Identifier("substring") to InterpreterBuiltinFunction { state, arguments ->
-            val startIndex = (arguments[0] as InterpreterInt).value
-            val endIndex = (arguments[1] as InterpreterInt).value
+            val startCount = (arguments[0] as InterpreterInt).value
+            val endCount = (arguments[1] as InterpreterInt).value
             val string = (arguments[2] as InterpreterString).value
             // TODO: handle bounds
-            val result = string.substring(indexAtCodePointCount(string, startIndex), indexAtCodePointCount(string, endIndex))
+            val startIndex = indexAtCodePointCount(string, startCount)
+            val endIndex = indexAtCodePointCount(string, endCount)
+            val result = if (startIndex < endIndex) {
+                string.substring(startIndex, endIndex)
+            } else {
+                ""
+            }
             state.pushTemporary(InterpreterString(result))
         }
     )

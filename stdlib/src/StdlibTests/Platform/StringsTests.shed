@@ -88,8 +88,83 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     }),
 ));
 
+val substringTestSuite = Tests.suite("substring", list(
+    Tests.testCase("characters in BMP, positive startIndex, positive endIndex, startIndex < endIndex", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(2, 4, string);
+
+        Tests.assertThat(result, Matchers.isString("cd"))
+    }),
+
+    Tests.testCase("when startIndex is negative then startIndex is from end of string", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(-4, 4, string);
+
+        Tests.assertThat(result, Matchers.isString("cd"))
+    }),
+
+    Tests.testCase("when endIndex is negative then endIndex is from end of string", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(2, -2, string);
+
+        Tests.assertThat(result, Matchers.isString("cd"))
+    }),
+
+    Tests.testCase("when startIndex equals endIndex then empty string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(3, 3, string);
+
+        Tests.assertThat(result, Matchers.isString(""))
+    }),
+
+    Tests.testCase("when startIndex is greater than end index then empty string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(4, 3, string);
+
+        Tests.assertThat(result, Matchers.isString(""))
+    }),
+
+    Tests.testCase("when startIndex is equal to code point count then empty string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(6, 10, string);
+
+        Tests.assertThat(result, Matchers.isString(""))
+    }),
+
+    Tests.testCase("when startIndex is greater than code point count then empty string is returned", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(7, 10, string);
+
+        Tests.assertThat(result, Matchers.isString(""))
+    }),
+
+    Tests.testCase("when negative startIndex is equal to code point count then substring starts at start of string", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(-6, 10, string);
+
+        Tests.assertThat(result, Matchers.isString("abcdef"))
+    }),
+
+    Tests.testCase("when negative startIndex is greater than code point count then substring starts at start of string", fun() {
+        val string = "abcdef";
+
+        val result = Strings.substring(-7, 10, string);
+
+        Tests.assertThat(result, Matchers.isString("abcdef"))
+    }),
+));
+
 val testCases = Tests.suite(moduleName, list(
     codePointCountTestSuite,
     dropLeftCodePointsTestSuite,
+    substringTestSuite,
 ));
 

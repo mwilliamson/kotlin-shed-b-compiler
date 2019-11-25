@@ -70,11 +70,14 @@ function slice(string) {
     return {string: string, startIndex: 0, endIndex: string.length};
 }
 
-function substring(startIndex, endIndex, string) {
-    return string.substring(
-        indexAtCodePointCount(Number(startIndex), string),
-        indexAtCodePointCount(Number(endIndex), string),
-    );
+function substring(startCount, endCount, string) {
+    const startIndex = indexAtCodePointCount(Number(startCount), string);
+    const endIndex = indexAtCodePointCount(Number(endCount), string);
+    if (startIndex < endIndex) {
+        return string.substring(startIndex, endIndex);
+    } else {
+        return "";
+    }
 }
 
 exports.codePointToHexString = codePointToHexString;
