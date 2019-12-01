@@ -42,7 +42,7 @@ class TokenIteratorTests {
                 { tokens.skip(TokenType.SYMBOL) }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::location, cast(equalTo(stringSource(0)))),
+                has(UnexpectedTokenException::source, cast(equalTo(stringSource(0)))),
                 has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
                 has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
             ))
