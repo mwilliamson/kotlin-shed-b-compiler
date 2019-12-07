@@ -33,7 +33,7 @@ class ResolutionTests {
         val context = resolutionContext(mapOf(Identifier("x") to anyDeclaration()))
 
         assertThat(
-            { resolve(node, context) },
+            { resolveEval(node, context) },
             throws(has(UninitialisedVariableError::name, isIdentifier("x")))
         )
     }
@@ -44,7 +44,7 @@ class ResolutionTests {
         val context = resolutionContext()
 
         assertThat(
-            { resolve(node, context) },
+            { resolveEval(node, context) },
             throws(has(UnresolvedReferenceError::name, isIdentifier("x")))
         )
     }
@@ -62,7 +62,7 @@ class ResolutionTests {
         val context = resolutionContext()
 
         assertThat(
-            { resolve(node, context) },
+            { resolveEval(node, context) },
             throws(has(UnresolvedReferenceError::name, isIdentifier("X")))
         )
     }

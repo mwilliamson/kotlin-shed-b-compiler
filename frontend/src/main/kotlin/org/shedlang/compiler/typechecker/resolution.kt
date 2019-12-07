@@ -2,7 +2,6 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.nullableToList
 
 class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode>) : ResolvedReferences {
     override fun get(node: ReferenceNode): VariableBindingNode {
@@ -85,198 +84,57 @@ fun resolve(node: Node, globals: Map<Identifier, VariableBindingNode>): Resolved
         isInitialised = globals.values.map(VariableBindingNode::nodeId).toMutableSet(),
         deferred = mutableMapOf()
     )
-    resolve(node, context)
+    resolveEval(node, context)
     context.undefer()
     return ResolvedReferencesMap(context.nodes)
 }
 
-internal fun resolve(node: Node, context: ResolutionContext) {
-    when (node) {
-        is ReferenceNode -> {
-            val referent = context.bindings[node.name]
-            if (referent == null) {
-                throw UnresolvedReferenceError(node.name, node.source)
-            } else {
-                context[node] = referent
-                if (!context.isInitialised(referent)) {
-                    throw UninitialisedVariableError(node.name, node.source)
-                }
-            }
-        }
-
-        is FunctionDeclarationNode -> {
-            context.defer(node, {
-                resolveFunction(node, context)
-            })
-        }
-
-        is FunctionExpressionNode -> resolveFunction(node, context)
-
-        is FunctionTypeNode -> resolveFunctionType(node, context)
-
-        is TypeAliasNode -> {
-            context.defer(node, {
-                resolveScope(
-                    body = listOf(node.expression),
-                    context = context
-                )
-            })
-        }
-
-        is ShapeNode -> {
-            context.defer(node, {
-                resolveScope(
-                    binders = node.staticParameters,
-                    body = node.extends + node.fields,
-                    context = context
-                )
-            })
-        }
-
-        is UnionNode -> {
-            context.defer(node, {
-                resolveScope(
-                    binders = node.staticParameters,
-                    body = node.superType.nullableToList(),
-                    context = context
-                )
-            })
-
-            node.members.forEach { member ->
-                context.defer(member, {
-                    resolveScope(
-                        binders = member.staticParameters,
-                        body = member.extends + member.fields,
-                        context = context
-                    )
-                })
-            }
-        }
-
-        is VarargsDeclarationNode -> {
-            resolve(node.cons, context)
-            resolve(node.nil, context)
-            context.initialise(node)
-        }
-
-        is ValNode -> {
-            resolve(node.expression, context)
-            for (target in node.target.variableBinders()) {
-                context.initialise(target)
-            }
-        }
-
-        is ModuleNode -> {
-            resolveScope(
-                binders = node.imports.flatMap { import -> import.target.variableBinders() },
-                body = node.body + node.exports,
-                context = context
-            )
-        }
-
-        is TypesModuleNode -> {
-            resolveScope(
-                binders = node.imports.flatMap { import -> import.target.variableBinders() },
-                body = node.body,
-                context = context
-            )
-        }
-
-        is ImportNode -> {
-            for (target in node.target.variableBinders()) {
-                context.initialise(target)
-            }
-        }
-
-        is IfNode -> {
-            for (conditionalBranch in node.conditionalBranches) {
-                resolve(conditionalBranch.condition, context)
-                resolveBlock(conditionalBranch.body, context = context)
-            }
-            resolveBlock(node.elseBranch, context = context)
-        }
-
-        is WhenNode -> {
-            resolve(node.expression, context)
-            for (branch in node.branches) {
-                resolve(branch.type, context)
-                resolveBlock(branch.body, context = context)
-            }
-            val elseBranch = node.elseBranch
-            if (elseBranch != null) {
-                resolveBlock(elseBranch, context = context)
-            }
-        }
-
-        else -> {
-            for (child in node.children) {
-                resolve(child, context)
-            }
-        }
+internal fun resolve(structure: NodeStructure, context: ResolutionContext) {
+    when (structure) {
+        is NodeStructure.Eval -> resolveEval(structure.node, context)
+        // TODO: substructures should always be static
+        is NodeStructure.StaticEval -> resolveEval(structure.node, context)
+        is NodeStructure.SubEnv -> resolveSubEnv(structure.structure, context)
+        is NodeStructure.DeferInitialise -> context.defer(structure.binding) { resolve(structure.structure, context) }
+        is NodeStructure.Initialise -> context.initialise(structure.binding)
     }
 }
 
-private fun resolveFunction(node: FunctionNode, context: ResolutionContext) {
-    // TODO: test namedParameters resolution
-    val bodyContext = resolveScope(
-        binders = node.staticParameters,
-        body = node.effects + listOf(node.returnType).filterNotNull() + node.parameters + node.namedParameters,
-        context = context
-    )
-    resolveBlock(
-        block = node.body,
-        binders = node.parameters + node.namedParameters,
-        context = bodyContext
-    )
-}
-
-private fun resolveFunctionType(node: FunctionTypeNode, context: ResolutionContext) {
-    resolveScope(
-        binders = node.staticParameters,
-        body = node.positionalParameters + node.namedParameters + node.effects + listOf(node.returnType),
-        context = context
-    )
-}
-
-private fun resolveBlock(
-    block: Block,
-    binders: List<VariableBindingNode> = listOf(),
-    context: ResolutionContext
-): ResolutionContext {
-    return resolveScope(
-        body = block.statements,
-        binders = binders,
-        context = context
-    )
-}
-
-private fun resolveScope(
-    body: List<Node> = listOf(),
-    binders: List<VariableBindingNode> = listOf(),
-    context: ResolutionContext
-): ResolutionContext {
-    // TODO: handle this more neatly
-    val bodyBinders = body.flatMap { node ->
-        when (node) {
-            is StatementNode -> node.variableBinders()
-            is VariableBindingNode -> listOf(node)
-            else -> listOf()
+internal fun resolveEval(node: Node, context: ResolutionContext) {
+    if (node is ReferenceNode) {
+        val referent = context.bindings[node.name]
+        if (referent == null) {
+            throw UnresolvedReferenceError(node.name, node.source)
+        } else {
+            context[node] = referent
+            if (!context.isInitialised(referent)) {
+                throw UninitialisedVariableError(node.name, node.source)
+            }
         }
     }
-    val bodyContext = enterScope(
-        binders + bodyBinders,
-        context
-    )
 
-    for (binder in binders) {
-        bodyContext.initialise(binder)
+    node.structure.forEach { structure -> resolve(structure, context) }
+}
+
+internal fun resolveSubEnv(structures: List<NodeStructure>, context: ResolutionContext) {
+    val binders = bindings(structures)
+    val subEnvContext = enterScope(binders, context)
+
+    structures.forEach { structure -> resolve(structure, subEnvContext) }
+}
+
+private fun bindings(structures: List<NodeStructure>): List<VariableBindingNode> {
+    return structures.flatMap(::bindings)
+}
+
+private fun bindings(structure: NodeStructure): List<VariableBindingNode> {
+    return when (structure) {
+        is NodeStructure.Eval -> bindings(structure.node.structure)
+        is NodeStructure.StaticEval -> bindings(structure.node.structure)
+        is NodeStructure.SubEnv -> listOf()
+        is NodeStructure.DeferInitialise -> listOf(structure.binding) + bindings(structure.structure)
+        is NodeStructure.Initialise -> listOf(structure.binding)
     }
-
-    for (child in body) {
-        resolve(child, bodyContext)
-    }
-
-    return bodyContext
 }
 
 private fun enterScope(binders: List<VariableBindingNode>, context: ResolutionContext): ResolutionContext {
