@@ -119,6 +119,13 @@ private fun readString(stream: InputStream): String {
 }
 
 data class ExecutionResult(val exitCode: Int = 0, val stdout: String = "", val stderr: String = "") {
+    fun throwOnError(): ExecutionResult {
+        if (exitCode == 0) {
+            return this
+        } else {
+            throw Exception("exit code was $exitCode\nstdout:\n$stdout\nstderr:\n$stderr")
+        }
+    }
 }
 
 fun temporaryDirectory(): TemporaryDirectory {
