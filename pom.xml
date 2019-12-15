@@ -9,6 +9,7 @@
     <packaging>pom</packaging>
     <version>0.1.0-SNAPSHOT</version>
     <modules>
+        <module>backend-amd64</module>
         <module>backend-common</module>
         <module>backend-javascript</module>
         <module>backend-python</module>
@@ -17,8 +18,8 @@
         <module>core</module>
         <module>core-tests</module>
         <module>frontend</module>
-	<module>stack-interpreter</module>
-	<module>testing</module>
+    <module>stack-interpreter</module>
+    <module>testing</module>
     </modules>
 
     <properties>

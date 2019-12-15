@@ -1,6 +1,7 @@
 /.idea
 *.iml
 /target
+/backend-amd64/target
 /backend-common/target
 /backend-javascript/target
 /backend-python/target
