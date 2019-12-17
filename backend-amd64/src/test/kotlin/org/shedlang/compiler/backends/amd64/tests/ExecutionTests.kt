@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.backends.amd64.*
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.typechecker.CompilerError
@@ -71,21 +72,19 @@ class ExecutionTests {
     }
 
     private fun compile(moduleSet: ModuleSet, target: Path, mainModule: List<Identifier>) {
-        val asm = """
-                global main
-                default rel
-
-                section .text
-
-            main:
-                mov rax, 42
-                ret
-        """.trimIndent()
+        val source = serialise(listOf(
+            Directives.global("main"),
+            Directives.defaultRel,
+            Directives.section(".text"),
+            Label("main"),
+            Instructions.mov(Registers.rax, 42),
+            Instructions.ret
+        ))
 
         temporaryDirectory().use { directory ->
             val directoryPath = directory.file.toPath()
             val asmPath = directoryPath.resolve("program.asm")
-            asmPath.toFile().writeText(asm)
+            asmPath.toFile().writeText(source)
             org.shedlang.compiler.backends.tests.run(
                 listOf("nasm", "-felf64", asmPath.toString()),
                 directory.file
