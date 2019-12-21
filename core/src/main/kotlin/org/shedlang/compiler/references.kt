@@ -5,4 +5,5 @@ import org.shedlang.compiler.ast.VariableBindingNode
 
 interface ResolvedReferences {
     operator fun get(node: ReferenceNode): VariableBindingNode
+    val referencedNodes: Collection<VariableBindingNode>
 }

@@ -14,8 +14,10 @@ class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode
         } else {
             return targetNode
         }
-
     }
+
+    override val referencedNodes: Collection<VariableBindingNode>
+        get() = references.values
 
     companion object {
         val EMPTY = ResolvedReferencesMap(mapOf())

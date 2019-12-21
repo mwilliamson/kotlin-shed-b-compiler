@@ -778,13 +778,20 @@ internal class Loader(
             StoreLocal(Builtins.moduleName.nodeId)
         )
 
-        val importInstructions = module.node.imports.flatMap { import ->
-            val importedModuleName = resolveImport(module.name, import.path)
-            persistentListOf(
-                InitModule(importedModuleName),
-                LoadModule(importedModuleName)
-            ).addAll(loadTarget(import.target))
-        }.toPersistentList()
+        val importInstructions = module.node.imports
+            .filter { import ->
+                import.target.variableBinders().any { variableBinder ->
+                    module.references.referencedNodes.contains(variableBinder)
+                }
+            }
+            .flatMap { import ->
+                val importedModuleName = resolveImport(module.name, import.path)
+                persistentListOf(
+                    InitModule(importedModuleName),
+                    LoadModule(importedModuleName)
+                ).addAll(loadTarget(import.target))
+            }
+            .toPersistentList()
 
         return importInstructions
             .addAll(moduleNameInstructions)
