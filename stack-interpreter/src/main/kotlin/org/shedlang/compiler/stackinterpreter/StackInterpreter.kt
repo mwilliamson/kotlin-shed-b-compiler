@@ -24,7 +24,7 @@ object RealWorld: World {
     }
 }
 
-internal interface InterpreterValue
+interface InterpreterValue
 
 internal object InterpreterUnit: InterpreterValue
 
@@ -32,7 +32,7 @@ internal data class InterpreterBool(val value: Boolean): InterpreterValue
 
 internal data class InterpreterCodePoint(val value: Int): InterpreterValue
 
-internal data class InterpreterInt(val value: BigInteger): InterpreterValue
+data class InterpreterInt(val value: BigInteger): InterpreterValue
 
 internal data class InterpreterString(val value: String): InterpreterValue
 
@@ -42,7 +42,7 @@ internal data class InterpreterSymbol(val value: Symbol): InterpreterValue
 
 internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue
 
-internal class InterpreterFunction(
+class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val positionalParameterIds: List<Int>,
     val namedParameterIds: List<NamedParameterId>,
@@ -134,7 +134,7 @@ internal class Stack<T>(private val stack: PersistentList<T>) {
 
 private var nextScopeId = 1
 
-internal data class ScopeReference(private val scopeId: Int)
+data class ScopeReference(private val scopeId: Int)
 
 internal fun createScopeReference(): ScopeReference {
     return ScopeReference(nextScopeId++)
@@ -352,29 +352,29 @@ internal fun initialState(
     ).enterModuleScope(instructions)
 }
 
-internal interface Instruction {
-    fun run(initialState: InterpreterState): InterpreterState
+sealed class Instruction {
+    internal abstract fun run(initialState: InterpreterState): InterpreterState
 }
 
-internal class PushValue(private val value: InterpreterValue): Instruction {
+class PushValue(val value: InterpreterValue): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(value).nextInstruction()
     }
 }
 
-internal object Duplicate: Instruction {
+internal object Duplicate: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.duplicateTemporary().nextInstruction()
     }
 }
 
-internal object Discard: Instruction {
+internal object Discard: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.discardTemporary().nextInstruction()
     }
 }
 
-internal object Swap: Instruction {
+internal object Swap: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value1) = initialState.popTemporary()
         val (state3, value2) = state2.popTemporary()
@@ -382,18 +382,18 @@ internal object Swap: Instruction {
     }
 }
 
-internal class CreateTuple(private val length: Int): Instruction {
+internal class CreateTuple(private val length: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, elements) = initialState.popTemporaries(length)
         return state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
     }
 }
 
-internal class DeclareFunction(
+class DeclareFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val positionalParameterIds: List<Int>,
     val namedParameterIds: List<InterpreterFunction.NamedParameterId>
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(InterpreterFunction(
             bodyInstructions = bodyInstructions,
@@ -404,7 +404,7 @@ internal class DeclareFunction(
     }
 }
 
-internal object DeclareVarargs: Instruction {
+internal object DeclareVarargs: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, arguments) = initialState.popTemporaries(2)
         val cons = arguments[0]
@@ -413,7 +413,7 @@ internal object DeclareVarargs: Instruction {
     }
 }
 
-internal object BoolNot: Instruction {
+internal object BoolNot: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, operand) = initialState.popTemporary()
         val result = InterpreterBool(!(operand as InterpreterBool).value)
@@ -423,7 +423,7 @@ internal object BoolNot: Instruction {
 
 internal class BinaryBoolOperation(
     private val func: (left: Boolean, right: Boolean) -> InterpreterValue
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.popTemporary()
         val (state3, left) = state2.popTemporary()
@@ -442,7 +442,7 @@ internal val BoolNotEqual = BinaryBoolOperation { left, right ->
 
 internal class BinaryCodePointOperation(
     private val func: (left: Int, right: Int) -> InterpreterValue
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.popTemporary()
         val (state3, left) = state2.popTemporary()
@@ -475,7 +475,7 @@ internal val CodePointGreaterThanOrEqual = BinaryCodePointOperation { left, righ
     InterpreterBool(left >= right)
 }
 
-internal object IntMinus: Instruction {
+internal object IntMinus: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, operand) = initialState.popTemporary()
         val result = InterpreterInt(-(operand as InterpreterInt).value)
@@ -485,7 +485,7 @@ internal object IntMinus: Instruction {
 
 internal class BinaryIntOperation(
     private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.popTemporary()
         val (state3, left) = state2.popTemporary()
@@ -516,7 +516,7 @@ internal val IntNotEqual = BinaryIntOperation { left, right ->
 
 internal class BinaryStringOperation(
     private val func: (left: String, right: String) -> InterpreterValue
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.popTemporary()
         val (state3, left) = state2.popTemporary()
@@ -539,7 +539,7 @@ internal val StringNotEqual = BinaryStringOperation { left, right ->
 
 internal class BinarySymbolOperation(
     private val func: (left: Symbol, right: Symbol) -> InterpreterValue
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, right) = initialState.popTemporary()
         val (state3, left) = state2.popTemporary()
@@ -552,7 +552,7 @@ internal val SymbolEquals = BinarySymbolOperation { left, right ->
     InterpreterBool(left == right)
 }
 
-internal class TupleAccess(private val elementIndex: Int): Instruction {
+internal class TupleAccess(private val elementIndex: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
         val element = (value as InterpreterTuple).elements[elementIndex]
@@ -560,7 +560,7 @@ internal class TupleAccess(private val elementIndex: Int): Instruction {
     }
 }
 
-internal class FieldAccess(private val fieldName: Identifier): Instruction {
+internal class FieldAccess(private val fieldName: Identifier): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, receiver) = initialState.popTemporary()
         val module = receiver as InterpreterHasFields
@@ -568,7 +568,7 @@ internal class FieldAccess(private val fieldName: Identifier): Instruction {
     }
 }
 
-internal class RelativeJumpIfFalse(private val size: Int): Instruction {
+internal class RelativeJumpIfFalse(private val size: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
         val condition = (value as InterpreterBool).value
@@ -580,7 +580,7 @@ internal class RelativeJumpIfFalse(private val size: Int): Instruction {
     }
 }
 
-internal class RelativeJumpIfTrue(private val size: Int): Instruction {
+internal class RelativeJumpIfTrue(private val size: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
         val condition = (value as InterpreterBool).value
@@ -592,40 +592,40 @@ internal class RelativeJumpIfTrue(private val size: Int): Instruction {
     }
 }
 
-internal class RelativeJump(private val size: Int): Instruction {
+internal class RelativeJump(private val size: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.relativeJump(size + 1)
     }
 }
 
-internal object Exit: Instruction {
+object Exit: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.exit()
     }
 }
 
-internal object Return: Instruction {
+object Return: Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
         return state2.exit().pushTemporary(value)
     }
 }
 
-internal class StoreLocal(private val variableId: Int): Instruction {
+class StoreLocal(val variableId: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, value) = initialState.popTemporary()
         return state2.storeLocal(variableId, value).nextInstruction()
     }
 }
 
-internal class LoadLocal(private val variableId: Int): Instruction {
+internal class LoadLocal(private val variableId: Int): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val value = initialState.loadLocal(variableId)
         return initialState.pushTemporary(value).nextInstruction()
     }
 }
 
-internal class InitModule(private val moduleName: List<Identifier>): Instruction {
+internal class InitModule(private val moduleName: List<Identifier>): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val state2 = initialState.nextInstruction()
 
@@ -639,10 +639,10 @@ internal class InitModule(private val moduleName: List<Identifier>): Instruction
     }
 }
 
-internal class StoreModule(
-    private val moduleName: List<Identifier>,
-    private val exports: List<Pair<Identifier, Int>>
-): Instruction {
+class StoreModule(
+    val moduleName: List<Identifier>,
+    val exports: List<Pair<Identifier, Int>>
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val fields = exports.associate { (name, variableId) ->
             name to initialState.loadLocal(variableId)
@@ -652,7 +652,7 @@ internal class StoreModule(
     }
 }
 
-internal class LoadModule(private val moduleName: List<Identifier>): Instruction {
+internal class LoadModule(private val moduleName: List<Identifier>): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         return initialState.pushTemporary(initialState.loadModule(moduleName)).nextInstruction()
     }
@@ -661,7 +661,7 @@ internal class LoadModule(private val moduleName: List<Identifier>): Instruction
 internal class Call(
     private val positionalArgumentCount: Int,
     private val namedArgumentNames: List<Identifier>
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
         val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
@@ -679,7 +679,7 @@ internal class Call(
 internal class PartialCall(
     private val positionalArgumentCount: Int,
     private val namedArgumentNames: List<Identifier>
-): Instruction {
+): Instruction() {
     override fun run(initialState: InterpreterState): InterpreterState {
         val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
         val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
@@ -743,7 +743,7 @@ class Image internal constructor(private val modules: Map<List<Identifier>, Pers
         val EMPTY = Image(modules = persistentMapOf())
     }
 
-    internal fun moduleInitialisation(name: List<Identifier>): List<Instruction> {
+    fun moduleInitialisation(name: List<Identifier>): List<Instruction> {
         return modules[name]!!
     }
 }
