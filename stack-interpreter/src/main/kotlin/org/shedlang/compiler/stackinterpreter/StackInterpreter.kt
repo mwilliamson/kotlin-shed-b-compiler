@@ -773,15 +773,19 @@ internal class Loader(
     private val inspector: CodeInspector
 ) {
     internal fun loadModule(module: Module.Shed): PersistentList<Instruction> {
-        val moduleNameInstructions = persistentListOf(
-            PushValue(InterpreterString(module.name.joinToString(".") { part -> part.value })),
-            StoreLocal(Builtins.moduleName.nodeId)
-        )
+        val moduleNameInstructions = if (isReferenced(module, Builtins.moduleName)) {
+            persistentListOf(
+                PushValue(InterpreterString(module.name.joinToString(".") { part -> part.value })),
+                StoreLocal(Builtins.moduleName.nodeId)
+            )
+        } else {
+            persistentListOf()
+        }
 
         val importInstructions = module.node.imports
             .filter { import ->
                 import.target.variableBinders().any { variableBinder ->
-                    module.references.referencedNodes.contains(variableBinder)
+                    isReferenced(module, variableBinder)
                 }
             }
             .flatMap { import ->
@@ -806,6 +810,9 @@ internal class Loader(
             ))
             .add(Exit)
     }
+
+    private fun isReferenced(module: Module.Shed, variableBinder: VariableBindingNode) =
+        module.references.referencedNodes.contains(variableBinder)
 
     internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
