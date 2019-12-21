@@ -78,6 +78,63 @@ class ExecutionTests {
 
 private const val VALUE_SIZE = 8
 
+private class CompilationResult<T>(
+    val value: T,
+    val text: List<Line>,
+    val bss: List<Line>
+) {
+    fun <R> mapInstructions(func: (T) -> R): CompilationResult<R> {
+        return CompilationResult(
+            value = func(value),
+            text = text,
+            bss = bss
+        )
+    }
+
+    fun addBss(moreBss: List<Line>): CompilationResult<T> {
+        return CompilationResult(
+            value = value,
+            text = text,
+            bss = bss + moreBss
+        )
+    }
+
+    companion object {
+        val EMPTY = CompilationResult<List<Line>>(
+            value = listOf(),
+            text = listOf(),
+            bss = listOf()
+        )
+
+        fun <T> of(value: T): CompilationResult<T> {
+            return CompilationResult(
+                value = value,
+                text = listOf(),
+                bss = listOf()
+            )
+        }
+
+        fun flatten(results: List<CompilationResult<List<Line>>>): CompilationResult<List<Line>> {
+            val value = results.flatMap { result -> result.value }
+            val text = results.flatMap { result -> result.text }
+            val bss = results.flatMap { result -> result.bss }
+            return CompilationResult(
+                value = value,
+                text = text,
+                bss = bss
+            )
+        }
+    }
+}
+
+private fun CompilationResult<List<Line>>.instructionsToText(): CompilationResult<Unit> {
+    return CompilationResult(
+        value = Unit,
+        text = value + text,
+        bss = bss
+    )
+}
+
 private class Compiler(private val moduleSet: ModuleSet) {
     fun compile(target: Path, mainModule: List<Identifier>) {
         val asm = mutableListOf(
@@ -104,7 +161,10 @@ private class Compiler(private val moduleSet: ModuleSet) {
             Instructions.ret
         ))
 
-        asm.addAll(generateAsmForModule(mainModule))
+        val moduleAsm = generateAsmForModule(mainModule)
+        asm.addAll(moduleAsm.text)
+        asm.add(Directives.bssSection)
+        asm.addAll(moduleAsm.bss)
 
         val source = serialise(asm)
 
@@ -127,24 +187,34 @@ private class Compiler(private val moduleSet: ModuleSet) {
         }
     }
 
-    private fun generateAsmForModule(moduleName: List<Identifier>): Collection<Line> {
+    private fun generateAsmForModule(moduleName: List<Identifier>): CompilationResult<Unit> {
         val image = loadModuleSet(moduleSet)
-        val (immediate, deferred) = generateAsmForInstructions(image.moduleInitialisation(moduleName))
-        return listOf(
-            Directives.bssSection,
+        val result = generateAsmForModuleInitialisation(image, moduleName)
+        return result.addBss(listOf(
             Label(labelForModuleInitialised(moduleName)),
             Instructions.resq(1),
             Label(labelForModuleValue(moduleName)),
-            Instructions.resq(fieldCount(moduleName)),
-            Directives.textSection,
-            Label(labelForModuleInit(moduleName)),
-            Instructions.push(Registers.rbp),
-            Instructions.mov(Registers.rbp, Registers.rsp)
-        ) + immediate + listOf(
-            Instructions.mov(Registers.rsp, Registers.rbp),
-            Instructions.pop(Registers.rbp),
-            Instructions.ret
-        ) + deferred
+            Instructions.resq(fieldCount(moduleName))
+        ))
+    }
+
+    private fun generateAsmForModuleInitialisation(
+        image: Image,
+        moduleName: List<Identifier>
+    ): CompilationResult<Unit> {
+        return generateAsmForInstructions(image.moduleInitialisation(moduleName))
+            .mapInstructions { instructions ->
+                listOf(
+                    Label(labelForModuleInit(moduleName)),
+                    Instructions.push(Registers.rbp),
+                    Instructions.mov(Registers.rbp, Registers.rsp)
+                ) + instructions + listOf(
+                    Instructions.mov(Registers.rsp, Registers.rbp),
+                    Instructions.pop(Registers.rbp),
+                    Instructions.ret
+                )
+            }
+            .instructionsToText()
     }
 
     private fun fieldCount(moduleName: List<Identifier>): Int {
@@ -152,73 +222,68 @@ private class Compiler(private val moduleSet: ModuleSet) {
         return 1
     }
 
-    private fun generateAsmForInstructions(instructions: List<Instruction>): Pair<List<Line>, List<Line>> {
-        val (immediate, deferred) = instructions
-            .map { instruction -> generateAsmForInstruction(instruction) }
-            .unzip()
-
-        return Pair(immediate.flatten(), deferred.flatten())
+    private fun generateAsmForInstructions(instructions: List<Instruction>): CompilationResult<List<Line>> {
+        return CompilationResult.flatten(
+            instructions.map { instruction -> generateAsmForInstruction(instruction) }
+        )
     }
 
-    private fun generateAsmForInstruction(instruction: Instruction): Pair<List<Line>, List<Line>> {
+    private fun generateAsmForInstruction(instruction: Instruction): CompilationResult<List<Line>> {
         return when (instruction) {
             is DeclareFunction -> {
                 val label = generateLabel()
-                val (immediateBody, deferredBody) = generateAsmForInstructions(instruction.bodyInstructions)
                 // TODO: handle more locals
                 val localCount = 1
-                Pair(
-                    listOf(
-                        Instructions.lea(Registers.rdx, MemoryOperand(LabelOperand(label))),
-                        Instructions.push(Registers.rdx)
-                    ),
-                    listOf(
-                        Label(label),
-                        Instructions.push(Registers.rbp),
-                        Instructions.mov(Registers.rbp, Registers.rsp),
-                        Instructions.sub(Registers.rsp, Immediates.int(VALUE_SIZE * localCount))
-                    ) + immediateBody + deferredBody
-                )
+                generateAsmForInstructions(instruction.bodyInstructions)
+                    .mapInstructions { instructions ->
+                        listOf(
+                            Label(label),
+                            Instructions.push(Registers.rbp),
+                            Instructions.mov(Registers.rbp, Registers.rsp),
+                            Instructions.sub(Registers.rsp, Immediates.int(VALUE_SIZE * localCount))
+                        ) + instructions
+                    }
+                    .instructionsToText()
+                    .mapInstructions {
+                        listOf(
+                            Instructions.lea(Registers.rdx, MemoryOperand(LabelOperand(label))),
+                            Instructions.push(Registers.rdx)
+                        )
+                    }
             }
             is Exit -> {
-                Pair(
-                    listOf(),
-                    listOf()
-                )
+                CompilationResult.EMPTY
             }
             is PushValue -> {
-                Pair(
-                    listOf(Instructions.push(generateOperandForValue(instruction.value))),
-                    listOf()
+                CompilationResult.of(
+                    listOf(Instructions.push(generateOperandForValue(instruction.value)))
                 )
             }
             is Return -> {
-                Pair(
+                CompilationResult.of(
                     listOf(
                         Instructions.pop(Registers.rax),
                         Instructions.mov(Registers.rsp, Registers.rbp),
                         Instructions.pop(Registers.rbp),
                         Instructions.ret
-                    ),
-                    listOf()
+                    )
                 )
             }
             is StoreLocal -> {
                 // TODO: handle locals properly
                 val localIndex = 0
-                Pair(
+                CompilationResult.of(
                     listOf(
                         Instructions.pop(Registers.rax),
                         Instructions.mov(
                             localOperand(localIndex),
                             Registers.rax
                         )
-                    ),
-                    listOf()
+                    )
                 )
             }
             is StoreModule -> {
-                Pair(
+                CompilationResult.of(
                     listOf(
                         Instructions.lea(
                             Registers.rdx,
@@ -240,8 +305,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                             MemoryOperand(Registers.rdx),
                             Registers.rax
                         )
-                    ),
-                    listOf()
+                    )
                 )
             }
             else -> throw UnsupportedOperationException(instruction.toString())
