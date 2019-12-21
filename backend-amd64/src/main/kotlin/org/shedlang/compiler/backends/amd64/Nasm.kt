@@ -85,6 +85,12 @@ class Directive(private val string: String): Line {
     }
 }
 
+class Section(private val name: String): Line {
+    override fun serialise(): String {
+        return "\n    section $name"
+    }
+}
+
 object Directives {
     fun global(name: String): Directive {
         return Directive("global $name")
@@ -92,8 +98,8 @@ object Directives {
 
     val defaultRel = Directive("default rel")
 
-    fun section(name: String): Directive {
-        return Directive("section $name")
+    private fun section(name: String): Line {
+        return Section(name)
     }
 
     val bssSection = section(".bss")
