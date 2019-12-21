@@ -208,6 +208,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                     Label(labelForModuleInit(moduleName)),
                     Instructions.push(Registers.rbp),
                     Instructions.mov(Registers.rbp, Registers.rsp)
+                    // TODO: space for locals
                 ) + instructions + listOf(
                     Instructions.mov(Registers.rsp, Registers.rbp),
                     Instructions.pop(Registers.rbp),
