@@ -20,6 +20,12 @@ class ConstantOperand(private val value: Int): Operand {
     }
 }
 
+class LabelOperand(private val name: String): Operand {
+    override fun serialise(): String {
+        return name
+    }
+}
+
 interface Line {
     fun serialise(): String
 }
@@ -57,6 +63,10 @@ class Instruction(private val name: String, private val operands: List<Operand>)
 object Instructions {
     fun mov(destination: RegisterOperand, source: Int): Instruction {
         return Instruction("mov", listOf(destination, ConstantOperand(source)))
+    }
+
+    fun call(label: String): Instruction {
+        return Instruction("call", listOf(LabelOperand(label)))
     }
 
     val ret = Instruction("ret", listOf())

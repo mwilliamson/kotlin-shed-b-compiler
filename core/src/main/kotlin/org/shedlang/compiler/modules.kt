@@ -6,7 +6,11 @@ import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.metaTypeToType
 
-class ModuleSet(val modules: Collection<Module>)
+class ModuleSet(val modules: Collection<Module>) {
+    fun module(name: List<Identifier>): Module? {
+        return modules.find { module -> module.name == name }
+    }
+}
 
 sealed class Module {
     abstract val name: List<Identifier>
