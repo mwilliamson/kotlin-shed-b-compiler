@@ -3,7 +3,7 @@ package org.shedlang.compiler.stackinterpreter.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.stackinterpreter.InterpreterInt
+import org.shedlang.compiler.stackir.IrInt
 
 class IntToStringModuleTests {
     private val moduleName = listOf(Identifier("Core"), Identifier("IntToString"))
@@ -16,7 +16,7 @@ class IntToStringModuleTests {
             moduleName = moduleName,
             functionName = "intToString",
             arguments = listOf(
-                InterpreterInt(42.toBigInteger())
+                IrInt(42.toBigInteger())
             ),
             world = world
         )

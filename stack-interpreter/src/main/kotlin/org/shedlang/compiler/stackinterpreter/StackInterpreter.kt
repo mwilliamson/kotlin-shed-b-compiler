@@ -6,6 +6,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
@@ -24,47 +25,45 @@ object RealWorld: World {
     }
 }
 
-interface InterpreterValue
+internal sealed class InterpreterValue
 
-internal object InterpreterUnit: InterpreterValue
+internal object InterpreterUnit: InterpreterValue()
 
-internal data class InterpreterBool(val value: Boolean): InterpreterValue
+internal data class InterpreterBool(val value: Boolean): InterpreterValue()
 
-internal data class InterpreterCodePoint(val value: Int): InterpreterValue
+internal data class InterpreterCodePoint(val value: Int): InterpreterValue()
 
-data class InterpreterInt(val value: BigInteger): InterpreterValue
+internal data class InterpreterInt(val value: BigInteger): InterpreterValue()
 
-internal data class InterpreterString(val value: String): InterpreterValue
+internal data class InterpreterString(val value: String): InterpreterValue()
 
-internal data class InterpreterStringSlice(val string: String, val startIndex: Int, val endIndex: Int): InterpreterValue
+internal data class InterpreterStringSlice(val string: String, val startIndex: Int, val endIndex: Int): InterpreterValue()
 
-internal data class InterpreterSymbol(val value: Symbol): InterpreterValue
+internal data class InterpreterSymbol(val value: Symbol): InterpreterValue()
 
-internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue
+internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue()
 
-class InterpreterFunction(
+internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val positionalParameterIds: List<Int>,
     val namedParameterIds: List<NamedParameterId>,
     val scopes: PersistentList<ScopeReference>
-) : InterpreterValue {
-    data class NamedParameterId(val name: Identifier, val variableId: Int)
-}
+) : InterpreterValue()
 
 internal class InterpreterBuiltinFunction(
     val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
-): InterpreterValue
+): InterpreterValue()
 
 internal class InterpreterPartialCall(
     val receiver: InterpreterValue,
     val positionalArguments: List<InterpreterValue>,
     val namedArguments: Map<Identifier, InterpreterValue>
-) : InterpreterValue
+) : InterpreterValue()
 
 internal class InterpreterVarargs(
     val cons: InterpreterValue,
     val nil: InterpreterValue
-): InterpreterValue, InterpreterHasFields {
+): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
         return when (fieldName.value) {
             "cons" -> cons
@@ -72,13 +71,12 @@ internal class InterpreterVarargs(
             else -> throw UnsupportedOperationException("no such field: ${fieldName.value}")
         }
     }
-
 }
 
 internal class InterpreterShape(
     val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
     val fields: Map<Identifier, InterpreterValue>
-): InterpreterValue, InterpreterHasFields {
+): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
         return fields.getValue(fieldName)
     }
@@ -90,7 +88,7 @@ internal interface InterpreterHasFields {
 
 internal class InterpreterShapeValue(
     private val fields: Map<Identifier, InterpreterValue>
-): InterpreterValue, InterpreterHasFields {
+): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
         return fields.getValue(fieldName)
     }
@@ -98,9 +96,20 @@ internal class InterpreterShapeValue(
 
 internal class InterpreterModule(
     private val fields: Map<Identifier, InterpreterValue>
-): InterpreterValue, InterpreterHasFields {
+): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
         return fields.getValue(fieldName)
+    }
+}
+
+private fun irValueToInterpreterValue(value: IrValue): InterpreterValue {
+    return when (value) {
+        is IrBool -> InterpreterBool(value.value)
+        is IrCodePoint -> InterpreterCodePoint(value.value)
+        is IrInt -> InterpreterInt(value.value)
+        is IrString -> InterpreterString(value.value)
+        is IrSymbol -> InterpreterSymbol(value.value)
+        is IrUnit -> InterpreterUnit
     }
 }
 
@@ -347,350 +356,361 @@ internal fun initialState(
         defaultScope = defaultScope,
         image = image,
         callStack = Stack(persistentListOf()),
-        modules = persistentMapOf(),
+        modules = loadNativeModules(),
         world = world
     ).enterModuleScope(instructions)
 }
 
-sealed class Instruction {
-    internal abstract fun run(initialState: InterpreterState): InterpreterState
-}
-
-class PushValue(val value: InterpreterValue): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.pushTemporary(value).nextInstruction()
-    }
-}
-
-internal object Duplicate: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.duplicateTemporary().nextInstruction()
-    }
-}
-
-internal object Discard: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.discardTemporary().nextInstruction()
-    }
-}
-
-internal object Swap: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, value1) = initialState.popTemporary()
-        val (state3, value2) = state2.popTemporary()
-        return state3.pushTemporary(value1).pushTemporary(value2).nextInstruction()
-    }
-}
-
-internal class CreateTuple(private val length: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, elements) = initialState.popTemporaries(length)
-        return state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
-    }
-}
-
-class DeclareFunction(
-    val bodyInstructions: PersistentList<Instruction>,
-    val positionalParameterIds: List<Int>,
-    val namedParameterIds: List<InterpreterFunction.NamedParameterId>
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.pushTemporary(InterpreterFunction(
-            bodyInstructions = bodyInstructions,
-            positionalParameterIds = positionalParameterIds,
-            namedParameterIds = namedParameterIds,
-            scopes = initialState.currentScopes()
-        )).nextInstruction()
-    }
-}
-
-internal object DeclareVarargs: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, arguments) = initialState.popTemporaries(2)
-        val cons = arguments[0]
-        val nil = arguments[1]
-        return state2.pushTemporary(InterpreterVarargs(cons = cons, nil = nil)).nextInstruction()
-    }
-}
-
-internal object BoolNot: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, operand) = initialState.popTemporary()
-        val result = InterpreterBool(!(operand as InterpreterBool).value)
-        return state2.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal class BinaryBoolOperation(
-    private val func: (left: Boolean, right: Boolean) -> InterpreterValue
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, right) = initialState.popTemporary()
-        val (state3, left) = state2.popTemporary()
-        val result = func((left as InterpreterBool).value, (right as InterpreterBool).value)
-        return state3.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal val BoolEquals = BinaryBoolOperation { left, right ->
-    InterpreterBool(left == right)
-}
-
-internal val BoolNotEqual = BinaryBoolOperation { left, right ->
-    InterpreterBool(left != right)
-}
-
-internal class BinaryCodePointOperation(
-    private val func: (left: Int, right: Int) -> InterpreterValue
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, right) = initialState.popTemporary()
-        val (state3, left) = state2.popTemporary()
-        val result = func((left as InterpreterCodePoint).value, (right as InterpreterCodePoint).value)
-        return state3.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal val CodePointEquals = BinaryCodePointOperation { left, right ->
-    InterpreterBool(left == right)
-}
-
-internal val CodePointNotEqual = BinaryCodePointOperation { left, right ->
-    InterpreterBool(left != right)
-}
-
-internal val CodePointLessThan = BinaryCodePointOperation { left, right ->
-    InterpreterBool(left < right)
-}
-
-internal val CodePointLessThanOrEqual = BinaryCodePointOperation { left, right ->
-    InterpreterBool(left <= right)
-}
-
-internal val CodePointGreaterThan = BinaryCodePointOperation { left, right ->
-    InterpreterBool(left > right)
-}
-
-internal val CodePointGreaterThanOrEqual = BinaryCodePointOperation { left, right ->
-    InterpreterBool(left >= right)
-}
-
-internal object IntMinus: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, operand) = initialState.popTemporary()
-        val result = InterpreterInt(-(operand as InterpreterInt).value)
-        return state2.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal class BinaryIntOperation(
-    private val func: (left: BigInteger, right: BigInteger) -> InterpreterValue
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, right) = initialState.popTemporary()
-        val (state3, left) = state2.popTemporary()
-        val result = func((left as InterpreterInt).value, (right as InterpreterInt).value)
-        return state3.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal val IntAdd = BinaryIntOperation { left, right ->
-    InterpreterInt(left + right)
-}
-
-internal val IntSubtract = BinaryIntOperation { left, right ->
-    InterpreterInt(left - right)
-}
-
-internal val IntMultiply = BinaryIntOperation { left, right ->
-    InterpreterInt(left * right)
-}
-
-internal val IntEquals = BinaryIntOperation { left, right ->
-    InterpreterBool(left == right)
-}
-
-internal val IntNotEqual = BinaryIntOperation { left, right ->
-    InterpreterBool(left != right)
-}
-
-internal class BinaryStringOperation(
-    private val func: (left: String, right: String) -> InterpreterValue
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, right) = initialState.popTemporary()
-        val (state3, left) = state2.popTemporary()
-        val result = func((left as InterpreterString).value, (right as InterpreterString).value)
-        return state3.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal val StringAdd = BinaryStringOperation { left, right ->
-    InterpreterString(left + right)
-}
-
-internal val StringEquals = BinaryStringOperation { left, right ->
-    InterpreterBool(left == right)
-}
-
-internal val StringNotEqual = BinaryStringOperation { left, right ->
-    InterpreterBool(left != right)
-}
-
-internal class BinarySymbolOperation(
-    private val func: (left: Symbol, right: Symbol) -> InterpreterValue
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, right) = initialState.popTemporary()
-        val (state3, left) = state2.popTemporary()
-        val result = func((left as InterpreterSymbol).value, (right as InterpreterSymbol).value)
-        return state3.pushTemporary(result).nextInstruction()
-    }
-}
-
-internal val SymbolEquals = BinarySymbolOperation { left, right ->
-    InterpreterBool(left == right)
-}
-
-internal class TupleAccess(private val elementIndex: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, value) = initialState.popTemporary()
-        val element = (value as InterpreterTuple).elements[elementIndex]
-        return state2.pushTemporary(element).nextInstruction()
-    }
-}
-
-internal class FieldAccess(private val fieldName: Identifier): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, receiver) = initialState.popTemporary()
-        val module = receiver as InterpreterHasFields
-        return state2.pushTemporary(module.field(fieldName)).nextInstruction()
-    }
-}
-
-internal class RelativeJumpIfFalse(private val size: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, value) = initialState.popTemporary()
-        val condition = (value as InterpreterBool).value
-        return if (condition) {
-            state2.nextInstruction()
-        } else {
-            state2.relativeJump(size + 1)
+internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
+    return when (this) {
+        is BoolEquals -> {
+            runBinaryBoolOperation(initialState) { left, right ->
+                InterpreterBool(left == right)
+            }
         }
-    }
-}
 
-internal class RelativeJumpIfTrue(private val size: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, value) = initialState.popTemporary()
-        val condition = (value as InterpreterBool).value
-        return if (condition) {
-            state2.relativeJump(size + 1)
-        } else {
-            state2.nextInstruction()
+        is BoolNotEqual -> {
+            runBinaryBoolOperation(initialState) { left, right ->
+                InterpreterBool(left != right)
+            }
         }
-    }
-}
 
-internal class RelativeJump(private val size: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.relativeJump(size + 1)
-    }
-}
+        is BoolNot -> {
+            val (state2, operand) = initialState.popTemporary()
+            val result = InterpreterBool(!(operand as InterpreterBool).value)
+            state2.pushTemporary(result).nextInstruction()
+        }
 
-object Exit: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.exit()
-    }
-}
-
-object Return: Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, value) = initialState.popTemporary()
-        return state2.exit().pushTemporary(value)
-    }
-}
-
-class StoreLocal(val variableId: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, value) = initialState.popTemporary()
-        return state2.storeLocal(variableId, value).nextInstruction()
-    }
-}
-
-internal class LoadLocal(private val variableId: Int): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val value = initialState.loadLocal(variableId)
-        return initialState.pushTemporary(value).nextInstruction()
-    }
-}
-
-internal class InitModule(private val moduleName: List<Identifier>): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val state2 = initialState.nextInstruction()
-
-        return if (initialState.isModuleInitialised(moduleName)) {
-            state2
-        } else {
-            state2.enterModuleScope(
-                instructions = initialState.moduleInitialisation(moduleName)
+        is Call -> {
+            val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
+            val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
+            val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
+            val (state4, receiver) = state3.popTemporary()
+            call(
+                state = state4.nextInstruction(),
+                receiver = receiver,
+                positionalArguments =  positionalArguments,
+                namedArguments =  namedArguments
             )
         }
-    }
-}
 
-class StoreModule(
-    val moduleName: List<Identifier>,
-    val exports: List<Pair<Identifier, Int>>
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val fields = exports.associate { (name, variableId) ->
-            name to initialState.loadLocal(variableId)
+        is PartialCall -> {
+            val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
+            val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
+            val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
+            val (state4, receiver) = state3.popTemporary()
+            state4.pushTemporary(InterpreterPartialCall(
+                receiver = receiver,
+                positionalArguments = positionalArguments,
+                namedArguments = namedArguments
+            )).nextInstruction()
         }
-        val value = InterpreterModule(fields = fields)
-        return initialState.storeModule(moduleName, value).nextInstruction()
+
+        is CodePointEquals -> {
+            runBinaryCodePointOperation(initialState) { left, right ->
+                InterpreterBool(left == right)
+            }
+        }
+
+        is CodePointNotEqual -> {
+            runBinaryCodePointOperation(initialState) { left, right ->
+                InterpreterBool(left != right)
+            }
+        }
+
+        is CodePointLessThan -> {
+            runBinaryCodePointOperation(initialState) { left, right ->
+                InterpreterBool(left < right)
+            }
+        }
+
+        is CodePointLessThanOrEqual -> {
+            runBinaryCodePointOperation(initialState) { left, right ->
+                InterpreterBool(left <= right)
+            }
+        }
+
+        is CodePointGreaterThan -> {
+            runBinaryCodePointOperation(initialState) { left, right ->
+                InterpreterBool(left > right)
+            }
+        }
+
+        is CodePointGreaterThanOrEqual -> {
+            runBinaryCodePointOperation(initialState) { left, right ->
+                InterpreterBool(left >= right)
+            }
+        }
+
+        is CreateTuple -> {
+            val (state2, elements) = initialState.popTemporaries(length)
+            state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
+        }
+
+        is DeclareFunction -> {
+            initialState.pushTemporary(InterpreterFunction(
+                bodyInstructions = bodyInstructions,
+                positionalParameterIds = positionalParameterIds,
+                namedParameterIds = namedParameterIds,
+                scopes = initialState.currentScopes()
+            )).nextInstruction()
+        }
+
+        is DeclareShape -> {
+            val constantFieldValues = fields
+                .mapNotNull { field ->
+                    when (val fieldValue = field.value) {
+                        null -> null
+                        is FieldValue.Expression -> throw NotImplementedError()
+                        is FieldValue.Symbol -> field.name to InterpreterSymbol(fieldValue.symbol)
+                    }
+                }
+                .toMap()
+                .toPersistentMap()
+
+            val runtimeFields = mapOf(
+                Identifier("fields") to InterpreterShapeValue(
+                    fields = fields.associate { field ->
+                        val getParameterId = freshNodeId()
+
+                        field.name to InterpreterShapeValue(
+                            fields = mapOf(
+                                Identifier("name") to InterpreterString(field.name.value),
+                                Identifier("get") to InterpreterFunction(
+                                    bodyInstructions = persistentListOf(
+                                        LocalLoad(getParameterId),
+                                        FieldAccess(field.name),
+                                        Return
+                                    ),
+                                    positionalParameterIds = listOf(getParameterId),
+                                    namedParameterIds = listOf(),
+                                    scopes = persistentListOf()
+                                )
+                            )
+                        )
+                    }
+                )
+            )
+
+            val value = InterpreterShape(constantFieldValues = constantFieldValues, fields = runtimeFields)
+
+            initialState.pushTemporary(value).nextInstruction()
+        }
+
+        is DeclareVarargs -> {
+            val (state2, arguments) = initialState.popTemporaries(2)
+            val cons = arguments[0]
+            val nil = arguments[1]
+            state2.pushTemporary(InterpreterVarargs(cons = cons, nil = nil)).nextInstruction()
+        }
+
+        is Discard -> {
+            initialState.discardTemporary().nextInstruction()
+        }
+
+        is Duplicate -> {
+            initialState.duplicateTemporary().nextInstruction()
+        }
+
+        is Exit -> {
+            initialState.exit()
+        }
+
+        is FieldAccess -> {
+            val (state2, receiver) = initialState.popTemporary()
+            val module = receiver as InterpreterHasFields
+            state2.pushTemporary(module.field(fieldName)).nextInstruction()
+        }
+
+        is IntAdd -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterInt(left + right)
+            }
+        }
+
+        is IntEquals -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterBool(left == right)
+            }
+        }
+
+        is IntMinus -> {
+            val (state2, operand) = initialState.popTemporary()
+            val result = InterpreterInt(-(operand as InterpreterInt).value)
+            state2.pushTemporary(result).nextInstruction()
+        }
+
+        is IntMultiply -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterInt(left * right)
+            }
+        }
+
+        is IntNotEqual -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterBool(left != right)
+            }
+        }
+
+        is IntSubtract -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterInt(left - right)
+            }
+        }
+
+        is LocalLoad -> {
+            val value = initialState.loadLocal(variableId)
+            initialState.pushTemporary(value).nextInstruction()
+        }
+
+        is LocalStore -> {
+            val (state2, value) = initialState.popTemporary()
+            state2.storeLocal(variableId, value).nextInstruction()
+        }
+
+        is ModuleInit -> {
+            val state2 = initialState.nextInstruction()
+
+            if (initialState.isModuleInitialised(moduleName)) {
+                state2
+            } else {
+                state2.enterModuleScope(
+                    instructions = initialState.moduleInitialisation(moduleName)
+                )
+            }
+        }
+
+        is ModuleLoad -> {
+            initialState.pushTemporary(initialState.loadModule(moduleName)).nextInstruction()
+        }
+
+        is ModuleStore -> {
+            val fields = exports.associate { (name, variableId) ->
+                name to initialState.loadLocal(variableId)
+            }
+            val value = InterpreterModule(fields = fields)
+            return initialState.storeModule(moduleName, value).nextInstruction()
+        }
+
+        is PushValue -> {
+            initialState.pushTemporary(irValueToInterpreterValue(value)).nextInstruction()
+        }
+
+        is RelativeJump -> {
+            initialState.relativeJump(size + 1)
+        }
+
+        is RelativeJumpIfFalse -> {
+            val (state2, value) = initialState.popTemporary()
+            val condition = (value as InterpreterBool).value
+            if (condition) {
+                state2.nextInstruction()
+            } else {
+                state2.relativeJump(size + 1)
+            }
+        }
+
+        is RelativeJumpIfTrue -> {
+            val (state2, value) = initialState.popTemporary()
+            val condition = (value as InterpreterBool).value
+            if (condition) {
+                state2.relativeJump(size + 1)
+            } else {
+                state2.nextInstruction()
+            }
+        }
+
+        is Return -> {
+            val (state2, value) = initialState.popTemporary()
+            state2.exit().pushTemporary(value)
+        }
+
+        is StringAdd -> {
+            runBinaryStringOperation(initialState) { left, right ->
+                InterpreterString(left + right)
+            }
+        }
+
+        is StringEquals -> {
+            runBinaryStringOperation(initialState) { left, right ->
+                InterpreterBool(left == right)
+            }
+        }
+
+        is StringNotEqual -> {
+            runBinaryStringOperation(initialState) { left, right ->
+                InterpreterBool(left != right)
+            }
+        }
+
+        is Swap -> {
+            val (state2, value1) = initialState.popTemporary()
+            val (state3, value2) = state2.popTemporary()
+            state3.pushTemporary(value1).pushTemporary(value2).nextInstruction()
+        }
+
+        is SymbolEquals -> {
+            runBinarySymbolOperation(initialState) { left, right ->
+                InterpreterBool(left == right)
+            }
+        }
+
+        is TupleAccess -> {
+            val (state2, value) = initialState.popTemporary()
+            val element = (value as InterpreterTuple).elements[elementIndex]
+            state2.pushTemporary(element).nextInstruction()
+        }
     }
 }
 
-internal class LoadModule(private val moduleName: List<Identifier>): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        return initialState.pushTemporary(initialState.loadModule(moduleName)).nextInstruction()
-    }
+private fun runBinaryBoolOperation(
+    initialState: InterpreterState,
+    func: (left: Boolean, right: Boolean) -> InterpreterValue
+): InterpreterState {
+    val (state2, right) = initialState.popTemporary()
+    val (state3, left) = state2.popTemporary()
+    val result = func((left as InterpreterBool).value, (right as InterpreterBool).value)
+    return state3.pushTemporary(result).nextInstruction()
 }
 
-internal class Call(
-    private val positionalArgumentCount: Int,
-    private val namedArgumentNames: List<Identifier>
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
-        val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
-        val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
-        val (state4, receiver) = state3.popTemporary()
-        return call(
-            state = state4.nextInstruction(),
-            receiver = receiver,
-            positionalArguments =  positionalArguments,
-            namedArguments =  namedArguments
-        )
-    }
+private fun runBinaryCodePointOperation(
+    initialState: InterpreterState,
+    func: (left: Int, right: Int) -> InterpreterValue
+): InterpreterState {
+    val (state2, right) = initialState.popTemporary()
+    val (state3, left) = state2.popTemporary()
+    val result = func((left as InterpreterCodePoint).value, (right as InterpreterCodePoint).value)
+    return state3.pushTemporary(result).nextInstruction()
 }
 
-internal class PartialCall(
-    private val positionalArgumentCount: Int,
-    private val namedArgumentNames: List<Identifier>
-): Instruction() {
-    override fun run(initialState: InterpreterState): InterpreterState {
-        val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
-        val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
-        val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
-        val (state4, receiver) = state3.popTemporary()
-        return state4.pushTemporary(InterpreterPartialCall(
-            receiver = receiver,
-            positionalArguments = positionalArguments,
-            namedArguments = namedArguments
-        )).nextInstruction()
-    }
+private fun runBinaryIntOperation(
+    initialState: InterpreterState,
+    func: (left: BigInteger, right: BigInteger) -> InterpreterValue
+): InterpreterState {
+    val (state2, right) = initialState.popTemporary()
+    val (state3, left) = state2.popTemporary()
+    val result = func((left as InterpreterInt).value, (right as InterpreterInt).value)
+    return state3.pushTemporary(result).nextInstruction()
+}
+
+private fun runBinaryStringOperation(
+    initialState: InterpreterState,
+    func: (left: String, right: String) -> InterpreterValue
+): InterpreterState {
+    val (state2, right) = initialState.popTemporary()
+    val (state3, left) = state2.popTemporary()
+    val result = func((left as InterpreterString).value, (right as InterpreterString).value)
+    return state3.pushTemporary(result).nextInstruction()
+}
+
+private fun runBinarySymbolOperation(
+    initialState: InterpreterState,
+    func: (left: Symbol, right: Symbol) -> InterpreterValue
+): InterpreterState {
+    val (state2, right) = initialState.popTemporary()
+    val (state3, left) = state2.popTemporary()
+    val result = func((left as InterpreterSymbol).value, (right as InterpreterSymbol).value)
+    return state3.pushTemporary(result).nextInstruction()
 }
 
 internal fun call(
@@ -749,12 +769,8 @@ class Image internal constructor(private val modules: Map<List<Identifier>, Pers
 }
 
 fun loadModuleSet(moduleSet: ModuleSet): Image {
-    return Image(moduleSet.modules.associate { module ->
-        val instructions = when (module) {
-            is Module.Shed -> loadModule(module)
-            else -> loadNativeModule(module.name)
-        }
-        module.name to instructions
+    return Image(moduleSet.modules.filterIsInstance<Module.Shed>().associate { module ->
+        module.name to loadModule(module)
     })
 }
 
@@ -775,8 +791,8 @@ internal class Loader(
     internal fun loadModule(module: Module.Shed): PersistentList<Instruction> {
         val moduleNameInstructions = if (isReferenced(module, Builtins.moduleName)) {
             persistentListOf(
-                PushValue(InterpreterString(module.name.joinToString(".") { part -> part.value })),
-                StoreLocal(Builtins.moduleName.nodeId)
+                PushValue(IrString(module.name.joinToString(".") { part -> part.value })),
+                LocalStore(Builtins.moduleName.nodeId)
             )
         } else {
             persistentListOf()
@@ -791,8 +807,8 @@ internal class Loader(
             .flatMap { import ->
                 val importedModuleName = resolveImport(module.name, import.path)
                 persistentListOf(
-                    InitModule(importedModuleName),
-                    LoadModule(importedModuleName)
+                    ModuleInit(importedModuleName),
+                    ModuleLoad(importedModuleName)
                 ).addAll(loadTarget(import.target))
             }
             .toPersistentList()
@@ -802,7 +818,7 @@ internal class Loader(
             .addAll(module.node.body.flatMap { statement ->
                 loadModuleStatement(statement)
             })
-            .add(StoreModule(
+            .add(ModuleStore(
                 moduleName = module.name,
                 exports = module.node.exports.map { export ->
                     export.name to module.references[export].nodeId
@@ -817,27 +833,27 @@ internal class Loader(
     internal fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
-                val push = PushValue(InterpreterUnit)
+                val push = PushValue(IrUnit)
                 return persistentListOf(push)
             }
 
             override fun visit(node: BooleanLiteralNode): PersistentList<Instruction> {
-                val push = PushValue(InterpreterBool(node.value))
+                val push = PushValue(IrBool(node.value))
                 return persistentListOf(push)
             }
 
             override fun visit(node: IntegerLiteralNode): PersistentList<Instruction> {
-                val push = PushValue(InterpreterInt(node.value))
+                val push = PushValue(IrInt(node.value))
                 return persistentListOf(push)
             }
 
             override fun visit(node: StringLiteralNode): PersistentList<Instruction> {
-                val push = PushValue(InterpreterString(node.value))
+                val push = PushValue(IrString(node.value))
                 return persistentListOf(push)
             }
 
             override fun visit(node: CodePointLiteralNode): PersistentList<Instruction> {
-                val push = PushValue(InterpreterCodePoint(node.value))
+                val push = PushValue(IrCodePoint(node.value))
                 return persistentListOf(push)
             }
 
@@ -851,7 +867,7 @@ internal class Loader(
             }
 
             override fun visit(node: ReferenceNode): PersistentList<Instruction> {
-                return persistentListOf(LoadLocal(resolveReference(node)))
+                return persistentListOf(LocalLoad(resolveReference(node)))
             }
 
             override fun visit(node: UnaryOperationNode): PersistentList<Instruction> {
@@ -942,7 +958,7 @@ internal class Loader(
 
                 return expressionInstructions
                     .add(FieldAccess(discriminator.fieldName))
-                    .add(PushValue(InterpreterSymbol(discriminator.symbolType.symbol)))
+                    .add(PushValue(IrSymbol(discriminator.symbolType.symbol)))
                     .add(SymbolEquals)
             }
 
@@ -950,8 +966,8 @@ internal class Loader(
                 if (inspector.isCast(node)) {
                     val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
                     val loadOptionsModuleInstructions = persistentListOf(
-                        InitModule(optionsModuleName),
-                        LoadModule(optionsModuleName)
+                        ModuleInit(optionsModuleName),
+                        ModuleLoad(optionsModuleName)
                     )
                     val parameterId = freshNodeId()
 
@@ -960,27 +976,33 @@ internal class Loader(
                         .add(Return)
                     val successInstructions = loadOptionsModuleInstructions
                         .add(FieldAccess(Identifier("some")))
-                        .add(LoadLocal(parameterId))
+                        .add(LocalLoad(parameterId))
                         .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
                         .add(Return)
 
                     val discriminator = inspector.discriminatorForCast(node)
                     val bodyInstructions = persistentListOf<Instruction>()
-                        .add(LoadLocal(parameterId))
+                        .add(LocalLoad(parameterId))
                         .add(FieldAccess(discriminator.fieldName))
-                        .add(PushValue(InterpreterSymbol(discriminator.symbolType.symbol)))
+                        .add(PushValue(IrSymbol(discriminator.symbolType.symbol)))
                         .add(SymbolEquals)
                         .add(RelativeJumpIfFalse(successInstructions.size))
                         .addAll(successInstructions)
                         .addAll(failureInstructions)
 
                     return persistentListOf(
-                        PushValue(InterpreterFunction(
+                        DeclareFunction(
                             positionalParameterIds = listOf(parameterId),
                             bodyInstructions = bodyInstructions,
-                            namedParameterIds = listOf(),
-                            scopes = persistentListOf()
-                        ))
+                            namedParameterIds = listOf()
+                        )
+                    // TODO: delete if the above works
+//                        PushValue(InterpreterFunction(
+//                            positionalParameterIds = listOf(parameterId),
+//                            bodyInstructions = bodyInstructions,
+//                            namedParameterIds = listOf(),
+//                            scopes = persistentListOf()
+//                        ))
                     )
                 } else if (types.typeOfExpression(node.receiver) is VarargsType) {
                     return loadExpression(node.receiver)
@@ -1051,7 +1073,7 @@ internal class Loader(
                     persistentListOf(
                         Duplicate,
                         FieldAccess(discriminator.fieldName),
-                        PushValue(InterpreterSymbol(discriminator.symbolType.symbol)),
+                        PushValue(IrSymbol(discriminator.symbolType.symbol)),
                         SymbolEquals
                     )
                 }
@@ -1113,7 +1135,7 @@ internal class Loader(
         return if (blockHasReturnValue(block)) {
             statementInstructions
         } else {
-            statementInstructions.add(PushValue(InterpreterUnit))
+            statementInstructions.add(PushValue(IrUnit))
         }
     }
 
@@ -1129,7 +1151,7 @@ internal class Loader(
                 if (node.type == ExpressionStatementNode.Type.RETURN || node.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
                     return expressionInstructions
                 } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
-                    return expressionInstructions.add(Discard).add(PushValue(InterpreterUnit))
+                    return expressionInstructions.add(Discard).add(PushValue(IrUnit))
                 } else {
                     throw UnsupportedOperationException("not implemented")
                 }
@@ -1157,8 +1179,8 @@ internal class Loader(
 
             override fun visit(node: UnionNode): PersistentList<Instruction> {
                 val unionInstructions = persistentListOf(
-                    PushValue(InterpreterUnit),
-                    StoreLocal(node.nodeId)
+                    PushValue(IrUnit),
+                    LocalStore(node.nodeId)
                 )
                 val memberInstructions = node.members.flatMap { member -> loadShape(member) }
 
@@ -1182,7 +1204,7 @@ internal class Loader(
     private fun loadFunctionDeclaration(node: FunctionDeclarationNode): PersistentList<Instruction> {
         return persistentListOf(
             loadFunctionValue(node),
-            StoreLocal(node.nodeId)
+            LocalStore(node.nodeId)
         )
     }
 
@@ -1192,53 +1214,17 @@ internal class Loader(
             bodyInstructions = bodyInstructions,
             positionalParameterIds = node.parameters.map { parameter -> parameter.nodeId },
             namedParameterIds = node.namedParameters.map { parameter ->
-                InterpreterFunction.NamedParameterId(parameter.name, parameter.nodeId)
+                NamedParameterId(parameter.name, parameter.nodeId)
             }
         )
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
         val shapeFields = inspector.shapeFields(node)
-        val constantFieldValues = shapeFields
-            .mapNotNull { field ->
-                when (val fieldValue = field.value) {
-                    null -> null
-                    is FieldValue.Expression -> throw NotImplementedError()
-                    is FieldValue.Symbol -> field.name to InterpreterSymbol(fieldValue.symbol)
-                }
-            }
-            .toMap()
-            .toPersistentMap()
-
-        val runtimeFields = mapOf(
-            Identifier("fields") to InterpreterShapeValue(
-                fields = shapeFields.associate { field ->
-                    val getParameterId = freshNodeId()
-
-                    field.name to InterpreterShapeValue(
-                        fields = mapOf(
-                            Identifier("name") to InterpreterString(field.name.value),
-                            Identifier("get") to InterpreterFunction(
-                                bodyInstructions = persistentListOf(
-                                    LoadLocal(getParameterId),
-                                    FieldAccess(field.name),
-                                    Return
-                                ),
-                                positionalParameterIds = listOf(getParameterId),
-                                namedParameterIds = listOf(),
-                                scopes = persistentListOf()
-                            )
-                        )
-                    )
-                }
-            )
-        )
-
-        val value = InterpreterShape(constantFieldValues = constantFieldValues, fields = runtimeFields)
 
         return persistentListOf(
-            PushValue(value),
-            StoreLocal(node.nodeId)
+            DeclareShape(shapeFields),
+            LocalStore(node.nodeId)
         )
     }
 
@@ -1251,7 +1237,7 @@ internal class Loader(
     private fun loadTarget(target: TargetNode): PersistentList<Instruction> {
         return when (target) {
             is TargetNode.Variable ->
-                persistentListOf(StoreLocal(target.nodeId))
+                persistentListOf(LocalStore(target.nodeId))
 
             is TargetNode.Fields ->
                 target.fields.flatMap { (fieldName, fieldTarget) ->
@@ -1275,7 +1261,7 @@ internal class Loader(
         val consInstructions = loadExpression(node.cons)
         val nilInstructions = loadExpression(node.nil)
 
-        return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(StoreLocal(node.nodeId))
+        return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(LocalStore(node.nodeId))
     }
 
     private fun resolveReference(reference: ReferenceNode): Int {
@@ -1286,8 +1272,8 @@ internal class Loader(
 fun executeMain(mainModule: List<Identifier>, image: Image, world: World): Int {
     val finalState = executeInstructions(
         persistentListOf(
-            InitModule(mainModule),
-            LoadModule(mainModule),
+            ModuleInit(mainModule),
+            ModuleLoad(mainModule),
             FieldAccess(Identifier("main")),
             Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
         ),

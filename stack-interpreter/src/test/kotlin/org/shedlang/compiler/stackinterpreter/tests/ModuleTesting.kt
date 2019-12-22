@@ -6,18 +6,22 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
-import org.shedlang.compiler.stackinterpreter.*
+import org.shedlang.compiler.stackinterpreter.InterpreterValue
+import org.shedlang.compiler.stackinterpreter.NullWorld
+import org.shedlang.compiler.stackinterpreter.World
+import org.shedlang.compiler.stackinterpreter.loadModuleSet
+import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.moduleType
 
 internal fun callFunction(
     moduleName: List<Identifier>,
     functionName: String,
-    arguments: List<InterpreterValue>,
+    arguments: List<IrValue>,
     world: World = NullWorld
 ): InterpreterValue {
     val instructions = persistentListOf(
-        InitModule(moduleName),
-        LoadModule(moduleName),
+        ModuleInit(moduleName),
+        ModuleLoad(moduleName),
         FieldAccess(Identifier(functionName))
     )
         .addAll(arguments.map { argument -> PushValue(argument) })

@@ -19,6 +19,7 @@
         <module>core-tests</module>
         <module>frontend</module>
     <module>stack-interpreter</module>
+    <module>stack-ir</module>
     <module>testing</module>
     </modules>
 

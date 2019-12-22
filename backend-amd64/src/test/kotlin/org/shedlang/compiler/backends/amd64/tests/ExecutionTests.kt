@@ -8,8 +8,10 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.amd64.*
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.stackinterpreter.*
-import org.shedlang.compiler.stackinterpreter.Instruction
+import org.shedlang.compiler.stackinterpreter.Image
+import org.shedlang.compiler.stackinterpreter.loadModuleSet
+import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.stackir.Instruction
 import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 import org.shedlang.compiler.types.FunctionType
@@ -270,7 +272,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                     )
                 )
             }
-            is StoreLocal -> {
+            is LocalStore -> {
                 // TODO: handle locals properly
                 val localIndex = 0
                 CompilationResult.of(
@@ -283,7 +285,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                     )
                 )
             }
-            is StoreModule -> {
+            is ModuleStore -> {
                 CompilationResult.of(
                     listOf(
                         Instructions.lea(
@@ -316,8 +318,8 @@ private class Compiler(private val moduleSet: ModuleSet) {
     private fun localOperand(localIndex: Int) =
         MemoryOperand(Registers.rbp, offset = (-1 - localIndex) * VALUE_SIZE)
 
-    private fun generateOperandForValue(value: InterpreterValue): Operand {
-        if (value is InterpreterInt) {
+    private fun generateOperandForValue(value: IrValue): Operand {
+        if (value is IrInt) {
             return Immediates.qword(value.value.longValueExact())
         } else {
             throw UnsupportedOperationException(value.toString())

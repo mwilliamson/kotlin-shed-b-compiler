@@ -12,5 +12,6 @@
 /frontend/target
 /interpreter/target
 /stack-interpreter/target
+/stack-ir/target
 /testing/target
 shedDependencies

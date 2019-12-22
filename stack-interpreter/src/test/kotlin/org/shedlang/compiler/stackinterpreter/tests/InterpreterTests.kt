@@ -2,7 +2,6 @@ package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
@@ -10,7 +9,9 @@ import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
-import org.shedlang.compiler.stackinterpreter.*
+import org.shedlang.compiler.stackinterpreter.InterpreterValue
+import org.shedlang.compiler.stackinterpreter.loadModuleSet
+import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
@@ -801,8 +802,8 @@ class InterpreterTests {
         val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
-                InitModule(moduleName),
-                LoadModule(moduleName),
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
                 FieldAccess(Identifier("main")),
                 Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
@@ -853,11 +854,11 @@ class InterpreterTests {
         val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
-                InitModule(moduleName),
-                LoadModule(moduleName),
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
                 FieldAccess(Identifier("main")),
-                PushValue(InterpreterInt(1.toBigInteger())),
-                PushValue(InterpreterInt(2.toBigInteger())),
+                PushValue(IrInt(1.toBigInteger())),
+                PushValue(IrInt(2.toBigInteger())),
                 Call(positionalArgumentCount = 2, namedArgumentNames = listOf())
             ),
             image = image
@@ -895,8 +896,8 @@ class InterpreterTests {
         val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
-                InitModule(moduleName),
-                LoadModule(moduleName),
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
                 FieldAccess(Identifier("main")),
                 Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
@@ -935,8 +936,8 @@ class InterpreterTests {
         val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
-                InitModule(moduleName),
-                LoadModule(moduleName),
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
                 FieldAccess(Identifier("main")),
                 Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
@@ -1306,8 +1307,8 @@ class InterpreterTests {
         val image = loadModuleSet(ModuleSet(listOf(exportingModule, importingModule)))
         val value = executeInstructions(
             persistentListOf(
-                InitModule(importingModuleName),
-                LoadModule(importingModuleName),
+                ModuleInit(importingModuleName),
+                ModuleLoad(importingModuleName),
                 FieldAccess(Identifier("x"))
             ),
             image = image
@@ -1334,8 +1335,8 @@ class InterpreterTests {
         val image = loadModuleSet(ModuleSet(listOf(module)))
         val value = executeInstructions(
             persistentListOf(
-                InitModule(moduleName),
-                LoadModule(moduleName),
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
                 FieldAccess(Identifier("moduleName"))
             ),
             image = image
