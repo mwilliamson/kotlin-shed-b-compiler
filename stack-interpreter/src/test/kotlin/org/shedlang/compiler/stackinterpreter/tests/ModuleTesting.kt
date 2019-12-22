@@ -9,7 +9,6 @@ import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.InterpreterValue
 import org.shedlang.compiler.stackinterpreter.NullWorld
 import org.shedlang.compiler.stackinterpreter.World
-import org.shedlang.compiler.stackinterpreter.loadModuleSet
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.moduleType
 

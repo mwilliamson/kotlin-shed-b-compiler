@@ -1,0 +1,522 @@
+package org.shedlang.compiler.stackir
+
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.toPersistentList
+import org.shedlang.compiler.*
+import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.types.*
+
+class Image internal constructor(private val modules: Map<List<Identifier>, PersistentList<Instruction>>) {
+    companion object {
+        val EMPTY = Image(modules = persistentMapOf())
+    }
+
+    fun moduleInitialisation(name: List<Identifier>): List<Instruction> {
+        return modules[name]!!
+    }
+}
+
+fun loadModuleSet(moduleSet: ModuleSet): Image {
+    return Image(moduleSet.modules.filterIsInstance<Module.Shed>().associate { module ->
+        module.name to loadModule(module)
+    })
+}
+
+private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
+    val loader = Loader(
+        inspector = ModuleCodeInspector(module),
+        references = module.references,
+        types = module.types
+    )
+    return loader.loadModule(module)
+}
+
+class Loader(
+    private val references: ResolvedReferences,
+    private val types: Types,
+    private val inspector: CodeInspector
+) {
+    internal fun loadModule(module: Module.Shed): PersistentList<Instruction> {
+        val moduleNameInstructions = if (isReferenced(module, Builtins.moduleName)) {
+            persistentListOf(
+                PushValue(IrString(module.name.joinToString(".") { part -> part.value })),
+                LocalStore(Builtins.moduleName.nodeId)
+            )
+        } else {
+            persistentListOf()
+        }
+
+        val importInstructions = module.node.imports
+            .filter { import ->
+                import.target.variableBinders().any { variableBinder ->
+                    isReferenced(module, variableBinder)
+                }
+            }
+            .flatMap { import ->
+                val importedModuleName = resolveImport(module.name, import.path)
+                persistentListOf(
+                    ModuleInit(importedModuleName),
+                    ModuleLoad(importedModuleName)
+                ).addAll(loadTarget(import.target))
+            }
+            .toPersistentList()
+
+        return importInstructions
+            .addAll(moduleNameInstructions)
+            .addAll(module.node.body.flatMap { statement ->
+                loadModuleStatement(statement)
+            })
+            .add(ModuleStore(
+                moduleName = module.name,
+                exports = module.node.exports.map { export ->
+                    export.name to module.references[export].nodeId
+                }
+            ))
+            .add(Exit)
+    }
+
+    private fun isReferenced(module: Module.Shed, variableBinder: VariableBindingNode) =
+        module.references.referencedNodes.contains(variableBinder)
+
+    fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
+        return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
+            override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
+                val push = PushValue(IrUnit)
+                return persistentListOf(push)
+            }
+
+            override fun visit(node: BooleanLiteralNode): PersistentList<Instruction> {
+                val push = PushValue(IrBool(node.value))
+                return persistentListOf(push)
+            }
+
+            override fun visit(node: IntegerLiteralNode): PersistentList<Instruction> {
+                val push = PushValue(IrInt(node.value))
+                return persistentListOf(push)
+            }
+
+            override fun visit(node: StringLiteralNode): PersistentList<Instruction> {
+                val push = PushValue(IrString(node.value))
+                return persistentListOf(push)
+            }
+
+            override fun visit(node: CodePointLiteralNode): PersistentList<Instruction> {
+                val push = PushValue(IrCodePoint(node.value))
+                return persistentListOf(push)
+            }
+
+            override fun visit(node: SymbolNode): PersistentList<Instruction> {
+                throw UnsupportedOperationException("not implemented")
+            }
+
+            override fun visit(node: TupleNode): PersistentList<Instruction> {
+                val elementInstructions = node.elements.flatMap { element -> loadExpression(element) }
+                return elementInstructions.toPersistentList().add(CreateTuple(node.elements.size))
+            }
+
+            override fun visit(node: ReferenceNode): PersistentList<Instruction> {
+                return persistentListOf(LocalLoad(resolveReference(node)))
+            }
+
+            override fun visit(node: UnaryOperationNode): PersistentList<Instruction> {
+                val operandInstructions = loadExpression(node.operand)
+
+                val operationInstruction = when (node.operator) {
+                    UnaryOperator.NOT -> BoolNot
+                    UnaryOperator.MINUS -> IntMinus
+                }
+
+                return operandInstructions.add(operationInstruction)
+            }
+
+            override fun visit(node: BinaryOperationNode): PersistentList<Instruction> {
+                val left = loadExpression(node.left)
+                val right = loadExpression(node.right)
+                val operation = when (node.operator) {
+                    BinaryOperator.ADD -> when (types.typeOfExpression(node.left)) {
+                        IntType -> IntAdd
+                        StringType -> StringAdd
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.AND -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> {
+                            val leftInstructions = loadExpression(node.left)
+                            val rightInstructions = loadExpression(node.right)
+                            return leftInstructions
+                                .add(Duplicate)
+                                .add(RelativeJumpIfFalse(rightInstructions.size + 1))
+                                .add(Discard)
+                                .addAll(rightInstructions)
+                        }
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.SUBTRACT -> IntSubtract
+                    BinaryOperator.MULTIPLY -> IntMultiply
+                    BinaryOperator.EQUALS -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> BoolEquals
+                        CodePointType -> CodePointEquals
+                        IntType -> IntEquals
+                        StringType -> StringEquals
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.GREATER_THAN -> when (types.typeOfExpression(node.left)) {
+                        CodePointType -> CodePointGreaterThan
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.GREATER_THAN_OR_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        CodePointType -> CodePointGreaterThanOrEqual
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.LESS_THAN -> when (types.typeOfExpression(node.left)) {
+                        CodePointType -> CodePointLessThan
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.LESS_THAN_OR_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        CodePointType -> CodePointLessThanOrEqual
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.NOT_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> BoolNotEqual
+                        CodePointType -> CodePointNotEqual
+                        IntType -> IntNotEqual
+                        StringType -> StringNotEqual
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    BinaryOperator.OR -> when (types.typeOfExpression(node.left)) {
+                        BoolType -> {
+                            val leftInstructions = loadExpression(node.left)
+                            val rightInstructions = loadExpression(node.right)
+                            return leftInstructions
+                                .add(Duplicate)
+                                .add(RelativeJumpIfTrue(rightInstructions.size + 1))
+                                .add(Discard)
+                                .addAll(rightInstructions)
+                        }
+                        else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                    }
+                    else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
+                }
+                return left.addAll(right).add(operation)
+            }
+
+            override fun visit(node: IsNode): PersistentList<Instruction> {
+                val expressionInstructions = loadExpression(node.expression)
+
+                val discriminator = inspector.discriminatorForIsExpression(node)
+
+                return expressionInstructions
+                    .add(FieldAccess(discriminator.fieldName))
+                    .add(PushValue(IrSymbol(discriminator.symbolType.symbol)))
+                    .add(SymbolEquals)
+            }
+
+            override fun visit(node: CallNode): PersistentList<Instruction> {
+                if (inspector.isCast(node)) {
+                    val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
+                    val loadOptionsModuleInstructions = persistentListOf(
+                        ModuleInit(optionsModuleName),
+                        ModuleLoad(optionsModuleName)
+                    )
+                    val parameterId = freshNodeId()
+
+                    val failureInstructions = loadOptionsModuleInstructions
+                        .add(FieldAccess(Identifier("none")))
+                        .add(Return)
+                    val successInstructions = loadOptionsModuleInstructions
+                        .add(FieldAccess(Identifier("some")))
+                        .add(LocalLoad(parameterId))
+                        .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
+                        .add(Return)
+
+                    val discriminator = inspector.discriminatorForCast(node)
+                    val bodyInstructions = persistentListOf<Instruction>()
+                        .add(LocalLoad(parameterId))
+                        .add(FieldAccess(discriminator.fieldName))
+                        .add(PushValue(IrSymbol(discriminator.symbolType.symbol)))
+                        .add(SymbolEquals)
+                        .add(RelativeJumpIfFalse(successInstructions.size))
+                        .addAll(successInstructions)
+                        .addAll(failureInstructions)
+
+                    return persistentListOf(
+                        DeclareFunction(
+                            positionalParameterIds = listOf(parameterId),
+                            bodyInstructions = bodyInstructions,
+                            namedParameterIds = listOf()
+                        )
+                        // TODO: delete if the above works
+//                        PushValue(InterpreterFunction(
+//                            positionalParameterIds = listOf(parameterId),
+//                            bodyInstructions = bodyInstructions,
+//                            namedParameterIds = listOf(),
+//                            scopes = persistentListOf()
+//                        ))
+                    )
+                } else if (types.typeOfExpression(node.receiver) is VarargsType) {
+                    return loadExpression(node.receiver)
+                        .addAll(node.positionalArguments.flatMap { argument ->
+                            persistentListOf<Instruction>()
+                                .add(Duplicate)
+                                .add(FieldAccess(Identifier("cons")))
+                                .add(Swap)
+                                .addAll(loadExpression(argument))
+                                .add(Swap)
+                        })
+                        .add(FieldAccess(Identifier("nil")))
+                        .addAll((0 until node.positionalArguments.size).map {
+                            Call(
+                                positionalArgumentCount = 2,
+                                namedArgumentNames = listOf()
+                            )
+                        })
+                } else {
+                    val receiverInstructions = loadExpression(node.receiver)
+                    val argumentInstructions = loadArguments(node)
+                    val call = Call(
+                        positionalArgumentCount = node.positionalArguments.size,
+                        namedArgumentNames = node.namedArguments.map { argument -> argument.name }
+                    )
+                    return receiverInstructions.addAll(argumentInstructions).add(call)
+                }
+            }
+
+            override fun visit(node: PartialCallNode): PersistentList<Instruction> {
+                val receiverInstructions = loadExpression(node.receiver)
+                val argumentInstructions = loadArguments(node)
+                val partialCall = PartialCall(
+                    positionalArgumentCount = node.positionalArguments.size,
+                    namedArgumentNames = node.namedArguments.map { argument -> argument.name }
+                )
+                return receiverInstructions.addAll(argumentInstructions).add(partialCall)
+            }
+
+            override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
+                val receiverInstructions = loadExpression(node.receiver)
+                val fieldAccess = FieldAccess(fieldName = node.fieldName.identifier)
+                return receiverInstructions.add(fieldAccess)
+            }
+
+            override fun visit(node: FunctionExpressionNode): PersistentList<Instruction> {
+                return persistentListOf(loadFunctionValue(node))
+            }
+
+            override fun visit(node: IfNode): PersistentList<Instruction> {
+                val conditionInstructions = node.conditionalBranches.map { branch ->
+                    loadExpression(branch.condition)
+                }
+
+                return generateBranches(
+                    conditionInstructions = conditionInstructions,
+                    conditionalBodies = node.conditionalBranches.map { branch -> branch.body },
+                    elseBranch = node.elseBranch
+                )
+            }
+
+            override fun visit(node: WhenNode): PersistentList<Instruction> {
+                val expressionInstructions = loadExpression(node.expression)
+
+                val conditionInstructions = node.branches.map { branch ->
+                    val discriminator = inspector.discriminatorForWhenBranch(node, branch)
+
+                    persistentListOf(
+                        Duplicate,
+                        FieldAccess(discriminator.fieldName),
+                        PushValue(IrSymbol(discriminator.symbolType.symbol)),
+                        SymbolEquals
+                    )
+                }
+
+                return expressionInstructions.addAll(generateBranches(
+                    conditionInstructions = conditionInstructions,
+                    conditionalBodies = node.branches.map { branch -> branch.body },
+                    elseBranch = node.elseBranch
+                ))
+            }
+
+            private fun generateBranches(
+                conditionInstructions: List<PersistentList<Instruction>>,
+                conditionalBodies: List<Block>,
+                elseBranch: Block?
+            ): PersistentList<Instruction> {
+                val instructions = mutableListOf<Instruction>()
+
+                val branchBodies = conditionalBodies + elseBranch.nullableToList()
+                val bodyInstructions = branchBodies.map { body -> loadBlock(body) }
+
+                conditionInstructions.forEachIndexed { branchIndex, _ ->
+                    instructions.addAll(conditionInstructions[branchIndex])
+                    instructions.add(RelativeJumpIfFalse(bodyInstructions[branchIndex].size + 1))
+                    instructions.addAll(bodyInstructions[branchIndex])
+
+                    val remainingConditionInstructionCount = conditionInstructions.drop(branchIndex + 1)
+                        .fold(0) { total, instructions -> total + instructions.size }
+                    val remainingBodyInstructionCount = bodyInstructions.drop(branchIndex + 1)
+                        .fold(0) { total, instructions -> total + instructions.size }
+                    val remainingInstructionCount =
+                        remainingConditionInstructionCount +
+                            remainingBodyInstructionCount +
+                            (conditionInstructions.size - branchIndex - 1) * 2
+                    instructions.add(RelativeJump(remainingInstructionCount))
+                }
+
+                if (elseBranch != null) {
+                    instructions.addAll(loadBlock(elseBranch))
+                }
+                return instructions.toPersistentList()
+            }
+        })
+    }
+
+    private fun loadArguments(node: CallBaseNode): List<Instruction> {
+        return node.positionalArguments.flatMap { argument ->
+            loadExpression(argument)
+        } + node.namedArguments.flatMap { argument ->
+            loadExpression(argument.expression)
+        }
+    }
+
+    fun loadBlock(block: Block): PersistentList<Instruction> {
+        val statementInstructions = block.statements.flatMap { statement ->
+            loadFunctionStatement(statement)
+        }.toPersistentList()
+
+        return if (blockHasReturnValue(block)) {
+            statementInstructions
+        } else {
+            statementInstructions.add(PushValue(IrUnit))
+        }
+    }
+
+    private fun blockHasReturnValue(block: Block): Boolean {
+        val last = block.statements.lastOrNull()
+        return last != null && last is ExpressionStatementNode && last.isReturn
+    }
+
+    fun loadFunctionStatement(statement: FunctionStatementNode): PersistentList<Instruction> {
+        return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<Instruction>> {
+            override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
+                val expressionInstructions = loadExpression(node.expression)
+                if (node.type == ExpressionStatementNode.Type.RETURN || node.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
+                    return expressionInstructions
+                } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
+                    return expressionInstructions.add(Discard).add(PushValue(IrUnit))
+                } else {
+                    throw UnsupportedOperationException("not implemented")
+                }
+            }
+
+            override fun visit(node: ValNode): PersistentList<Instruction> {
+                return loadVal(node)
+            }
+
+            override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
+                return loadFunctionDeclaration(node)
+            }
+        })
+    }
+
+    fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
+        return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
+            override fun visit(node: TypeAliasNode): PersistentList<Instruction> {
+                return persistentListOf()
+            }
+
+            override fun visit(node: ShapeNode): PersistentList<Instruction> {
+                return loadShape(node)
+            }
+
+            override fun visit(node: UnionNode): PersistentList<Instruction> {
+                val unionInstructions = persistentListOf(
+                    PushValue(IrUnit),
+                    LocalStore(node.nodeId)
+                )
+                val memberInstructions = node.members.flatMap { member -> loadShape(member) }
+
+                return unionInstructions.addAll(memberInstructions)
+            }
+
+            override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
+                return loadFunctionDeclaration(node)
+            }
+
+            override fun visit(node: ValNode): PersistentList<Instruction> {
+                return loadVal(node)
+            }
+
+            override fun visit(node: VarargsDeclarationNode): PersistentList<Instruction> {
+                return loadVarargsDeclaration(node)
+            }
+        })
+    }
+
+    private fun loadFunctionDeclaration(node: FunctionDeclarationNode): PersistentList<Instruction> {
+        return persistentListOf(
+            loadFunctionValue(node),
+            LocalStore(node.nodeId)
+        )
+    }
+
+    private fun loadFunctionValue(node: FunctionNode): DeclareFunction {
+        val bodyInstructions = loadBlock(node.body).add(Return)
+        return DeclareFunction(
+            bodyInstructions = bodyInstructions,
+            positionalParameterIds = node.parameters.map { parameter -> parameter.nodeId },
+            namedParameterIds = node.namedParameters.map { parameter ->
+                NamedParameterId(parameter.name, parameter.nodeId)
+            }
+        )
+    }
+
+    private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
+        val shapeFields = inspector.shapeFields(node)
+
+        return persistentListOf(
+            DeclareShape(shapeFields),
+            LocalStore(node.nodeId)
+        )
+    }
+
+    private fun loadVal(node: ValNode): PersistentList<Instruction> {
+        val expressionInstructions = loadExpression(node.expression)
+        val targetInstructions = loadTarget(node.target)
+        return expressionInstructions.addAll(targetInstructions)
+    }
+
+    private fun loadTarget(target: TargetNode): PersistentList<Instruction> {
+        return when (target) {
+            is TargetNode.Variable ->
+                persistentListOf(LocalStore(target.nodeId))
+
+            is TargetNode.Fields ->
+                target.fields.flatMap { (fieldName, fieldTarget) ->
+                    persistentListOf(
+                        Duplicate,
+                        FieldAccess(fieldName = fieldName.identifier)
+                    ).addAll(loadTarget(fieldTarget))
+                }.toPersistentList().add(Discard)
+
+            is TargetNode.Tuple ->
+                target.elements.mapIndexed { elementIndex, target ->
+                    persistentListOf(
+                        Duplicate,
+                        TupleAccess(elementIndex = elementIndex)
+                    ).addAll(loadTarget(target))
+                }.flatten().toPersistentList().add(Discard)
+        }
+    }
+
+    private fun loadVarargsDeclaration(node: VarargsDeclarationNode): PersistentList<Instruction> {
+        val consInstructions = loadExpression(node.cons)
+        val nilInstructions = loadExpression(node.nil)
+
+        return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(LocalStore(node.nodeId))
+    }
+
+    private fun resolveReference(reference: ReferenceNode): Int {
+        return references[reference].nodeId
+    }
+}

@@ -8,7 +8,7 @@ import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.RealWorld
 import org.shedlang.compiler.stackinterpreter.executeMain
-import org.shedlang.compiler.stackinterpreter.loadModuleSet
+import org.shedlang.compiler.stackir.loadModuleSet
 import org.shedlang.compiler.typechecker.SourceError
 import java.nio.file.Path
 import java.nio.file.Paths

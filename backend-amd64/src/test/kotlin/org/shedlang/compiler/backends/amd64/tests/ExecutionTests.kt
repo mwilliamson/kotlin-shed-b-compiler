@@ -8,8 +8,6 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.amd64.*
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.stackinterpreter.Image
-import org.shedlang.compiler.stackinterpreter.loadModuleSet
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.stackir.Instruction
 import org.shedlang.compiler.typechecker.CompilerError

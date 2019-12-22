@@ -8,8 +8,12 @@ import org.shedlang.compiler.ast.Block
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.SimpleCodeInspector
-import org.shedlang.compiler.stackinterpreter.*
+import org.shedlang.compiler.stackinterpreter.InterpreterValue
+import org.shedlang.compiler.stackinterpreter.NullWorld
+import org.shedlang.compiler.stackinterpreter.World
+import org.shedlang.compiler.stackir.Image
 import org.shedlang.compiler.stackir.Instruction
+import org.shedlang.compiler.stackir.Loader
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
 internal fun loader(

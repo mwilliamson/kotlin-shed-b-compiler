@@ -37,7 +37,7 @@
         </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
-            <artifactId>shed-compiler-stack-interpreter</artifactId>
+            <artifactId>shed-compiler-stack-ir</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>
         <dependency>

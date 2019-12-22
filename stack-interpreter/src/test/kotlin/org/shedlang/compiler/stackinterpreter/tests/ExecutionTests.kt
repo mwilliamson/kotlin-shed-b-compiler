@@ -13,7 +13,7 @@ import org.shedlang.compiler.backends.tests.TestProgram
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackinterpreter.World
 import org.shedlang.compiler.stackinterpreter.executeMain
-import org.shedlang.compiler.stackinterpreter.loadModuleSet
+import org.shedlang.compiler.stackir.loadModuleSet
 import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 

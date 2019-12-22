@@ -10,7 +10,6 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackinterpreter.InterpreterValue
-import org.shedlang.compiler.stackinterpreter.loadModuleSet
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
