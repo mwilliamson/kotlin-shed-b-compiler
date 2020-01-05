@@ -4,6 +4,7 @@ import kotlinx.collections.immutable.PersistentList
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.TagValue
 import java.math.BigInteger
 
 sealed class IrValue
@@ -61,6 +62,7 @@ class DeclareFunction(
 ): Instruction()
 
 class DeclareShape(
+    val tagValue: TagValue?,
     val fields: List<FieldInspector>
 ): Instruction()
 
@@ -118,5 +120,7 @@ object StringNotEqual: Instruction()
 object Swap: Instruction()
 
 object SymbolEquals: Instruction()
+
+object TagValueAccess: Instruction()
 
 class TupleAccess(val elementIndex: Int): Instruction()

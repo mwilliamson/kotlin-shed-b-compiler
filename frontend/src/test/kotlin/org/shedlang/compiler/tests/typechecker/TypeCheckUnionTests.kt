@@ -1,7 +1,7 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheckModuleStatement
@@ -19,6 +19,7 @@ class TypeCheckUnionTests {
         typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             name = isIdentifier("X"),
+            tag = isTag(listOf("Example"), "X"),
             members = isSequence(
                 isShapeType(name = isIdentifier("Member1")),
                 isShapeType(name = isIdentifier("Member2"))
@@ -27,7 +28,7 @@ class TypeCheckUnionTests {
     }
 
     @Test
-    fun unionMembersHaveTagField() {
+    fun unionMembersHaveTagValue() {
         val node = union("X", listOf(
             unionMember(name = "Member1"),
             unionMember(name = "Member2")
@@ -42,29 +43,13 @@ class TypeCheckUnionTests {
             members = isSequence(
                 isShapeType(
                     name = isIdentifier("Member1"),
-                    fields = isSequence(
-                        isField(
-                            name = isIdentifier("\$unionTag\$A.B\$X"),
-                            isConstant = equalTo(true),
-                            type = equalTo(symbolType(
-                                module = listOf("A", "B"),
-                                name = "`Member1"
-                            ))
-                        )
-                    )
+                    tagValue = present(isTagValue(isTag(listOf("A", "B"), "X"), "Member1")),
+                    fields = isSequence()
                 ),
                 isShapeType(
                     name = isIdentifier("Member2"),
-                    fields = isSequence(
-                        isField(
-                            name = isIdentifier("\$unionTag\$A.B\$X"),
-                            isConstant = equalTo(true),
-                            type = equalTo(symbolType(
-                                module = listOf("A", "B"),
-                                name = "`Member2"
-                            ))
-                        )
-                    )
+                    tagValue = present(isTagValue(isTag(listOf("A", "B"), "X"), "Member2")),
+                    fields = isSequence()
                 )
             )
         )))

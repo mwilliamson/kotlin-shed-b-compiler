@@ -249,6 +249,19 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         source = shapeSource
     )
 
+    val tagValue = context.inspector.shapeTagValue(node)
+    val tagValueAssignment = if (tagValue == null) {
+        listOf()
+    } else {
+        listOf(
+            PythonAssignmentNode(
+                PythonVariableReferenceNode(tagValueAttributeName, source = shapeSource),
+                PythonStringLiteralNode(tagValue.value.value, source = shapeSource),
+                source = shapeSource
+            )
+        )
+    }
+
     val body = shapeFields.mapNotNull { field ->
         val fieldValue = field.value
 
@@ -271,7 +284,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
                 source = shapeSource
             )
         }
-    } + init + listOf(fieldsClass)
+    } + init + listOf(fieldsClass) + tagValueAssignment
     return PythonClassNode(
         // TODO: test renaming
         name = context.name(node),
@@ -1128,8 +1141,8 @@ private fun generateTypeCondition(
 ): PythonExpressionNode {
     return PythonBinaryOperationNode(
         PythonBinaryOperator.EQUALS,
-        PythonAttributeAccessNode(expression, pythoniseName(discriminator.fieldName), source),
-        symbol(discriminator.symbolType.symbol, source = source),
+        PythonAttributeAccessNode(expression, tagValueAttributeName, source),
+        PythonStringLiteralNode(discriminator.tagValue.value.value, source = source),
         source = source
     )
 }
@@ -1190,3 +1203,5 @@ internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationCon
 private fun generateCodeForReference(node: ReferenceNode, context: CodeGenerationContext): PythonVariableReferenceNode {
     return PythonVariableReferenceNode(context.name(node), NodeSource(node))
 }
+
+private const val tagValueAttributeName = "_tag_value"

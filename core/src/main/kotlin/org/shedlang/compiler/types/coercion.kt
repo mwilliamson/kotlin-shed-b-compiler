@@ -12,6 +12,10 @@ fun canCoerce(from: Type, to: Type): Boolean {
     return coerce(from = from, to = to) is CoercionResult.Success
 }
 
+fun canCoerce(from: Type, to: Type, freeParameters: Set<StaticParameter>): Boolean {
+    return coerce(from = from, to = to, parameters = freeParameters) is CoercionResult.Success
+}
+
 fun isEquivalentType(first: Type, second: Type): Boolean {
     return canCoerce(from = first, to = second) && canCoerce(from = second, to = first)
 }
@@ -19,14 +23,14 @@ fun isEquivalentType(first: Type, second: Type): Boolean {
 fun coerce(
     from: Type,
     to: Type,
-    parameters: Set<TypeParameter> = setOf()
+    parameters: Set<StaticParameter> = setOf()
 ): CoercionResult {
     return coerce(listOf(from to to), parameters = parameters)
 }
 
 fun coerce(
     constraints: List<Pair<Type, Type>>,
-    parameters: Set<TypeParameter> = setOf()
+    parameters: Set<StaticParameter> = setOf()
 ): CoercionResult {
     val solver = TypeConstraintSolver(parameters = parameters)
     for ((from, to) in constraints) {

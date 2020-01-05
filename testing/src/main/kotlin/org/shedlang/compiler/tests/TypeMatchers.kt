@@ -38,12 +38,14 @@ fun isTypeAlias(
 fun isShapeType(
     shapeId: Matcher<Int> = anything,
     name: Matcher<Identifier> = anything,
+    tagValue: Matcher<TagValue?> = anything,
     staticParameters: Matcher<List<StaticParameter>> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
     fields: Matcher<Collection<Field>> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::name, name),
+    has(ShapeType::tagValue, tagValue),
     has(ShapeType::staticParameters, staticParameters),
     has(ShapeType::staticArguments, staticArguments),
     has("fields", { type -> type.fields.values }, fields)
@@ -63,12 +65,24 @@ fun isField(
 
 fun isUnionType(
     name: Matcher<Identifier> = anything,
+    tag: Matcher<Tag> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
     members: Matcher<List<Type>> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(UnionType::name, name),
+    has(UnionType::tag, tag),
     has(UnionType::staticArguments, staticArguments),
     has(UnionType::members, members)
+))
+
+fun isTag(moduleName: List<String>, name: String) = cast(allOf(
+    has(Tag::moduleName, equalTo(moduleName.map(::Identifier))),
+    has(Tag::name, isIdentifier(name))
+))
+
+fun isTagValue(tag: Matcher<Tag>, value: String) = cast(allOf(
+    has(TagValue::tag, tag),
+    has(TagValue::value, isIdentifier(value))
 ))
 
 val isAnyType: Matcher<StaticValue> = cast(equalTo(AnyType))
@@ -120,3 +134,8 @@ fun isEquivalentType(type: Type): Matcher<Type> {
 
 val isUnionTypeGroup: Matcher<TypeGroup> = equalTo(UnionTypeGroup)
 val isMetaTypeGroup: Matcher<TypeGroup> = equalTo(MetaTypeGroup)
+
+fun isDiscriminator(tagValue: Matcher<TagValue>, targetType: Matcher<Type> = anything): Matcher<Discriminator> = allOf(
+    has(Discriminator::tagValue, tagValue),
+    has(Discriminator::targetType, targetType)
+)

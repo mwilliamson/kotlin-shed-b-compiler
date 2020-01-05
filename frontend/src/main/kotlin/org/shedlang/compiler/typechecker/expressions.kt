@@ -137,11 +137,12 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
     // TODO: test expression and type checking
 
     val expressionType = checkTypeConditionOperand(node.expression, context)
+    val targetType = evalType(node.type, context)
 
     val discriminator = evalTypeCondition(
         expressionType = expressionType,
-        targetTypeNode = node.type,
-        context = context
+        targetType = targetType,
+        source = node.type.source
     )
 
     context.addDiscriminator(node, discriminator)
@@ -151,18 +152,17 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 
 private fun evalTypeCondition(
     expressionType: UnionType,
-    targetTypeNode: StaticExpressionNode,
-    context: TypeContext
+    targetType: Type,
+    source: Source
 ): Discriminator {
-    val targetType = evalType(targetTypeNode, context)
-
     // TODO: given generics are erased, when node.type is generic we
     // should make sure no other instantiations of that generic type
     // are possible e.g. if the expression has type Cons[T] | Nil,
     // then checking the type to be Cons[U] is valid iff T <: U
+
     val discriminator = findDiscriminator(sourceType = expressionType, targetType = targetType)
     if (discriminator == null) {
-        throw CouldNotFindDiscriminator(sourceType = expressionType, targetType = targetType, source = targetTypeNode.source)
+        throw CouldNotFindDiscriminator(sourceType = expressionType, targetType = targetType, source = source)
     }
 
     return discriminator
@@ -179,6 +179,7 @@ internal fun inferFieldAccessType(receiverType: Type, fieldName: FieldNameNode):
     val fieldType = receiverType.fieldType(identifier)
 
     if (fieldType == null) {
+        println(receiverType)
         throw NoSuchFieldError(
             fieldName = fieldName.identifier,
             source = fieldName.source
@@ -199,7 +200,13 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
             val conditionExpression = condition.expression
             if (conditionExpression is ReferenceNode) {
                 val conditionType = evalType(condition.type, context)
-                trueContext.addVariableType(conditionExpression, conditionType)
+                val discriminator = evalTypeCondition(
+                    expressionType = context.typeOf(context.resolveReference(conditionExpression)) as UnionType,
+                    targetType = conditionType,
+                    source = branch.source
+                )
+                // TODO: test discriminator.targetType is used instead of conditionType
+                trueContext.addVariableType(conditionExpression, discriminator.targetType)
             }
         }
 
@@ -215,20 +222,22 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     val expressionType = checkTypeConditionOperand(node.expression, context)
 
     val branchResults = node.branches.map { branch ->
+        val conditionType = evalType(branch.type, context)
         val discriminator = evalTypeCondition(
             expressionType = expressionType,
-            targetTypeNode = branch.type,
-            context = context
+            targetType = conditionType,
+            source = branch.source
         )
+
         context.addDiscriminator(branch, discriminator)
-        val conditionType = discriminator.targetType
         val branchContext = context.enterScope()
         val expression = node.expression
         if (expression is ReferenceNode) {
-            branchContext.addVariableType(expression, conditionType)
+            // TODO: test discriminator.targetType is used instead of conditionType
+            branchContext.addVariableType(expression, discriminator.targetType)
         }
         val type = typeCheckBlock(branch.body, branchContext)
-        Pair(type, conditionType)
+        Pair(type, discriminator.targetType)
     }
 
     var branchTypes = branchResults.map { result -> result.first }

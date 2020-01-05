@@ -208,10 +208,7 @@ class Loader(
 
                 val discriminator = inspector.discriminatorForIsExpression(node)
 
-                return expressionInstructions
-                    .add(FieldAccess(discriminator.fieldName))
-                    .add(PushValue(IrSymbol(discriminator.symbolType.symbol)))
-                    .add(SymbolEquals)
+                return expressionInstructions.addAll(typeConditionInstructions(discriminator))
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
@@ -235,9 +232,7 @@ class Loader(
                     val discriminator = inspector.discriminatorForCast(node)
                     val bodyInstructions = persistentListOf<Instruction>()
                         .add(LocalLoad(parameterId))
-                        .add(FieldAccess(discriminator.fieldName))
-                        .add(PushValue(IrSymbol(discriminator.symbolType.symbol)))
-                        .add(SymbolEquals)
+                        .addAll(typeConditionInstructions(discriminator))
                         .add(RelativeJumpIfFalse(successInstructions.size))
                         .addAll(successInstructions)
                         .addAll(failureInstructions)
@@ -322,12 +317,7 @@ class Loader(
                 val conditionInstructions = node.branches.map { branch ->
                     val discriminator = inspector.discriminatorForWhenBranch(node, branch)
 
-                    persistentListOf(
-                        Duplicate,
-                        FieldAccess(discriminator.fieldName),
-                        PushValue(IrSymbol(discriminator.symbolType.symbol)),
-                        SymbolEquals
-                    )
+                    persistentListOf<Instruction>(Duplicate).addAll(typeConditionInstructions(discriminator))
                 }
 
                 return expressionInstructions.addAll(generateBranches(
@@ -473,9 +463,10 @@ class Loader(
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
         val shapeFields = inspector.shapeFields(node)
+        val tagValue = inspector.shapeTagValue(node)
 
         return persistentListOf(
-            DeclareShape(shapeFields),
+            DeclareShape(tagValue, shapeFields),
             LocalStore(node.nodeId)
         )
     }
@@ -514,6 +505,14 @@ class Loader(
         val nilInstructions = loadExpression(node.nil)
 
         return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(LocalStore(node.nodeId))
+    }
+
+    private fun typeConditionInstructions(discriminator: Discriminator): PersistentList<Instruction> {
+        return persistentListOf(
+            TagValueAccess,
+            PushValue(IrString(discriminator.tagValue.value.value)),
+            StringEquals
+        )
     }
 
     private fun resolveReference(reference: ReferenceNode): Int {

@@ -40,18 +40,19 @@ private fun typeCheck(node: ShapeNode, context: TypeContext) {
 private fun generateShapeType(
     node: ShapeBaseNode,
     context: TypeContext,
-    extraFields: List<FieldDefinition> = listOf()
+    tagValue: TagValue? = null
 ): Type {
     val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     val shapeId = freshTypeId()
 
     // TODO: test laziness
-    val fields = generateFields(node, context, shapeId, extraFields)
+    val fields = generateFields(node, context, shapeId)
 
     val shapeType = lazyShapeType(
         shapeId = shapeId,
         name = node.name,
+        tagValue = tagValue,
         getFields = fields,
         staticParameters = staticParameters,
         staticArguments = staticParameters
@@ -77,8 +78,7 @@ private fun generateShapeType(
 private fun generateFields(
     node: ShapeBaseNode,
     context: TypeContext,
-    shapeId: Int,
-    extraFields: List<FieldDefinition>
+    shapeId: Int
 ): Lazy<List<Field>> {
     for ((fieldName, fields) in node.fields.groupBy({ field -> field.name })) {
         if (fields.size > 1) {
@@ -103,7 +103,7 @@ private fun generateFields(
             generateField(field, context, shapeId = shapeId, shapeName = node.name)
         }
 
-        mergeFields(parentFields, explicitFields + extraFields)
+        mergeFields(parentFields, explicitFields)
     }
 }
 
@@ -249,21 +249,14 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     val baseShapeId = freshTypeId()
 
+    val tag = Tag(context.moduleName!!.map(::Identifier), node.name)
+
     val memberTypes = node.members.map { member ->
-        val unionField = FieldDefinition(
-            field = Field(
-                shapeId = baseShapeId,
-                name = Identifier("\$unionTag\$${context.moduleName!!.joinToString(".")}\$${node.name.value}"),
-                isConstant = true,
-                type = SymbolType(Symbol(context.moduleName.map(::Identifier), "`" + member.name.value))
-            ),
-            shape = node.name,
-            source = node.source
-        )
+        val tagValue = TagValue(tag, member.name)
         val type = generateShapeType(
             member,
             context,
-            extraFields = listOf(unionField)
+            tagValue = tagValue
         )
         if (type is ShapeType) {
             type
@@ -278,6 +271,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     val unionType = LazyUnionType(
         name = node.name,
+        tag = tag,
         getMembers = lazy { memberTypes },
         staticArguments = staticParameters
     )

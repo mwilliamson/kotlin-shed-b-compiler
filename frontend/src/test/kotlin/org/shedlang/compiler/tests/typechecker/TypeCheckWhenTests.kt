@@ -2,32 +2,30 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
-import org.shedlang.compiler.types.freshTypeId
 
 class TypeCheckWhenTests {
-    private val shapeId = freshTypeId();
+    private val inputTag = tag(listOf("Example"), "Union")
     private val inputMember1TypeReference = staticReference("Member1")
     private val inputMember2TypeReference = staticReference("Member2")
-    private val inputMember1 = shapeType(name = "Member1", fields = listOf(
-        field(name = "tag", type = symbolType(listOf(), "`Member1"), shapeId = shapeId)
-    ))
-    private val inputMember2 = shapeType(name = "Member2", fields = listOf(
-        field(name = "tag", type = symbolType(listOf(), "`Member2"), shapeId = shapeId)
-    ))
-    private val inputUnion = unionType("Union", members = listOf(inputMember1, inputMember2))
+    private val inputTagValue1 = tagValue(inputTag, "Member1")
+    private val inputMember1 = shapeType(name = "Member1", tagValue = inputTagValue1)
+    private val inputTagValue2 = tagValue(inputTag, "Member2")
+    private val inputMember2 = shapeType(name = "Member2", tagValue = inputTagValue2)
+    private val inputUnion = unionType("Union", tag = inputTag, members = listOf(inputMember1, inputMember2))
 
+    private val outputTag = tag(listOf("Example"), "Output")
     private val outputMember1Reference = variableReference("outputMember1")
     private val outputMember2Reference = variableReference("outputMember2")
-    private val outputMember1 = shapeType(name = "OutputMember1")
-    private val outputMember2 = shapeType(name = "OutputMember2")
+    private val outputMember1 = shapeType(name = "OutputMember1", tagValue = tagValue(outputTag, "OutputMember1"))
+    private val outputMember2 = shapeType(name = "OutputMember2", tagValue = tagValue(outputTag, "OutputMember2"))
 
     @Test
     fun expressionMustBeUnion() {
@@ -258,11 +256,15 @@ class TypeCheckWhenTests {
 
         assertThat(
             typeContext.toTypes().discriminatorForWhenBranch(branch1),
-            has(Discriminator::targetType, isType(inputMember1))
+            isDiscriminator(
+                tagValue = equalTo(inputTagValue1)
+            )
         )
         assertThat(
             typeContext.toTypes().discriminatorForWhenBranch(branch2),
-            has(Discriminator::targetType, isType(inputMember2))
+            isDiscriminator(
+                tagValue = equalTo(inputTagValue2)
+            )
         )
     }
 }

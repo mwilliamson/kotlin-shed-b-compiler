@@ -120,6 +120,7 @@ class CodeGeneratorTests {
                 isJavascriptVariableReference("\$shed.declareShape"),
                 isSequence(
                     isJavascriptStringLiteral("X"),
+                    isJavascriptNull(),
                     isJavascriptArray(anything)
                 )
             )
@@ -136,6 +137,10 @@ class CodeGeneratorTests {
             shapeFields = mapOf(
                 member1Node to listOf(),
                 member2Node to listOf()
+            ),
+            shapeTagValues = mapOf(
+                member1Node to tagValue(tag(listOf("Example"), "X"), "Member1TagValue"),
+                member2Node to tagValue(tag(listOf("Example"), "X"), "Member2TagValue")
             )
         )
         val nodes = generateCode(shed, context)
@@ -151,6 +156,7 @@ class CodeGeneratorTests {
                     isJavascriptVariableReference("\$shed.declareShape"),
                     isSequence(
                         isJavascriptStringLiteral("Member1"),
+                        isJavascriptStringLiteral("Member1TagValue"),
                         anything
                     )
                 )
@@ -161,6 +167,7 @@ class CodeGeneratorTests {
                     isJavascriptVariableReference("\$shed.declareShape"),
                     isSequence(
                         isJavascriptStringLiteral("Member2"),
+                        isJavascriptStringLiteral("Member2TagValue"),
                         anything
                     )
                 )
@@ -324,7 +331,7 @@ class CodeGeneratorTests {
 
         val context = context(
             discriminatorsForWhenBranches = mapOf(
-                Pair(shed, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
             )
         )
         val node = generateCode(shed, context)
@@ -340,7 +347,7 @@ class CodeGeneratorTests {
                         isJavascriptConditionalBranch(
                             condition = isJavascriptTypeCondition(
                                 expression = isJavascriptVariableReference("\$shed_tmp"),
-                                discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
+                                discriminator = discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
                             ),
                             body = isSequence(
                                 isJavascriptReturn(isJavascriptIntegerLiteral(42))
@@ -547,14 +554,14 @@ class CodeGeneratorTests {
 
         val context = context(
             discriminatorsForIsExpressions = mapOf(
-                shed to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                shed to discriminator(tagValue(tag(listOf("M"), "`A"), "tag"))
             )
         )
         val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptTypeCondition(
             isJavascriptVariableReference("x"),
-            discriminator(symbolType(listOf("M"), "`A"), "tag")
+            discriminator(tagValue(tag(listOf("M"), "`A"), "tag"))
         ))
     }
 
@@ -754,7 +761,8 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         expressionTypes: Map<ExpressionNode, Type> = mapOf(),
-        shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf()
+        shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
+        shapeTagValues: Map<ShapeBaseNode, TagValue> = mapOf()
     ): CodeGenerationContext {
         return CodeGenerationContext(
             moduleName = moduleName.map(::Identifier),
@@ -762,7 +770,8 @@ class CodeGeneratorTests {
                 discriminatorsForIsExpressions = discriminatorsForIsExpressions,
                 discriminatorsForWhenBranches = discriminatorsForWhenBranches,
                 expressionTypes = expressionTypes,
-                shapeFields = shapeFields
+                shapeFields = shapeFields,
+                shapeTagValues = shapeTagValues
             )
         )
     }
@@ -928,9 +937,9 @@ class CodeGeneratorTests {
             operator = equalTo(JavascriptBinaryOperator.EQUALS),
             left = isJavascriptPropertyAccess(
                 receiver = expression,
-                propertyName = equalTo(discriminator.fieldName.value)
+                propertyName = equalTo("\$tagValue")
             ),
-            right = isJavascriptStringLiteral(discriminator.symbolType.symbol.fullName)
+            right = isJavascriptStringLiteral(discriminator.tagValue.value.value)
         )
     }
 

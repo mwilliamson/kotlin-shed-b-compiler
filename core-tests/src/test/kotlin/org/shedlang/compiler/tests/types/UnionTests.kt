@@ -10,9 +10,10 @@ import org.shedlang.compiler.types.union
 class UnionTests {
     @Test
     fun whenLeftOperandIsSuperTypeOfRightOperandThenResultOfUnionIsLeftOperand() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
-        val superType = unionType("SuperType", listOf(member1, member2))
+        val tag = tag(listOf("Example"), "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+        val superType = unionType("SuperType", tag, listOf(member1, member2))
 
         val union = union(superType, member1)
         assertThat(union, cast(equalTo(superType)))
@@ -20,9 +21,10 @@ class UnionTests {
 
     @Test
     fun whenRightOperandIsSuperTypeOfLeftOperandThenResultOfUnionIsRightOperand() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
-        val superType = unionType("SuperType", listOf(member1, member2))
+        val tag = tag(listOf("Example"), "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+        val superType = unionType("SuperType", tag, listOf(member1, member2))
 
         val union = union(member1, superType)
         assertThat(union, cast(equalTo(superType)))
@@ -30,11 +32,12 @@ class UnionTests {
 
     @Test
     fun unioningTwoUnionsReturnsWiderUnion() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
-        val member3 = shapeType(name = "Member3")
-        val left = unionType("Left", listOf(member1, member2))
-        val right = unionType("Right", listOf(member2, member3))
+        val tag = tag(listOf("Example"), "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+        val member3 = shapeType(name = "Member3", tagValue = tagValue(tag, "Member3"))
+        val left = unionType("Left", tag, listOf(member1, member2))
+        val right = unionType("Right", tag, listOf(member2, member3))
 
         val union = union(left, right)
         assertThat(union, isUnionType(
@@ -43,9 +46,10 @@ class UnionTests {
     }
 
     @Test
-    fun unioningTwoShapesReturnsUnion() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
+    fun unioningTwoShapesWithSameTagReturnsUnion() {
+        val tag = tag(listOf("Example"), "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
 
         val union = union(member1, member2)
         assertThat(union, isUnionType(
@@ -55,9 +59,10 @@ class UnionTests {
 
     @Test
     fun repeatedUnionsFromLeftProduceSingleUnion() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
-        val member3 = shapeType(name = "Member3")
+        val tag = tag(listOf("Example"), "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+        val member3 = shapeType(name = "Member3", tagValue = tagValue(tag, "Member3"))
 
         val union = union(union(member1, member2), member3)
         assertThat(union, isUnionType(
@@ -67,9 +72,10 @@ class UnionTests {
 
     @Test
     fun repeatedUnionsFromRightProduceSingleUnion() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
-        val member3 = shapeType(name = "Member3")
+        val tag = tag(listOf("Example"), "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+        val member3 = shapeType(name = "Member3", tagValue = tagValue(tag, "Member3"))
 
         val union = union(member1, union(member2, member3))
         assertThat(union, isUnionType(

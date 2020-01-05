@@ -20,10 +20,7 @@ import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.resolve
-import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
 class CodeGeneratorTests {
@@ -304,6 +301,10 @@ class CodeGeneratorTests {
             shapeFields = mapOf(
                 member1Node to listOf(),
                 member2Node to listOf()
+            ),
+            shapeTagValues = mapOf(
+                member1Node to tagValue(tag(listOf("Example"), "X"), "Member1TagValue"),
+                member2Node to tagValue(tag(listOf("Example"), "X"), "Member2TagValue")
             )
         )
         val nodes = generateModuleStatementCode(shed, context)
@@ -311,10 +312,12 @@ class CodeGeneratorTests {
         assertThat(nodes, isSequence(
             isPythonAssignment("X", isPythonNone()),
             isPythonClass(
-                name = equalTo("Member1")
+                name = equalTo("Member1"),
+                body = isSequence(anything, isPythonAssignment("_tag_value", isPythonStringLiteral("Member1TagValue")))
             ),
             isPythonClass(
-                name = equalTo("Member2")
+                name = equalTo("Member2"),
+                body = isSequence(anything, isPythonAssignment("_tag_value", isPythonStringLiteral("Member2TagValue")))
             )
         ))
     }
@@ -557,7 +560,7 @@ class CodeGeneratorTests {
                 variableReference to variableDeclaration
             ),
             discriminatorsForWhenBranches = mapOf(
-                Pair(shed, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
             )
         )
         val generatedExpression = generateExpressionCode(shed, context)
@@ -576,7 +579,7 @@ class CodeGeneratorTests {
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
                             expression = isPythonVariableReference("f"),
-                            discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
+                            discriminator = tagValue(tag(listOf("M"), "A"), "tag")
                         ),
                         body = isSequence(
                             isPythonAssignment(
@@ -618,7 +621,7 @@ class CodeGeneratorTests {
                 variableReference to variableDeclaration
             ),
             discriminatorsForWhenBranches = mapOf(
-                Pair(shed, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
             )
         ))
         val reference = generatedExpression.value as PythonVariableReferenceNode
@@ -629,7 +632,7 @@ class CodeGeneratorTests {
                     isPythonConditionalBranch(
                         condition = isPythonTypeCondition(
                             expression = isPythonVariableReference("x"),
-                            discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
+                            discriminator = tagValue(tag(listOf("M"), "A"), "tag")
                         ),
                         body = isSequence(
                             isPythonAssignment(
@@ -679,7 +682,7 @@ class CodeGeneratorTests {
                     typeReference to typeDeclaration
                 ),
                 discriminatorsForWhenBranches = mapOf(
-                    Pair(whenExpression, whenBranch) to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                    Pair(whenExpression, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
                 )
             )
         )
@@ -691,7 +694,7 @@ class CodeGeneratorTests {
                         isPythonConditionalBranch(
                             condition = isPythonTypeCondition(
                                 expression = isPythonVariableReference("x"),
-                                discriminator = discriminator(symbolType(listOf("M"), "`A"), "tag")
+                                discriminator = tagValue(tag(listOf("M"), "A"), "tag")
                             ),
                             body = isSequence(
                                 isPythonReturn(isPythonIntegerLiteral(42))
@@ -1110,14 +1113,14 @@ class CodeGeneratorTests {
                 variableReference to variableDeclaration
             ),
             discriminatorsForIsExpressions = mapOf(
-                shed to discriminator(symbolType(listOf("M"), "`A"), "tag")
+                shed to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
             )
         )
         val node = generateExpressionCode(shed, context)
 
         assertThat(node, isGeneratedExpression(isPythonTypeCondition(
             isPythonVariableReference("x"),
-            discriminator(symbolType(listOf("M"), "`A"), "tag")
+            tagValue(tag(listOf("M"), "A"), "tag")
         )))
     }
 
@@ -1378,13 +1381,15 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-        shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf()
+        shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
+        shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf()
     ) = CodeGenerationContext(
         inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = discriminatorsForIsExpressions,
             discriminatorsForWhenBranches = discriminatorsForWhenBranches,
             references = references,
-            shapeFields = shapeFields
+            shapeFields = shapeFields,
+            shapeTagValues = shapeTagValues
         ),
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
@@ -1537,16 +1542,15 @@ class CodeGeneratorTests {
 
     private fun isPythonTypeCondition(
         expression: Matcher<PythonExpressionNode>,
-        discriminator: Discriminator
+        discriminator: TagValue
     ): Matcher<PythonExpressionNode> {
-        val symbol = discriminator.symbolType.symbol
         return isPythonBinaryOperation(
             operator = equalTo(PythonBinaryOperator.EQUALS),
             left = isPythonAttributeAccess(
                 receiver = expression,
-                attributeName = equalTo(discriminator.fieldName.value)
+                attributeName = equalTo("_tag_value")
             ),
-            right = isPythonStringLiteral(symbol.fullName)
+            right = isPythonStringLiteral(discriminator.value.value)
         )
     }
 

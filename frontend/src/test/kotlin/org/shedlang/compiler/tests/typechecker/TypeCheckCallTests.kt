@@ -148,8 +148,9 @@ class TypeCheckCallTests {
 
     @Test
     fun typeParameterTakesUnionTypeWhenUsedWithMultipleTypes() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
+        val tag = tag(listOf("Example"), "Union")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
 
         val functionReference = variableReference("f")
         val member1Reference = variableReference("member1")
@@ -726,14 +727,10 @@ class TypeCheckCallTests {
 
     @Test
     fun castTypeIsFunctionFromUnionToOptionalMember() {
-        val discriminatorShapeId = freshTypeId()
-        val member1 = shapeType(name = "Member1", fields = listOf(
-            field(name = "tag", shapeId = discriminatorShapeId, type = symbolType(listOf(), "`Member1"))
-        ))
-        val member2 = shapeType(name = "Member2",fields = listOf(
-            field(name = "tag", shapeId = discriminatorShapeId, type = symbolType(listOf(), "`Member2"))
-        ))
-        val union = unionType("Union", members = listOf(member1, member2))
+        val tag = tag(listOf("Example"), "Union")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+        val union = unionType("Union", tag = tag, members = listOf(member1, member2))
 
         val optionType = parametrizedShapeType(
             name = "Option",
@@ -776,7 +773,9 @@ class TypeCheckCallTests {
 
         assertThat(
             typeContext.toTypes().discriminatorForCast(node),
-            has(Discriminator::targetType, isType(member1))
+            isDiscriminator(
+                tagValue = equalTo(tagValue(tag, "Member1"))
+            )
         )
     }
 

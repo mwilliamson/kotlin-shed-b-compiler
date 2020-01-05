@@ -7,6 +7,7 @@ import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.TagValue
 import java.math.BigInteger
 
 interface World {
@@ -73,6 +74,7 @@ internal class InterpreterVarargs(
 }
 
 internal class InterpreterShape(
+    val tagValue: TagValue?,
     val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
     val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue(), InterpreterHasFields {
@@ -86,6 +88,7 @@ internal interface InterpreterHasFields {
 }
 
 internal class InterpreterShapeValue(
+    val tagValue: TagValue?,
     private val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
@@ -469,10 +472,12 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
             val runtimeFields = mapOf(
                 Identifier("fields") to InterpreterShapeValue(
+                    tagValue = null,
                     fields = fields.associate { field ->
                         val getParameterId = freshNodeId()
 
                         field.name to InterpreterShapeValue(
+                            tagValue = null,
                             fields = mapOf(
                                 Identifier("name") to InterpreterString(field.name.value),
                                 Identifier("get") to InterpreterFunction(
@@ -491,7 +496,11 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                 )
             )
 
-            val value = InterpreterShape(constantFieldValues = constantFieldValues, fields = runtimeFields)
+            val value = InterpreterShape(
+                tagValue = tagValue,
+                constantFieldValues = constantFieldValues,
+                fields = runtimeFields
+            )
 
             initialState.pushTemporary(value).nextInstruction()
         }
@@ -654,6 +663,12 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
+        is TagValueAccess -> {
+            val (state2, value) = initialState.popTemporary()
+            val tagValue = (value as InterpreterShapeValue).tagValue!!
+            state2.pushTemporary(InterpreterString(tagValue.value.value)).nextInstruction()
+        }
+
         is TupleAccess -> {
             val (state2, value) = initialState.popTemporary()
             val element = (value as InterpreterTuple).elements[elementIndex]
@@ -750,7 +765,7 @@ internal fun call(
 
         is InterpreterShape -> {
             val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
-            state.pushTemporary(InterpreterShapeValue(fields = fieldValues))
+            state.pushTemporary(InterpreterShapeValue(tagValue = receiver.tagValue, fields = fieldValues))
         }
 
         else -> throw Exception("cannot call: $receiver")

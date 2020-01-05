@@ -485,8 +485,9 @@ class CoercionTests {
 
     @Test
     fun canCoerceTypeParameterToSupertypeOfMultipleTypes() {
-        val member1 = shapeType(name = "Member1")
-        val member2 = shapeType(name = "Member2")
+        val tag = tag(listOf("Example"), "X")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
 
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(

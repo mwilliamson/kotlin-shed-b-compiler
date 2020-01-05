@@ -11,6 +11,7 @@ interface CodeInspector {
     fun isCast(node: CallBaseNode): Boolean
     fun resolve(node: ReferenceNode): VariableBindingNode
     fun shapeFields(node: ShapeBaseNode): List<FieldInspector>
+    fun shapeTagValue(node: ShapeBaseNode): TagValue?
     fun typeOfExpression(node: ExpressionNode): Type
 }
 
@@ -50,7 +51,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 
     override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
-        val shapeType = rawType(module.types.declaredType(node)) as ShapeType
+        val shapeType = shapeType(node)
         return shapeType.fields.values.map { field ->
             val fieldNode = node.fields
                 .find { fieldNode -> fieldNode.name == field.name }
@@ -76,6 +77,13 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
         }
     }
 
+    override fun shapeTagValue(node: ShapeBaseNode): TagValue? {
+        return shapeType(node).tagValue
+    }
+
+    private fun shapeType(node: ShapeBaseNode) =
+        rawType(module.types.declaredType(node)) as ShapeType
+
     override fun typeOfExpression(node: ExpressionNode): Type {
         return module.types.typeOfExpression(node)
     }
@@ -87,7 +95,8 @@ class SimpleCodeInspector(
     private val discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
     private val expressionTypes: Map<ExpressionNode, Type> = mapOf(),
     private val references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-    private val shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf()
+    private val shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
+    private val shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf()
 ): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
         return discriminatorsForCasts[node] ?: error("missing discriminator for node: $node")
@@ -111,6 +120,10 @@ class SimpleCodeInspector(
 
     override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
         return shapeFields[node] ?: error("missing fields for node: $node")
+    }
+
+    override fun shapeTagValue(node: ShapeBaseNode): TagValue? {
+        return shapeTagValues[node]
     }
 
     override fun typeOfExpression(node: ExpressionNode): Type {

@@ -508,10 +508,12 @@ fun typeAlias(
 fun parametrizedShapeType(
     name: String,
     parameters: List<TypeParameter>,
+    tagValue: TagValue? = null,
     fields: List<Field> = listOf()
 ) = TypeFunction(
     type = shapeType(
         name = name,
+        tagValue = tagValue,
         fields = fields,
         typeParameters = parameters,
         typeArguments = parameters
@@ -522,12 +524,14 @@ fun parametrizedShapeType(
 fun shapeType(
     name: String = "Shape",
     fields: List<Field> = listOf(),
+    tagValue: TagValue? = null,
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf(),
     shapeId: Int = freshTypeId()
 ) = lazyShapeType(
     shapeId = shapeId,
     name = Identifier(name),
+    tagValue = tagValue,
     getFields = lazy { fields },
     staticParameters = typeParameters,
     staticArguments = typeArguments
@@ -548,22 +552,30 @@ fun fieldInspector(name: String, value: FieldValue? = null) = FieldInspector(
 
 fun parametrizedUnionType(
     name: String,
+    tag: Tag = Tag(listOf(), Identifier(name)),
     parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
     members: List<ShapeType> = listOf()
 ) = TypeFunction(
     type = LazyUnionType(
         name = Identifier(name),
+        tag = tag,
         getMembers = lazy { members },
         staticArguments = parameters
     ),
     parameters = parameters
 )
 
+fun tag(moduleName: List<String>, name: String) = Tag(moduleName.map(::Identifier), Identifier(name))
+
+fun tagValue(tag: Tag, value: String) = TagValue(tag, Identifier(value))
+
 fun unionType(
     name: String = "Union",
+    tag: Tag = Tag(listOf(), Identifier(name)),
     members: List<Type> = listOf()
 ) = LazyUnionType(
     name = Identifier(name),
+    tag = tag,
     getMembers = lazy { members },
     staticArguments = listOf()
 )
@@ -582,10 +594,9 @@ fun symbolType(module: List<String>, name: String): SymbolType {
     return SymbolType(Symbol(module.map(::Identifier), name))
 }
 
-fun discriminator(symbolType: SymbolType, fieldName: String, targetType: Type = AnyType): Discriminator {
+fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator {
     return Discriminator(
-        field = field(fieldName, symbolType, shapeId = freshTypeId()),
-        symbolType = symbolType,
+        tagValue = tagValue,
         targetType = targetType
     )
 }

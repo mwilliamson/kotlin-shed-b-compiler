@@ -1,6 +1,6 @@
-function declareShape(name, fields) {
+function declareShape(name, tagValue, fields) {
     function shape(fieldValues = {}) {
-        return {...fieldValues, ...constantFieldValues};
+        return {...fieldValues, ...constantFieldValues, $tagValue: tagValue};
     }
 
     shape.fields = {};

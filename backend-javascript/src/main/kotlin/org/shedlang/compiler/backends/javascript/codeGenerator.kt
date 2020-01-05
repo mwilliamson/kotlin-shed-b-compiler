@@ -117,6 +117,14 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext) : JavascriptStatementNode {
     val source = NodeSource(node)
+
+    val tagValue = context.inspector.shapeTagValue(node)
+    val tagValueArgument = if (tagValue == null) {
+        JavascriptNullLiteralNode(source = node.source)
+    } else {
+        JavascriptStringLiteralNode(tagValue.value.value, source = node.source)
+    }
+
     return javascriptConst(
         name = generateName(node.name),
         expression = JavascriptFunctionCallNode(
@@ -126,6 +134,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
             ),
             listOf(
                 JavascriptStringLiteralNode(generateName(node.name), source = source),
+                tagValueArgument,
                 JavascriptArrayLiteralNode(
                     context.inspector.shapeFields(node).map { field ->
                         val fieldSource = field.source
@@ -624,10 +633,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 JavascriptBinaryOperator.EQUALS,
                 JavascriptPropertyAccessNode(
                     expression,
-                    generateName(discriminator.fieldName),
+                    tagValuePropertyName,
                     source
                 ),
-                generateSymbolCode(discriminator.symbolType.symbol, source),
+                JavascriptStringLiteralNode(discriminator.tagValue.value.value, source),
                 source = source
             )
         }
@@ -758,3 +767,5 @@ val javascriptKeywords = setOf(
 fun isJavascriptKeyword(value: String): Boolean {
     return value in javascriptKeywords
 }
+
+private const val tagValuePropertyName = "\$tagValue"

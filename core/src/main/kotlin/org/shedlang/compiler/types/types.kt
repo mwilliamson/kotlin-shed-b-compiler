@@ -133,6 +133,7 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
     return lazyShapeType(
         shapeId = shapeId,
         name = Identifier("Fields"),
+        tagValue = null,
         staticParameters = listOf(),
         staticArguments = listOf(),
         getFields = lazy {
@@ -156,6 +157,7 @@ val ShapeFieldTypeFunction = TypeFunction(
     type = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("ShapeField"),
+        tagValue = null,
         staticParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
         staticArguments = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
         getFields = lazy {
@@ -367,9 +369,13 @@ data class LazyTypeAlias(
         get() = name.value
 }
 
+data class Tag(val moduleName: List<Identifier>, val name: Identifier)
+data class TagValue(val tag: Tag, val value: Identifier)
+
 interface ShapeType: Type {
     val name: Identifier
     val shapeId: Int
+    val tagValue: TagValue?
     val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
@@ -396,6 +402,7 @@ data class Field(
 fun lazyShapeType(
     shapeId: Int,
     name: Identifier,
+    tagValue: TagValue?,
     getFields: Lazy<List<Field>>,
     staticParameters: List<StaticParameter>,
     staticArguments: List<StaticValue>
@@ -405,6 +412,7 @@ fun lazyShapeType(
     getFields = lazy {
         getFields.value.associateBy { field -> field.name }
     },
+    tagValue = tagValue,
     staticParameters = staticParameters,
     staticArguments = staticArguments
 )
@@ -413,6 +421,7 @@ data class LazyShapeType(
     override val name: Identifier,
     private val getFields: Lazy<Map<Identifier, Field>>,
     override val shapeId: Int = freshTypeId(),
+    override val tagValue: TagValue?,
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>
 ): ShapeType {
@@ -427,6 +436,7 @@ data class LazyShapeType(
 
 interface UnionType: Type {
     val name: Identifier
+    val tag: Tag
     val members: List<Type>
     val staticArguments: List<StaticValue>
 
@@ -435,6 +445,7 @@ interface UnionType: Type {
 
 
 data class AnonymousUnionType(
+    override val tag: Tag,
     override val name: Identifier = Identifier("_Union" + freshTypeId()),
     override val members: List<Type>
 ): UnionType {
@@ -462,12 +473,22 @@ fun union(left: Type, right: Type): Type {
 
         val leftMembers = findMembers(left)
         val rightMembers = findMembers(right)
+        // TODO: test this, handle failure
+        val members = (leftMembers + rightMembers).distinct().map { member -> member as ShapeType }
+        // TODO: test this, handle failure
+        val tag = members.map { member -> member.tagValue!!.tag }.distinct().single()
 
-        return AnonymousUnionType(members = (leftMembers + rightMembers).distinct())
+        return AnonymousUnionType(
+            tag = tag,
+            members = members
+        )
     }
 }
 
+fun unionAll(members: List<Type>) = members.reduce(::union)
+
 data class LazyUnionType(
+    override val tag: Tag,
     override val name: Identifier,
     private val getMembers: Lazy<List<Type>>,
     override val staticArguments: List<StaticValue>
@@ -588,6 +609,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         return bindings.getOrElse(type, { type }) as Type
     } else if (type is UnionType) {
         return LazyUnionType(
+            type.tag,
             type.name,
             lazy({
                 type.members.map({ memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType })
@@ -602,6 +624,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
                     replaceStaticValuesInType(field.value.type, bindings)
                 } }
             }),
+            tagValue = type.tagValue,
             shapeId = type.shapeId,
             staticParameters = type.staticParameters,
             staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
@@ -637,49 +660,74 @@ public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticV
     }
 }
 
-public data class Discriminator(
-    val field: Field,
-    val symbolType: SymbolType,
+data class Discriminator(
+    val tagValue: TagValue,
     val targetType: Type
-) {
-    val fieldName: Identifier = field.name
-}
+)
 
-public fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
-    var refinedTargetType = targetType
-    if (sourceType is UnionType && targetType is TypeFunction) {
-        val innerTargetType = targetType.type
-        val matchingMembers = sourceType.members
-            .filterIsInstance<ShapeType>()
-            .filter { member ->
-                innerTargetType is ShapeType && member.shapeId == innerTargetType.shapeId
-            }
-        if (matchingMembers.size == 1) {
-            refinedTargetType = matchingMembers.single()
-        }
+fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
+    // TODO: handle generics
+
+    if (sourceType !is UnionType) {
+        return null
     }
 
-    if (sourceType is UnionType && refinedTargetType is ShapeType) {
-        val candidateDiscriminators = refinedTargetType.fields.values.mapNotNull { field ->
-            val fieldType = field.type
-            if (fieldType is SymbolType) {
-                Discriminator(field = field, symbolType = fieldType, targetType = refinedTargetType)
-            } else {
-                null
-            }
-        }
-        return candidateDiscriminators.find { candidateDiscriminator ->
-            sourceType.members.all { member ->
-                canCoerce(from = member, to = refinedTargetType) || run {
-                    val memberShape = member as ShapeType
-                    val memberField = memberShape.fields[candidateDiscriminator.fieldName]
-                    val memberSymbolType = memberField?.type as? SymbolType
-                    memberField?.shapeId == candidateDiscriminator.field.shapeId &&
-                        memberSymbolType != null &&
-                        memberSymbolType != candidateDiscriminator.symbolType
-                }
-            }
-        }
+    val tagValue = (rawType(targetType) as? ShapeType)?.tagValue
+    if (tagValue?.tag != sourceType.tag) {
+        return null
     }
-    return null
+
+    val matchingMembers = sourceType.members.filter { member -> (member as ShapeType).tagValue == tagValue }
+    val refinedType = unionAll(matchingMembers)
+
+    if (targetType is ShapeType) {
+        if (!canCoerce(from = refinedType, to = targetType)) {
+            return null
+        }
+    } else if (targetType is TypeFunction) {
+        if (!canCoerce(from = refinedType, to = targetType.type, freeParameters = targetType.parameters.toSet())) {
+            return null
+        }
+    } else {
+        return null
+    }
+
+    return Discriminator(tagValue = tagValue, targetType = refinedType)
+
+//    var refinedTargetType = targetType
+//    if (sourceType is UnionType && targetType is TypeFunction) {
+//        val innerTargetType = targetType.type
+//        val matchingMembers = sourceType.members
+//            .filterIsInstance<ShapeType>()
+//            .filter { member ->
+//                innerTargetType is ShapeType && member.shapeId == innerTargetType.shapeId
+//            }
+//        if (matchingMembers.size == 1) {
+//            refinedTargetType = matchingMembers.single()
+//        }
+//    }
+//
+//    if (sourceType is UnionType && refinedTargetType is ShapeType) {
+//        val candidateDiscriminators = refinedTargetType.fields.values.mapNotNull { field ->
+//            val fieldType = field.type
+//            if (fieldType is SymbolType) {
+//                Discriminator(field = field, symbolType = fieldType, targetType = refinedTargetType)
+//            } else {
+//                null
+//            }
+//        }
+//        return candidateDiscriminators.find { candidateDiscriminator ->
+//            sourceType.members.all { member ->
+//                canCoerce(from = member, to = refinedTargetType) || run {
+//                    val memberShape = member as ShapeType
+//                    val memberField = memberShape.fields[candidateDiscriminator.fieldName]
+//                    val memberSymbolType = memberField?.type as? SymbolType
+//                    memberField?.shapeId == candidateDiscriminator.field.shapeId &&
+//                        memberSymbolType != null &&
+//                        memberSymbolType != candidateDiscriminator.symbolType
+//                }
+//            }
+//        }
+//    }
+//    return null
 }

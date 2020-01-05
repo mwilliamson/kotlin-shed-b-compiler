@@ -388,15 +388,16 @@ class InterpreterTests {
         val receiverReference = variableReference("receiver")
         val node = isOperation(receiverReference, shapeReference)
 
-        val symbol = Symbol(listOf(Identifier("A")), "B")
+        val tag = tag(listOf("Example"), "Tag")
         val inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = mapOf(
-                node to discriminator(fieldName = "tag", symbolType = SymbolType(symbol))
+                node to discriminator(tagValue(tag, "X"))
             ),
             shapeFields = mapOf(
-                shapeDeclaration to listOf(
-                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol))
-                )
+                shapeDeclaration to listOf()
+            ),
+            shapeTagValues = mapOf(
+                shapeDeclaration to tagValue(tag, "X")
             )
         )
         val references = ResolvedReferencesMap(mapOf(
@@ -419,7 +420,7 @@ class InterpreterTests {
     }
 
     @Test
-    fun whenDiscriminatorMatchesThenIsOperationIsFalse() {
+    fun whenDiscriminatorDoesNotMatchThenIsOperationIsFalse() {
         val shapeDeclaration = shape("X")
         val shapeReference = variableReference("X")
 
@@ -431,16 +432,16 @@ class InterpreterTests {
         val receiverReference = variableReference("receiver")
         val node = isOperation(receiverReference, shapeReference)
 
-        val shapeSymbol = Symbol(listOf(Identifier("A")), "B")
-        val isSymbol = Symbol(listOf(Identifier("A")), "C")
+        val tag = tag(listOf("Example"), "Tag")
         val inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = mapOf(
-                node to discriminator(fieldName = "tag", symbolType = SymbolType(isSymbol))
+                node to discriminator(tagValue(tag, "C"))
             ),
             shapeFields = mapOf(
-                shapeDeclaration to listOf(
-                    fieldInspector(name = "tag", value = FieldValue.Symbol(shapeSymbol))
-                )
+                shapeDeclaration to listOf()
+            ),
+            shapeTagValues = mapOf(
+                shapeDeclaration to tagValue(tag, "B")
             )
         )
         val references = ResolvedReferencesMap(mapOf(
@@ -687,11 +688,6 @@ class InterpreterTests {
 
     @Test
     fun firstMatchingBranchOfWhenIsEvaluated() {
-        val symbol1 = Symbol(listOf(Identifier("Test")), "Symbol1")
-        val symbol2 = Symbol(listOf(Identifier("Test")), "Symbol2")
-        val symbol3 = Symbol(listOf(Identifier("Test")), "Symbol3")
-        val symbol4 = Symbol(listOf(Identifier("Test")), "Symbol4")
-
         val shape1 = unionMember("Shape1")
         val shape2 = unionMember("Shape2")
         val shape3 = unionMember("Shape3")
@@ -716,26 +712,25 @@ class InterpreterTests {
             branches = listOf(branch1, branch2, branch3, branch4)
         )
 
+        val tag = tag(listOf("Example"), "Tag")
         val inspector = SimpleCodeInspector(
             discriminatorsForWhenBranches = mapOf(
-                Pair(node, branch1) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol1)),
-                Pair(node, branch2) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol2)),
-                Pair(node, branch3) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol3)),
-                Pair(node, branch4) to discriminator(fieldName = "tag", symbolType = SymbolType(symbol4))
+                Pair(node, branch1) to discriminator(tagValue(tag, "value1")),
+                Pair(node, branch2) to discriminator(tagValue(tag, "value2")),
+                Pair(node, branch3) to discriminator(tagValue(tag, "value3")),
+                Pair(node, branch4) to discriminator(tagValue(tag, "value4"))
             ),
             shapeFields = mapOf(
-                shape1 to listOf(
-                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol1))
-                ),
-                shape2 to listOf(
-                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol2))
-                ),
-                shape3 to listOf(
-                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol3))
-                ),
-                shape4 to listOf(
-                    fieldInspector(name = "tag", value = FieldValue.Symbol(symbol4))
-                )
+                shape1 to listOf(),
+                shape2 to listOf(),
+                shape3 to listOf(),
+                shape4 to listOf()
+            ),
+            shapeTagValues = mapOf(
+                shape1 to tagValue(tag, "value1"),
+                shape2 to tagValue(tag, "value2"),
+                shape3 to tagValue(tag, "value3"),
+                shape4 to tagValue(tag, "value4")
             )
         )
         val references = ResolvedReferencesMap(mapOf(
