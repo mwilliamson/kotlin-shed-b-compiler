@@ -12,6 +12,7 @@
         <module>backend-amd64</module>
         <module>backend-common</module>
         <module>backend-javascript</module>
+        <module>backend-llvm</module>
         <module>backend-python</module>
         <module>backend-testing</module>
         <module>cli</module>

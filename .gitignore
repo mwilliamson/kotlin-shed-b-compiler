@@ -4,6 +4,7 @@
 /backend-amd64/target
 /backend-common/target
 /backend-javascript/target
+/backend-llvm/target
 /backend-python/target
 /backend-testing/target
 /cli/target

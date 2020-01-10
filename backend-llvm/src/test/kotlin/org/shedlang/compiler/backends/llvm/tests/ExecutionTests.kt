@@ -5,6 +5,10 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.backends.llvm.LlvmFunctionDefinition
+import org.shedlang.compiler.backends.llvm.LlvmOperandInt
+import org.shedlang.compiler.backends.llvm.LlvmReturn
+import org.shedlang.compiler.backends.llvm.LlvmTypes
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.typechecker.CompilerError
@@ -72,10 +76,14 @@ class ExecutionTests {
 
 private class Compiler(private val moduleSet: ModuleSet) {
     fun compile(target: Path, mainModule: List<Identifier>) {
-        target.toFile().writeText("""
-            define i32 @main() {
-                ret i32 42
-            }
-        """.trimIndent())
+        val main = LlvmFunctionDefinition(
+            returnType = LlvmTypes.i32,
+            name = "main",
+            body = listOf(
+                LlvmReturn(type = LlvmTypes.i32, value = LlvmOperandInt(42))
+            )
+        )
+
+        target.toFile().writeText(main.serialise())
     }
 }
