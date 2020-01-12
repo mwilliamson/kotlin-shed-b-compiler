@@ -75,6 +75,27 @@ class ExecutionTests {
 }
 
 private class Compiler(private val moduleSet: ModuleSet) {
+    private class Context {
+        fun pushTemporary(operand: LlvmOperand) {
+            stack.add(operand)
+        }
+
+        fun popTemporary(): LlvmOperand {
+            return stack.pop()
+        }
+
+        fun storeLocal(variableId: Int, operand: LlvmOperand) {
+            locals.put(variableId, operand)
+        }
+
+        fun loadLocal(variableId: Int): LlvmOperand {
+            return locals.getValue(variableId)
+        }
+
+        private val stack: MutableList<LlvmOperand> = mutableListOf()
+        private val locals: MutableMap<Int, LlvmOperand> = mutableMapOf()
+    }
+
     private val image = loadModuleSet(moduleSet)
     
     fun compile(target: Path, mainModule: List<Identifier>) {
@@ -143,7 +164,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
     }
 
     private fun moduleInit(moduleName: List<Identifier>): List<LlvmModuleStatement> {
-        return compileInstructions(image.moduleInitialisation(moduleName), stack = mutableListOf(), locals = mutableMapOf()).mapValue<LlvmModuleStatement> { instructions ->
+        return compileInstructions(image.moduleInitialisation(moduleName), context = Context()).mapValue<LlvmModuleStatement> { instructions ->
             LlvmFunctionDefinition(
                 name = nameForModuleInit(moduleName),
                 returnType = LlvmTypes.void,
@@ -152,16 +173,16 @@ private class Compiler(private val moduleSet: ModuleSet) {
         }.toModuleStatements()
     }
 
-    private fun compileInstructions(instructions: List<Instruction>, stack: MutableList<LlvmOperand>, locals: MutableMap<Int, LlvmOperand>): CompilationResult<List<LlvmBasicBlock>> {
-        return CompilationResult.flatten(instructions.map { instruction -> compileInstruction(instruction, stack = stack, locals = locals) })
+    private fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
+        return CompilationResult.flatten(instructions.map { instruction -> compileInstruction(instruction, context = context) })
     }
 
-    private fun compileInstruction(instruction: Instruction, stack: MutableList<LlvmOperand>, locals: MutableMap<Int, LlvmOperand>): CompilationResult<List<LlvmBasicBlock>> {
+    private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmBasicBlock>> {
         when (instruction) {
             is DeclareFunction -> {
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
-                return compileInstructions(instruction.bodyInstructions, stack = mutableListOf(), locals = mutableMapOf())
+                return compileInstructions(instruction.bodyInstructions, context = context)
                     .flatMapValue { instructions ->
                         val functionDefinition = LlvmFunctionDefinition(
                             name = functionName,
@@ -169,7 +190,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                             body = instructions
                         )
 
-                        stack.add(functionPointerVariable)
+                        context.pushTemporary(functionPointerVariable)
 
                         val getVariableAddress = LlvmPtrToInt(
                             target = functionPointerVariable,
@@ -187,8 +208,8 @@ private class Compiler(private val moduleSet: ModuleSet) {
             }
 
             is LocalStore -> {
-                val operand = stack.pop()
-                locals.put(instruction.variableId, operand)
+                val operand = context.popTemporary()
+                context.storeLocal(instruction.variableId, operand)
                 return CompilationResult.of(listOf())
             }
 
@@ -224,7 +245,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                     ),
                     LlvmStore(
                         type = LlvmTypes.i64,
-                        value = locals.getValue(exportVariableId),
+                        value = context.loadLocal(exportVariableId),
                         pointer = fieldVariable
                     ),
                     LlvmStore(
@@ -236,13 +257,13 @@ private class Compiler(private val moduleSet: ModuleSet) {
             }
 
             is PushValue -> {
-                stack.add(generateOperand(instruction.value))
+                context.pushTemporary(generateOperand(instruction.value))
 
                 return CompilationResult.of(listOf())
             }
 
             is Return -> {
-                val returnVariable = stack.pop()
+                val returnVariable = context.popTemporary()
 
                 return CompilationResult.of(listOf(
                     LlvmReturn(type = LlvmTypes.i64, value = returnVariable)
