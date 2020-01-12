@@ -1,0 +1,8 @@
+// stdout:
+//   Hello, world!
+
+export main;
+
+fun main() !Io -> Unit {
+    print!("Hello, world!\n");
+}
