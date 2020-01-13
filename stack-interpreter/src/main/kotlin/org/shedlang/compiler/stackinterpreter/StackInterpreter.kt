@@ -483,7 +483,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                                 Identifier("get") to InterpreterFunction(
                                     bodyInstructions = persistentListOf(
                                         LocalLoad(getParameterId),
-                                        FieldAccess(field.name),
+                                        FieldAccess(field.name, receiverType = null),
                                         Return
                                     ),
                                     positionalParameterIds = listOf(getParameterId),
@@ -777,7 +777,7 @@ fun executeMain(mainModule: List<Identifier>, image: Image, world: World): Int {
         persistentListOf(
             ModuleInit(mainModule),
             ModuleLoad(mainModule),
-            FieldAccess(Identifier("main")),
+            FieldAccess(Identifier("main"), receiverType = null),
             Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
         ),
         image = image,

@@ -494,9 +494,11 @@ class InterpreterTests {
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val shapeType = shapeType()
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType())
+                receiverReference.nodeId to shapeType,
+                shapeReference.nodeId to MetaType(shapeType)
             )
         )
 
@@ -537,9 +539,11 @@ class InterpreterTests {
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val shapeType = shapeType()
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType())
+                receiverReference.nodeId to shapeType,
+                shapeReference.nodeId to MetaType(shapeType)
             )
         )
 
@@ -559,11 +563,12 @@ class InterpreterTests {
 
         val firstTarget = targetVariable("target1")
         val secondTarget = targetVariable("target2")
+        val fieldsTarget = targetFields(listOf(
+            fieldName("first") to firstTarget,
+            fieldName("second") to secondTarget
+        ))
         val receiverDeclaration = valStatement(
-            target = targetFields(listOf(
-                fieldName("first") to firstTarget,
-                fieldName("second") to secondTarget
-            )),
+            target = fieldsTarget,
             expression = call(
                 shapeReference,
                 namedArguments = listOf(
@@ -590,10 +595,14 @@ class InterpreterTests {
             firstReference.nodeId to firstTarget,
             secondReference.nodeId to secondTarget
         ))
+        val shapeType = shapeType()
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType()),
+                shapeReference.nodeId to MetaType(shapeType),
                 firstReference.nodeId to IntType
+            ),
+            targetTypes = mapOf(
+                fieldsTarget.nodeId to shapeType
             )
         )
 
@@ -621,7 +630,11 @@ class InterpreterTests {
             firstReference.nodeId to firstTarget,
             secondReference.nodeId to secondTarget
         ))
-        val types = createTypes(expressionTypes = mapOf(firstReference.nodeId to IntType))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                firstReference.nodeId to IntType
+            )
+        )
 
         val loader = loader(references = references, types = types)
         val instructions = loader.loadFunctionStatement(valStatement)
@@ -798,7 +811,7 @@ class InterpreterTests {
             persistentListOf(
                 ModuleInit(moduleName),
                 ModuleLoad(moduleName),
-                FieldAccess(Identifier("main")),
+                FieldAccess(Identifier("main"), receiverType = null),
                 Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
             image = image
@@ -850,7 +863,7 @@ class InterpreterTests {
             persistentListOf(
                 ModuleInit(moduleName),
                 ModuleLoad(moduleName),
-                FieldAccess(Identifier("main")),
+                FieldAccess(Identifier("main"), receiverType = null),
                 PushValue(IrInt(1.toBigInteger())),
                 PushValue(IrInt(2.toBigInteger())),
                 Call(positionalArgumentCount = 2, namedArgumentNames = listOf())
@@ -892,7 +905,7 @@ class InterpreterTests {
             persistentListOf(
                 ModuleInit(moduleName),
                 ModuleLoad(moduleName),
-                FieldAccess(Identifier("main")),
+                FieldAccess(Identifier("main"), receiverType = null),
                 Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
             image = image
@@ -932,7 +945,7 @@ class InterpreterTests {
             persistentListOf(
                 ModuleInit(moduleName),
                 ModuleLoad(moduleName),
-                FieldAccess(Identifier("main")),
+                FieldAccess(Identifier("main"), receiverType = null),
                 Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
             ),
             image = image
@@ -1282,8 +1295,9 @@ class InterpreterTests {
 
         val importingModuleName = listOf(Identifier("Importing"))
         val importTarget = targetVariable("x")
+        val importTargetFields = targetFields(listOf(fieldName("x") to importTarget))
         val importNode = import(
-            targetFields(listOf(fieldName("x") to importTarget)),
+            importTargetFields,
             ImportPath.absolute(exportingModuleName.map(Identifier::value))
         )
         val reexportNode = export("x")
@@ -1295,7 +1309,8 @@ class InterpreterTests {
             ),
             references = ResolvedReferencesMap(mapOf(
                 reexportNode.nodeId to importTarget
-            ))
+            )),
+            types = createTypes(targetTypes = mapOf(importTargetFields.nodeId to exportingModule.type))
         )
 
         val image = loadModuleSet(ModuleSet(listOf(exportingModule, importingModule)))
@@ -1303,7 +1318,7 @@ class InterpreterTests {
             persistentListOf(
                 ModuleInit(importingModuleName),
                 ModuleLoad(importingModuleName),
-                FieldAccess(Identifier("x"))
+                FieldAccess(Identifier("x"), receiverType = null)
             ),
             image = image
         )
@@ -1331,7 +1346,7 @@ class InterpreterTests {
             persistentListOf(
                 ModuleInit(moduleName),
                 ModuleLoad(moduleName),
-                FieldAccess(Identifier("moduleName"))
+                FieldAccess(Identifier("moduleName"), receiverType = null)
             ),
             image = image
         )
@@ -1342,21 +1357,26 @@ class InterpreterTests {
     private fun stubbedModule(
         name: List<Identifier>,
         node: ModuleNode,
-        references: ResolvedReferences = ResolvedReferencesMap.EMPTY
+        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
+        types: Types = EMPTY_TYPES
     ): Module.Shed {
         return Module.Shed(
             name = name,
             type = ModuleType(mapOf()),
-            types = EMPTY_TYPES,
+            types = types,
             references = references,
             node = node
         )
     }
 
-    private fun createTypes(expressionTypes: Map<Int, Type>): Types {
+    private fun createTypes(
+        expressionTypes: Map<Int, Type> = mapOf(),
+        targetTypes: Map<Int, Type> = mapOf()
+    ): Types {
         return TypesMap(
             discriminators = mapOf(),
             expressionTypes = expressionTypes,
+            targetTypes = targetTypes,
             variableTypes = mapOf()
         )
     }

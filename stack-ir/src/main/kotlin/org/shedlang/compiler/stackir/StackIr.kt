@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.Type
 import java.math.BigInteger
 
 sealed class IrValue
@@ -74,7 +75,8 @@ object Duplicate: Instruction()
 
 object Exit: Instruction()
 
-class FieldAccess(val fieldName: Identifier): Instruction()
+// TODO: require Type
+class FieldAccess(val fieldName: Identifier, val receiverType: Type?): Instruction()
 
 object IntAdd: Instruction()
 

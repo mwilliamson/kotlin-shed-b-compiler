@@ -27,6 +27,7 @@ internal fun captureTypes(
     return TypesMap(
         discriminators = mapOf(),
         expressionTypes = expressionTypes,
+        targetTypes = mapOf(),
         variableTypes = mapOf()
     )
 }

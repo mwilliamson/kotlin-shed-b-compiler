@@ -145,6 +145,7 @@ internal class TypeContext(
         return TypesMap(
             discriminators = discriminators,
             expressionTypes = expressionTypes,
+            targetTypes = targetTypes,
             variableTypes = variableTypes
         )
     }

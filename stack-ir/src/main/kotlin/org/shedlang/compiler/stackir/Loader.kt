@@ -221,10 +221,10 @@ class Loader(
                     val parameterId = freshNodeId()
 
                     val failureInstructions = loadOptionsModuleInstructions
-                        .add(FieldAccess(Identifier("none")))
+                        .add(FieldAccess(Identifier("none"), receiverType = null))
                         .add(Return)
                     val successInstructions = loadOptionsModuleInstructions
-                        .add(FieldAccess(Identifier("some")))
+                        .add(FieldAccess(Identifier("some"), receiverType = null))
                         .add(LocalLoad(parameterId))
                         .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
                         .add(Return)
@@ -256,12 +256,12 @@ class Loader(
                         .addAll(node.positionalArguments.flatMap { argument ->
                             persistentListOf<Instruction>()
                                 .add(Duplicate)
-                                .add(FieldAccess(Identifier("cons")))
+                                .add(FieldAccess(Identifier("cons"), receiverType = null))
                                 .add(Swap)
                                 .addAll(loadExpression(argument))
                                 .add(Swap)
                         })
-                        .add(FieldAccess(Identifier("nil")))
+                        .add(FieldAccess(Identifier("nil"), receiverType = null))
                         .addAll((0 until node.positionalArguments.size).map {
                             Call(
                                 positionalArgumentCount = 2,
@@ -291,7 +291,10 @@ class Loader(
 
             override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
                 val receiverInstructions = loadExpression(node.receiver)
-                val fieldAccess = FieldAccess(fieldName = node.fieldName.identifier)
+                val fieldAccess = FieldAccess(
+                    fieldName = node.fieldName.identifier,
+                    receiverType = types.typeOfExpression(node.receiver)
+                )
                 return receiverInstructions.add(fieldAccess)
             }
 
@@ -486,7 +489,7 @@ class Loader(
                 target.fields.flatMap { (fieldName, fieldTarget) ->
                     persistentListOf(
                         Duplicate,
-                        FieldAccess(fieldName = fieldName.identifier)
+                        FieldAccess(fieldName = fieldName.identifier, receiverType = types.typeOfTarget(target))
                     ).addAll(loadTarget(fieldTarget))
                 }.toPersistentList().add(Discard)
 

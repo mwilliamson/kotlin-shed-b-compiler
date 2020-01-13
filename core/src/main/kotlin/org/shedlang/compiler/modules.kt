@@ -38,6 +38,7 @@ sealed class Module {
 interface Types {
     fun typeOfExpression(node: ExpressionNode): Type
     fun typeOfStaticExpression(node: StaticExpressionNode): Type
+    fun typeOfTarget(target: TargetNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
 
     fun discriminatorForCast(node: CallBaseNode): Discriminator
@@ -45,11 +46,12 @@ interface Types {
     fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator
 }
 
-val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf(), mapOf())
+val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf(), mapOf(), mapOf())
 
 class TypesMap(
     private val discriminators: Map<Int, Discriminator>,
     private val expressionTypes: Map<Int, Type>,
+    private val targetTypes: Map<Int, Type>,
     private val variableTypes: Map<Int, Type>
 ) : Types {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
@@ -66,6 +68,10 @@ class TypesMap(
 
     override fun typeOfExpression(node: ExpressionNode): Type {
         return expressionTypes[node.nodeId]!!
+    }
+
+    override fun typeOfTarget(target: TargetNode): Type {
+        return targetTypes[target.nodeId]!!
     }
 
     override fun typeOfStaticExpression(node: StaticExpressionNode): Type {

@@ -21,7 +21,7 @@ internal fun callFunction(
     val instructions = persistentListOf(
         ModuleInit(moduleName),
         ModuleLoad(moduleName),
-        FieldAccess(Identifier(functionName))
+        FieldAccess(Identifier(functionName), receiverType = null)
     )
         .addAll(arguments.map { argument -> PushValue(argument) })
         .add(Call(positionalArgumentCount = arguments.size, namedArgumentNames = listOf()))
