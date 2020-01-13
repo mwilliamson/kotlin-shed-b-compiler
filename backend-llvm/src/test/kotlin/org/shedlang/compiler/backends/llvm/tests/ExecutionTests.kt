@@ -283,6 +283,8 @@ private class Compiler(private val moduleSet: ModuleSet) {
     private fun generateOperand(value: IrValue): LlvmOperand {
         if (value is IrInt) {
             return LlvmOperandInt(value.value.intValueExact())
+        } else if (value is IrUnit) {
+            return LlvmOperandInt(0)
         } else {
             throw UnsupportedOperationException(value.toString())
         }

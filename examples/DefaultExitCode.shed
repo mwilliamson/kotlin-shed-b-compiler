@@ -1,0 +1,7 @@
+// exitCode: 0
+
+export main;
+
+fun main() -> Unit {
+
+}

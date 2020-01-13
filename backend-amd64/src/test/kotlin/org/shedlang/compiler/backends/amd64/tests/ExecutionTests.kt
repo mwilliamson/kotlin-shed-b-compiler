@@ -320,6 +320,8 @@ private class Compiler(private val moduleSet: ModuleSet) {
     private fun generateOperandForValue(value: IrValue): Operand {
         if (value is IrInt) {
             return Immediates.qword(value.value.longValueExact())
+        } else if (value is IrUnit) {
+            return Immediates.qword(0)
         } else {
             throw UnsupportedOperationException(value.toString())
         }

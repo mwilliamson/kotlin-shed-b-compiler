@@ -134,7 +134,7 @@ object Instructions {
     }
 
     fun mov(destination: RegisterOperand, source: Int): Instruction {
-        return mov(destination, source)
+        return mov(destination, ImmediateOperand(source.toLong()))
     }
 
     fun mov(destination: Operand, source: Operand): Instruction {
