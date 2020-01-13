@@ -341,6 +341,8 @@ private fun typeCheck(node: ValNode, context: TypeContext) {
 }
 
 internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContext) {
+    context.addTargetType(target, type)
+
     when (target) {
         is TargetNode.Variable ->
             context.addVariableType(target, type)

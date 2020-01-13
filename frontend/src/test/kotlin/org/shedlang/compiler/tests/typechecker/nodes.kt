@@ -41,6 +41,7 @@ internal fun typeContext(
         moduleName = moduleName,
         effect = effect,
         expressionTypes = expressionTypes,
+        targetTypes = mutableMapOf(),
         variableTypes = HashMap(finalTypes),
         discriminators = mutableMapOf(),
         resolvedReferences = ResolvedReferencesMap(finalReferences),

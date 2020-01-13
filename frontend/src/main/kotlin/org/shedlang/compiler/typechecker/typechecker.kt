@@ -19,6 +19,7 @@ internal fun newTypeContext(
         moduleName = moduleName,
         effect = EmptyEffect,
         expressionTypes = expressionTypes,
+        targetTypes = mutableMapOf(),
         variableTypes = nodeTypes.toMutableMap(),
         discriminators = mutableMapOf(),
         resolvedReferences = resolvedReferences,
@@ -33,6 +34,7 @@ internal class TypeContext(
     private val variableTypes: MutableMap<Int, Type>,
     private val discriminators: MutableMap<Int, Discriminator>,
     private val expressionTypes: MutableMap<Int, Type>,
+    private val targetTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
     private val getModule: (ImportPath) -> ModuleResult,
     private val deferred: Queue<() -> Unit>
@@ -52,6 +54,19 @@ internal class TypeContext(
             throw CompilerError(
                 "type of ${node.name.value} is unknown",
                 source = node.source
+            )
+        } else {
+            return type
+        }
+    }
+
+    fun typeOfTarget(target: TargetNode): Type {
+        val type = targetTypes[target.nodeId]
+        if (type == null) {
+            // TODO: test this
+            throw CompilerError(
+                "type of target is unknown",
+                source = target.source
             )
         } else {
             return type
@@ -83,11 +98,16 @@ internal class TypeContext(
         expressionTypes[node.nodeId] = type
     }
 
+    fun addTargetType(target: TargetNode, type: Type) {
+        targetTypes[target.nodeId] = type
+    }
+
     fun enterFunction(function: FunctionNode, effect: Effect): TypeContext {
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
             expressionTypes = expressionTypes,
+            targetTypes = targetTypes,
             variableTypes = variableTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
@@ -101,6 +121,7 @@ internal class TypeContext(
             moduleName = moduleName,
             effect = effect,
             expressionTypes = expressionTypes,
+            targetTypes = targetTypes,
             variableTypes = HashMap(variableTypes),
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
