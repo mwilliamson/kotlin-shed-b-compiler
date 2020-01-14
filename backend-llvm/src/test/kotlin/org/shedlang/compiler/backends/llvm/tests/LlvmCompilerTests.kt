@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.backends.llvm.*
 import org.shedlang.compiler.stackir.IrBool
+import org.shedlang.compiler.stackir.IrCodePoint
 import org.shedlang.compiler.stackir.IrInt
 import org.shedlang.compiler.stackir.IrUnit
 import org.shedlang.compiler.tests.isSequence
@@ -22,6 +23,13 @@ class StackValueToLlvmOperandTests {
         val operand = stackValueToLlvmOperand(IrBool(true))
 
         assertThat(operand, isCompilationResult(isLlvmOperandInt(1)))
+    }
+
+    @Test
+    fun codePointIsCompiledToImmediateIntegerOperand() {
+        val operand = stackValueToLlvmOperand(IrCodePoint(42))
+
+        assertThat(operand, isCompilationResult(isLlvmOperandInt(42)))
     }
 
     @Test

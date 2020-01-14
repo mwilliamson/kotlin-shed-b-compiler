@@ -291,6 +291,9 @@ internal fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOper
         is IrBool ->
             CompilationResult.of(LlvmOperandInt(if (value.value) 1 else 0))
 
+        is IrCodePoint ->
+            CompilationResult.of(LlvmOperandInt(value.value))
+
         is IrInt ->
             CompilationResult.of(LlvmOperandInt(value.value.intValueExact()))
 
