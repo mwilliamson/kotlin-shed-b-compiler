@@ -189,7 +189,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
             }
 
             is PushValue -> {
-                return stackValueToLlvmOperand(instruction.value).mapValue { operand ->
+                return stackValueToLlvmOperand(instruction.value, generateName = ::generateName).mapValue { operand ->
                     context.pushTemporary(operand)
                     listOf<LlvmBasicBlock>()
                 }
@@ -283,10 +283,13 @@ internal class Compiler(private val moduleSet: ModuleSet) {
 
 private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
 
-private val compiledValueType = LlvmTypes.i64
+internal val compiledValueType = LlvmTypes.i64
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
-internal fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOperand> {
+internal fun stackValueToLlvmOperand(
+    value: IrValue,
+    generateName: (String) -> String
+): CompilationResult<LlvmOperand> {
     return when (value) {
         is IrBool ->
             CompilationResult.of(LlvmOperandInt(if (value.value) 1 else 0))
@@ -296,6 +299,40 @@ internal fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOper
 
         is IrInt ->
             CompilationResult.of(LlvmOperandInt(value.value.intValueExact()))
+
+        is IrString -> {
+            val globalName = generateName("string")
+            val bytes = value.value.toByteArray(Charsets.UTF_8)
+
+            val stringDataType = LlvmTypes.arrayType(bytes.size, LlvmTypes.i8)
+            val stringValueType = LlvmTypes.structure(listOf(
+                LlvmTypes.i64,
+                stringDataType
+            ))
+            val operand: LlvmOperand = LlvmOperandPtrToInt(
+                sourceType = LlvmTypes.pointer(stringValueType),
+                value = LlvmOperandGlobal(globalName),
+                targetType = compiledValueType
+            )
+
+            val stringDefinition = LlvmGlobalDefinition(
+                name = globalName,
+                type = stringValueType,
+                value = LlvmOperandStructure(listOf(
+                    LlvmTypedOperand(LlvmTypes.i64, LlvmOperandInt(bytes.size)),
+                    LlvmTypedOperand(
+                        stringDataType,
+                        LlvmOperandArray(bytes.map { byte ->
+                            LlvmTypedOperand(LlvmTypes.i8, LlvmOperandInt(byte.toInt()))
+                        })
+                    )
+                )),
+                unnamedAddr = true,
+                isConstant = true
+            )
+
+            CompilationResult.of(operand).addModuleStatements(listOf(stringDefinition))
+        }
 
         is IrUnit ->
             CompilationResult.of(LlvmOperandInt(0))

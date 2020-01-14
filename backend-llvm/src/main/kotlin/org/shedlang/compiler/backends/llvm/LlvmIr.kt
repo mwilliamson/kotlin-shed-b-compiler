@@ -28,6 +28,12 @@ internal data class LlvmTypeFunction(val returnType: LlvmType): LlvmType {
     }
 }
 
+internal data class LlvmTypeStructure(val elementTypes: List<LlvmType>): LlvmType {
+    override fun serialise(): String {
+        return "{${elementTypes.joinToString(", ") { elementType -> elementType.serialise() }}}"
+    }
+}
+
 internal object LlvmTypes {
     val i8 = LlvmTypeScalar("i8")
     val i32 = LlvmTypeScalar("i32")
@@ -39,6 +45,8 @@ internal object LlvmTypes {
     fun arrayType(size: Int, elementType: LlvmType) = LlvmTypeArray(size = size, elementType = elementType)
 
     fun function(returnType: LlvmType): LlvmType = LlvmTypeFunction(returnType = returnType)
+
+    fun structure(elementTypes: List<LlvmType>) = LlvmTypeStructure(elementTypes)
 }
 
 internal interface LlvmOperand {
@@ -68,6 +76,28 @@ internal data class LlvmOperandGlobal(val name: String): LlvmVariable {
 internal data class LlvmOperandLocal(val name: String): LlvmVariable {
     override fun serialise(): String {
         return "%$name"
+    }
+}
+
+internal data class LlvmOperandPtrToInt(
+    val sourceType: LlvmType,
+    val value: LlvmOperand,
+    val targetType: LlvmType
+): LlvmOperand {
+    override fun serialise(): String {
+        return "ptrtoint (${sourceType.serialise()} ${value.serialise()} to ${targetType.serialise()})"
+    }
+}
+
+internal data class LlvmOperandArray(val elements: List<LlvmTypedOperand>): LlvmOperand {
+    override fun serialise(): String {
+        return "[${elements.joinToString(", ") { element -> element.serialise() }}]"
+    }
+}
+
+internal data class LlvmOperandStructure(val elements: List<LlvmTypedOperand>): LlvmOperand {
+    override fun serialise(): String {
+        return "{${elements.joinToString(", ") { element -> element.serialise() }}}"
     }
 }
 
