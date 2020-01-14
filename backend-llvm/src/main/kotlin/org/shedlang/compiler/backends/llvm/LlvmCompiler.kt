@@ -341,6 +341,7 @@ private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0,
 
 internal fun stackValueToLlvmOperand(value: IrValue): LlvmOperand {
     return when (value) {
+        is IrBool -> LlvmOperandInt(if (value.value) 1 else 0)
         is IrInt -> LlvmOperandInt(value.value.intValueExact())
         is IrUnit -> LlvmOperandInt(0)
         else -> throw UnsupportedOperationException(value.toString())
