@@ -14,7 +14,9 @@ class IrBool(val value: Boolean): IrValue()
 
 class IrCodePoint(val value: Int): IrValue()
 
-class IrInt(val value: BigInteger): IrValue()
+class IrInt(val value: BigInteger): IrValue() {
+    constructor(value: Int): this(value.toBigInteger())
+}
 
 class IrString(val value: String): IrValue()
 

@@ -189,7 +189,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
             }
 
             is PushValue -> {
-                context.pushTemporary(generateOperand(instruction.value))
+                context.pushTemporary(stackValueToLlvmOperand(instruction.value))
 
                 return CompilationResult.of(listOf())
             }
@@ -210,16 +210,6 @@ internal class Compiler(private val moduleSet: ModuleSet) {
 
     private fun variableForLocal(variableId: Int): LlvmVariable {
         return LlvmOperandLocal("local_$variableId")
-    }
-
-    private fun generateOperand(value: IrValue): LlvmOperand {
-        if (value is IrInt) {
-            return LlvmOperandInt(value.value.intValueExact())
-        } else if (value is IrUnit) {
-            return LlvmOperandInt(0)
-        } else {
-            throw UnsupportedOperationException(value.toString())
-        }
     }
 
     private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmBasicBlock> {
@@ -348,3 +338,11 @@ private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
 
 private val compiledValueType = LlvmTypes.i64
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
+
+internal fun stackValueToLlvmOperand(value: IrValue): LlvmOperand {
+    return when (value) {
+        is IrInt -> LlvmOperandInt(value.value.intValueExact())
+        is IrUnit -> LlvmOperandInt(0)
+        else -> throw UnsupportedOperationException(value.toString())
+    }
+}
