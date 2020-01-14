@@ -189,9 +189,10 @@ internal class Compiler(private val moduleSet: ModuleSet) {
             }
 
             is PushValue -> {
-                context.pushTemporary(stackValueToLlvmOperand(instruction.value))
-
-                return CompilationResult.of(listOf())
+                return stackValueToLlvmOperand(instruction.value).mapValue { operand ->
+                    context.pushTemporary(operand)
+                    listOf<LlvmBasicBlock>()
+                }
             }
 
             is Return -> {
@@ -278,60 +279,6 @@ internal class Compiler(private val moduleSet: ModuleSet) {
     private fun generateName(prefix: String): String {
         return prefix + "_" + nextNameIndex++
     }
-
-    private class CompilationResult<T>(
-        val value: T,
-        val moduleStatements: List<LlvmModuleStatement>
-    ) {
-        fun <R> mapValue(func: (T) -> R): CompilationResult<R> {
-            return CompilationResult(
-                value = func(value),
-                moduleStatements = moduleStatements
-            )
-        }
-
-        fun <R> flatMapValue(func: (T) -> CompilationResult<R>): CompilationResult<R> {
-            val result = func(value)
-            return CompilationResult(
-                value = result.value,
-                moduleStatements = moduleStatements + result.moduleStatements
-            )
-        }
-
-        fun addModuleStatements(moduleStatements: List<LlvmModuleStatement>): CompilationResult<T> {
-            return CompilationResult(
-                value = value,
-                moduleStatements = this.moduleStatements + moduleStatements
-            )
-        }
-
-        companion object {
-            val EMPTY = CompilationResult<List<Nothing>>(
-                value = listOf(),
-                moduleStatements = listOf()
-            )
-
-            fun <T> of(value: T): CompilationResult<T> {
-                return CompilationResult(
-                    value = value,
-                    moduleStatements = listOf()
-                )
-            }
-
-            fun <T> flatten(results: List<CompilationResult<List<T>>>): CompilationResult<List<T>> {
-                val value = results.flatMap { result -> result.value }
-                val moduleStatements = results.flatMap { result -> result.moduleStatements }
-                return CompilationResult(
-                    value = value,
-                    moduleStatements = moduleStatements
-                )
-            }
-        }
-    }
-
-    private fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<LlvmModuleStatement> {
-        return moduleStatements + listOf(value)
-    }
 }
 
 private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
@@ -339,11 +286,72 @@ private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
 private val compiledValueType = LlvmTypes.i64
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
-internal fun stackValueToLlvmOperand(value: IrValue): LlvmOperand {
+internal fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOperand> {
     return when (value) {
-        is IrBool -> LlvmOperandInt(if (value.value) 1 else 0)
-        is IrInt -> LlvmOperandInt(value.value.intValueExact())
-        is IrUnit -> LlvmOperandInt(0)
-        else -> throw UnsupportedOperationException(value.toString())
+        is IrBool ->
+            CompilationResult.of(LlvmOperandInt(if (value.value) 1 else 0))
+
+        is IrInt ->
+            CompilationResult.of(LlvmOperandInt(value.value.intValueExact()))
+
+        is IrUnit ->
+            CompilationResult.of(LlvmOperandInt(0))
+
+        else ->
+            throw UnsupportedOperationException(value.toString())
     }
+}
+
+internal class CompilationResult<T>(
+    val value: T,
+    val moduleStatements: List<LlvmModuleStatement>
+) {
+    fun <R> mapValue(func: (T) -> R): CompilationResult<R> {
+        return CompilationResult(
+            value = func(value),
+            moduleStatements = moduleStatements
+        )
+    }
+
+    fun <R> flatMapValue(func: (T) -> CompilationResult<R>): CompilationResult<R> {
+        val result = func(value)
+        return CompilationResult(
+            value = result.value,
+            moduleStatements = moduleStatements + result.moduleStatements
+        )
+    }
+
+    fun addModuleStatements(moduleStatements: List<LlvmModuleStatement>): CompilationResult<T> {
+        return CompilationResult(
+            value = value,
+            moduleStatements = this.moduleStatements + moduleStatements
+        )
+    }
+
+    companion object {
+        val EMPTY = CompilationResult<List<Nothing>>(
+            value = listOf(),
+            moduleStatements = listOf()
+        )
+
+        fun <T> of(value: T): CompilationResult<T> {
+            return CompilationResult(
+                value = value,
+                moduleStatements = listOf()
+            )
+        }
+
+        fun <T> flatten(results: List<CompilationResult<List<T>>>): CompilationResult<List<T>> {
+            val value = results.flatMap { result -> result.value }
+            val moduleStatements = results.flatMap { result -> result.moduleStatements }
+            return CompilationResult(
+                value = value,
+                moduleStatements = moduleStatements
+            )
+        }
+    }
+}
+
+private fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<LlvmModuleStatement> {
+    return moduleStatements + listOf(value)
 }
