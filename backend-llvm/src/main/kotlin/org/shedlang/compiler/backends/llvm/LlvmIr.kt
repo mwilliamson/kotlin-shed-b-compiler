@@ -205,10 +205,11 @@ internal data class LlvmFunctionDefinition(
 internal data class LlvmGlobalDefinition(
     val name: String,
     val type: LlvmType,
-    val value: LlvmOperand
+    val value: LlvmOperand,
+    val isConstant: Boolean = false
 ): LlvmModuleStatement {
     override fun serialise(): String {
-        return "@$name = global ${type.serialise()} ${value.serialise()}\n"
+        return "@$name = ${if(isConstant) "constant" else "global"} ${type.serialise()} ${value.serialise()}\n"
     }
 }
 
