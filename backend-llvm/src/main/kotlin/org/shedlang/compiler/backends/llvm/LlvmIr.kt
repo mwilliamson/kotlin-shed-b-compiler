@@ -206,10 +206,13 @@ internal data class LlvmGlobalDefinition(
     val name: String,
     val type: LlvmType,
     val value: LlvmOperand,
-    val isConstant: Boolean = false
+    val isConstant: Boolean = false,
+    val unnamedAddr: Boolean = false
 ): LlvmModuleStatement {
     override fun serialise(): String {
-        return "@$name = ${if(isConstant) "constant" else "global"} ${type.serialise()} ${value.serialise()}\n"
+        val unnamedAddrString = if (unnamedAddr) "unnamed_addr " else ""
+        val keyword = if (isConstant) "constant" else "global"
+        return "@$name = $unnamedAddrString$keyword ${type.serialise()} ${value.serialise()}\n"
     }
 }
 
