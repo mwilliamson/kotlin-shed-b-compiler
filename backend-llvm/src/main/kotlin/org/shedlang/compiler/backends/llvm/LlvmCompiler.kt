@@ -38,7 +38,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
         val mainFunctionVariable = LlvmOperandLocal("mainFunction")
         val exitCodeVariable = LlvmOperandLocal("exitCode")
         val main = LlvmFunctionDefinition(
-            returnType = LlvmTypes.i64,
+            returnType = compiledValueType,
             name = "main",
             body = listOf(
                 importModule(mainModule, target = mainModuleVariable),
@@ -51,15 +51,15 @@ internal class Compiler(private val moduleSet: ModuleSet) {
                 listOf(
                     LlvmIntToPtr(
                         target = mainFunctionVariable,
-                        sourceType = LlvmTypes.i64,
+                        sourceType = compiledValueType,
                         value = mainFunctionUntypedVariable,
                         targetType = LlvmTypes.pointer(LlvmTypes.function(
-                            returnType = LlvmTypes.i64
+                            returnType = compiledValueType
                         ))
                     ),
                     LlvmCall(
                         target = exitCodeVariable,
-                        returnType = LlvmTypes.i64,
+                        returnType = compiledValueType,
                         functionPointer = mainFunctionVariable,
                         arguments = listOf()
                     ),
@@ -89,7 +89,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
         return listOf(
             LlvmGlobalDefinition(
                 name = nameForModuleValue(moduleName),
-                type = objectType,
+                type = compiledObjectType,
                 value = LlvmNullPointer
             )
         ) + moduleInit(moduleName)
@@ -118,7 +118,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
                     .flatMapValue { instructions ->
                         val functionDefinition = LlvmFunctionDefinition(
                             name = functionName,
-                            returnType = LlvmTypes.i64,
+                            returnType = compiledValueType,
                             body = instructions
                         )
 
@@ -126,9 +126,9 @@ internal class Compiler(private val moduleSet: ModuleSet) {
 
                         val getVariableAddress = LlvmPtrToInt(
                             target = functionPointerVariable,
-                            targetType = LlvmTypes.i64,
+                            targetType = compiledValueType,
                             value = LlvmOperandGlobal(functionName),
-                            sourceType = LlvmTypes.pointer(LlvmTypes.function(returnType = LlvmTypes.i64))
+                            sourceType = LlvmTypes.pointer(LlvmTypes.function(returnType = compiledValueType))
                         )
                         CompilationResult.of(listOf<LlvmBasicBlock>(getVariableAddress))
                             .addModuleStatements(listOf(functionDefinition))
@@ -156,19 +156,19 @@ internal class Compiler(private val moduleSet: ModuleSet) {
                         returnType = LlvmTypes.pointer(LlvmTypes.i8),
                         functionPointer = LlvmOperandGlobal("malloc"),
                         arguments = listOf(
-                            LlvmTypedOperand(LlvmTypes.i64, LlvmOperandInt(8 * instruction.exports.size))
+                            LlvmTypedOperand(compiledValueType, LlvmOperandInt(8 * instruction.exports.size))
                         )
                     ),
                     LlvmBitCast(
                         target = moduleVariable,
                         sourceType = LlvmTypes.pointer(LlvmTypes.i8),
                         value = moduleVariableUntyped,
-                        targetType = objectType
+                        targetType = compiledObjectType
                     ),
                     // TODO: don't assume exactly one export
                     LlvmGetElementPtr(
                         target = fieldVariable,
-                        type = objectType.type,
+                        type = compiledObjectType.type,
                         pointer = moduleVariable,
                         indices = listOf(
                             LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -176,12 +176,12 @@ internal class Compiler(private val moduleSet: ModuleSet) {
                         )
                     ),
                     LlvmStore(
-                        type = LlvmTypes.i64,
+                        type = compiledValueType,
                         value = context.loadLocal(exportVariableId),
                         pointer = fieldVariable
                     ),
                     LlvmStore(
-                        type = objectType,
+                        type = compiledObjectType,
                         value = moduleVariable,
                         pointer = operandForModuleValue(instruction.moduleName)
                     )
@@ -198,7 +198,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
                 val returnVariable = context.popTemporary()
 
                 return CompilationResult.of(listOf(
-                    LlvmReturn(type = LlvmTypes.i64, value = returnVariable)
+                    LlvmReturn(type = compiledValueType, value = returnVariable)
                 ))
             }
 
@@ -231,7 +231,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
         return listOf(
             LlvmGetElementPtr(
                 target = fieldPointerVariable,
-                type = objectType.type,
+                type = compiledObjectType.type,
                 pointer = receiver,
                 indices = listOf(
                     LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0)),
@@ -240,8 +240,8 @@ internal class Compiler(private val moduleSet: ModuleSet) {
             ),
             LlvmLoad(
                 target = target,
-                type = LlvmTypes.i64,
-                pointerType = LlvmTypes.pointer(LlvmTypes.i64),
+                type = compiledValueType,
+                pointerType = LlvmTypes.pointer(compiledValueType),
                 pointer = fieldPointerVariable
             )
         )
@@ -257,8 +257,8 @@ internal class Compiler(private val moduleSet: ModuleSet) {
             ),
             LlvmLoad(
                 target = target,
-                type = objectType,
-                pointerType = LlvmTypes.pointer(objectType),
+                type = compiledObjectType,
+                pointerType = LlvmTypes.pointer(compiledObjectType),
                 pointer = operandForModuleValue(moduleName)
             )
         )
@@ -288,8 +288,6 @@ internal class Compiler(private val moduleSet: ModuleSet) {
     private fun generateName(prefix: String): String {
         return prefix + "_" + nextNameIndex++
     }
-
-    private val objectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = LlvmTypes.i64))
 
     private class CompilationResult<T>(
         val value: T,
@@ -347,3 +345,6 @@ internal class Compiler(private val moduleSet: ModuleSet) {
 }
 
 private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
+
+private val compiledValueType = LlvmTypes.i64
+private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
