@@ -6,41 +6,26 @@ import kotlinx.collections.immutable.PersistentList
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.backends.llvm.*
+import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
+import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.backends.tests.loader
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.literalBool
 
-class LlvmCompilerTests {
-    @Test
-    fun booleanLiteralIsEvaluatedToBoolean() {
-        val node = literalBool(true)
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isBool(true))
-    }
-
-    @Test
-    fun booleanLiteralIsEvaluatedToBoolean2() {
-        val node = literalBool(false)
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isBool(false))
-    }
-
-    private fun isBool(expected: Boolean): Matcher<Long> {
-        return equalTo(if (expected) 1L else 0L)
-    }
-
-    private fun evaluateExpression(node: ExpressionNode, types: Types = EMPTY_TYPES): Long {
+private val environment = object: StackIrExecutionEnvironment {
+    override fun evaluateExpression(node: ExpressionNode): IrValue {
+        val types = EMPTY_TYPES
         val instructions = loader(types = types).loadExpression(node)
-        return executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
+        val exitCode = executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
+
+        return when (exitCode) {
+            0L -> IrBool(false)
+            1L -> IrBool(true)
+            else -> throw UnsupportedOperationException()
+        }
     }
 
     private fun executeInstructions(
@@ -72,6 +57,8 @@ class LlvmCompilerTests {
         }
     }
 }
+
+class LlvmCompilerTests: StackIrExecutionTests(environment)
 
 class StackValueToLlvmOperandTests {
     @Test

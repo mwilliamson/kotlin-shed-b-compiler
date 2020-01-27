@@ -9,14 +9,35 @@ import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
+import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
+import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.backends.tests.loader
-import org.shedlang.compiler.stackinterpreter.InterpreterValue
+import org.shedlang.compiler.stackinterpreter.*
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
-class InterpreterTests {
+private val environment = object: StackIrExecutionEnvironment {
+    override fun evaluateExpression(node: ExpressionNode): IrValue {
+        val interpreterValue = org.shedlang.compiler.stackinterpreter.tests.evaluateExpression(node)
+        return interpreterValueToIrValue(interpreterValue)
+    }
+
+    private fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrValue {
+        return when (interpreterValue) {
+            is InterpreterBool -> IrBool(interpreterValue.value)
+            is InterpreterCodePoint -> IrCodePoint(interpreterValue.value)
+            is InterpreterInt -> IrInt(interpreterValue.value)
+            is InterpreterString -> IrString(interpreterValue.value)
+            is InterpreterSymbol -> IrSymbol(interpreterValue.value)
+            is InterpreterUnit -> IrUnit
+            else -> throw UnsupportedOperationException()
+        }
+    }
+}
+
+class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
     fun booleanLiteralIsEvaluatedToBoolean() {
         val node = literalBool(true)
