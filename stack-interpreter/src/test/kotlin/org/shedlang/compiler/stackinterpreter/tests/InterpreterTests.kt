@@ -9,6 +9,7 @@ import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
+import org.shedlang.compiler.backends.tests.loader
 import org.shedlang.compiler.stackinterpreter.InterpreterValue
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*

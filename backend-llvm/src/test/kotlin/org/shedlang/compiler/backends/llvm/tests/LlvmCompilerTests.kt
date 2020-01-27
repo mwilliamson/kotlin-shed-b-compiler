@@ -6,17 +6,14 @@ import kotlinx.collections.immutable.PersistentList
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.backends.CodeInspector
-import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.llvm.*
+import org.shedlang.compiler.backends.tests.loader
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.literalBool
-import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 
 class LlvmCompilerTests {
     @Test
@@ -73,14 +70,6 @@ class LlvmCompilerTests {
             outputPath.toFile().writeText(serialiseProgram(module))
             return executeLlvmInterpreter(outputPath).exitCode.toLong()
         }
-    }
-
-    private fun loader(
-        inspector: CodeInspector = SimpleCodeInspector(),
-        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
-        types: Types = EMPTY_TYPES
-    ): Loader {
-        return Loader(inspector = inspector, references = references, types = types)
     }
 }
 
