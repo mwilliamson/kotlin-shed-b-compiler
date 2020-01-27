@@ -6,8 +6,8 @@ import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
-internal class Compiler(private val moduleSet: ModuleSet) {
-    private class Context {
+internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
+    internal class Context {
         fun pushTemporary(operand: LlvmOperand) {
             stack.add(operand)
         }
@@ -27,8 +27,6 @@ internal class Compiler(private val moduleSet: ModuleSet) {
         private val stack: MutableList<LlvmOperand> = mutableListOf()
         private val locals: MutableMap<Int, LlvmOperand> = mutableMapOf()
     }
-
-    private val image = loadModuleSet(moduleSet)
 
     fun compile(target: Path, mainModule: List<Identifier>) {
         val defineMainModule = moduleDefine(mainModule)
@@ -105,7 +103,7 @@ internal class Compiler(private val moduleSet: ModuleSet) {
         }.toModuleStatements()
     }
 
-    private fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
+    internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
         return CompilationResult.flatten(instructions.map { instruction -> compileInstruction(instruction, context = context) })
     }
 
@@ -342,7 +340,7 @@ internal fun stackValueToLlvmOperand(
     }
 }
 
-internal class CompilationResult<T>(
+internal class CompilationResult<out T>(
     val value: T,
     val moduleStatements: List<LlvmModuleStatement>
 ) {
@@ -392,6 +390,6 @@ internal class CompilationResult<T>(
     }
 }
 
-private fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<LlvmModuleStatement> {
+internal fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<LlvmModuleStatement> {
     return moduleStatements + listOf(value)
 }

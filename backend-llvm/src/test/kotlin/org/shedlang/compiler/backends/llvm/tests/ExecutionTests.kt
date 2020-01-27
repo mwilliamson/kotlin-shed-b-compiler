@@ -6,6 +6,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.backends.llvm.Compiler
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
+import org.shedlang.compiler.stackir.loadModuleSet
 import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
@@ -48,7 +49,9 @@ class ExecutionTests {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
-                    Compiler(testProgram.load()).compile(
+                    val moduleSet = testProgram.load()
+                    val image = loadModuleSet(moduleSet)
+                    Compiler(image = image, moduleSet = moduleSet).compile(
                         target = outputPath,
                         mainModule = testProgram.mainModule
                     )

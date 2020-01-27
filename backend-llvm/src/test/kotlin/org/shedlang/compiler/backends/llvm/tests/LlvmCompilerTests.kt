@@ -2,10 +2,90 @@ package org.shedlang.compiler.backends.llvm.tests
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import kotlinx.collections.immutable.PersistentList
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.EMPTY_TYPES
+import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.Types
+import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.backends.CodeInspector
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.llvm.*
+import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.literalBool
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+
+class LlvmCompilerTests {
+    @Test
+    fun booleanLiteralIsEvaluatedToBoolean() {
+        val node = literalBool(true)
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun booleanLiteralIsEvaluatedToBoolean2() {
+        val node = literalBool(false)
+
+        val value = evaluateExpression(node)
+
+        assertThat(value, isBool(false))
+    }
+
+    private fun isBool(expected: Boolean): Matcher<Long> {
+        return equalTo(if (expected) 1L else 0L)
+    }
+
+    private fun evaluateExpression(node: ExpressionNode, types: Types = EMPTY_TYPES): Long {
+        val instructions = loader(types = types).loadExpression(node)
+        return executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
+    }
+
+    private fun executeInstructions(
+        instructions: PersistentList<Instruction>,
+        moduleSet: ModuleSet
+    ): Long {
+        val image = loadModuleSet(moduleSet)
+
+        val compiler = Compiler(image = image, moduleSet = moduleSet)
+        val context = Compiler.Context()
+        val llvmStatements = compiler.compileInstructions(instructions, context = context)
+            .mapValue { llvmInstructions ->
+                LlvmFunctionDefinition(
+                    name = "main",
+                    returnType = LlvmTypes.i64,
+                    body = llvmInstructions + listOf(
+                        LlvmReturn(LlvmTypes.i64, context.popTemporary())
+                    )
+                )
+            }
+            .toModuleStatements()
+        temporaryDirectory().use { temporaryDirectory ->
+            val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
+            val module = LlvmModule(llvmStatements)
+            outputPath.toFile().writeText("declare i8* @malloc(i64)\n" + module.serialise())
+            val result = org.shedlang.compiler.backends.tests.run(
+                listOf("lli", outputPath.toString()),
+                workingDirectory = temporaryDirectory.file
+            )
+            return result.exitCode.toLong()
+        }
+    }
+
+
+    private fun loader(
+        inspector: CodeInspector = SimpleCodeInspector(),
+        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
+        types: Types = EMPTY_TYPES
+    ): Loader {
+        return Loader(inspector = inspector, references = references, types = types)
+    }
+}
 
 class StackValueToLlvmOperandTests {
     @Test
