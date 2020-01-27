@@ -65,18 +65,15 @@ class LlvmCompilerTests {
                 )
             }
             .toModuleStatements()
+
+        val module = LlvmModule(llvmStatements)
+
         temporaryDirectory().use { temporaryDirectory ->
             val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
-            val module = LlvmModule(llvmStatements)
-            outputPath.toFile().writeText("declare i8* @malloc(i64)\n" + module.serialise())
-            val result = org.shedlang.compiler.backends.tests.run(
-                listOf("lli", outputPath.toString()),
-                workingDirectory = temporaryDirectory.file
-            )
-            return result.exitCode.toLong()
+            outputPath.toFile().writeText(serialiseProgram(module))
+            return executeLlvmInterpreter(outputPath).exitCode.toLong()
         }
     }
-
 
     private fun loader(
         inspector: CodeInspector = SimpleCodeInspector(),

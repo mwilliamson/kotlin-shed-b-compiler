@@ -73,8 +73,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             ).flatten()
         )
 
-        // TODO: handle malloc declaration properly
-        val source = "declare i8* @malloc(i64)\n" + module.serialise()
+        val source = serialiseProgram(module)
 
         println(source.lines().mapIndexed { index, line ->
             (index + 1).toString().padStart(3) + " " + line
@@ -392,4 +391,9 @@ internal class CompilationResult<out T>(
 
 internal fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<LlvmModuleStatement> {
     return moduleStatements + listOf(value)
+}
+
+internal fun serialiseProgram(module: LlvmModule): String {
+    // TODO: handle malloc declaration properly
+    return "declare i8* @malloc(i64)\n" + module.serialise()
 }

@@ -55,10 +55,8 @@ class ExecutionTests {
                         target = outputPath,
                         mainModule = testProgram.mainModule
                     )
-                    val result = org.shedlang.compiler.backends.tests.run(
-                        listOf("lli", outputPath.toString()),
-                        workingDirectory = temporaryDirectory.file
-                    )
+
+                    val result = executeLlvmInterpreter(outputPath)
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
