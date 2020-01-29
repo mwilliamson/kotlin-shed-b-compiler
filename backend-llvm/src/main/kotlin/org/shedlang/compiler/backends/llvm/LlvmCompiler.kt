@@ -52,7 +52,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         sourceType = compiledValueType,
                         value = mainFunctionUntypedVariable,
                         targetType = LlvmTypes.pointer(LlvmTypes.function(
-                            returnType = compiledValueType
+                            returnType = compiledValueType,
+                            parameterTypes = listOf()
                         ))
                     ),
                     LlvmCall(
@@ -149,7 +150,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                             target = functionPointerVariable,
                             targetType = compiledValueType,
                             value = LlvmOperandGlobal(functionName),
-                            sourceType = LlvmTypes.pointer(LlvmTypes.function(returnType = compiledValueType))
+                            sourceType = LlvmTypes.pointer(LlvmTypes.function(
+                                returnType = compiledValueType,
+                                parameterTypes = listOf()
+                            ))
                         )
                         CompilationResult.of(listOf<LlvmBasicBlock>(getVariableAddress))
                             .addModuleStatements(listOf(functionDefinition))
@@ -420,5 +424,8 @@ internal fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<L
 
 internal fun serialiseProgram(module: LlvmModule): String {
     // TODO: handle malloc declaration properly
-    return "declare i8* @malloc(i64)\n" + module.serialise()
+    return """
+        declare i8* @malloc(i64)
+        declare i32 @printf(i8* noalias nocapture, ...)
+    """.trimIndent() + module.serialise()
 }

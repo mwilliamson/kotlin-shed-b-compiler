@@ -22,9 +22,15 @@ internal data class LlvmTypeArray(val size: Int, val elementType: LlvmType): Llv
     }
 }
 
-internal data class LlvmTypeFunction(val returnType: LlvmType): LlvmType {
+internal data class LlvmTypeFunction(
+    val returnType: LlvmType,
+    val parameterTypes: List<LlvmType>,
+    val hasVarargs: Boolean
+): LlvmType {
     override fun serialise(): String {
-        return "${returnType.serialise()} ()"
+        val parameterStrings = parameterTypes.map(LlvmType::serialise) + (if (hasVarargs) listOf("...") else listOf())
+        val parametersString = parameterStrings.joinToString(", ")
+        return "${returnType.serialise()} ($parametersString)"
     }
 }
 
@@ -45,7 +51,15 @@ internal object LlvmTypes {
 
     fun arrayType(size: Int, elementType: LlvmType) = LlvmTypeArray(size = size, elementType = elementType)
 
-    fun function(returnType: LlvmType): LlvmType = LlvmTypeFunction(returnType = returnType)
+    fun function(
+        returnType: LlvmType,
+        parameterTypes: List<LlvmType>,
+        hasVarargs: Boolean = false
+    ): LlvmType = LlvmTypeFunction(
+        returnType = returnType,
+        parameterTypes = parameterTypes,
+        hasVarargs = hasVarargs
+    )
 
     fun structure(elementTypes: List<LlvmType>) = LlvmTypeStructure(elementTypes)
 }

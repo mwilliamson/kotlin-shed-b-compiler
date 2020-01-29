@@ -20,25 +20,25 @@ private val environment = object: StackIrExecutionEnvironment {
     override fun evaluateExpression(node: ExpressionNode, type: Type): IrValue {
         val types = EMPTY_TYPES
         val instructions = loader(types = types).loadExpression(node)
-        val exitCode = executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
+        val stdout = executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
 
         return when (type) {
             BoolType ->
-                when (exitCode) {
-                    0L -> IrBool(false)
-                    1L -> IrBool(true)
+                when (stdout) {
+                    "0" -> IrBool(false)
+                    "1" -> IrBool(true)
                     else -> throw UnsupportedOperationException()
                 }
 
             CodePointType ->
-                IrCodePoint(exitCode.toInt())
+                IrCodePoint(stdout.toInt())
 
             IntType ->
-                IrInt(exitCode.toBigInteger())
+                IrInt(stdout.toBigInteger())
 
             UnitType ->
-                when (exitCode) {
-                    0L -> IrUnit
+                when (stdout) {
+                    "0" -> IrUnit
                     else -> throw UnsupportedOperationException()
                 }
 
@@ -50,7 +50,7 @@ private val environment = object: StackIrExecutionEnvironment {
     private fun executeInstructions(
         instructions: PersistentList<Instruction>,
         moduleSet: ModuleSet
-    ): Long {
+    ): String {
         val image = loadModuleSet(moduleSet)
 
         val compiler = Compiler(image = image, moduleSet = moduleSet)
@@ -61,7 +61,29 @@ private val environment = object: StackIrExecutionEnvironment {
                     name = "main",
                     returnType = LlvmTypes.i64,
                     body = llvmInstructions + listOf(
-                        LlvmReturn(LlvmTypes.i64, context.popTemporary())
+                        LlvmGetElementPtr(
+                            target = LlvmOperandLocal("format_int64_pointer"),
+                            type = LlvmTypes.arrayType(4, LlvmTypes.i8),
+                            pointer = LlvmOperandGlobal("format_int64"),
+                            indices = listOf(
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                            )
+                        ),
+                        LlvmCall(
+                            target = null,
+                            returnType = LlvmTypes.function(
+                                returnType = LlvmTypes.i32,
+                                parameterTypes = listOf(LlvmTypes.pointer(LlvmTypes.i8)),
+                                hasVarargs = true
+                            ),
+                            functionPointer = LlvmOperandGlobal("printf"),
+                            arguments = listOf(
+                                LlvmTypedOperand(LlvmTypes.pointer(LlvmTypes.i8), LlvmOperandLocal("format_int64_pointer")),
+                                LlvmTypedOperand(compiledValueType, context.popTemporary())
+                            )
+                        ),
+                        LlvmReturn(LlvmTypes.i64, LlvmOperandInt(0))
                     )
                 )
             }
@@ -71,8 +93,8 @@ private val environment = object: StackIrExecutionEnvironment {
 
         temporaryDirectory().use { temporaryDirectory ->
             val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
-            outputPath.toFile().writeText(serialiseProgram(module))
-            return executeLlvmInterpreter(outputPath).exitCode.toLong()
+            outputPath.toFile().writeText(serialiseProgram(module) + "@format_int64 = private unnamed_addr constant [4 x i8] c\"%ld\\00\"")
+            return executeLlvmInterpreter(outputPath).throwOnError().stdout
         }
     }
 }
