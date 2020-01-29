@@ -39,15 +39,6 @@ private val environment = object: StackIrExecutionEnvironment {
 
 class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
-    fun integerLiteralIsEvaluatedToInteger() {
-        val node = literalInt(42)
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isInt(42))
-    }
-
-    @Test
     fun stringLiteralIsEvaluatedToString() {
         val node = literalString("hello")
 

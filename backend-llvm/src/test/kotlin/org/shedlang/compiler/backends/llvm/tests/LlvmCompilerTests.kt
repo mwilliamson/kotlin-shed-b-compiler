@@ -16,6 +16,7 @@ import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.CodePointType
+import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.Type
 
 private val environment = object: StackIrExecutionEnvironment {
@@ -34,6 +35,9 @@ private val environment = object: StackIrExecutionEnvironment {
 
             CodePointType ->
                 IrCodePoint(exitCode.toInt())
+
+            IntType ->
+                IrInt(exitCode.toBigInteger())
 
             else ->
                 throw java.lang.UnsupportedOperationException("unsupported type: ${type.shortDescription}")

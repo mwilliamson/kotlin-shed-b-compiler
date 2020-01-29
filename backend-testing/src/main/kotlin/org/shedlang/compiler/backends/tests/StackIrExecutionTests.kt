@@ -9,11 +9,14 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.stackir.IrBool
 import org.shedlang.compiler.stackir.IrCodePoint
+import org.shedlang.compiler.stackir.IrInt
 import org.shedlang.compiler.stackir.IrValue
 import org.shedlang.compiler.tests.literalBool
 import org.shedlang.compiler.tests.literalCodePoint
+import org.shedlang.compiler.tests.literalInt
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.CodePointType
+import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.Type
 
 interface StackIrExecutionEnvironment {
@@ -48,6 +51,16 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isCodePoint('X'.toInt()))
     }
 
+    @Test
+    fun integerLiteralIsEvaluatedToInteger() {
+        val node = literalInt(42)
+
+        val value = evaluateExpression(node, type = IntType)
+
+        assertThat(value, isInt(42))
+    }
+
+
     private fun evaluateExpression(node: ExpressionNode, type: Type) =
         environment.evaluateExpression(node, type)
 
@@ -57,5 +70,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
     private fun isCodePoint(expected: Int): Matcher<IrValue> {
         return cast(has(IrCodePoint::value, equalTo(expected)))
+    }
+
+    private fun isInt(expected: Int): Matcher<IrValue> {
+        return cast(has(IrInt::value, equalTo(expected.toBigInteger())))
     }
 }
