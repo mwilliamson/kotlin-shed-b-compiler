@@ -48,15 +48,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun unitLiteralIsEvaluatedToUnit() {
-        val node = literalUnit()
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isUnit)
-    }
-
-    @Test
     fun notOperatorNegatesOperand() {
         assertNotOperation(true, isBool(false))
         assertNotOperation(false, isBool(true))

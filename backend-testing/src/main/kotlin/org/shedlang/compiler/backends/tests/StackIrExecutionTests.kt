@@ -1,23 +1,15 @@
 package org.shedlang.compiler.backends.tests
 
-import com.natpryce.hamkrest.Matcher
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.stackir.IrBool
-import org.shedlang.compiler.stackir.IrCodePoint
-import org.shedlang.compiler.stackir.IrInt
-import org.shedlang.compiler.stackir.IrValue
+import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.literalBool
 import org.shedlang.compiler.tests.literalCodePoint
 import org.shedlang.compiler.tests.literalInt
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.CodePointType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.tests.literalUnit
+import org.shedlang.compiler.types.*
 
 interface StackIrExecutionEnvironment {
     fun evaluateExpression(node: ExpressionNode, type: Type): IrValue
@@ -60,6 +52,15 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(42))
     }
 
+    @Test
+    fun unitLiteralIsEvaluatedToUnit() {
+        val node = literalUnit()
+
+        val value = evaluateExpression(node, type = UnitType)
+
+        assertThat(value, isUnit)
+    }
+
 
     private fun evaluateExpression(node: ExpressionNode, type: Type) =
         environment.evaluateExpression(node, type)
@@ -75,4 +76,6 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     private fun isInt(expected: Int): Matcher<IrValue> {
         return cast(has(IrInt::value, equalTo(expected.toBigInteger())))
     }
+
+    private val isUnit = isA<IrUnit>()
 }
