@@ -4,11 +4,9 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionNode
+import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.tests.literalBool
-import org.shedlang.compiler.tests.literalCodePoint
-import org.shedlang.compiler.tests.literalInt
-import org.shedlang.compiler.tests.literalUnit
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 interface StackIrExecutionEnvironment {
@@ -59,6 +57,20 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val value = evaluateExpression(node, type = UnitType)
 
         assertThat(value, isUnit)
+    }
+
+    @Test
+    fun notOperatorNegatesOperand() {
+        assertNotOperation(true, isBool(false))
+        assertNotOperation(false, isBool(true))
+    }
+
+    private fun assertNotOperation(operand: Boolean, expected: Matcher<IrValue>) {
+        val node = unaryOperation(UnaryOperator.NOT, literalBool(operand))
+
+        val value = evaluateExpression(node, type = BoolType)
+
+        assertThat(value, expected)
     }
 
 

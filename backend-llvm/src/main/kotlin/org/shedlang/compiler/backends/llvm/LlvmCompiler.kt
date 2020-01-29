@@ -108,6 +108,30 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
     private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmBasicBlock>> {
         when (instruction) {
+            is BoolNot -> {
+                val operand = context.popTemporary()
+                val booleanResult = LlvmOperandLocal(generateName("not_i1"))
+                val fullResult = LlvmOperandLocal(generateName("not"))
+
+                context.pushTemporary(fullResult)
+
+                return CompilationResult.of(listOf(
+                    LlvmIcmp(
+                        target = booleanResult,
+                        conditionCode = LlvmIcmp.ConditionCode.EQ,
+                        type = compiledBoolType,
+                        left = operand,
+                        right = LlvmOperandInt(0)
+                    ),
+                    LlvmZext(
+                        target = fullResult,
+                        sourceType = LlvmTypes.i1,
+                        operand = booleanResult,
+                        targetType = compiledBoolType
+                    )
+                ))
+            }
+
             is DeclareFunction -> {
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
@@ -281,6 +305,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
 
 internal val compiledValueType = LlvmTypes.i64
+internal val compiledBoolType = compiledValueType
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal fun stackValueToLlvmOperand(

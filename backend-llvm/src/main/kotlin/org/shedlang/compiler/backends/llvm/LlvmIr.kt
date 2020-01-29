@@ -35,6 +35,7 @@ internal data class LlvmTypeStructure(val elementTypes: List<LlvmType>): LlvmTyp
 }
 
 internal object LlvmTypes {
+    val i1 = LlvmTypeScalar("i1")
     val i8 = LlvmTypeScalar("i8")
     val i32 = LlvmTypeScalar("i32")
     val i64 = LlvmTypeScalar("i64")
@@ -191,6 +192,22 @@ internal data class LlvmGetElementPtr(
     }
 }
 
+internal data class LlvmIcmp(
+    val target: LlvmVariable,
+    val conditionCode: ConditionCode,
+    val type: LlvmType,
+    val left: LlvmOperand,
+    val right: LlvmOperand
+): LlvmBasicBlock {
+    enum class ConditionCode {
+        EQ
+    }
+
+    override fun serialise(): String {
+        return "${target.serialise()} = icmp ${conditionCode.name.toLowerCase()} ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
+    }
+}
+
 internal data class LlvmIndex(val type: LlvmType, val value: LlvmOperand) {
     fun serialise(): String {
         return "${type.serialise()} ${value.serialise()}"
@@ -218,6 +235,17 @@ internal object LlvmReturnVoid: LlvmBasicBlock {
 internal data class LlvmStore(val type: LlvmType, val value: LlvmOperand, val pointer: LlvmOperand): LlvmBasicBlock {
     override fun serialise(): String {
         return "store ${type.serialise()} ${value.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}"
+    }
+}
+
+internal data class LlvmZext(
+    val target: LlvmVariable,
+    val sourceType: LlvmType,
+    val operand: LlvmOperand,
+    val targetType: LlvmType
+): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "${target.serialise()} = zext ${sourceType.serialise()} ${operand.serialise()} to ${targetType.serialise()}"
     }
 }
 
