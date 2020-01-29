@@ -252,6 +252,17 @@ internal data class LlvmStore(val type: LlvmType, val value: LlvmOperand, val po
     }
 }
 
+internal data class LlvmSub(
+    val target: LlvmVariable,
+    val type: LlvmType,
+    val left: LlvmOperand,
+    val right: LlvmOperand
+): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "${target.serialise()} = sub ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
+    }
+}
+
 internal data class LlvmZext(
     val target: LlvmVariable,
     val sourceType: LlvmType,

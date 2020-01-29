@@ -73,6 +73,15 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, expected)
     }
 
+    @Test
+    fun minusOperatorNegatesOperand() {
+        val node = unaryOperation(UnaryOperator.MINUS, literalInt(42))
+
+        val value = evaluateExpression(node, type = IntType)
+
+        assertThat(value, isInt(-42))
+    }
+
 
     private fun evaluateExpression(node: ExpressionNode, type: Type) =
         environment.evaluateExpression(node, type)

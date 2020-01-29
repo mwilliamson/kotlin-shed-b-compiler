@@ -164,6 +164,22 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return CompilationResult.of(listOf())
             }
 
+            is IntMinus -> {
+                val result = LlvmOperandLocal(generateName("result"))
+
+                val operand = context.popTemporary()
+                context.pushTemporary(result)
+
+                return CompilationResult.of(listOf(
+                    LlvmSub(
+                        target = result,
+                        type = compiledIntType,
+                        left = LlvmOperandInt(0),
+                        right = operand
+                    )
+                ))
+            }
+
             is LocalStore -> {
                 val operand = context.popTemporary()
                 context.storeLocal(instruction.variableId, operand)
@@ -310,6 +326,7 @@ private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
 
 internal val compiledValueType = LlvmTypes.i64
 internal val compiledBoolType = compiledValueType
+internal val compiledIntType = compiledValueType
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal fun stackValueToLlvmOperand(

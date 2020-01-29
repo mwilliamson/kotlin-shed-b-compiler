@@ -48,15 +48,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun minusOperatorNegatesOperand() {
-        val node = unaryOperation(UnaryOperator.MINUS, literalInt(42))
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isInt(-42))
-    }
-
-    @Test
     fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
         val left = literalBool(true)
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))
