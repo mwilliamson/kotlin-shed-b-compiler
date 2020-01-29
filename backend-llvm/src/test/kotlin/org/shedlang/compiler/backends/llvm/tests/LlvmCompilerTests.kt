@@ -14,17 +14,29 @@ import org.shedlang.compiler.backends.tests.loader
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.CodePointType
+import org.shedlang.compiler.types.Type
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun evaluateExpression(node: ExpressionNode): IrValue {
+    override fun evaluateExpression(node: ExpressionNode, type: Type): IrValue {
         val types = EMPTY_TYPES
         val instructions = loader(types = types).loadExpression(node)
         val exitCode = executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
 
-        return when (exitCode) {
-            0L -> IrBool(false)
-            1L -> IrBool(true)
-            else -> throw UnsupportedOperationException()
+        return when (type) {
+            BoolType ->
+                when (exitCode) {
+                    0L -> IrBool(false)
+                    1L -> IrBool(true)
+                    else -> throw UnsupportedOperationException()
+                }
+
+            CodePointType ->
+                IrCodePoint(exitCode.toInt())
+
+            else ->
+                throw java.lang.UnsupportedOperationException("unsupported type: ${type.shortDescription}")
         }
     }
 

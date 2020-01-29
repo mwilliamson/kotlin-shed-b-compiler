@@ -19,8 +19,8 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun evaluateExpression(node: ExpressionNode): IrValue {
-        val interpreterValue = org.shedlang.compiler.stackinterpreter.tests.evaluateExpression(node)
+    override fun evaluateExpression(node: ExpressionNode, type: Type): IrValue {
+        val interpreterValue = evaluateExpression(node)
         return interpreterValueToIrValue(interpreterValue)
     }
 
@@ -38,24 +38,6 @@ private val environment = object: StackIrExecutionEnvironment {
 }
 
 class InterpreterTests: StackIrExecutionTests(environment) {
-    @Test
-    fun booleanLiteralIsEvaluatedToBoolean() {
-        val node = literalBool(true)
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isBool(true))
-    }
-
-    @Test
-    fun codePointLiteralIsEvaluatedToCodePoint() {
-        val node = literalCodePoint('X')
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isCodePoint('X'.toInt()))
-    }
-
     @Test
     fun integerLiteralIsEvaluatedToInteger() {
         val node = literalInt(42)
