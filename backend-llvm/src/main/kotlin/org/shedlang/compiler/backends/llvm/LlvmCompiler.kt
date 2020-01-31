@@ -1,5 +1,8 @@
 package org.shedlang.compiler.backends.llvm
 
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackir.*
@@ -7,26 +10,37 @@ import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
 internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
-    internal class Context {
-        fun pushTemporary(operand: LlvmOperand) {
-            stack.add(operand)
+    internal class Context(private val stack: PersistentList<LlvmOperand>) {
+        fun pushTemporary(operand: LlvmOperand): Context {
+            return Context(stack.add(operand))
         }
 
-        fun popTemporary(): LlvmOperand {
-            return stack.pop()
+        fun popTemporary(): Pair<Context, LlvmOperand> {
+            val (newStack, value) = stack.pop()
+            return Pair(Context(newStack), value)
         }
 
-        fun duplicateTemporary() {
-            pushTemporary(peekTemporary())
+        fun duplicateTemporary(): Context {
+            return pushTemporary(peekTemporary())
         }
 
-        fun discardTemporary() {
-            stack.pop()
+        fun discardTemporary(): Context {
+            return Context(stack.removeAt(stack.lastIndex))
         }
 
         private fun peekTemporary() = stack.last()
 
-        private val stack: MutableList<LlvmOperand> = mutableListOf()
+        companion object {
+            val EMPTY = Context(persistentListOf())
+        }
+
+        fun <T> result(value: T): CompilationResult<T> {
+            return CompilationResult(
+                value = value,
+                moduleStatements = listOf(),
+                context = this
+            )
+        }
     }
 
     fun compile(target: Path, mainModule: List<Identifier>) {
@@ -93,13 +107,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun moduleInit(moduleName: List<Identifier>): List<LlvmModuleStatement> {
-        return compileInstructions(image.moduleInitialisation(moduleName), context = Context()).mapValue<LlvmModuleStatement> { instructions ->
-            LlvmFunctionDefinition(
-                name = nameForModuleInit(moduleName),
-                returnType = LlvmTypes.void,
-                body = instructions + listOf(LlvmReturnVoid)
-            )
-        }.toModuleStatements()
+        return compileInstructions(image.moduleInitialisation(moduleName), context = Context.EMPTY)
+            .mapValue<LlvmModuleStatement> { instructions, _ ->
+                LlvmFunctionDefinition(
+                    name = nameForModuleInit(moduleName),
+                    returnType = LlvmTypes.void,
+                    body = instructions + listOf(LlvmReturnVoid)
+                )
+            }
+            .toModuleStatements()
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
@@ -109,10 +125,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             .distinct()
         val allocateLocals = localVariableIds.map { localVariableId ->
             LlvmAlloca(target = variableForLocal(localVariableId), type = compiledValueType)
-        }
+        }.toPersistentList<LlvmBasicBlock>()
 
-        return CompilationResult.flatten(instructions.map { instruction -> compileInstruction(instruction, context = context) })
-            .mapValue { llvmBasicBlocks -> allocateLocals + llvmBasicBlocks }
+        return instructions.fold(context.result(allocateLocals)) { result, instruction ->
+            result.flatMapValue { previousInstructions, context ->
+                compileInstruction(instruction, context = context).mapValue {
+                    currentInstructions, _ -> previousInstructions.addAll(currentInstructions)
+                }
+            }
+        }
     }
 
     private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmBasicBlock>> {
@@ -132,15 +153,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is DeclareFunction -> {
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
-                return compileInstructions(instruction.bodyInstructions, context = context)
-                    .flatMapValue { instructions ->
+                return compileInstructions(instruction.bodyInstructions, context = Context.EMPTY)
+                    .flatMapValue { instructions, _ ->
                         val functionDefinition = LlvmFunctionDefinition(
                             name = functionName,
                             returnType = compiledValueType,
                             body = instructions
                         )
 
-                        context.pushTemporary(functionPointerVariable)
+                        val context2 = context.pushTemporary(functionPointerVariable)
 
                         val getVariableAddress = LlvmPtrToInt(
                             target = functionPointerVariable,
@@ -151,32 +172,32 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                                 parameterTypes = listOf()
                             ))
                         )
-                        CompilationResult.of(listOf<LlvmBasicBlock>(getVariableAddress))
+
+                        context2.pushTemporary(functionPointerVariable)
+                            .result(listOf<LlvmBasicBlock>(getVariableAddress))
                             .addModuleStatements(listOf(functionDefinition))
                     }
             }
 
             is Discard -> {
-                context.discardTemporary()
-                return CompilationResult.of(listOf())
+                return context.discardTemporary().result(listOf())
             }
 
             is Duplicate -> {
-                context.duplicateTemporary()
-                return CompilationResult.of(listOf())
+                return context.duplicateTemporary().result(listOf())
             }
 
             is Exit -> {
-                return CompilationResult.of(listOf())
+                return context.result(listOf())
             }
 
             is IntMinus -> {
                 val result = LlvmOperandLocal(generateName("result"))
 
-                val operand = context.popTemporary()
-                context.pushTemporary(result)
+                val (context2, operand) = context.popTemporary()
+                val context3 = context2.pushTemporary(result)
 
-                return CompilationResult.of(listOf(
+                return context3.result(listOf(
                     LlvmSub(
                         target = result,
                         type = compiledIntType,
@@ -187,16 +208,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is Jump -> {
-                return CompilationResult.of(listOf(
+                return context.result(listOf(
                     LlvmBrUnconditional(labelToLlvmLabel(instruction.label))
                 ))
             }
 
             is JumpIfFalse -> {
-                val condition = context.popTemporary()
+                val (context2, condition) = context.popTemporary()
                 val trueLabel = createLlvmLabel("true")
 
-                return CompilationResult.of(listOf(
+                return context2.result(listOf(
                     LlvmBr(
                         condition = condition,
                         ifTrue = trueLabel,
@@ -207,10 +228,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is JumpIfTrue -> {
-                val condition = context.popTemporary()
+                val (context2, condition) = context.popTemporary()
                 val falseLabel = createLlvmLabel("false")
 
-                return CompilationResult.of(listOf(
+                return context2.result(listOf(
                     LlvmBr(
                         condition = condition,
                         ifTrue = labelToLlvmLabel(instruction.label),
@@ -221,15 +242,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is Label -> {
-                return CompilationResult.of(listOf(
+                return context.result(listOf(
                     LlvmLabel(labelToLlvmLabel(instruction.value))
                 ))
             }
 
             is LocalLoad -> {
                 val value = LlvmOperandLocal(generateName("load"))
-                context.pushTemporary(value)
-                return CompilationResult.of(listOf(
+                val context2 = context.pushTemporary(value)
+                return context2.result(listOf(
                     LlvmLoad(
                         target = value,
                         type = compiledValueType,
@@ -239,8 +260,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is LocalStore -> {
-                val operand = context.popTemporary()
-                return CompilationResult.of(listOf(
+                val (context2, operand) = context.popTemporary()
+                return context2.result(listOf(
                     LlvmStore(
                         type = compiledValueType,
                         value = operand,
@@ -255,7 +276,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
                 val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
                 val (exportName, exportVariableId) = instruction.exports.single()
-                return CompilationResult.of(listOf(
+                return context.result(listOf(
                     LlvmCall(
                         target = moduleVariableUntyped,
                         returnType = LlvmTypes.pointer(LlvmTypes.i8),
@@ -299,16 +320,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is PushValue -> {
-                return stackValueToLlvmOperand(instruction.value, generateName = ::generateName).mapValue { operand ->
-                    context.pushTemporary(operand)
-                    listOf<LlvmBasicBlock>()
-                }
+                return stackValueToLlvmOperand(instruction.value, generateName = ::generateName, context = context)
+                    .flatMapValue { operand, context2 ->
+                        context2.pushTemporary(operand).result(listOf<LlvmBasicBlock>())
+                    }
             }
 
             is Return -> {
-                val returnVariable = context.popTemporary()
+                val (context2, returnVariable) = context.popTemporary()
 
-                return CompilationResult.of(listOf(
+                return context2.result(listOf(
                     LlvmReturn(type = compiledValueType, value = returnVariable)
                 ))
             }
@@ -320,13 +341,13 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun compileBoolNot(context: Context): CompilationResult<List<LlvmBasicBlock>> {
-        val operand = context.popTemporary()
+        val (context2, operand) = context.popTemporary()
         val booleanResult = LlvmOperandLocal(generateName("not_i1"))
         val fullResult = LlvmOperandLocal(generateName("not"))
 
-        context.pushTemporary(fullResult)
+        val context3 = context2.pushTemporary(fullResult)
 
-        return CompilationResult.of(listOf(
+        return context3.result(listOf(
             LlvmIcmp(
                 target = booleanResult,
                 conditionCode = LlvmIcmp.ConditionCode.EQ,
@@ -350,15 +371,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         conditionCode: LlvmIcmp.ConditionCode,
         context: Context
     ): CompilationResult<List<LlvmBasicBlock>> {
-        val right = context.popTemporary()
-        val left = context.popTemporary()
+        val (context2, right) = context.popTemporary()
+        val (context3, left) = context2.popTemporary()
 
         val booleanResult = LlvmOperandLocal(generateName("op_i1"))
         val fullResult = LlvmOperandLocal(generateName("op"))
 
-        context.pushTemporary(fullResult)
+        val context4 = context3.pushTemporary(fullResult)
 
-        return CompilationResult.of(listOf(
+        return context4.result(listOf(
             LlvmIcmp(
                 target = booleanResult,
                 conditionCode = conditionCode,
@@ -459,7 +480,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 }
 
-private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
+private fun <T> PersistentList<T>.pop() = Pair(removeAt(lastIndex), last())
 
 internal val compiledValueType = LlvmTypes.i64
 internal val compiledBoolType = compiledValueType
@@ -483,17 +504,18 @@ internal object CTypes {
 
 internal fun stackValueToLlvmOperand(
     value: IrValue,
-    generateName: (String) -> String
+    generateName: (String) -> String,
+    context: Compiler.Context
 ): CompilationResult<LlvmOperand> {
     return when (value) {
         is IrBool ->
-            CompilationResult.of(LlvmOperandInt(if (value.value) 1 else 0))
+            context.result(LlvmOperandInt(if (value.value) 1 else 0))
 
         is IrCodePoint ->
-            CompilationResult.of(LlvmOperandInt(value.value))
+            context.result(LlvmOperandInt(value.value))
 
         is IrInt ->
-            CompilationResult.of(LlvmOperandInt(value.value.intValueExact()))
+            context.result(LlvmOperandInt(value.value.intValueExact()))
 
         is IrString -> {
             val globalName = generateName("string")
@@ -526,11 +548,11 @@ internal fun stackValueToLlvmOperand(
                 isConstant = true
             )
 
-            CompilationResult.of(operand).addModuleStatements(listOf(stringDefinition))
+            context.result(operand).addModuleStatements(listOf(stringDefinition))
         }
 
         is IrUnit ->
-            CompilationResult.of(LlvmOperandInt(0))
+            context.result(LlvmOperandInt(0))
 
         else ->
             throw UnsupportedOperationException(value.toString())
@@ -539,51 +561,32 @@ internal fun stackValueToLlvmOperand(
 
 internal class CompilationResult<out T>(
     val value: T,
-    val moduleStatements: List<LlvmModuleStatement>
+    val moduleStatements: List<LlvmModuleStatement>,
+    val context: Compiler.Context
 ) {
-    fun <R> mapValue(func: (T) -> R): CompilationResult<R> {
+    fun <R> mapValue(func: (T, Compiler.Context) -> R): CompilationResult<R> {
         return CompilationResult(
-            value = func(value),
-            moduleStatements = moduleStatements
+            value = func(value, context),
+            moduleStatements = moduleStatements,
+            context = context
         )
     }
 
-    fun <R> flatMapValue(func: (T) -> CompilationResult<R>): CompilationResult<R> {
-        val result = func(value)
+    fun <R> flatMapValue(func: (T, Compiler.Context) -> CompilationResult<R>): CompilationResult<R> {
+        val result = func(value, context)
         return CompilationResult(
             value = result.value,
-            moduleStatements = moduleStatements + result.moduleStatements
+            moduleStatements = moduleStatements + result.moduleStatements,
+            context = result.context
         )
     }
 
     fun addModuleStatements(moduleStatements: List<LlvmModuleStatement>): CompilationResult<T> {
         return CompilationResult(
             value = value,
-            moduleStatements = this.moduleStatements + moduleStatements
+            moduleStatements = this.moduleStatements + moduleStatements,
+            context = context
         )
-    }
-
-    companion object {
-        val EMPTY = CompilationResult<List<Nothing>>(
-            value = listOf(),
-            moduleStatements = listOf()
-        )
-
-        fun <T> of(value: T): CompilationResult<T> {
-            return CompilationResult(
-                value = value,
-                moduleStatements = listOf()
-            )
-        }
-
-        fun <T> flatten(results: List<CompilationResult<List<T>>>): CompilationResult<List<T>> {
-            val value = results.flatMap { result -> result.value }
-            val moduleStatements = results.flatMap { result -> result.moduleStatements }
-            return CompilationResult(
-                value = value,
-                moduleStatements = moduleStatements
-            )
-        }
     }
 }
 

@@ -61,12 +61,12 @@ private val environment = object: StackIrExecutionEnvironment {
         val image = loadModuleSet(moduleSet)
 
         val compiler = Compiler(image = image, moduleSet = moduleSet)
-        val context = Compiler.Context()
+        val context = Compiler.Context.EMPTY
         val llvmStatements = compiler.compileInstructions(instructions, context = context)
-            .mapValue { llvmInstructions ->
+            .mapValue { llvmInstructions, context ->
                 val print = if (type == StringType) {
                     val stdoutFd = 1
-                    val stringValue = context.popTemporary()
+                    val (context2, stringValue) = context.popTemporary()
                     val string = LlvmOperandLocal("string")
                     val sizePointer = LlvmOperandLocal("sizePointer")
                     val size = LlvmOperandLocal("size")
@@ -109,6 +109,7 @@ private val environment = object: StackIrExecutionEnvironment {
                         )
                     )
                 } else {
+                    val (context2, value) = context.popTemporary()
                     listOf(
                         LlvmGetElementPtr(
                             target = LlvmOperandLocal("format_int64_pointer"),
@@ -129,7 +130,7 @@ private val environment = object: StackIrExecutionEnvironment {
                             functionPointer = LlvmOperandGlobal("printf"),
                             arguments = listOf(
                                 LlvmTypedOperand(LlvmTypes.pointer(LlvmTypes.i8), LlvmOperandLocal("format_int64_pointer")),
-                                LlvmTypedOperand(compiledValueType, context.popTemporary())
+                                LlvmTypedOperand(compiledValueType, value)
                             )
                         )
                     )
@@ -239,7 +240,7 @@ class StackValueToLlvmOperandTests {
 }
 
 private fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOperand> {
-    return stackValueToLlvmOperand(value, generateName = { name -> "NAME_$name"})
+    return stackValueToLlvmOperand(value, generateName = { name -> "NAME_$name"}, context = Compiler.Context.EMPTY)
 }
 
 private fun <T> isCompilationResult(
