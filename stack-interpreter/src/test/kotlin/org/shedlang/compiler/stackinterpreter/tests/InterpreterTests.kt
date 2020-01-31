@@ -1,6 +1,5 @@
 package org.shedlang.compiler.stackinterpreter.tests
 
-import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
@@ -38,87 +37,6 @@ private val environment = object: StackIrExecutionEnvironment {
 }
 
 class InterpreterTests: StackIrExecutionTests(environment) {
-    @Test
-    fun integerAdditionAddsOperandsTogether() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.ADD, left, literalInt(2))
-        val types = createTypes(expressionTypes = mapOf(left.nodeId to IntType))
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isInt(3))
-    }
-
-    @Test
-    fun subtractSubtractsOperandsFromEachOther() {
-        val node = binaryOperation(BinaryOperator.SUBTRACT, literalInt(1), literalInt(2))
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isInt(-1))
-    }
-
-    @Test
-    fun multiplyMultipliesOperands() {
-        val node = binaryOperation(BinaryOperator.MULTIPLY, literalInt(3), literalInt(4))
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isInt(12))
-    }
-
-    @Test
-    fun whenOperandsAreEqualThenIntegerEqualityEvaluatesToTrue() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalInt(1))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(true))
-    }
-
-    @Test
-    fun whenOperandsAreNotEqualThenIntegerEqualityEvaluatesToFalse() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalInt(2))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(false))
-    }
-
-    @Test
-    fun whenOperandsAreEqualThenIntegerInequalityEvaluatesToFalse() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalInt(1))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(false))
-    }
-
-    @Test
-    fun whenOperandsAreNotEqualThenIntegerInequalityEvaluatesToTrue() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalInt(2))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(true))
-    }
-
     @Test
     fun stringAdditionConcatenatesStrings() {
         val left = literalString("hello ")

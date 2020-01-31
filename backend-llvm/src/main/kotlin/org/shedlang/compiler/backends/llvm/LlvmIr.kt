@@ -172,6 +172,17 @@ internal data class LlvmCall(
     }
 }
 
+internal data class LlvmAdd(
+    val target: LlvmVariable,
+    val type: LlvmType,
+    val left: LlvmOperand,
+    val right: LlvmOperand
+): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "${target.serialise()} = add ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
+    }
+}
+
 internal data class LlvmAlloca(val target: LlvmVariable, val type: LlvmType): LlvmBasicBlock {
     override fun serialise(): String {
         return "${target.serialise()} = alloca ${type.serialise()}"
@@ -268,6 +279,17 @@ internal data class LlvmLabel(val name: String): LlvmBasicBlock {
 internal data class LlvmLoad(val target: LlvmVariable, val type: LlvmType, val pointer: LlvmOperand): LlvmBasicBlock {
     override fun serialise(): String {
         return "${target.serialise()} = load ${type.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}"
+    }
+}
+
+internal data class LlvmMul(
+    val target: LlvmVariable,
+    val type: LlvmType,
+    val left: LlvmOperand,
+    val right: LlvmOperand
+): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "${target.serialise()} = mul ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
     }
 }
 

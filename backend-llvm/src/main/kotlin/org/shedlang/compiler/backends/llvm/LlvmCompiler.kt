@@ -151,27 +151,27 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is CodePointEquals -> {
-                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.EQ, context = context)
+                return compileCodePointComparison(LlvmIcmp.ConditionCode.EQ, context = context)
             }
 
             is CodePointNotEqual -> {
-                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.NE, context = context)
+                return compileCodePointComparison(LlvmIcmp.ConditionCode.NE, context = context)
             }
 
             is CodePointGreaterThanOrEqual -> {
-                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.UGE, context = context)
+                return compileCodePointComparison(LlvmIcmp.ConditionCode.UGE, context = context)
             }
 
             is CodePointGreaterThan -> {
-                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.UGT, context = context)
+                return compileCodePointComparison(LlvmIcmp.ConditionCode.UGT, context = context)
             }
 
             is CodePointLessThanOrEqual -> {
-                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.ULE, context = context)
+                return compileCodePointComparison(LlvmIcmp.ConditionCode.ULE, context = context)
             }
 
             is CodePointLessThan -> {
-                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.ULT, context = context)
+                return compileCodePointComparison(LlvmIcmp.ConditionCode.ULT, context = context)
             }
 
             is DeclareFunction -> {
@@ -215,6 +215,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return context.result(listOf())
             }
 
+            is IntAdd -> {
+                return compileIntClosedOperation(::LlvmAdd, context = context)
+            }
+
+            is IntEquals -> {
+                return compileIntComparison(LlvmIcmp.ConditionCode.EQ, context = context)
+            }
+
             is IntMinus -> {
                 val result = LlvmOperandLocal(generateName("result"))
 
@@ -229,6 +237,18 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         right = operand
                     )
                 ))
+            }
+
+            is IntMultiply -> {
+                return compileIntClosedOperation(::LlvmMul, context = context)
+            }
+
+            is IntNotEqual -> {
+                return compileIntComparison(LlvmIcmp.ConditionCode.NE, context = context)
+            }
+
+            is IntSubtract -> {
+                return compileIntClosedOperation(::LlvmSub, context = context)
             }
 
             is Jump -> {
@@ -384,40 +404,66 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun compileBoolEquals(context: Context): CompilationResult<List<LlvmBasicBlock>> {
-        return compileBoolBinaryOperation(LlvmIcmp.ConditionCode.EQ, context = context)
+        return compileBoolComparison(LlvmIcmp.ConditionCode.EQ, context = context)
     }
 
     private fun compileBoolNotEqual(context: Context): CompilationResult<List<LlvmBasicBlock>> {
-        return compileBoolBinaryOperation(LlvmIcmp.ConditionCode.NE, context = context)
+        return compileBoolComparison(LlvmIcmp.ConditionCode.NE, context = context)
     }
 
-    private fun compileBoolBinaryOperation(
+    private fun compileBoolComparison(
         conditionCode: LlvmIcmp.ConditionCode,
+        context: Context
+    ): CompilationResult<List<LlvmBasicBlock>> {
+        return compileComparisonOperation(
+            conditionCode = conditionCode,
+            context = context,
+            operandType = compiledBoolType
+        )
+    }
+
+    private fun compileCodePointComparison(
+        conditionCode: LlvmIcmp.ConditionCode,
+        context: Context
+    ): CompilationResult<List<LlvmBasicBlock>> {
+        return compileComparisonOperation(
+            conditionCode = conditionCode,
+            context = context,
+            operandType = compiledCodePointType
+        )
+    }
+
+    private fun compileIntClosedOperation(
+        func: (LlvmVariable, LlvmType, LlvmOperand, LlvmOperand) -> LlvmBasicBlock,
         context: Context
     ): CompilationResult<List<LlvmBasicBlock>> {
         val (context2, right) = context.popTemporary()
         val (context3, left) = context2.popTemporary()
 
-        val booleanResult = LlvmOperandLocal(generateName("op_i1"))
-        val fullResult = LlvmOperandLocal(generateName("op"))
+        val result = LlvmOperandLocal(generateName("op"))
 
-        val context4 = context3.pushTemporary(fullResult)
+        val context4 = context3.pushTemporary(result)
 
         return context4.result(listOf(
-            LlvmIcmp(
-                target = booleanResult,
-                conditionCode = conditionCode,
-                type = compiledBoolType,
-                left = left,
-                right = right
-            ),
-            extendBool(target = fullResult, source = booleanResult)
+            func(result, compiledIntType, left, right)
         ))
     }
 
-    private fun compileCodePointBinaryOperation(
+    private fun compileIntComparison(
         conditionCode: LlvmIcmp.ConditionCode,
         context: Context
+    ): CompilationResult<List<LlvmBasicBlock>> {
+        return compileComparisonOperation(
+            conditionCode = conditionCode,
+            context = context,
+            operandType = compiledIntType
+        )
+    }
+
+    private fun compileComparisonOperation(
+        conditionCode: LlvmIcmp.ConditionCode,
+        context: Context,
+        operandType: LlvmType
     ): CompilationResult<List<LlvmBasicBlock>> {
         val (context2, right) = context.popTemporary()
         val (context3, left) = context2.popTemporary()
@@ -431,7 +477,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             LlvmIcmp(
                 target = booleanResult,
                 conditionCode = conditionCode,
-                type = compiledCodePointType,
+                type = operandType,
                 left = left,
                 right = right
             ),
