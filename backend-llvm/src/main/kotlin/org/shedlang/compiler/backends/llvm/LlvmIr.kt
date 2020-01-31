@@ -237,7 +237,15 @@ internal data class LlvmIcmp(
 ): LlvmBasicBlock {
     enum class ConditionCode {
         EQ,
-        NE
+        NE,
+        UGT,
+        UGE,
+        ULT,
+        ULE,
+        SGT,
+        SGE,
+        SLT,
+        SLE
     }
 
     override fun serialise(): String {

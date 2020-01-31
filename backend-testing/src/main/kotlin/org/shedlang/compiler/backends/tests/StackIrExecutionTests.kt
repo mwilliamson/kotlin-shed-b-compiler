@@ -174,6 +174,59 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertBooleanOr(true, true, true)
     }
 
+    @Test
+    fun codePointOperandsAreEqualIfAndOnlyIfCodePointEqualityEvaluatesToTrue() {
+        assertCodePointBinaryOperation(BinaryOperator.EQUALS, 'X', 'X', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.EQUALS, 'X', 'Y', isBool(false))
+    }
+
+    @Test
+    fun codePointOperandsAreNotEqualIfAndOnlyIfCodePointEqualityEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'X', isBool(false))
+        assertCodePointBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'Y', isBool(true))
+    }
+
+    @Test
+    fun leftCodePointOperandIsLessThanRightOperandIfAndOnlyIfCodePointLessThanOperatorEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'X', 'Y', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'Y', 'Y', isBool(false))
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'Z', 'Y', isBool(false))
+    }
+
+    @Test
+    fun leftCodePointOperandIsLessThanOrEqualRightOperandIfAndOnlyIfCodePointLessThanOrEqualOperatorEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'X', 'Y', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Z', 'Y', isBool(false))
+    }
+
+    @Test
+    fun leftCodePointOperandIsGreaterThanRightOperandIfAndOnlyIfCodePointGreaterThanOperatorEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN, 'X', 'Y', isBool(false))
+        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN, 'Y', 'Y', isBool(false))
+        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN, 'Z', 'Y', isBool(true))
+    }
+
+    @Test
+    fun leftCodePointOperandIsGreaterThanOrEqualRightOperandIfAndOnlyIfCodePointGreaterThanOrEqualOperatorEvaluatesToFalse() {
+        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'X', 'Y', isBool(false))
+        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
+        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'Z', 'Y', isBool(true))
+    }
+
+    private fun assertCodePointBinaryOperation(operator: BinaryOperator, left: Char, right: Char, expected: Matcher<IrValue>) {
+        val left = literalCodePoint(left)
+        val node = binaryOperation(operator, left, literalCodePoint(right))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to CodePointType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, expected)
+    }
+
+
     private fun assertBooleanOr(leftValue: Boolean, rightValue: Boolean, expectedValue: Boolean) {
         val left = literalBool(leftValue)
         val node = binaryOperation(BinaryOperator.OR, left, literalBool(rightValue))

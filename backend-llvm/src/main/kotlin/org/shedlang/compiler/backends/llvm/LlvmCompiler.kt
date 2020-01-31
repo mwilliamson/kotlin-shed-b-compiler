@@ -150,6 +150,30 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return compileBoolNotEqual(context)
             }
 
+            is CodePointEquals -> {
+                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.EQ, context = context)
+            }
+
+            is CodePointNotEqual -> {
+                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.NE, context = context)
+            }
+
+            is CodePointGreaterThanOrEqual -> {
+                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.UGE, context = context)
+            }
+
+            is CodePointGreaterThan -> {
+                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.UGT, context = context)
+            }
+
+            is CodePointLessThanOrEqual -> {
+                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.ULE, context = context)
+            }
+
+            is CodePointLessThan -> {
+                return compileCodePointBinaryOperation(LlvmIcmp.ConditionCode.ULT, context = context)
+            }
+
             is DeclareFunction -> {
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
@@ -391,6 +415,30 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         ))
     }
 
+    private fun compileCodePointBinaryOperation(
+        conditionCode: LlvmIcmp.ConditionCode,
+        context: Context
+    ): CompilationResult<List<LlvmBasicBlock>> {
+        val (context2, right) = context.popTemporary()
+        val (context3, left) = context2.popTemporary()
+
+        val booleanResult = LlvmOperandLocal(generateName("op_i1"))
+        val fullResult = LlvmOperandLocal(generateName("op"))
+
+        val context4 = context3.pushTemporary(fullResult)
+
+        return context4.result(listOf(
+            LlvmIcmp(
+                target = booleanResult,
+                conditionCode = conditionCode,
+                type = compiledCodePointType,
+                left = left,
+                right = right
+            ),
+            extendBool(target = fullResult, source = booleanResult)
+        ))
+    }
+
     private fun extendBool(target: LlvmOperandLocal, source: LlvmOperandLocal): LlvmZext {
         return LlvmZext(
             target = target,
@@ -484,6 +532,7 @@ private fun <T> PersistentList<T>.pop() = Pair(removeAt(lastIndex), last())
 
 internal val compiledValueType = LlvmTypes.i64
 internal val compiledBoolType = compiledValueType
+internal val compiledCodePointType = compiledValueType
 internal val compiledIntType = compiledValueType
 
 internal val compiledStringLengthType = LlvmTypes.i64
