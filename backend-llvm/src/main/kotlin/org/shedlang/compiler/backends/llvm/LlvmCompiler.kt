@@ -110,53 +110,11 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmBasicBlock>> {
         when (instruction) {
             is BoolEquals -> {
-                val right = context.popTemporary()
-                val left = context.popTemporary()
-
-                val booleanResult = LlvmOperandLocal(generateName("eq_i1"))
-                val fullResult = LlvmOperandLocal(generateName("eq"))
-
-                context.pushTemporary(fullResult)
-
-                return CompilationResult.of(listOf(
-                    LlvmIcmp(
-                        target = booleanResult,
-                        conditionCode = LlvmIcmp.ConditionCode.EQ,
-                        type = compiledBoolType,
-                        left = left,
-                        right = right
-                    ),
-                    LlvmZext(
-                        target = fullResult,
-                        sourceType = LlvmTypes.i1,
-                        operand = booleanResult,
-                        targetType = compiledBoolType
-                    )
-                ))
+                return compileBoolEquals(context)
             }
 
             is BoolNot -> {
-                val operand = context.popTemporary()
-                val booleanResult = LlvmOperandLocal(generateName("not_i1"))
-                val fullResult = LlvmOperandLocal(generateName("not"))
-
-                context.pushTemporary(fullResult)
-
-                return CompilationResult.of(listOf(
-                    LlvmIcmp(
-                        target = booleanResult,
-                        conditionCode = LlvmIcmp.ConditionCode.EQ,
-                        type = compiledBoolType,
-                        left = operand,
-                        right = LlvmOperandInt(0)
-                    ),
-                    LlvmZext(
-                        target = fullResult,
-                        sourceType = LlvmTypes.i1,
-                        operand = booleanResult,
-                        targetType = compiledBoolType
-                    )
-                ))
+                return compileBoolNot(context)
             }
 
             is DeclareFunction -> {
@@ -274,6 +232,56 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 throw UnsupportedOperationException(instruction.toString())
             }
         }
+    }
+
+    private fun compileBoolEquals(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+        val right = context.popTemporary()
+        val left = context.popTemporary()
+
+        val booleanResult = LlvmOperandLocal(generateName("eq_i1"))
+        val fullResult = LlvmOperandLocal(generateName("eq"))
+
+        context.pushTemporary(fullResult)
+
+        return CompilationResult.of(listOf(
+            LlvmIcmp(
+                target = booleanResult,
+                conditionCode = LlvmIcmp.ConditionCode.EQ,
+                type = compiledBoolType,
+                left = left,
+                right = right
+            ),
+            LlvmZext(
+                target = fullResult,
+                sourceType = LlvmTypes.i1,
+                operand = booleanResult,
+                targetType = compiledBoolType
+            )
+        ))
+    }
+
+    private fun compileBoolNot(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+        val operand = context.popTemporary()
+        val booleanResult = LlvmOperandLocal(generateName("not_i1"))
+        val fullResult = LlvmOperandLocal(generateName("not"))
+
+        context.pushTemporary(fullResult)
+
+        return CompilationResult.of(listOf(
+            LlvmIcmp(
+                target = booleanResult,
+                conditionCode = LlvmIcmp.ConditionCode.EQ,
+                type = compiledBoolType,
+                left = operand,
+                right = LlvmOperandInt(0)
+            ),
+            LlvmZext(
+                target = fullResult,
+                sourceType = LlvmTypes.i1,
+                operand = booleanResult,
+                targetType = compiledBoolType
+            )
+        ))
     }
 
     private fun variableForLocal(variableId: Int): LlvmVariable {
