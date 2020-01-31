@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import kotlinx.collections.immutable.PersistentList
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.backends.llvm.*
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
@@ -17,8 +17,7 @@ import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun evaluateExpression(node: ExpressionNode, type: Type): IrValue {
-        val types = EMPTY_TYPES
+    override fun evaluateExpression(node: ExpressionNode, type: Type, types: Types): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         val stdout = executeInstructions(
             instructions,

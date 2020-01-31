@@ -19,8 +19,8 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun evaluateExpression(node: ExpressionNode, type: Type): IrValue {
-        val interpreterValue = evaluateExpression(node)
+    override fun evaluateExpression(node: ExpressionNode, type: Type, types: Types): IrValue {
+        val interpreterValue = evaluateExpression(node, types = types)
         return interpreterValueToIrValue(interpreterValue)
     }
 
@@ -38,19 +38,6 @@ private val environment = object: StackIrExecutionEnvironment {
 }
 
 class InterpreterTests: StackIrExecutionTests(environment) {
-    @Test
-    fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
-        val left = literalBool(true)
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to BoolType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(true))
-    }
-
     @Test
     fun whenOperandsAreNotEqualThenBooleanEqualityEvaluatesToFalse() {
         val left = literalBool(true)

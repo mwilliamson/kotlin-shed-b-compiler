@@ -3,6 +3,9 @@ package org.shedlang.compiler.backends.tests
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.Types
+import org.shedlang.compiler.TypesMap
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.stackir.*
@@ -10,7 +13,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 interface StackIrExecutionEnvironment {
-    fun evaluateExpression(node: ExpressionNode, type: Type): IrValue
+    fun evaluateExpression(node: ExpressionNode, type: Type, types: Types): IrValue
 }
 
 abstract class StackIrExecutionTests(private val environment: StackIrExecutionEnvironment) {
@@ -91,9 +94,21 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(-42))
     }
 
+    @Test
+    fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
+        val left = literalBool(true)
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to BoolType)
+        )
 
-    private fun evaluateExpression(node: ExpressionNode, type: Type) =
-        environment.evaluateExpression(node, type)
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()) =
+        environment.evaluateExpression(node, type, types = types)
 
     private fun isBool(expected: Boolean): Matcher<IrValue> {
         return cast(has(IrBool::value, equalTo(expected)))
@@ -112,4 +127,16 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     private val isUnit = isA<IrUnit>()
+
+    private fun createTypes(
+        expressionTypes: Map<Int, Type> = mapOf(),
+        targetTypes: Map<Int, Type> = mapOf()
+    ): Types {
+        return TypesMap(
+            discriminators = mapOf(),
+            expressionTypes = expressionTypes,
+            targetTypes = targetTypes,
+            variableTypes = mapOf()
+        )
+    }
 }
