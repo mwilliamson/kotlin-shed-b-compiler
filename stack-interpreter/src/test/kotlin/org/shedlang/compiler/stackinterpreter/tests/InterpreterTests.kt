@@ -39,19 +39,6 @@ private val environment = object: StackIrExecutionEnvironment {
 
 class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
-    fun whenOperandsAreNotEqualThenBooleanEqualityEvaluatesToFalse() {
-        val left = literalBool(true)
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(false))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to BoolType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(false))
-    }
-
-    @Test
     fun whenOperandsAreEqualThenBooleanInequalityEvaluatesToFalse() {
         val left = literalBool(true)
         val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalBool(true))

@@ -107,6 +107,19 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isBool(true))
     }
 
+    @Test
+    fun whenOperandsAreNotEqualThenBooleanEqualityEvaluatesToFalse() {
+        val left = literalBool(true)
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(false))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to BoolType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()) =
         environment.evaluateExpression(node, type, types = types)
 
