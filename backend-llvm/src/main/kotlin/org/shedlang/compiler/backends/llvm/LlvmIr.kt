@@ -172,6 +172,12 @@ internal data class LlvmCall(
     }
 }
 
+internal data class LlvmAlloca(val target: LlvmVariable, val type: LlvmType): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "${target.serialise()} = alloca ${type.serialise()}"
+    }
+}
+
 internal data class LlvmAssign(
     val target: LlvmVariable,
     val value: LlvmOperand

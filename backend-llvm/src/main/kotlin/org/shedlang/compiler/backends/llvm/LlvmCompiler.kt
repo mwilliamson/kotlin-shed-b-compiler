@@ -16,16 +16,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             return stack.pop()
         }
 
-        fun storeLocal(variableId: Int, operand: LlvmOperand) {
-            locals.put(variableId, operand)
-        }
-
-        fun loadLocal(variableId: Int): LlvmOperand {
-            return locals.getValue(variableId)
-        }
-
         private val stack: MutableList<LlvmOperand> = mutableListOf()
-        private val locals: MutableMap<Int, LlvmOperand> = mutableMapOf()
     }
 
     fun compile(target: Path, mainModule: List<Identifier>) {
@@ -104,7 +95,13 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
+        val localVariableIds = instructions.filterIsInstance<LocalStore>().map { store -> store.variableId }
+        val allocateLocals = localVariableIds.map { localVariableId ->
+            LlvmAlloca(target = variableForLocal(localVariableId), type = compiledValueType)
+        }
+
         return CompilationResult.flatten(instructions.map { instruction -> compileInstruction(instruction, context = context) })
+            .mapValue { llvmBasicBlocks -> allocateLocals + llvmBasicBlocks }
     }
 
     private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmBasicBlock>> {
@@ -170,14 +167,20 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is LocalStore -> {
                 val operand = context.popTemporary()
-                context.storeLocal(instruction.variableId, operand)
-                return CompilationResult.of(listOf())
+                return CompilationResult.of(listOf(
+                    LlvmStore(
+                        type = compiledValueType,
+                        value = operand,
+                        pointer = variableForLocal(instruction.variableId)
+                    )
+                ))
             }
 
             is ModuleStore -> {
                 val moduleVariableUntyped = LlvmOperandLocal(generateName("moduleUntyped"))
                 val moduleVariable = LlvmOperandLocal(generateName("module"))
-                val fieldVariable = LlvmOperandLocal(generateName("field"))
+                val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
+                val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
                 val (exportName, exportVariableId) = instruction.exports.single()
                 return CompilationResult.of(listOf(
                     LlvmCall(
@@ -196,7 +199,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     ),
                     // TODO: don't assume exactly one export
                     LlvmGetElementPtr(
-                        target = fieldVariable,
+                        target = fieldPointerVariable,
                         type = compiledObjectType.type,
                         pointer = moduleVariable,
                         indices = listOf(
@@ -204,10 +207,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                             LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
                         )
                     ),
+                    LlvmLoad(
+                        target = fieldValueVariable,
+                        type = compiledValueType,
+                        pointer = variableForLocal(exportVariableId)
+                    ),
                     LlvmStore(
                         type = compiledValueType,
-                        value = context.loadLocal(exportVariableId),
-                        pointer = fieldVariable
+                        value = fieldValueVariable,
+                        pointer = fieldPointerVariable
                     ),
                     LlvmStore(
                         type = compiledObjectType,
