@@ -166,6 +166,26 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isBool(expectedValue))
     }
 
+    @Test
+    fun whenEitherOperandIsTrueThenBooleanOrEvaluatesToTrue() {
+        assertBooleanOr(false, false, false)
+        assertBooleanOr(false, true, true)
+        assertBooleanOr(true, false, true)
+        assertBooleanOr(true, true, true)
+    }
+
+    private fun assertBooleanOr(leftValue: Boolean, rightValue: Boolean, expectedValue: Boolean) {
+        val left = literalBool(leftValue)
+        val node = binaryOperation(BinaryOperator.OR, left, literalBool(rightValue))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to BoolType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(expectedValue))
+    }
+
 
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()) =
         environment.evaluateExpression(node, type, types = types)
