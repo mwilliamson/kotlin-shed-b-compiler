@@ -144,13 +144,15 @@ class Loader(
                     }
                     BinaryOperator.AND -> when (types.typeOfExpression(node.left)) {
                         BoolType -> {
+                            val endLabel = createLabel()
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
                                 .add(Duplicate)
-                                .add(RelativeJumpIfFalse(rightInstructions.size + 1))
+                                .add(JumpIfFalse(endLabel.value))
                                 .add(Discard)
                                 .addAll(rightInstructions)
+                                .add(endLabel)
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
@@ -188,13 +190,15 @@ class Loader(
                     }
                     BinaryOperator.OR -> when (types.typeOfExpression(node.left)) {
                         BoolType -> {
+                            val endLabel = createLabel()
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
                                 .add(Duplicate)
-                                .add(RelativeJumpIfTrue(rightInstructions.size + 1))
+                                .add(JumpIfTrue(endLabel.value))
                                 .add(Discard)
                                 .addAll(rightInstructions)
+                                .add(endLabel)
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
@@ -230,11 +234,13 @@ class Loader(
                         .add(Return)
 
                     val discriminator = inspector.discriminatorForCast(node)
+                    val failureLabel = createLabel()
                     val bodyInstructions = persistentListOf<Instruction>()
                         .add(LocalLoad(parameterId))
                         .addAll(typeConditionInstructions(discriminator))
-                        .add(RelativeJumpIfFalse(successInstructions.size))
+                        .add(JumpIfFalse(failureLabel.value))
                         .addAll(successInstructions)
+                        .add(failureLabel)
                         .addAll(failureInstructions)
 
                     return persistentListOf(
@@ -339,26 +345,22 @@ class Loader(
 
                 val branchBodies = conditionalBodies + elseBranch.nullableToList()
                 val bodyInstructions = branchBodies.map { body -> loadBlock(body) }
+                val conditionLabels = branchBodies.map { createLabel() }
+                val endLabel = createLabel()
 
                 conditionInstructions.forEachIndexed { branchIndex, _ ->
+                    instructions.add(conditionLabels[branchIndex])
                     instructions.addAll(conditionInstructions[branchIndex])
-                    instructions.add(RelativeJumpIfFalse(bodyInstructions[branchIndex].size + 1))
+                    instructions.add(JumpIfFalse(conditionLabels.getOrElse(branchIndex + 1, { endLabel }).value))
                     instructions.addAll(bodyInstructions[branchIndex])
-
-                    val remainingConditionInstructionCount = conditionInstructions.drop(branchIndex + 1)
-                        .fold(0) { total, instructions -> total + instructions.size }
-                    val remainingBodyInstructionCount = bodyInstructions.drop(branchIndex + 1)
-                        .fold(0) { total, instructions -> total + instructions.size }
-                    val remainingInstructionCount =
-                        remainingConditionInstructionCount +
-                            remainingBodyInstructionCount +
-                            (conditionInstructions.size - branchIndex - 1) * 2
-                    instructions.add(RelativeJump(remainingInstructionCount))
+                    instructions.add(Jump(endLabel.value))
                 }
 
                 if (elseBranch != null) {
+                    instructions.add(conditionLabels.last())
                     instructions.addAll(loadBlock(elseBranch))
                 }
+                instructions.add(endLabel)
                 return instructions.toPersistentList()
             }
         })
@@ -518,7 +520,13 @@ class Loader(
         )
     }
 
+    private fun createLabel(): Label {
+        return Label(nextLabel++)
+    }
+
     private fun resolveReference(reference: ReferenceNode): Int {
         return references[reference].nodeId
     }
 }
+
+var nextLabel = 1

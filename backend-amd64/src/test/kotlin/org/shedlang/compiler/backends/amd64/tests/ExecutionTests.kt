@@ -6,6 +6,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.amd64.*
+import org.shedlang.compiler.backends.amd64.Label
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackir.*

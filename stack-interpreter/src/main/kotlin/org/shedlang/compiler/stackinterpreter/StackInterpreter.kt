@@ -171,8 +171,14 @@ internal data class CallFrame(
         return copy(instructionIndex = instructionIndex + 1)
     }
 
-    fun relativeJump(size: Int): CallFrame {
-        return copy(instructionIndex = instructionIndex + size)
+    fun jump(instructionIndex: Int): CallFrame {
+        return copy(instructionIndex = instructionIndex)
+    }
+
+    fun findInstructionIndex(label: Int): Int {
+        return instructions.indexOfFirst { instruction ->
+            instruction is Label && instruction.value == label
+        }
     }
 
     fun pushTemporary(value: InterpreterValue): CallFrame {
@@ -220,7 +226,8 @@ internal data class InterpreterState(
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
-    private val world: World
+    private val world: World,
+    private val labelToInstructionIndex: MutableMap<Int, Int>
 ) {
     fun instruction(): Instruction? {
         val instruction = currentCallFrame().currentInstruction()
@@ -270,8 +277,12 @@ internal data class InterpreterState(
         return updateCurrentCallFrame { frame -> frame.nextInstruction() }
     }
 
-    fun relativeJump(size: Int): InterpreterState {
-        return updateCurrentCallFrame { frame -> frame.relativeJump(size) }
+    fun jump(label: Int): InterpreterState {
+        if (!labelToInstructionIndex.containsKey(label)) {
+            labelToInstructionIndex[label] = currentCallFrame().findInstructionIndex(label)
+        }
+        val instructionIndex = labelToInstructionIndex.getValue(label)
+        return updateCurrentCallFrame { frame -> frame.jump(instructionIndex) }
     }
 
     fun storeLocal(variableId: Int, value: InterpreterValue): InterpreterState {
@@ -359,7 +370,8 @@ internal fun initialState(
         image = image,
         callStack = Stack(persistentListOf()),
         modules = loadNativeModules(),
-        world = world
+        world = world,
+        labelToInstructionIndex = mutableMapOf()
     ).enterModuleScope(instructions)
 }
 
@@ -566,6 +578,34 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
+        is Jump -> {
+            initialState.jump(label)
+        }
+
+        is JumpIfFalse -> {
+            val (state2, value) = initialState.popTemporary()
+            val condition = (value as InterpreterBool).value
+            if (condition) {
+                state2.nextInstruction()
+            } else {
+                state2.jump(label)
+            }
+        }
+
+        is JumpIfTrue -> {
+            val (state2, value) = initialState.popTemporary()
+            val condition = (value as InterpreterBool).value
+            if (condition) {
+                state2.jump(label)
+            } else {
+                state2.nextInstruction()
+            }
+        }
+
+        is Label -> {
+            initialState.nextInstruction()
+        }
+
         is LocalLoad -> {
             val value = initialState.loadLocal(variableId)
             initialState.pushTemporary(value).nextInstruction()
@@ -602,30 +642,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
         is PushValue -> {
             initialState.pushTemporary(irValueToInterpreterValue(value)).nextInstruction()
-        }
-
-        is RelativeJump -> {
-            initialState.relativeJump(size + 1)
-        }
-
-        is RelativeJumpIfFalse -> {
-            val (state2, value) = initialState.popTemporary()
-            val condition = (value as InterpreterBool).value
-            if (condition) {
-                state2.nextInstruction()
-            } else {
-                state2.relativeJump(size + 1)
-            }
-        }
-
-        is RelativeJumpIfTrue -> {
-            val (state2, value) = initialState.popTemporary()
-            val condition = (value as InterpreterBool).value
-            if (condition) {
-                state2.relativeJump(size + 1)
-            } else {
-                state2.nextInstruction()
-            }
         }
 
         is Return -> {

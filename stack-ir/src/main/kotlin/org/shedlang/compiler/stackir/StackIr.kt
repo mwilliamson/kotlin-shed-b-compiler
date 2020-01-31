@@ -92,6 +92,14 @@ object IntNotEqual: Instruction()
 
 object IntSubtract: Instruction()
 
+class Jump(val label: Int): Instruction()
+
+class JumpIfFalse(val label: Int): Instruction()
+
+class JumpIfTrue(val label: Int): Instruction()
+
+class Label(val value: Int): Instruction()
+
 class LocalLoad(val variableId: Int): Instruction()
 
 class LocalStore(val variableId: Int): Instruction()
@@ -106,12 +114,6 @@ class ModuleStore(
 ): Instruction()
 
 class PushValue(val value: IrValue): Instruction()
-
-class RelativeJump(val size: Int): Instruction()
-
-class RelativeJumpIfFalse(val size: Int): Instruction()
-
-class RelativeJumpIfTrue(val size: Int): Instruction()
 
 object Return: Instruction()
 
