@@ -228,9 +228,9 @@ internal data class LlvmIndex(val type: LlvmType, val value: LlvmOperand) {
     }
 }
 
-internal data class LlvmLoad(val target: LlvmVariable, val type: LlvmType, val pointerType: LlvmType, val pointer: LlvmOperand): LlvmBasicBlock {
+internal data class LlvmLoad(val target: LlvmVariable, val type: LlvmType, val pointer: LlvmOperand): LlvmBasicBlock {
     override fun serialise(): String {
-        return "${target.serialise()} = load ${type.serialise()}, ${pointerType.serialise()} ${pointer.serialise()}"
+        return "${target.serialise()} = load ${type.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}"
     }
 }
 

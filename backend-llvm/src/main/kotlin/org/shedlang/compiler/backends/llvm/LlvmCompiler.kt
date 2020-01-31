@@ -273,7 +273,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             LlvmLoad(
                 target = target,
                 type = compiledValueType,
-                pointerType = LlvmTypes.pointer(compiledValueType),
                 pointer = fieldPointerVariable
             )
         )
@@ -290,7 +289,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             LlvmLoad(
                 target = target,
                 type = compiledObjectType,
-                pointerType = LlvmTypes.pointer(compiledObjectType),
                 pointer = operandForModuleValue(moduleName)
             )
         )
