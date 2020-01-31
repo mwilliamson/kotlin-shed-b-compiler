@@ -188,6 +188,22 @@ internal data class LlvmAssign(
 
 }
 
+internal data class LlvmBr(
+    val condition: LlvmOperand,
+    val ifTrue: String,
+    val ifFalse: String
+): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "br i1 ${condition.serialise()}, label %$ifTrue, label %$ifFalse"
+    }
+}
+
+internal data class LlvmBrUnconditional(val label: String): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "br label %$label"
+    }
+}
+
 internal data class LlvmExtractValue(
     val target: LlvmVariable,
     val valueType: LlvmType,
@@ -232,6 +248,12 @@ internal data class LlvmIcmp(
 internal data class LlvmIndex(val type: LlvmType, val value: LlvmOperand) {
     fun serialise(): String {
         return "${type.serialise()} ${value.serialise()}"
+    }
+}
+
+internal data class LlvmLabel(val name: String): LlvmBasicBlock {
+    override fun serialise(): String {
+        return "$name:"
     }
 }
 

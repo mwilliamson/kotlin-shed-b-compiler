@@ -148,7 +148,9 @@ private val environment = object: StackIrExecutionEnvironment {
 
         temporaryDirectory().use { temporaryDirectory ->
             val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
-            outputPath.toFile().writeText(serialiseProgram(module) + "@format_int64 = private unnamed_addr constant [4 x i8] c\"%ld\\00\"")
+            val program = serialiseProgram(module) + "@format_int64 = private unnamed_addr constant [4 x i8] c\"%ld\\00\""
+            println(withLineNumbers(program))
+            outputPath.toFile().writeText(program)
             return executeLlvmInterpreter(outputPath).throwOnError().stdout
         }
     }

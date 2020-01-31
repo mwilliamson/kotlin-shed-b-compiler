@@ -144,15 +144,22 @@ class Loader(
                     }
                     BinaryOperator.AND -> when (types.typeOfExpression(node.left)) {
                         BoolType -> {
+                            val resultVariableId = freshNodeId()
                             val endLabel = createLabel()
+                            val rightLabel = createLabel()
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
-                                .add(Duplicate)
-                                .add(JumpIfFalse(endLabel.value))
-                                .add(Discard)
+                                .add(JumpIfTrue(rightLabel.value))
+                                .add(PushValue(IrBool(false)))
+                                .add(LocalStore(resultVariableId))
+                                .add(Jump(endLabel.value))
+                                .add(rightLabel)
                                 .addAll(rightInstructions)
+                                .add(LocalStore(resultVariableId))
+                                .add(Jump(endLabel.value))
                                 .add(endLabel)
+                                .add(LocalLoad(resultVariableId))
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
@@ -529,4 +536,4 @@ class Loader(
     }
 }
 
-var nextLabel = 1
+private var nextLabel = 1

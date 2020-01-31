@@ -39,26 +39,6 @@ private val environment = object: StackIrExecutionEnvironment {
 
 class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
-    fun whenOperandsAreBothTrueThenBooleanAndEvaluatesToTrue() {
-        assertBooleanAnd(false, false, false)
-        assertBooleanAnd(false, true, false)
-        assertBooleanAnd(true, false, false)
-        assertBooleanAnd(true, true, true)
-    }
-
-    private fun assertBooleanAnd(leftValue: Boolean, rightValue: Boolean, expectedValue: Boolean) {
-        val left = literalBool(leftValue)
-        val node = binaryOperation(BinaryOperator.AND, left, literalBool(rightValue))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to BoolType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(expectedValue))
-    }
-
-    @Test
     fun whenEitherOperandIsTrueThenBooleanOrEvaluatesToTrue() {
         assertBooleanOr(false, false, false)
         assertBooleanOr(false, true, true)

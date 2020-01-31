@@ -16,6 +16,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             return stack.pop()
         }
 
+        fun duplicateTemporary() {
+            pushTemporary(peekTemporary())
+        }
+
+        fun discardTemporary() {
+            stack.pop()
+        }
+
+        private fun peekTemporary() = stack.last()
+
         private val stack: MutableList<LlvmOperand> = mutableListOf()
     }
 
@@ -67,9 +77,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
         val source = serialiseProgram(module)
 
-        println(source.lines().mapIndexed { index, line ->
-            (index + 1).toString().padStart(3) + " " + line
-        }.joinToString("\n"))
+        println(withLineNumbers(source))
 
         target.toFile().writeText(source)
     }
@@ -95,7 +103,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
-        val localVariableIds = instructions.filterIsInstance<LocalStore>().map { store -> store.variableId }
+        val localVariableIds = instructions
+            .filterIsInstance<LocalStore>()
+            .map { store -> store.variableId }
+            .distinct()
         val allocateLocals = localVariableIds.map { localVariableId ->
             LlvmAlloca(target = variableForLocal(localVariableId), type = compiledValueType)
         }
@@ -145,6 +156,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     }
             }
 
+            is Discard -> {
+                context.discardTemporary()
+                return CompilationResult.of(listOf())
+            }
+
+            is Duplicate -> {
+                context.duplicateTemporary()
+                return CompilationResult.of(listOf())
+            }
+
             is Exit -> {
                 return CompilationResult.of(listOf())
             }
@@ -161,6 +182,58 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         type = compiledIntType,
                         left = LlvmOperandInt(0),
                         right = operand
+                    )
+                ))
+            }
+
+            is Jump -> {
+                return CompilationResult.of(listOf(
+                    LlvmBrUnconditional(labelToLlvmLabel(instruction.label))
+                ))
+            }
+
+            is JumpIfFalse -> {
+                val condition = context.popTemporary()
+                val trueLabel = createLlvmLabel("true")
+
+                return CompilationResult.of(listOf(
+                    LlvmBr(
+                        condition = condition,
+                        ifTrue = trueLabel,
+                        ifFalse = labelToLlvmLabel(instruction.label)
+                    ),
+                    LlvmLabel(trueLabel)
+                ))
+            }
+
+            is JumpIfTrue -> {
+                val condition = context.popTemporary()
+                val falseLabel = createLlvmLabel("false")
+
+                return CompilationResult.of(listOf(
+                    LlvmBr(
+                        condition = condition,
+                        ifTrue = labelToLlvmLabel(instruction.label),
+                        ifFalse = falseLabel
+                    ),
+                    LlvmLabel(falseLabel)
+                ))
+            }
+
+            is Label -> {
+                return CompilationResult.of(listOf(
+                    LlvmLabel(labelToLlvmLabel(instruction.value))
+                ))
+            }
+
+            is LocalLoad -> {
+                val value = LlvmOperandLocal(generateName("load"))
+                context.pushTemporary(value)
+                return CompilationResult.of(listOf(
+                    LlvmLoad(
+                        target = value,
+                        type = compiledValueType,
+                        pointer = variableForLocal(instruction.variableId)
                     )
                 ))
             }
@@ -374,6 +447,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun generateName(prefix: String): String {
         return prefix + "_" + nextNameIndex++
     }
+
+    var nextLabelIndex = 1
+
+    private fun createLlvmLabel(prefix: String): String {
+        return "label_generated_" + prefix + "_" + nextLabelIndex++
+    }
+
+    private fun labelToLlvmLabel(label: Int): String {
+        return "label_" + label
+    }
 }
 
 private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
@@ -529,4 +612,10 @@ internal fun compileWrite(fd: LlvmOperand, buf: LlvmOperand, count: LlvmOperand)
             LlvmTypedOperand(CTypes.size_t, count)
         )
     )
+}
+
+fun withLineNumbers(source: String): String {
+    return source.lines().mapIndexed { index, line ->
+        (index + 1).toString().padStart(3) + " " + line
+    }.joinToString("\n")
 }
