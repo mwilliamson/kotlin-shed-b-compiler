@@ -325,7 +325,22 @@ private fun <T> MutableList<T>.pop() = removeAt(lastIndex)
 internal val compiledValueType = LlvmTypes.i64
 internal val compiledBoolType = compiledValueType
 internal val compiledIntType = compiledValueType
+
+internal val compiledStringLengthType = LlvmTypes.i64
+internal fun compiledStringDataType(size: Int) = LlvmTypes.arrayType(size, LlvmTypes.i8)
+internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
+    compiledStringLengthType,
+    compiledStringDataType(size)
+))
+internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
+
+internal object CTypes {
+    val int = LlvmTypes.i32
+    val ssize_t = LlvmTypes.i64
+    val size_t = LlvmTypes.i64
+    val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
+}
 
 internal fun stackValueToLlvmOperand(
     value: IrValue,
@@ -442,5 +457,20 @@ internal fun serialiseProgram(module: LlvmModule): String {
     return """
         declare i8* @malloc(i64)
         declare i32 @printf(i8* noalias nocapture, ...)
+        declare i64 @write(i32, i8*, i64)
     """.trimIndent() + module.serialise()
+}
+
+internal fun compileWrite(fd: LlvmOperand, buf: LlvmOperand, count: LlvmOperand): LlvmCall {
+    // TODO: handle number of bytes written less than count
+    return LlvmCall(
+        target = null,
+        returnType = CTypes.ssize_t,
+        functionPointer = LlvmOperandGlobal("write"),
+        arguments = listOf(
+            LlvmTypedOperand(CTypes.int, fd),
+            LlvmTypedOperand(CTypes.voidPointer, buf),
+            LlvmTypedOperand(CTypes.size_t, count)
+        )
+    )
 }

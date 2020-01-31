@@ -51,6 +51,15 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun stringLiteralIsEvaluatedToString() {
+        val node = literalString("hello")
+
+        val value = evaluateExpression(node, type = StringType)
+
+        assertThat(value, isString("hello"))
+    }
+
+    @Test
     fun unitLiteralIsEvaluatedToUnit() {
         val node = literalUnit()
 
@@ -96,6 +105,10 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
     private fun isInt(expected: Int): Matcher<IrValue> {
         return cast(has(IrInt::value, equalTo(expected.toBigInteger())))
+    }
+
+    private fun isString(expected: String): Matcher<IrValue> {
+        return cast(has(IrString::value, equalTo(expected)))
     }
 
     private val isUnit = isA<IrUnit>()

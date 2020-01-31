@@ -39,15 +39,6 @@ private val environment = object: StackIrExecutionEnvironment {
 
 class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
-    fun stringLiteralIsEvaluatedToString() {
-        val node = literalString("hello")
-
-        val value = evaluateExpression(node)
-
-        assertThat(value, isString("hello"))
-    }
-
-    @Test
     fun whenOperandsAreEqualThenBooleanEqualityEvaluatesToTrue() {
         val left = literalBool(true)
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalBool(true))

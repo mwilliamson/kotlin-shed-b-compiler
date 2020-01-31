@@ -20,7 +20,11 @@ private val environment = object: StackIrExecutionEnvironment {
     override fun evaluateExpression(node: ExpressionNode, type: Type): IrValue {
         val types = EMPTY_TYPES
         val instructions = loader(types = types).loadExpression(node)
-        val stdout = executeInstructions(instructions, moduleSet = ModuleSet(listOf()))
+        val stdout = executeInstructions(
+            instructions,
+            moduleSet = ModuleSet(listOf()),
+            type = type
+        )
 
         return when (type) {
             BoolType ->
@@ -36,6 +40,9 @@ private val environment = object: StackIrExecutionEnvironment {
             IntType ->
                 IrInt(stdout.toBigInteger())
 
+            StringType ->
+                IrString(stdout)
+
             UnitType ->
                 when (stdout) {
                     "0" -> IrUnit
@@ -49,7 +56,8 @@ private val environment = object: StackIrExecutionEnvironment {
 
     private fun executeInstructions(
         instructions: PersistentList<Instruction>,
-        moduleSet: ModuleSet
+        moduleSet: ModuleSet,
+        type: Type
     ): String {
         val image = loadModuleSet(moduleSet)
 
@@ -57,10 +65,52 @@ private val environment = object: StackIrExecutionEnvironment {
         val context = Compiler.Context()
         val llvmStatements = compiler.compileInstructions(instructions, context = context)
             .mapValue { llvmInstructions ->
-                LlvmFunctionDefinition(
-                    name = "main",
-                    returnType = LlvmTypes.i64,
-                    body = llvmInstructions + listOf(
+                val print = if (type == StringType) {
+                    val stdoutFd = 1
+                    val stringValue = context.popTemporary()
+                    val string = LlvmOperandLocal("string")
+                    val sizePointer = LlvmOperandLocal("sizePointer")
+                    val size = LlvmOperandLocal("size")
+                    val dataPointer = LlvmOperandLocal("dataPointer")
+                    listOf(
+                        LlvmIntToPtr(
+                            target = string,
+                            sourceType = compiledValueType,
+                            value = stringValue,
+                            targetType = compiledStringType(0)
+                        ),
+                        LlvmGetElementPtr(
+                            target = sizePointer,
+                            type = compiledStringValueType(0),
+                            pointer = string,
+                            indices = listOf(
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0))
+                            )
+                        ),
+                        LlvmLoad(
+                            target = size,
+                            type = compiledStringLengthType,
+                            pointer = sizePointer
+                        ),
+                        LlvmGetElementPtr(
+                            target = dataPointer,
+                            type = compiledStringValueType(0),
+                            pointer = string,
+                            indices = listOf(
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(1)),
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                            )
+                        ),
+                        compileWrite(
+                            fd = LlvmOperandInt(stdoutFd),
+                            buf = dataPointer,
+                            count = size
+                        )
+                    )
+                } else {
+                    listOf(
                         LlvmGetElementPtr(
                             target = LlvmOperandLocal("format_int64_pointer"),
                             type = LlvmTypes.arrayType(4, LlvmTypes.i8),
@@ -82,7 +132,13 @@ private val environment = object: StackIrExecutionEnvironment {
                                 LlvmTypedOperand(LlvmTypes.pointer(LlvmTypes.i8), LlvmOperandLocal("format_int64_pointer")),
                                 LlvmTypedOperand(compiledValueType, context.popTemporary())
                             )
-                        ),
+                        )
+                    )
+                }
+                LlvmFunctionDefinition(
+                    name = "main",
+                    returnType = LlvmTypes.i64,
+                    body = llvmInstructions + print + listOf(
                         LlvmReturn(LlvmTypes.i64, LlvmOperandInt(0))
                     )
                 )
