@@ -321,14 +321,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
                 val (exportName, exportVariableId) = instruction.exports.single()
                 return context.result(listOf(
-                    LlvmCall(
-                        target = moduleVariableUntyped,
-                        returnType = LlvmTypes.pointer(LlvmTypes.i8),
-                        functionPointer = LlvmOperandGlobal("malloc"),
-                        arguments = listOf(
-                            LlvmTypedOperand(compiledValueType, LlvmOperandInt(8 * instruction.exports.size))
-                        )
-                    ),
+                    malloc(moduleVariableUntyped, LlvmOperandInt(compiledValueTypeSize * instruction.exports.size)),
                     LlvmBitCast(
                         target = moduleVariable,
                         sourceType = LlvmTypes.pointer(LlvmTypes.i8),
@@ -376,6 +369,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return context2.result(listOf(
                     LlvmReturn(type = compiledValueType, value = returnVariable)
                 ))
+            }
+
+            is StringAdd -> {
+                return compileStringAdd(instruction, context = context)
             }
 
             else -> {
@@ -494,6 +491,198 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
+    private fun compileStringAdd(
+        instruction: StringAdd,
+        context: Context
+    ): CompilationResult<List<LlvmBasicBlock>> {
+        val (context2, right) = context.popTemporary()
+        val (context3, left) = context2.popTemporary()
+
+        val result = LlvmOperandLocal(generateName("op"))
+        val context4 = context3.pushTemporary(result)
+
+        val leftString = LlvmOperandLocal(generateName("left"))
+        val rightString = LlvmOperandLocal(generateName("right"))
+        val leftSize = LlvmOperandLocal(generateName("leftSize"))
+        val rightSize = LlvmOperandLocal(generateName("rightSize"))
+        val leftStringDataStart = LlvmOperandLocal(generateName("leftStringDataStart"))
+        val rightStringDataStart = LlvmOperandLocal(generateName("rightStringDataStart"))
+        val newDataSize = LlvmOperandLocal(generateName("newDataSize"))
+        val newSize = LlvmOperandLocal(generateName("newSize"))
+        val rawResult = LlvmOperandLocal(generateName("rawResult"))
+        val newString = LlvmOperandLocal(generateName("newString"))
+        val newSizePointer = LlvmOperandLocal(generateName("newSizePointer"))
+        val newStringData = LlvmOperandLocal(generateName("newStringData"))
+        val newStringLeftStart = LlvmOperandLocal(generateName("newStringLeftStart"))
+        val newStringLeftStartAsInt = LlvmOperandLocal(generateName("newStringLeftStartAsInt"))
+        val newStringRightStartAsInt = LlvmOperandLocal(generateName("newStringRightStartAsInt"))
+        val newStringRightStart = LlvmOperandLocal(generateName("newStringRightStart"))
+
+        return context4.result(listOf(
+            listOf(
+                rawValueToString(target = leftString, source = left),
+                rawValueToString(target = rightString, source = right)
+            ),
+            stringSize(target = leftSize, source = leftString),
+            stringSize(target = rightSize, source = rightString),
+            listOf(
+                LlvmAdd(
+                    target = newDataSize,
+                    type = compiledStringLengthType,
+                    left = leftSize,
+                    right = rightSize
+                ),
+                LlvmAdd(
+                    target = newSize,
+                    type = LlvmTypes.i64,
+                    left = newDataSize,
+                    right = LlvmOperandInt(compiledStringLengthTypeSize)
+                ),
+                malloc(rawResult, newSize),
+                LlvmBitCast(
+                    target = newString,
+                    sourceType = LlvmTypes.pointer(LlvmTypes.i8),
+                    value = rawResult,
+                    targetType = compiledStringType(0)
+                ),
+                stringSizePointer(
+                    target = newSizePointer,
+                    source = newString
+                ),
+                LlvmStore(
+                    type = compiledStringLengthType,
+                    value = newDataSize,
+                    pointer = newSizePointer
+                ),
+                stringData(
+                    target = newStringData,
+                    source = newString
+                ),
+                LlvmGetElementPtr(
+                    target = newStringLeftStart,
+                    type = compiledStringDataType(0),
+                    pointer = newStringData,
+                    indices = listOf(
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                    )
+                ),
+                stringDataStart(
+                    target = leftStringDataStart,
+                    source = leftString
+                ),
+                LlvmCall(
+                    target = null,
+                    returnType = LlvmTypes.pointer(LlvmTypes.i8),
+                    functionPointer = LlvmOperandGlobal("memcpy"),
+                    arguments = listOf(
+                        LlvmTypedOperand(CTypes.stringPointer, newStringLeftStart),
+                        LlvmTypedOperand(CTypes.stringPointer, leftStringDataStart),
+                        LlvmTypedOperand(CTypes.size_t, leftSize)
+                    )
+                ),
+                LlvmGetElementPtr(
+                    target = newStringRightStart,
+                    type = compiledStringDataType(0),
+                    pointer = newStringData,
+                    indices = listOf(
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                        LlvmIndex(LlvmTypes.i64, leftSize)
+                    )
+                ),
+                stringDataStart(
+                    target = rightStringDataStart,
+                    source = rightString
+                ),
+                LlvmCall(
+                    target = null,
+                    returnType = LlvmTypes.pointer(LlvmTypes.i8),
+                    functionPointer = LlvmOperandGlobal("memcpy"),
+                    arguments = listOf(
+                        LlvmTypedOperand(CTypes.stringPointer, newStringRightStart),
+                        LlvmTypedOperand(CTypes.stringPointer, rightStringDataStart),
+                        LlvmTypedOperand(CTypes.size_t, rightSize)
+                    )
+                ),
+                LlvmPtrToInt(
+                    target = result,
+                    sourceType = compiledStringType(0),
+                    value = newString,
+                    targetType = compiledValueType
+                )
+            )
+        ).flatten())
+    }
+
+    internal fun rawValueToString(target: LlvmOperandLocal, source: LlvmOperand): LlvmIntToPtr {
+        return LlvmIntToPtr(
+            target = target,
+            sourceType = compiledValueType,
+            value = source,
+            targetType = compiledStringType(0)
+        )
+    }
+
+    internal fun stringSize(target: LlvmOperandLocal, source: LlvmOperand): List<LlvmBasicBlock> {
+        val sizePointer = LlvmOperandLocal(generateName("sizePointer"))
+        return listOf(
+            stringSizePointer(sizePointer, source),
+            LlvmLoad(
+                target = target,
+                type = compiledStringLengthType,
+                pointer = sizePointer
+            )
+        )
+    }
+
+    private fun stringSizePointer(target: LlvmOperandLocal, source: LlvmOperand): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledStringValueType(0),
+            pointer = source,
+            indices = listOf(
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0))
+            )
+        )
+    }
+
+    internal fun stringData(target: LlvmOperandLocal, source: LlvmOperand): LlvmBasicBlock {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledStringValueType(0),
+            pointer = source,
+            indices = listOf(
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(1))
+            )
+        )
+    }
+
+    internal fun stringDataStart(target: LlvmOperandLocal, source: LlvmOperand): LlvmBasicBlock {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledStringValueType(0),
+            pointer = source,
+            indices = listOf(
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(1)),
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+            )
+        )
+    }
+
+    private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
+        return LlvmCall(
+            target = target,
+            returnType = LlvmTypes.pointer(LlvmTypes.i8),
+            functionPointer = LlvmOperandGlobal("malloc"),
+            arguments = listOf(
+                LlvmTypedOperand(LlvmTypes.i64, bytes)
+            )
+        )
+    }
+
     private fun variableForLocal(variableId: Int): LlvmVariable {
         return LlvmOperandLocal("local_$variableId")
     }
@@ -577,11 +766,13 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 private fun <T> PersistentList<T>.pop() = Pair(removeAt(lastIndex), last())
 
 internal val compiledValueType = LlvmTypes.i64
+internal val compiledValueTypeSize = 8
 internal val compiledBoolType = compiledValueType
 internal val compiledCodePointType = compiledValueType
 internal val compiledIntType = compiledValueType
 
 internal val compiledStringLengthType = LlvmTypes.i64
+internal val compiledStringLengthTypeSize = 8
 internal fun compiledStringDataType(size: Int) = LlvmTypes.arrayType(size, LlvmTypes.i8)
 internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
     compiledStringLengthType,
@@ -594,6 +785,7 @@ internal object CTypes {
     val int = LlvmTypes.i32
     val ssize_t = LlvmTypes.i64
     val size_t = LlvmTypes.i64
+    val stringPointer = LlvmTypes.pointer(LlvmTypes.i8)
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
 }
 
@@ -693,6 +885,7 @@ internal fun serialiseProgram(module: LlvmModule): String {
     // TODO: handle malloc declaration properly
     return """
         declare i8* @malloc(i64)
+        declare i8* @memcpy(i8*, i8*, i64)
         declare i32 @printf(i8* noalias nocapture, ...)
         declare i64 @write(i32, i8*, i64)
     """.trimIndent() + module.serialise()

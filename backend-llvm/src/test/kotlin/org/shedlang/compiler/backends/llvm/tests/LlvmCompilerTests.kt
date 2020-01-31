@@ -72,35 +72,14 @@ private val environment = object: StackIrExecutionEnvironment {
                     val size = LlvmOperandLocal("size")
                     val dataPointer = LlvmOperandLocal("dataPointer")
                     listOf(
-                        LlvmIntToPtr(
-                            target = string,
-                            sourceType = compiledValueType,
-                            value = stringValue,
-                            targetType = compiledStringType(0)
-                        ),
-                        LlvmGetElementPtr(
-                            target = sizePointer,
-                            type = compiledStringValueType(0),
-                            pointer = string,
-                            indices = listOf(
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0))
-                            )
-                        ),
-                        LlvmLoad(
-                            target = size,
-                            type = compiledStringLengthType,
-                            pointer = sizePointer
-                        ),
-                        LlvmGetElementPtr(
+                        compiler.rawValueToString(target = string, source = stringValue)
+                    ) + compiler.stringSize(
+                        target = size,
+                        source = string
+                    ) + listOf(
+                        compiler.stringDataStart(
                             target = dataPointer,
-                            type = compiledStringValueType(0),
-                            pointer = string,
-                            indices = listOf(
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(1)),
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
-                            )
+                            source = string
                         ),
                         compileWrite(
                             fd = LlvmOperandInt(stdoutFd),

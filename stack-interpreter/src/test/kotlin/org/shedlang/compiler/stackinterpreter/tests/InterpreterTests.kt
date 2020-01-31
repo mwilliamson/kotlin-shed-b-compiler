@@ -38,19 +38,6 @@ private val environment = object: StackIrExecutionEnvironment {
 
 class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
-    fun stringAdditionConcatenatesStrings() {
-        val left = literalString("hello ")
-        val node = binaryOperation(BinaryOperator.ADD, left, literalString("world"))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to StringType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isString("hello world"))
-    }
-
-    @Test
     fun whenOperandsAreEqualThenStringEqualityReturnsTrue() {
         val left = literalString("hello")
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("hello"))

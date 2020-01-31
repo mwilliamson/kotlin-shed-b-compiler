@@ -319,6 +319,19 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isBool(true))
     }
 
+    @Test
+    fun stringAdditionConcatenatesStrings() {
+        val left = literalString("hello ")
+        val node = binaryOperation(BinaryOperator.ADD, left, literalString("world"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = StringType, types = types)
+
+        assertThat(value, isString("hello world"))
+    }
+
 
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()) =
         environment.evaluateExpression(node, type, types = types)
