@@ -117,6 +117,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return compileBoolNot(context)
             }
 
+            is BoolNotEqual -> {
+                return compileBoolNotEqual(context)
+            }
+
             is DeclareFunction -> {
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
@@ -254,18 +258,29 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun compileBoolEquals(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+        return compileBoolBinaryOperation(LlvmIcmp.ConditionCode.EQ, context = context)
+    }
+
+    private fun compileBoolNotEqual(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+        return compileBoolBinaryOperation(LlvmIcmp.ConditionCode.NE, context = context)
+    }
+
+    private fun compileBoolBinaryOperation(
+        conditionCode: LlvmIcmp.ConditionCode,
+        context: Context
+    ): CompilationResult<List<LlvmBasicBlock>> {
         val right = context.popTemporary()
         val left = context.popTemporary()
 
-        val booleanResult = LlvmOperandLocal(generateName("eq_i1"))
-        val fullResult = LlvmOperandLocal(generateName("eq"))
+        val booleanResult = LlvmOperandLocal(generateName("op_i1"))
+        val fullResult = LlvmOperandLocal(generateName("op"))
 
         context.pushTemporary(fullResult)
 
         return CompilationResult.of(listOf(
             LlvmIcmp(
                 target = booleanResult,
-                conditionCode = LlvmIcmp.ConditionCode.EQ,
+                conditionCode = conditionCode,
                 type = compiledBoolType,
                 left = left,
                 right = right

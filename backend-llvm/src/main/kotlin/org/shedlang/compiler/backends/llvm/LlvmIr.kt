@@ -214,7 +214,8 @@ internal data class LlvmIcmp(
     val right: LlvmOperand
 ): LlvmBasicBlock {
     enum class ConditionCode {
-        EQ
+        EQ,
+        NE
     }
 
     override fun serialise(): String {
