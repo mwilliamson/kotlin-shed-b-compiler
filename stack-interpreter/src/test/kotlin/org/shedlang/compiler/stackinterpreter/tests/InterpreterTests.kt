@@ -51,7 +51,7 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun whenOperandsAreEqualThenStringEqualityReturnsFalse() {
+    fun whenOperandsAreNotEqualThenStringEqualityReturnsFalse() {
         val left = literalString("hello")
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("world"))
         val types = createTypes(
