@@ -332,6 +332,58 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isString("hello world"))
     }
 
+    @Test
+    fun whenOperandsAreEqualThenStringEqualityReturnsTrue() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("hello"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenOperandsAreNotEqualThenStringEqualityReturnsFalse() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("world"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
+    fun whenOperandsAreEqualThenStringInequalityReturnsFalse() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("hello"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
+    fun whenOperandsAreNotEqualThenStringInequalityReturnsTrue() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("world"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
 
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()) =
         environment.evaluateExpression(node, type, types = types)

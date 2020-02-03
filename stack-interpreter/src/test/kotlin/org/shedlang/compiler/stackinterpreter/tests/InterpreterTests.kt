@@ -38,58 +38,6 @@ private val environment = object: StackIrExecutionEnvironment {
 
 class InterpreterTests: StackIrExecutionTests(environment) {
     @Test
-    fun whenOperandsAreEqualThenStringEqualityReturnsTrue() {
-        val left = literalString("hello")
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("hello"))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to StringType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(true))
-    }
-
-    @Test
-    fun whenOperandsAreNotEqualThenStringEqualityReturnsFalse() {
-        val left = literalString("hello")
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("world"))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to StringType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(false))
-    }
-
-    @Test
-    fun whenOperandsAreEqualThenStringInequalityReturnsFalse() {
-        val left = literalString("hello")
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("hello"))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to StringType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(false))
-    }
-
-    @Test
-    fun whenOperandsAreNotEqualThenStringInequalityReturnsTrue() {
-        val left = literalString("hello")
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("world"))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to StringType)
-        )
-
-        val value = evaluateExpression(node, types = types)
-
-        assertThat(value, isBool(true))
-    }
-
-    @Test
     fun whenDiscriminatorMatchesThenIsOperationIsTrue() {
         val shapeDeclaration = shape("X")
         val shapeReference = variableReference("X")

@@ -375,6 +375,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return compileStringAdd(instruction, context = context)
             }
 
+            is StringEquals -> {
+                return compileStringComparison(conditionCode = LlvmIcmp.ConditionCode.EQ, context = context)
+            }
+
+            is StringNotEqual -> {
+                return compileStringComparison(conditionCode = LlvmIcmp.ConditionCode.NE, context = context)
+            }
+
             else -> {
                 throw UnsupportedOperationException(instruction.toString())
             }
@@ -608,6 +616,101 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     target = result,
                     sourceType = compiledStringType(0),
                     value = newString,
+                    targetType = compiledValueType
+                )
+            )
+        ).flatten())
+    }
+
+    private fun compileStringComparison(
+        conditionCode: LlvmIcmp.ConditionCode,
+        context: Context
+    ): CompilationResult<List<LlvmInstruction>> {
+        val (context2, right) = context.popTemporary()
+        val (context3, left) = context2.popTemporary()
+
+        val result = LlvmOperandLocal(generateName("op"))
+        val context4 = context3.pushTemporary(result)
+
+        val leftString = LlvmOperandLocal(generateName("left"))
+        val rightString = LlvmOperandLocal(generateName("right"))
+        val leftSize = LlvmOperandLocal(generateName("leftSize"))
+        val rightSize = LlvmOperandLocal(generateName("rightSize"))
+        val sameSize = LlvmOperandLocal(generateName("sameSize"))
+        val resultPointer = LlvmOperandLocal(generateName("resultPointer"))
+        val differentSizeLabel = generateName("differentSize")
+        val compareBytesLabel = generateName("compareBytes")
+        val leftBytesPointer = LlvmOperandLocal(generateName("leftBytesPointer"))
+        val rightBytesPointer = LlvmOperandLocal(generateName("rightBytesPointer"))
+        val memcmpResult = LlvmOperandLocal(generateName("memcmpResult"))
+        val sameBytes = LlvmOperandLocal(generateName("sameBytes"))
+        val endLabel = generateName("end")
+        val resultBool = LlvmOperandLocal(generateName("resultBool"))
+
+        return context4.result(listOf(
+            listOf(
+                rawValueToString(target = leftString, source = left),
+                rawValueToString(target = rightString, source = right)
+            ),
+            stringSize(target = leftSize, source = leftString),
+            stringSize(target = rightSize, source = rightString),
+            listOf(
+                LlvmAlloca(target = resultPointer, type = LlvmTypes.i1),
+                LlvmIcmp(
+                    target = sameSize,
+                    conditionCode = LlvmIcmp.ConditionCode.EQ,
+                    type = compiledStringLengthType,
+                    left = leftSize,
+                    right = rightSize
+                ),
+                LlvmBr(
+                    condition = sameSize,
+                    ifFalse = differentSizeLabel,
+                    ifTrue = compareBytesLabel
+                ),
+                LlvmLabel(differentSizeLabel),
+                LlvmStore(
+                    type = LlvmTypes.i1,
+                    value = LlvmOperandInt(0),
+                    pointer = resultPointer
+                ),
+                LlvmBrUnconditional(endLabel),
+                LlvmLabel(compareBytesLabel),
+                stringDataStart(target = leftBytesPointer, source = leftString),
+                stringDataStart(target = rightBytesPointer, source = rightString),
+                LlvmCall(
+                    target = memcmpResult,
+                    returnType = CTypes.int,
+                    functionPointer = LlvmOperandGlobal("memcmp"),
+                    arguments = listOf(
+                        LlvmTypedOperand(CTypes.voidPointer, leftBytesPointer),
+                        LlvmTypedOperand(CTypes.voidPointer, rightBytesPointer),
+                        LlvmTypedOperand(CTypes.size_t, leftSize)
+                    )
+                ),
+                LlvmIcmp(
+                    target = sameBytes,
+                    conditionCode = conditionCode,
+                    type = CTypes.int,
+                    left = memcmpResult,
+                    right = LlvmOperandInt(0)
+                ),
+                LlvmStore(
+                    type = LlvmTypes.i1,
+                    value = sameBytes,
+                    pointer = resultPointer
+                ),
+                LlvmBrUnconditional(endLabel),
+                LlvmLabel(endLabel),
+                LlvmLoad(
+                    target = resultBool,
+                    type = LlvmTypes.i1,
+                    pointer = resultPointer
+                ),
+                LlvmZext(
+                    target = result,
+                    sourceType = LlvmTypes.i1,
+                    operand = resultBool,
                     targetType = compiledValueType
                 )
             )
@@ -886,6 +989,7 @@ internal fun serialiseProgram(module: LlvmModule): String {
     return """
         declare i8* @malloc(i64)
         declare i8* @memcpy(i8*, i8*, i64)
+        declare i32 @memcmp(i8*, i8*, i64)
         declare i32 @printf(i8* noalias nocapture, ...)
         declare i64 @write(i32, i8*, i64)
     """.trimIndent() + module.serialise()
