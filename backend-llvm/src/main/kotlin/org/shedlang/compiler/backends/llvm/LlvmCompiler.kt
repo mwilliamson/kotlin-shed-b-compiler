@@ -376,11 +376,19 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is StringEquals -> {
-                return compileStringComparison(conditionCode = LlvmIcmp.ConditionCode.EQ, context = context)
+                return compileStringComparison(
+                    differentSizeValue = 0,
+                    memcmpConditionCode = LlvmIcmp.ConditionCode.EQ,
+                    context = context
+                )
             }
 
             is StringNotEqual -> {
-                return compileStringComparison(conditionCode = LlvmIcmp.ConditionCode.NE, context = context)
+                return compileStringComparison(
+                    differentSizeValue = 1,
+                    memcmpConditionCode = LlvmIcmp.ConditionCode.NE,
+                    context = context
+                )
             }
 
             else -> {
@@ -623,7 +631,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun compileStringComparison(
-        conditionCode: LlvmIcmp.ConditionCode,
+        differentSizeValue: Int,
+        memcmpConditionCode: LlvmIcmp.ConditionCode,
         context: Context
     ): CompilationResult<List<LlvmInstruction>> {
         val (context2, right) = context.popTemporary()
@@ -671,7 +680,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 LlvmLabel(differentSizeLabel),
                 LlvmStore(
                     type = LlvmTypes.i1,
-                    value = LlvmOperandInt(0),
+                    value = LlvmOperandInt(differentSizeValue),
                     pointer = resultPointer
                 ),
                 LlvmBrUnconditional(endLabel),
@@ -690,7 +699,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 ),
                 LlvmIcmp(
                     target = sameBytes,
-                    conditionCode = conditionCode,
+                    conditionCode = memcmpConditionCode,
                     type = CTypes.int,
                     left = memcmpResult,
                     right = LlvmOperandInt(0)

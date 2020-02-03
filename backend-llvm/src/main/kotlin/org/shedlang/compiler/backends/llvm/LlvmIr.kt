@@ -339,7 +339,10 @@ internal data class LlvmFunctionDefinition(
     val body: List<LlvmInstruction>
 ): LlvmModuleStatement {
     override fun serialise(): String {
-        val bodyString = body.joinToString("") { block -> "    " + block.serialise()+ "\n" }
+        val bodyString = body.joinToString("") { instruction ->
+            // TODO: get rid of this hack
+            if (instruction is LlvmLabel) { "" } else { "    " } + instruction.serialise()+ "\n"
+        }
         return "define ${returnType.serialise()} @$name() {\n$bodyString}\n"
     }
 }

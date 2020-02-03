@@ -346,9 +346,35 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
-    fun whenOperandsAreNotEqualThenStringEqualityReturnsFalse() {
+    fun whenOperandsHaveSameLengthButDifferentBytesThenStringEqualityReturnsFalse() {
         val left = literalString("hello")
         val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("world"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
+    fun whenLeftStringIsPrefixOfRightStringThenStringEqualityReturnsFalse() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("helloo"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(false))
+    }
+
+    @Test
+    fun whenRightStringIsPrefixOfLeftStringThenStringEqualityReturnsFalse() {
+        val left = literalString("helloo")
+        val node = binaryOperation(BinaryOperator.EQUALS, left, literalString("hello"))
         val types = createTypes(
             expressionTypes = mapOf(left.nodeId to StringType)
         )
@@ -372,7 +398,33 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
-    fun whenOperandsAreNotEqualThenStringInequalityReturnsTrue() {
+    fun whenLeftStringIsPrefixOfRightStringThenStringInequalityReturnsTrue() {
+        val left = literalString("hello")
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("helloo"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenRightStringIsPrefixOfLeftStringThenStringInequalityReturnsTrue() {
+        val left = literalString("helloo")
+        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("hello"))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to StringType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenOperandsHaveSameLengthButDifferentBytesThenStringInequalityReturnsTrue() {
         val left = literalString("hello")
         val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalString("world"))
         val types = createTypes(
