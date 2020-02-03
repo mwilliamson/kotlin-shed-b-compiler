@@ -122,7 +122,7 @@ internal data class LlvmTypedOperand(val type: LlvmType, val operand: LlvmOperan
     }
 }
 
-internal interface LlvmBasicBlock {
+internal interface LlvmInstruction {
     fun serialise(): String
 }
 
@@ -131,7 +131,7 @@ internal data class LlvmBitCast(
     val sourceType: LlvmType,
     val value: LlvmOperand,
     val targetType: LlvmType
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = bitcast ${sourceType.serialise()} ${value.serialise()} to ${targetType.serialise()}"
     }
@@ -142,7 +142,7 @@ internal data class LlvmIntToPtr(
     val sourceType: LlvmType,
     val value: LlvmOperand,
     val targetType: LlvmType
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = inttoptr ${sourceType.serialise()} ${value.serialise()} to ${targetType.serialise()}"
     }
@@ -153,7 +153,7 @@ internal data class LlvmPtrToInt(
     val sourceType: LlvmType,
     val value: LlvmOperand,
     val targetType: LlvmType
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = ptrtoint ${sourceType.serialise()} ${value.serialise()} to ${targetType.serialise()}"
     }
@@ -164,7 +164,7 @@ internal data class LlvmCall(
     val returnType: LlvmType,
     val functionPointer: LlvmOperand,
     val arguments: List<LlvmTypedOperand>
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         val prefix = if (target == null) { "" } else { "${target.serialise()} = " }
         val argumentsString = arguments.joinToString(", ") { argument -> argument.serialise() }
@@ -177,13 +177,13 @@ internal data class LlvmAdd(
     val type: LlvmType,
     val left: LlvmOperand,
     val right: LlvmOperand
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = add ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
     }
 }
 
-internal data class LlvmAlloca(val target: LlvmVariable, val type: LlvmType): LlvmBasicBlock {
+internal data class LlvmAlloca(val target: LlvmVariable, val type: LlvmType): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = alloca ${type.serialise()}"
     }
@@ -192,7 +192,7 @@ internal data class LlvmAlloca(val target: LlvmVariable, val type: LlvmType): Ll
 internal data class LlvmAssign(
     val target: LlvmVariable,
     val value: LlvmOperand
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = ${value.serialise()}"
     }
@@ -203,13 +203,13 @@ internal data class LlvmBr(
     val condition: LlvmOperand,
     val ifTrue: String,
     val ifFalse: String
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "br i1 ${condition.serialise()}, label %$ifTrue, label %$ifFalse"
     }
 }
 
-internal data class LlvmBrUnconditional(val label: String): LlvmBasicBlock {
+internal data class LlvmBrUnconditional(val label: String): LlvmInstruction {
     override fun serialise(): String {
         return "br label %$label"
     }
@@ -220,7 +220,7 @@ internal data class LlvmExtractValue(
     val valueType: LlvmType,
     val value: LlvmOperand,
     val index: LlvmOperand
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = extractvalue ${valueType.serialise()} ${value.serialise()}, ${index.serialise()}"
     }
@@ -231,7 +231,7 @@ internal data class LlvmGetElementPtr(
     val type: LlvmType,
     val pointer: LlvmOperand,
     val indices: List<LlvmIndex>
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         val indicesString = indices.joinToString("") {index -> ", ${index.serialise()}" }
 
@@ -245,7 +245,7 @@ internal data class LlvmIcmp(
     val type: LlvmType,
     val left: LlvmOperand,
     val right: LlvmOperand
-): LlvmBasicBlock {
+): LlvmInstruction {
     enum class ConditionCode {
         EQ,
         NE,
@@ -270,13 +270,13 @@ internal data class LlvmIndex(val type: LlvmType, val value: LlvmOperand) {
     }
 }
 
-internal data class LlvmLabel(val name: String): LlvmBasicBlock {
+internal data class LlvmLabel(val name: String): LlvmInstruction {
     override fun serialise(): String {
         return "$name:"
     }
 }
 
-internal data class LlvmLoad(val target: LlvmVariable, val type: LlvmType, val pointer: LlvmOperand): LlvmBasicBlock {
+internal data class LlvmLoad(val target: LlvmVariable, val type: LlvmType, val pointer: LlvmOperand): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = load ${type.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}"
     }
@@ -287,25 +287,25 @@ internal data class LlvmMul(
     val type: LlvmType,
     val left: LlvmOperand,
     val right: LlvmOperand
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = mul ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
     }
 }
 
-internal data class LlvmReturn(val type: LlvmType, val value: LlvmOperand): LlvmBasicBlock {
+internal data class LlvmReturn(val type: LlvmType, val value: LlvmOperand): LlvmInstruction {
     override fun serialise(): String {
         return "ret ${type.serialise()} ${value.serialise()}"
     }
 }
 
-internal object LlvmReturnVoid: LlvmBasicBlock {
+internal object LlvmReturnVoid: LlvmInstruction {
     override fun serialise(): String {
         return "ret void"
     }
 }
 
-internal data class LlvmStore(val type: LlvmType, val value: LlvmOperand, val pointer: LlvmOperand): LlvmBasicBlock {
+internal data class LlvmStore(val type: LlvmType, val value: LlvmOperand, val pointer: LlvmOperand): LlvmInstruction {
     override fun serialise(): String {
         return "store ${type.serialise()} ${value.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}"
     }
@@ -316,7 +316,7 @@ internal data class LlvmSub(
     val type: LlvmType,
     val left: LlvmOperand,
     val right: LlvmOperand
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = sub ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
     }
@@ -327,7 +327,7 @@ internal data class LlvmZext(
     val sourceType: LlvmType,
     val operand: LlvmOperand,
     val targetType: LlvmType
-): LlvmBasicBlock {
+): LlvmInstruction {
     override fun serialise(): String {
         return "${target.serialise()} = zext ${sourceType.serialise()} ${operand.serialise()} to ${targetType.serialise()}"
     }
@@ -336,7 +336,7 @@ internal data class LlvmZext(
 internal data class LlvmFunctionDefinition(
     val name: String,
     val returnType: LlvmType,
-    val body: List<LlvmBasicBlock>
+    val body: List<LlvmInstruction>
 ): LlvmModuleStatement {
     override fun serialise(): String {
         val bodyString = body.joinToString("") { block -> "    " + block.serialise()+ "\n" }

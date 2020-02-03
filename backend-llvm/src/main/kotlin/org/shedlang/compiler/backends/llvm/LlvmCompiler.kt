@@ -118,14 +118,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             .toModuleStatements()
     }
 
-    internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmBasicBlock>> {
+    internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmInstruction>> {
         val localVariableIds = instructions
             .filterIsInstance<LocalStore>()
             .map { store -> store.variableId }
             .distinct()
         val allocateLocals = localVariableIds.map { localVariableId ->
             LlvmAlloca(target = variableForLocal(localVariableId), type = compiledValueType)
-        }.toPersistentList<LlvmBasicBlock>()
+        }.toPersistentList<LlvmInstruction>()
 
         return instructions.fold(context.result(allocateLocals)) { result, instruction ->
             result.flatMapValue { previousInstructions, context ->
@@ -136,7 +136,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         }
     }
 
-    private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmBasicBlock>> {
+    private fun compileInstruction(instruction: Instruction, context: Context): CompilationResult<List<LlvmInstruction>> {
         when (instruction) {
             is BoolEquals -> {
                 return compileBoolEquals(context)
@@ -198,7 +198,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         )
 
                         context2.pushTemporary(functionPointerVariable)
-                            .result(listOf<LlvmBasicBlock>(getVariableAddress))
+                            .result(listOf<LlvmInstruction>(getVariableAddress))
                             .addModuleStatements(listOf(functionDefinition))
                     }
             }
@@ -359,7 +359,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is PushValue -> {
                 return stackValueToLlvmOperand(instruction.value, generateName = ::generateName, context = context)
                     .flatMapValue { operand, context2 ->
-                        context2.pushTemporary(operand).result(listOf<LlvmBasicBlock>())
+                        context2.pushTemporary(operand).result(listOf<LlvmInstruction>())
                     }
             }
 
@@ -381,7 +381,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         }
     }
 
-    private fun compileBoolNot(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+    private fun compileBoolNot(context: Context): CompilationResult<List<LlvmInstruction>> {
         val (context2, operand) = context.popTemporary()
         val booleanResult = LlvmOperandLocal(generateName("not_i1"))
         val fullResult = LlvmOperandLocal(generateName("not"))
@@ -400,18 +400,18 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         ))
     }
 
-    private fun compileBoolEquals(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+    private fun compileBoolEquals(context: Context): CompilationResult<List<LlvmInstruction>> {
         return compileBoolComparison(LlvmIcmp.ConditionCode.EQ, context = context)
     }
 
-    private fun compileBoolNotEqual(context: Context): CompilationResult<List<LlvmBasicBlock>> {
+    private fun compileBoolNotEqual(context: Context): CompilationResult<List<LlvmInstruction>> {
         return compileBoolComparison(LlvmIcmp.ConditionCode.NE, context = context)
     }
 
     private fun compileBoolComparison(
         conditionCode: LlvmIcmp.ConditionCode,
         context: Context
-    ): CompilationResult<List<LlvmBasicBlock>> {
+    ): CompilationResult<List<LlvmInstruction>> {
         return compileComparisonOperation(
             conditionCode = conditionCode,
             context = context,
@@ -422,7 +422,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun compileCodePointComparison(
         conditionCode: LlvmIcmp.ConditionCode,
         context: Context
-    ): CompilationResult<List<LlvmBasicBlock>> {
+    ): CompilationResult<List<LlvmInstruction>> {
         return compileComparisonOperation(
             conditionCode = conditionCode,
             context = context,
@@ -431,9 +431,9 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun compileIntClosedOperation(
-        func: (LlvmVariable, LlvmType, LlvmOperand, LlvmOperand) -> LlvmBasicBlock,
+        func: (LlvmVariable, LlvmType, LlvmOperand, LlvmOperand) -> LlvmInstruction,
         context: Context
-    ): CompilationResult<List<LlvmBasicBlock>> {
+    ): CompilationResult<List<LlvmInstruction>> {
         val (context2, right) = context.popTemporary()
         val (context3, left) = context2.popTemporary()
 
@@ -449,7 +449,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun compileIntComparison(
         conditionCode: LlvmIcmp.ConditionCode,
         context: Context
-    ): CompilationResult<List<LlvmBasicBlock>> {
+    ): CompilationResult<List<LlvmInstruction>> {
         return compileComparisonOperation(
             conditionCode = conditionCode,
             context = context,
@@ -461,7 +461,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         conditionCode: LlvmIcmp.ConditionCode,
         context: Context,
         operandType: LlvmType
-    ): CompilationResult<List<LlvmBasicBlock>> {
+    ): CompilationResult<List<LlvmInstruction>> {
         val (context2, right) = context.popTemporary()
         val (context3, left) = context2.popTemporary()
 
@@ -494,7 +494,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun compileStringAdd(
         instruction: StringAdd,
         context: Context
-    ): CompilationResult<List<LlvmBasicBlock>> {
+    ): CompilationResult<List<LlvmInstruction>> {
         val (context2, right) = context.popTemporary()
         val (context3, left) = context2.popTemporary()
 
@@ -623,7 +623,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    internal fun stringSize(target: LlvmOperandLocal, source: LlvmOperand): List<LlvmBasicBlock> {
+    internal fun stringSize(target: LlvmOperandLocal, source: LlvmOperand): List<LlvmInstruction> {
         val sizePointer = LlvmOperandLocal(generateName("sizePointer"))
         return listOf(
             stringSizePointer(sizePointer, source),
@@ -647,7 +647,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    internal fun stringData(target: LlvmOperandLocal, source: LlvmOperand): LlvmBasicBlock {
+    internal fun stringData(target: LlvmOperandLocal, source: LlvmOperand): LlvmInstruction {
         return LlvmGetElementPtr(
             target = target,
             type = compiledStringValueType(0),
@@ -659,7 +659,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    internal fun stringDataStart(target: LlvmOperandLocal, source: LlvmOperand): LlvmBasicBlock {
+    internal fun stringDataStart(target: LlvmOperandLocal, source: LlvmOperand): LlvmInstruction {
         return LlvmGetElementPtr(
             target = target,
             type = compiledStringValueType(0),
@@ -687,7 +687,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         return LlvmOperandLocal("local_$variableId")
     }
 
-    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmBasicBlock> {
+    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmInstruction> {
         val fieldPointerVariable = LlvmOperandLocal("fieldPointer")
 
         // TODO: calculate fieldIndex
@@ -711,7 +711,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    private fun importModule(moduleName: List<Identifier>, target: LlvmVariable): List<LlvmBasicBlock> {
+    private fun importModule(moduleName: List<Identifier>, target: LlvmVariable): List<LlvmInstruction> {
         return listOf(
             LlvmCall(
                 target = null,
