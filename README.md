@@ -115,3 +115,7 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
 
 * Check usages of defer() in type-checker
   * Function bodies can be deferred, but should be checked on first use
+
+* Rename CodePoint to UnicodeScalar?
+
+* Use canonical representation for Unicode comparisons?
