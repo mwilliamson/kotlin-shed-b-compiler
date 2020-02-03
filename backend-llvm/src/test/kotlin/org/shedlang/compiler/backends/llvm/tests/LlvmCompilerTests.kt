@@ -68,7 +68,6 @@ private val environment = object: StackIrExecutionEnvironment {
                     val stdoutFd = 1
                     val (context2, stringValue) = context.popTemporary()
                     val string = LlvmOperandLocal("string")
-                    val sizePointer = LlvmOperandLocal("sizePointer")
                     val size = LlvmOperandLocal("size")
                     val dataPointer = LlvmOperandLocal("dataPointer")
                     listOf(
