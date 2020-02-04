@@ -150,6 +150,31 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return compileBoolNotEqual(context)
             }
 
+            is Call -> {
+                val (context2, receiver) = context.popTemporary()
+                val receiverPointer = LlvmOperandLocal(generateName("receiver"))
+                val result = LlvmOperandLocal(generateName("result"))
+                val context3 = context2.pushTemporary(result)
+
+                return context3.result(listOf(
+                    LlvmIntToPtr(
+                        target = receiverPointer,
+                        sourceType = compiledValueType,
+                        value = receiver,
+                        targetType = LlvmTypes.pointer(LlvmTypes.function(
+                            returnType = compiledValueType,
+                            parameterTypes = listOf()
+                        ))
+                    ),
+                    LlvmCall(
+                        target = result,
+                        returnType = compiledValueType,
+                        functionPointer = receiverPointer,
+                        arguments = listOf()
+                    )
+                ))
+            }
+
             is CodePointEquals -> {
                 return compileCodePointComparison(LlvmIcmp.ConditionCode.EQ, context = context)
             }
@@ -201,6 +226,88 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                             .result(listOf<LlvmInstruction>(getVariableAddress))
                             .addModuleStatements(listOf(functionDefinition))
                     }
+            }
+
+            is DeclareShape -> {
+                val constructorName = generateName("constructor")
+                val constructorPointer = LlvmOperandLocal(generateName("constructorPointer"))
+                val instanceBytes = LlvmOperandLocal(generateName("instanceBytes"))
+                val instance = LlvmOperandLocal(generateName("instance"))
+                val instanceAsValue = LlvmOperandLocal(generateName("instanceAsValue"))
+                val tagValue = instruction.tagValue
+                val shapeSize = if (tagValue == null) 0 else 1
+
+                val extraModuleStatements = mutableListOf<LlvmModuleStatement>()
+
+                val constructorDefinition = LlvmFunctionDefinition(
+                    name = constructorName,
+                    returnType = compiledValueType,
+                    body = listOf(
+                        listOf(
+                            malloc(
+                                target = instanceBytes,
+                                bytes = LlvmOperandInt(compiledValueTypeSize * shapeSize)
+                            ),
+                            LlvmBitCast(
+                                target = instance,
+                                sourceType = LlvmTypes.pointer(LlvmTypes.i8),
+                                value = instanceBytes,
+                                targetType = compiledObjectType
+                            )
+                        ),
+
+                        if (tagValue == null)
+                            listOf()
+                        else {
+                            val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
+
+                            val tagValueDefinitionName = generateName("tagValueDefinition")
+
+                            val (tagValueDefinition, tagValueOperand) = defineString(
+                                globalName = tagValueDefinitionName,
+                                value = tagValue.value.value
+                            )
+                            extraModuleStatements.add(tagValueDefinition)
+
+                            listOf(
+                                tagValuePointer(tagValuePointer, instance),
+                                LlvmStore(
+                                    type = compiledTagValueType,
+                                    value = tagValueOperand,
+                                    pointer = tagValuePointer
+                                )
+                            )
+                        },
+
+                        listOf(
+                            LlvmPtrToInt(
+                                target = instanceAsValue,
+                                sourceType = compiledObjectType,
+                                value = instance,
+                                targetType = compiledValueType
+                            ),
+                            LlvmReturn(
+                                type = compiledValueType,
+                                value = instanceAsValue
+                            )
+                        )
+                    ).flatten()
+                )
+
+                return context.pushTemporary(constructorPointer)
+                    .result(listOf<LlvmInstruction>(
+                        LlvmPtrToInt(
+                            target = constructorPointer,
+                            targetType = compiledValueType,
+                            value = LlvmOperandGlobal(constructorName),
+                            sourceType = LlvmTypes.pointer(LlvmTypes.function(
+                                returnType = compiledValueType,
+                                parameterTypes = listOf()
+                            ))
+                        )
+                    ))
+                    .addModuleStatements(listOf(constructorDefinition))
+                    .addModuleStatements(extraModuleStatements)
             }
 
             is Discard -> {
@@ -389,6 +496,32 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     memcmpConditionCode = LlvmIcmp.ConditionCode.NE,
                     context = context
                 )
+            }
+
+            is TagValueAccess -> {
+                val (context2, operand) = context.popTemporary()
+                val objectPointer = LlvmOperandLocal(generateName("objectPointer"))
+                val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
+                val tagValue = LlvmOperandLocal(generateName("tagValue"))
+                val context3 = context2.pushTemporary(tagValue)
+
+                return context3.result(listOf(
+                    LlvmIntToPtr(
+                        target = objectPointer,
+                        sourceType = compiledValueType,
+                        value = operand,
+                        targetType = compiledObjectType
+                    ),
+                    tagValuePointer(
+                        target = tagValuePointer,
+                        source = objectPointer
+                    ),
+                    LlvmLoad(
+                        target = tagValue,
+                        type = compiledValueType,
+                        pointer = tagValuePointer
+                    )
+                ))
             }
 
             else -> {
@@ -784,6 +917,18 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
+    private fun tagValuePointer(target: LlvmOperandLocal, source: LlvmOperandLocal): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledObjectType.type,
+            pointer = source,
+            indices = listOf(
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+            )
+        )
+    }
+
     private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
         return LlvmCall(
             target = target,
@@ -882,6 +1027,7 @@ internal val compiledValueTypeSize = 8
 internal val compiledBoolType = compiledValueType
 internal val compiledCodePointType = compiledValueType
 internal val compiledIntType = compiledValueType
+private val compiledTagValueType = compiledValueType
 
 internal val compiledStringLengthType = LlvmTypes.i64
 internal val compiledStringLengthTypeSize = 8
@@ -918,33 +1064,10 @@ internal fun stackValueToLlvmOperand(
 
         is IrString -> {
             val globalName = generateName("string")
-            val bytes = value.value.toByteArray(Charsets.UTF_8)
 
-            val stringDataType = LlvmTypes.arrayType(bytes.size, LlvmTypes.i8)
-            val stringValueType = LlvmTypes.structure(listOf(
-                LlvmTypes.i64,
-                stringDataType
-            ))
-            val operand: LlvmOperand = LlvmOperandPtrToInt(
-                sourceType = LlvmTypes.pointer(stringValueType),
-                value = LlvmOperandGlobal(globalName),
-                targetType = compiledValueType
-            )
-
-            val stringDefinition = LlvmGlobalDefinition(
-                name = globalName,
-                type = stringValueType,
-                value = LlvmOperandStructure(listOf(
-                    LlvmTypedOperand(LlvmTypes.i64, LlvmOperandInt(bytes.size)),
-                    LlvmTypedOperand(
-                        stringDataType,
-                        LlvmOperandArray(bytes.map { byte ->
-                            LlvmTypedOperand(LlvmTypes.i8, LlvmOperandInt(byte.toInt()))
-                        })
-                    )
-                )),
-                unnamedAddr = true,
-                isConstant = true
+            val (stringDefinition, operand) = defineString(
+                globalName = globalName,
+                value = value.value
             )
 
             context.result(operand).addModuleStatements(listOf(stringDefinition))
@@ -956,6 +1079,40 @@ internal fun stackValueToLlvmOperand(
         else ->
             throw UnsupportedOperationException(value.toString())
     }
+}
+
+internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDefinition, LlvmOperand> {
+    val bytes = value.toByteArray(Charsets.UTF_8)
+
+    val stringDataType = LlvmTypes.arrayType(bytes.size, LlvmTypes.i8)
+    val stringValueType = LlvmTypes.structure(listOf(
+        LlvmTypes.i64,
+        stringDataType
+    ))
+
+    val operand: LlvmOperand = LlvmOperandPtrToInt(
+        sourceType = LlvmTypes.pointer(stringValueType),
+        value = LlvmOperandGlobal(globalName),
+        targetType = compiledValueType
+    )
+
+    val definition = LlvmGlobalDefinition(
+        name = globalName,
+        type = stringValueType,
+        value = LlvmOperandStructure(listOf(
+            LlvmTypedOperand(LlvmTypes.i64, LlvmOperandInt(bytes.size)),
+            LlvmTypedOperand(
+                stringDataType,
+                LlvmOperandArray(bytes.map { byte ->
+                    LlvmTypedOperand(LlvmTypes.i8, LlvmOperandInt(byte.toInt()))
+                })
+            )
+        )),
+        unnamedAddr = true,
+        isConstant = true
+    )
+
+    return Pair(definition, operand)
 }
 
 internal class CompilationResult<out T>(

@@ -1,6 +1,5 @@
 package org.shedlang.compiler.stackinterpreter.tests
 
-import kotlinx.collections.immutable.PersistentList
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.Types

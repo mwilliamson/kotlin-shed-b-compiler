@@ -8,8 +8,10 @@ import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.UnaryOperator
+import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 interface StackIrExecutionEnvironment {
@@ -436,8 +438,100 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isBool(true))
     }
 
+    @Test
+    fun whenDiscriminatorMatchesThenIsOperationIsTrue() {
+        val shapeDeclaration = shape("X")
+        val shapeReference = variableReference("X")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(shapeReference)
+        )
+        val receiverReference = variableReference("receiver")
+        val node = isOperation(receiverReference, shapeReference)
+
+        val tag = tag(listOf("Example"), "Tag")
+        val inspector = SimpleCodeInspector(
+            discriminatorsForIsExpressions = mapOf(
+                node to discriminator(tagValue(tag, "X"))
+            ),
+            shapeFields = mapOf(
+                shapeDeclaration to listOf()
+            ),
+            shapeTagValues = mapOf(
+                shapeDeclaration to tagValue(tag, "X")
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType())
+            )
+        )
+
+        val loader = loader(inspector = inspector, references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(node))
+        val value = executeInstructions(instructions, type = BoolType)
+
+        assertThat(value, isBool(true))
+    }
+
+    @Test
+    fun whenDiscriminatorDoesNotMatchThenIsOperationIsFalse() {
+        val shapeDeclaration = shape("X")
+        val shapeReference = variableReference("X")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(shapeReference)
+        )
+        val receiverReference = variableReference("receiver")
+        val node = isOperation(receiverReference, shapeReference)
+
+        val tag = tag(listOf("Example"), "Tag")
+        val inspector = SimpleCodeInspector(
+            discriminatorsForIsExpressions = mapOf(
+                node to discriminator(tagValue(tag, "C"))
+            ),
+            shapeFields = mapOf(
+                shapeDeclaration to listOf()
+            ),
+            shapeTagValues = mapOf(
+                shapeDeclaration to tagValue(tag, "B")
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType())
+            )
+        )
+
+        val loader = loader(inspector = inspector, references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(node))
+        val value = executeInstructions(instructions, type = BoolType)
+
+        assertThat(value, isBool(false))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
+        return executeInstructions(instructions, type = type)
+    }
+
+    private fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue {
         return environment.executeInstructions(instructions, type = type)
     }
 
