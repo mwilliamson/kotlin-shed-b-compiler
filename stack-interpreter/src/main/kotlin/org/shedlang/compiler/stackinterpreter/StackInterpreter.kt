@@ -809,7 +809,7 @@ fun executeMain(mainModule: List<Identifier>, image: Image, world: World): Int {
 }
 
 internal fun executeInstructions(
-    instructions: PersistentList<Instruction>,
+    instructions: List<Instruction>,
     image: Image,
     defaultVariables: Map<Int, InterpreterValue>,
     world: World

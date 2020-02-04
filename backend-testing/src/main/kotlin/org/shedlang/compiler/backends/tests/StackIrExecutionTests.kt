@@ -13,7 +13,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 interface StackIrExecutionEnvironment {
-    fun evaluateExpression(node: ExpressionNode, type: Type, types: Types): IrValue
+    fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue
 }
 
 abstract class StackIrExecutionTests(private val environment: StackIrExecutionEnvironment) {
@@ -436,9 +436,10 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isBool(true))
     }
 
-
-    private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()) =
-        environment.evaluateExpression(node, type, types = types)
+    private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
+        val instructions = loader(types = types).loadExpression(node)
+        return environment.executeInstructions(instructions, type = type)
+    }
 
     private fun isBool(expected: Boolean): Matcher<IrValue> {
         return cast(has(IrBool::value, equalTo(expected)))

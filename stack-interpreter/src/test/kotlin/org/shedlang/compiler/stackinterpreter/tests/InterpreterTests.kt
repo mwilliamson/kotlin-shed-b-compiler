@@ -18,8 +18,8 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun evaluateExpression(node: ExpressionNode, type: Type, types: Types): IrValue {
-        val interpreterValue = evaluateExpression(node, types = types)
+    override fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue {
+        val interpreterValue = executeInstructions(instructions)
         return interpreterValueToIrValue(interpreterValue)
     }
 

@@ -24,7 +24,7 @@ internal fun evaluateExpression(node: ExpressionNode, types: Types = EMPTY_TYPES
 }
 
 internal fun executeInstructions(
-    instructions: PersistentList<Instruction>,
+    instructions: List<Instruction>,
     image: Image = Image.EMPTY,
     variables: Map<Int, InterpreterValue> = mapOf(),
     world: World = NullWorld
