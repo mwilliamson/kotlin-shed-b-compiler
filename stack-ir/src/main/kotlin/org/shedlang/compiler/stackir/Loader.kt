@@ -263,13 +263,6 @@ class Loader(
                             bodyInstructions = bodyInstructions,
                             namedParameterIds = listOf()
                         )
-                        // TODO: delete if the above works
-//                        PushValue(InterpreterFunction(
-//                            positionalParameterIds = listOf(parameterId),
-//                            bodyInstructions = bodyInstructions,
-//                            namedParameterIds = listOf(),
-//                            scopes = persistentListOf()
-//                        ))
                     )
                 } else if (types.typeOfExpression(node.receiver) is VarargsType) {
                     return loadExpression(node.receiver)
