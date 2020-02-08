@@ -1073,6 +1073,17 @@ internal fun stackValueToLlvmOperand(
             context.result(operand).addModuleStatements(listOf(stringDefinition))
         }
 
+        is IrTagValue -> {
+            val globalName = generateName("tagValue")
+
+            val (stringDefinition, operand) = defineString(
+                globalName = globalName,
+                value = value.value.value.value
+            )
+
+            context.result(operand).addModuleStatements(listOf(stringDefinition))
+        }
+
         is IrUnit ->
             context.result(LlvmOperandInt(0))
 

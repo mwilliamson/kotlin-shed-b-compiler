@@ -111,6 +111,7 @@ private fun irValueToInterpreterValue(value: IrValue): InterpreterValue {
         is IrInt -> InterpreterInt(value.value)
         is IrString -> InterpreterString(value.value)
         is IrSymbol -> InterpreterSymbol(value.value)
+        is IrTagValue -> InterpreterString(value.value.value.value)
         is IrUnit -> InterpreterUnit
     }
 }

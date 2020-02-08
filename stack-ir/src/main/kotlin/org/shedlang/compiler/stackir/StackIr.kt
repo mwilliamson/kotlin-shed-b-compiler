@@ -22,6 +22,8 @@ class IrString(val value: String): IrValue()
 
 class IrSymbol(val value: Symbol): IrValue()
 
+class IrTagValue(val value: TagValue): IrValue()
+
 object IrUnit: IrValue()
 
 data class NamedParameterId(val name: Identifier, val variableId: Int)

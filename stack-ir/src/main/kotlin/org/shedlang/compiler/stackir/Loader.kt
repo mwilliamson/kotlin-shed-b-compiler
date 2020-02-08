@@ -529,7 +529,7 @@ class Loader(
     private fun typeConditionInstructions(discriminator: Discriminator): PersistentList<Instruction> {
         return persistentListOf(
             TagValueAccess,
-            PushValue(IrString(discriminator.tagValue.value.value)),
+            PushValue(IrTagValue(discriminator.tagValue)),
             StringEquals
         )
     }
