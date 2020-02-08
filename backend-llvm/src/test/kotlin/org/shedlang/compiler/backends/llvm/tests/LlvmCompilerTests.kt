@@ -171,12 +171,12 @@ class StackValueToLlvmOperandTests {
                     LlvmTypes.i64,
                     LlvmTypes.arrayType(5, LlvmTypes.i8)
                 )))),
-                value = isLlvmOperandGlobal("NAME_string"),
+                value = isLlvmOperandGlobal("string_1"),
                 targetType = equalTo(compiledValueType)
             ),
             moduleStatements = isSequence(
                 isLlvmGlobalDefinition(
-                    name = equalTo("NAME_string"),
+                    name = equalTo("string_1"),
                     type = equalTo(LlvmTypes.structure(listOf(
                         LlvmTypes.i64,
                         LlvmTypes.arrayType(5, LlvmTypes.i8)
@@ -213,7 +213,10 @@ class StackValueToLlvmOperandTests {
 }
 
 private fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOperand> {
-    return stackValueToLlvmOperand(value, generateName = { name -> "NAME_$name"}, context = Compiler.Context.EMPTY)
+    val moduleSet = ModuleSet(setOf())
+    val image = loadModuleSet(moduleSet)
+    val compiler = Compiler(image = image, moduleSet = moduleSet)
+    return compiler.stackValueToLlvmOperand(value, context = Compiler.Context.EMPTY)
 }
 
 private fun <T> isCompilationResult(

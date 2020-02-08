@@ -464,7 +464,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is PushValue -> {
-                return stackValueToLlvmOperand(instruction.value, generateName = ::generateName, context = context)
+                return stackValueToLlvmOperand(instruction.value, context = context)
                     .flatMapValue { operand, context2 ->
                         context2.pushTemporary(operand).result(listOf<LlvmInstruction>())
                     }
@@ -1018,6 +1018,50 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun labelToLlvmLabel(label: Int): String {
         return "label_" + label
     }
+
+    internal fun stackValueToLlvmOperand(
+        value: IrValue,
+        context: Context
+    ): CompilationResult<LlvmOperand> {
+        return when (value) {
+            is IrBool ->
+                context.result(LlvmOperandInt(if (value.value) 1 else 0))
+
+            is IrCodePoint ->
+                context.result(LlvmOperandInt(value.value))
+
+            is IrInt ->
+                context.result(LlvmOperandInt(value.value.intValueExact()))
+
+            is IrString -> {
+                val globalName = generateName("string")
+
+                val (stringDefinition, operand) = defineString(
+                    globalName = globalName,
+                    value = value.value
+                )
+
+                context.result(operand).addModuleStatements(listOf(stringDefinition))
+            }
+
+            is IrTagValue -> {
+                val globalName = generateName("tagValue")
+
+                val (stringDefinition, operand) = defineString(
+                    globalName = globalName,
+                    value = value.value.value.value
+                )
+
+                context.result(operand).addModuleStatements(listOf(stringDefinition))
+            }
+
+            is IrUnit ->
+                context.result(LlvmOperandInt(0))
+
+            else ->
+                throw UnsupportedOperationException(value.toString())
+        }
+    }
 }
 
 private fun <T> PersistentList<T>.pop() = Pair(removeAt(lastIndex), last())
@@ -1045,51 +1089,6 @@ internal object CTypes {
     val size_t = LlvmTypes.i64
     val stringPointer = LlvmTypes.pointer(LlvmTypes.i8)
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
-}
-
-internal fun stackValueToLlvmOperand(
-    value: IrValue,
-    generateName: (String) -> String,
-    context: Compiler.Context
-): CompilationResult<LlvmOperand> {
-    return when (value) {
-        is IrBool ->
-            context.result(LlvmOperandInt(if (value.value) 1 else 0))
-
-        is IrCodePoint ->
-            context.result(LlvmOperandInt(value.value))
-
-        is IrInt ->
-            context.result(LlvmOperandInt(value.value.intValueExact()))
-
-        is IrString -> {
-            val globalName = generateName("string")
-
-            val (stringDefinition, operand) = defineString(
-                globalName = globalName,
-                value = value.value
-            )
-
-            context.result(operand).addModuleStatements(listOf(stringDefinition))
-        }
-
-        is IrTagValue -> {
-            val globalName = generateName("tagValue")
-
-            val (stringDefinition, operand) = defineString(
-                globalName = globalName,
-                value = value.value.value.value
-            )
-
-            context.result(operand).addModuleStatements(listOf(stringDefinition))
-        }
-
-        is IrUnit ->
-            context.result(LlvmOperandInt(0))
-
-        else ->
-            throw UnsupportedOperationException(value.toString())
-    }
 }
 
 internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDefinition, LlvmOperand> {
