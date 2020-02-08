@@ -116,7 +116,7 @@ private val environment = object: StackIrExecutionEnvironment {
                     )
                 )
             }
-            .toModuleStatements()
+            .toTopLevelEntities()
 
         val module = LlvmModule(llvmStatements)
 
@@ -221,11 +221,11 @@ private fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOpera
 
 private fun <T> isCompilationResult(
     value: Matcher<T>,
-    moduleStatements: Matcher<List<LlvmModuleStatement>> = isSequence()
+    moduleStatements: Matcher<List<LlvmTopLevelEntity>> = isSequence()
 ): Matcher<CompilationResult<T>> {
     return allOf(
         has(CompilationResult<T>::value, value),
-        has(CompilationResult<T>::moduleStatements, moduleStatements)
+        has(CompilationResult<T>::topLevelEntities, moduleStatements)
     )
 }
 
@@ -273,7 +273,7 @@ private fun isLlvmGlobalDefinition(
     value: Matcher<LlvmOperand>,
     isConstant: Matcher<Boolean>,
     unnamedAddr: Matcher<Boolean>
-): Matcher<LlvmModuleStatement> {
+): Matcher<LlvmTopLevelEntity> {
     return cast(allOf(
         has(LlvmGlobalDefinition::name, name),
         has(LlvmGlobalDefinition::type, type),

@@ -337,7 +337,7 @@ internal data class LlvmFunctionDefinition(
     val name: String,
     val returnType: LlvmType,
     val body: List<LlvmInstruction>
-): LlvmModuleStatement {
+): LlvmTopLevelEntity {
     override fun serialise(): String {
         val bodyString = body.joinToString("") { instruction ->
             // TODO: get rid of this hack
@@ -353,7 +353,7 @@ internal data class LlvmGlobalDefinition(
     val value: LlvmOperand,
     val isConstant: Boolean = false,
     val unnamedAddr: Boolean = false
-): LlvmModuleStatement {
+): LlvmTopLevelEntity {
     override fun serialise(): String {
         val unnamedAddrString = if (unnamedAddr) "unnamed_addr " else ""
         val keyword = if (isConstant) "constant" else "global"
@@ -361,12 +361,12 @@ internal data class LlvmGlobalDefinition(
     }
 }
 
-internal data class LlvmModule(val body: List<LlvmModuleStatement>) {
+internal data class LlvmModule(val body: List<LlvmTopLevelEntity>) {
     fun serialise(): String {
-        return body.joinToString("") { statement -> statement.serialise() }
+        return body.joinToString("") { entity -> entity.serialise() }
     }
 }
 
-interface LlvmModuleStatement {
+interface LlvmTopLevelEntity {
     fun serialise(): String
 }

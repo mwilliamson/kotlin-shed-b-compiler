@@ -38,7 +38,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         fun <T> result(value: T): CompilationResult<T> {
             return CompilationResult(
                 value = value,
-                moduleStatements = listOf(),
+                topLevelEntities = listOf(),
                 context = this
             )
         }
@@ -97,7 +97,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         target.toFile().writeText(source)
     }
 
-    private fun moduleDefine(moduleName: List<Identifier>): List<LlvmModuleStatement> {
+    private fun moduleDefine(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
         return listOf(
             LlvmGlobalDefinition(
                 name = nameForModuleValue(moduleName),
@@ -107,16 +107,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         ) + moduleInit(moduleName)
     }
 
-    private fun moduleInit(moduleName: List<Identifier>): List<LlvmModuleStatement> {
+    private fun moduleInit(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
         return compileInstructions(image.moduleInitialisation(moduleName), context = Context.EMPTY)
-            .mapValue<LlvmModuleStatement> { instructions, _ ->
+            .mapValue<LlvmTopLevelEntity> { instructions, _ ->
                 LlvmFunctionDefinition(
                     name = nameForModuleInit(moduleName),
                     returnType = LlvmTypes.void,
                     body = instructions + listOf(LlvmReturnVoid)
                 )
             }
-            .toModuleStatements()
+            .toTopLevelEntities()
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: Context): CompilationResult<List<LlvmInstruction>> {
@@ -225,7 +225,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
                         context2.pushTemporary(functionPointerVariable)
                             .result(listOf<LlvmInstruction>(getVariableAddress))
-                            .addModuleStatements(listOf(functionDefinition))
+                            .addTopLevelEntities(listOf(functionDefinition))
                     }
             }
 
@@ -297,7 +297,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                             ))
                         )
                     ))
-                    .addModuleStatements(listOf(constructorDefinition))
+                    .addTopLevelEntities(listOf(constructorDefinition))
             }
 
             is Discard -> {
@@ -1035,7 +1035,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     value = value.value
                 )
 
-                context.result(operand).addModuleStatements(listOf(stringDefinition))
+                context.result(operand).addTopLevelEntities(listOf(stringDefinition))
             }
 
             is IrTagValue -> {
@@ -1125,13 +1125,13 @@ internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDef
 
 internal class CompilationResult<out T>(
     val value: T,
-    val moduleStatements: List<LlvmModuleStatement>,
+    val topLevelEntities: List<LlvmTopLevelEntity>,
     val context: Compiler.Context
 ) {
     fun <R> mapValue(func: (T, Compiler.Context) -> R): CompilationResult<R> {
         return CompilationResult(
             value = func(value, context),
-            moduleStatements = moduleStatements,
+            topLevelEntities = topLevelEntities,
             context = context
         )
     }
@@ -1140,22 +1140,22 @@ internal class CompilationResult<out T>(
         val result = func(value, context)
         return CompilationResult(
             value = result.value,
-            moduleStatements = moduleStatements + result.moduleStatements,
+            topLevelEntities = topLevelEntities + result.topLevelEntities,
             context = result.context
         )
     }
 
-    fun addModuleStatements(moduleStatements: List<LlvmModuleStatement>): CompilationResult<T> {
+    fun addTopLevelEntities(topLevelEntities: List<LlvmTopLevelEntity>): CompilationResult<T> {
         return CompilationResult(
             value = value,
-            moduleStatements = this.moduleStatements + moduleStatements,
+            topLevelEntities = this.topLevelEntities + topLevelEntities,
             context = context
         )
     }
 }
 
-internal fun CompilationResult<LlvmModuleStatement>.toModuleStatements(): List<LlvmModuleStatement> {
-    return moduleStatements + listOf(value)
+internal fun CompilationResult<LlvmTopLevelEntity>.toTopLevelEntities(): List<LlvmTopLevelEntity> {
+    return topLevelEntities + listOf(value)
 }
 
 internal fun serialiseProgram(module: LlvmModule): String {
