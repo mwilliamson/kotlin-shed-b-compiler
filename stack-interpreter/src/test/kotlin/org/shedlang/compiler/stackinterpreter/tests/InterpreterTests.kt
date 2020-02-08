@@ -5,7 +5,10 @@ import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.*
-import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ImportPath
+import org.shedlang.compiler.ast.ModuleNode
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment

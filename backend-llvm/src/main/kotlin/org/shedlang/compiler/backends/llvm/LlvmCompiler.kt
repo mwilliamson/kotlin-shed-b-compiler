@@ -6,6 +6,7 @@ import kotlinx.collections.immutable.toPersistentList
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
@@ -237,8 +238,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val tagValue = instruction.tagValue
                 val shapeSize = if (tagValue == null) 0 else 1
 
-                val extraModuleStatements = mutableListOf<LlvmModuleStatement>()
-
                 val constructorDefinition = LlvmFunctionDefinition(
                     name = constructorName,
                     returnType = compiledValueType,
@@ -256,24 +255,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                             )
                         ),
 
-                        if (tagValue == null)
+                        if (tagValue == null) {
                             listOf()
-                        else {
+                        } else {
                             val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
-
-                            val tagValueDefinitionName = generateName("tagValueDefinition")
-
-                            val (tagValueDefinition, tagValueOperand) = defineString(
-                                globalName = tagValueDefinitionName,
-                                value = tagValue.value.value
-                            )
-                            extraModuleStatements.add(tagValueDefinition)
 
                             listOf(
                                 tagValuePointer(tagValuePointer, instance),
                                 LlvmStore(
                                     type = compiledTagValueType,
-                                    value = tagValueOperand,
+                                    value = LlvmOperandInt(tagValueToInt(tagValue)),
                                     pointer = tagValuePointer
                                 )
                             )
@@ -307,7 +298,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         )
                     ))
                     .addModuleStatements(listOf(constructorDefinition))
-                    .addModuleStatements(extraModuleStatements)
             }
 
             is Discard -> {
@@ -525,11 +515,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is TagValueEquals -> {
-                return compileStringComparison(
-                    differentSizeValue = 0,
-                    memcmpConditionCode = LlvmIcmp.ConditionCode.EQ,
-                    context = context
-                )
+                return compileIntComparison(LlvmIcmp.ConditionCode.EQ, context = context)
             }
 
             else -> {
@@ -1053,14 +1039,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is IrTagValue -> {
-                val globalName = generateName("tagValue")
-
-                val (stringDefinition, operand) = defineString(
-                    globalName = globalName,
-                    value = value.value.value.value
-                )
-
-                context.result(operand).addModuleStatements(listOf(stringDefinition))
+                context.result(LlvmOperandInt(tagValueToInt(value.value)))
             }
 
             is IrUnit ->
@@ -1069,6 +1048,17 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             else ->
                 throw UnsupportedOperationException(value.toString())
         }
+    }
+
+    private var nextTagValueInt = 1
+    private val tagValueToInt: MutableMap<TagValue, Int> = mutableMapOf()
+
+    private fun tagValueToInt(tagValue: TagValue): Int {
+        if (!tagValueToInt.containsKey(tagValue)) {
+            tagValueToInt[tagValue] = nextTagValueInt++
+        }
+
+        return tagValueToInt.getValue(tagValue)
     }
 }
 
