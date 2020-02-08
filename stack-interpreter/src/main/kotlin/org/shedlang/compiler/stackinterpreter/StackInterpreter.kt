@@ -686,6 +686,12 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             state2.pushTemporary(InterpreterString(tagValue.value.value)).nextInstruction()
         }
 
+        is TagValueEquals -> {
+            runBinaryStringOperation(initialState) { left, right ->
+                InterpreterBool(left == right)
+            }
+        }
+
         is TupleAccess -> {
             val (state2, value) = initialState.popTemporary()
             val element = (value as InterpreterTuple).elements[elementIndex]

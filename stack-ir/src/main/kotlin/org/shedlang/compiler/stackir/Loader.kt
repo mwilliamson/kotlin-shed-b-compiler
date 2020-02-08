@@ -530,7 +530,7 @@ class Loader(
         return persistentListOf(
             TagValueAccess,
             PushValue(IrTagValue(discriminator.tagValue)),
-            StringEquals
+            TagValueEquals
         )
     }
 

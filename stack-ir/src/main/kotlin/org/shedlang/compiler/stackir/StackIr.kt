@@ -131,4 +131,6 @@ object SymbolEquals: Instruction()
 
 object TagValueAccess: Instruction()
 
+object TagValueEquals: Instruction()
+
 class TupleAccess(val elementIndex: Int): Instruction()

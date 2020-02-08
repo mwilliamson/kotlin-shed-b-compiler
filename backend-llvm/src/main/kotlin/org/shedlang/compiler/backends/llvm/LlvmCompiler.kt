@@ -524,6 +524,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 ))
             }
 
+            is TagValueEquals -> {
+                return compileStringComparison(
+                    differentSizeValue = 0,
+                    memcmpConditionCode = LlvmIcmp.ConditionCode.EQ,
+                    context = context
+                )
+            }
+
             else -> {
                 throw UnsupportedOperationException(instruction.toString())
             }
