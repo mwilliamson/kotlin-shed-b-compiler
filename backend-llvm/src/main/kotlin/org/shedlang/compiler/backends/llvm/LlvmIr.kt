@@ -335,6 +335,17 @@ internal data class LlvmSub(
     }
 }
 
+internal data class LlvmTrunc(
+    val target: LlvmVariable,
+    val sourceType: LlvmType,
+    val operand: LlvmOperand,
+    val targetType: LlvmType
+): LlvmInstruction {
+    override fun serialise(): String {
+        return "${target.serialise()} = trunc ${sourceType.serialise()} ${operand.serialise()} to ${targetType.serialise()}"
+    }
+}
+
 internal data class LlvmZext(
     val target: LlvmVariable,
     val sourceType: LlvmType,

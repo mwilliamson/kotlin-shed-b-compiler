@@ -350,8 +350,11 @@ class Loader(
 
                 conditionInstructions.forEachIndexed { branchIndex, _ ->
                     instructions.add(conditionLabels[branchIndex])
-                    instructions.addAll(conditionInstructions[branchIndex])
-                    instructions.add(JumpIfFalse(conditionLabels.getOrElse(branchIndex + 1, { endLabel }).value))
+                    val nextConditionLabel = conditionLabels.getOrNull(branchIndex + 1)
+                    if (nextConditionLabel != null) {
+                        instructions.addAll(conditionInstructions[branchIndex])
+                        instructions.add(JumpIfFalse(nextConditionLabel.value))
+                    }
                     instructions.addAll(bodyInstructions[branchIndex])
                     instructions.add(Jump(endLabel.value))
                 }

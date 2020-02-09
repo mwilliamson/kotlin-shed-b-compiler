@@ -464,11 +464,18 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is JumpIfFalse -> {
                 val (context2, condition) = context.popTemporary()
+                val conditionTruncated = LlvmOperandLocal(generateName("condition"))
                 val trueLabel = createLlvmLabel("true")
 
                 return context2.addInstructions(
+                    LlvmTrunc(
+                        target = conditionTruncated,
+                        sourceType = compiledValueType,
+                        operand = condition,
+                        targetType = LlvmTypes.i1
+                    ),
                     LlvmBr(
-                        condition = condition,
+                        condition = conditionTruncated,
                         ifTrue = trueLabel,
                         ifFalse = labelToLlvmLabel(instruction.label)
                     ),
@@ -478,11 +485,18 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is JumpIfTrue -> {
                 val (context2, condition) = context.popTemporary()
+                val conditionTruncated = LlvmOperandLocal(generateName("condition"))
                 val falseLabel = createLlvmLabel("false")
 
                 return context2.addInstructions(
+                    LlvmTrunc(
+                        target = conditionTruncated,
+                        sourceType = compiledValueType,
+                        operand = condition,
+                        targetType = LlvmTypes.i1
+                    ),
                     LlvmBr(
-                        condition = condition,
+                        condition = conditionTruncated,
                         ifTrue = labelToLlvmLabel(instruction.label),
                         ifFalse = falseLabel
                     ),
