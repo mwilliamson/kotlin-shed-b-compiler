@@ -22,54 +22,58 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         private val labelPredecessors: PersistentMultiMap<String, LabelPredecessor>,
         private val generateName: (String) -> String
     ): LabelPredecessor {
-        fun addInstruction(vararg newInstructions: LlvmInstruction): FunctionContext {
+        fun addInstructions(vararg newInstructions: LlvmInstruction): FunctionContext {
             return addInstructions(newInstructions.asList())
         }
 
         fun addInstructions(newInstructions: List<LlvmInstruction>): FunctionContext {
             return newInstructions.fold(this) { acc, newInstruction ->
-                val newLabelPredecessors = when (newInstruction) {
-                    is LlvmBrUnconditional ->
-                        labelPredecessors.add(newInstruction.label, acc)
-                    is LlvmBr ->
-                        labelPredecessors
-                            .add(newInstruction.ifTrue, acc)
-                            .add(newInstruction.ifFalse, acc)
-                    is LlvmLabel -> {
-                        val previousInstruction = instructions.lastOrNull()
-                        if (previousInstruction == null || isTerminator(previousInstruction)) {
-                            labelPredecessors
-                        } else {
-                            labelPredecessors.add(newInstruction.name, acc)
-                        }
-                    }
-                    else ->
-                        labelPredecessors
-                }
-
-                val newBasicBlockName = when (newInstruction) {
-                    is LlvmLabel ->
-                        newInstruction.name
-                    else ->
-                        basicBlockName
-                }
-
-                val (newStack, extraInstructions) = when (newInstruction) {
-                    is LlvmLabel ->
-                        mergeStacks(newLabelPredecessors[newInstruction.name])
-                    else ->
-                        Pair(stack, listOf())
-                }
-
-                FunctionContext(
-                    stack = newStack,
-                    instructions = acc.instructions.add(newInstruction).addAll(extraInstructions),
-                    basicBlockName = newBasicBlockName,
-                    topLevelEntities = acc.topLevelEntities,
-                    labelPredecessors = newLabelPredecessors,
-                    generateName = acc.generateName
-                )
+                acc.addInstruction(newInstruction)
             }
+        }
+
+        fun addInstruction(newInstruction: LlvmInstruction): FunctionContext {
+            val newLabelPredecessors = when (newInstruction) {
+                is LlvmBrUnconditional ->
+                    labelPredecessors.add(newInstruction.label, this)
+                is LlvmBr ->
+                    labelPredecessors
+                        .add(newInstruction.ifTrue, this)
+                        .add(newInstruction.ifFalse, this)
+                is LlvmLabel -> {
+                    val previousInstruction = instructions.lastOrNull()
+                    if (previousInstruction == null || isTerminator(previousInstruction)) {
+                        labelPredecessors
+                    } else {
+                        labelPredecessors.add(newInstruction.name, this)
+                    }
+                }
+                else ->
+                    labelPredecessors
+            }
+
+            val newBasicBlockName = when (newInstruction) {
+                is LlvmLabel ->
+                    newInstruction.name
+                else ->
+                    basicBlockName
+            }
+
+            val (newStack, extraInstructions) = when (newInstruction) {
+                is LlvmLabel ->
+                    mergeStacks(newLabelPredecessors[newInstruction.name])
+                else ->
+                    Pair(stack, listOf())
+            }
+
+            return FunctionContext(
+                stack = newStack,
+                instructions = instructions.add(newInstruction).addAll(extraInstructions),
+                basicBlockName = newBasicBlockName,
+                topLevelEntities = topLevelEntities,
+                labelPredecessors = newLabelPredecessors,
+                generateName = generateName
+            )
         }
 
         fun addTopLevelEntities(newTopLevelEntities: List<LlvmTopLevelEntity>): FunctionContext {
@@ -258,7 +262,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val receiverPointer = LlvmOperandLocal(generateName("receiver"))
                 val result = LlvmOperandLocal(generateName("result"))
 
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmIntToPtr(
                         target = receiverPointer,
                         sourceType = compiledValueType,
@@ -329,7 +333,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return context
                     .addTopLevelEntities(bodyContext.topLevelEntities)
                     .addTopLevelEntities(listOf(functionDefinition))
-                    .addInstruction(getVariableAddress)
+                    .addInstructions(getVariableAddress)
                     .pushTemporary(functionPointerVariable)
             }
 
@@ -391,7 +395,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
                 return context
                     .addTopLevelEntities(listOf(constructorDefinition))
-                    .addInstruction(
+                    .addInstructions(
                         LlvmPtrToInt(
                             target = constructorPointer,
                             targetType = compiledValueType,
@@ -430,7 +434,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
                 val (context2, operand) = context.popTemporary()
 
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmSub(
                         target = result,
                         type = compiledIntType,
@@ -453,7 +457,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is Jump -> {
-                return context.addInstruction(
+                return context.addInstructions(
                     LlvmBrUnconditional(labelToLlvmLabel(instruction.label))
                 )
             }
@@ -462,7 +466,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val (context2, condition) = context.popTemporary()
                 val trueLabel = createLlvmLabel("true")
 
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmBr(
                         condition = condition,
                         ifTrue = trueLabel,
@@ -476,7 +480,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val (context2, condition) = context.popTemporary()
                 val falseLabel = createLlvmLabel("false")
 
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmBr(
                         condition = condition,
                         ifTrue = labelToLlvmLabel(instruction.label),
@@ -488,12 +492,12 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is Label -> {
                 val label = labelToLlvmLabel(instruction.value)
-                return context.addInstruction(LlvmLabel(label))
+                return context.addInstructions(LlvmLabel(label))
             }
 
             is LocalLoad -> {
                 val value = LlvmOperandLocal(generateName("load"))
-                return context.addInstruction(
+                return context.addInstructions(
                     LlvmLoad(
                         target = value,
                         type = compiledValueType,
@@ -504,7 +508,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is LocalStore -> {
                 val (context2, operand) = context.popTemporary()
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmStore(
                         type = compiledValueType,
                         value = operand,
@@ -519,7 +523,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
                 val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
                 val (exportName, exportVariableId) = instruction.exports.single()
-                return context.addInstruction(
+                return context.addInstructions(
                     malloc(moduleVariableUntyped, LlvmOperandInt(compiledValueTypeSize * instruction.exports.size)),
                     LlvmBitCast(
                         target = moduleVariable,
@@ -563,7 +567,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is Return -> {
                 val (context2, returnVariable) = context.popTemporary()
 
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmReturn(type = compiledValueType, value = returnVariable)
                 )
             }
@@ -594,7 +598,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
                 val tagValue = LlvmOperandLocal(generateName("tagValue"))
 
-                return context2.addInstruction(
+                return context2.addInstructions(
                     LlvmIntToPtr(
                         target = objectPointer,
                         sourceType = compiledValueType,
@@ -641,7 +645,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
         val context3 = context2
 
-        return context3.addInstruction(
+        return context3.addInstructions(
             LlvmIcmp(
                 target = booleanResult,
                 conditionCode = LlvmIcmp.ConditionCode.EQ,
@@ -693,7 +697,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val result = LlvmOperandLocal(generateName("op"))
 
         return context3
-            .addInstruction(func(result, compiledIntType, left, right))
+            .addInstructions(func(result, compiledIntType, left, right))
             .pushTemporary(result)
     }
 
@@ -720,7 +724,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val fullResult = LlvmOperandLocal(generateName("op"))
 
         return context3
-            .addInstruction(
+            .addInstructions(
                 LlvmIcmp(
                     target = booleanResult,
                     conditionCode = conditionCode,
