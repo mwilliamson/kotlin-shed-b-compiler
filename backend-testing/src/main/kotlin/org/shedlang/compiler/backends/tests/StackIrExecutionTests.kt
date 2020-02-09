@@ -598,14 +598,14 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
                 shapeReference,
                 namedArguments = listOf(
                     callNamedArgument("first", literalInt(1)),
-                    callNamedArgument("second", literalInt(2))
+                    callNamedArgument("second", literalInt(5))
                 )
             )
         )
 
         val firstReference = variableReference("first")
         val secondReference = variableReference("second")
-        val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
+        val addition = binaryOperation(BinaryOperator.SUBTRACT, firstReference, secondReference)
 
         val inspector = SimpleCodeInspector(
             shapeFields = mapOf(
@@ -642,7 +642,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             .addAll(loader.loadExpression(addition))
         val value = executeInstructions(instructions, type = IntType)
 
-        assertThat(value, isInt(3))
+        assertThat(value, isInt(-4))
     }
 
     @Test
