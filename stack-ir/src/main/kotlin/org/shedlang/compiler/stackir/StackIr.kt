@@ -58,8 +58,6 @@ object CodePointGreaterThan: Instruction()
 
 object CodePointGreaterThanOrEqual: Instruction()
 
-class CreateTuple(val length: Int): Instruction()
-
 class DeclareFunction(
     val bodyInstructions: PersistentList<Instruction>,
     val positionalParameterIds: List<Int>,
@@ -134,3 +132,5 @@ object TagValueAccess: Instruction()
 object TagValueEquals: Instruction()
 
 class TupleAccess(val elementIndex: Int): Instruction()
+
+class TupleCreate(val length: Int): Instruction()

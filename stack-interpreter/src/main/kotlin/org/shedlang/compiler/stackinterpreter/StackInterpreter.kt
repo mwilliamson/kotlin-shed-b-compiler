@@ -457,11 +457,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
-        is CreateTuple -> {
-            val (state2, elements) = initialState.popTemporaries(length)
-            state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
-        }
-
         is DeclareFunction -> {
             initialState.pushTemporary(InterpreterFunction(
                 bodyInstructions = bodyInstructions,
@@ -696,6 +691,11 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             val (state2, value) = initialState.popTemporary()
             val element = (value as InterpreterTuple).elements[elementIndex]
             state2.pushTemporary(element).nextInstruction()
+        }
+
+        is TupleCreate -> {
+            val (state2, elements) = initialState.popTemporaries(length)
+            state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
         }
     }
 }

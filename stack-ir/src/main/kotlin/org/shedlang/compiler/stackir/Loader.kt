@@ -115,7 +115,7 @@ class Loader(
 
             override fun visit(node: TupleNode): PersistentList<Instruction> {
                 val elementInstructions = node.elements.flatMap { element -> loadExpression(element) }
-                return elementInstructions.toPersistentList().add(CreateTuple(node.elements.size))
+                return elementInstructions.toPersistentList().add(TupleCreate(node.elements.size))
             }
 
             override fun visit(node: ReferenceNode): PersistentList<Instruction> {
