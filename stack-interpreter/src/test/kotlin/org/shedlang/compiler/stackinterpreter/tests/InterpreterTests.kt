@@ -288,30 +288,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun emptyFunctionReturnsUnit() {
-        val function = function(
-            name = "main",
-            body = listOf()
-        )
-        val functionReference = variableReference("main")
-        val call = call(receiver = functionReference)
-        val references = ResolvedReferencesMap(mapOf(
-            functionReference.nodeId to function
-        ))
-        val types = createTypes(
-            expressionTypes = mapOf(
-                functionReference.nodeId to functionType()
-            )
-        )
-
-        val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
-        val value = executeInstructions(instructions)
-
-        assertThat(value, isUnit)
-    }
-
-    @Test
     fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithPositionalArguments() {
         val firstParameter = parameter("first")
         val secondParameter = parameter("second")
