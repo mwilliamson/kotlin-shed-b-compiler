@@ -672,11 +672,11 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val secondTarget = targetVariable("target2")
         val valStatement = valStatement(
             target = targetTuple(listOf(firstTarget, secondTarget)),
-            expression = tupleNode(listOf(literalInt(1), literalInt(2)))
+            expression = tupleNode(listOf(literalInt(1), literalInt(5)))
         )
         val firstReference = variableReference("first")
         val secondReference = variableReference("second")
-        val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
+        val addition = binaryOperation(BinaryOperator.SUBTRACT, firstReference, secondReference)
         val references = ResolvedReferencesMap(mapOf(
             firstReference.nodeId to firstTarget,
             secondReference.nodeId to secondTarget
@@ -692,7 +692,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             .addAll(loader.loadExpression(addition))
         val value = executeInstructions(instructions, type = IntType)
 
-        assertThat(value, isInt(3))
+        assertThat(value, isInt(-4))
     }
 
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
