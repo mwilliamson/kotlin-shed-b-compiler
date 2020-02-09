@@ -258,36 +258,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithZeroArguments() {
-        val function = function(
-            name = "main",
-            body = listOf(
-                expressionStatementReturn(
-                    literalInt(42)
-                )
-            )
-        )
-        val functionReference = variableReference("main")
-        val call = call(
-            receiver = functionReference
-        )
-        val references = ResolvedReferencesMap(mapOf(
-            functionReference.nodeId to function
-        ))
-        val types = createTypes(
-            expressionTypes = mapOf(
-                functionReference.nodeId to functionType()
-            )
-        )
-
-        val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
-        val value = executeInstructions(instructions)
-
-        assertThat(value, isInt(42))
-    }
-
-    @Test
     fun partialCallCombinesPositionalArguments() {
         val parameter1 = parameter("first")
         val parameter2 = parameter("second")

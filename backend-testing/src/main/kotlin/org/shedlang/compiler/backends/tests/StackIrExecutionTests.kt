@@ -837,6 +837,36 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithZeroArguments() {
+        val function = function(
+            name = "main",
+            body = listOf(
+                expressionStatementReturn(
+                    literalInt(42)
+                )
+            )
+        )
+        val functionReference = variableReference("main")
+        val call = call(
+            receiver = functionReference
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function
+        ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
+
+        val loader = loader(references = references, types = types)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(42))
+    }
+
+    @Test
     fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithPositionalArguments() {
         val firstParameter = parameter("first")
         val secondParameter = parameter("second")
