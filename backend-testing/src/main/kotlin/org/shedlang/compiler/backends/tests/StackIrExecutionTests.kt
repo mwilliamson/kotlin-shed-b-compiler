@@ -3,9 +3,11 @@ package org.shedlang.compiler.backends.tests
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Block
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.backends.SimpleCodeInspector
@@ -644,8 +646,33 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(2))
     }
 
+    @Test
+    fun variableIntroducedByValCanBeRead() {
+        val target = targetVariable("x")
+        val reference = variableReference("x")
+        val block = block(
+            listOf(
+                valStatement(target = target, expression = literalInt(42)),
+                expressionStatementReturn(reference)
+            )
+        )
+
+        val references = ResolvedReferencesMap(mapOf(
+            reference.nodeId to target
+        ))
+
+        val value = evaluateBlock(block, type = IntType, references = references)
+
+        assertThat(value, isInt(42))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
+        return executeInstructions(instructions, type = type)
+    }
+
+    private fun evaluateBlock(block: Block, type: Type, references: ResolvedReferences): IrValue {
+        val instructions = loader(references = references).loadBlock(block)
         return executeInstructions(instructions, type = type)
     }
 

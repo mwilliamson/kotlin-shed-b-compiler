@@ -222,26 +222,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun variableIntroducedByValCanBeRead() {
-        val target = targetVariable("x")
-        val reference = variableReference("x")
-        val block = block(
-            listOf(
-                valStatement(target = target, expression = literalInt(42)),
-                expressionStatementReturn(reference)
-            )
-        )
-
-        val references = ResolvedReferencesMap(mapOf(
-            reference.nodeId to target
-        ))
-
-        val value = evaluateBlock(block, references = references)
-
-        assertThat(value, isInt(42))
-    }
-
-    @Test
     fun canCallFunctionDefinedInModuleWithZeroArguments() {
         val function = function(
             name = "main",
