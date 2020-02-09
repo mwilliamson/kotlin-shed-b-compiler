@@ -162,7 +162,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     fun compile(target: Path, mainModule: List<Identifier>) {
-        val defineMainModule = moduleDefine(mainModule)
+        val defineMainModule = moduleDefinition(mainModule)
 
         val mainModuleVariable = LlvmOperandLocal("mainModule")
         val mainFunctionUntypedVariable = LlvmOperandLocal("mainFunctionUntyped")
@@ -215,7 +215,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         target.toFile().writeText(source)
     }
 
-    private fun moduleDefine(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
+    private fun moduleDefinition(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
         return listOf(
             LlvmGlobalDefinition(
                 name = nameForModuleValue(moduleName),
