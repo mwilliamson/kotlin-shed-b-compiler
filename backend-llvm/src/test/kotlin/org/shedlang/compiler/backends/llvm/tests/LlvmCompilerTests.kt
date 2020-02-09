@@ -110,6 +110,7 @@ private val environment = object: StackIrExecutionEnvironment {
         val mainFunctionDefinition = LlvmFunctionDefinition(
             name = "main",
             returnType = LlvmTypes.i64,
+            parameters = listOf(),
             body = context.instructions + print + listOf(
                 LlvmReturn(LlvmTypes.i64, LlvmOperandInt(0))
             )

@@ -4,6 +4,8 @@ import kotlinx.collections.immutable.*
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.nio.file.Path
@@ -169,6 +171,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val main = LlvmFunctionDefinition(
             returnType = compiledValueType,
             name = "main",
+            parameters = listOf(),
             body = listOf(
                 importModule(mainModule, target = mainModuleVariable),
                 fieldAccess(
@@ -232,6 +235,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             LlvmFunctionDefinition(
                 name = nameForModuleInit(moduleName),
                 returnType = LlvmTypes.void,
+                parameters = listOf(),
                 body = bodyContext.instructions.add(LlvmReturnVoid)
             )
         )
@@ -267,25 +271,31 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is Call -> {
-                val (context2, receiver) = context.popTemporary()
+                val (context2, namedArgumentValues) = context.popTemporaries(instruction.namedArgumentNames.size)
+                val (context3, receiver) = context2.popTemporary()
                 val receiverPointer = LlvmOperandLocal(generateName("receiver"))
                 val result = LlvmOperandLocal(generateName("result"))
 
-                return context2.addInstructions(
+                val namedArguments = instruction.namedArgumentNames
+                    .zip(namedArgumentValues)
+                    .sortedBy { (name, value) -> name }
+                    .map { (name, value) -> LlvmTypedOperand(compiledValueType, value) }
+
+                return context3.addInstructions(
                     LlvmIntToPtr(
                         target = receiverPointer,
                         sourceType = compiledValueType,
                         value = receiver,
                         targetType = LlvmTypes.pointer(LlvmTypes.function(
                             returnType = compiledValueType,
-                            parameterTypes = listOf()
+                            parameterTypes = instruction.namedArgumentNames.map { _ -> compiledValueType }
                         ))
                     ),
                     LlvmCall(
                         target = result,
                         returnType = compiledValueType,
                         functionPointer = receiverPointer,
-                        arguments = listOf()
+                        arguments = namedArguments
                     )
                 ).pushTemporary(result)
             }
@@ -326,6 +336,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val functionDefinition = LlvmFunctionDefinition(
                     name = functionName,
                     returnType = compiledValueType,
+                    parameters = listOf(),
                     body = bodyContext.instructions
                 )
 
@@ -347,75 +358,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is DeclareShape -> {
-                val constructorName = generateName("constructor")
-                val constructorPointer = LlvmOperandLocal(generateName("constructorPointer"))
-                val instanceBytes = LlvmOperandLocal(generateName("instanceBytes"))
-                val instance = LlvmOperandLocal(generateName("instance"))
-                val instanceAsValue = LlvmOperandLocal(generateName("instanceAsValue"))
-                val tagValue = instruction.tagValue
-                val shapeSize = if (tagValue == null) 0 else 1
-
-                val constructorDefinition = LlvmFunctionDefinition(
-                    name = constructorName,
-                    returnType = compiledValueType,
-                    body = listOf(
-                        listOf(
-                            malloc(
-                                target = instanceBytes,
-                                bytes = LlvmOperandInt(compiledValueTypeSize * shapeSize)
-                            ),
-                            LlvmBitCast(
-                                target = instance,
-                                sourceType = LlvmTypes.pointer(LlvmTypes.i8),
-                                value = instanceBytes,
-                                targetType = compiledObjectType
-                            )
-                        ),
-
-                        if (tagValue == null) {
-                            listOf()
-                        } else {
-                            val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
-
-                            listOf(
-                                tagValuePointer(tagValuePointer, instance),
-                                LlvmStore(
-                                    type = compiledTagValueType,
-                                    value = LlvmOperandInt(tagValueToInt(tagValue)),
-                                    pointer = tagValuePointer
-                                )
-                            )
-                        },
-
-                        listOf(
-                            LlvmPtrToInt(
-                                target = instanceAsValue,
-                                sourceType = compiledObjectType,
-                                value = instance,
-                                targetType = compiledValueType
-                            ),
-                            LlvmReturn(
-                                type = compiledValueType,
-                                value = instanceAsValue
-                            )
-                        )
-                    ).flatten()
-                )
-
-                return context
-                    .addTopLevelEntities(listOf(constructorDefinition))
-                    .addInstructions(
-                        LlvmPtrToInt(
-                            target = constructorPointer,
-                            targetType = compiledValueType,
-                            value = LlvmOperandGlobal(constructorName),
-                            sourceType = LlvmTypes.pointer(LlvmTypes.function(
-                                returnType = compiledValueType,
-                                parameterTypes = listOf()
-                            ))
-                        )
-                    )
-                    .pushTemporary(constructorPointer)
+                return compileDeclareShape(instruction, context)
             }
 
             is Discard -> {
@@ -428,6 +371,32 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is Exit -> {
                 return context
+            }
+
+            is FieldAccess -> {
+                val (context2, operand) = context.popTemporary()
+
+                val instance = LlvmOperandLocal(generateName("instance"))
+                val field = LlvmOperandLocal(generateName("field"))
+
+                return context2
+                    .addInstructions(
+                        LlvmIntToPtr(
+                            target = instance,
+                            sourceType = compiledValueType,
+                            value = operand,
+                            targetType = compiledObjectType
+                        )
+                    )
+                    .addInstructions(
+                        fieldAccess(
+                            target = field,
+                            receiver = instance,
+                            fieldName = instruction.fieldName,
+                            receiverType = instruction.receiverType!!
+                        )
+                    )
+                    .pushTemporary(field)
             }
 
             is IntAdd -> {
@@ -1148,28 +1117,139 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         return LlvmOperandLocal("local_$variableId")
     }
 
-    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmInstruction> {
-        val fieldPointerVariable = LlvmOperandLocal("fieldPointer")
+    private fun compileDeclareShape(instruction: DeclareShape, context: FunctionContext): FunctionContext {
+        val constructorName = generateName("constructor")
+        val constructorPointer = LlvmOperandLocal(generateName("constructorPointer"))
+        val instanceBytes = LlvmOperandLocal(generateName("instanceBytes"))
+        val instance = LlvmOperandLocal(generateName("instance"))
+        val instanceAsValue = LlvmOperandLocal(generateName("instanceAsValue"))
+        val tagValue = instruction.tagValue
+        val shapeSize = (if (tagValue == null) 0 else 1) + instruction.fields.size
 
-        // TODO: calculate fieldIndex
-        val fieldIndex = 0
+        val fieldNames = instruction.fields.map { field -> field.name }
+        val parameterNames = fieldNames
+            .sorted()
+            .map { fieldName -> generateName(fieldName.value) }
+
+        val parameters = parameterNames.map { parameterName -> LlvmParameter(compiledValueType, parameterName) }
+
+        val constructorDefinition = LlvmFunctionDefinition(
+            name = constructorName,
+            returnType = compiledValueType,
+            parameters = parameters,
+            body = listOf(
+                listOf(
+                    malloc(
+                        target = instanceBytes,
+                        bytes = LlvmOperandInt(compiledValueTypeSize * shapeSize)
+                    ),
+                    LlvmBitCast(
+                        target = instance,
+                        sourceType = LlvmTypes.pointer(LlvmTypes.i8),
+                        value = instanceBytes,
+                        targetType = compiledObjectType
+                    )
+                ),
+
+                if (tagValue == null) {
+                    listOf()
+                } else {
+                    val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
+
+                    listOf(
+                        tagValuePointer(tagValuePointer, instance),
+                        LlvmStore(
+                            type = compiledTagValueType,
+                            value = LlvmOperandInt(tagValueToInt(tagValue)),
+                            pointer = tagValuePointer
+                        )
+                    )
+                },
+
+                fieldNames.zip(parameterNames).flatMap { (fieldName, parameterName) ->
+                    val parameter = LlvmOperandLocal(parameterName)
+                    val fieldPointer = LlvmOperandLocal(generateName("fieldPointer"))
+
+                    listOf(
+                        fieldPointer(fieldPointer, instance, fieldNames.indexOf(fieldName)),
+                        LlvmStore(
+                            type = compiledValueType,
+                            value = parameter,
+                            pointer = fieldPointer
+                        )
+                    )
+                },
+
+                listOf(
+                    LlvmPtrToInt(
+                        target = instanceAsValue,
+                        sourceType = compiledObjectType,
+                        value = instance,
+                        targetType = compiledValueType
+                    ),
+                    LlvmReturn(
+                        type = compiledValueType,
+                        value = instanceAsValue
+                    )
+                )
+            ).flatten()
+        )
+
+        return context
+            .addTopLevelEntities(listOf(constructorDefinition))
+            .addInstructions(
+                LlvmPtrToInt(
+                    target = constructorPointer,
+                    targetType = compiledValueType,
+                    value = LlvmOperandGlobal(constructorName),
+                    sourceType = LlvmTypes.pointer(LlvmTypes.function(
+                        returnType = compiledValueType,
+                        parameterTypes = parameters.map { parameter -> parameter.type }
+                    ))
+                )
+            )
+            .pushTemporary(constructorPointer)
+    }
+
+    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmInstruction> {
+        val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
 
         return listOf(
-            LlvmGetElementPtr(
-                target = fieldPointerVariable,
-                type = compiledObjectType.type,
-                pointer = receiver,
-                indices = listOf(
-                    LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0)),
-                    LlvmIndex(LlvmTypes.i32, LlvmOperandInt(fieldIndex))
-                )
-            ),
+            fieldPointer(fieldPointerVariable, receiver, fieldIndex(receiverType, fieldName)),
             LlvmLoad(
                 target = target,
                 type = compiledValueType,
                 pointer = fieldPointerVariable
             )
         )
+    }
+
+    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, fieldIndex: Int): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledObjectType.type,
+            pointer = receiver,
+            indices = listOf(
+                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0)),
+                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(fieldIndex))
+            )
+        )
+    }
+
+    private fun fieldIndex(receiverType: Type, fieldName: Identifier): Int {
+        val (fields, hasTagValue) = when (receiverType) {
+            is ModuleType -> receiverType.fields.keys to false
+            is ShapeType -> receiverType.fields.keys to (receiverType.tagValue != null)
+            else -> setOf<Identifier>() to false
+        }
+
+        val fieldIndex = (if (hasTagValue) 1 else 0) + fields.sorted().indexOf(fieldName)
+
+        if (fieldIndex == -1) {
+            throw Exception("could not find field: ${fieldName.value}\nin type: ${receiverType.shortDescription}")
+        } else {
+            return fieldIndex
+        }
     }
 
     private fun importModule(moduleName: List<Identifier>, target: LlvmVariable): List<LlvmInstruction> {

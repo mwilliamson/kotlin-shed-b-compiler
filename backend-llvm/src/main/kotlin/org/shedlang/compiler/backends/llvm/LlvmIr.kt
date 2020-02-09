@@ -360,6 +360,7 @@ internal data class LlvmZext(
 internal data class LlvmFunctionDefinition(
     val name: String,
     val returnType: LlvmType,
+    val parameters: List<LlvmParameter>,
     val body: List<LlvmInstruction>
 ): LlvmTopLevelEntity {
     override fun serialise(): String {
@@ -367,7 +368,17 @@ internal data class LlvmFunctionDefinition(
             // TODO: get rid of this hack
             if (instruction is LlvmLabel) { "" } else { "    " } + instruction.serialise()+ "\n"
         }
-        return "define ${returnType.serialise()} @$name() {\n$bodyString}\n"
+        val parametersString = parameters.joinToString(", ") { parameter -> parameter.serialise() }
+        return "define ${returnType.serialise()} @$name($parametersString) {\n$bodyString}\n"
+    }
+}
+
+internal data class LlvmParameter(
+    val type: LlvmType,
+    val name: String
+) {
+    fun serialise(): String {
+        return "${type.serialise()} %$name"
     }
 }
 

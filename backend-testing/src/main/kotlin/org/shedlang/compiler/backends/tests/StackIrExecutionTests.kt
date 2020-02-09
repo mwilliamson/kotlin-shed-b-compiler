@@ -529,6 +529,123 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun canAccessFieldsOnShapeValue() {
+        val shapeDeclaration = shape("Pair")
+        val shapeReference = variableReference("Pair")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    callNamedArgument("first", literalInt(1)),
+                    callNamedArgument("second", literalInt(2))
+                )
+            )
+        )
+        val receiverReference = variableReference("receiver")
+        val fieldAccess = fieldAccess(receiverReference, "second")
+
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "first"),
+                    fieldInspector(name = "second")
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+        val shapeType = shapeType(
+            fields = listOf(
+                field("first", type = IntType),
+                field("second", type = IntType)
+            )
+        )
+        val types = createTypes(
+            expressionTypes = mapOf(
+                receiverReference.nodeId to shapeType,
+                shapeReference.nodeId to MetaType(shapeType)
+            )
+        )
+
+        val loader = loader(inspector = inspector, references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(fieldAccess))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
+    fun canDestructureFieldsInVal() {
+        val shapeDeclaration = shape("Pair")
+        val shapeReference = variableReference("Pair")
+
+        val firstTarget = targetVariable("target1")
+        val secondTarget = targetVariable("target2")
+        val fieldsTarget = targetFields(listOf(
+            fieldName("first") to firstTarget,
+            fieldName("second") to secondTarget
+        ))
+        val receiverDeclaration = valStatement(
+            target = fieldsTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    callNamedArgument("first", literalInt(1)),
+                    callNamedArgument("second", literalInt(2))
+                )
+            )
+        )
+
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
+
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "first"),
+                    fieldInspector(name = "second")
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            firstReference.nodeId to firstTarget,
+            secondReference.nodeId to secondTarget
+        ))
+        val shapeType = shapeType(
+            fields = listOf(
+                field("first", type = IntType),
+                field("second", type = IntType)
+            )
+        )
+        val types = createTypes(
+            expressionTypes = mapOf(
+                shapeReference.nodeId to MetaType(shapeType),
+                firstReference.nodeId to IntType
+            ),
+            targetTypes = mapOf(
+                fieldsTarget.nodeId to shapeType
+            )
+        )
+
+        val loader = loader(inspector = inspector, references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(addition))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(3))
+    }
+
+    @Test
     fun whenConditionOfIfIsTrueThenFinalValueIsResultOfTrueBranch() {
         val node = ifExpression(
             literalBool(true),
