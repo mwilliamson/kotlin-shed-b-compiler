@@ -18,6 +18,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
     internal class FunctionContext(
         override val stack: PersistentList<LlvmOperand>,
+        internal val locals: PersistentMap<Int, LlvmOperand>,
         internal val instructions: PersistentList<LlvmInstruction>,
         override val basicBlockName: String,
         internal val topLevelEntities: PersistentList<LlvmTopLevelEntity>,
@@ -70,6 +71,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             return FunctionContext(
                 stack = newStack,
+                locals = locals,
                 instructions = instructions.add(newInstruction).addAll(extraInstructions),
                 basicBlockName = newBasicBlockName,
                 topLevelEntities = topLevelEntities,
@@ -81,9 +83,30 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         fun addTopLevelEntities(newTopLevelEntities: List<LlvmTopLevelEntity>): FunctionContext {
             return FunctionContext(
                 stack = stack,
+                locals = locals,
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities.addAll(newTopLevelEntities),
+                labelPredecessors = labelPredecessors,
+                generateName = generateName
+            )
+        }
+
+        fun localLoad(variableId: Int): LlvmOperand {
+            return locals.getValue(variableId)
+        }
+
+        fun localStore(variableId: Int, operand: LlvmOperand): FunctionContext {
+            return updateLocals(locals.put(variableId, operand))
+        }
+
+        private fun updateLocals(newLocals: PersistentMap<Int, LlvmOperand>): FunctionContext {
+            return FunctionContext(
+                stack = stack,
+                locals = newLocals,
+                instructions = instructions,
+                basicBlockName = basicBlockName,
+                topLevelEntities = topLevelEntities,
                 labelPredecessors = labelPredecessors,
                 generateName = generateName
             )
@@ -120,6 +143,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         private fun updateStack(newStack: PersistentList<LlvmOperand>): FunctionContext {
             return FunctionContext(
                 stack = newStack,
+                locals = locals,
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities,
@@ -255,16 +279,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: FunctionContext): FunctionContext {
-        val localVariableIds = instructions
-            .filterIsInstance<LocalStore>()
-            .map { store -> store.variableId }
-            .distinct()
-
-        val allocateLocals = localVariableIds.map { localVariableId ->
-            LlvmAlloca(target = variableForLocal(localVariableId), type = compiledValueType)
-        }.toPersistentList<LlvmInstruction>()
-
-        return instructions.fold(context.addInstructions(allocateLocals)) { result, instruction ->
+        return instructions.fold(context) { result, instruction ->
             compileInstruction(instruction, context = result)
         }
     }
@@ -353,22 +368,17 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     LlvmParameter(compiledValueType, generateName("parameter"))
                 }
 
-                val storeArgumentLocals = parameterIds.zip(parameters).flatMap { (parameterId, parameter) ->
-                    listOf(
-                        LlvmAlloca(target = variableForLocal(parameterId), type = compiledValueType),
-                        LlvmStore(type = compiledValueType, value = LlvmOperandLocal(parameter.name), pointer = variableForLocal(parameterId))
-                    )
-                }.toPersistentList()
-
                 val bodyContext = compileInstructions(
                     instruction.bodyInstructions,
-                    context = startFunction()
+                    context = parameterIds.zip(parameters).fold(startFunction()) { context, (parameterId, parameter) ->
+                        context.localStore(parameterId, LlvmOperandLocal(parameter.name))
+                    }
                 )
                 val functionDefinition = LlvmFunctionDefinition(
                     name = functionName,
                     returnType = compiledValueType,
                     parameters = parameters,
-                    body = storeArgumentLocals.addAll(bodyContext.instructions)
+                    body = bodyContext.instructions
                 )
 
                 val getVariableAddress = LlvmPtrToInt(
@@ -519,30 +529,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is LocalLoad -> {
-                val value = LlvmOperandLocal(generateName("load"))
-                return context.addInstructions(
-                    LlvmLoad(
-                        target = value,
-                        type = compiledValueType,
-                        pointer = variableForLocal(instruction.variableId)
-                    )
-                ).pushTemporary(value)
+                return context.pushTemporary(context.localLoad(instruction.variableId))
             }
 
             is LocalStore -> {
                 val (context2, operand) = context.popTemporary()
-                return context2.addInstructions(
-                    LlvmStore(
-                        type = compiledValueType,
-                        value = operand,
-                        pointer = variableForLocal(instruction.variableId)
-                    )
-                )
+                return context2.localStore(instruction.variableId, operand)
             }
 
             is ModuleStore -> {
                 val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
-                val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
                 val moduleType = moduleType(instruction.moduleName)
 
                 val storeFields = instruction.exports.flatMap { (exportName, exportVariableId) ->
@@ -556,14 +552,9 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(fieldIndex(moduleType, exportName)))
                             )
                         ),
-                        LlvmLoad(
-                            target = fieldValueVariable,
-                            type = compiledValueType,
-                            pointer = variableForLocal(exportVariableId)
-                        ),
                         LlvmStore(
                             type = compiledValueType,
-                            value = fieldValueVariable,
+                            value = context.localLoad(exportVariableId),
                             pointer = fieldPointerVariable
                         )
                     )
@@ -709,6 +700,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             basicBlockName = generateName("entry"),
             instructions = persistentListOf(),
             stack = persistentListOf(),
+            locals = persistentMapOf(),
             topLevelEntities = persistentListOf(),
             labelPredecessors = persistentMultiMapOf(),
             generateName = ::generateName
@@ -1128,12 +1120,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             )
         )
     }
-
-    private fun variableForLocal(variableId: Int): LlvmVariable {
-        return LlvmOperandLocal(variableNameForLocal(variableId))
-    }
-
-    private fun variableNameForLocal(variableId: Int) = "local_$variableId"
 
     private fun compileDeclareShape(instruction: DeclareShape, context: FunctionContext): FunctionContext {
         val constructorName = generateName("constructor")
