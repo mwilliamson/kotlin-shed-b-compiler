@@ -96,6 +96,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             return Pair(updateStack(newStack), value)
         }
 
+        fun popTemporaries(count: Int): Pair<FunctionContext, List<LlvmOperand>> {
+            val (newContext, operands) = (0 until count).fold(Pair(this, persistentListOf<LlvmOperand>())) { (newContext, operands), _ ->
+                val (context2, operand) = newContext.popTemporary()
+                Pair(context2, operands.add(operand))
+            }
+
+            return Pair(newContext, operands.reversed())
+        }
+
         fun duplicateTemporary(): FunctionContext {
             return pushTemporary(peekTemporary())
         }
@@ -635,6 +644,71 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 return compileIntComparison(LlvmIcmp.ConditionCode.EQ, context = context)
             }
 
+            is TupleAccess -> {
+                val (context2, operand) = context.popTemporary()
+
+                val tuple = LlvmOperandLocal(generateName("tuple"))
+                val elementPointer = LlvmOperandLocal(generateName("elementPointer"))
+                val element = LlvmOperandLocal(generateName("element"))
+
+                return context2.addInstructions(
+                    LlvmIntToPtr(
+                        target = tuple,
+                        sourceType = compiledValueType,
+                        value = operand,
+                        targetType = compiledTupleType
+                    ),
+                    tupleElementPointer(elementPointer, tuple, instruction.elementIndex),
+                    LlvmLoad(
+                        target = element,
+                        type = compiledValueType,
+                        pointer = elementPointer
+                    )
+                ).pushTemporary(element)
+            }
+
+            is TupleCreate -> {
+                val tupleBytes = LlvmOperandLocal(generateName("tupleBytes"))
+                val tuple = LlvmOperandLocal(generateName("tuple"))
+                val result = LlvmOperandLocal(generateName("result"))
+
+                val context2 = context.addInstructions(
+                    malloc(
+                        target = tupleBytes,
+                        bytes = LlvmOperandInt(compiledValueTypeSize * instruction.length)
+                    ),
+                    LlvmBitCast(
+                        target = tuple,
+                        sourceType = LlvmTypes.pointer(LlvmTypes.i8),
+                        value = tupleBytes,
+                        targetType = compiledTupleType
+                    )
+                )
+
+                val (context3, elements) = context2.popTemporaries(instruction.length)
+
+                val context4 = elements.foldIndexed(context3) { elementIndex, newContext, element ->
+                    val elementPointer = LlvmOperandLocal(generateName("element"))
+                    newContext.addInstructions(
+                        tupleElementPointer(elementPointer, tuple, elementIndex),
+                        LlvmStore(
+                            type = compiledValueType,
+                            value = element,
+                            pointer = elementPointer
+                        )
+                    )
+                }
+
+                return context4.addInstructions(
+                    LlvmPtrToInt(
+                        target = result,
+                        sourceType = compiledTupleType,
+                        value = tuple,
+                        targetType = compiledValueType
+                    )
+                ).pushTemporary(result)
+            }
+
             else -> {
                 throw UnsupportedOperationException(instruction.toString())
             }
@@ -1047,6 +1121,18 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
+    private fun tupleElementPointer(target: LlvmOperandLocal, receiver: LlvmOperandLocal, elementIndex: Int): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledTupleType.type,
+            pointer = receiver,
+            indices = listOf(
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(elementIndex))
+            )
+        )
+    }
+
     private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
         return LlvmCall(
             target = target,
@@ -1203,6 +1289,7 @@ internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
 ))
 internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
 private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
+private val compiledTupleType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal object CTypes {
     val int = LlvmTypes.i32

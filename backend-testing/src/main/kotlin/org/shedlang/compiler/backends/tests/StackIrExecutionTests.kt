@@ -666,6 +666,35 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(42))
     }
 
+    @Test
+    fun canCreateAndDestructureTuple() {
+        val firstTarget = targetVariable("target1")
+        val secondTarget = targetVariable("target2")
+        val valStatement = valStatement(
+            target = targetTuple(listOf(firstTarget, secondTarget)),
+            expression = tupleNode(listOf(literalInt(1), literalInt(2)))
+        )
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
+        val references = ResolvedReferencesMap(mapOf(
+            firstReference.nodeId to firstTarget,
+            secondReference.nodeId to secondTarget
+        ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                firstReference.nodeId to IntType
+            )
+        )
+
+        val loader = loader(references = references, types = types)
+        val instructions = loader.loadFunctionStatement(valStatement)
+            .addAll(loader.loadExpression(addition))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(3))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions, type = type)

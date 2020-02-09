@@ -193,35 +193,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun canCreateAndDestructureTuple() {
-        val firstTarget = targetVariable("target1")
-        val secondTarget = targetVariable("target2")
-        val valStatement = valStatement(
-            target = targetTuple(listOf(firstTarget, secondTarget)),
-            expression = tupleNode(listOf(literalInt(1), literalInt(2)))
-        )
-        val firstReference = variableReference("first")
-        val secondReference = variableReference("second")
-        val addition = binaryOperation(BinaryOperator.ADD, firstReference, secondReference)
-        val references = ResolvedReferencesMap(mapOf(
-            firstReference.nodeId to firstTarget,
-            secondReference.nodeId to secondTarget
-        ))
-        val types = createTypes(
-            expressionTypes = mapOf(
-                firstReference.nodeId to IntType
-            )
-        )
-
-        val loader = loader(references = references, types = types)
-        val instructions = loader.loadFunctionStatement(valStatement)
-            .addAll(loader.loadExpression(addition))
-        val value = executeInstructions(instructions)
-
-        assertThat(value, isInt(3))
-    }
-
-    @Test
     fun canCallFunctionDefinedInModuleWithZeroArguments() {
         val function = function(
             name = "main",
