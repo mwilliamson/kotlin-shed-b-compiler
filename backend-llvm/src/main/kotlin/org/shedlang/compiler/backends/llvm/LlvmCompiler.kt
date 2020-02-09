@@ -1228,41 +1228,6 @@ internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDef
     return Pair(definition, operand)
 }
 
-internal class CompilationResult<out T>(
-    val value: T,
-    val topLevelEntities: List<LlvmTopLevelEntity>,
-    val context: Compiler.FunctionContext
-) {
-    fun <R> mapValue(func: (T, Compiler.FunctionContext) -> R): CompilationResult<R> {
-        return CompilationResult(
-            value = func(value, context),
-            topLevelEntities = topLevelEntities,
-            context = context
-        )
-    }
-
-    fun <R> flatMapValue(func: (T, Compiler.FunctionContext) -> CompilationResult<R>): CompilationResult<R> {
-        val result = func(value, context)
-        return CompilationResult(
-            value = result.value,
-            topLevelEntities = topLevelEntities + result.topLevelEntities,
-            context = result.context
-        )
-    }
-
-    fun addTopLevelEntities(topLevelEntities: List<LlvmTopLevelEntity>): CompilationResult<T> {
-        return CompilationResult(
-            value = value,
-            topLevelEntities = this.topLevelEntities + topLevelEntities,
-            context = context
-        )
-    }
-}
-
-internal fun CompilationResult<LlvmTopLevelEntity>.toTopLevelEntities(): List<LlvmTopLevelEntity> {
-    return topLevelEntities + listOf(value)
-}
-
 internal fun serialiseProgram(module: LlvmModule): String {
     // TODO: handle malloc declaration properly
     return """
