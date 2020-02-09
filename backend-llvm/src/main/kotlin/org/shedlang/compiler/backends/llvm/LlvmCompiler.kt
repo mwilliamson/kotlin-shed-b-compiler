@@ -272,30 +272,34 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is Call -> {
                 val (context2, namedArgumentValues) = context.popTemporaries(instruction.namedArgumentNames.size)
-                val (context3, receiver) = context2.popTemporary()
+                val (context3, positionalArguments) = context2.popTemporaries(instruction.positionalArgumentCount)
+                val (context4, receiver) = context3.popTemporary()
                 val receiverPointer = LlvmOperandLocal(generateName("receiver"))
                 val result = LlvmOperandLocal(generateName("result"))
 
                 val namedArguments = instruction.namedArgumentNames
                     .zip(namedArgumentValues)
                     .sortedBy { (name, value) -> name }
-                    .map { (name, value) -> LlvmTypedOperand(compiledValueType, value) }
+                    .map { (name, value) -> value }
 
-                return context3.addInstructions(
+                val typedArguments = (positionalArguments + namedArguments).map { argument ->
+                    LlvmTypedOperand(compiledValueType, argument)
+                }
+                return context4.addInstructions(
                     LlvmIntToPtr(
                         target = receiverPointer,
                         sourceType = compiledValueType,
                         value = receiver,
                         targetType = LlvmTypes.pointer(LlvmTypes.function(
                             returnType = compiledValueType,
-                            parameterTypes = instruction.namedArgumentNames.map { _ -> compiledValueType }
+                            parameterTypes = typedArguments.map { argument -> argument.type }
                         ))
                     ),
                     LlvmCall(
                         target = result,
                         returnType = compiledValueType,
                         functionPointer = receiverPointer,
-                        arguments = namedArguments
+                        arguments = typedArguments
                     )
                 ).pushTemporary(result)
             }
@@ -328,16 +332,26 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
 
+                val parameters = instruction.positionalParameterIds.map { parameterId ->
+                    LlvmParameter(compiledValueType, generateName("parameter"))
+                }
+
+                val storeArgumentLocals = instruction.positionalParameterIds.zip(parameters).flatMap { (parameterId, parameter) ->
+                    listOf(
+                        LlvmAlloca(target = variableForLocal(parameterId), type = compiledValueType),
+                        LlvmStore(type = compiledValueType, value = LlvmOperandLocal(parameter.name), pointer = variableForLocal(parameterId))
+                    )
+                }.toPersistentList()
+
                 val bodyContext = compileInstructions(
                     instruction.bodyInstructions,
                     context = startFunction()
                 )
-
                 val functionDefinition = LlvmFunctionDefinition(
                     name = functionName,
                     returnType = compiledValueType,
-                    parameters = listOf(),
-                    body = bodyContext.instructions
+                    parameters = parameters,
+                    body = storeArgumentLocals.addAll(bodyContext.instructions)
                 )
 
                 val getVariableAddress = LlvmPtrToInt(
@@ -346,7 +360,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     value = LlvmOperandGlobal(functionName),
                     sourceType = LlvmTypes.pointer(LlvmTypes.function(
                         returnType = compiledValueType,
-                        parameterTypes = listOf()
+                        parameterTypes = parameters.map { parameter -> parameter.type }
                     ))
                 )
 
@@ -1114,8 +1128,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun variableForLocal(variableId: Int): LlvmVariable {
-        return LlvmOperandLocal("local_$variableId")
+        return LlvmOperandLocal(variableNameForLocal(variableId))
     }
+
+    private fun variableNameForLocal(variableId: Int) = "local_$variableId"
 
     private fun compileDeclareShape(instruction: DeclareShape, context: FunctionContext): FunctionContext {
         val constructorName = generateName("constructor")

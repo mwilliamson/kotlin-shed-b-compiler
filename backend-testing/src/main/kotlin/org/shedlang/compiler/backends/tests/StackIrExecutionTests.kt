@@ -836,6 +836,54 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isUnit)
     }
 
+    @Test
+    fun functionDeclarationCreatesFunctionValueThatCanBeCalledWithPositionalArguments() {
+        val firstParameter = parameter("first")
+        val secondParameter = parameter("second")
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val function = function(
+            name = "subtract",
+            parameters = listOf(
+                firstParameter,
+                secondParameter
+            ),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(
+                        BinaryOperator.SUBTRACT,
+                        firstReference,
+                        secondReference
+                    )
+                )
+            )
+        )
+        val functionReference = variableReference("main")
+        val call = call(
+            receiver = functionReference,
+            positionalArguments = listOf(
+                literalInt(1),
+                literalInt(5)
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            firstReference.nodeId to firstParameter,
+            secondReference.nodeId to secondParameter
+        ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
+
+        val loader = loader(references = references, types = types)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(-4))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions, type = type)
