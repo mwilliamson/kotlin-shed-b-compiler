@@ -843,8 +843,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val newSizePointer = LlvmOperandLocal(generateName("newSizePointer"))
         val newStringData = LlvmOperandLocal(generateName("newStringData"))
         val newStringLeftStart = LlvmOperandLocal(generateName("newStringLeftStart"))
-        val newStringLeftStartAsInt = LlvmOperandLocal(generateName("newStringLeftStartAsInt"))
-        val newStringRightStartAsInt = LlvmOperandLocal(generateName("newStringRightStartAsInt"))
         val newStringRightStart = LlvmOperandLocal(generateName("newStringRightStart"))
 
         return context3.addInstructions(listOf(
