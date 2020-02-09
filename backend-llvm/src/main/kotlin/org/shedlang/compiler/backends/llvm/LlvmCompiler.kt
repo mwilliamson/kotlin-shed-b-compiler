@@ -33,6 +33,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
         companion object {
             val EMPTY = Context(persistentListOf())
+
+            fun merge(contexts: List<Context>): Context {
+                val stacks = contexts.map { context -> context.stack }
+                if (stacks.distinct().size == 1) {
+                    return contexts[0]
+                } else {
+                    throw Exception("cannot merge contexts")
+                }
+            }
         }
 
         fun <T> result(value: T): CompilationResult<T> {
@@ -43,6 +52,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             )
         }
     }
+
+    private val labelToContexts: MutableMap<Int, MutableList<Context>> = mutableMapOf()
 
     fun compile(target: Path, mainModule: List<Identifier>) {
         val defineMainModule = moduleDefine(mainModule)
@@ -349,6 +360,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is Jump -> {
+                addLabelContext(instruction.label, context)
+
                 return context.result(listOf(
                     LlvmBrUnconditional(labelToLlvmLabel(instruction.label))
                 ))
@@ -357,6 +370,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is JumpIfFalse -> {
                 val (context2, condition) = context.popTemporary()
                 val trueLabel = createLlvmLabel("true")
+
+                addLabelContext(instruction.label, context2)
 
                 return context2.result(listOf(
                     LlvmBr(
@@ -372,6 +387,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val (context2, condition) = context.popTemporary()
                 val falseLabel = createLlvmLabel("false")
 
+                addLabelContext(instruction.label, context2)
+
                 return context2.result(listOf(
                     LlvmBr(
                         condition = condition,
@@ -383,9 +400,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is Label -> {
-                return context.result(listOf(
-                    LlvmLabel(labelToLlvmLabel(instruction.value))
-                ))
+                val contexts = labelToContexts.getOrDefault(instruction.value, mutableListOf())
+
+                if (contexts.isEmpty()) {
+                    // TODO: better error message
+                    throw Exception("contexts is empty")
+                } else {
+                    return Context.merge(contexts).result(listOf(
+                        LlvmLabel(labelToLlvmLabel(instruction.value))
+                    ))
+                }
             }
 
             is LocalLoad -> {
@@ -522,6 +546,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 throw UnsupportedOperationException(instruction.toString())
             }
         }
+    }
+
+    private fun addLabelContext(label: Int, context: Context) {
+        if (!labelToContexts.containsKey(label)) {
+            labelToContexts[label] = mutableListOf()
+        }
+
+        labelToContexts.getValue(label).add(context)
     }
 
     private fun compileBoolNot(context: Context): CompilationResult<List<LlvmInstruction>> {
