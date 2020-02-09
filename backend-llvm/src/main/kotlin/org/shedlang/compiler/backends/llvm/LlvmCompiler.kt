@@ -718,9 +718,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val booleanResult = LlvmOperandLocal(generateName("not_i1"))
         val fullResult = LlvmOperandLocal(generateName("not"))
 
-        val context3 = context2
-
-        return context3.addInstructions(
+        return context2.addInstructions(
             LlvmIcmp(
                 target = booleanResult,
                 conditionCode = LlvmIcmp.ConditionCode.EQ,
