@@ -144,7 +144,6 @@ class Loader(
                     }
                     BinaryOperator.AND -> when (types.typeOfExpression(node.left)) {
                         BoolType -> {
-                            val resultVariableId = freshNodeId()
                             val endLabel = createLabel()
                             val rightLabel = createLabel()
                             val leftInstructions = loadExpression(node.left)
@@ -152,14 +151,11 @@ class Loader(
                             return leftInstructions
                                 .add(JumpIfTrue(rightLabel.value))
                                 .add(PushValue(IrBool(false)))
-                                .add(LocalStore(resultVariableId))
                                 .add(Jump(endLabel.value))
                                 .add(rightLabel)
                                 .addAll(rightInstructions)
-                                .add(LocalStore(resultVariableId))
                                 .add(Jump(endLabel.value))
                                 .add(endLabel)
-                                .add(LocalLoad(resultVariableId))
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
@@ -197,7 +193,6 @@ class Loader(
                     }
                     BinaryOperator.OR -> when (types.typeOfExpression(node.left)) {
                         BoolType -> {
-                            val resultVariableId = freshNodeId()
                             val endLabel = createLabel()
                             val rightLabel = createLabel()
                             val leftInstructions = loadExpression(node.left)
@@ -205,14 +200,11 @@ class Loader(
                             return leftInstructions
                                 .add(JumpIfFalse(rightLabel.value))
                                 .add(PushValue(IrBool(true)))
-                                .add(LocalStore(resultVariableId))
                                 .add(Jump(endLabel.value))
                                 .add(rightLabel)
                                 .addAll(rightInstructions)
-                                .add(LocalStore(resultVariableId))
                                 .add(Jump(endLabel.value))
                                 .add(endLabel)
-                                .add(LocalLoad(resultVariableId))
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
