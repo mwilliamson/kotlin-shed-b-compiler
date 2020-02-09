@@ -177,7 +177,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 fieldAccess(
                     mainModuleVariable,
                     Identifier("main"),
-                    receiverType = moduleSet.module(mainModule)!!.type,
+                    receiverType = moduleType(mainModule),
                     target = mainFunctionUntypedVariable
                 ),
                 listOf(
@@ -233,7 +233,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         compiledObjectType(moduleSize(moduleName)).type
 
     private fun moduleSize(moduleName: List<Identifier>) =
-        moduleSet.module(moduleName)!!.type.fields.size
+        moduleType(moduleName).fields.size
+
+    private fun moduleType(moduleName: List<Identifier>) =
+        moduleSet.module(moduleName)!!.type
 
     private fun moduleInitDefinition(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
         val bodyContext = compileInstructions(
@@ -540,29 +543,32 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is ModuleStore -> {
                 val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
                 val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
-                val (exportName, exportVariableId) = instruction.exports.single()
-                return context.addInstructions(
-                    // TODO: don't assume exactly one export
-                    LlvmGetElementPtr(
-                        target = fieldPointerVariable,
-                        type = compiledObjectType(moduleSize(instruction.moduleName)).type,
-                        pointer = operandForModuleValue(instruction.moduleName),
-                        indices = listOf(
-                            LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                            LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                val moduleType = moduleType(instruction.moduleName)
+
+                val storeFields = instruction.exports.flatMap { (exportName, exportVariableId) ->
+                    listOf(
+                        LlvmGetElementPtr(
+                            target = fieldPointerVariable,
+                            type = compiledObjectType(moduleSize(instruction.moduleName)).type,
+                            pointer = operandForModuleValue(instruction.moduleName),
+                            indices = listOf(
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(fieldIndex(moduleType, exportName)))
+                            )
+                        ),
+                        LlvmLoad(
+                            target = fieldValueVariable,
+                            type = compiledValueType,
+                            pointer = variableForLocal(exportVariableId)
+                        ),
+                        LlvmStore(
+                            type = compiledValueType,
+                            value = fieldValueVariable,
+                            pointer = fieldPointerVariable
                         )
-                    ),
-                    LlvmLoad(
-                        target = fieldValueVariable,
-                        type = compiledValueType,
-                        pointer = variableForLocal(exportVariableId)
-                    ),
-                    LlvmStore(
-                        type = compiledValueType,
-                        value = fieldValueVariable,
-                        pointer = fieldPointerVariable
                     )
-                )
+                }
+                return context.addInstructions(storeFields)
             }
 
             is PushValue -> {
