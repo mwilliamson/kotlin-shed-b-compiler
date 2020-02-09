@@ -219,11 +219,21 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         return listOf(
             LlvmGlobalDefinition(
                 name = nameForModuleValue(moduleName),
-                type = compiledObjectType,
-                value = LlvmNullPointer
+                type = compiledModuleType(moduleName),
+                value = LlvmOperandArray(
+                    (0 until moduleSize(moduleName)).map {
+                        LlvmTypedOperand(compiledValueType, LlvmOperandInt(0))
+                    }
+                )
             )
         ) + moduleInitDefinition(moduleName)
     }
+
+    private fun compiledModuleType(moduleName: List<Identifier>) =
+        compiledObjectType(moduleSize(moduleName)).type
+
+    private fun moduleSize(moduleName: List<Identifier>) =
+        moduleSet.module(moduleName)!!.type.fields.size
 
     private fun moduleInitDefinition(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
         val bodyContext = compileInstructions(
@@ -403,7 +413,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                             target = instance,
                             sourceType = compiledValueType,
                             value = operand,
-                            targetType = compiledObjectType
+                            targetType = compiledObjectType()
                         )
                     )
                     .addInstructions(
@@ -528,24 +538,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is ModuleStore -> {
-                val moduleVariableUntyped = LlvmOperandLocal(generateName("moduleUntyped"))
-                val moduleVariable = LlvmOperandLocal(generateName("module"))
                 val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
                 val fieldValueVariable = LlvmOperandLocal(generateName("fieldValue"))
                 val (exportName, exportVariableId) = instruction.exports.single()
                 return context.addInstructions(
-                    malloc(moduleVariableUntyped, LlvmOperandInt(compiledValueTypeSize * instruction.exports.size)),
-                    LlvmBitCast(
-                        target = moduleVariable,
-                        sourceType = LlvmTypes.pointer(LlvmTypes.i8),
-                        value = moduleVariableUntyped,
-                        targetType = compiledObjectType
-                    ),
                     // TODO: don't assume exactly one export
                     LlvmGetElementPtr(
                         target = fieldPointerVariable,
-                        type = compiledObjectType.type,
-                        pointer = moduleVariable,
+                        type = compiledObjectType(moduleSize(instruction.moduleName)).type,
+                        pointer = operandForModuleValue(instruction.moduleName),
                         indices = listOf(
                             LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
                             LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
@@ -560,11 +561,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         type = compiledValueType,
                         value = fieldValueVariable,
                         pointer = fieldPointerVariable
-                    ),
-                    LlvmStore(
-                        type = compiledObjectType,
-                        value = moduleVariable,
-                        pointer = operandForModuleValue(instruction.moduleName)
                     )
                 )
             }
@@ -613,7 +609,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         target = objectPointer,
                         sourceType = compiledValueType,
                         value = operand,
-                        targetType = compiledObjectType
+                        targetType = compiledObjectType()
                     ),
                     tagValuePointer(
                         target = tagValuePointer,
@@ -1095,7 +1091,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun tagValuePointer(target: LlvmOperandLocal, source: LlvmOperandLocal): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledObjectType.type,
+            type = compiledObjectType().type,
             pointer = source,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -1163,7 +1159,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         target = instance,
                         sourceType = LlvmTypes.pointer(LlvmTypes.i8),
                         value = instanceBytes,
-                        targetType = compiledObjectType
+                        targetType = compiledObjectType()
                     )
                 ),
 
@@ -1199,7 +1195,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 listOf(
                     LlvmPtrToInt(
                         target = instanceAsValue,
-                        sourceType = compiledObjectType,
+                        sourceType = compiledObjectType(),
                         value = instance,
                         targetType = compiledValueType
                     ),
@@ -1243,7 +1239,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, fieldIndex: Int): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledObjectType.type,
+            type = compiledObjectType().type,
             pointer = receiver,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0)),
@@ -1276,10 +1272,11 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 functionPointer = operandForModuleInit(moduleName),
                 arguments = listOf()
             ),
-            LlvmLoad(
+            LlvmBitCast(
                 target = target,
-                type = compiledObjectType,
-                pointer = operandForModuleValue(moduleName)
+                sourceType = compiledObjectType(moduleSize(moduleName)),
+                value = operandForModuleValue(moduleName),
+                targetType = compiledObjectType()
             )
         )
     }
@@ -1384,7 +1381,7 @@ internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
     compiledStringDataType(size)
 ))
 internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
-private val compiledObjectType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
+private fun compiledObjectType(size: Int = 0) = LlvmTypes.pointer(LlvmTypes.arrayType(size = size, elementType = compiledValueType))
 private val compiledTupleType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal object CTypes {
