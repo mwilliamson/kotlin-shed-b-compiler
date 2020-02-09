@@ -11,14 +11,14 @@ import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
 internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
-    internal class Context(private val stack: PersistentList<LlvmOperand>) {
+    internal class Context(internal val stack: PersistentList<LlvmOperand>, internal val basicBlockName: String) {
         fun pushTemporary(operand: LlvmOperand): Context {
-            return Context(stack.add(operand))
+            return updateStack(stack.add(operand))
         }
 
         fun popTemporary(): Pair<Context, LlvmOperand> {
             val (newStack, value) = stack.pop()
-            return Pair(Context(newStack), value)
+            return Pair(updateStack(newStack), value)
         }
 
         fun duplicateTemporary(): Context {
@@ -26,22 +26,21 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         }
 
         fun discardTemporary(): Context {
-            return Context(stack.removeAt(stack.lastIndex))
+            return updateStack(stack.removeAt(stack.lastIndex))
         }
 
         private fun peekTemporary() = stack.last()
 
-        companion object {
-            val EMPTY = Context(persistentListOf())
+        private fun updateStack(newStack: PersistentList<LlvmOperand>): Context {
+            return Context(stack = newStack, basicBlockName = basicBlockName)
+        }
 
-            fun merge(contexts: List<Context>): Context {
-                val stacks = contexts.map { context -> context.stack }
-                if (stacks.distinct().size == 1) {
-                    return contexts[0]
-                } else {
-                    throw Exception("cannot merge contexts")
-                }
-            }
+        internal fun basicBlockName(newBasicBlockName: String): Context {
+            return Context(stack = stack, basicBlockName = newBasicBlockName)
+        }
+
+        companion object {
+            fun create(basicBlockName: String) = Context(persistentListOf(), basicBlockName = basicBlockName)
         }
 
         fun <T> result(value: T): CompilationResult<T> {
@@ -50,6 +49,40 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 topLevelEntities = listOf(),
                 context = this
             )
+        }
+    }
+
+    private fun mergeContexts(contexts: List<Context>, basicBlockName: String): Pair<Context, List<LlvmInstruction>> {
+        val stacks = contexts.map { context -> context.stack }
+        val stackSizes = stacks.distinctBy { stack -> stack.size }
+        if (stackSizes.size == 1) {
+            val (newStack, mergeInstructions) = (0 until stackSizes.single().size).map { stackIndex ->
+                mergeOperands(contexts, stackIndex)
+            }.unzip()
+            val newContext = Context(
+                stack = newStack.toPersistentList(),
+                basicBlockName = basicBlockName
+            )
+            return Pair(newContext, mergeInstructions.flatten())
+        } else {
+            throw Exception("cannot merge contexts")
+        }
+    }
+
+    private fun mergeOperands(contexts: List<Context>, stackIndex: Int): Pair<LlvmOperand, List<LlvmInstruction>> {
+        val distinctOperands = contexts.map { context -> context.stack[stackIndex] }.distinct()
+        if (distinctOperands.size == 1) {
+            return Pair(distinctOperands.single(), listOf())
+        } else {
+            val mergedValue = LlvmOperandLocal(generateName("val"))
+            val mergeInstruction = LlvmPhi(
+                target = mergedValue,
+                type = compiledValueType,
+                pairs = contexts.map { context ->
+                    LlvmPhiPair(value = context.stack[stackIndex], predecessorBasicBlockName = context.basicBlockName)
+                }
+            )
+            return Pair(mergedValue, listOf(mergeInstruction))
         }
     }
 
@@ -119,7 +152,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun moduleInit(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
-        return compileInstructions(image.moduleInitialisation(moduleName), context = Context.EMPTY)
+        return compileInstructions(
+            image.moduleInitialisation(moduleName),
+            context = Context.create(basicBlockName = createLlvmLabel("entry"))
+        )
             .mapValue<LlvmTopLevelEntity> { instructions, _ ->
                 LlvmFunctionDefinition(
                     name = nameForModuleInit(moduleName),
@@ -214,7 +250,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is DeclareFunction -> {
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
-                return compileInstructions(instruction.bodyInstructions, context = Context.EMPTY)
+                return compileInstructions(
+                    instruction.bodyInstructions,
+                    context = Context.create(basicBlockName = createLlvmLabel("entry"))
+                )
                     .flatMapValue { instructions, _ ->
                         val functionDefinition = LlvmFunctionDefinition(
                             name = functionName,
@@ -380,7 +419,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         ifFalse = labelToLlvmLabel(instruction.label)
                     ),
                     LlvmLabel(trueLabel)
-                ))
+                )).basicBlockName(trueLabel)
             }
 
             is JumpIfTrue -> {
@@ -396,7 +435,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         ifFalse = falseLabel
                     ),
                     LlvmLabel(falseLabel)
-                ))
+                )).basicBlockName(falseLabel)
             }
 
             is Label -> {
@@ -406,9 +445,11 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     // TODO: better error message
                     throw Exception("contexts is empty")
                 } else {
-                    return Context.merge(contexts).result(listOf(
-                        LlvmLabel(labelToLlvmLabel(instruction.value))
-                    ))
+                    val label = labelToLlvmLabel(instruction.value)
+                    val (context2, mergeInstructions) = mergeContexts(contexts, basicBlockName = label)
+                    return context2.result(listOf(
+                        LlvmLabel(label)
+                    ) + mergeInstructions)
                 }
             }
 
@@ -1182,6 +1223,14 @@ internal class CompilationResult<out T>(
             value = value,
             topLevelEntities = this.topLevelEntities + topLevelEntities,
             context = context
+        )
+    }
+
+    fun basicBlockName(name: String): CompilationResult<T> {
+        return CompilationResult(
+            value = value,
+            topLevelEntities = topLevelEntities,
+            context = context.basicBlockName(name)
         )
     }
 }

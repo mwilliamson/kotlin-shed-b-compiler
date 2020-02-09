@@ -293,6 +293,19 @@ internal data class LlvmMul(
     }
 }
 
+internal data class LlvmPhi(
+    val target: LlvmVariable,
+    val type: LlvmType,
+    val pairs: List<LlvmPhiPair>
+): LlvmInstruction {
+    override fun serialise(): String {
+        val pairsString = pairs.joinToString(", ") { pair -> "[${pair.value.serialise()}, %${pair.predecessorBasicBlockName}]" }
+        return "${target.serialise()} = phi ${type.serialise()} $pairsString"
+    }
+}
+
+internal data class LlvmPhiPair(val value: LlvmOperand, val predecessorBasicBlockName: String)
+
 internal data class LlvmReturn(val type: LlvmType, val value: LlvmOperand): LlvmInstruction {
     override fun serialise(): String {
         return "ret ${type.serialise()} ${value.serialise()}"

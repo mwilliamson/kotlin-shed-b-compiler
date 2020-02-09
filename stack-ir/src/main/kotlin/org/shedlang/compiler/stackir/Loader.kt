@@ -354,6 +354,7 @@ class Loader(
                 val bodyInstructions = branchBodies.map { body -> loadBlock(body) }
                 val conditionLabels = branchBodies.map { createLabel() }
                 val endLabel = createLabel()
+                instructions.add(Jump(conditionLabels[0].value))
 
                 conditionInstructions.forEachIndexed { branchIndex, _ ->
                     instructions.add(conditionLabels[branchIndex])
@@ -366,6 +367,7 @@ class Loader(
                 if (elseBranch != null) {
                     instructions.add(conditionLabels.last())
                     instructions.addAll(loadBlock(elseBranch))
+                    instructions.add(Jump(endLabel.value))
                 }
                 instructions.add(endLabel)
                 return instructions.toPersistentList()

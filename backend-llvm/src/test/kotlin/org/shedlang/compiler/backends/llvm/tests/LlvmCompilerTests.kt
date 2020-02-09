@@ -56,7 +56,7 @@ private val environment = object: StackIrExecutionEnvironment {
         val image = loadModuleSet(moduleSet)
 
         val compiler = Compiler(image = image, moduleSet = moduleSet)
-        val context = Compiler.Context.EMPTY
+        val context = Compiler.Context.create(basicBlockName = "")
         val llvmStatements = compiler.compileInstructions(instructions, context = context)
             .mapValue { llvmInstructions, context ->
                 val print = if (type == StringType) {
@@ -216,7 +216,7 @@ private fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOpera
     val moduleSet = ModuleSet(setOf())
     val image = loadModuleSet(moduleSet)
     val compiler = Compiler(image = image, moduleSet = moduleSet)
-    return compiler.stackValueToLlvmOperand(value, context = Compiler.Context.EMPTY)
+    return compiler.stackValueToLlvmOperand(value, context = Compiler.Context.create(basicBlockName = ""))
 }
 
 private fun <T> isCompilationResult(
