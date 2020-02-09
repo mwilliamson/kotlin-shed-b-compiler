@@ -332,11 +332,15 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val functionName = generateName("function")
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
 
-                val parameters = instruction.positionalParameterIds.map { parameterId ->
+                val parameterIds = instruction.positionalParameterIds + instruction.namedParameterIds
+                    .sortedBy { namedParameter -> namedParameter.name }
+                    .map { namedParameter -> namedParameter.variableId }
+
+                val parameters = parameterIds.map { parameterId ->
                     LlvmParameter(compiledValueType, generateName("parameter"))
                 }
 
-                val storeArgumentLocals = instruction.positionalParameterIds.zip(parameters).flatMap { (parameterId, parameter) ->
+                val storeArgumentLocals = parameterIds.zip(parameters).flatMap { (parameterId, parameter) ->
                     listOf(
                         LlvmAlloca(target = variableForLocal(parameterId), type = compiledValueType),
                         LlvmStore(type = compiledValueType, value = LlvmOperandLocal(parameter.name), pointer = variableForLocal(parameterId))
