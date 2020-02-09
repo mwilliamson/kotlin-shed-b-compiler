@@ -222,10 +222,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 type = compiledObjectType,
                 value = LlvmNullPointer
             )
-        ) + moduleInit(moduleName)
+        ) + moduleInitDefinition(moduleName)
     }
 
-    private fun moduleInit(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
+    private fun moduleInitDefinition(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
         val bodyContext = compileInstructions(
             image.moduleInitialisation(moduleName),
             context = startFunction()
