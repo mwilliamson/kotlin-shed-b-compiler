@@ -9,6 +9,7 @@ import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
 import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
 
@@ -56,69 +57,65 @@ private val environment = object: StackIrExecutionEnvironment {
         val image = loadModuleSet(moduleSet)
 
         val compiler = Compiler(image = image, moduleSet = moduleSet)
-        val context = Compiler.Context.create(basicBlockName = "")
-        val llvmStatements = compiler.compileInstructions(instructions, context = context)
-            .mapValue { llvmInstructions, context ->
-                val print = if (type == StringType) {
-                    val stdoutFd = 1
-                    val (context2, stringValue) = context.popTemporary()
-                    val string = LlvmOperandLocal("string")
-                    val size = LlvmOperandLocal("size")
-                    val dataPointer = LlvmOperandLocal("dataPointer")
-                    listOf(
-                        compiler.rawValueToString(target = string, source = stringValue)
-                    ) + compiler.stringSize(
-                        target = size,
-                        source = string
-                    ) + listOf(
-                        compiler.stringDataStart(
-                            target = dataPointer,
-                            source = string
-                        ),
-                        compileWrite(
-                            fd = LlvmOperandInt(stdoutFd),
-                            buf = dataPointer,
-                            count = size
-                        )
+        val context = compiler.compileInstructions(instructions, context = compiler.startFunction())
+        val print = if (type == StringType) {
+            val stdoutFd = 1
+            val (context2, stringValue) = context.popTemporary()
+            val string = LlvmOperandLocal("string")
+            val size = LlvmOperandLocal("size")
+            val dataPointer = LlvmOperandLocal("dataPointer")
+            listOf(
+                compiler.rawValueToString(target = string, source = stringValue)
+            ) + compiler.stringSize(
+                target = size,
+                source = string
+            ) + listOf(
+                compiler.stringDataStart(
+                    target = dataPointer,
+                    source = string
+                ),
+                compileWrite(
+                    fd = LlvmOperandInt(stdoutFd),
+                    buf = dataPointer,
+                    count = size
+                )
+            )
+        } else {
+            val (context2, value) = context.popTemporary()
+            listOf(
+                LlvmGetElementPtr(
+                    target = LlvmOperandLocal("format_int64_pointer"),
+                    type = LlvmTypes.arrayType(4, LlvmTypes.i8),
+                    pointer = LlvmOperandGlobal("format_int64"),
+                    indices = listOf(
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
                     )
-                } else {
-                    val (context2, value) = context.popTemporary()
-                    listOf(
-                        LlvmGetElementPtr(
-                            target = LlvmOperandLocal("format_int64_pointer"),
-                            type = LlvmTypes.arrayType(4, LlvmTypes.i8),
-                            pointer = LlvmOperandGlobal("format_int64"),
-                            indices = listOf(
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
-                            )
-                        ),
-                        LlvmCall(
-                            target = null,
-                            returnType = LlvmTypes.function(
-                                returnType = LlvmTypes.i32,
-                                parameterTypes = listOf(LlvmTypes.pointer(LlvmTypes.i8)),
-                                hasVarargs = true
-                            ),
-                            functionPointer = LlvmOperandGlobal("printf"),
-                            arguments = listOf(
-                                LlvmTypedOperand(LlvmTypes.pointer(LlvmTypes.i8), LlvmOperandLocal("format_int64_pointer")),
-                                LlvmTypedOperand(compiledValueType, value)
-                            )
-                        )
-                    )
-                }
-                LlvmFunctionDefinition(
-                    name = "main",
-                    returnType = LlvmTypes.i64,
-                    body = llvmInstructions + print + listOf(
-                        LlvmReturn(LlvmTypes.i64, LlvmOperandInt(0))
+                ),
+                LlvmCall(
+                    target = null,
+                    returnType = LlvmTypes.function(
+                        returnType = LlvmTypes.i32,
+                        parameterTypes = listOf(LlvmTypes.pointer(LlvmTypes.i8)),
+                        hasVarargs = true
+                    ),
+                    functionPointer = LlvmOperandGlobal("printf"),
+                    arguments = listOf(
+                        LlvmTypedOperand(LlvmTypes.pointer(LlvmTypes.i8), LlvmOperandLocal("format_int64_pointer")),
+                        LlvmTypedOperand(compiledValueType, value)
                     )
                 )
-            }
-            .toTopLevelEntities()
+            )
+        }
+        val mainFunctionDefinition = LlvmFunctionDefinition(
+            name = "main",
+            returnType = LlvmTypes.i64,
+            body = context.instructions + print + listOf(
+                LlvmReturn(LlvmTypes.i64, LlvmOperandInt(0))
+            )
+        )
 
-        val module = LlvmModule(llvmStatements)
+        val module = LlvmModule(context.topLevelEntities.add(mainFunctionDefinition))
 
         temporaryDirectory().use { temporaryDirectory ->
             val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
@@ -137,44 +134,37 @@ class StackValueToLlvmOperandTests {
     fun falseIsCompiledToZero() {
         val operand = stackValueToLlvmOperand(IrBool(false))
 
-        assertThat(operand, isCompilationResult(isLlvmOperandInt(0)))
+        assertThat(operand, isPair(isSequence(), isLlvmOperandInt(0)))
     }
 
     @Test
     fun trueIsCompiledToOne() {
         val operand = stackValueToLlvmOperand(IrBool(true))
 
-        assertThat(operand, isCompilationResult(isLlvmOperandInt(1)))
+        assertThat(operand, isPair(isSequence(), isLlvmOperandInt(1)))
     }
 
     @Test
     fun codePointIsCompiledToImmediateIntegerOperand() {
         val operand = stackValueToLlvmOperand(IrCodePoint(42))
 
-        assertThat(operand, isCompilationResult(isLlvmOperandInt(42)))
+        assertThat(operand, isPair(isSequence(), isLlvmOperandInt(42)))
     }
 
     @Test
     fun integerIsCompiledToImmediateIntegerOperand() {
         val operand = stackValueToLlvmOperand(IrInt(42))
 
-        assertThat(operand, isCompilationResult(isLlvmOperandInt(42)))
+        assertThat(operand, isPair(isSequence(), isLlvmOperandInt(42)))
     }
 
     @Test
     fun stringIsCompiledToPointerToGlobal() {
         val operand = stackValueToLlvmOperand(IrString("Hello"))
 
-        assertThat(operand, isCompilationResult(
-            isLlvmOperandPtrToInt(
-                sourceType = equalTo(LlvmTypes.pointer(LlvmTypes.structure(listOf(
-                    LlvmTypes.i64,
-                    LlvmTypes.arrayType(5, LlvmTypes.i8)
-                )))),
-                value = isLlvmOperandGlobal("string_1"),
-                targetType = equalTo(compiledValueType)
-            ),
-            moduleStatements = isSequence(
+        assertThat(operand, isPair(
+
+            isSequence(
                 isLlvmGlobalDefinition(
                     name = equalTo("string_1"),
                     type = equalTo(LlvmTypes.structure(listOf(
@@ -200,6 +190,14 @@ class StackValueToLlvmOperandTests {
                     isConstant = equalTo(true),
                     unnamedAddr = equalTo(true)
                 )
+            ),
+            isLlvmOperandPtrToInt(
+                sourceType = equalTo(LlvmTypes.pointer(LlvmTypes.structure(listOf(
+                    LlvmTypes.i64,
+                    LlvmTypes.arrayType(5, LlvmTypes.i8)
+                )))),
+                value = isLlvmOperandGlobal("string_1"),
+                targetType = equalTo(compiledValueType)
             )
         ))
     }
@@ -208,25 +206,15 @@ class StackValueToLlvmOperandTests {
     fun unitIsCompiledToZero() {
         val operand = stackValueToLlvmOperand(IrUnit)
 
-        assertThat(operand, isCompilationResult(isLlvmOperandInt(0)))
+        assertThat(operand, isPair(isSequence(), isLlvmOperandInt(0)))
     }
 }
 
-private fun stackValueToLlvmOperand(value: IrValue): CompilationResult<LlvmOperand> {
+private fun stackValueToLlvmOperand(value: IrValue): Pair<List<LlvmTopLevelEntity>, LlvmOperand> {
     val moduleSet = ModuleSet(setOf())
     val image = loadModuleSet(moduleSet)
     val compiler = Compiler(image = image, moduleSet = moduleSet)
-    return compiler.stackValueToLlvmOperand(value, context = Compiler.Context.create(basicBlockName = ""))
-}
-
-private fun <T> isCompilationResult(
-    value: Matcher<T>,
-    moduleStatements: Matcher<List<LlvmTopLevelEntity>> = isSequence()
-): Matcher<CompilationResult<T>> {
-    return allOf(
-        has(CompilationResult<T>::value, value),
-        has(CompilationResult<T>::topLevelEntities, moduleStatements)
-    )
+    return compiler.stackValueToLlvmOperand(value)
 }
 
 private fun isLlvmOperandGlobal(name: String): Matcher<LlvmOperand> {
