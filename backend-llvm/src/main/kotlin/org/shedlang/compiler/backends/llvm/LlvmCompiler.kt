@@ -357,7 +357,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is DeclareFunction -> {
-                val functionName = generateName("function")
+                val functionName = generateName(instruction.name)
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
 
                 val parameterIds = instruction.positionalParameterIds + instruction.namedParameterIds

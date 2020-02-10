@@ -59,6 +59,7 @@ object CodePointGreaterThan: Instruction()
 object CodePointGreaterThanOrEqual: Instruction()
 
 class DeclareFunction(
+    val name: String,
     val bodyInstructions: PersistentList<Instruction>,
     val positionalParameterIds: List<Int>,
     val namedParameterIds: List<NamedParameterId>

@@ -251,6 +251,7 @@ class Loader(
 
                     return persistentListOf(
                         DeclareFunction(
+                            name = "cast",
                             positionalParameterIds = listOf(parameterId),
                             bodyInstructions = bodyInstructions,
                             namedParameterIds = listOf()
@@ -462,6 +463,7 @@ class Loader(
     private fun loadFunctionValue(node: FunctionNode): DeclareFunction {
         val bodyInstructions = loadBlock(node.body).add(Return)
         return DeclareFunction(
+            name = if (node is FunctionDeclarationNode) node.name.value else "anonymous",
             bodyInstructions = bodyInstructions,
             positionalParameterIds = node.parameters.map { parameter -> parameter.nodeId },
             namedParameterIds = node.namedParameters.map { parameter ->
