@@ -748,6 +748,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val typedClosurePointer = LlvmOperandLocal(generateName("closurePointer"))
         val functionPointerPointer = LlvmOperandLocal(generateName("functionPointerPointer"))
         val functionPointer = LlvmOperandLocal(generateName("functionPointer"))
+        val environmentPointer = LlvmOperandLocal(generateName("environmentPointer"))
 
         val compiledClosurePointerType = compiledClosurePointerType(arguments.map { argument -> argument.type })
 
@@ -772,11 +773,20 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 type = compiledClosureFunctionPointerType(arguments.map { argument -> argument.type }),
                 pointer = functionPointerPointer
             ),
+            LlvmGetElementPtr(
+                target = environmentPointer,
+                type = compiledClosurePointerType.type,
+                pointer = typedClosurePointer,
+                indices = listOf(
+                    LlvmIndex.i64(0),
+                    LlvmIndex.i32(1)
+                )
+            ),
             LlvmCall(
                 target = target,
                 returnType = compiledValueType,
                 functionPointer = functionPointer,
-                arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, LlvmNullPointer)) + arguments
+                arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, environmentPointer)) + arguments
             )
         )
     }
