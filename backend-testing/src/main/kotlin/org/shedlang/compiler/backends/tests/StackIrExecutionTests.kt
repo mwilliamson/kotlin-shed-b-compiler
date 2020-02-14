@@ -1049,6 +1049,67 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(42))
     }
 
+    @Test
+    fun canCallFunctionDefinedInModuleWithPositionalArguments() {
+        val firstParameter = parameter("first")
+        val secondParameter = parameter("second")
+        val firstReference = variableReference("first")
+        val secondReference = variableReference("second")
+        val function = function(
+            name = "subtract",
+            parameters = listOf(
+                firstParameter,
+                secondParameter
+            ),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(
+                        BinaryOperator.SUBTRACT,
+                        firstReference,
+                        secondReference
+                    )
+                )
+            )
+        )
+        val functionType = functionType(
+            positionalParameters = listOf(IntType, IntType),
+            returns = IntType
+        )
+        val moduleName = listOf(Identifier("Example"))
+        val functionReference = export("subtract")
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            firstReference.nodeId to firstParameter,
+            secondReference.nodeId to secondParameter
+        ))
+        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                exports = listOf(functionReference),
+                body = listOf(function)
+            ),
+            type = moduleType,
+            references = references
+        )
+
+        val moduleSet = ModuleSet(listOf(module))
+        val value = executeInstructions(
+            persistentListOf(
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
+                FieldAccess(Identifier("subtract"), receiverType = moduleType),
+                PushValue(IrInt(1)),
+                PushValue(IrInt(5)),
+                Call(positionalArgumentCount = 2, namedArgumentNames = listOf())
+            ),
+            type = IntType,
+            moduleSet = moduleSet
+        )
+
+        assertThat(value, isInt(-4))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions, type = type)

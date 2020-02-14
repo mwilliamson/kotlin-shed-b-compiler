@@ -83,60 +83,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
     }
 
     @Test
-    fun canCallFunctionDefinedInModuleWithPositionalArguments() {
-        val firstParameter = parameter("first")
-        val secondParameter = parameter("second")
-        val firstReference = variableReference("first")
-        val secondReference = variableReference("second")
-        val function = function(
-            name = "subtract",
-            parameters = listOf(
-                firstParameter,
-                secondParameter
-            ),
-            body = listOf(
-                expressionStatementReturn(
-                    binaryOperation(
-                        BinaryOperator.SUBTRACT,
-                        firstReference,
-                        secondReference
-                    )
-                )
-            )
-        )
-        val moduleName = listOf(Identifier("Example"))
-        val functionReference = export("main")
-        val references = ResolvedReferencesMap(mapOf(
-            functionReference.nodeId to function,
-            firstReference.nodeId to firstParameter,
-            secondReference.nodeId to secondParameter
-        ))
-        val module = stubbedModule(
-            name = moduleName,
-            node = module(
-                exports = listOf(functionReference),
-                body = listOf(function)
-            ),
-            references = references
-        )
-
-        val image = loadModuleSet(ModuleSet(listOf(module)))
-        val value = executeInstructions(
-            persistentListOf(
-                ModuleInit(moduleName),
-                ModuleLoad(moduleName),
-                FieldAccess(Identifier("main"), receiverType = null),
-                PushValue(IrInt(1.toBigInteger())),
-                PushValue(IrInt(2.toBigInteger())),
-                Call(positionalArgumentCount = 2, namedArgumentNames = listOf())
-            ),
-            image = image
-        )
-
-        assertThat(value, isInt(-1))
-    }
-
-    @Test
     fun functionCanReferenceVariablesFromOuterScope() {
         val valueTarget = targetVariable("value")
         val valueDeclaration = valStatement(valueTarget, literalInt(42))
