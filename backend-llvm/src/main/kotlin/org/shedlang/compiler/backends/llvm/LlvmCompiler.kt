@@ -727,20 +727,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is TupleCreate -> {
-                val tupleBytes = LlvmOperandLocal(generateName("tupleBytes"))
                 val tuple = LlvmOperandLocal(generateName("tuple"))
                 val result = LlvmOperandLocal(generateName("result"))
 
                 val context2 = context.addInstructions(
-                    malloc(
-                        target = tupleBytes,
-                        bytes = compiledValueTypeSize * instruction.length
-                    ),
-                    LlvmBitCast(
+                    typedMalloc(
                         target = tuple,
-                        sourceType = LlvmTypes.pointer(LlvmTypes.i8),
-                        value = tupleBytes,
-                        targetType = compiledTupleType
+                        bytes = compiledValueTypeSize * instruction.length,
+                        type = compiledTupleType
                     )
                 )
 
@@ -910,7 +904,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val rightStringDataStart = LlvmOperandLocal(generateName("rightStringDataStart"))
         val newDataSize = LlvmOperandLocal(generateName("newDataSize"))
         val newSize = LlvmOperandLocal(generateName("newSize"))
-        val rawResult = LlvmOperandLocal(generateName("rawResult"))
         val newString = LlvmOperandLocal(generateName("newString"))
         val newSizePointer = LlvmOperandLocal(generateName("newSizePointer"))
         val newStringData = LlvmOperandLocal(generateName("newStringData"))
@@ -936,14 +929,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     type = LlvmTypes.i64,
                     left = newDataSize,
                     right = LlvmOperandInt(compiledStringLengthTypeSize)
-                ),
-                malloc(rawResult, newSize),
-                LlvmBitCast(
-                    target = newString,
-                    sourceType = LlvmTypes.pointer(LlvmTypes.i8),
-                    value = rawResult,
-                    targetType = compiledStringType(0)
-                ),
+                )
+            ),
+            typedMalloc(newString, newSize, compiledStringType(0)),
+            listOf(
                 stringSizePointer(
                     target = newSizePointer,
                     source = newString
@@ -1190,6 +1179,24 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
+    private fun typedMalloc(target: LlvmOperandLocal, bytes: Int, type: LlvmType): List<LlvmInstruction> {
+        return typedMalloc(target, LlvmOperandInt(bytes), type)
+    }
+
+    private fun typedMalloc(target: LlvmOperandLocal, bytes: LlvmOperand, type: LlvmType): List<LlvmInstruction> {
+        val mallocResult = LlvmOperandLocal(generateName("bytes"))
+
+        return listOf(
+            malloc(target = mallocResult, bytes = bytes),
+            LlvmBitCast(
+                target = target,
+                sourceType = LlvmTypes.pointer(LlvmTypes.i8),
+                value = mallocResult,
+                targetType = type
+            )
+        )
+    }
+
     private fun malloc(target: LlvmOperandLocal, bytes: Int) = malloc(target, LlvmOperandInt(bytes))
 
     private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
@@ -1206,7 +1213,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun compileDeclareShape(instruction: DeclareShape, context: FunctionContext): FunctionContext {
         val constructorName = generateName("constructor")
         val constructorPointer = LlvmOperandLocal(generateName("constructorPointer"))
-        val instanceBytes = LlvmOperandLocal(generateName("instanceBytes"))
         val instance = LlvmOperandLocal(generateName("instance"))
         val instanceAsValue = LlvmOperandLocal(generateName("instanceAsValue"))
         val tagValue = instruction.tagValue
@@ -1224,17 +1230,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             returnType = compiledValueType,
             parameters = parameters,
             body = listOf(
-                listOf(
-                    malloc(
-                        target = instanceBytes,
-                        bytes = compiledValueTypeSize * shapeSize
-                    ),
-                    LlvmBitCast(
-                        target = instance,
-                        sourceType = LlvmTypes.pointer(LlvmTypes.i8),
-                        value = instanceBytes,
-                        targetType = compiledObjectType()
-                    )
+                typedMalloc(
+                    target = instance,
+                    bytes = compiledValueTypeSize * shapeSize,
+                    type = compiledObjectType()
                 ),
 
                 if (tagValue == null) {
