@@ -46,8 +46,8 @@ internal class InterpreterTuple(val elements: List<InterpreterValue>): Interpret
 
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
-    val positionalParameterIds: List<Int>,
-    val namedParameterIds: List<NamedParameterId>,
+    val positionalParameters: List<DeclareFunction.Parameter>,
+    val namedParameters: List<DeclareFunction.Parameter>,
     val scopes: PersistentList<ScopeReference>
 ) : InterpreterValue()
 
@@ -461,8 +461,8 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         is DeclareFunction -> {
             initialState.pushTemporary(InterpreterFunction(
                 bodyInstructions = bodyInstructions,
-                positionalParameterIds = positionalParameterIds,
-                namedParameterIds = namedParameterIds,
+                positionalParameters = positionalParameters,
+                namedParameters = namedParameters,
                 scopes = initialState.currentScopes()
             )).nextInstruction()
         }
@@ -483,7 +483,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                 Identifier("fields") to InterpreterShapeValue(
                     tagValue = null,
                     fields = fields.associate { field ->
-                        val getParameterId = freshNodeId()
+                        val getParameter = DeclareFunction.Parameter(Identifier("receiver"), freshNodeId())
 
                         field.name to InterpreterShapeValue(
                             tagValue = null,
@@ -491,12 +491,12 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                                 Identifier("name") to InterpreterString(field.name.value),
                                 Identifier("get") to InterpreterFunction(
                                     bodyInstructions = persistentListOf(
-                                        LocalLoad(getParameterId),
+                                        LocalLoad(getParameter),
                                         FieldAccess(field.name, receiverType = null),
                                         Return
                                     ),
-                                    positionalParameterIds = listOf(getParameterId),
-                                    namedParameterIds = listOf(),
+                                    positionalParameters = listOf(getParameter),
+                                    namedParameters = listOf(),
                                     scopes = persistentListOf()
                                 )
                             )
@@ -759,19 +759,19 @@ internal fun call(
 ): InterpreterState {
     return when (receiver) {
         is InterpreterFunction -> {
-            val state2 = receiver.positionalParameterIds.zip(positionalArguments).fold(
+            val state2 = receiver.positionalParameters.zip(positionalArguments).fold(
                 state.enter(
                     instructions = receiver.bodyInstructions,
                     parentScopes = receiver.scopes
                 ),
-                { state, (parameterId, argument) ->
-                    state.storeLocal(parameterId, argument)
+                { state, (parameter, argument) ->
+                    state.storeLocal(parameter.variableId, argument)
                 }
             )
-            receiver.namedParameterIds.fold(
+            receiver.namedParameters.fold(
                 state2,
-                { state, namedParameterId ->
-                    state.storeLocal(namedParameterId.variableId, namedArguments[namedParameterId.name]!!)
+                { state, namedParameter ->
+                    state.storeLocal(namedParameter.variableId, namedArguments[namedParameter.name]!!)
                 }
             )
         }

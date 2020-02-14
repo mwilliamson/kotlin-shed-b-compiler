@@ -3,6 +3,7 @@ package org.shedlang.compiler.stackir
 import kotlinx.collections.immutable.PersistentList
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.TagValue
@@ -26,8 +27,6 @@ class IrSymbol(val value: Symbol): IrValue()
 class IrTagValue(val value: TagValue): IrValue()
 
 object IrUnit: IrValue()
-
-data class NamedParameterId(val name: Identifier, val variableId: Int)
 
 sealed class Instruction
 
@@ -62,9 +61,13 @@ object CodePointGreaterThanOrEqual: Instruction()
 class DeclareFunction(
     val name: String,
     val bodyInstructions: PersistentList<Instruction>,
-    val positionalParameterIds: List<Int>,
-    val namedParameterIds: List<NamedParameterId>
-): Instruction()
+    val positionalParameters: List<Parameter>,
+    val namedParameters: List<Parameter>
+): Instruction() {
+    data class Parameter(val name: Identifier, val variableId: Int) {
+        constructor(node: VariableBindingNode) : this(node.name, node.nodeId)
+    }
+}
 
 class DeclareShape(
     val tagValue: TagValue?,
@@ -102,9 +105,15 @@ class JumpIfTrue(val label: Int): Instruction()
 
 class Label(val value: Int): Instruction()
 
-class LocalLoad(val variableId: Int): Instruction()
+class LocalLoad(val variableId: Int, val name: Identifier): Instruction() {
+    constructor(node: VariableBindingNode) : this(node.nodeId, node.name)
+    // TODO: extract more general notion of local (equivalent to DeclareFunction.Parameter)?
+    constructor(parameter: DeclareFunction.Parameter) : this(parameter.variableId, parameter.name)
+}
 
-class LocalStore(val variableId: Int): Instruction()
+class LocalStore(val variableId: Int, val name: Identifier): Instruction() {
+    constructor(node: VariableBindingNode) : this(node.nodeId, node.name)
+}
 
 class ModuleInit(val moduleName: ModuleName): Instruction()
 

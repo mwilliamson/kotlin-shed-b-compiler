@@ -419,24 +419,23 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val functionName = generateName(instruction.name)
                 val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
 
-                val parameterIds = instruction.positionalParameterIds + instruction.namedParameterIds
+                val irParameters = instruction.positionalParameters + instruction.namedParameters
                     .sortedBy { namedParameter -> namedParameter.name }
-                    .map { namedParameter -> namedParameter.variableId }
 
-                val parameters = parameterIds.map { parameterId ->
-                    LlvmParameter(compiledValueType, generateName("parameter"))
+                val llvmParameters = irParameters.map { irParameter ->
+                    LlvmParameter(compiledValueType, generateName(irParameter.name))
                 }
 
                 val bodyContext = compileInstructions(
                     instruction.bodyInstructions,
-                    context = parameterIds.zip(parameters).fold(startFunction()) { context, (parameterId, parameter) ->
-                        context.localStore(parameterId, LlvmOperandLocal(parameter.name))
+                    context = irParameters.zip(llvmParameters).fold(startFunction()) { context, (irParameter, llvmParameter) ->
+                        context.localStore(irParameter.variableId, LlvmOperandLocal(llvmParameter.name))
                     }
                 )
                 val functionDefinition = LlvmFunctionDefinition(
                     name = functionName,
                     returnType = compiledValueType,
-                    parameters = parameters,
+                    parameters = llvmParameters,
                     body = bodyContext.instructions
                 )
 
@@ -446,7 +445,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     value = LlvmOperandGlobal(functionName),
                     sourceType = LlvmTypes.pointer(LlvmTypes.function(
                         returnType = compiledValueType,
-                        parameterTypes = parameters.map { parameter -> parameter.type }
+                        parameterTypes = llvmParameters.map { parameter -> parameter.type }
                     ))
                 )
 
@@ -1390,6 +1389,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         moduleName.joinToString("_") { part -> part.value }
 
     var nextNameIndex = 1
+
+    private fun generateName(prefix: Identifier) = generateName(prefix.value)
 
     private fun generateName(prefix: String): String {
         return prefix + "_" + nextNameIndex++

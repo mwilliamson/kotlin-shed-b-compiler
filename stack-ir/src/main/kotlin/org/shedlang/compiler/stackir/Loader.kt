@@ -44,7 +44,7 @@ class Loader(
         val moduleNameInstructions = if (isReferenced(module, Builtins.moduleName)) {
             persistentListOf(
                 PushValue(IrString(module.name.joinToString(".") { part -> part.value })),
-                LocalStore(Builtins.moduleName.nodeId)
+                LocalStore(Builtins.moduleName)
             )
         } else {
             persistentListOf()
@@ -228,21 +228,21 @@ class Loader(
                         ModuleInit(optionsModuleName),
                         ModuleLoad(optionsModuleName)
                     )
-                    val parameterId = freshNodeId()
+                    val parameter = DeclareFunction.Parameter(Identifier("value"), freshNodeId())
 
                     val failureInstructions = loadOptionsModuleInstructions
                         .add(FieldAccess(Identifier("none"), receiverType = null))
                         .add(Return)
                     val successInstructions = loadOptionsModuleInstructions
                         .add(FieldAccess(Identifier("some"), receiverType = null))
-                        .add(LocalLoad(parameterId))
+                        .add(LocalLoad(parameter))
                         .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
                         .add(Return)
 
                     val discriminator = inspector.discriminatorForCast(node)
                     val failureLabel = createLabel()
                     val bodyInstructions = persistentListOf<Instruction>()
-                        .add(LocalLoad(parameterId))
+                        .add(LocalLoad(parameter))
                         .addAll(typeConditionInstructions(discriminator))
                         .add(JumpIfFalse(failureLabel.value))
                         .addAll(successInstructions)
@@ -252,9 +252,9 @@ class Loader(
                     return persistentListOf(
                         DeclareFunction(
                             name = "cast",
-                            positionalParameterIds = listOf(parameterId),
+                            positionalParameters = listOf(parameter),
                             bodyInstructions = bodyInstructions,
-                            namedParameterIds = listOf()
+                            namedParameters = listOf()
                         )
                     )
                 } else if (types.typeOfExpression(node.receiver) is VarargsType) {
@@ -432,7 +432,7 @@ class Loader(
             override fun visit(node: UnionNode): PersistentList<Instruction> {
                 val unionInstructions = persistentListOf(
                     PushValue(IrUnit),
-                    LocalStore(node.nodeId)
+                    LocalStore(node)
                 )
                 val memberInstructions = node.members.flatMap { member -> loadShape(member) }
 
@@ -456,7 +456,7 @@ class Loader(
     private fun loadFunctionDeclaration(node: FunctionDeclarationNode): PersistentList<Instruction> {
         return persistentListOf(
             loadFunctionValue(node),
-            LocalStore(node.nodeId)
+            LocalStore(node)
         )
     }
 
@@ -465,9 +465,11 @@ class Loader(
         return DeclareFunction(
             name = if (node is FunctionDeclarationNode) node.name.value else "anonymous",
             bodyInstructions = bodyInstructions,
-            positionalParameterIds = node.parameters.map { parameter -> parameter.nodeId },
-            namedParameterIds = node.namedParameters.map { parameter ->
-                NamedParameterId(parameter.name, parameter.nodeId)
+            positionalParameters = node.parameters.map { parameter ->
+                DeclareFunction.Parameter(parameter)
+            },
+            namedParameters = node.namedParameters.map { parameter ->
+                DeclareFunction.Parameter(parameter)
             }
         )
     }
@@ -478,7 +480,7 @@ class Loader(
 
         return persistentListOf(
             DeclareShape(tagValue, shapeFields),
-            LocalStore(node.nodeId)
+            LocalStore(node)
         )
     }
 
@@ -491,7 +493,7 @@ class Loader(
     private fun loadTarget(target: TargetNode): PersistentList<Instruction> {
         return when (target) {
             is TargetNode.Variable ->
-                persistentListOf(LocalStore(target.nodeId))
+                persistentListOf(LocalStore(target))
 
             is TargetNode.Fields ->
                 target.fields.flatMap { (fieldName, fieldTarget) ->
@@ -515,7 +517,7 @@ class Loader(
         val consInstructions = loadExpression(node.cons)
         val nilInstructions = loadExpression(node.nil)
 
-        return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(LocalStore(node.nodeId))
+        return consInstructions.addAll(nilInstructions).add(DeclareVarargs).add(LocalStore(node))
     }
 
     private fun typeConditionInstructions(discriminator: Discriminator): PersistentList<Instruction> {
@@ -530,8 +532,8 @@ class Loader(
         return Label(nextLabel++)
     }
 
-    private fun resolveReference(reference: ReferenceNode): Int {
-        return references[reference].nodeId
+    private fun resolveReference(reference: ReferenceNode): VariableBindingNode {
+        return references[reference]
     }
 }
 
