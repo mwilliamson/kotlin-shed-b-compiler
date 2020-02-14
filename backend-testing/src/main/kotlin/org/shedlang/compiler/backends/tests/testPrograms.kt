@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -28,26 +29,26 @@ data class TestProgram(
         }
     }
 
-    val mainModule: List<Identifier>
+    val mainModule: ModuleName
         get() = source.mainModule
 }
 
 sealed class TestProgramSource {
     abstract val path: Path
-    abstract val mainModule: List<Identifier>
+    abstract val mainModule: ModuleName
     abstract val expectedResult: Matcher<ExecutionResult>?
 
     class File(
         override val path: Path,
         override val expectedResult: Matcher<ExecutionResult>?
     ): TestProgramSource() {
-        override val mainModule: List<Identifier>
+        override val mainModule: ModuleName
             get() = listOf(Identifier(path.fileName.toString().removeSuffix(".shed")))
     }
 
     class Directory(
         override val path: Path,
-        override val mainModule: List<Identifier>,
+        override val mainModule: ModuleName,
         override val expectedResult: Matcher<ExecutionResult>?
     ): TestProgramSource()
 }

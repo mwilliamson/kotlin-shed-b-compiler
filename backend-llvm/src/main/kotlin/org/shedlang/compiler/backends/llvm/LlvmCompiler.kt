@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.llvm
 import kotlinx.collections.immutable.*
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.ShapeType
@@ -185,7 +186,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         }
     }
 
-    fun compile(target: Path, mainModule: List<Identifier>) {
+    fun compile(target: Path, mainModule: ModuleName) {
         val defineMainModule = moduleDefinition(mainModule)
 
         val mainModuleVariable = LlvmOperandLocal("mainModule")
@@ -239,7 +240,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         target.toFile().writeText(source)
     }
 
-    private fun moduleDefinition(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
+    private fun moduleDefinition(moduleName: ModuleName): List<LlvmTopLevelEntity> {
         return listOf(
             LlvmGlobalDefinition(
                 name = nameForModuleValue(moduleName),
@@ -253,16 +254,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         ) + moduleInitDefinition(moduleName)
     }
 
-    private fun compiledModuleType(moduleName: List<Identifier>) =
+    private fun compiledModuleType(moduleName: ModuleName) =
         compiledObjectType(moduleSize(moduleName)).type
 
-    private fun moduleSize(moduleName: List<Identifier>) =
+    private fun moduleSize(moduleName: ModuleName) =
         moduleType(moduleName).fields.size
 
-    private fun moduleType(moduleName: List<Identifier>) =
+    private fun moduleType(moduleName: ModuleName) =
         moduleSet.module(moduleName)!!.type
 
-    private fun moduleInitDefinition(moduleName: List<Identifier>): List<LlvmTopLevelEntity> {
+    private fun moduleInitDefinition(moduleName: ModuleName): List<LlvmTopLevelEntity> {
         val bodyContext = compileInstructions(
             image.moduleInitialisation(moduleName),
             context = startFunction()
@@ -1256,7 +1257,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         }
     }
 
-    private fun importModule(moduleName: List<Identifier>, target: LlvmVariable): List<LlvmInstruction> {
+    private fun importModule(moduleName: ModuleName, target: LlvmVariable): List<LlvmInstruction> {
         return listOf(
             LlvmCall(
                 target = null,
@@ -1273,23 +1274,23 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    private fun operandForModuleInit(moduleName: List<Identifier>): LlvmOperand {
+    private fun operandForModuleInit(moduleName: ModuleName): LlvmOperand {
         return LlvmOperandGlobal(nameForModuleInit(moduleName))
     }
 
-    private fun operandForModuleValue(moduleName: List<Identifier>): LlvmVariable {
+    private fun operandForModuleValue(moduleName: ModuleName): LlvmVariable {
         return LlvmOperandGlobal(nameForModuleValue(moduleName))
     }
 
-    private fun nameForModuleInit(moduleName: List<Identifier>): String {
+    private fun nameForModuleInit(moduleName: ModuleName): String {
         return "shed__module_init__${serialiseModuleName(moduleName)}"
     }
 
-    private fun nameForModuleValue(moduleName: List<Identifier>): String {
+    private fun nameForModuleValue(moduleName: ModuleName): String {
         return "shed__module_value__${serialiseModuleName(moduleName)}"
     }
 
-    private fun serialiseModuleName(moduleName: List<Identifier>) =
+    private fun serialiseModuleName(moduleName: ModuleName) =
         moduleName.joinToString("_") { part -> part.value }
 
     var nextNameIndex = 1

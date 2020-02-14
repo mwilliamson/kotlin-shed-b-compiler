@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.amd64.*
 import org.shedlang.compiler.backends.amd64.Label
 import org.shedlang.compiler.backends.tests.temporaryDirectory
@@ -138,7 +139,7 @@ private fun CompilationResult<List<Line>>.instructionsToText(): CompilationResul
 }
 
 private class Compiler(private val moduleSet: ModuleSet) {
-    fun compile(target: Path, mainModule: List<Identifier>) {
+    fun compile(target: Path, mainModule: ModuleName) {
         val asm = mutableListOf(
             Directives.global("main"),
             Directives.defaultRel,
@@ -189,7 +190,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
         }
     }
 
-    private fun generateAsmForModule(moduleName: List<Identifier>): CompilationResult<Unit> {
+    private fun generateAsmForModule(moduleName: ModuleName): CompilationResult<Unit> {
         val image = loadModuleSet(moduleSet)
         val result = generateAsmForModuleInitialisation(image, moduleName)
         return result.addBss(listOf(
@@ -202,7 +203,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
 
     private fun generateAsmForModuleInitialisation(
         image: Image,
-        moduleName: List<Identifier>
+        moduleName: ModuleName
     ): CompilationResult<Unit> {
         return generateAsmForInstructions(image.moduleInitialisation(moduleName))
             .mapInstructions { instructions ->
@@ -220,7 +221,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
             .instructionsToText()
     }
 
-    private fun fieldCount(moduleName: List<Identifier>): Int {
+    private fun fieldCount(moduleName: ModuleName): Int {
         // TODO: handle modules with multiple fields
         return 1
     }
@@ -328,13 +329,13 @@ private class Compiler(private val moduleSet: ModuleSet) {
         }
     }
 
-    private fun mainReturnsUnit(moduleSet: ModuleSet, mainModuleName: List<Identifier>): Boolean {
+    private fun mainReturnsUnit(moduleSet: ModuleSet, mainModuleName: ModuleName): Boolean {
         val mainModule = moduleSet.module(mainModuleName)!!
         val mainType = mainModule.type.fieldType(Identifier("main")) as FunctionType
         return mainType.returns == UnitType
     }
 
-    private fun importModule(moduleName: List<Identifier>): List<Line> {
+    private fun importModule(moduleName: ModuleName): List<Line> {
         val alreadyInitialisedLabel = generateLabel()
         return listOf(
             Instructions.lea(
@@ -365,19 +366,19 @@ private class Compiler(private val moduleSet: ModuleSet) {
         )
     }
 
-    private fun labelForModuleInitialised(moduleName: List<Identifier>): String {
+    private fun labelForModuleInitialised(moduleName: ModuleName): String {
         return "shed__module_initialised__" + moduleNameToLabel(moduleName)
     }
 
-    private fun labelForModuleValue(moduleName: List<Identifier>): String {
+    private fun labelForModuleValue(moduleName: ModuleName): String {
         return "shed__module_value__" + moduleNameToLabel(moduleName)
     }
 
-    private fun labelForModuleInit(moduleName: List<Identifier>): String {
+    private fun labelForModuleInit(moduleName: ModuleName): String {
         return "shed__module_init__" + moduleNameToLabel(moduleName)
     }
 
-    private fun moduleNameToLabel(moduleName: List<Identifier>) =
+    private fun moduleNameToLabel(moduleName: ModuleName) =
         moduleName.joinToString("_") { part -> part.value }
 
     private var nextLabelIndex = 0

@@ -10,12 +10,12 @@ import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.types.*
 
-class Image internal constructor(private val modules: Map<List<Identifier>, PersistentList<Instruction>>) {
+class Image internal constructor(private val modules: Map<ModuleName, PersistentList<Instruction>>) {
     companion object {
         val EMPTY = Image(modules = persistentMapOf())
     }
 
-    fun moduleInitialisation(name: List<Identifier>): List<Instruction> {
+    fun moduleInitialisation(name: ModuleName): List<Instruction> {
         return modules[name]!!
     }
 }

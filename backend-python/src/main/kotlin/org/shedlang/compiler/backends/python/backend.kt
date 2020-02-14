@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.python
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NodeSource
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.python.ast.PythonAssignmentNode
@@ -130,7 +131,7 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
     )
 }
 
-internal fun shedModuleNameToPythonModuleName(moduleName: List<Identifier>, moduleSet: ModuleSet): List<String> {
+internal fun shedModuleNameToPythonModuleName(moduleName: ModuleName, moduleSet: ModuleSet): List<String> {
     val pythonModuleName = listOf(topLevelPythonPackageName) + moduleName.map(Identifier::value)
     if (isPackage(moduleSet, moduleName)) {
         return pythonModuleName + "__init__"

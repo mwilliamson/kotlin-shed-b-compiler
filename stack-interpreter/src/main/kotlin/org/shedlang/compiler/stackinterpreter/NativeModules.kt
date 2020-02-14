@@ -3,18 +3,19 @@ package org.shedlang.compiler.stackinterpreter
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentMapOf
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 
 internal fun loadNativeModules() = nativeModules
 
 internal fun createNativeModule(
-    name: List<Identifier>,
-    dependencies: List<List<Identifier>>,
+    name: ModuleName,
+    dependencies: List<ModuleName>,
     fields: List<Pair<Identifier, InterpreterValue>>
-): Pair<List<Identifier>, InterpreterModule> {
+): Pair<ModuleName, InterpreterModule> {
     return name to InterpreterModule(fields.toMap())
 }
 
-private val nativeModules: PersistentMap<List<Identifier>, InterpreterModule> = persistentMapOf(
+private val nativeModules: PersistentMap<ModuleName, InterpreterModule> = persistentMapOf(
     intToStringModule,
     ioModule,
     stringsModule

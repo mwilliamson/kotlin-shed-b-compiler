@@ -1,9 +1,6 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.ast.BinaryOperator
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.Source
-import org.shedlang.compiler.ast.UnaryOperator
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.TypeGroup
@@ -98,9 +95,9 @@ class WhenElseIsNotReachableError(source: Source) : TypeCheckError(
     "else branch of when is not reachable",
     source = source
 )
-class ModuleNotFoundError(val name: List<Identifier>, source: Source)
+class ModuleNotFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("Module not found: " + name.map(Identifier::value).joinToString("."), source = source)
-class MultipleModulesWithSameNameFoundError(val name: List<Identifier>, source: Source)
+class MultipleModulesWithSameNameFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("More than one module with the name ${name.map(Identifier::value).joinToString(".")} was found", source = source)
 class CouldNotFindDiscriminator(val sourceType: Type, val targetType: Type, source: Source)
     : TypeCheckError("Could not find discriminator from ${sourceType.shortDescription} to ${targetType.shortDescription}", source = source)

@@ -32,7 +32,7 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
-    val moduleName: List<Identifier>,
+    val moduleName: ModuleName,
     var hasCast: Boolean = false
 )
 

@@ -1,6 +1,7 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.freshNodeId
 
 
@@ -86,7 +87,7 @@ data class SymbolType(val symbol: Symbol): BasicType {
         get() = "Symbol[${symbol.module}.${symbol.name}]"
 }
 
-data class Symbol(val module: List<Identifier>, val name: String) {
+data class Symbol(val module: ModuleName, val name: String) {
     val fullName: String = (module.map(Identifier::value) + listOf(name)).joinToString(".")
 }
 
@@ -369,7 +370,7 @@ data class LazyTypeAlias(
         get() = name.value
 }
 
-data class Tag(val moduleName: List<Identifier>, val name: Identifier)
+data class Tag(val moduleName: ModuleName, val name: Identifier)
 data class TagValue(val tag: Tag, val value: Identifier)
 
 interface ShapeType: Type {

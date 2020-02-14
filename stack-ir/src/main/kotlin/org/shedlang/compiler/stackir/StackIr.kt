@@ -2,6 +2,7 @@ package org.shedlang.compiler.stackir
 
 import kotlinx.collections.immutable.PersistentList
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.TagValue
@@ -105,12 +106,12 @@ class LocalLoad(val variableId: Int): Instruction()
 
 class LocalStore(val variableId: Int): Instruction()
 
-class ModuleInit(val moduleName: List<Identifier>): Instruction()
+class ModuleInit(val moduleName: ModuleName): Instruction()
 
-class ModuleLoad(val moduleName: List<Identifier>): Instruction()
+class ModuleLoad(val moduleName: ModuleName): Instruction()
 
 class ModuleStore(
-    val moduleName: List<Identifier>,
+    val moduleName: ModuleName,
     val exports: List<Pair<Identifier, Int>>
 ): Instruction()
 

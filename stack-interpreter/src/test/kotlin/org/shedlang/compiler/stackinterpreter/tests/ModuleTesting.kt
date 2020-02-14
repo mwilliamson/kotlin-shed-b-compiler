@@ -4,6 +4,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.InterpreterValue
@@ -13,7 +14,7 @@ import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.moduleType
 
 internal fun callFunction(
-    moduleName: List<Identifier>,
+    moduleName: ModuleName,
     functionName: String,
     arguments: List<IrValue>,
     world: World = NullWorld

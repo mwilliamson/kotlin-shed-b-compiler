@@ -2,6 +2,7 @@ package org.shedlang.compiler.stackinterpreter
 
 import kotlinx.collections.immutable.*
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.backends.FieldValue
@@ -226,7 +227,7 @@ internal data class InterpreterState(
     private val defaultScope: ScopeReference,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
-    private val modules: PersistentMap<List<Identifier>, InterpreterModule>,
+    private val modules: PersistentMap<ModuleName, InterpreterModule>,
     private val world: World,
     private val labelToInstructionIndex: MutableMap<Int, Int>
 ) {
@@ -294,13 +295,13 @@ internal data class InterpreterState(
         return currentCallFrame().loadVariable(bindings, variableId)
     }
 
-    fun storeModule(moduleName: List<Identifier>, value: InterpreterModule): InterpreterState {
+    fun storeModule(moduleName: ModuleName, value: InterpreterModule): InterpreterState {
         return copy(
             modules = modules.put(moduleName, value)
         )
     }
 
-    fun loadModule(moduleName: List<Identifier>): InterpreterModule {
+    fun loadModule(moduleName: ModuleName): InterpreterModule {
         val module = modules[moduleName]
         if (module == null) {
             throw Exception("module missing: ${formatModuleName(moduleName)}")
@@ -309,11 +310,11 @@ internal data class InterpreterState(
         }
     }
 
-    fun moduleInitialisation(moduleName: List<Identifier>): List<Instruction> {
+    fun moduleInitialisation(moduleName: ModuleName): List<Instruction> {
         return image.moduleInitialisation(moduleName)
     }
 
-    fun isModuleInitialised(moduleName: List<Identifier>): Boolean {
+    fun isModuleInitialised(moduleName: ModuleName): Boolean {
         return modules.containsKey(moduleName)
     }
 
@@ -795,7 +796,7 @@ internal fun call(
     }
 }
 
-fun executeMain(mainModule: List<Identifier>, image: Image, world: World): Int {
+fun executeMain(mainModule: ModuleName, image: Image, world: World): Int {
     val finalState = executeInstructions(
         persistentListOf(
             ModuleInit(mainModule),

@@ -13,7 +13,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-fun readStandalone(directory: Path, moduleName: List<Identifier>): ModuleSet {
+fun readStandalone(directory: Path, moduleName: ModuleName): ModuleSet {
     val reader = ModuleReader(sourceDirectories = listOf(directory))
     reader.load(moduleName)
     return ModuleSet(reader.modules)
@@ -21,7 +21,7 @@ fun readStandalone(directory: Path, moduleName: List<Identifier>): ModuleSet {
 
 private val sourceDirectoryName = "src"
 
-fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
+fun readPackage(base: Path, name: ModuleName): ModuleSet {
     val dependencyDirectories = base.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
     val dependencies = dependencyDirectories
         .map({ file -> file.resolve(sourceDirectoryName) })
@@ -36,8 +36,8 @@ fun readPackage(base: Path, name: List<Identifier>): ModuleSet {
 
 private fun readModule(
     path: Path,
-    name: List<Identifier>,
-    getModule: (List<Identifier>) -> ModuleResult
+    name: ModuleName,
+    getModule: (ModuleName) -> ModuleResult
 ): Module {
     val moduleText = path.toFile().readText()
 
@@ -100,7 +100,7 @@ private fun readModule(
     }
 }
 
-private fun isCoreModule(moduleName: List<Identifier>): Boolean {
+private fun isCoreModule(moduleName: ModuleName): Boolean {
     return moduleName.isNotEmpty() && moduleName[0] == Identifier("Core")
 }
 
@@ -147,18 +147,18 @@ private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
     )
 }
 
-internal sealed class ModuleResult(val name: List<Identifier>) {
-    class NotFound(name: List<Identifier>): ModuleResult(name)
+internal sealed class ModuleResult(val name: ModuleName) {
+    class NotFound(name: ModuleName): ModuleResult(name)
     class Found(val module: Module): ModuleResult(module.name)
-    class FoundMany(name: List<Identifier>): ModuleResult(name)
+    class FoundMany(name: ModuleName): ModuleResult(name)
 }
 
 private class ModuleReader(private val sourceDirectories: List<Path>) {
-    private val modulesByName = LazyMap<List<Identifier>, ModuleResult>({ name ->
+    private val modulesByName = LazyMap<ModuleName, ModuleResult>({ name ->
         readModuleInPackage(name = name)
     })
 
-    internal fun load(name: List<Identifier>) {
+    internal fun load(name: ModuleName) {
         modulesByName.get(name) as ModuleResult.Found
     }
 
@@ -171,7 +171,7 @@ private class ModuleReader(private val sourceDirectories: List<Path>) {
             }
         }
 
-    private fun readModuleInPackage(name: List<Identifier>): ModuleResult {
+    private fun readModuleInPackage(name: ModuleName): ModuleResult {
         val bases = listOf(findRoot().resolve("corelib").resolve(sourceDirectoryName)) + sourceDirectories
         val possiblePaths = bases.flatMap({ base ->
             listOf(".shed", ".types.shed").map { extension ->

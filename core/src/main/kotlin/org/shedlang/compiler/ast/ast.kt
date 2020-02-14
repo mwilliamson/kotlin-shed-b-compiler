@@ -46,7 +46,9 @@ data class Identifier(val value: String) : Comparable<Identifier> {
     }
 }
 
-fun formatModuleName(moduleName: List<Identifier>): String {
+typealias ModuleName = List<Identifier>
+
+fun formatModuleName(moduleName: ModuleName): String {
     return moduleName.joinToString(".") { part -> part.value }
 }
 

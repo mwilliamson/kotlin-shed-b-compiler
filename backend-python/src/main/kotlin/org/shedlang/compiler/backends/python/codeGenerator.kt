@@ -29,7 +29,7 @@ internal fun generateCode(
     return generateCode(module.node, context)
 }
 
-internal fun isPackage(moduleSet: ModuleSet, moduleName: List<Identifier>): Boolean {
+internal fun isPackage(moduleSet: ModuleSet, moduleName: ModuleName): Boolean {
     return moduleSet.modules.any { module ->
         module.name.size > moduleName.size && module.name.subList(0, moduleName.size) == moduleName
     }
@@ -39,7 +39,7 @@ internal data class HasCast(var value: Boolean)
 
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
-    val moduleName: List<Identifier>,
+    val moduleName: ModuleName,
     val isPackage: Boolean,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf(),

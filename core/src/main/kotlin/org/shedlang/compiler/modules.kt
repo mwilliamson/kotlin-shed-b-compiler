@@ -7,17 +7,17 @@ import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.metaTypeToType
 
 class ModuleSet(val modules: Collection<Module>) {
-    fun module(name: List<Identifier>): Module? {
+    fun module(name: ModuleName): Module? {
         return modules.find { module -> module.name == name }
     }
 }
 
 sealed class Module {
-    abstract val name: List<Identifier>
+    abstract val name: ModuleName
     abstract val type: ModuleType
 
     class Shed(
-        override val name: List<Identifier>,
+        override val name: ModuleName,
         val node: ModuleNode,
         override val type: ModuleType,
         val types: Types,
@@ -29,7 +29,7 @@ sealed class Module {
     }
 
     class Native(
-        override val name: List<Identifier>,
+        override val name: ModuleName,
         override val type: ModuleType
     ): Module()
 }
