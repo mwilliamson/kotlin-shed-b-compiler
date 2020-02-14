@@ -1328,12 +1328,12 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             else -> setOf<Identifier>() to false
         }
 
-        val fieldIndex = (if (hasTagValue) 1 else 0) + fields.sorted().indexOf(fieldName)
+        val fieldIndex = fields.sorted().indexOf(fieldName)
 
         if (fieldIndex == -1) {
             throw Exception("could not find field: ${fieldName.value}\nin type: ${receiverType.shortDescription}")
         } else {
-            return fieldIndex
+            return (if (hasTagValue) 1 else 0) + fieldIndex
         }
     }
 
