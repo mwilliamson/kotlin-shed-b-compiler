@@ -734,7 +734,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val context2 = context.addInstructions(
                     malloc(
                         target = tupleBytes,
-                        bytes = LlvmOperandInt(compiledValueTypeSize * instruction.length)
+                        bytes = compiledValueTypeSize * instruction.length
                     ),
                     LlvmBitCast(
                         target = tuple,
@@ -1190,6 +1190,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
+    private fun malloc(target: LlvmOperandLocal, bytes: Int) = malloc(target, LlvmOperandInt(bytes))
+
     private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
         return LlvmCall(
             target = target,
@@ -1225,7 +1227,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 listOf(
                     malloc(
                         target = instanceBytes,
-                        bytes = LlvmOperandInt(compiledValueTypeSize * shapeSize)
+                        bytes = compiledValueTypeSize * shapeSize
                     ),
                     LlvmBitCast(
                         target = instance,
