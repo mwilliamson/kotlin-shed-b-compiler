@@ -145,3 +145,15 @@ object TagValueEquals: Instruction()
 class TupleAccess(val elementIndex: Int): Instruction()
 
 class TupleCreate(val length: Int): Instruction()
+
+fun Instruction.children(): List<Instruction> {
+    return when (this) {
+        is DeclareFunction -> bodyInstructions
+        else -> listOf()
+    }
+}
+
+fun Instruction.descendants(): List<Instruction> {
+    val children = children()
+    return children + children.flatMap { child -> child.descendants() }
+}
