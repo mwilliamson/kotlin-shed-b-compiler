@@ -264,19 +264,55 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         moduleSet.module(moduleName)!!.type
 
     private fun moduleInitDefinition(moduleName: ModuleName): List<LlvmTopLevelEntity> {
+        val isInitialisedPointer = operandForModuleIsInitialised(moduleName)
+        val isInitialised = LlvmOperandLocal(generateName("isInitialised"))
+
         val bodyContext = compileInstructions(
             image.moduleInitialisation(moduleName),
             context = startFunction()
-        )
-
-        return bodyContext.topLevelEntities.add(
-            LlvmFunctionDefinition(
-                name = nameForModuleInit(moduleName),
-                returnType = LlvmTypes.void,
-                parameters = listOf(),
-                body = bodyContext.instructions.add(LlvmReturnVoid)
+        ).addInstructions(
+            LlvmStore(
+                type = LlvmTypes.i1,
+                value = LlvmOperandInt(1),
+                pointer = isInitialisedPointer
             )
         )
+
+        val isInitialisedDefinition = LlvmGlobalDefinition(
+            name = nameForModuleIsInitialised(moduleName),
+            type = LlvmTypes.i1,
+            value = LlvmOperandInt(0)
+        )
+
+        val notInitialisedLabel = generateName("notInitialised")
+        val initialisedLabel = generateName("initialised")
+
+        val initFunctionDefinition = LlvmFunctionDefinition(
+            name = nameForModuleInit(moduleName),
+            returnType = LlvmTypes.void,
+            parameters = listOf(),
+            body = persistentListOf(
+                LlvmLoad(
+                    target = isInitialised,
+                    type = LlvmTypes.i1,
+                    pointer = isInitialisedPointer
+                ),
+                LlvmBr(
+                    condition = isInitialised,
+                    ifFalse = notInitialisedLabel,
+                    ifTrue = initialisedLabel
+                ),
+                LlvmLabel(notInitialisedLabel)
+            ).addAll(bodyContext.instructions).addAll(listOf(
+                LlvmReturnVoid,
+                LlvmLabel(initialisedLabel),
+                LlvmReturnVoid
+            ))
+        )
+        return bodyContext.topLevelEntities.addAll(listOf(
+            isInitialisedDefinition,
+            initFunctionDefinition
+        ))
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: FunctionContext): FunctionContext {
@@ -536,6 +572,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is LocalStore -> {
                 val (context2, operand) = context.popTemporary()
                 return context2.localStore(instruction.variableId, operand)
+            }
+
+            is ModuleInit -> {
+                return context.addInstruction(callModuleInit(instruction.moduleName))
+            }
+
+            is ModuleLoad -> {
+                val moduleValue = LlvmOperandLocal(generateName("moduleValue"))
+                val loadModule = moduleLoad(target = moduleValue, moduleName = instruction.moduleName)
+                return context.addInstruction(loadModule).pushTemporary(moduleValue)
             }
 
             is ModuleStore -> {
@@ -1259,23 +1305,35 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
     private fun importModule(moduleName: ModuleName, target: LlvmVariable): List<LlvmInstruction> {
         return listOf(
-            LlvmCall(
-                target = null,
-                returnType = LlvmTypes.void,
-                functionPointer = operandForModuleInit(moduleName),
-                arguments = listOf()
-            ),
-            LlvmBitCast(
-                target = target,
-                sourceType = compiledObjectType(moduleSize(moduleName)),
-                value = operandForModuleValue(moduleName),
-                targetType = compiledObjectType()
-            )
+            callModuleInit(moduleName),
+            moduleLoad(target, moduleName)
+        )
+    }
+
+    private fun callModuleInit(moduleName: ModuleName): LlvmCall {
+        return LlvmCall(
+            target = null,
+            returnType = LlvmTypes.void,
+            functionPointer = operandForModuleInit(moduleName),
+            arguments = listOf()
+        )
+    }
+
+    private fun moduleLoad(target: LlvmVariable, moduleName: ModuleName): LlvmBitCast {
+        return LlvmBitCast(
+            target = target,
+            sourceType = compiledObjectType(moduleSize(moduleName)),
+            value = operandForModuleValue(moduleName),
+            targetType = compiledObjectType()
         )
     }
 
     private fun operandForModuleInit(moduleName: ModuleName): LlvmOperand {
         return LlvmOperandGlobal(nameForModuleInit(moduleName))
+    }
+
+    private fun operandForModuleIsInitialised(moduleName: ModuleName): LlvmOperand {
+        return LlvmOperandGlobal(nameForModuleIsInitialised(moduleName))
     }
 
     private fun operandForModuleValue(moduleName: ModuleName): LlvmVariable {
@@ -1284,6 +1342,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
     private fun nameForModuleInit(moduleName: ModuleName): String {
         return "shed__module_init__${serialiseModuleName(moduleName)}"
+    }
+
+    private fun nameForModuleIsInitialised(moduleName: ModuleName): String {
+        return "shed__module_is_initialised__${serialiseModuleName(moduleName)}"
     }
 
     private fun nameForModuleValue(moduleName: ModuleName): String {
