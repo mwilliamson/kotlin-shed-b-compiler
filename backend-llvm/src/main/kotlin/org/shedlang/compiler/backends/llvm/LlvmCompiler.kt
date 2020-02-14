@@ -212,8 +212,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val defineMainModule = moduleDefinition(mainModule)
 
         val mainModuleVariable = LlvmOperandLocal("mainModule")
-        val mainFunctionUntypedVariable = LlvmOperandLocal("mainFunctionUntyped")
-        val mainFunctionVariable = LlvmOperandLocal("mainFunction")
+        val mainClosureVariable = LlvmOperandLocal("mainClosure")
         val exitCodeVariable = LlvmOperandLocal("exitCode")
         val main = LlvmFunctionDefinition(
             returnType = compiledValueType,
@@ -225,24 +224,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     mainModuleVariable,
                     Identifier("main"),
                     receiverType = moduleType(mainModule),
-                    target = mainFunctionUntypedVariable
+                    target = mainClosureVariable
+                ),
+                callClosure(
+                    target = exitCodeVariable,
+                    closurePointer = mainClosureVariable,
+                    arguments = listOf()
                 ),
                 listOf(
-                    LlvmIntToPtr(
-                        target = mainFunctionVariable,
-                        sourceType = compiledValueType,
-                        value = mainFunctionUntypedVariable,
-                        targetType = LlvmTypes.pointer(LlvmTypes.function(
-                            returnType = compiledValueType,
-                            parameterTypes = listOf()
-                        ))
-                    ),
-                    LlvmCall(
-                        target = exitCodeVariable,
-                        returnType = compiledValueType,
-                        functionPointer = mainFunctionVariable,
-                        arguments = listOf()
-                    ),
                     LlvmReturn(type = LlvmTypes.i64, value = exitCodeVariable)
                 )
             ).flatten()
@@ -361,7 +350,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val (context2, namedArgumentValues) = context.popTemporaries(instruction.namedArgumentNames.size)
                 val (context3, positionalArguments) = context2.popTemporaries(instruction.positionalArgumentCount)
                 val (context4, receiver) = context3.popTemporary()
-                val receiverPointer = LlvmOperandLocal(generateName("receiver"))
                 val result = LlvmOperandLocal(generateName("result"))
 
                 val namedArguments = instruction.namedArgumentNames
@@ -372,23 +360,14 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val typedArguments = (positionalArguments + namedArguments).map { argument ->
                     LlvmTypedOperand(compiledValueType, argument)
                 }
-                return context4.addInstructions(
-                    LlvmIntToPtr(
-                        target = receiverPointer,
-                        sourceType = compiledValueType,
-                        value = receiver,
-                        targetType = LlvmTypes.pointer(LlvmTypes.function(
-                            returnType = compiledValueType,
-                            parameterTypes = typedArguments.map { argument -> argument.type }
-                        ))
-                    ),
-                    LlvmCall(
-                        target = result,
-                        returnType = compiledValueType,
-                        functionPointer = receiverPointer,
-                        arguments = typedArguments
-                    )
-                ).pushTemporary(result)
+
+                val callInstructions = callClosure(
+                    target = result,
+                    closurePointer = receiver,
+                    arguments = typedArguments
+                )
+
+                return context4.addInstructions(callInstructions).pushTemporary(result)
             }
 
             is CodePointEquals -> {
@@ -417,7 +396,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is DeclareFunction -> {
                 val functionName = generateName(instruction.name)
-                val functionPointerVariable = LlvmOperandLocal(generateName("functionPointer"))
+                val temporary = LlvmOperandLocal(generateName("value"))
 
                 val irParameters = instruction.positionalParameters + instruction.namedParameters
                     .sortedBy { namedParameter -> namedParameter.name }
@@ -425,6 +404,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val llvmParameters = irParameters.map { irParameter ->
                     LlvmParameter(compiledValueType, generateName(irParameter.name))
                 }
+                val llvmParameterTypes = llvmParameters.map(LlvmParameter::type)
 
                 val bodyContext = compileInstructions(
                     instruction.bodyInstructions,
@@ -435,25 +415,21 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val functionDefinition = LlvmFunctionDefinition(
                     name = functionName,
                     returnType = compiledValueType,
-                    parameters = llvmParameters,
+                    parameters = listOf(closureEnvironmentParameter) + llvmParameters,
                     body = bodyContext.instructions
                 )
 
-                val getVariableAddress = LlvmPtrToInt(
-                    target = functionPointerVariable,
-                    targetType = compiledValueType,
-                    value = LlvmOperandGlobal(functionName),
-                    sourceType = LlvmTypes.pointer(LlvmTypes.function(
-                        returnType = compiledValueType,
-                        parameterTypes = llvmParameters.map { parameter -> parameter.type }
-                    ))
+                val createClosure = createClosure(
+                    target = temporary,
+                    functionName = functionName,
+                    parameterTypes = llvmParameterTypes
                 )
 
                 return context
                     .addTopLevelEntities(bodyContext.topLevelEntities)
                     .addTopLevelEntities(listOf(functionDefinition))
-                    .addInstructions(getVariableAddress)
-                    .pushTemporary(functionPointerVariable)
+                    .addInstructions(createClosure)
+                    .pushTemporary(temporary)
             }
 
             is DeclareShape -> {
@@ -766,6 +742,82 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 throw UnsupportedOperationException(instruction.toString())
             }
         }
+    }
+
+    private fun callClosure(target: LlvmOperandLocal, closurePointer: LlvmOperand, arguments: List<LlvmTypedOperand>): List<LlvmInstruction> {
+        val typedClosurePointer = LlvmOperandLocal(generateName("closurePointer"))
+        val functionPointerPointer = LlvmOperandLocal(generateName("functionPointerPointer"))
+        val functionPointer = LlvmOperandLocal(generateName("functionPointer"))
+
+        val compiledClosurePointerType = compiledClosurePointerType(arguments.map { argument -> argument.type })
+
+        return listOf(
+            LlvmIntToPtr(
+                target = typedClosurePointer,
+                sourceType = compiledValueType,
+                value = closurePointer,
+                targetType = compiledClosurePointerType
+            ),
+            LlvmGetElementPtr(
+                target = functionPointerPointer,
+                type = compiledClosurePointerType.type,
+                pointer = typedClosurePointer,
+                indices = listOf(
+                    LlvmIndex.i64(0),
+                    LlvmIndex.i32(0)
+                )
+            ),
+            LlvmLoad(
+                target = functionPointer,
+                type = compiledClosureFunctionPointerType(arguments.map { argument -> argument.type }),
+                pointer = functionPointerPointer
+            ),
+            LlvmCall(
+                target = target,
+                returnType = compiledValueType,
+                functionPointer = functionPointer,
+                arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, LlvmNullPointer)) + arguments
+            )
+        )
+    }
+
+    private val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, "environment")
+
+    private fun createClosure(target: LlvmOperandLocal, functionName: String, parameterTypes: List<LlvmType>): PersistentList<LlvmInstruction> {
+        val closurePointer = LlvmOperandLocal(generateName("closurePointer"))
+        val closureFunctionPointer = LlvmOperandLocal(generateName("closureFunctionPointer"))
+        val closurePointerType = compiledClosurePointerType(parameterTypes)
+
+        val closureMalloc = typedMalloc(closurePointer, compiledClosureSize, type = closurePointerType)
+
+        val getClosureFunctionPointer = LlvmGetElementPtr(
+            target = closureFunctionPointer,
+            type = closurePointerType.type,
+            pointer = closurePointer,
+            indices = listOf(
+                LlvmIndex.i64(0),
+                LlvmIndex.i32(0)
+            )
+        )
+
+        val storeClosureFunction = LlvmStore(
+            type = compiledClosureFunctionPointerType(parameterTypes),
+            value = LlvmOperandGlobal(functionName),
+            pointer = closureFunctionPointer
+        )
+
+        val getClosureAddress = LlvmPtrToInt(
+            target = target,
+            targetType = compiledValueType,
+            value = closurePointer,
+            sourceType = closurePointerType
+        )
+
+        return persistentListOf<LlvmInstruction>()
+            .addAll(closureMalloc)
+            .add(getClosureFunctionPointer)
+            .add(storeClosureFunction)
+            .add(getClosureAddress)
     }
 
     internal fun startFunction(): FunctionContext {
@@ -1228,7 +1280,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val constructorDefinition = LlvmFunctionDefinition(
             name = constructorName,
             returnType = compiledValueType,
-            parameters = parameters,
+            parameters = listOf(closureEnvironmentParameter) + parameters,
             body = listOf(
                 typedMalloc(
                     target = instance,
@@ -1282,17 +1334,11 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
         return context
             .addTopLevelEntities(listOf(constructorDefinition))
-            .addInstructions(
-                LlvmPtrToInt(
-                    target = constructorPointer,
-                    targetType = compiledValueType,
-                    value = LlvmOperandGlobal(constructorName),
-                    sourceType = LlvmTypes.pointer(LlvmTypes.function(
-                        returnType = compiledValueType,
-                        parameterTypes = parameters.map { parameter -> parameter.type }
-                    ))
-                )
-            )
+            .addInstructions(createClosure(
+                target = constructorPointer,
+                functionName = constructorName,
+                parameterTypes = parameters.map { parameter -> parameter.type }
+            ))
             .pushTemporary(constructorPointer)
     }
 
@@ -1474,6 +1520,33 @@ internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
 internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
 private fun compiledObjectType(size: Int = 0) = LlvmTypes.pointer(LlvmTypes.arrayType(size = size, elementType = compiledValueType))
 private val compiledTupleType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
+
+private val compiledClosureEnvironmentType = LlvmTypes.arrayType(0, compiledValueType)
+private val compiledClosureEnvironmentPointerType = LlvmTypes.pointer(compiledClosureEnvironmentType)
+
+private fun compiledClosureFunctionPointerType(parameterTypes: List<LlvmType>): LlvmTypePointer {
+    return LlvmTypes.pointer(compiledClosureFunctionType(parameterTypes))
+}
+
+private fun compiledClosureFunctionType(parameterTypes: List<LlvmType>): LlvmType {
+    return LlvmTypes.function(
+        returnType = compiledValueType,
+        parameterTypes = listOf(compiledClosureEnvironmentPointerType) + parameterTypes
+    )
+}
+
+private fun compiledClosurePointerType(parameterTypes: List<LlvmType>): LlvmTypePointer {
+    return LlvmTypes.pointer(compiledClosureType(parameterTypes))
+}
+
+private fun compiledClosureType(parameterTypes: List<LlvmType>): LlvmTypeStructure {
+    return LlvmTypes.structure(listOf(
+        compiledClosureFunctionPointerType(parameterTypes),
+        compiledClosureEnvironmentType
+    ))
+}
+
+private val compiledClosureSize = 16
 
 internal object CTypes {
     val int = LlvmTypes.i32

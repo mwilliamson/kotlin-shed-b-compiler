@@ -268,6 +268,16 @@ internal data class LlvmIndex(val type: LlvmType, val value: LlvmOperand) {
     fun serialise(): String {
         return "${type.serialise()} ${value.serialise()}"
     }
+
+    companion object {
+        fun i64(value: Int): LlvmIndex {
+            return LlvmIndex(LlvmTypes.i64, LlvmOperandInt(value))
+        }
+
+        fun i32(value: Int): LlvmIndex {
+            return LlvmIndex(LlvmTypes.i32, LlvmOperandInt(value))
+        }
+    }
 }
 
 internal data class LlvmLabel(val name: String): LlvmInstruction {
