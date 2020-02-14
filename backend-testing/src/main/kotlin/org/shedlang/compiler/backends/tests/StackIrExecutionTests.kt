@@ -1110,6 +1110,50 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(-4))
     }
 
+    @Test
+    fun functionCanReferenceVariablesFromOuterScope() {
+        val valueTarget = targetVariable("value")
+        val valueDeclaration = valStatement(valueTarget, literalInt(42))
+        val valueReference = variableReference("value")
+        val function = function(
+            name = "main",
+            body = listOf(
+                expressionStatementReturn(valueReference)
+            )
+        )
+        val functionType = functionType(returns = IntType)
+        val moduleName = listOf(Identifier("Example"))
+        val functionReference = export("main")
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            valueReference.nodeId to valueTarget
+        ))
+        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                exports = listOf(functionReference),
+                body = listOf(valueDeclaration, function)
+            ),
+            type = moduleType,
+            references = references
+        )
+
+        val moduleSet = ModuleSet(listOf(module))
+        val value = executeInstructions(
+            persistentListOf(
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
+                FieldAccess(Identifier("main"), receiverType = moduleType),
+                Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
+            ),
+            type = IntType,
+            moduleSet = moduleSet
+        )
+
+        assertThat(value, isInt(42))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions, type = type)

@@ -157,3 +157,7 @@ fun Instruction.descendants(): List<Instruction> {
     val children = children()
     return children + children.flatMap { child -> child.descendants() }
 }
+
+fun Instruction.descendantsAndSelf(): List<Instruction> {
+    return listOf(this) + descendants()
+}
