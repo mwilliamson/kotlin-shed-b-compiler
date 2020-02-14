@@ -581,7 +581,16 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is ModuleLoad -> {
                 val moduleValue = LlvmOperandLocal(generateName("moduleValue"))
                 val loadModule = moduleLoad(target = moduleValue, moduleName = instruction.moduleName)
-                return context.addInstruction(loadModule).pushTemporary(moduleValue)
+                val temporary = LlvmOperandLocal(generateName("temporary"))
+                return context
+                    .addInstruction(loadModule)
+                    .addInstruction(LlvmPtrToInt(
+                        target = temporary,
+                        sourceType = LlvmTypes.pointer(compiledModuleType(instruction.moduleName)),
+                        value = moduleValue,
+                        targetType = compiledValueType
+                    ))
+                    .pushTemporary(temporary)
             }
 
             is ModuleStore -> {
