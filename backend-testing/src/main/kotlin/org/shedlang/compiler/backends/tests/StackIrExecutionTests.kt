@@ -2,14 +2,10 @@ package org.shedlang.compiler.backends.tests
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ResolvedReferences
-import org.shedlang.compiler.Types
-import org.shedlang.compiler.TypesMap
-import org.shedlang.compiler.ast.BinaryOperator
-import org.shedlang.compiler.ast.Block
-import org.shedlang.compiler.ast.ExpressionNode
-import org.shedlang.compiler.ast.UnaryOperator
+import org.shedlang.compiler.*
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
@@ -17,7 +13,11 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 interface StackIrExecutionEnvironment {
-    fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue
+    fun executeInstructions(
+        instructions: List<Instruction>,
+        type: Type,
+        moduleSet: ModuleSet = ModuleSet(listOf())
+    ): IrValue
 }
 
 abstract class StackIrExecutionTests(private val environment: StackIrExecutionEnvironment) {
@@ -1007,6 +1007,48 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertThat(value, isInt(-4))
     }
 
+    @Test
+    fun canCallFunctionDefinedInModuleWithZeroArguments() {
+        val function = function(
+            name = "main",
+            body = listOf(
+                expressionStatementReturn(
+                    literalInt(42)
+                )
+            )
+        )
+        val functionType = functionType(returns = IntType)
+        val moduleName = listOf(Identifier("Example"))
+        val functionReference = export("main")
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function
+        ))
+        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                exports = listOf(functionReference),
+                body = listOf(function)
+            ),
+            type = moduleType,
+            references = references
+        )
+
+        val moduleSet = ModuleSet(listOf(module))
+        val value = executeInstructions(
+            persistentListOf(
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
+                FieldAccess(Identifier("main"), receiverType = moduleType),
+                Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
+            ),
+            moduleSet = moduleSet,
+            type = IntType
+        )
+
+        assertThat(value, isInt(42))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions, type = type)
@@ -1017,8 +1059,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         return executeInstructions(instructions, type = type)
     }
 
-    private fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue {
-        return environment.executeInstructions(instructions, type = type)
+    private fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet = ModuleSet(listOf())): IrValue {
+        return environment.executeInstructions(instructions, type = type, moduleSet = moduleSet)
     }
 
     private fun isBool(expected: Boolean): Matcher<IrValue> {
@@ -1048,6 +1090,22 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = mapOf()
+        )
+    }
+
+    private fun stubbedModule(
+        name: ModuleName,
+        node: ModuleNode,
+        type: ModuleType,
+        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
+        types: Types = EMPTY_TYPES
+    ): Module.Shed {
+        return Module.Shed(
+            name = name,
+            type = type,
+            types = types,
+            references = references,
+            node = node
         )
     }
 }

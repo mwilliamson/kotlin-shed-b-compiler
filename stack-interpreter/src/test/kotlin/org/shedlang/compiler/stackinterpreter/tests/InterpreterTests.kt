@@ -18,8 +18,8 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue {
-        val interpreterValue = executeInstructions(instructions)
+    override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): IrValue {
+        val interpreterValue = executeInstructions(instructions, image = loadModuleSet(moduleSet))
         return interpreterValueToIrValue(interpreterValue)
     }
 
@@ -80,44 +80,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
         val value = executeInstructions(instructions)
 
         assertThat(value, isSymbol(symbol))
-    }
-
-    @Test
-    fun canCallFunctionDefinedInModuleWithZeroArguments() {
-        val function = function(
-            name = "main",
-            body = listOf(
-                expressionStatementReturn(
-                    literalInt(42)
-                )
-            )
-        )
-        val moduleName = listOf(Identifier("Example"))
-        val functionReference = export("main")
-        val references = ResolvedReferencesMap(mapOf(
-            functionReference.nodeId to function
-        ))
-        val module = stubbedModule(
-            name = moduleName,
-            node = module(
-                exports = listOf(functionReference),
-                body = listOf(function)
-            ),
-            references = references
-        )
-
-        val image = loadModuleSet(ModuleSet(listOf(module)))
-        val value = executeInstructions(
-            persistentListOf(
-                ModuleInit(moduleName),
-                ModuleLoad(moduleName),
-                FieldAccess(Identifier("main"), receiverType = null),
-                Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
-            ),
-            image = image
-        )
-
-        assertThat(value, isInt(42))
     }
 
     @Test

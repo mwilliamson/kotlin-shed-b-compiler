@@ -23,6 +23,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         internal val instructions: PersistentList<LlvmInstruction>,
         override val basicBlockName: String,
         internal val topLevelEntities: PersistentList<LlvmTopLevelEntity>,
+        private val definedModules: PersistentSet<ModuleName>,
         private val labelPredecessors: PersistentMultiMap<String, LabelPredecessor>,
         private val generateName: (String) -> String
     ): LabelPredecessor {
@@ -76,6 +77,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 instructions = instructions.add(newInstruction).addAll(extraInstructions),
                 basicBlockName = newBasicBlockName,
                 topLevelEntities = topLevelEntities,
+                definedModules = definedModules,
                 labelPredecessors = newLabelPredecessors,
                 generateName = generateName
             )
@@ -88,9 +90,27 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities.addAll(newTopLevelEntities),
+                definedModules = definedModules,
                 labelPredecessors = labelPredecessors,
                 generateName = generateName
             )
+        }
+
+        fun defineModule(moduleName: List<Identifier>, function: () -> List<LlvmTopLevelEntity>): FunctionContext {
+            if (definedModules.contains(moduleName)) {
+                return this
+            } else {
+                return FunctionContext(
+                    stack = stack,
+                    locals = locals,
+                    instructions = instructions,
+                    basicBlockName = basicBlockName,
+                    topLevelEntities = topLevelEntities,
+                    definedModules = definedModules.add(moduleName),
+                    labelPredecessors = labelPredecessors,
+                    generateName = generateName
+                ).addTopLevelEntities(function())
+            }
         }
 
         fun localLoad(variableId: Int): LlvmOperand {
@@ -108,6 +128,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities,
+                definedModules = definedModules,
                 labelPredecessors = labelPredecessors,
                 generateName = generateName
             )
@@ -148,6 +169,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities,
+                definedModules = definedModules,
                 labelPredecessors = labelPredecessors,
                 generateName = generateName
             )
@@ -575,22 +597,24 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is ModuleInit -> {
-                return context.addInstruction(callModuleInit(instruction.moduleName))
+                return context
+                    .defineModule(instruction.moduleName) {
+                        moduleDefinition(instruction.moduleName)
+                    }
+                    .addInstruction(callModuleInit(instruction.moduleName))
             }
 
             is ModuleLoad -> {
                 val moduleValue = LlvmOperandLocal(generateName("moduleValue"))
-                val loadModule = moduleLoad(target = moduleValue, moduleName = instruction.moduleName)
-                val temporary = LlvmOperandLocal(generateName("temporary"))
+                val loadModule = LlvmPtrToInt(
+                    target = moduleValue,
+                    sourceType = LlvmTypes.pointer(compiledModuleType(instruction.moduleName)),
+                    value = operandForModuleValue(instruction.moduleName),
+                    targetType = compiledValueType
+                )
                 return context
                     .addInstruction(loadModule)
-                    .addInstruction(LlvmPtrToInt(
-                        target = temporary,
-                        sourceType = LlvmTypes.pointer(compiledModuleType(instruction.moduleName)),
-                        value = moduleValue,
-                        targetType = compiledValueType
-                    ))
-                    .pushTemporary(temporary)
+                    .pushTemporary(moduleValue)
             }
 
             is ModuleStore -> {
@@ -758,6 +782,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             stack = persistentListOf(),
             locals = persistentMapOf(),
             topLevelEntities = persistentListOf(),
+            definedModules = persistentSetOf(),
             labelPredecessors = persistentMultiMapOf(),
             generateName = ::generateName
         )

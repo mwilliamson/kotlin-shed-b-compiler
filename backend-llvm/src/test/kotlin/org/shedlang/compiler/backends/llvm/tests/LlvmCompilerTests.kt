@@ -14,10 +14,10 @@ import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun executeInstructions(instructions: List<Instruction>, type: Type): IrValue {
-        val stdout = executeInstructions(
+    override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): IrValue {
+        val stdout = executeInstructionsOutput(
             instructions,
-            moduleSet = ModuleSet(listOf()),
+            moduleSet = moduleSet,
             type = type
         )
 
@@ -49,7 +49,7 @@ private val environment = object: StackIrExecutionEnvironment {
         }
     }
 
-    private fun executeInstructions(
+    private fun executeInstructionsOutput(
         instructions: List<Instruction>,
         moduleSet: ModuleSet,
         type: Type
