@@ -460,6 +460,12 @@ internal class Compiler(
                 return strings.compileStringNotEqual(context = context)
             }
 
+            is Swap -> {
+                val (context2, operand1) = context.popTemporary()
+                val (context3, operand2) = context2.popTemporary()
+                return context3.pushTemporary(operand1).pushTemporary(operand2)
+            }
+
             is TagValueAccess -> {
                 val (context2, operand) = context.popTemporary()
                 val objectPointer = LlvmOperandLocal(generateName("objectPointer"))

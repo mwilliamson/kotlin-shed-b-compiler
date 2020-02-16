@@ -26,8 +26,7 @@ class ExecutionTests {
         "symbols",
         "TailRec.shed",
         "Tuples.shed",
-        "usingStdlib",
-        "Varargs.shed"
+        "usingStdlib"
     )
 
     @TestFactory
