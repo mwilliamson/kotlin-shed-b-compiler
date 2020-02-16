@@ -408,26 +408,11 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
                 val freeVariables = findFreeVariables(instruction)
 
-                val bodyContextWithEnvironment = freeVariables.foldIndexed(startFunction()) { freeVariableIndex, bodyContext, freeVariable ->
-                    val pointer = LlvmOperandLocal(generateName(freeVariable.name.value + "Pointer"))
-                    val value = LlvmOperandLocal(generateName(freeVariable.name))
-                    bodyContext.addInstructions(
-                        LlvmGetElementPtr(
-                            target = pointer,
-                            type = compiledClosureEnvironmentType,
-                            pointer = LlvmOperandLocal(closureEnvironmentParameter.name),
-                            indices = listOf(
-                                LlvmIndex.i64(0),
-                                LlvmIndex.i64(freeVariableIndex)
-                            )
-                        ),
-                        LlvmLoad(
-                            target = value,
-                            type = compiledValueType,
-                            pointer = pointer
-                        )
-                    ).localStore(freeVariable.variableId, value)
-                }
+                val bodyContextWithEnvironment = loadFreeVariables(
+                    freeVariables = freeVariables,
+                    closureEnvironmentPointer = LlvmOperandLocal(closureEnvironmentParameter.name),
+                    context = startFunction()
+                )
                 val bodyContextWithEnvironmentAndParameters =
                     irParameters.zip(llvmParameters).fold(bodyContextWithEnvironment) { bodyContext, (irParameter, llvmParameter) ->
                         bodyContext.localStore(irParameter.variableId, LlvmOperandLocal(llvmParameter.name))
@@ -873,26 +858,11 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             )
         )
 
-        val storeCapturedVariables = freeVariables.mapIndexed { freeVariableIndex, freeVariable ->
-            val capturedVariablePointer = LlvmOperandLocal(generateName("capturedVariablePointer"))
-
-            listOf(
-                LlvmGetElementPtr(
-                    target = capturedVariablePointer,
-                    type = compiledClosureEnvironmentType,
-                    pointer = closureEnvironmentPointer,
-                    indices = listOf(
-                        LlvmIndex.i64(0),
-                        LlvmIndex.i64(freeVariableIndex)
-                    )
-                ),
-                LlvmStore(
-                    type = compiledValueType,
-                    value = context.localLoad(freeVariable.variableId),
-                    pointer = capturedVariablePointer
-                )
-            )
-        }.flatten()
+        val storeCapturedVariables = storeFreeVariables(
+            freeVariables = freeVariables,
+            closureEnvironmentPointer = closureEnvironmentPointer,
+            context = context
+        )
 
         val getClosureAddress = LlvmPtrToInt(
             target = target,
@@ -908,6 +878,68 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             .add(getClosureEnvironmentPointer)
             .addAll(storeCapturedVariables)
             .add(getClosureAddress)
+    }
+
+    private fun storeFreeVariables(
+        freeVariables: List<LocalLoad>,
+        closureEnvironmentPointer: LlvmOperandLocal,
+        context: FunctionContext
+    ): List<LlvmInstruction> {
+        return freeVariables.mapIndexed { freeVariableIndex, freeVariable ->
+            val capturedVariablePointer = LlvmOperandLocal(generateName(freeVariable.name.value + "Pointer"))
+
+            listOf(
+                capturedVariablePointer(
+                    target = capturedVariablePointer,
+                    closureEnvironmentPointer = closureEnvironmentPointer,
+                    freeVariableIndex = freeVariableIndex
+                ),
+                LlvmStore(
+                    type = compiledValueType,
+                    value = context.localLoad(freeVariable.variableId),
+                    pointer = capturedVariablePointer
+                )
+            )
+        }.flatten()
+    }
+
+    private fun loadFreeVariables(
+        freeVariables: List<LocalLoad>,
+        closureEnvironmentPointer: LlvmOperandLocal,
+        context: FunctionContext
+    ): FunctionContext {
+        return freeVariables.foldIndexed(context) { freeVariableIndex, bodyContext, freeVariable ->
+            val pointer = LlvmOperandLocal(generateName(freeVariable.name.value + "Pointer"))
+            val value = LlvmOperandLocal(generateName(freeVariable.name))
+            bodyContext.addInstructions(
+                capturedVariablePointer(
+                    target = pointer,
+                    closureEnvironmentPointer = closureEnvironmentPointer,
+                    freeVariableIndex = freeVariableIndex
+                ),
+                LlvmLoad(
+                    target = value,
+                    type = compiledValueType,
+                    pointer = pointer
+                )
+            ).localStore(freeVariable.variableId, value)
+        }
+    }
+
+    private fun capturedVariablePointer(
+        target: LlvmOperandLocal,
+        closureEnvironmentPointer: LlvmOperandLocal,
+        freeVariableIndex: Int
+    ): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            type = compiledClosureEnvironmentType,
+            pointer = closureEnvironmentPointer,
+            indices = listOf(
+                LlvmIndex.i64(0),
+                LlvmIndex.i64(freeVariableIndex)
+            )
+        )
     }
 
     internal fun startFunction(): FunctionContext {
