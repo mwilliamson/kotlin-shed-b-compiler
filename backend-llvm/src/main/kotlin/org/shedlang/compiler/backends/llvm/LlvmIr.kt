@@ -389,6 +389,22 @@ internal data class LlvmFunctionDefinition(
     }
 }
 
+internal data class LlvmFunctionDeclaration(
+    val name: String,
+    val returnType: LlvmType,
+    val parameters: List<LlvmParameter>,
+    val hasVarargs: Boolean = false
+): LlvmTopLevelEntity {
+    override fun serialise(): String {
+        val parameterStrings = parameters.map { parameter ->
+            parameter.serialise()
+        } + if (hasVarargs) listOf("...") else listOf()
+        val parametersString = parameterStrings.joinToString(", ")
+
+        return "declare ${returnType.serialise()} @$name($parametersString)"
+    }
+}
+
 internal data class LlvmParameter(
     val type: LlvmType,
     val name: String

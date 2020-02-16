@@ -921,15 +921,68 @@ internal class Compiler(
 }
 
 internal fun serialiseProgram(module: LlvmModule): String {
-    // TODO: handle malloc declaration properly
-    return """
-        declare i8* @malloc(i64)
-        declare i8* @memcpy(i8*, i8*, i64)
-        declare i32 @memcmp(i8*, i8*, i64)
-        declare i32 @printf(i8* noalias nocapture, ...)
-        declare i32 @snprintf(i8*, i64, i8*, ...)
-        declare i64 @write(i32, i8*, i64)
-    """.trimIndent() + module.serialise()
+    val malloc = LlvmFunctionDeclaration(
+        name = "malloc",
+        returnType = CTypes.voidPointer,
+        parameters = listOf(
+            LlvmParameter(CTypes.size_t, "size")
+        )
+    )
+    val memcpy = LlvmFunctionDeclaration(
+        name = "memcpy",
+        returnType = CTypes.voidPointer,
+        parameters = listOf(
+            LlvmParameter(CTypes.voidPointer, "dest"),
+            LlvmParameter(CTypes.voidPointer, "src"),
+            LlvmParameter(CTypes.size_t, "n")
+        )
+    )
+    val memcmp = LlvmFunctionDeclaration(
+        name = "memcmp",
+        returnType = CTypes.int,
+        parameters = listOf(
+            LlvmParameter(CTypes.voidPointer, "s1"),
+            LlvmParameter(CTypes.voidPointer, "s2"),
+            LlvmParameter(CTypes.size_t, "n")
+        )
+    )
+    val printf = LlvmFunctionDeclaration(
+        name = "printf",
+        returnType = CTypes.int,
+        parameters = listOf(
+            LlvmParameter(CTypes.stringPointer, "format") // TODO: noalias nocapture
+        ),
+        hasVarargs = true
+    )
+    val snprintf = LlvmFunctionDeclaration(
+        name = "snprintf",
+        returnType = CTypes.int,
+        parameters = listOf(
+            LlvmParameter(CTypes.stringPointer, "str"),
+            LlvmParameter(CTypes.size_t, "size"),
+            LlvmParameter(CTypes.stringPointer, "format")
+        ),
+        hasVarargs = true
+    )
+    val write = LlvmFunctionDeclaration(
+        name = "write",
+        returnType = CTypes.ssize_t,
+        parameters = listOf(
+            LlvmParameter(CTypes.int, "fd"),
+            LlvmParameter(CTypes.voidPointer, "buf"),
+            LlvmParameter(CTypes.size_t, "count")
+        )
+    )
+    return listOf(
+        malloc,
+        memcpy,
+        memcmp,
+        printf,
+        snprintf,
+        write
+    ).joinToString("") { declaration ->
+        declaration.serialise() + "\n"
+    } + module.serialise()
 }
 
 fun withLineNumbers(source: String): String {

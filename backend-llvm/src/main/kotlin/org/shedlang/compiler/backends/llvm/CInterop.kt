@@ -1,10 +1,11 @@
 package org.shedlang.compiler.backends.llvm
 
 internal object CTypes {
+    val char = LlvmTypes.i8
     val int = LlvmTypes.i32
     val ssize_t = LlvmTypes.i64
     val size_t = LlvmTypes.i64
-    val stringPointer = LlvmTypes.pointer(LlvmTypes.i8)
+    val stringPointer = LlvmTypes.pointer(char)
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
 }
 
