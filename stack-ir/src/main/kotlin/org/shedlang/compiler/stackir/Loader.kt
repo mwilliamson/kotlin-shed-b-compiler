@@ -262,12 +262,12 @@ class Loader(
                         .addAll(node.positionalArguments.flatMap { argument ->
                             persistentListOf<Instruction>()
                                 .add(Duplicate)
-                                .add(TupleAccess(0))
+                                .add(varargsAccessCons())
                                 .add(Swap)
                                 .addAll(loadExpression(argument))
                                 .add(Swap)
                         })
-                        .add(TupleAccess(1))
+                        .add(varargsAccessNil())
                         .addAll((0 until node.positionalArguments.size).map {
                             Call(
                                 positionalArgumentCount = 2,
@@ -518,6 +518,14 @@ class Loader(
         val nilInstructions = loadExpression(node.nil)
 
         return consInstructions.addAll(nilInstructions).add(TupleCreate(2)).add(LocalStore(node))
+    }
+
+    private fun varargsAccessCons(): Instruction {
+        return TupleAccess(0)
+    }
+
+    private fun varargsAccessNil(): Instruction {
+        return TupleAccess(1)
     }
 
     private fun typeConditionInstructions(discriminator: Discriminator): PersistentList<Instruction> {
