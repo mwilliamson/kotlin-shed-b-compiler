@@ -253,18 +253,18 @@ internal class Compiler(
                     body = bodyContext.instructions
                 )
 
-                val createClosure = closures.createClosure(
-                    target = temporary,
-                    functionName = functionName,
-                    parameterTypes = llvmParameterTypes,
-                    freeVariables = freeVariables,
-                    context = context
-                )
-
                 return context
                     .addTopLevelEntities(bodyContext.topLevelEntities)
                     .addTopLevelEntities(listOf(functionDefinition))
-                    .addInstructions(createClosure)
+                    .let {
+                        closures.createClosure(
+                            target = temporary,
+                            functionName = functionName,
+                            parameterTypes = llvmParameterTypes,
+                            freeVariables = freeVariables,
+                            context = it
+                        )
+                    }
                     .pushTemporary(temporary)
             }
 
@@ -560,6 +560,7 @@ internal class Compiler(
             instructions = persistentListOf(),
             stack = persistentListOf(),
             locals = persistentMapOf(),
+            onLocalStore = persistentMultiMapOf(),
             topLevelEntities = persistentListOf(),
             definedModules = persistentSetOf(),
             labelPredecessors = persistentMultiMapOf(),
@@ -770,13 +771,15 @@ internal class Compiler(
 
         return context
             .addTopLevelEntities(listOf(constructorDefinition))
-            .addInstructions(closures.createClosure(
-                target = constructorPointer,
-                functionName = constructorName,
-                parameterTypes = parameters.map { parameter -> parameter.type },
-                freeVariables = listOf(),
-                context = context
-            ))
+            .let {
+                closures.createClosure(
+                    target = constructorPointer,
+                    functionName = constructorName,
+                    parameterTypes = parameters.map { parameter -> parameter.type },
+                    freeVariables = listOf(),
+                    context = it
+                )
+            }
             .pushTemporary(constructorPointer)
     }
 

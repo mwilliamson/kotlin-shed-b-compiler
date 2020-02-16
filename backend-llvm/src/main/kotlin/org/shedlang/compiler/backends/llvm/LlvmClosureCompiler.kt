@@ -1,7 +1,5 @@
 package org.shedlang.compiler.backends.llvm
 
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.stackir.*
 
 internal class ClosureCompiler(
@@ -14,7 +12,7 @@ internal class ClosureCompiler(
         parameterTypes: List<LlvmType>,
         freeVariables: List<LocalLoad>,
         context: FunctionContext
-    ): PersistentList<LlvmInstruction> {
+    ): FunctionContext {
         val closurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))
         val closureFunctionPointer = LlvmOperandLocal(irBuilder.generateName("closureFunctionPointer"))
         val closureEnvironmentPointer = LlvmOperandLocal(irBuilder.generateName("closureEnvironmentPointer"))
@@ -48,12 +46,6 @@ internal class ClosureCompiler(
             )
         )
 
-        val storeCapturedVariables = storeFreeVariables(
-            freeVariables = freeVariables,
-            closureEnvironmentPointer = closureEnvironmentPointer,
-            context = context
-        )
-
         val getClosureAddress = LlvmPtrToInt(
             target = target,
             targetType = compiledValueType,
@@ -61,13 +53,17 @@ internal class ClosureCompiler(
             sourceType = closurePointerType
         )
 
-        return persistentListOf<LlvmInstruction>()
-            .addAll(closureMalloc)
-            .add(getClosureFunctionPointer)
-            .add(storeClosureFunction)
-            .add(getClosureEnvironmentPointer)
-            .addAll(storeCapturedVariables)
-            .add(getClosureAddress)
+        return context
+            .addInstructions(closureMalloc)
+            .addInstructions(getClosureFunctionPointer)
+            .addInstructions(storeClosureFunction)
+            .addInstructions(getClosureEnvironmentPointer)
+            .let { storeFreeVariables(
+                freeVariables = freeVariables,
+                closureEnvironmentPointer = closureEnvironmentPointer,
+                context = it
+            ) }
+            .addInstructions(getClosureAddress)
     }
 
     internal fun findFreeVariables(instruction: Instruction): List<LocalLoad> {
@@ -134,11 +130,27 @@ internal class ClosureCompiler(
         freeVariables: List<LocalLoad>,
         closureEnvironmentPointer: LlvmOperandLocal,
         context: FunctionContext
-    ): List<LlvmInstruction> {
-        return freeVariables.mapIndexed { freeVariableIndex, freeVariable ->
+    ): FunctionContext {
+        return freeVariables.foldIndexed(context) { freeVariableIndex, context, freeVariable ->
+            storeFreeVariable(
+                closureEnvironmentPointer = closureEnvironmentPointer,
+                freeVariable = freeVariable,
+                freeVariableIndex = freeVariableIndex,
+                context = context
+            )
+        }
+    }
+
+    private fun storeFreeVariable(
+        closureEnvironmentPointer: LlvmOperandLocal,
+        freeVariable: LocalLoad,
+        freeVariableIndex: Int,
+        context: FunctionContext
+    ): FunctionContext {
+        return context.localLoad(freeVariable.variableId) { freeVariableValue, context ->
             val capturedVariablePointer = LlvmOperandLocal(irBuilder.generateName(freeVariable.name.value + "Pointer"))
 
-            listOf(
+            context.addInstructions(
                 capturedVariablePointer(
                     target = capturedVariablePointer,
                     closureEnvironmentPointer = closureEnvironmentPointer,
@@ -146,11 +158,11 @@ internal class ClosureCompiler(
                 ),
                 LlvmStore(
                     type = compiledValueType,
-                    value = context.localLoad(freeVariable.variableId),
+                    value = freeVariableValue,
                     pointer = capturedVariablePointer
                 )
             )
-        }.flatten()
+        }
     }
 
     internal fun loadFreeVariables(

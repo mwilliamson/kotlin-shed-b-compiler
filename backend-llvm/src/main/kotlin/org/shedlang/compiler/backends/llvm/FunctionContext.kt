@@ -12,6 +12,7 @@ internal interface LabelPredecessor {
 internal class FunctionContext(
     override val stack: PersistentList<LlvmOperand>,
     internal val locals: PersistentMap<Int, LlvmOperand>,
+    private val onLocalStore: PersistentMultiMap<Int, (LlvmOperand, FunctionContext) -> FunctionContext>,
     internal val instructions: PersistentList<LlvmInstruction>,
     override val basicBlockName: String,
     internal val topLevelEntities: PersistentList<LlvmTopLevelEntity>,
@@ -66,6 +67,7 @@ internal class FunctionContext(
         return FunctionContext(
             stack = newStack,
             locals = locals,
+            onLocalStore = onLocalStore,
             instructions = instructions.add(newInstruction).addAll(extraInstructions),
             basicBlockName = newBasicBlockName,
             topLevelEntities = topLevelEntities,
@@ -82,6 +84,7 @@ internal class FunctionContext(
         return FunctionContext(
             stack = stack,
             locals = locals,
+            onLocalStore = onLocalStore,
             instructions = instructions,
             basicBlockName = basicBlockName,
             topLevelEntities = topLevelEntities.addAll(newTopLevelEntities),
@@ -98,6 +101,7 @@ internal class FunctionContext(
             return FunctionContext(
                 stack = stack,
                 locals = locals,
+                onLocalStore = onLocalStore,
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities,
@@ -112,14 +116,37 @@ internal class FunctionContext(
         return locals.getValue(variableId)
     }
 
+    fun localLoad(variableId: Int, onStore: (LlvmOperand, FunctionContext) -> FunctionContext): FunctionContext {
+        val value = locals[variableId]
+        if (value == null) {
+            return FunctionContext(
+                stack = stack,
+                locals = locals,
+                onLocalStore = onLocalStore.add(variableId, onStore),
+                instructions = instructions,
+                basicBlockName = basicBlockName,
+                topLevelEntities = topLevelEntities,
+                definedModules = definedModules,
+                labelPredecessors = labelPredecessors,
+                generateName = generateName
+            )
+        } else {
+            return onStore(value, this)
+        }
+    }
+
     fun localStore(variableId: Int, operand: LlvmOperand): FunctionContext {
         return updateLocals(locals.put(variableId, operand))
+            .let { onLocalStore[variableId].fold(it) { context, func ->
+                func(operand, context)
+            } }
     }
 
     private fun updateLocals(newLocals: PersistentMap<Int, LlvmOperand>): FunctionContext {
         return FunctionContext(
             stack = stack,
             locals = newLocals,
+            onLocalStore = onLocalStore,
             instructions = instructions,
             basicBlockName = basicBlockName,
             topLevelEntities = topLevelEntities,
@@ -161,6 +188,7 @@ internal class FunctionContext(
         return FunctionContext(
             stack = newStack,
             locals = locals,
+            onLocalStore = onLocalStore,
             instructions = instructions,
             basicBlockName = basicBlockName,
             topLevelEntities = topLevelEntities,

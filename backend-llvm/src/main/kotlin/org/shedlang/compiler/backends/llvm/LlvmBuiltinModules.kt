@@ -40,16 +40,13 @@ internal class BuiltinModuleCompiler(
 
         val printClosure = irBuilder.generateLocal("print")
 
-        val createClosure = closures.createClosure(
+        return closures.createClosure(
             target = printClosure,
             functionName = functionName,
             parameterTypes = listOf(compiledValueType),
             freeVariables = listOf(),
             context = context
         )
-
-        return context
-            .addInstructions(createClosure)
             .addInstructions(
                 modules.storeFields(
                     moduleName = listOf(Identifier("Core"), Identifier("Io")),
