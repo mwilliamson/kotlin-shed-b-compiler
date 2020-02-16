@@ -1713,13 +1713,3 @@ internal class PersistentMultiMap<K, V>(private val map: PersistentMap<K, Persis
 internal fun <K, V> persistentMultiMapOf(): PersistentMultiMap<K, V> {
     return PersistentMultiMap(persistentMapOf())
 }
-
-private fun isTerminator(instruction: LlvmInstruction): Boolean {
-    return when (instruction) {
-        is LlvmBr -> true
-        is LlvmBrUnconditional -> true
-        is LlvmReturn -> true
-        is LlvmReturnVoid -> true
-        else -> false
-    }
-}

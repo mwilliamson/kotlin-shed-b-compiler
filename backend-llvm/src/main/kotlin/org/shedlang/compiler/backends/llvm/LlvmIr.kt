@@ -415,3 +415,13 @@ internal data class LlvmModule(val body: List<LlvmTopLevelEntity>) {
 interface LlvmTopLevelEntity {
     fun serialise(): String
 }
+
+internal fun isTerminator(instruction: LlvmInstruction): Boolean {
+    return when (instruction) {
+        is LlvmBr -> true
+        is LlvmBrUnconditional -> true
+        is LlvmReturn -> true
+        is LlvmReturnVoid -> true
+        else -> false
+    }
+}
