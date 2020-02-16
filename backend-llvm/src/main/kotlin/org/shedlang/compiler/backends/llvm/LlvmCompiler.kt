@@ -1627,14 +1627,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
 private fun <T> PersistentList<T>.pop() = Pair(removeAt(lastIndex), last())
 
-internal object CTypes {
-    val int = LlvmTypes.i32
-    val ssize_t = LlvmTypes.i64
-    val size_t = LlvmTypes.i64
-    val stringPointer = LlvmTypes.pointer(LlvmTypes.i8)
-    val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
-}
-
 internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDefinition, LlvmOperand> {
     val bytes = value.toByteArray(Charsets.UTF_8)
 
@@ -1678,20 +1670,6 @@ internal fun serialiseProgram(module: LlvmModule): String {
         declare i32 @printf(i8* noalias nocapture, ...)
         declare i64 @write(i32, i8*, i64)
     """.trimIndent() + module.serialise()
-}
-
-internal fun compileWrite(fd: LlvmOperand, buf: LlvmOperand, count: LlvmOperand): LlvmCall {
-    // TODO: handle number of bytes written less than count
-    return LlvmCall(
-        target = null,
-        returnType = CTypes.ssize_t,
-        functionPointer = LlvmOperandGlobal("write"),
-        arguments = listOf(
-            LlvmTypedOperand(CTypes.int, fd),
-            LlvmTypedOperand(CTypes.voidPointer, buf),
-            LlvmTypedOperand(CTypes.size_t, count)
-        )
-    )
 }
 
 fun withLineNumbers(source: String): String {
