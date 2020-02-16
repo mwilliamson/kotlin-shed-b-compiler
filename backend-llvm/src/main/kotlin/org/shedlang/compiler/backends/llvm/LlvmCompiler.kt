@@ -6,7 +6,10 @@ import kotlinx.collections.immutable.persistentSetOf
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.ast.NullSource
+import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
@@ -22,6 +25,13 @@ internal class Compiler(
     private val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
     private val modules = ModuleValueCompiler(irBuilder = irBuilder, moduleSet = moduleSet)
     private val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
+    private val builtins = BuiltinModuleCompiler(
+        irBuilder = irBuilder,
+        closures = closures,
+        libc = libc,
+        modules = modules,
+        strings = strings
+    )
 
     fun compile(target: Path, mainModule: ModuleName) {
         val defineMainModule = moduleDefinition(mainModule)
@@ -74,10 +84,7 @@ internal class Compiler(
         val isInitialisedPointer = operandForModuleIsInitialised(moduleName)
         val isInitialised = LlvmOperandLocal(generateName("isInitialised"))
 
-        val bodyContext = compileInstructions(
-            image.moduleInitialisation(moduleName)!!,
-            context = startFunction()
-        ).addInstructions(
+        val bodyContext = compileModuleInitialisation(moduleName, startFunction()).addInstructions(
             LlvmStore(
                 type = LlvmTypes.i1,
                 value = LlvmOperandInt(1),
@@ -120,6 +127,25 @@ internal class Compiler(
             isInitialisedDefinition,
             initFunctionDefinition
         ))
+    }
+
+    private fun compileModuleInitialisation(moduleName: ModuleName, context: FunctionContext): FunctionContext {
+        if (builtins.isBuiltinModule(moduleName)) {
+            return builtins.compileBuiltinModule(moduleName, context = context)
+        } else {
+            val moduleInitialisationInstructions = image.moduleInitialisation(moduleName)
+            if (moduleInitialisationInstructions == null) {
+                throw CompilerError(
+                    "could not find initialisation for ${formatModuleName(moduleName)}",
+                    source = NullSource
+                )
+            } else {
+                return compileInstructions(
+                    moduleInitialisationInstructions,
+                    context = context
+                )
+            }
+        }
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: FunctionContext): FunctionContext {
@@ -858,7 +884,7 @@ internal class Compiler(
             }
 
             is IrUnit ->
-                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(0)
+                listOf<LlvmTopLevelEntity>() to compiledUnitValue
 
             else ->
                 throw UnsupportedOperationException(value.toString())
@@ -912,3 +938,5 @@ internal fun fieldIndex(receiverType: Type, fieldName: Identifier): Int {
         return (if (hasTagValue) 1 else 0) + fieldIndex
     }
 }
+
+internal val compiledUnitValue = LlvmOperandInt(0)

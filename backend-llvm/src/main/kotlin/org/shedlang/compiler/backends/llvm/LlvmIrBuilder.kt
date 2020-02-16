@@ -10,4 +10,8 @@ internal class LlvmIrBuilder() {
     internal fun generateName(prefix: String): String {
         return prefix + "_" + nextNameIndex++
     }
+
+    internal fun generateLocal(prefix: String): LlvmOperandLocal {
+        return LlvmOperandLocal(generateName(prefix))
+    }
 }

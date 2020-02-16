@@ -58,7 +58,16 @@ private val environment = object: StackIrExecutionEnvironment {
 
         val irBuilder = LlvmIrBuilder()
         val libc = LibcCallCompiler(irBuilder = irBuilder)
+        val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
+        val modules = ModuleValueCompiler(irBuilder = irBuilder, moduleSet = moduleSet)
         val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
+        val builtins = BuiltinModuleCompiler(
+            irBuilder = irBuilder,
+            closures = closures,
+            libc = libc,
+            modules = modules,
+            strings = strings
+        )
         val compiler = Compiler(
             image = image,
             moduleSet = moduleSet,
@@ -66,27 +75,8 @@ private val environment = object: StackIrExecutionEnvironment {
         )
         val context = compiler.compileInstructions(instructions, context = compiler.startFunction())
         val print = if (type == StringType) {
-            val stdoutFd = 1
             val (context2, stringValue) = context.popTemporary()
-            val string = LlvmOperandLocal("string")
-            val size = LlvmOperandLocal("size")
-            val dataPointer = LlvmOperandLocal("dataPointer")
-            listOf(
-                strings.rawValueToString(target = string, source = stringValue)
-            ) + strings.stringSize(
-                target = size,
-                source = string
-            ) + listOf(
-                strings.stringDataStart(
-                    target = dataPointer,
-                    source = string
-                ),
-                libc.write(
-                    fd = LlvmOperandInt(stdoutFd),
-                    buf = dataPointer,
-                    count = size
-                )
-            )
+            builtins.print(stringValue)
         } else {
             val (context2, value) = context.popTemporary()
             listOf(

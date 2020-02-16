@@ -109,6 +109,12 @@ interface Source {
     fun describe(): String
 }
 
+object NullSource : Source {
+    override fun describe(): String {
+        return "null"
+    }
+}
+
 object BuiltinSource : Source {
     override fun describe(): String {
         return "builtin"

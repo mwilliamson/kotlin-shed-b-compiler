@@ -74,6 +74,9 @@ internal class FunctionContext(
             generateName = generateName
         )
     }
+    fun addTopLevelEntities(vararg newTopLevelEntities: LlvmTopLevelEntity): FunctionContext {
+        return addTopLevelEntities(newTopLevelEntities.asList())
+    }
 
     fun addTopLevelEntities(newTopLevelEntities: List<LlvmTopLevelEntity>): FunctionContext {
         return FunctionContext(
