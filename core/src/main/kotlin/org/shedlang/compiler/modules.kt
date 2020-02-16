@@ -10,6 +10,10 @@ class ModuleSet(val modules: Collection<Module>) {
     fun module(name: ModuleName): Module? {
         return modules.find { module -> module.name == name }
     }
+
+    fun moduleType(name: ModuleName): ModuleType? {
+        return module(name)?.type
+    }
 }
 
 sealed class Module {

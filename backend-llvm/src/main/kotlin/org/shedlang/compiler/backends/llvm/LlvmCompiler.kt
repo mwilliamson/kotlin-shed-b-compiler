@@ -13,9 +13,14 @@ import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
-internal class Compiler(private val image: Image, private val moduleSet: ModuleSet, private val irBuilder: LlvmIrBuilder) {
+internal class Compiler(
+    private val image: Image,
+    private val moduleSet: ModuleSet,
+    private val irBuilder: LlvmIrBuilder
+) {
     private val libc = LibcCallCompiler(irBuilder = irBuilder)
     private val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
+    private val modules = ModuleValueCompiler(irBuilder = irBuilder, moduleSet = moduleSet)
     private val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
 
     fun compile(target: Path, mainModule: ModuleName) {
@@ -62,27 +67,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     }
 
     private fun moduleDefinition(moduleName: ModuleName): List<LlvmTopLevelEntity> {
-        return listOf(
-            LlvmGlobalDefinition(
-                name = nameForModuleValue(moduleName),
-                type = compiledModuleType(moduleName),
-                value = LlvmOperandArray(
-                    (0 until moduleSize(moduleName)).map {
-                        LlvmTypedOperand(compiledValueType, LlvmOperandInt(0))
-                    }
-                )
-            )
-        ) + moduleInitDefinition(moduleName)
+        return listOf(modules.defineModuleValue(moduleName)) + moduleInitDefinition(moduleName)
     }
-
-    private fun compiledModuleType(moduleName: ModuleName) =
-        compiledObjectType(moduleSize(moduleName)).type
-
-    private fun moduleSize(moduleName: ModuleName) =
-        moduleType(moduleName).fields.size
-
-    private fun moduleType(moduleName: ModuleName) =
-        moduleSet.module(moduleName)!!.type
 
     private fun moduleInitDefinition(moduleName: ModuleName): List<LlvmTopLevelEntity> {
         val isInitialisedPointer = operandForModuleIsInitialised(moduleName)
@@ -405,11 +391,9 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
             is ModuleLoad -> {
                 val moduleValue = LlvmOperandLocal(generateName("moduleValue"))
-                val loadModule = LlvmPtrToInt(
+                val loadModule = modules.loadRaw(
                     target = moduleValue,
-                    sourceType = LlvmTypes.pointer(compiledModuleType(instruction.moduleName)),
-                    value = operandForModuleValue(instruction.moduleName),
-                    targetType = compiledValueType
+                    moduleName = instruction.moduleName
                 )
                 return context
                     .addInstruction(loadModule)
@@ -417,28 +401,12 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             }
 
             is ModuleStore -> {
-                val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
-                val moduleType = moduleType(instruction.moduleName)
-
-                val storeFields = instruction.exports.flatMap { (exportName, exportVariableId) ->
-                    listOf(
-                        LlvmGetElementPtr(
-                            target = fieldPointerVariable,
-                            pointerType = compiledObjectType(moduleSize(instruction.moduleName)),
-                            pointer = operandForModuleValue(instruction.moduleName),
-                            indices = listOf(
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(fieldIndex(moduleType, exportName)))
-                            )
-                        ),
-                        LlvmStore(
-                            type = compiledValueType,
-                            value = context.localLoad(exportVariableId),
-                            pointer = fieldPointerVariable
-                        )
-                    )
-                }
-                return context.addInstructions(storeFields)
+                return context.addInstructions(modules.storeFields(
+                    moduleName = instruction.moduleName,
+                    exports = instruction.exports.map { (exportName, exportVariableId) ->
+                        exportName to context.localLoad(exportVariableId)
+                    }
+                ))
             }
 
             is PushValue -> {
@@ -811,26 +779,10 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    private fun fieldIndex(receiverType: Type, fieldName: Identifier): Int {
-        val (fields, hasTagValue) = when (receiverType) {
-            is ModuleType -> receiverType.fields.keys to false
-            is ShapeType -> receiverType.fields.keys to (receiverType.tagValue != null)
-            else -> setOf<Identifier>() to false
-        }
-
-        val fieldIndex = fields.sorted().indexOf(fieldName)
-
-        if (fieldIndex == -1) {
-            throw Exception("could not find field: ${fieldName.value}\nin type: ${receiverType.shortDescription}")
-        } else {
-            return (if (hasTagValue) 1 else 0) + fieldIndex
-        }
-    }
-
     private fun importModule(moduleName: ModuleName, target: LlvmVariable): List<LlvmInstruction> {
         return listOf(
             callModuleInit(moduleName),
-            moduleLoad(target, moduleName)
+            modules.load(target = target, moduleName = moduleName)
         )
     }
 
@@ -843,15 +795,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    private fun moduleLoad(target: LlvmVariable, moduleName: ModuleName): LlvmBitCast {
-        return LlvmBitCast(
-            target = target,
-            sourceType = compiledObjectType(moduleSize(moduleName)),
-            value = operandForModuleValue(moduleName),
-            targetType = compiledObjectType()
-        )
-    }
-
     private fun operandForModuleInit(moduleName: ModuleName): LlvmOperand {
         return LlvmOperandGlobal(nameForModuleInit(moduleName))
     }
@@ -860,20 +803,12 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         return LlvmOperandGlobal(nameForModuleIsInitialised(moduleName))
     }
 
-    private fun operandForModuleValue(moduleName: ModuleName): LlvmVariable {
-        return LlvmOperandGlobal(nameForModuleValue(moduleName))
-    }
-
     private fun nameForModuleInit(moduleName: ModuleName): String {
         return "shed__module_init__${serialiseModuleName(moduleName)}"
     }
 
     private fun nameForModuleIsInitialised(moduleName: ModuleName): String {
         return "shed__module_is_initialised__${serialiseModuleName(moduleName)}"
-    }
-
-    private fun nameForModuleValue(moduleName: ModuleName): String {
-        return "shed__module_value__${serialiseModuleName(moduleName)}"
     }
 
     private fun serialiseModuleName(moduleName: ModuleName) =
@@ -930,6 +865,9 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         }
     }
 
+    private fun moduleType(moduleName: ModuleName) =
+        moduleSet.moduleType(moduleName)!!
+
     private var nextTagValueInt = 1
     private val tagValueToInt: MutableMap<TagValue, Int> = mutableMapOf()
 
@@ -957,4 +895,20 @@ fun withLineNumbers(source: String): String {
     return source.lines().mapIndexed { index, line ->
         (index + 1).toString().padStart(3) + " " + line
     }.joinToString("\n")
+}
+
+internal fun fieldIndex(receiverType: Type, fieldName: Identifier): Int {
+    val (fields, hasTagValue) = when (receiverType) {
+        is ModuleType -> receiverType.fields.keys to false
+        is ShapeType -> receiverType.fields.keys to (receiverType.tagValue != null)
+        else -> setOf<Identifier>() to false
+    }
+
+    val fieldIndex = fields.sorted().indexOf(fieldName)
+
+    if (fieldIndex == -1) {
+        throw Exception("could not find field: ${fieldName.value}\nin type: ${receiverType.shortDescription}")
+    } else {
+        return (if (hasTagValue) 1 else 0) + fieldIndex
+    }
 }
