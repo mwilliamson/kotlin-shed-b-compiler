@@ -28,7 +28,6 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         )
     }
 
-
     private val mallocDeclaration = LlvmFunctionDeclaration(
         name = "malloc",
         returnType = CTypes.voidPointer,
@@ -40,10 +39,10 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
         return LlvmCall(
             target = target,
-            returnType = LlvmTypes.pointer(LlvmTypes.i8),
+            returnType = CTypes.voidPointer,
             functionPointer = LlvmOperandGlobal("malloc"),
             arguments = listOf(
-                LlvmTypedOperand(LlvmTypes.i64, bytes)
+                LlvmTypedOperand(CTypes.size_t, bytes)
             )
         )
     }
@@ -58,6 +57,19 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         )
     )
 
+    internal fun memcmp(target: LlvmOperandLocal, s1: LlvmOperand, s2: LlvmOperand, n: LlvmOperand): LlvmCall {
+        return LlvmCall(
+            target = target,
+            returnType = CTypes.int,
+            functionPointer = LlvmOperandGlobal("memcmp"),
+            arguments = listOf(
+                LlvmTypedOperand(CTypes.voidPointer, s1),
+                LlvmTypedOperand(CTypes.voidPointer, s2),
+                LlvmTypedOperand(CTypes.size_t, n)
+            )
+        )
+    }
+
     private val memcpyDeclaration = LlvmFunctionDeclaration(
         name = "memcpy",
         returnType = CTypes.voidPointer,
@@ -68,6 +80,19 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         )
     )
 
+    internal fun memcpy(target: LlvmOperandLocal?, dest: LlvmOperand, src: LlvmOperand, n: LlvmOperand): LlvmCall {
+        return LlvmCall(
+            target = target,
+            returnType = CTypes.voidPointer,
+            functionPointer = LlvmOperandGlobal("memcpy"),
+            arguments = listOf(
+                LlvmTypedOperand(CTypes.voidPointer, dest),
+                LlvmTypedOperand(CTypes.voidPointer, src),
+                LlvmTypedOperand(CTypes.size_t, n)
+            )
+        )
+    }
+
     private val printfDeclaration = LlvmFunctionDeclaration(
         name = "printf",
         returnType = CTypes.int,
@@ -76,6 +101,17 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         ),
         hasVarargs = true
     )
+
+    internal fun printf(target: LlvmOperandLocal?, format: LlvmOperand, args: List<LlvmTypedOperand>): LlvmCall {
+        return LlvmCall(
+            target = target,
+            returnType = printfDeclaration.type(),
+            functionPointer = LlvmOperandGlobal("printf"),
+            arguments = listOf(
+                LlvmTypedOperand(CTypes.stringPointer, format)
+            ) + args
+        )
+    }
 
     private val snprintfDeclaration = LlvmFunctionDeclaration(
         name = "snprintf",

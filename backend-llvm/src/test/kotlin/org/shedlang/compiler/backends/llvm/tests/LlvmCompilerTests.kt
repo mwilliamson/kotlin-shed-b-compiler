@@ -89,16 +89,10 @@ private val environment = object: StackIrExecutionEnvironment {
                         LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
                     )
                 ),
-                LlvmCall(
+                libc.printf(
                     target = null,
-                    returnType = LlvmTypes.function(
-                        returnType = LlvmTypes.i32,
-                        parameterTypes = listOf(LlvmTypes.pointer(LlvmTypes.i8)),
-                        hasVarargs = true
-                    ),
-                    functionPointer = LlvmOperandGlobal("printf"),
-                    arguments = listOf(
-                        LlvmTypedOperand(LlvmTypes.pointer(LlvmTypes.i8), LlvmOperandLocal("format_int64_pointer")),
+                    format = LlvmOperandLocal("format_int64_pointer"),
+                    args = listOf(
                         LlvmTypedOperand(compiledValueType, value)
                     )
                 )

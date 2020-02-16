@@ -395,6 +395,14 @@ internal data class LlvmFunctionDeclaration(
     val parameters: List<LlvmParameter>,
     val hasVarargs: Boolean = false
 ): LlvmTopLevelEntity {
+    fun type(): LlvmType {
+        return LlvmTypes.function(
+            returnType = returnType,
+            parameterTypes = parameters.map { parameter -> parameter.type },
+            hasVarargs = hasVarargs
+        )
+    }
+
     override fun serialise(): String {
         val parameterStrings = parameters.map { parameter ->
             parameter.serialise()

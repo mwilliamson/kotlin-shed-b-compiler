@@ -93,15 +93,11 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                     target = leftStringDataStart,
                     source = leftString
                 ),
-                LlvmCall(
+                libc.memcpy(
                     target = null,
-                    returnType = LlvmTypes.pointer(LlvmTypes.i8),
-                    functionPointer = LlvmOperandGlobal("memcpy"),
-                    arguments = listOf(
-                        LlvmTypedOperand(CTypes.stringPointer, newStringLeftStart),
-                        LlvmTypedOperand(CTypes.stringPointer, leftStringDataStart),
-                        LlvmTypedOperand(CTypes.size_t, leftSize)
-                    )
+                    dest = newStringLeftStart,
+                    src = leftStringDataStart,
+                    n = leftSize
                 ),
                 LlvmGetElementPtr(
                     target = newStringRightStart,
@@ -116,15 +112,11 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                     target = rightStringDataStart,
                     source = rightString
                 ),
-                LlvmCall(
+                libc.memcpy(
                     target = null,
-                    returnType = LlvmTypes.pointer(LlvmTypes.i8),
-                    functionPointer = LlvmOperandGlobal("memcpy"),
-                    arguments = listOf(
-                        LlvmTypedOperand(CTypes.stringPointer, newStringRightStart),
-                        LlvmTypedOperand(CTypes.stringPointer, rightStringDataStart),
-                        LlvmTypedOperand(CTypes.size_t, rightSize)
-                    )
+                    dest = newStringRightStart,
+                    src = rightStringDataStart,
+                    n = rightSize
                 ),
                 LlvmPtrToInt(
                     target = result,
@@ -235,15 +227,11 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                 LlvmLabel(compareBytesLabel),
                 stringDataStart(target = leftBytesPointer, source = leftString),
                 stringDataStart(target = rightBytesPointer, source = rightString),
-                LlvmCall(
+                libc.memcmp(
                     target = memcmpResult,
-                    returnType = CTypes.int,
-                    functionPointer = LlvmOperandGlobal("memcmp"),
-                    arguments = listOf(
-                        LlvmTypedOperand(CTypes.voidPointer, leftBytesPointer),
-                        LlvmTypedOperand(CTypes.voidPointer, rightBytesPointer),
-                        LlvmTypedOperand(CTypes.size_t, leftSize)
-                    )
+                    s1 = leftBytesPointer,
+                    s2 = rightBytesPointer,
+                    n = leftSize
                 ),
                 LlvmIcmp(
                     target = sameBytes,
