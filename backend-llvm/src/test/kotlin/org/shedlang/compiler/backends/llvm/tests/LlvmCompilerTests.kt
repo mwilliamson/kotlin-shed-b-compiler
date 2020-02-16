@@ -58,6 +58,7 @@ private val environment = object: StackIrExecutionEnvironment {
 
         val irBuilder = LlvmIrBuilder()
         val libc = LibcCallCompiler(irBuilder = irBuilder)
+        val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
         val compiler = Compiler(
             image = image,
             moduleSet = moduleSet,
@@ -71,12 +72,12 @@ private val environment = object: StackIrExecutionEnvironment {
             val size = LlvmOperandLocal("size")
             val dataPointer = LlvmOperandLocal("dataPointer")
             listOf(
-                compiler.rawValueToString(target = string, source = stringValue)
-            ) + compiler.stringSize(
+                strings.rawValueToString(target = string, source = stringValue)
+            ) + strings.stringSize(
                 target = size,
                 source = string
             ) + listOf(
-                compiler.stringDataStart(
+                strings.stringDataStart(
                     target = dataPointer,
                     source = string
                 ),
