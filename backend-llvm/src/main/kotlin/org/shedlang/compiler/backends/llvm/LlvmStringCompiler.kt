@@ -55,7 +55,6 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
         val newDataSize = LlvmOperandLocal(generateName("newDataSize"))
         val newSize = LlvmOperandLocal(generateName("newSize"))
         val newString = LlvmOperandLocal(generateName("newString"))
-        val newSizePointer = LlvmOperandLocal(generateName("newSizePointer"))
         val newStringData = LlvmOperandLocal(generateName("newStringData"))
         val newStringLeftStart = LlvmOperandLocal(generateName("newStringLeftStart"))
         val newStringRightStart = LlvmOperandLocal(generateName("newStringRightStart"))
@@ -81,17 +80,9 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                     right = LlvmOperandInt(compiledStringLengthTypeSize)
                 )
             ),
-            libc.typedMalloc(newString, newSize, compiledStringType(0)),
+            allocString(target = newString, size = newSize),
+            storeStringDataSize(string = newString, size = newDataSize),
             listOf(
-                stringSizePointer(
-                    target = newSizePointer,
-                    source = newString
-                ),
-                LlvmStore(
-                    type = compiledStringLengthType,
-                    value = newDataSize,
-                    pointer = newSizePointer
-                ),
                 stringData(
                     target = newStringData,
                     source = newString
@@ -150,6 +141,25 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                 )
             )
         ).flatten()).pushTemporary(result)
+    }
+
+    private fun allocString(target: LlvmOperandLocal, size: LlvmOperand): List<LlvmInstruction> {
+        return libc.typedMalloc(target, size, compiledStringType(0))
+    }
+
+    private fun storeStringDataSize(string: LlvmOperand, size: LlvmOperand): List<LlvmInstruction> {
+        val sizePointer = LlvmOperandLocal(generateName("sizePointer"))
+        return listOf(
+            stringSizePointer(
+                target = sizePointer,
+                source = string
+            ),
+            LlvmStore(
+                type = compiledStringLengthType,
+                value = size,
+                pointer = sizePointer
+            )
+        )
     }
 
     internal fun compileStringEquals(context: FunctionContext): FunctionContext {
