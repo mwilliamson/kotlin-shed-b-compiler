@@ -914,7 +914,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is IrString -> {
                 val globalName = generateName("string")
 
-                val (stringDefinition, operand) = defineString(
+                val (stringDefinition, operand) = strings.defineString(
                     globalName = globalName,
                     value = value.value
                 )
@@ -944,40 +944,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
 
         return tagValueToInt.getValue(tagValue)
     }
-}
-
-internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDefinition, LlvmOperand> {
-    val bytes = value.toByteArray(Charsets.UTF_8)
-
-    val stringDataType = LlvmTypes.arrayType(bytes.size, LlvmTypes.i8)
-    val stringValueType = LlvmTypes.structure(listOf(
-        LlvmTypes.i64,
-        stringDataType
-    ))
-
-    val operand: LlvmOperand = LlvmOperandPtrToInt(
-        sourceType = LlvmTypes.pointer(stringValueType),
-        value = LlvmOperandGlobal(globalName),
-        targetType = compiledValueType
-    )
-
-    val definition = LlvmGlobalDefinition(
-        name = globalName,
-        type = stringValueType,
-        value = LlvmOperandStructure(listOf(
-            LlvmTypedOperand(LlvmTypes.i64, LlvmOperandInt(bytes.size)),
-            LlvmTypedOperand(
-                stringDataType,
-                LlvmOperandArray(bytes.map { byte ->
-                    LlvmTypedOperand(LlvmTypes.i8, LlvmOperandInt(byte.toInt()))
-                })
-            )
-        )),
-        unnamedAddr = true,
-        isConstant = true
-    )
-
-    return Pair(definition, operand)
 }
 
 internal fun serialiseProgram(module: LlvmModule): String {
