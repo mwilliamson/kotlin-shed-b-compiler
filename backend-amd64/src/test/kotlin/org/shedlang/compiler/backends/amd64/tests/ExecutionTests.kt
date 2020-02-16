@@ -205,7 +205,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
         image: Image,
         moduleName: ModuleName
     ): CompilationResult<Unit> {
-        return generateAsmForInstructions(image.moduleInitialisation(moduleName))
+        return generateAsmForInstructions(image.moduleInitialisation(moduleName)!!)
             .mapInstructions { instructions ->
                 listOf(
                     Label(labelForModuleInit(moduleName)),

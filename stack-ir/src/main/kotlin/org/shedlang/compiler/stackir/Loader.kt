@@ -15,8 +15,8 @@ class Image internal constructor(private val modules: Map<ModuleName, Persistent
         val EMPTY = Image(modules = persistentMapOf())
     }
 
-    fun moduleInitialisation(name: ModuleName): List<Instruction> {
-        return modules[name]!!
+    fun moduleInitialisation(name: ModuleName): List<Instruction>? {
+        return modules[name]
     }
 }
 

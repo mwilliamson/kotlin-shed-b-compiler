@@ -311,7 +311,7 @@ internal data class InterpreterState(
     }
 
     fun moduleInitialisation(moduleName: ModuleName): List<Instruction> {
-        return image.moduleInitialisation(moduleName)
+        return image.moduleInitialisation(moduleName)!!
     }
 
     fun isModuleInitialised(moduleName: ModuleName): Boolean {

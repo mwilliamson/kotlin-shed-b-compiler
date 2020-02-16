@@ -279,7 +279,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val isInitialised = LlvmOperandLocal(generateName("isInitialised"))
 
         val bodyContext = compileInstructions(
-            image.moduleInitialisation(moduleName),
+            image.moduleInitialisation(moduleName)!!,
             context = startFunction()
         ).addInstructions(
             LlvmStore(
