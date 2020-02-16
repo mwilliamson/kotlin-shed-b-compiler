@@ -15,6 +15,8 @@ import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
 internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
+    private val irBuilder = LlvmIrBuilder()
+
     internal interface LabelPredecessor {
         val stack: PersistentList<LlvmOperand>
         val basicBlockName: String
@@ -1371,13 +1373,8 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun serialiseModuleName(moduleName: ModuleName) =
         moduleName.joinToString("_") { part -> part.value }
 
-    var nextNameIndex = 1
-
-    private fun generateName(prefix: Identifier) = generateName(prefix.value)
-
-    private fun generateName(prefix: String): String {
-        return prefix + "_" + nextNameIndex++
-    }
+    private fun generateName(prefix: Identifier) = irBuilder.generateName(prefix)
+    private fun generateName(prefix: String) = irBuilder.generateName(prefix)
 
     var nextLabelIndex = 1
 
