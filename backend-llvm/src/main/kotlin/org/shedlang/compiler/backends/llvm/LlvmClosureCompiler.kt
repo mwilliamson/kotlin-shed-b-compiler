@@ -24,7 +24,7 @@ internal class ClosureCompiler(
 
         val getClosureFunctionPointer = LlvmGetElementPtr(
             target = closureFunctionPointer,
-            type = closurePointerType.type,
+            pointerType = closurePointerType,
             pointer = closurePointer,
             indices = listOf(
                 LlvmIndex.i64(0),
@@ -40,7 +40,7 @@ internal class ClosureCompiler(
 
         val getClosureEnvironmentPointer = LlvmGetElementPtr(
             target = closureEnvironmentPointer,
-            type = closurePointerType.type,
+            pointerType = closurePointerType,
             pointer = closurePointer,
             indices = listOf(
                 LlvmIndex.i64(0),
@@ -100,7 +100,7 @@ internal class ClosureCompiler(
             ),
             LlvmGetElementPtr(
                 target = functionPointerPointer,
-                type = compiledClosurePointerType.type,
+                pointerType = compiledClosurePointerType,
                 pointer = typedClosurePointer,
                 indices = listOf(
                     LlvmIndex.i64(0),
@@ -114,7 +114,7 @@ internal class ClosureCompiler(
             ),
             LlvmGetElementPtr(
                 target = environmentPointer,
-                type = compiledClosurePointerType.type,
+                pointerType = compiledClosurePointerType,
                 pointer = typedClosurePointer,
                 indices = listOf(
                     LlvmIndex.i64(0),
@@ -183,7 +183,7 @@ internal class ClosureCompiler(
     ): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledClosureEnvironmentType,
+            pointerType = compiledClosureEnvironmentPointerType,
             pointer = closureEnvironmentPointer,
             indices = listOf(
                 LlvmIndex.i64(0),

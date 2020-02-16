@@ -92,7 +92,7 @@ private val environment = object: StackIrExecutionEnvironment {
             listOf(
                 LlvmGetElementPtr(
                     target = LlvmOperandLocal("format_int64_pointer"),
-                    type = LlvmTypes.arrayType(4, LlvmTypes.i8),
+                    pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(4, LlvmTypes.i8)),
                     pointer = LlvmOperandGlobal("format_int64"),
                     indices = listOf(
                         LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),

@@ -228,14 +228,14 @@ internal data class LlvmExtractValue(
 
 internal data class LlvmGetElementPtr(
     val target: LlvmVariable,
-    val type: LlvmType,
+    val pointerType: LlvmTypePointer,
     val pointer: LlvmOperand,
     val indices: List<LlvmIndex>
 ): LlvmInstruction {
     override fun serialise(): String {
         val indicesString = indices.joinToString("") {index -> ", ${index.serialise()}" }
 
-        return "${target.serialise()} = getelementptr ${type.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}$indicesString"
+        return "${target.serialise()} = getelementptr ${pointerType.type.serialise()}, ${pointerType.serialise()} ${pointer.serialise()}$indicesString"
     }
 }
 

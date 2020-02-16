@@ -1,6 +1,5 @@
 package org.shedlang.compiler.backends.llvm
 
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.persistentSetOf
@@ -425,7 +424,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     listOf(
                         LlvmGetElementPtr(
                             target = fieldPointerVariable,
-                            type = compiledObjectType(moduleSize(instruction.moduleName)).type,
+                            pointerType = compiledObjectType(moduleSize(instruction.moduleName)),
                             pointer = operandForModuleValue(instruction.moduleName),
                             indices = listOf(
                                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -683,7 +682,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun tagValuePointer(target: LlvmOperandLocal, source: LlvmOperandLocal): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledObjectType().type,
+            pointerType = compiledObjectType(),
             pointer = source,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -695,7 +694,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun tupleElementPointer(target: LlvmOperandLocal, receiver: LlvmOperandLocal, elementIndex: Int): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledTupleType.type,
+            pointerType = compiledTupleType,
             pointer = receiver,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -803,7 +802,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, fieldIndex: Int): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledObjectType().type,
+            pointerType = compiledObjectType(),
             pointer = receiver,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0)),

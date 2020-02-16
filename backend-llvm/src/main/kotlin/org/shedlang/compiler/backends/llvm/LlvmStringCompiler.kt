@@ -1,6 +1,5 @@
 package org.shedlang.compiler.backends.llvm
 
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackir.StringAdd
 
 internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val libc: LibcCallCompiler) {
@@ -99,7 +98,7 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                 ),
                 LlvmGetElementPtr(
                     target = newStringLeftStart,
-                    type = compiledStringDataType(0),
+                    pointerType = LlvmTypes.pointer(compiledStringDataType(0)),
                     pointer = newStringData,
                     indices = listOf(
                         LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -122,7 +121,7 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                 ),
                 LlvmGetElementPtr(
                     target = newStringRightStart,
-                    type = compiledStringDataType(0),
+                    pointerType = LlvmTypes.pointer(compiledStringDataType(0)),
                     pointer = newStringData,
                     indices = listOf(
                         LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -288,7 +287,7 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
     private fun stringSizePointer(target: LlvmOperandLocal, source: LlvmOperand): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledStringValueType(0),
+            pointerType = compiledStringType(0),
             pointer = source,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -300,7 +299,7 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
     internal fun stringData(target: LlvmOperandLocal, source: LlvmOperand): LlvmInstruction {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledStringValueType(0),
+            pointerType = compiledStringType(0),
             pointer = source,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -312,7 +311,7 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
     internal fun stringDataStart(target: LlvmOperandLocal, source: LlvmOperand): LlvmInstruction {
         return LlvmGetElementPtr(
             target = target,
-            type = compiledStringValueType(0),
+            pointerType = compiledStringType(0),
             pointer = source,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -322,6 +321,5 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
         )
     }
 
-    private fun generateName(prefix: Identifier) = irBuilder.generateName(prefix)
     private fun generateName(prefix: String) = irBuilder.generateName(prefix)
 }
