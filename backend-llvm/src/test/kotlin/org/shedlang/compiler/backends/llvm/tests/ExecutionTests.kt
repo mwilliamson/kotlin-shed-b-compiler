@@ -15,9 +15,6 @@ class ExecutionTests {
     private val disabledTests = setOf<String>(
         "cast",
         "ConstantField.shed",
-        "dependencies",
-        "Matchers.shed",
-        "PolymorphicMap.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
         "symbols",
