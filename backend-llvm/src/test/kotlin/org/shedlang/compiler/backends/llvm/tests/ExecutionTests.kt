@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.backends.llvm.Compiler
+import org.shedlang.compiler.backends.llvm.LlvmIrBuilder
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackir.loadModuleSet
@@ -51,7 +52,7 @@ class ExecutionTests {
                     val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
                     val moduleSet = testProgram.load()
                     val image = loadModuleSet(moduleSet)
-                    Compiler(image = image, moduleSet = moduleSet).compile(
+                    Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder()).compile(
                         target = outputPath,
                         mainModule = testProgram.mainModule
                     )

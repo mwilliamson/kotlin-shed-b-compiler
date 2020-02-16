@@ -8,16 +8,47 @@ internal object CTypes {
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
 }
 
-internal fun compileWrite(fd: LlvmOperand, buf: LlvmOperand, count: LlvmOperand): LlvmCall {
-    // TODO: handle number of bytes written less than count
-    return LlvmCall(
-        target = null,
-        returnType = CTypes.ssize_t,
-        functionPointer = LlvmOperandGlobal("write"),
-        arguments = listOf(
-            LlvmTypedOperand(CTypes.int, fd),
-            LlvmTypedOperand(CTypes.voidPointer, buf),
-            LlvmTypedOperand(CTypes.size_t, count)
+internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
+    internal fun write(fd: LlvmOperand, buf: LlvmOperand, count: LlvmOperand): LlvmCall {
+        // TODO: handle number of bytes written less than count
+        return LlvmCall(
+            target = null,
+            returnType = CTypes.ssize_t,
+            functionPointer = LlvmOperandGlobal("write"),
+            arguments = listOf(
+                LlvmTypedOperand(CTypes.int, fd),
+                LlvmTypedOperand(CTypes.voidPointer, buf),
+                LlvmTypedOperand(CTypes.size_t, count)
+            )
         )
-    )
+    }
+
+    internal fun typedMalloc(target: LlvmOperandLocal, bytes: Int, type: LlvmType): List<LlvmInstruction> {
+        return typedMalloc(target, LlvmOperandInt(bytes), type)
+    }
+
+    internal fun typedMalloc(target: LlvmOperandLocal, bytes: LlvmOperand, type: LlvmType): List<LlvmInstruction> {
+        val mallocResult = LlvmOperandLocal(irBuilder.generateName("bytes"))
+
+        return listOf(
+            malloc(target = mallocResult, bytes = bytes),
+            LlvmBitCast(
+                target = target,
+                sourceType = LlvmTypes.pointer(LlvmTypes.i8),
+                value = mallocResult,
+                targetType = type
+            )
+        )
+    }
+
+    private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
+        return LlvmCall(
+            target = target,
+            returnType = LlvmTypes.pointer(LlvmTypes.i8),
+            functionPointer = LlvmOperandGlobal("malloc"),
+            arguments = listOf(
+                LlvmTypedOperand(LlvmTypes.i64, bytes)
+            )
+        )
+    }
 }

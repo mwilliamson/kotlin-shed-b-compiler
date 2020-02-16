@@ -14,8 +14,8 @@ import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 
-internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
-    private val irBuilder = LlvmIrBuilder()
+internal class Compiler(private val image: Image, private val moduleSet: ModuleSet, private val irBuilder: LlvmIrBuilder) {
+    private val libc = LibcCallCompiler(irBuilder = irBuilder)
 
     internal interface LabelPredecessor {
         val stack: PersistentList<LlvmOperand>
@@ -533,7 +533,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 val result = LlvmOperandLocal(generateName("result"))
 
                 val context2 = context.addInstructions(
-                    typedMalloc(
+                    libc.typedMalloc(
                         target = tuple,
                         bytes = compiledValueTypeSize * instruction.length,
                         type = compiledTupleType
@@ -644,7 +644,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         val closureEnvironmentPointer = LlvmOperandLocal(generateName("closureEnvironmentPointer"))
         val closurePointerType = compiledClosurePointerType(parameterTypes)
 
-        val closureMalloc = typedMalloc(closurePointer, compiledClosureSize(freeVariables.size), type = closurePointerType)
+        val closureMalloc = libc.typedMalloc(closurePointer, compiledClosureSize(freeVariables.size), type = closurePointerType)
 
         val getClosureFunctionPointer = LlvmGetElementPtr(
             target = closureFunctionPointer,
@@ -919,7 +919,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                     right = LlvmOperandInt(compiledStringLengthTypeSize)
                 )
             ),
-            typedMalloc(newString, newSize, compiledStringType(0)),
+            libc.typedMalloc(newString, newSize, compiledStringType(0)),
             listOf(
                 stringSizePointer(
                     target = newSizePointer,
@@ -1167,37 +1167,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
         )
     }
 
-    private fun typedMalloc(target: LlvmOperandLocal, bytes: Int, type: LlvmType): List<LlvmInstruction> {
-        return typedMalloc(target, LlvmOperandInt(bytes), type)
-    }
-
-    private fun typedMalloc(target: LlvmOperandLocal, bytes: LlvmOperand, type: LlvmType): List<LlvmInstruction> {
-        val mallocResult = LlvmOperandLocal(generateName("bytes"))
-
-        return listOf(
-            malloc(target = mallocResult, bytes = bytes),
-            LlvmBitCast(
-                target = target,
-                sourceType = LlvmTypes.pointer(LlvmTypes.i8),
-                value = mallocResult,
-                targetType = type
-            )
-        )
-    }
-
-    private fun malloc(target: LlvmOperandLocal, bytes: Int) = malloc(target, LlvmOperandInt(bytes))
-
-    private fun malloc(target: LlvmOperandLocal, bytes: LlvmOperand): LlvmCall {
-        return LlvmCall(
-            target = target,
-            returnType = LlvmTypes.pointer(LlvmTypes.i8),
-            functionPointer = LlvmOperandGlobal("malloc"),
-            arguments = listOf(
-                LlvmTypedOperand(LlvmTypes.i64, bytes)
-            )
-        )
-    }
-
     private fun compileDeclareShape(instruction: DeclareShape, context: FunctionContext): FunctionContext {
         val constructorName = generateName("constructor")
         val constructorPointer = LlvmOperandLocal(generateName("constructorPointer"))
@@ -1218,7 +1187,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             returnType = compiledValueType,
             parameters = listOf(closureEnvironmentParameter) + parameters,
             body = listOf(
-                typedMalloc(
+                libc.typedMalloc(
                     target = instance,
                     bytes = compiledValueTypeSize * shapeSize,
                     type = compiledObjectType()

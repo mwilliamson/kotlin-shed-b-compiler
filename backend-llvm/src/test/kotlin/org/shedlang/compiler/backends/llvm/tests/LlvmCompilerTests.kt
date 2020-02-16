@@ -56,7 +56,13 @@ private val environment = object: StackIrExecutionEnvironment {
     ): String {
         val image = loadModuleSet(moduleSet)
 
-        val compiler = Compiler(image = image, moduleSet = moduleSet)
+        val irBuilder = LlvmIrBuilder()
+        val libc = LibcCallCompiler(irBuilder = irBuilder)
+        val compiler = Compiler(
+            image = image,
+            moduleSet = moduleSet,
+            irBuilder = irBuilder
+        )
         val context = compiler.compileInstructions(instructions, context = compiler.startFunction())
         val print = if (type == StringType) {
             val stdoutFd = 1
@@ -74,7 +80,7 @@ private val environment = object: StackIrExecutionEnvironment {
                     target = dataPointer,
                     source = string
                 ),
-                compileWrite(
+                libc.write(
                     fd = LlvmOperandInt(stdoutFd),
                     buf = dataPointer,
                     count = size
@@ -214,7 +220,7 @@ class StackValueToLlvmOperandTests {
 private fun stackValueToLlvmOperand(value: IrValue): Pair<List<LlvmTopLevelEntity>, LlvmOperand> {
     val moduleSet = ModuleSet(setOf())
     val image = loadModuleSet(moduleSet)
-    val compiler = Compiler(image = image, moduleSet = moduleSet)
+    val compiler = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
     return compiler.stackValueToLlvmOperand(value)
 }
 
