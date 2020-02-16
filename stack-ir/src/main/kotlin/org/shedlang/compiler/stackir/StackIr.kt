@@ -74,8 +74,6 @@ class DeclareShape(
     val fields: List<FieldInspector>
 ): Instruction()
 
-object DeclareVarargs: Instruction()
-
 object Discard: Instruction()
 
 object Duplicate: Instruction()

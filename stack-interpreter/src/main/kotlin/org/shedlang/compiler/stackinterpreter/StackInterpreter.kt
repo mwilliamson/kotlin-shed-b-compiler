@@ -61,19 +61,6 @@ internal class InterpreterPartialCall(
     val namedArguments: Map<Identifier, InterpreterValue>
 ) : InterpreterValue()
 
-internal class InterpreterVarargs(
-    val cons: InterpreterValue,
-    val nil: InterpreterValue
-): InterpreterValue(), InterpreterHasFields {
-    override fun field(fieldName: Identifier): InterpreterValue {
-        return when (fieldName.value) {
-            "cons" -> cons
-            "nil" -> nil
-            else -> throw UnsupportedOperationException("no such field: ${fieldName.value}")
-        }
-    }
-}
-
 internal class InterpreterShape(
     val tagValue: TagValue?,
     val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
@@ -512,13 +499,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )
 
             initialState.pushTemporary(value).nextInstruction()
-        }
-
-        is DeclareVarargs -> {
-            val (state2, arguments) = initialState.popTemporaries(2)
-            val cons = arguments[0]
-            val nil = arguments[1]
-            state2.pushTemporary(InterpreterVarargs(cons = cons, nil = nil)).nextInstruction()
         }
 
         is Discard -> {
