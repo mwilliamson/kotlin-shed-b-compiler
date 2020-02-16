@@ -397,7 +397,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )
         }
 
-        is PartialCall -> {
+        is CallPartial -> {
             val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
             val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
             val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)

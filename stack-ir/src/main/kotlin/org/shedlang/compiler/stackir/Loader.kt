@@ -288,7 +288,7 @@ class Loader(
             override fun visit(node: PartialCallNode): PersistentList<Instruction> {
                 val receiverInstructions = loadExpression(node.receiver)
                 val argumentInstructions = loadArguments(node)
-                val partialCall = PartialCall(
+                val partialCall = CallPartial(
                     positionalArgumentCount = node.positionalArguments.size,
                     namedArgumentNames = node.namedArguments.map { argument -> argument.name }
                 )

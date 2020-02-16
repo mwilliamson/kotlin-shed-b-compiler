@@ -41,7 +41,7 @@ class Call(
     val namedArgumentNames: List<Identifier>
 ): Instruction()
 
-class PartialCall(
+class CallPartial(
     val positionalArgumentCount: Int,
     val namedArgumentNames: List<Identifier>
 ): Instruction()
