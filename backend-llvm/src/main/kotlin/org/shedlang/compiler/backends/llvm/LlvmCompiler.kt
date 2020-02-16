@@ -914,10 +914,12 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             is IrString -> {
                 val globalName = generateName("string")
 
-                val (stringDefinition, operand) = strings.defineString(
+                val stringDefinition = strings.defineString(
                     globalName = globalName,
                     value = value.value
                 )
+
+                val operand = strings.operandRaw(stringDefinition)
 
                 listOf(stringDefinition) to operand
             }

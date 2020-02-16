@@ -4,7 +4,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackir.StringAdd
 
 internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val libc: LibcCallCompiler) {
-    internal fun defineString(globalName: String, value: String): Pair<LlvmGlobalDefinition, LlvmOperand> {
+    internal fun defineString(globalName: String, value: String): LlvmGlobalDefinition {
         val bytes = value.toByteArray(Charsets.UTF_8)
 
         val stringDataType = LlvmTypes.arrayType(bytes.size, LlvmTypes.i8)
@@ -13,13 +13,7 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
             stringDataType
         ))
 
-        val operand: LlvmOperand = LlvmOperandPtrToInt(
-            sourceType = LlvmTypes.pointer(stringValueType),
-            value = LlvmOperandGlobal(globalName),
-            targetType = compiledValueType
-        )
-
-        val definition = LlvmGlobalDefinition(
+        return LlvmGlobalDefinition(
             name = globalName,
             type = stringValueType,
             value = LlvmOperandStructure(listOf(
@@ -34,8 +28,14 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
             unnamedAddr = true,
             isConstant = true
         )
+    }
 
-        return Pair(definition, operand)
+    internal fun operandRaw(definition: LlvmGlobalDefinition): LlvmOperandPtrToInt {
+        return LlvmOperandPtrToInt(
+            sourceType = LlvmTypes.pointer(definition.type),
+            value = LlvmOperandGlobal(definition.name),
+            targetType = compiledValueType
+        )
     }
 
     internal fun compileStringAdd(
