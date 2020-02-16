@@ -36,14 +36,10 @@ internal class ClosureCompiler(
             pointer = closureFunctionPointer
         )
 
-        val getClosureEnvironmentPointer = LlvmGetElementPtr(
+        val getClosureEnvironmentPointer = closureEnvironmentPointer(
             target = closureEnvironmentPointer,
-            pointerType = closurePointerType,
-            pointer = closurePointer,
-            indices = listOf(
-                LlvmIndex.i64(0),
-                LlvmIndex.i32(1)
-            )
+            closurePointerType = closurePointerType,
+            closurePointer = closurePointer
         )
 
         val getClosureAddress = LlvmPtrToInt(
@@ -108,14 +104,10 @@ internal class ClosureCompiler(
                 type = compiledClosureFunctionPointerType(arguments.map { argument -> argument.type }),
                 pointer = functionPointerPointer
             ),
-            LlvmGetElementPtr(
+            closureEnvironmentPointer(
                 target = environmentPointer,
-                pointerType = compiledClosurePointerType,
-                pointer = typedClosurePointer,
-                indices = listOf(
-                    LlvmIndex.i64(0),
-                    LlvmIndex.i32(1)
-                )
+                closurePointerType = compiledClosurePointerType,
+                closurePointer = typedClosurePointer
             ),
             LlvmCall(
                 target = target,
@@ -200,6 +192,22 @@ internal class ClosureCompiler(
             indices = listOf(
                 LlvmIndex.i64(0),
                 LlvmIndex.i64(freeVariableIndex)
+            )
+        )
+    }
+
+    private fun closureEnvironmentPointer(
+        target: LlvmOperandLocal,
+        closurePointerType: LlvmTypePointer,
+        closurePointer: LlvmOperandLocal
+    ): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            pointerType = closurePointerType,
+            pointer = closurePointer,
+            indices = listOf(
+                LlvmIndex.i64(0),
+                LlvmIndex.i32(1)
             )
         )
     }
