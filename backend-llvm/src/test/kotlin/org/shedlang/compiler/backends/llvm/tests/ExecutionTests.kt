@@ -13,7 +13,6 @@ import org.shedlang.compiler.typechecker.SourceError
 
 class ExecutionTests {
     private val disabledTests = setOf<String>(
-        "BooleanOperations.shed",
         "cast",
         "Cons.shed",
         "ConstantField.shed",
@@ -21,7 +20,6 @@ class ExecutionTests {
         "FieldDestructuring.shed",
         "Matchers.shed",
         "moduleName",
-        "NamedArguments.shed",
         "PolymorphicCons.shed",
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",
@@ -33,11 +31,8 @@ class ExecutionTests {
         "symbols",
         "TailRec.shed",
         "Tuples.shed",
-        "TypeAlias.shed",
         "usingStdlib",
-        "Varargs.shed",
-        "When.shed",
-        "WhenElse.shed"
+        "Varargs.shed"
     )
 
     @TestFactory
