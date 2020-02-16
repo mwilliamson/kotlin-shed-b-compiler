@@ -403,7 +403,7 @@ class Loader(
                 if (node.type == ExpressionStatementNode.Type.RETURN || node.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
                     return expressionInstructions
                 } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
-                    return expressionInstructions.add(Discard).add(PushValue(IrUnit))
+                    return expressionInstructions.add(Discard)
                 } else {
                     throw UnsupportedOperationException("not implemented")
                 }
