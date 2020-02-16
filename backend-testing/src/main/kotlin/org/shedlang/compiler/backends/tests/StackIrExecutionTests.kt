@@ -454,15 +454,16 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val node = isOperation(receiverReference, shapeReference)
 
         val tag = tag(listOf("Example"), "Tag")
+        val tagValue = tagValue(tag, "X")
         val inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = mapOf(
-                node to discriminator(tagValue(tag, "X"))
+                node to discriminator(tagValue)
             ),
             shapeFields = mapOf(
                 shapeDeclaration to listOf()
             ),
             shapeTagValues = mapOf(
-                shapeDeclaration to tagValue(tag, "X")
+                shapeDeclaration to tagValue
             )
         )
         val references = ResolvedReferencesMap(mapOf(
@@ -471,7 +472,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         ))
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType())
+                shapeReference.nodeId to MetaType(shapeType(tagValue = tagValue))
             )
         )
 
@@ -498,6 +499,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val node = isOperation(receiverReference, shapeReference)
 
         val tag = tag(listOf("Example"), "Tag")
+        val tagValue = tagValue(tag, "B")
         val inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = mapOf(
                 node to discriminator(tagValue(tag, "C"))
@@ -506,7 +508,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
                 shapeDeclaration to listOf()
             ),
             shapeTagValues = mapOf(
-                shapeDeclaration to tagValue(tag, "B")
+                shapeDeclaration to tagValue
             )
         )
         val references = ResolvedReferencesMap(mapOf(
@@ -515,7 +517,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         ))
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType())
+                shapeReference.nodeId to MetaType(shapeType(tagValue = tagValue))
             )
         )
 
@@ -564,6 +566,65 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
                 field("first", type = IntType),
                 field("second", type = IntType)
             )
+        )
+        val types = createTypes(
+            expressionTypes = mapOf(
+                receiverReference.nodeId to shapeType,
+                shapeReference.nodeId to MetaType(shapeType)
+            )
+        )
+
+        val loader = loader(inspector = inspector, references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration))
+            .addAll(loader.loadExpression(fieldAccess))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(2))
+    }
+
+    @Test
+    fun canAccessFieldsOnShapeValueWithTagValue() {
+        val shapeDeclaration = shape("Pair")
+        val shapeReference = variableReference("Pair")
+
+        val receiverTarget = targetVariable("receiver")
+        val receiverDeclaration = valStatement(
+            target = receiverTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    callNamedArgument("first", literalInt(1)),
+                    callNamedArgument("second", literalInt(2))
+                )
+            )
+        )
+        val receiverReference = variableReference("receiver")
+        val fieldAccess = fieldAccess(receiverReference, "second")
+
+        val tag = tag(listOf("Example"), "Tag")
+        val tagValue = tagValue(tag, "TagValue")
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "first"),
+                    fieldInspector(name = "second")
+                )
+            ),
+            shapeTagValues = mapOf(
+                shapeDeclaration to tagValue
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            receiverReference.nodeId to receiverTarget
+        ))
+        val shapeType = shapeType(
+            fields = listOf(
+                field("first", type = IntType),
+                field("second", type = IntType)
+            ),
+            tagValue = tagValue
         )
         val types = createTypes(
             expressionTypes = mapOf(
