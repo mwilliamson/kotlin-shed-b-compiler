@@ -16,16 +16,12 @@ class ExecutionTests {
         "cast",
         "ConstantField.shed",
         "dependencies",
-        "FieldDestructuring.shed",
         "Matchers.shed",
         "PolymorphicMap.shed",
-        "RecursiveFactorial.shed",
-        "RecursiveFibonacci.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
         "symbols",
         "TailRec.shed",
-        "Tuples.shed",
         "usingStdlib"
     )
 

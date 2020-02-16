@@ -53,7 +53,6 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
         val leftStringDataStart = LlvmOperandLocal(generateName("leftStringDataStart"))
         val rightStringDataStart = LlvmOperandLocal(generateName("rightStringDataStart"))
         val newDataSize = LlvmOperandLocal(generateName("newDataSize"))
-        val newSize = LlvmOperandLocal(generateName("newSize"))
         val newString = LlvmOperandLocal(generateName("newString"))
         val newStringData = LlvmOperandLocal(generateName("newStringData"))
         val newStringLeftStart = LlvmOperandLocal(generateName("newStringLeftStart"))
@@ -72,15 +71,9 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
                     type = compiledStringLengthType,
                     left = leftSize,
                     right = rightSize
-                ),
-                LlvmAdd(
-                    target = newSize,
-                    type = LlvmTypes.i64,
-                    left = newDataSize,
-                    right = LlvmOperandInt(compiledStringLengthTypeSize)
                 )
             ),
-            allocString(target = newString, size = newSize),
+            allocString(target = newString, dataSize = newDataSize),
             storeStringDataSize(string = newString, size = newDataSize),
             listOf(
                 stringData(
@@ -143,11 +136,19 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
         ).flatten()).pushTemporary(result)
     }
 
-    private fun allocString(target: LlvmOperandLocal, size: LlvmOperand): List<LlvmInstruction> {
-        return libc.typedMalloc(target, size, compiledStringType(0))
+    internal fun allocString(target: LlvmOperandLocal, dataSize: LlvmOperand): List<LlvmInstruction> {
+        val size = LlvmOperandLocal(generateName("size"))
+        return listOf(
+            LlvmAdd(
+                target = size,
+                type = LlvmTypes.i64,
+                left = dataSize,
+                right = LlvmOperandInt(compiledStringLengthTypeSize)
+            )
+        ) + libc.typedMalloc(target, size, compiledStringType(0))
     }
 
-    private fun storeStringDataSize(string: LlvmOperand, size: LlvmOperand): List<LlvmInstruction> {
+    internal fun storeStringDataSize(string: LlvmOperand, size: LlvmOperand): List<LlvmInstruction> {
         val sizePointer = LlvmOperandLocal(generateName("sizePointer"))
         return listOf(
             stringSizePointer(

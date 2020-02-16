@@ -51,4 +51,31 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
             )
         )
     }
+
+    internal fun snprintf(
+        target: LlvmVariable,
+        str: LlvmOperand,
+        size: LlvmOperand,
+        format: LlvmOperand,
+        args: List<LlvmTypedOperand>
+    ): LlvmInstruction {
+        return LlvmCall(
+            target = target,
+            returnType = LlvmTypes.function(
+                returnType = CTypes.int,
+                parameterTypes = listOf(
+                    CTypes.stringPointer,
+                    CTypes.size_t,
+                    CTypes.stringPointer
+                ),
+                hasVarargs = true
+            ),
+            functionPointer = LlvmOperandGlobal("snprintf"),
+            arguments = listOf(
+                LlvmTypedOperand(CTypes.stringPointer, str),
+                LlvmTypedOperand(CTypes.size_t, size),
+                LlvmTypedOperand(CTypes.stringPointer, format)
+            ) + args
+        )
+    }
 }

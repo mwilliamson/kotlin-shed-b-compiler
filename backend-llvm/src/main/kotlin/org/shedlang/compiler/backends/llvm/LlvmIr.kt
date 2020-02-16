@@ -82,6 +82,12 @@ internal data class LlvmOperandInt(val value: Int): LlvmOperand {
     }
 }
 
+internal data class LlvmOperandString(val value: String): LlvmOperand {
+    override fun serialise(): String {
+        return "c\"$value\""
+    }
+}
+
 internal data class LlvmOperandGlobal(val name: String): LlvmVariable {
     override fun serialise(): String {
         return "@$name"

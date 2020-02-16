@@ -927,6 +927,7 @@ internal fun serialiseProgram(module: LlvmModule): String {
         declare i8* @memcpy(i8*, i8*, i64)
         declare i32 @memcmp(i8*, i8*, i64)
         declare i32 @printf(i8* noalias nocapture, ...)
+        declare i32 @snprintf(i8*, i64, i8*, ...)
         declare i64 @write(i32, i8*, i64)
     """.trimIndent() + module.serialise()
 }
