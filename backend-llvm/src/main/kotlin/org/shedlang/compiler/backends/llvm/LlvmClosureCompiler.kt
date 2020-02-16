@@ -20,14 +20,10 @@ internal class ClosureCompiler(
 
         val closureMalloc = libc.typedMalloc(closurePointer, compiledClosureSize(freeVariables.size), type = closurePointerType)
 
-        val getClosureFunctionPointer = LlvmGetElementPtr(
+        val getClosureFunctionPointer = closureFunctionPointer(
             target = closureFunctionPointer,
-            pointerType = closurePointerType,
-            pointer = closurePointer,
-            indices = listOf(
-                LlvmIndex.i64(0),
-                LlvmIndex.i32(0)
-            )
+            closurePointerType = closurePointerType,
+            closurePointer = closurePointer
         )
 
         val storeClosureFunction = LlvmStore(
@@ -90,14 +86,10 @@ internal class ClosureCompiler(
                 value = closurePointer,
                 targetType = compiledClosurePointerType
             ),
-            LlvmGetElementPtr(
+            closureFunctionPointer(
                 target = functionPointerPointer,
-                pointerType = compiledClosurePointerType,
-                pointer = typedClosurePointer,
-                indices = listOf(
-                    LlvmIndex.i64(0),
-                    LlvmIndex.i32(0)
-                )
+                closurePointerType = compiledClosurePointerType,
+                closurePointer = typedClosurePointer
             ),
             LlvmLoad(
                 target = functionPointer,
@@ -192,6 +184,22 @@ internal class ClosureCompiler(
             indices = listOf(
                 LlvmIndex.i64(0),
                 LlvmIndex.i64(freeVariableIndex)
+            )
+        )
+    }
+
+    private fun closureFunctionPointer(
+        target: LlvmOperandLocal,
+        closurePointerType: LlvmTypePointer,
+        closurePointer: LlvmOperandLocal
+    ): LlvmGetElementPtr {
+        return LlvmGetElementPtr(
+            target = target,
+            pointerType = closurePointerType,
+            pointer = closurePointer,
+            indices = listOf(
+                LlvmIndex.i64(0),
+                LlvmIndex.i32(0)
             )
         )
     }
