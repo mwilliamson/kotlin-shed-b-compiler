@@ -18,7 +18,6 @@ class ExecutionTests {
         "dependencies",
         "FieldDestructuring.shed",
         "Matchers.shed",
-        "PolymorphicCons.shed",
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",
         "PolymorphicMap.shed",
