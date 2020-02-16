@@ -4,6 +4,11 @@ import kotlinx.collections.immutable.*
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 
+internal interface LabelPredecessor {
+    val stack: PersistentList<LlvmOperand>
+    val basicBlockName: String
+}
+
 internal class FunctionContext(
     override val stack: PersistentList<LlvmOperand>,
     internal val locals: PersistentMap<Int, LlvmOperand>,
@@ -11,9 +16,9 @@ internal class FunctionContext(
     override val basicBlockName: String,
     internal val topLevelEntities: PersistentList<LlvmTopLevelEntity>,
     private val definedModules: PersistentSet<ModuleName>,
-    private val labelPredecessors: PersistentMultiMap<String, Compiler.LabelPredecessor>,
+    private val labelPredecessors: PersistentMultiMap<String, LabelPredecessor>,
     private val generateName: (String) -> String
-): Compiler.LabelPredecessor {
+): LabelPredecessor {
     fun addInstructions(vararg newInstructions: LlvmInstruction): FunctionContext {
         return addInstructions(newInstructions.asList())
     }
@@ -162,7 +167,7 @@ internal class FunctionContext(
         )
     }
 
-    private fun mergeStacks(predecessors: List<Compiler.LabelPredecessor>): Pair<PersistentList<LlvmOperand>, List<LlvmInstruction>> {
+    private fun mergeStacks(predecessors: List<LabelPredecessor>): Pair<PersistentList<LlvmOperand>, List<LlvmInstruction>> {
         val stacks = predecessors.map { predecessor -> predecessor.stack }
         val stackSizes = stacks.distinctBy { stack -> stack.size }
         if (stackSizes.size == 0) {
@@ -177,7 +182,7 @@ internal class FunctionContext(
         }
     }
 
-    private fun mergeOperands(predecessors: List<Compiler.LabelPredecessor>, stackIndex: Int): Pair<LlvmOperand, List<LlvmInstruction>> {
+    private fun mergeOperands(predecessors: List<LabelPredecessor>, stackIndex: Int): Pair<LlvmOperand, List<LlvmInstruction>> {
         val distinctOperands = predecessors.map { predecessor -> predecessor.stack[stackIndex] }.distinct()
         if (distinctOperands.size == 1) {
             return Pair(distinctOperands.single(), listOf())

@@ -19,11 +19,6 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     private val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
     private val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
 
-    internal interface LabelPredecessor {
-        val stack: PersistentList<LlvmOperand>
-        val basicBlockName: String
-    }
-
     fun compile(target: Path, mainModule: ModuleName) {
         val defineMainModule = moduleDefinition(mainModule)
 
