@@ -1699,17 +1699,3 @@ fun withLineNumbers(source: String): String {
         (index + 1).toString().padStart(3) + " " + line
     }.joinToString("\n")
 }
-
-internal class PersistentMultiMap<K, V>(private val map: PersistentMap<K, PersistentList<V>>) {
-    fun add(key: K, value: V): PersistentMultiMap<K, V> {
-        return PersistentMultiMap(map.put(key, get(key).add(value)))
-    }
-
-    operator fun get(key: K): PersistentList<V> {
-        return map.getOrDefault(key, persistentListOf())
-    }
-}
-
-internal fun <K, V> persistentMultiMapOf(): PersistentMultiMap<K, V> {
-    return PersistentMultiMap(persistentMapOf())
-}
