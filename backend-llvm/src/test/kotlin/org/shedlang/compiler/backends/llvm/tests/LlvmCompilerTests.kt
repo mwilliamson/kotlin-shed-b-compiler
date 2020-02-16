@@ -113,7 +113,11 @@ private val environment = object: StackIrExecutionEnvironment {
             )
         )
 
-        val module = LlvmModule(context.topLevelEntities.add(mainFunctionDefinition))
+        val module = LlvmModule(
+            context.topLevelEntities
+                .add(mainFunctionDefinition)
+                .addAll(libc.declarations())
+        )
 
         temporaryDirectory().use { temporaryDirectory ->
             val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")

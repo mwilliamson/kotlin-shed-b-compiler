@@ -65,7 +65,8 @@ internal class Compiler(
         val module = LlvmModule(
             listOf(
                 defineMainModule,
-                listOf(main)
+                listOf(main),
+                libc.declarations()
             ).flatten()
         )
 
@@ -921,68 +922,7 @@ internal class Compiler(
 }
 
 internal fun serialiseProgram(module: LlvmModule): String {
-    val malloc = LlvmFunctionDeclaration(
-        name = "malloc",
-        returnType = CTypes.voidPointer,
-        parameters = listOf(
-            LlvmParameter(CTypes.size_t, "size")
-        )
-    )
-    val memcpy = LlvmFunctionDeclaration(
-        name = "memcpy",
-        returnType = CTypes.voidPointer,
-        parameters = listOf(
-            LlvmParameter(CTypes.voidPointer, "dest"),
-            LlvmParameter(CTypes.voidPointer, "src"),
-            LlvmParameter(CTypes.size_t, "n")
-        )
-    )
-    val memcmp = LlvmFunctionDeclaration(
-        name = "memcmp",
-        returnType = CTypes.int,
-        parameters = listOf(
-            LlvmParameter(CTypes.voidPointer, "s1"),
-            LlvmParameter(CTypes.voidPointer, "s2"),
-            LlvmParameter(CTypes.size_t, "n")
-        )
-    )
-    val printf = LlvmFunctionDeclaration(
-        name = "printf",
-        returnType = CTypes.int,
-        parameters = listOf(
-            LlvmParameter(CTypes.stringPointer, "format") // TODO: noalias nocapture
-        ),
-        hasVarargs = true
-    )
-    val snprintf = LlvmFunctionDeclaration(
-        name = "snprintf",
-        returnType = CTypes.int,
-        parameters = listOf(
-            LlvmParameter(CTypes.stringPointer, "str"),
-            LlvmParameter(CTypes.size_t, "size"),
-            LlvmParameter(CTypes.stringPointer, "format")
-        ),
-        hasVarargs = true
-    )
-    val write = LlvmFunctionDeclaration(
-        name = "write",
-        returnType = CTypes.ssize_t,
-        parameters = listOf(
-            LlvmParameter(CTypes.int, "fd"),
-            LlvmParameter(CTypes.voidPointer, "buf"),
-            LlvmParameter(CTypes.size_t, "count")
-        )
-    )
-    return listOf(
-        malloc,
-        memcpy,
-        memcmp,
-        printf,
-        snprintf,
-        write
-    ).joinToString("") { declaration ->
-        declaration.serialise() + "\n"
-    } + module.serialise()
+    return module.serialise()
 }
 
 fun withLineNumbers(source: String): String {
