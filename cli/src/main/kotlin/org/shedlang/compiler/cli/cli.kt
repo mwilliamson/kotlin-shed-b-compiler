@@ -57,7 +57,7 @@ object ShedCli {
 
     private class Arguments(parser: ArgParser) {
         val source by parser.shedSource()
-        val mainModule by parser.positional("MAIN", help = "main module to run")
+        val mainModule by parser.shedMainModule()
         val backend by parser.shedBackends().default(null)
 
         init {
@@ -86,7 +86,7 @@ object ShedcCli {
 
     private class Arguments(parser: ArgParser) {
         val source by parser.shedSource()
-        val mainModule by parser.positional("MAIN", help = "main module to run")
+        val mainModule by parser.shedMainModule()
         val outputPath by parser.storing("--output-path",   "-o", help = "path to output directory")
         val backend by parser.shedBackends()
 

@@ -18,6 +18,10 @@ internal fun ArgParser.shedBackends(): ArgParser.Delegate<Backend> {
     return this.choices("--backend", argName = "BACKEND", help = "backend to generate code with", choices = backends)
 }
 
+internal fun ArgParser.shedMainModule(): ArgParser.Delegate<String> {
+    return positional("MAIN", help = "main module to run")
+}
+
 
 internal fun <T> ArgParser.choices(
     vararg names: String,
