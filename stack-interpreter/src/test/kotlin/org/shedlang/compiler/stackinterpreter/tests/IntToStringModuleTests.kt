@@ -9,7 +9,7 @@ class IntToStringModuleTests {
     private val moduleName = listOf(Identifier("Core"), Identifier("IntToString"))
 
     @Test
-    fun printBuiltinWritesToStdout() {
+    fun smallPositiveInteger() {
         val world = InMemoryWorld()
 
         val value = callFunction(
