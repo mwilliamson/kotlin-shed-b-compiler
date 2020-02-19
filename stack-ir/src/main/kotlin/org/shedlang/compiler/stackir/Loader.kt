@@ -22,15 +22,16 @@ class Image internal constructor(private val modules: Map<ModuleName, Persistent
 
 fun loadModuleSet(moduleSet: ModuleSet): Image {
     return Image(moduleSet.modules.filterIsInstance<Module.Shed>().associate { module ->
-        module.name to loadModule(module)
+        module.name to loadModule(module, moduleSet = moduleSet)
     })
 }
 
-private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
+private fun loadModule(module: Module.Shed, moduleSet: ModuleSet): PersistentList<Instruction> {
     val loader = Loader(
         inspector = ModuleCodeInspector(module),
         references = module.references,
-        types = module.types
+        types = module.types,
+        moduleSet = moduleSet
     )
     return loader.loadModule(module)
 }
@@ -38,7 +39,8 @@ private fun loadModule(module: Module.Shed): PersistentList<Instruction> {
 class Loader(
     private val references: ResolvedReferences,
     private val types: Types,
-    private val inspector: CodeInspector
+    private val inspector: CodeInspector,
+    private val moduleSet: ModuleSet
 ) {
     internal fun loadModule(module: Module.Shed): PersistentList<Instruction> {
         val moduleNameInstructions = if (isReferenced(module, Builtins.moduleName)) {
@@ -224,6 +226,7 @@ class Loader(
             override fun visit(node: CallNode): PersistentList<Instruction> {
                 if (inspector.isCast(node)) {
                     val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
+                    val optionsModuleType = moduleSet.moduleType(optionsModuleName)!!
                     val loadOptionsModuleInstructions = persistentListOf(
                         ModuleInit(optionsModuleName),
                         ModuleLoad(optionsModuleName)
@@ -231,10 +234,10 @@ class Loader(
                     val parameter = DeclareFunction.Parameter(Identifier("value"), freshNodeId())
 
                     val failureInstructions = loadOptionsModuleInstructions
-                        .add(FieldAccess(Identifier("none"), receiverType = null))
+                        .add(FieldAccess(Identifier("none"), receiverType = optionsModuleType))
                         .add(Return)
                     val successInstructions = loadOptionsModuleInstructions
-                        .add(FieldAccess(Identifier("some"), receiverType = null))
+                        .add(FieldAccess(Identifier("some"), receiverType = optionsModuleType))
                         .add(LocalLoad(parameter))
                         .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
                         .add(Return)

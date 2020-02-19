@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.tests
 
 import org.shedlang.compiler.EMPTY_TYPES
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.backends.CodeInspector
@@ -13,5 +14,10 @@ fun loader(
     references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
     types: Types = EMPTY_TYPES
 ): Loader {
-    return Loader(inspector = inspector, references = references, types = types)
+    return Loader(
+        inspector = inspector,
+        references = references,
+        types = types,
+        moduleSet = ModuleSet(modules = listOf())
+    )
 }
