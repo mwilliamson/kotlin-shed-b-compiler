@@ -1,10 +1,12 @@
 package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
-import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.*
-import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.Types
+import org.shedlang.compiler.TypesMap
+import org.shedlang.compiler.ast.BinaryOperator
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
@@ -167,21 +169,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
         val value = executeInstructions(instructions)
 
         assertThat(value, isInt(-1))
-    }
-
-    private fun stubbedModule(
-        name: ModuleName,
-        node: ModuleNode,
-        references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
-        types: Types = EMPTY_TYPES
-    ): Module.Shed {
-        return Module.Shed(
-            name = name,
-            type = ModuleType(mapOf()),
-            types = types,
-            references = references,
-            node = node
-        )
     }
 
     private fun createTypes(
