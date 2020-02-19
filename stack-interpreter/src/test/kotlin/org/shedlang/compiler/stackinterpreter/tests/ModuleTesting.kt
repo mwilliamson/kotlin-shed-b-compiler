@@ -12,6 +12,7 @@ import org.shedlang.compiler.stackinterpreter.NullWorld
 import org.shedlang.compiler.stackinterpreter.World
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.moduleType
+import org.shedlang.compiler.types.AnyType
 
 internal fun callFunction(
     moduleName: ModuleName,
@@ -22,7 +23,7 @@ internal fun callFunction(
     val instructions = persistentListOf(
         ModuleInit(moduleName),
         ModuleLoad(moduleName),
-        FieldAccess(Identifier(functionName), receiverType = null)
+        FieldAccess(Identifier(functionName), receiverType = AnyType)
     )
         .addAll(arguments.map { argument -> PushValue(argument) })
         .add(Call(positionalArgumentCount = arguments.size, namedArgumentNames = listOf()))

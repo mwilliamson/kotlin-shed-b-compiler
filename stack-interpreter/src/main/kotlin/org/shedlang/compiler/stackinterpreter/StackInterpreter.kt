@@ -7,6 +7,7 @@ import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.AnyType
 import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.TagValue
 import java.math.BigInteger
@@ -479,7 +480,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                                 Identifier("get") to InterpreterFunction(
                                     bodyInstructions = persistentListOf(
                                         LocalLoad(getParameter),
-                                        FieldAccess(field.name, receiverType = null),
+                                        FieldAccess(field.name, receiverType = AnyType),
                                         Return
                                     ),
                                     positionalParameters = listOf(getParameter),
@@ -781,7 +782,7 @@ fun executeMain(mainModule: ModuleName, image: Image, world: World): Int {
         persistentListOf(
             ModuleInit(mainModule),
             ModuleLoad(mainModule),
-            FieldAccess(Identifier("main"), receiverType = null),
+            FieldAccess(Identifier("main"), receiverType = AnyType),
             Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
         ),
         image = image,

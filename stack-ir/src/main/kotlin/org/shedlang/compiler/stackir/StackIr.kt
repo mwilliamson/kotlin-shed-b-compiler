@@ -80,8 +80,7 @@ object Duplicate: Instruction()
 
 object Exit: Instruction()
 
-// TODO: require Type
-class FieldAccess(val fieldName: Identifier, val receiverType: Type?): Instruction()
+class FieldAccess(val fieldName: Identifier, val receiverType: Type): Instruction()
 
 object IntAdd: Instruction()
 
