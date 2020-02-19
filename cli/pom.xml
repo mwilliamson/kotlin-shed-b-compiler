@@ -26,6 +26,11 @@
         </dependency>
         <dependency>
             <groupId>org.shedlang</groupId>
+            <artifactId>shed-compiler-backend-llvm</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.shedlang</groupId>
             <artifactId>shed-compiler-backend-python</artifactId>
             <version>0.1.0-SNAPSHOT</version>
         </dependency>

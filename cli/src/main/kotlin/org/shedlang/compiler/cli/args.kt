@@ -5,11 +5,13 @@ import com.xenomachina.argparser.InvalidArgumentException
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.parseModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.llvm.LlvmBackend
 
 
 private val backends = mapOf(
     "python" to org.shedlang.compiler.backends.python.backend,
-    "javascript" to org.shedlang.compiler.backends.javascript.backend
+    "javascript" to org.shedlang.compiler.backends.javascript.backend,
+    "llvm" to LlvmBackend
 )
 
 internal fun ArgParser.shedSource(): ArgParser.Delegate<String> {
