@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.llvm
 
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.persistentSetOf
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
@@ -32,6 +31,8 @@ internal class Compiler(
         modules = modules,
         strings = strings
     )
+
+    private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
     fun compile(target: Path, mainModule: ModuleName) {
         val defineMainModule = moduleDefinition(mainModule)
@@ -75,6 +76,15 @@ internal class Compiler(
         println(withLineNumbers(source))
 
         target.toFile().writeText(source)
+    }
+
+    private fun defineModule(moduleName: ModuleName): List<LlvmTopLevelEntity> {
+        if (definedModules.contains(moduleName)) {
+            return listOf()
+        } else {
+            definedModules.add(moduleName)
+            return moduleDefinition(moduleName)
+        }
     }
 
     private fun moduleDefinition(moduleName: ModuleName): List<LlvmTopLevelEntity> {
@@ -410,9 +420,7 @@ internal class Compiler(
 
             is ModuleInit -> {
                 return context
-                    .defineModule(instruction.moduleName) {
-                        moduleDefinition(instruction.moduleName)
-                    }
+                    .addTopLevelEntities(defineModule(instruction.moduleName))
                     .addInstruction(callModuleInit(instruction.moduleName))
             }
 
@@ -569,7 +577,6 @@ internal class Compiler(
             locals = persistentMapOf(),
             onLocalStore = persistentMultiMapOf(),
             topLevelEntities = persistentListOf(),
-            definedModules = persistentSetOf(),
             labelPredecessors = persistentMultiMapOf(),
             generateName = ::generateName
         )

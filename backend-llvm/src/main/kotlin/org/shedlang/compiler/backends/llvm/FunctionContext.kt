@@ -16,7 +16,6 @@ internal class FunctionContext(
     internal val instructions: PersistentList<LlvmInstruction>,
     override val basicBlockName: String,
     internal val topLevelEntities: PersistentList<LlvmTopLevelEntity>,
-    private val definedModules: PersistentSet<ModuleName>,
     private val labelPredecessors: PersistentMultiMap<String, LabelPredecessor>,
     private val generateName: (String) -> String
 ): LabelPredecessor {
@@ -71,7 +70,6 @@ internal class FunctionContext(
             instructions = instructions.add(newInstruction).addAll(extraInstructions),
             basicBlockName = newBasicBlockName,
             topLevelEntities = topLevelEntities,
-            definedModules = definedModules,
             labelPredecessors = newLabelPredecessors,
             generateName = generateName
         )
@@ -88,28 +86,9 @@ internal class FunctionContext(
             instructions = instructions,
             basicBlockName = basicBlockName,
             topLevelEntities = topLevelEntities.addAll(newTopLevelEntities),
-            definedModules = definedModules,
             labelPredecessors = labelPredecessors,
             generateName = generateName
         )
-    }
-
-    fun defineModule(moduleName: List<Identifier>, function: () -> List<LlvmTopLevelEntity>): FunctionContext {
-        if (definedModules.contains(moduleName)) {
-            return this
-        } else {
-            return FunctionContext(
-                stack = stack,
-                locals = locals,
-                onLocalStore = onLocalStore,
-                instructions = instructions,
-                basicBlockName = basicBlockName,
-                topLevelEntities = topLevelEntities,
-                definedModules = definedModules.add(moduleName),
-                labelPredecessors = labelPredecessors,
-                generateName = generateName
-            ).addTopLevelEntities(function())
-        }
     }
 
     fun localLoad(variableId: Int): LlvmOperand {
@@ -126,7 +105,6 @@ internal class FunctionContext(
                 instructions = instructions,
                 basicBlockName = basicBlockName,
                 topLevelEntities = topLevelEntities,
-                definedModules = definedModules,
                 labelPredecessors = labelPredecessors,
                 generateName = generateName
             )
@@ -150,7 +128,6 @@ internal class FunctionContext(
             instructions = instructions,
             basicBlockName = basicBlockName,
             topLevelEntities = topLevelEntities,
-            definedModules = definedModules,
             labelPredecessors = labelPredecessors,
             generateName = generateName
         )
@@ -192,7 +169,6 @@ internal class FunctionContext(
             instructions = instructions,
             basicBlockName = basicBlockName,
             topLevelEntities = topLevelEntities,
-            definedModules = definedModules,
             labelPredecessors = labelPredecessors,
             generateName = generateName
         )
