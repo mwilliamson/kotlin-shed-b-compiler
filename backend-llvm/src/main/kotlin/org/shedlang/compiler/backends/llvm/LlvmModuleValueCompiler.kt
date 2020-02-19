@@ -39,10 +39,10 @@ internal class ModuleValueCompiler(
     }
 
     internal fun storeFields(moduleName: ModuleName, exports: List<Pair<Identifier, LlvmOperand>>): List<LlvmInstruction> {
-        val fieldPointerVariable = LlvmOperandLocal(irBuilder.generateName("fieldPointer"))
         val moduleType = moduleType(moduleName)
 
         return exports.flatMap { (exportName, exportValue) ->
+            val fieldPointerVariable = LlvmOperandLocal(irBuilder.generateName("fieldPointer"))
             listOf(
                 LlvmGetElementPtr(
                     target = fieldPointerVariable,
