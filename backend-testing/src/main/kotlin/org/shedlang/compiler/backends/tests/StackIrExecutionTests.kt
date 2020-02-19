@@ -1356,6 +1356,62 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun moduleCanBeImported() {
+        val exportingModuleName = listOf(Identifier("Exporting"))
+        val exportNode = export("x")
+        val valTarget = targetVariable("x")
+        val exportingModuleType = ModuleType(fields = mapOf(Identifier("x") to IntType))
+        val exportingModule = stubbedModule(
+            name = exportingModuleName,
+            node = module(
+                exports = listOf(exportNode),
+                body = listOf(
+                    valStatement(valTarget, literalInt(42))
+                )
+            ),
+            type = exportingModuleType,
+            references = ResolvedReferencesMap(mapOf(
+                exportNode.nodeId to valTarget
+            ))
+        )
+
+        val importingModuleName = listOf(Identifier("Importing"))
+        val importTarget = targetVariable("x")
+        val importTargetFields = targetFields(listOf(fieldName("x") to importTarget))
+        val importNode = import(
+            importTargetFields,
+            ImportPath.absolute(exportingModuleName.map(Identifier::value))
+        )
+        val reexportNode = export("x")
+        val importingModuleType = ModuleType(fields = mapOf(Identifier("x") to IntType))
+        val importingModule = stubbedModule(
+            name = importingModuleName,
+            node = module(
+                imports = listOf(importNode),
+                exports = listOf(reexportNode)
+            ),
+            type = importingModuleType,
+            references = ResolvedReferencesMap(mapOf(
+                reexportNode.nodeId to importTarget
+            )),
+            types = createTypes(targetTypes = mapOf(importTargetFields.nodeId to exportingModule.type))
+        )
+
+        val moduleSet = ModuleSet(listOf(exportingModule, importingModule))
+        val value = executeInstructions(
+            persistentListOf(
+                ModuleInit(importingModuleName),
+                ModuleLoad(importingModuleName),
+                FieldAccess(Identifier("x"), receiverType = importingModuleType)
+            ),
+            type = IntType,
+            moduleSet = moduleSet
+        )
+
+        assertThat(value, isInt(42))
+    }
+
+    @Test
     fun moduleNameIsDefinedInEachModule() {
         val moduleName = listOf(Identifier("One"), Identifier("Two"), Identifier("Three"))
         val moduleNameReference = export("moduleName")

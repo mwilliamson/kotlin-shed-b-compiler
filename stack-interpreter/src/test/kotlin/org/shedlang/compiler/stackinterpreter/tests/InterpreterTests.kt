@@ -169,57 +169,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
         assertThat(value, isInt(-1))
     }
 
-    @Test
-    fun moduleCanBeImported() {
-        val exportingModuleName = listOf(Identifier("Exporting"))
-        val exportNode = export("x")
-        val valTarget = targetVariable("x")
-        val exportingModule = stubbedModule(
-            name = exportingModuleName,
-            node = module(
-                exports = listOf(exportNode),
-                body = listOf(
-                    valStatement(valTarget, literalInt(42))
-                )
-            ),
-            references = ResolvedReferencesMap(mapOf(
-                exportNode.nodeId to valTarget
-            ))
-        )
-
-        val importingModuleName = listOf(Identifier("Importing"))
-        val importTarget = targetVariable("x")
-        val importTargetFields = targetFields(listOf(fieldName("x") to importTarget))
-        val importNode = import(
-            importTargetFields,
-            ImportPath.absolute(exportingModuleName.map(Identifier::value))
-        )
-        val reexportNode = export("x")
-        val importingModule = stubbedModule(
-            name = importingModuleName,
-            node = module(
-                imports = listOf(importNode),
-                exports = listOf(reexportNode)
-            ),
-            references = ResolvedReferencesMap(mapOf(
-                reexportNode.nodeId to importTarget
-            )),
-            types = createTypes(targetTypes = mapOf(importTargetFields.nodeId to exportingModule.type))
-        )
-
-        val image = loadModuleSet(ModuleSet(listOf(exportingModule, importingModule)))
-        val value = executeInstructions(
-            persistentListOf(
-                ModuleInit(importingModuleName),
-                ModuleLoad(importingModuleName),
-                FieldAccess(Identifier("x"), receiverType = null)
-            ),
-            image = image
-        )
-
-        assertThat(value, isInt(42))
-    }
-
     private fun stubbedModule(
         name: ModuleName,
         node: ModuleNode,
