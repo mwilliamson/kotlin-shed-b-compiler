@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.tests
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
@@ -1257,6 +1258,101 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         assertThat(value, isInt(42))
+    }
+
+    @Nested
+    inner class VarargsTests {
+        private val headParameter = parameter("head")
+        private val tailParameter = parameter("tail")
+
+        private val headReference = variableReference("head")
+        private val tailReference = variableReference("tail")
+
+        private val openParen = literalString("(")
+        private val varargsDeclaration = varargsDeclaration(
+            name = "tuple",
+            cons = functionExpression(
+                parameters = listOf(headParameter, tailParameter),
+                body = binaryOperation(
+                    BinaryOperator.ADD,
+                    openParen,
+                    binaryOperation(
+                        BinaryOperator.ADD,
+                        headReference,
+                        binaryOperation(
+                            BinaryOperator.ADD,
+                            tailReference,
+                            literalString(")")
+                        )
+                    )
+                )
+            ),
+            nil = literalString("nil")
+        )
+
+        private val varargsReference = variableReference("tuple")
+
+        private val references = ResolvedReferencesMap(mapOf(
+            headReference.nodeId to headParameter,
+            tailReference.nodeId to tailParameter,
+            varargsReference.nodeId to varargsDeclaration
+        ))
+        private val types = createTypes(
+            expressionTypes = mapOf(
+                varargsReference.nodeId to varargsType(),
+                openParen.nodeId to StringType,
+                headReference.nodeId to StringType,
+                tailReference.nodeId to StringType
+            )
+        )
+
+        @Test
+        fun callingVarargsWithNoArgumentsCreatesNil() {
+            val call = call(
+                receiver = varargsReference,
+                positionalArguments = listOf()
+            )
+
+            val loader = loader(references = references, types = types)
+            val instructions = persistentListOf<Instruction>()
+                .addAll(loader.loadModuleStatement(varargsDeclaration))
+                .addAll(loader.loadExpression(call))
+            val value = executeInstructions(instructions, type = StringType)
+
+            assertThat(value, isString("nil"))
+        }
+
+        @Test
+        fun callingVarargsWithOneArgumentsCallsConsOnce() {
+            val call = call(
+                receiver = varargsReference,
+                positionalArguments = listOf(literalString("42"))
+            )
+
+            val loader = loader(references = references, types = types)
+            val instructions = persistentListOf<Instruction>()
+                .addAll(loader.loadModuleStatement(varargsDeclaration))
+                .addAll(loader.loadExpression(call))
+            val value = executeInstructions(instructions, type = StringType)
+
+            assertThat(value, isString("(42nil)"))
+        }
+
+        @Test
+        fun callingVarargsWithTwoArgumentsCallsConsTwice() {
+            val call = call(
+                receiver = varargsReference,
+                positionalArguments = listOf(literalString("42"), literalString("hello"))
+            )
+
+            val loader = loader(references = references, types = types)
+            val instructions = persistentListOf<Instruction>()
+                .addAll(loader.loadModuleStatement(varargsDeclaration))
+                .addAll(loader.loadExpression(call))
+            val value = executeInstructions(instructions, type = StringType)
+
+            assertThat(value, isString("(42(hellonil))"))
+        }
     }
 
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
