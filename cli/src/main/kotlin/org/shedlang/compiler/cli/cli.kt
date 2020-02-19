@@ -3,7 +3,7 @@ package org.shedlang.compiler.cli
 import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
-import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.RealWorld
@@ -25,7 +25,6 @@ object ShedCli {
 
     private fun run(rawArguments: Array<String>): Int {
         val arguments = Arguments(ArgParser(rawArguments))
-        val mainName = arguments.mainModule.split(".")
 
         val tempDir = createTempDir()
         try {
@@ -36,7 +35,7 @@ object ShedCli {
                     val source = readPackage(base, arguments.mainModule)
                     val image = loadModuleSet(source)
                     executeMain(
-                        mainModule = readMainModuleName(arguments.mainModule),
+                        mainModule = arguments.mainModule,
                         image = image,
                         world = RealWorld
                     )
@@ -48,7 +47,7 @@ object ShedCli {
                     backend = backend,
                     target = tempDir.toPath()
                 )
-                return backend.run(tempDir.toPath(), mainName)
+                return backend.run(tempDir.toPath(), arguments.mainModule)
             }
         } finally {
             tempDir.deleteRecursively()
@@ -96,10 +95,10 @@ object ShedcCli {
     }
 }
 
-private fun compile(base: Path, mainName: String, backend: Backend, target: Path) {
+private fun compile(base: Path, mainName: ModuleName, backend: Backend, target: Path) {
     onErrorPrintAndExit {
         val result = readPackage(base, mainName)
-        backend.compile(result, target = target)
+        backend.compile(result, mainModule = mainName, target = target)
     }
 }
 
@@ -112,9 +111,3 @@ private fun <T> onErrorPrintAndExit(func: () -> T): T {
         exitProcess(2)
     }
 }
-
-private fun readPackage(base: Path, mainName: String) =
-    readPackage(base, readMainModuleName(mainName))
-
-private fun readMainModuleName(mainName: String) =
-    mainName.split(".").map(::Identifier)

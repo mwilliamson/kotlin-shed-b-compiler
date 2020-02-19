@@ -52,6 +52,10 @@ fun formatModuleName(moduleName: ModuleName): String {
     return moduleName.joinToString(".") { part -> part.value }
 }
 
+fun parseModuleName(moduleName: String): ModuleName {
+    return moduleName.split(".").map(::Identifier)
+}
+
 fun Node.children(): List<Node> {
     return this.structure.flatMap(::structureToNodes)
 }

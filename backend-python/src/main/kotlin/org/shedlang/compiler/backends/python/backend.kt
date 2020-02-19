@@ -20,7 +20,7 @@ import java.nio.file.Path
 val topLevelPythonPackageName = "shed"
 
 val backend = object: Backend {
-    override fun compile(moduleSet: ModuleSet, target: Path) {
+    override fun compile(moduleSet: ModuleSet, mainModule: ModuleName, target: Path) {
         for (module in moduleSet.modules) {
             when (module) {
                 is Module.Shed -> {
@@ -63,7 +63,7 @@ val backend = object: Backend {
         return destination.toFile().writer(StandardCharsets.UTF_8)
     }
 
-    override fun run(path: Path, module: List<String>): Int {
+    override fun run(path: Path, module: ModuleName): Int {
         val process = ProcessBuilder("python3", "-m", topLevelPythonPackageName + "." + module.joinToString("."))
             .inheritIO()
             .directory(path.toFile())
@@ -72,8 +72,8 @@ val backend = object: Backend {
     }
 }
 
-fun compile(frontendResult: ModuleSet, target: Path) {
-    backend.compile(frontendResult, target = target)
+fun compile(frontendResult: ModuleSet, mainModule: ModuleName, target: Path) {
+    backend.compile(frontendResult, mainModule = mainModule, target = target)
 }
 
 private fun addInitFiles(base: Path, pythonPackage: Path) {

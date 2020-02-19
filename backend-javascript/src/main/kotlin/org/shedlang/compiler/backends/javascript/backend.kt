@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.javascript
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NodeSource
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.javascript.ast.JavascriptAssignmentNode
@@ -18,7 +19,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 
 val backend = object: Backend {
-    override fun compile(moduleSet: ModuleSet, target: Path) {
+    override fun compile(moduleSet: ModuleSet, mainModule: ModuleName, target: Path) {
         for (module in moduleSet.modules) {
             when (module) {
                 is Module.Shed -> {
@@ -59,7 +60,7 @@ val backend = object: Backend {
         return destination.toFile().writer(StandardCharsets.UTF_8)
     }
 
-    override fun run(path: Path, module: List<String>): Int {
+    override fun run(path: Path, module: ModuleName): Int {
         val process = ProcessBuilder("node", module.joinToString("/") + ".js")
             .inheritIO()
             .directory(path.toFile())
@@ -68,8 +69,8 @@ val backend = object: Backend {
     }
 }
 
-fun compile(frontendResult: ModuleSet, target: Path) {
-    backend.compile(frontendResult, target = target)
+fun compile(frontendResult: ModuleSet, mainModule: ModuleName, target: Path) {
+    backend.compile(frontendResult, mainModule = mainModule, target = target)
 }
 
 private fun modulePath(path: List<String>) = path.joinToString(File.separator) + ".js"
