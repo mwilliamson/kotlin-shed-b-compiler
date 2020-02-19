@@ -1,6 +1,7 @@
 package org.shedlang.compiler.cli
 
 import com.xenomachina.argparser.ArgParser
+import com.xenomachina.argparser.InvalidArgumentException
 import org.shedlang.compiler.backends.Backend
 
 
@@ -24,12 +25,20 @@ internal fun <T> ArgParser.choices(
     help: String,
     choices: Map<String, T>
 ): ArgParser.Delegate<T> {
+    val keys = choices.keys.sorted()
     return option<T>(
         *names,
-        help = choices.keys.joinToString("|") + "\n" + help,
+        help = keys.joinToString("|") + "\n" + help,
         argNames = listOf(argName),
         handler = {
-            choices[arguments.first()]!!
+            val name = arguments.first()
+            val choice = choices[name]
+            if (choice == null) {
+                val choicesString = keys.joinToString(", ") { key -> "'$key'" }
+                throw InvalidArgumentException("argument $argName: invalid choice '$name' (choose from $choicesString)")
+            } else {
+                choice
+            }
         }
     )
 }
