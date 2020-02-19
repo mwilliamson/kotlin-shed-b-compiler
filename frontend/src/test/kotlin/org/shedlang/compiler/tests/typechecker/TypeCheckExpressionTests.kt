@@ -41,10 +41,10 @@ class TypeCheckExpressionTests {
     }
 
     @Test
-    fun codePointLiteralIsTypedAsCodePoint() {
-        val node = literalCodePoint()
+    fun unicodeScalarLiteralIsTypedAsUnicodeScalar() {
+        val node = literalUnicodeScalar()
         val type = inferType(node, emptyTypeContext())
-        assertThat(type, cast(equalTo(CodePointType)))
+        assertThat(type, cast(equalTo(UnicodeScalarType)))
     }
 
     @Test
@@ -199,7 +199,7 @@ class TypeCheckExpressionTests {
     }
 
     @TestFactory
-    fun codePointComparisonOperationReturnsBoolean(): List<DynamicTest> {
+    fun unicodeScalarComparisonOperationReturnsBoolean(): List<DynamicTest> {
         return listOf(
             BinaryOperator.EQUALS,
             BinaryOperator.NOT_EQUAL,
@@ -208,7 +208,7 @@ class TypeCheckExpressionTests {
             BinaryOperator.GREATER_THAN,
             BinaryOperator.GREATER_THAN_OR_EQUAL
         ).map { operator -> DynamicTest.dynamicTest("char $operator operation returns boolean", {
-            val node = binaryOperation(operator, literalCodePoint(), literalCodePoint())
+            val node = binaryOperation(operator, literalUnicodeScalar(), literalUnicodeScalar())
             val type = inferType(node, emptyTypeContext())
             assertThat(type, cast(isBoolType))
         }) }

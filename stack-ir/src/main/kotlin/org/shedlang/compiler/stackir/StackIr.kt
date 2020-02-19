@@ -14,7 +14,7 @@ sealed class IrValue
 
 class IrBool(val value: Boolean): IrValue()
 
-class IrCodePoint(val value: Int): IrValue()
+class IrUnicodeScalar(val value: Int): IrValue()
 
 class IrInt(val value: BigInteger): IrValue() {
     constructor(value: Int): this(value.toBigInteger())
@@ -46,17 +46,17 @@ class CallPartial(
     val namedArgumentNames: List<Identifier>
 ): Instruction()
 
-object CodePointEquals: Instruction()
+object UnicodeScalarEquals: Instruction()
 
-object CodePointNotEqual: Instruction()
+object UnicodeScalarNotEqual: Instruction()
 
-object CodePointLessThan: Instruction()
+object UnicodeScalarLessThan: Instruction()
 
-object CodePointLessThanOrEqual: Instruction()
+object UnicodeScalarLessThanOrEqual: Instruction()
 
-object CodePointGreaterThan: Instruction()
+object UnicodeScalarGreaterThan: Instruction()
 
-object CodePointGreaterThanOrEqual: Instruction()
+object UnicodeScalarGreaterThanOrEqual: Instruction()
 
 class DeclareFunction(
     val name: String,

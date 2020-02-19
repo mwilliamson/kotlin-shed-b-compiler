@@ -6,27 +6,27 @@ import Matchers from Stdlib.Matchers;
 import Strings from Stdlib.Platform.Strings;
 import Tests from Stdlib.Tests;
 
-fun codePointCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
+fun unicodeScalarCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
     Tests.testCase(string, fun () {
-        val count = Strings.codePointCount(string);
+        val count = Strings.unicodeScalarCount(string);
         Tests.assertThat(count, Matchers.isInt(expectedCount))
     })
 }
 
-val codePointCountTestSuite = Tests.suite("codePointCount", list(
-    codePointCountTestCase("", 0),
-    codePointCountTestCase("a", 1),
-    codePointCountTestCase("abc", 3),
-    codePointCountTestCase("☃", 1),
-    codePointCountTestCase("𝔼", 1),
-    codePointCountTestCase("☃𝔼☃𝔼☃", 5),
+val unicodeScalarCountTestSuite = Tests.suite("unicodeScalarCount", list(
+    unicodeScalarCountTestCase("", 0),
+    unicodeScalarCountTestCase("a", 1),
+    unicodeScalarCountTestCase("abc", 3),
+    unicodeScalarCountTestCase("☃", 1),
+    unicodeScalarCountTestCase("𝔼", 1),
+    unicodeScalarCountTestCase("☃𝔼☃𝔼☃", 5),
 ));
 
-val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
+val dropLeftUnicodeScalarsTestSuite = Tests.suite("dropLeftUnicodeScalars", list(
     Tests.testCase("characters in BMP, positive count", fun() {
         val string = "abcdef";
 
-        val result = Strings.dropLeftCodePoints(2, string);
+        val result = Strings.dropLeftUnicodeScalars(2, string);
 
         Tests.assertThat(result, Matchers.isString("cdef"))
     }),
@@ -34,7 +34,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("characters outside BMP, positive count", fun() {
         val string = "𝔼bcdef";
 
-        val result = Strings.dropLeftCodePoints(2, string);
+        val result = Strings.dropLeftUnicodeScalars(2, string);
 
         Tests.assertThat(result, Matchers.isString("cdef"))
     }),
@@ -42,7 +42,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("characters in BMP, negative count", fun() {
         val string = "abcdef";
 
-        val result = Strings.dropLeftCodePoints(-2, string);
+        val result = Strings.dropLeftUnicodeScalars(-2, string);
 
         Tests.assertThat(result, Matchers.isString("ef"))
     }),
@@ -50,7 +50,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("characters outside BMP, negative count", fun() {
         val string = "abcd𝔼f";
 
-        val result = Strings.dropLeftCodePoints(-2, string);
+        val result = Strings.dropLeftUnicodeScalars(-2, string);
 
         Tests.assertThat(result, Matchers.isString("𝔼f"))
     }),
@@ -58,7 +58,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("when positive count is equal to string code point count then empty string is returned", fun() {
         val string = "abcdef";
 
-        val result = Strings.dropLeftCodePoints(6, string);
+        val result = Strings.dropLeftUnicodeScalars(6, string);
 
         Tests.assertThat(result, Matchers.isString(""))
     }),
@@ -66,7 +66,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("when positive count is larger than string then empty string is returned", fun() {
         val string = "abcdef";
 
-        val result = Strings.dropLeftCodePoints(7, string);
+        val result = Strings.dropLeftUnicodeScalars(7, string);
 
         Tests.assertThat(result, Matchers.isString(""))
     }),
@@ -74,7 +74,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("when negative count is equal to string code point count then entire string is returned", fun() {
         val string = "abcdef";
 
-        val result = Strings.dropLeftCodePoints(-6, string);
+        val result = Strings.dropLeftUnicodeScalars(-6, string);
 
         Tests.assertThat(result, Matchers.isString("abcdef"))
     }),
@@ -82,7 +82,7 @@ val dropLeftCodePointsTestSuite = Tests.suite("dropLeftCodePoints", list(
     Tests.testCase("when negative count is larger than string then entire string is returned", fun() {
         val string = "abcdef";
 
-        val result = Strings.dropLeftCodePoints(-7, string);
+        val result = Strings.dropLeftUnicodeScalars(-7, string);
 
         Tests.assertThat(result, Matchers.isString("abcdef"))
     }),
@@ -163,8 +163,8 @@ val substringTestSuite = Tests.suite("substring", list(
 ));
 
 val testCases = Tests.suite(moduleName, list(
-    codePointCountTestSuite,
-    dropLeftCodePointsTestSuite,
+    unicodeScalarCountTestSuite,
+    dropLeftUnicodeScalarsTestSuite,
     substringTestSuite,
 ));
 

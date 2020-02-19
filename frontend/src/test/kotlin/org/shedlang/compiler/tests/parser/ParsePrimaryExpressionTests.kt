@@ -6,8 +6,8 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.parser.InvalidCodePoint
-import org.shedlang.compiler.parser.InvalidCodePointLiteral
+import org.shedlang.compiler.parser.InvalidUnicodeScalar
+import org.shedlang.compiler.parser.InvalidUnicodeScalarLiteral
 import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
 import org.shedlang.compiler.parser.tryParsePrimaryExpression
 import org.shedlang.compiler.tests.isIdentifier
@@ -74,11 +74,11 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("\"\\u001B\"") },
             throws(allOf(
-                has(InvalidCodePoint::source, isStringSource(
+                has(InvalidUnicodeScalar::source, isStringSource(
                     contents = "\"\\u001B\"",
                     index = 3
                 )),
-                has(InvalidCodePoint::message, equalTo("Expected opening brace"))
+                has(InvalidUnicodeScalar::message, equalTo("Expected opening brace"))
             ))
         )
     }
@@ -88,11 +88,11 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("\"\\u{1B\"") },
             throws(allOf(
-                has(InvalidCodePoint::source, isStringSource(
+                has(InvalidUnicodeScalar::source, isStringSource(
                     contents = "\"\\u{1B\"",
                     index = 3
                 )),
-                has(InvalidCodePoint::message, equalTo("Could not find closing brace"))
+                has(InvalidUnicodeScalar::message, equalTo("Could not find closing brace"))
             ))
         )
     }
@@ -102,21 +102,21 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("  \"\\u001B\"") },
             throws(allOf(
-                has(InvalidCodePoint::source, isStringSource(
+                has(InvalidUnicodeScalar::source, isStringSource(
                     contents = "  \"\\u001B\"",
                     index = 5
                 )),
-                has(InvalidCodePoint::message, equalTo("Expected opening brace"))
+                has(InvalidUnicodeScalar::message, equalTo("Expected opening brace"))
             ))
         )
     }
 
     @TestFactory
-    fun canParseCodePointLiteral(): List<DynamicTest> {
+    fun canParseUnicodeScalarLiteral(): List<DynamicTest> {
         fun testCase(name: String, source: String, value: Int): DynamicTest {
             return DynamicTest.dynamicTest(name, {
                 val node = parsePrimaryExpression(source)
-                assertThat(node, cast(has(CodePointLiteralNode::value, equalTo(value))))
+                assertThat(node, cast(has(UnicodeScalarLiteralNode::value, equalTo(value))))
             })
         }
 
@@ -134,29 +134,29 @@ class ParsePrimaryExpressionTests {
     }
 
     @Test
-    fun whenUnicodeEscapeSequenceInCodePointIsMissingOpeningBraceThenErrorIsThrown() {
+    fun whenUnicodeEscapeSequenceInUnicodeScalarIsMissingOpeningBraceThenErrorIsThrown() {
         assertThat(
             { parsePrimaryExpression("'\\u001B'") },
             throws(allOf(
-                has(InvalidCodePoint::source, isStringSource(
+                has(InvalidUnicodeScalar::source, isStringSource(
                     contents = "'\\u001B'",
                     index = 3
                 )),
-                has(InvalidCodePoint::message, equalTo("Expected opening brace"))
+                has(InvalidUnicodeScalar::message, equalTo("Expected opening brace"))
             ))
         )
     }
 
     @Test
-    fun whenCodePointLiteralHasMultipleCodePointsThenErrorIsThrown() {
+    fun whenUnicodeScalarLiteralHasMultipleUnicodeScalarsThenErrorIsThrown() {
         assertThat(
             { parsePrimaryExpression("'ab'") },
             throws(allOf(
-                has(InvalidCodePointLiteral::source, isStringSource(
+                has(InvalidUnicodeScalarLiteral::source, isStringSource(
                     contents = "'ab'",
                     index = 0
                 )),
-                has(InvalidCodePointLiteral::message, equalTo("Code point literal has 2 code points"))
+                has(InvalidUnicodeScalarLiteral::message, equalTo("Unicode scalar literal has 2 Unicode scalars"))
             ))
         )
     }

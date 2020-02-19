@@ -27,7 +27,7 @@ import Lists from .Lists;
 import @(.list as list, .List as List) from Stdlib.Lists;
 import Sequences from .Sequences;
 import Unfold from .Sequences.Unfold;
-import CodePoints from .Strings.CodePoints;
+import UnicodeScalars from .Strings.UnicodeScalars;
 
 union JsonValue =
     | JsonObject {
@@ -81,11 +81,11 @@ val null = JsonNull();
 fun valueToText(value: JsonValue) -> String {
     when (value) {
         is JsonObject {
-            val properties = CodePoints.join(",", Lists.map(propertyToText, value.properties));
+            val properties = UnicodeScalars.join(",", Lists.map(propertyToText, value.properties));
             "{" + properties + "}"
         }
         is JsonArray {
-            val elements = CodePoints.join(",", Lists.map(valueToText, value.elements));
+            val elements = UnicodeScalars.join(",", Lists.map(valueToText, value.elements));
             "[" + elements +  "]"
         }
         is JsonNumber {
@@ -112,32 +112,32 @@ fun propertyToText(property: JsonProperty) -> String {
 }
 
 fun jsonStringToText(value: String) -> String {
-    val characters = CodePoints.flatMap(jsonStringCodePointToText, value);
+    val characters = UnicodeScalars.flatMap(jsonStringUnicodeScalarToText, value);
     "\"" + characters + "\""
 }
 
-fun jsonStringCodePointToText(codePoint: CodePoint) -> String {
-    if (codePoint == '\\') {
+fun jsonStringUnicodeScalarToText(unicodeScalar: UnicodeScalar) -> String {
+    if (unicodeScalar == '\\') {
         "\\\\"
-    } else if (codePoint == '\"') {
+    } else if (unicodeScalar == '\"') {
         "\\\""
-    } else if (codePoint == '\t') {
+    } else if (unicodeScalar == '\t') {
         "\\t"
-    } else if (codePoint == '\n') {
+    } else if (unicodeScalar == '\n') {
         "\\n"
-    } else if (codePoint == '\r') {
+    } else if (unicodeScalar == '\r') {
         "\\r"
-    } else if (codePoint < '\u{20}') {
-        val hexString = CodePoints.codePointToHexString(codePoint);
-        "\\u" + CodePoints.padLeft(4, '0', hexString)
+    } else if (unicodeScalar < '\u{20}') {
+        val hexString = UnicodeScalars.unicodeScalarToHexString(unicodeScalar);
+        "\\u" + UnicodeScalars.padLeft(4, '0', hexString)
     } else {
-        CodePoints.codePointToString(codePoint)
+        UnicodeScalars.unicodeScalarToString(unicodeScalar)
     }
 }
 
-fun stringTextToCodePoints(text: String) -> String {
+fun stringTextToUnicodeScalars(text: String) -> String {
     // TODO: handle escape sequences
-    CodePoints.substring(1, -1, text)
+    UnicodeScalars.substring(1, -1, text)
 }
 
 union JsonResult =
@@ -309,7 +309,7 @@ fun parseString(tokens: TokenIterator) -> ParseResult[JsonString] {
 }
 
 fun parseStringBody(tokens: TokenIterator) -> ParseResult[JsonString] {
-    success(tokens.tail(), string(stringTextToCodePoints(tokens.head.value)))
+    success(tokens.tail(), string(stringTextToUnicodeScalars(tokens.head.value)))
 }
 
 union Position = Start | ElementStart | ElementEnd;
@@ -437,18 +437,18 @@ fun token(tokenType: TokenType, value: String) -> Token {
 }
 
 fun nextToken(value: String) -> Token {
-    val maybeFirst = CodePoints.first(value);
+    val maybeFirst = UnicodeScalars.first(value);
     when (maybeFirst) {
         is Some {
             val first = maybeFirst.value;
-            if (first == 't' && CodePoints.startsWith("true", value)) {
+            if (first == 't' && UnicodeScalars.startsWith("true", value)) {
                 token(TokenTrue(), "true")
-            } else if (first == 'f' && CodePoints.startsWith("false", value)) {
+            } else if (first == 'f' && UnicodeScalars.startsWith("false", value)) {
                 token(TokenFalse(), "false")
-            } else if (first == 'n' && CodePoints.startsWith("null", value)) {
+            } else if (first == 'n' && UnicodeScalars.startsWith("null", value)) {
                 token(TokenNull(), "null")
             } else if (first == '"') {
-                val string = CodePoints.leftWhile(fun (codePoint: CodePoint) => codePoint != '"', CodePoints.dropLeft(1, value));
+                val string = UnicodeScalars.leftWhile(fun (unicodeScalar: UnicodeScalar) => unicodeScalar != '"', UnicodeScalars.dropLeft(1, value));
                 token(TokenString(), "\"" + string + "\"")
             } else if (first == '[') {
                 token(TokenOpenSquare(), "[")
@@ -463,10 +463,10 @@ fun nextToken(value: String) -> Token {
             } else if (first == ':') {
                 token(TokenColon(), ":")
             } else if (isWhitespace(first)) {
-                val whitespace = value |> CodePoints.leftWhile ~ (isWhitespace);
+                val whitespace = value |> UnicodeScalars.leftWhile ~ (isWhitespace);
                 token(TokenWhitespace(), whitespace)
             } else {
-                token(TokenUnexpected(), CodePoints.left(1, value))
+                token(TokenUnexpected(), UnicodeScalars.left(1, value))
             }
         }
         is None {
@@ -475,7 +475,7 @@ fun nextToken(value: String) -> Token {
     }
 }
 
-fun isWhitespace(value: CodePoint) -> Bool {
+fun isWhitespace(value: UnicodeScalar) -> Bool {
     value == ' ' || value == '\n' || value == '\r' || value == '\t'
 }
 
@@ -484,7 +484,7 @@ val tokenise = Unfold.unfold ~ (fun (value: String) -> Unfold.Next[Token, String
     if (token.tokenType is TokenEnd) {
         Unfold.end
     } else {
-        val remainder = CodePoints.dropLeft(CodePoints.count(token.value), value);
+        val remainder = UnicodeScalars.dropLeft(UnicodeScalars.count(token.value), value);
         Unfold.continue(token, remainder)
     }
 });

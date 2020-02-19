@@ -3,12 +3,12 @@ export testCases;
 import Lists from Stdlib.Lists;
 import @(.list as list) from Stdlib.Lists;
 import Matchers from Stdlib.Matchers;
-import CodePoints from Stdlib.Strings.CodePoints;
+import UnicodeScalars from Stdlib.Strings.UnicodeScalars;
 import Tests from Stdlib.Tests;
 
 fun countTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
     Tests.testCase(string, fun () {
-        val count = CodePoints.count(string);
+        val count = UnicodeScalars.count(string);
         Tests.assertThat(count, Matchers.isInt(expectedCount))
     })
 }
@@ -24,29 +24,29 @@ val countTestSuite = Tests.suite("count", list(
 
 val foldLeftTestSuite = Tests.suite("foldLeft", list(
     Tests.testCase("empty string produces initial value", fun () {
-        val result = CodePoints.foldLeft(fun (acc: Int, codePoint: CodePoint) => acc + 1, 0, "");
+        val result = UnicodeScalars.foldLeft(fun (acc: Int, unicodeScalar: UnicodeScalar) => acc + 1, 0, "");
         Tests.assertThat(result, Matchers.isInt(0))
     }),
 
     Tests.testCase("code points outside BMP are treated as single code point", fun () {
-        val result = CodePoints.foldLeft(fun (acc: Int, codePoint: CodePoint) => acc + 1, 0, "☃𝔼☃𝔼☃");
+        val result = UnicodeScalars.foldLeft(fun (acc: Int, unicodeScalar: UnicodeScalar) => acc + 1, 0, "☃𝔼☃𝔼☃");
         Tests.assertThat(result, Matchers.isInt(5))
     }),
 ));
 
 val joinTestSuite = Tests.suite("join", list(
     Tests.testCase("empty iterable is joined to empty string", fun () {
-        val result = CodePoints.join(", ", list());
+        val result = UnicodeScalars.join(", ", list());
         Tests.assertThat(result, Matchers.isString(""))
     }),
 
     Tests.testCase("singleton iterable is joined without separator", fun () {
-        val result = CodePoints.join(", ", list("apple"));
+        val result = UnicodeScalars.join(", ", list("apple"));
         Tests.assertThat(result, Matchers.isString("apple"))
     }),
 
     Tests.testCase("iterable with multiple values is joined with separator", fun () {
-        val result = CodePoints.join(", ", list("apple", "banana", "coconut"));
+        val result = UnicodeScalars.join(", ", list("apple", "banana", "coconut"));
         Tests.assertThat(result, Matchers.isString("apple, banana, coconut"))
     }),
 ));

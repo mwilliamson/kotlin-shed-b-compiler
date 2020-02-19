@@ -2,13 +2,13 @@ export parseInt;
 
 import Options from .Options;
 // TODO: Use Bytes instead
-import CodePoints from .Strings.CodePoints;
+import UnicodeScalars from .Strings.UnicodeScalars;
 
 fun parseInt(text: String) -> Option[Int] {
-    val first = CodePoints.first(text);
-    first |> Options.flatMap ~ (fun (codePoint: CodePoint) =>
-        if (codePoint == '-') {
-            parsePositiveInt(CodePoints.dropLeft(1, text))
+    val first = UnicodeScalars.first(text);
+    first |> Options.flatMap ~ (fun (unicodeScalar: UnicodeScalar) =>
+        if (unicodeScalar == '-') {
+            parsePositiveInt(UnicodeScalars.dropLeft(1, text))
                 |> Options.map ~ (fun (value: Int) => -value)
         } else {
             parsePositiveInt(text)
@@ -17,15 +17,15 @@ fun parseInt(text: String) -> Option[Int] {
 }
 
 fun parsePositiveInt(text: String) -> Option[Int] {
-    if (CodePoints.isEmpty(text)) {
+    if (UnicodeScalars.isEmpty(text)) {
         none
     } else {
-        CodePoints.foldLeft(
-            fun (acc: Option[Int], codePoint: CodePoint) -> Option[Int] {
+        UnicodeScalars.foldLeft(
+            fun (acc: Option[Int], unicodeScalar: UnicodeScalar) -> Option[Int] {
                 Options.flatMap(
                     fun (acc: Int) -> Option[Int] {
-                        if (codePoint >= '0' && codePoint <= '9') {
-                            val digit = CodePoints.codePointToInt(codePoint) - CodePoints.codePointToInt('0');
+                        if (unicodeScalar >= '0' && unicodeScalar <= '9') {
+                            val digit = UnicodeScalars.unicodeScalarToInt(unicodeScalar) - UnicodeScalars.unicodeScalarToInt('0');
                             some(acc * 10 + digit)
                         } else {
                             none

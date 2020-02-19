@@ -1,7 +1,7 @@
 export
-    codePointToHexString,
-    codePointToInt,
-    codePointToString,
+    unicodeScalarToHexString,
+    unicodeScalarToInt,
+    unicodeScalarToString,
     count,
     first,
     flatMap,
@@ -25,45 +25,45 @@ import Predicates from Stdlib.Predicates;
 import Repeat from Stdlib.Repeat;
 import Sequences from Stdlib.Sequences;
 
-val codePointToHexString = Strings.codePointToHexString;
-val codePointToInt = Strings.codePointToInt;
-val codePointToString = Strings.codePointToString;
-val count = Strings.codePointCount;
+val unicodeScalarToHexString = Strings.unicodeScalarToHexString;
+val unicodeScalarToInt = Strings.unicodeScalarToInt;
+val unicodeScalarToString = Strings.unicodeScalarToString;
+val count = Strings.unicodeScalarCount;
 val replace = Strings.replace;
 val substring = Strings.substring;
 
-fun stringToSequence(value: String) -> Sequences.Sequence[CodePoint, Pure] {
+fun stringToSequence(value: String) -> Sequences.Sequence[UnicodeScalar, Pure] {
     stringSliceToSequence(Strings.slice(value))
 }
 
-fun stringSliceToSequence(value: StringSlice) -> Sequences.Sequence[CodePoint, Pure] {
-    Sequences.pure[CodePoint](fun () {
+fun stringSliceToSequence(value: StringSlice) -> Sequences.Sequence[UnicodeScalar, Pure] {
+    Sequences.pure[UnicodeScalar](fun () {
         val next = Strings.next(value);
         when (next) {
             is None {
                 Sequences.end
             }
             is Some {
-                val #(codePoint, rest) = next.value;
-                Sequences.item(codePoint, stringSliceToSequence(rest))
+                val #(unicodeScalar, rest) = next.value;
+                Sequences.item(unicodeScalar, stringSliceToSequence(rest))
             }
         }
     })
 }
 
 fun dropLeft(toDrop: Int, value: String) -> String {
-    Strings.dropLeftCodePoints(
+    Strings.dropLeftUnicodeScalars(
         toDrop,
         value,
     )
 }
 
-fun first(value: String) -> Option[CodePoint] {
+fun first(value: String) -> Option[UnicodeScalar] {
     val next = Strings.next(Strings.slice(value));
     when (next) {
         is Some {
-            val #(codePoint, rest) = next.value;
-            some(codePoint)
+            val #(unicodeScalar, rest) = next.value;
+            some(unicodeScalar)
         }
         is None {
             none
@@ -71,15 +71,15 @@ fun first(value: String) -> Option[CodePoint] {
     }
 }
 
-fun flatMap(func: Fun (CodePoint) -> String, value: String) -> String {
+fun flatMap(func: Fun (UnicodeScalar) -> String, value: String) -> String {
     foldLeft(
-        fun (acc: String, codePoint: CodePoint) => acc + func(codePoint),
+        fun (acc: String, unicodeScalar: UnicodeScalar) => acc + func(unicodeScalar),
         "",
         value,
     )
 }
 
-fun foldLeft[T](func: Fun (T, CodePoint) -> T, initial: T, value: String) -> T {
+fun foldLeft[T](func: Fun (T, UnicodeScalar) -> T, initial: T, value: String) -> T {
     Sequences.foldLeft(
         func,
         initial,
@@ -109,7 +109,7 @@ fun left(count: Int, value: String) -> String {
     Strings.substring(0, count, value)
 }
 
-fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {
+fun leftWhile(predicate: Fun (UnicodeScalar) -> Bool, value: String) -> String {
     val index = Sequences.findIndex(Predicates.negate(predicate), stringToSequence(value));
     when (index) {
         is None {
@@ -121,8 +121,8 @@ fun leftWhile(predicate: Fun (CodePoint) -> Bool, value: String) -> String {
     }
 }
 
-fun padLeft(desiredLength: Int, padding: CodePoint, string: String) -> String {
-    repeat(codePointToString(padding), desiredLength - count(string)) + string
+fun padLeft(desiredLength: Int, padding: UnicodeScalar, string: String) -> String {
+    repeat(unicodeScalarToString(padding), desiredLength - count(string)) + string
 }
 
 fun repeat(value: String, times: Int) -> String {

@@ -7,7 +7,7 @@ import JsonTests from .JsonTests;
 import MatchersTests from .MatchersTests;
 import OptionsTests from .OptionsTests;
 import PlatformStringsTests from .Platform.StringsTests;
-import CodePointsTests from .Strings.CodePointsTests;
+import UnicodeScalarsTests from .Strings.UnicodeScalarsTests;
 import StringsTests from .StringsTests;
 
 fun main() !Io -> Int {
@@ -15,7 +15,7 @@ fun main() !Io -> Int {
         Lists.list(
             JsonTests.testCases,
             OptionsTests.testCases,
-            CodePointsTests.testCases,
+            UnicodeScalarsTests.testCases,
             PlatformStringsTests.testCases,
             StringsTests.testCases,
         ),

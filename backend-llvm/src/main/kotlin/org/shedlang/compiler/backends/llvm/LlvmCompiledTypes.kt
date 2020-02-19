@@ -3,7 +3,7 @@ package org.shedlang.compiler.backends.llvm
 internal val compiledValueType = LlvmTypes.i64
 internal val compiledValueTypeSize = 8
 internal val compiledBoolType = compiledValueType
-internal val compiledCodePointType = compiledValueType
+internal val compiledUnicodeScalarType = compiledValueType
 internal val compiledIntType = compiledValueType
 internal val compiledTagValueType = compiledValueType
 

@@ -714,7 +714,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             )
         }
 
-        override fun visit(node: CodePointLiteralNode): GeneratedExpression {
+        override fun visit(node: UnicodeScalarLiteralNode): GeneratedExpression {
             val value = Character.toChars(node.value).joinToString()
             return GeneratedExpression.pure(
                 PythonStringLiteralNode(value, NodeSource(node))

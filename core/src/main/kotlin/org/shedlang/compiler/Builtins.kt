@@ -20,7 +20,7 @@ val builtins = listOf(
     builtinType("Int", IntType),
     builtinType("String", StringType),
     builtinType("StringSlice", StringSliceType),
-    builtinType("CodePoint", CodePointType),
+    builtinType("UnicodeScalar", UnicodeScalarType),
     builtinType("Bool", BoolType),
     builtinType("Symbol", AnySymbolType),
     builtinType("ShapeField", ShapeFieldTypeFunction),

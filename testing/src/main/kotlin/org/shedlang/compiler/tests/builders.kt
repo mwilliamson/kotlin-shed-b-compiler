@@ -175,7 +175,7 @@ fun literalBool(
 ) = BooleanLiteralNode(value, source = source)
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value.toBigInteger(), anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
-fun literalCodePoint(value: Char = '!') = CodePointLiteralNode(value.toInt(), anySource())
+fun literalUnicodeScalar(value: Char = '!') = UnicodeScalarLiteralNode(value.toInt(), anySource())
 fun symbolName(name: String) = SymbolNode(name, anySource())
 fun tupleNode(elements: List<ExpressionNode>) = TupleNode(elements, anySource())
 fun variableReference(name: String) = ReferenceNode(Identifier(name), anySource())

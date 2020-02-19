@@ -26,7 +26,7 @@ private val environment = object: StackIrExecutionEnvironment {
     private fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrValue {
         return when (interpreterValue) {
             is InterpreterBool -> IrBool(interpreterValue.value)
-            is InterpreterCodePoint -> IrCodePoint(interpreterValue.value)
+            is InterpreterUnicodeScalar -> IrUnicodeScalar(interpreterValue.value)
             is InterpreterInt -> IrInt(interpreterValue.value)
             is InterpreterString -> IrString(interpreterValue.value)
             is InterpreterSymbol -> IrSymbol(interpreterValue.value)

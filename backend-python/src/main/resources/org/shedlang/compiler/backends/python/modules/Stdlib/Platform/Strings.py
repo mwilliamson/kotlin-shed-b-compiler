@@ -3,23 +3,23 @@ import io
 from .. import Options
 
 
-def code_point_to_hex_string(char):
+def unicode_scalar_to_hex_string(char):
     return format(ord(char), "X")
 
 
-def code_point_to_int(char):
+def unicode_scalar_to_int(char):
     return ord(char)
 
 
-def code_point_to_string(char):
+def unicode_scalar_to_string(char):
     return char
 
 
-def code_point_count(string):
+def unicode_scalar_count(string):
     return len(string)
 
 
-def drop_left_code_points(count, string):
+def drop_left_unicode_scalars(count, string):
     return string[count:]
 
 

@@ -193,28 +193,28 @@ internal class Compiler(
                 return context4.addInstructions(callInstructions).pushTemporary(result)
             }
 
-            is CodePointEquals -> {
-                return compileCodePointComparison(LlvmIcmp.ConditionCode.EQ, context = context)
+            is UnicodeScalarEquals -> {
+                return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.EQ, context = context)
             }
 
-            is CodePointNotEqual -> {
-                return compileCodePointComparison(LlvmIcmp.ConditionCode.NE, context = context)
+            is UnicodeScalarNotEqual -> {
+                return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.NE, context = context)
             }
 
-            is CodePointGreaterThanOrEqual -> {
-                return compileCodePointComparison(LlvmIcmp.ConditionCode.UGE, context = context)
+            is UnicodeScalarGreaterThanOrEqual -> {
+                return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.UGE, context = context)
             }
 
-            is CodePointGreaterThan -> {
-                return compileCodePointComparison(LlvmIcmp.ConditionCode.UGT, context = context)
+            is UnicodeScalarGreaterThan -> {
+                return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.UGT, context = context)
             }
 
-            is CodePointLessThanOrEqual -> {
-                return compileCodePointComparison(LlvmIcmp.ConditionCode.ULE, context = context)
+            is UnicodeScalarLessThanOrEqual -> {
+                return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.ULE, context = context)
             }
 
-            is CodePointLessThan -> {
-                return compileCodePointComparison(LlvmIcmp.ConditionCode.ULT, context = context)
+            is UnicodeScalarLessThan -> {
+                return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.ULT, context = context)
             }
 
             is DeclareFunction -> {
@@ -611,14 +611,14 @@ internal class Compiler(
         )
     }
 
-    private fun compileCodePointComparison(
+    private fun compileUnicodeScalarComparison(
         conditionCode: LlvmIcmp.ConditionCode,
         context: FunctionContext
     ): FunctionContext {
         return compileComparisonOperation(
             conditionCode = conditionCode,
             context = context,
-            operandType = compiledCodePointType
+            operandType = compiledUnicodeScalarType
         )
     }
 
@@ -875,7 +875,7 @@ internal class Compiler(
             is IrBool ->
                 listOf<LlvmTopLevelEntity>() to LlvmOperandInt(if (value.value) 1 else 0)
 
-            is IrCodePoint ->
+            is IrUnicodeScalar ->
                 listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value)
 
             is IrInt ->

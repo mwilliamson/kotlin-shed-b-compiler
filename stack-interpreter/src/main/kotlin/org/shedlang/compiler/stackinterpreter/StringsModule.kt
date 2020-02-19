@@ -11,32 +11,32 @@ internal val stringsModule = createNativeModule(
         optionsModuleName
     ),
     fields = listOf(
-        Identifier("codePointCount") to InterpreterBuiltinFunction { state, arguments ->
+        Identifier("unicodeScalarCount") to InterpreterBuiltinFunction { state, arguments ->
             val string = (arguments[0] as InterpreterString).value
             state.pushTemporary(InterpreterInt(string.codePointCount(0, string.length).toBigInteger()))
         },
 
-        Identifier("codePointToHexString") to InterpreterBuiltinFunction { state, arguments ->
-            val codePoint = (arguments[0] as InterpreterCodePoint).value
-            state.pushTemporary(InterpreterString(codePoint.toString(16).toUpperCase()))
+        Identifier("unicodeScalarToHexString") to InterpreterBuiltinFunction { state, arguments ->
+            val unicodeScalar = (arguments[0] as InterpreterUnicodeScalar).value
+            state.pushTemporary(InterpreterString(unicodeScalar.toString(16).toUpperCase()))
         },
 
-        Identifier("codePointToInt") to InterpreterBuiltinFunction { state, arguments ->
-            val codePoint = (arguments[0] as InterpreterCodePoint).value
-            state.pushTemporary(InterpreterInt(codePoint.toBigInteger()))
+        Identifier("unicodeScalarToInt") to InterpreterBuiltinFunction { state, arguments ->
+            val unicodeScalar = (arguments[0] as InterpreterUnicodeScalar).value
+            state.pushTemporary(InterpreterInt(unicodeScalar.toBigInteger()))
         },
 
-        Identifier("codePointToString") to InterpreterBuiltinFunction { state, arguments ->
-            val codePoint = (arguments[0] as InterpreterCodePoint).value
+        Identifier("unicodeScalarToString") to InterpreterBuiltinFunction { state, arguments ->
+            val unicodeScalar = (arguments[0] as InterpreterUnicodeScalar).value
             val builder = StringBuilder()
-            builder.appendCodePoint(codePoint)
+            builder.appendCodePoint(unicodeScalar)
             state.pushTemporary(InterpreterString(builder.toString()))
         },
 
-        Identifier("dropLeftCodePoints") to InterpreterBuiltinFunction { state, arguments ->
+        Identifier("dropLeftUnicodeScalars") to InterpreterBuiltinFunction { state, arguments ->
             val count = (arguments[0] as InterpreterInt).value
             val string = (arguments[1] as InterpreterString).value
-            val result = string.substring(indexAtCodePointCount(string, count))
+            val result = string.substring(indexAtUnicodeScalarCount(string, count))
             state.pushTemporary(InterpreterString(result))
         },
 
@@ -44,8 +44,8 @@ internal val stringsModule = createNativeModule(
             val stringSlice = arguments[0] as InterpreterStringSlice
             val optionsModule = state.loadModule(optionsModuleName)
             if (stringSlice.startIndex < stringSlice.endIndex) {
-                val codePoint = stringSlice.string.codePointAt(stringSlice.startIndex)
-                val size = if (codePoint > 0xffff) 2 else 1
+                val unicodeScalar = stringSlice.string.codePointAt(stringSlice.startIndex)
+                val size = if (unicodeScalar > 0xffff) 2 else 1
                 val rest = InterpreterStringSlice(
                     stringSlice.string,
                     stringSlice.startIndex + size,
@@ -55,7 +55,7 @@ internal val stringsModule = createNativeModule(
                     state = state,
                     receiver = optionsModule.field(Identifier("some")),
                     positionalArguments = listOf(InterpreterTuple(listOf(
-                        InterpreterCodePoint(codePoint),
+                        InterpreterUnicodeScalar(unicodeScalar),
                         rest
                     ))),
                     namedArguments = mapOf()
@@ -83,8 +83,8 @@ internal val stringsModule = createNativeModule(
             val endCount = (arguments[1] as InterpreterInt).value
             val string = (arguments[2] as InterpreterString).value
             // TODO: handle bounds
-            val startIndex = indexAtCodePointCount(string, startCount)
-            val endIndex = indexAtCodePointCount(string, endCount)
+            val startIndex = indexAtUnicodeScalarCount(string, startCount)
+            val endIndex = indexAtUnicodeScalarCount(string, endCount)
             val result = if (startIndex < endIndex) {
                 string.substring(startIndex, endIndex)
             } else {
@@ -96,7 +96,7 @@ internal val stringsModule = createNativeModule(
 )
 
 
-fun indexAtCodePointCount(string: String, countBigInt: BigInteger): Int {
+fun indexAtUnicodeScalarCount(string: String, countBigInt: BigInteger): Int {
     val count = countBigInt.intValueExact()
     return if (count >= 0) {
         try {

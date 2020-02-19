@@ -32,7 +32,7 @@ internal object InterpreterUnit: InterpreterValue()
 
 internal data class InterpreterBool(val value: Boolean): InterpreterValue()
 
-internal data class InterpreterCodePoint(val value: Int): InterpreterValue()
+internal data class InterpreterUnicodeScalar(val value: Int): InterpreterValue()
 
 internal data class InterpreterInt(val value: BigInteger): InterpreterValue()
 
@@ -95,7 +95,7 @@ internal class InterpreterModule(
 private fun irValueToInterpreterValue(value: IrValue): InterpreterValue {
     return when (value) {
         is IrBool -> InterpreterBool(value.value)
-        is IrCodePoint -> InterpreterCodePoint(value.value)
+        is IrUnicodeScalar -> InterpreterUnicodeScalar(value.value)
         is IrInt -> InterpreterInt(value.value)
         is IrString -> InterpreterString(value.value)
         is IrSymbol -> InterpreterSymbol(value.value)
@@ -409,38 +409,38 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )).nextInstruction()
         }
 
-        is CodePointEquals -> {
-            runBinaryCodePointOperation(initialState) { left, right ->
+        is UnicodeScalarEquals -> {
+            runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left == right)
             }
         }
 
-        is CodePointNotEqual -> {
-            runBinaryCodePointOperation(initialState) { left, right ->
+        is UnicodeScalarNotEqual -> {
+            runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left != right)
             }
         }
 
-        is CodePointLessThan -> {
-            runBinaryCodePointOperation(initialState) { left, right ->
+        is UnicodeScalarLessThan -> {
+            runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left < right)
             }
         }
 
-        is CodePointLessThanOrEqual -> {
-            runBinaryCodePointOperation(initialState) { left, right ->
+        is UnicodeScalarLessThanOrEqual -> {
+            runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left <= right)
             }
         }
 
-        is CodePointGreaterThan -> {
-            runBinaryCodePointOperation(initialState) { left, right ->
+        is UnicodeScalarGreaterThan -> {
+            runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left > right)
             }
         }
 
-        is CodePointGreaterThanOrEqual -> {
-            runBinaryCodePointOperation(initialState) { left, right ->
+        is UnicodeScalarGreaterThanOrEqual -> {
+            runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left >= right)
             }
         }
@@ -691,13 +691,13 @@ private fun runBinaryBoolOperation(
     return state3.pushTemporary(result).nextInstruction()
 }
 
-private fun runBinaryCodePointOperation(
+private fun runBinaryUnicodeScalarOperation(
     initialState: InterpreterState,
     func: (left: Int, right: Int) -> InterpreterValue
 ): InterpreterState {
     val (state2, right) = initialState.popTemporary()
     val (state3, left) = state2.popTemporary()
-    val result = func((left as InterpreterCodePoint).value, (right as InterpreterCodePoint).value)
+    val result = func((left as InterpreterUnicodeScalar).value, (right as InterpreterUnicodeScalar).value)
     return state3.pushTemporary(result).nextInstruction()
 }
 

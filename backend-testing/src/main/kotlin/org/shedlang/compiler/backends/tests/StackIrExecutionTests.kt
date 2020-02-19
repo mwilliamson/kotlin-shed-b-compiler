@@ -40,12 +40,12 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
-    fun codePointLiteralIsEvaluatedToCodePoint() {
-        val node = literalCodePoint('X')
+    fun unicodeScalarLiteralIsEvaluatedToUnicodeScalar() {
+        val node = literalUnicodeScalar('X')
 
-        val value = evaluateExpression(node, type = CodePointType)
+        val value = evaluateExpression(node, type = UnicodeScalarType)
 
-        assertThat(value, isCodePoint('X'.toInt()))
+        assertThat(value, isUnicodeScalar('X'.toInt()))
     }
 
     @Test
@@ -191,50 +191,50 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
-    fun codePointOperandsAreEqualIfAndOnlyIfCodePointEqualityEvaluatesToTrue() {
-        assertCodePointBinaryOperation(BinaryOperator.EQUALS, 'X', 'X', isBool(true))
-        assertCodePointBinaryOperation(BinaryOperator.EQUALS, 'X', 'Y', isBool(false))
+    fun unicodeScalarOperandsAreEqualIfAndOnlyIfUnicodeScalarEqualityEvaluatesToTrue() {
+        assertUnicodeScalarBinaryOperation(BinaryOperator.EQUALS, 'X', 'X', isBool(true))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.EQUALS, 'X', 'Y', isBool(false))
     }
 
     @Test
-    fun codePointOperandsAreNotEqualIfAndOnlyIfCodePointEqualityEvaluatesToFalse() {
-        assertCodePointBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'X', isBool(false))
-        assertCodePointBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'Y', isBool(true))
+    fun unicodeScalarOperandsAreNotEqualIfAndOnlyIfUnicodeScalarEqualityEvaluatesToFalse() {
+        assertUnicodeScalarBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'X', isBool(false))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.NOT_EQUAL, 'X', 'Y', isBool(true))
     }
 
     @Test
-    fun leftCodePointOperandIsLessThanRightOperandIfAndOnlyIfCodePointLessThanOperatorEvaluatesToFalse() {
-        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'X', 'Y', isBool(true))
-        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'Y', 'Y', isBool(false))
-        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN, 'Z', 'Y', isBool(false))
+    fun leftUnicodeScalarOperandIsLessThanRightOperandIfAndOnlyIfUnicodeScalarLessThanOperatorEvaluatesToFalse() {
+        assertUnicodeScalarBinaryOperation(BinaryOperator.LESS_THAN, 'X', 'Y', isBool(true))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.LESS_THAN, 'Y', 'Y', isBool(false))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.LESS_THAN, 'Z', 'Y', isBool(false))
     }
 
     @Test
-    fun leftCodePointOperandIsLessThanOrEqualRightOperandIfAndOnlyIfCodePointLessThanOrEqualOperatorEvaluatesToFalse() {
-        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'X', 'Y', isBool(true))
-        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
-        assertCodePointBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Z', 'Y', isBool(false))
+    fun leftUnicodeScalarOperandIsLessThanOrEqualRightOperandIfAndOnlyIfUnicodeScalarLessThanOrEqualOperatorEvaluatesToFalse() {
+        assertUnicodeScalarBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'X', 'Y', isBool(true))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 'Z', 'Y', isBool(false))
     }
 
     @Test
-    fun leftCodePointOperandIsGreaterThanRightOperandIfAndOnlyIfCodePointGreaterThanOperatorEvaluatesToFalse() {
-        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN, 'X', 'Y', isBool(false))
-        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN, 'Y', 'Y', isBool(false))
-        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN, 'Z', 'Y', isBool(true))
+    fun leftUnicodeScalarOperandIsGreaterThanRightOperandIfAndOnlyIfUnicodeScalarGreaterThanOperatorEvaluatesToFalse() {
+        assertUnicodeScalarBinaryOperation(BinaryOperator.GREATER_THAN, 'X', 'Y', isBool(false))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.GREATER_THAN, 'Y', 'Y', isBool(false))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.GREATER_THAN, 'Z', 'Y', isBool(true))
     }
 
     @Test
-    fun leftCodePointOperandIsGreaterThanOrEqualRightOperandIfAndOnlyIfCodePointGreaterThanOrEqualOperatorEvaluatesToFalse() {
-        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'X', 'Y', isBool(false))
-        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
-        assertCodePointBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'Z', 'Y', isBool(true))
+    fun leftUnicodeScalarOperandIsGreaterThanOrEqualRightOperandIfAndOnlyIfUnicodeScalarGreaterThanOrEqualOperatorEvaluatesToFalse() {
+        assertUnicodeScalarBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'X', 'Y', isBool(false))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'Y', 'Y', isBool(true))
+        assertUnicodeScalarBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 'Z', 'Y', isBool(true))
     }
 
-    private fun assertCodePointBinaryOperation(operator: BinaryOperator, left: Char, right: Char, expected: Matcher<IrValue>) {
-        val left = literalCodePoint(left)
-        val node = binaryOperation(operator, left, literalCodePoint(right))
+    private fun assertUnicodeScalarBinaryOperation(operator: BinaryOperator, left: Char, right: Char, expected: Matcher<IrValue>) {
+        val left = literalUnicodeScalar(left)
+        val node = binaryOperation(operator, left, literalUnicodeScalar(right))
         val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to CodePointType)
+            expressionTypes = mapOf(left.nodeId to UnicodeScalarType)
         )
 
         val value = evaluateExpression(node, type = BoolType, types = types)
@@ -1277,8 +1277,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         return cast(has(IrBool::value, equalTo(expected)))
     }
 
-    private fun isCodePoint(expected: Int): Matcher<IrValue> {
-        return cast(has(IrCodePoint::value, equalTo(expected)))
+    private fun isUnicodeScalar(expected: Int): Matcher<IrValue> {
+        return cast(has(IrUnicodeScalar::value, equalTo(expected)))
     }
 
     private fun isInt(expected: Int): Matcher<IrValue> {

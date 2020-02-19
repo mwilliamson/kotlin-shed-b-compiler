@@ -7,7 +7,7 @@ import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
 
-internal open class InvalidCodePoint(
+internal open class InvalidUnicodeScalar(
     source: Source,
     message: String
 ) : SourceError(message, source = source)
@@ -15,12 +15,12 @@ internal open class InvalidCodePoint(
 internal class UnrecognisedEscapeSequenceError(
     val escapeSequence: String,
     source: Source
-) : InvalidCodePoint(
+) : InvalidUnicodeScalar(
     source = source,
     message = "Unrecognised escape sequence"
 )
 
-internal class InvalidCodePointLiteral(message: String, source: Source) : SourceError(
+internal class InvalidUnicodeScalarLiteral(message: String, source: Source) : SourceError(
     message = message,
     source = source
 )
@@ -1139,17 +1139,17 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
         }
         TokenType.STRING -> {
             val token = tokens.next()
-            val value = decodeCodePointToken(token.value, source = source)
+            val value = decodeUnicodeScalarToken(token.value, source = source)
             return StringLiteralNode(value, source)
         }
         TokenType.CODE_POINT -> {
             val token = tokens.next()
-            val stringValue = decodeCodePointToken(token.value, source = source)
+            val stringValue = decodeUnicodeScalarToken(token.value, source = source)
             if (stringValue.codePointCount(0, stringValue.length) == 1) {
                 val value = stringValue.codePointAt(0)
-                return CodePointLiteralNode(value, source)
+                return UnicodeScalarLiteralNode(value, source)
             } else {
-                throw InvalidCodePointLiteral("Code point literal has ${stringValue.length} code points", source = source)
+                throw InvalidUnicodeScalarLiteral("Unicode scalar literal has ${stringValue.length} Unicode scalars", source = source)
             }
         }
         TokenType.SYMBOL_OPEN_PAREN -> {
@@ -1228,7 +1228,7 @@ private fun parseSymbolName(source: StringSource, tokens: TokenIterator<TokenTyp
     return SymbolNode(name, source)
 }
 
-private fun decodeCodePointToken(value: String, source: StringSource): String {
+private fun decodeUnicodeScalarToken(value: String, source: StringSource): String {
     return decodeEscapeSequence(value.substring(1, value.length - 1), source = source)
 }
 
@@ -1247,7 +1247,7 @@ private fun decodeEscapeSequence(value: CharBuffer, source: StringSource): Strin
         val code = matcher.group(1)
         if (code == "u") {
             if (value[matcher.end()] != '{') {
-                throw InvalidCodePoint(
+                throw InvalidUnicodeScalar(
                     source = source.at(matcher.end() + 1),
                     message = "Expected opening brace"
                 )
@@ -1255,14 +1255,14 @@ private fun decodeEscapeSequence(value: CharBuffer, source: StringSource): Strin
             val startIndex = matcher.end() + 1
             val endIndex = value.indexOf("}", startIndex = startIndex)
             if (endIndex == -1) {
-                throw InvalidCodePoint(
+                throw InvalidUnicodeScalar(
                     source = source.at(matcher.end() + 1),
                     message = "Could not find closing brace"
                 )
             }
             val hex = value.subSequence(startIndex, endIndex).toString()
-            val codePoint = hex.toInt(16)
-            decoded.appendCodePoint(codePoint)
+            val unicodeScalar = hex.toInt(16)
+            decoded.appendCodePoint(unicodeScalar)
             lastIndex = endIndex + 1
         } else {
             decoded.append(escapeSequence(code, source = source))

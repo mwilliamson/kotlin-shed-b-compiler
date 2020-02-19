@@ -29,8 +29,8 @@ private val environment = object: StackIrExecutionEnvironment {
                     else -> throw UnsupportedOperationException()
                 }
 
-            CodePointType ->
-                IrCodePoint(stdout.toInt())
+            UnicodeScalarType ->
+                IrUnicodeScalar(stdout.toInt())
 
             IntType ->
                 IrInt(stdout.toBigInteger())
@@ -141,8 +141,8 @@ class StackValueToLlvmOperandTests {
     }
 
     @Test
-    fun codePointIsCompiledToImmediateIntegerOperand() {
-        val operand = stackValueToLlvmOperand(IrCodePoint(42))
+    fun unicodeScalarIsCompiledToImmediateIntegerOperand() {
+        val operand = stackValueToLlvmOperand(IrUnicodeScalar(42))
 
         assertThat(operand, isPair(isSequence(), isLlvmOperandInt(42)))
     }

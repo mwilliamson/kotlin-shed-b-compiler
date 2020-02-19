@@ -104,8 +104,8 @@ class Loader(
                 return persistentListOf(push)
             }
 
-            override fun visit(node: CodePointLiteralNode): PersistentList<Instruction> {
-                val push = PushValue(IrCodePoint(node.value))
+            override fun visit(node: UnicodeScalarLiteralNode): PersistentList<Instruction> {
+                val push = PushValue(IrUnicodeScalar(node.value))
                 return persistentListOf(push)
             }
 
@@ -163,30 +163,30 @@ class Loader(
                     BinaryOperator.MULTIPLY -> IntMultiply
                     BinaryOperator.EQUALS -> when (types.typeOfExpression(node.left)) {
                         BoolType -> BoolEquals
-                        CodePointType -> CodePointEquals
+                        UnicodeScalarType -> UnicodeScalarEquals
                         IntType -> IntEquals
                         StringType -> StringEquals
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.GREATER_THAN -> when (types.typeOfExpression(node.left)) {
-                        CodePointType -> CodePointGreaterThan
+                        UnicodeScalarType -> UnicodeScalarGreaterThan
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.GREATER_THAN_OR_EQUAL -> when (types.typeOfExpression(node.left)) {
-                        CodePointType -> CodePointGreaterThanOrEqual
+                        UnicodeScalarType -> UnicodeScalarGreaterThanOrEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.LESS_THAN -> when (types.typeOfExpression(node.left)) {
-                        CodePointType -> CodePointLessThan
+                        UnicodeScalarType -> UnicodeScalarLessThan
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.LESS_THAN_OR_EQUAL -> when (types.typeOfExpression(node.left)) {
-                        CodePointType -> CodePointLessThanOrEqual
+                        UnicodeScalarType -> UnicodeScalarLessThanOrEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.NOT_EQUAL -> when (types.typeOfExpression(node.left)) {
                         BoolType -> BoolNotEqual
-                        CodePointType -> CodePointNotEqual
+                        UnicodeScalarType -> UnicodeScalarNotEqual
                         IntType -> IntNotEqual
                         StringType -> StringNotEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
