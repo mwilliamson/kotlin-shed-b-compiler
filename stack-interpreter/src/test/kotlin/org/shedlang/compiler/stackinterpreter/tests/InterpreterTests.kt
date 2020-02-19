@@ -2,7 +2,6 @@ package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
 import kotlinx.collections.immutable.persistentListOf
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
@@ -219,34 +218,6 @@ class InterpreterTests: StackIrExecutionTests(environment) {
         )
 
         assertThat(value, isInt(42))
-    }
-
-    @Test
-    fun moduleNameIsDefinedInEachModule() {
-        val moduleName = listOf(Identifier("One"), Identifier("Two"), Identifier("Three"))
-        val moduleNameReference = export("moduleName")
-        val references = ResolvedReferencesMap(mapOf(
-            moduleNameReference.nodeId to Builtins.moduleName
-        ))
-        val module = stubbedModule(
-            name = moduleName,
-            node = module(
-                exports = listOf(moduleNameReference)
-            ),
-            references = references
-        )
-
-        val image = loadModuleSet(ModuleSet(listOf(module)))
-        val value = executeInstructions(
-            persistentListOf(
-                ModuleInit(moduleName),
-                ModuleLoad(moduleName),
-                FieldAccess(Identifier("moduleName"), receiverType = null)
-            ),
-            image = image
-        )
-
-        assertThat(value, isString("One.Two.Three"))
     }
 
     private fun stubbedModule(

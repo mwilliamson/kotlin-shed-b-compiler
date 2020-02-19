@@ -1355,6 +1355,37 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         }
     }
 
+    @Test
+    fun moduleNameIsDefinedInEachModule() {
+        val moduleName = listOf(Identifier("One"), Identifier("Two"), Identifier("Three"))
+        val moduleNameReference = export("moduleName")
+        val references = ResolvedReferencesMap(mapOf(
+            moduleNameReference.nodeId to Builtins.moduleName
+        ))
+        val moduleType = ModuleType(fields = mapOf(Identifier("moduleName") to StringType))
+        val module = stubbedModule(
+            name = moduleName,
+            node = module(
+                exports = listOf(moduleNameReference)
+            ),
+            type = moduleType,
+            references = references
+        )
+
+        val moduleSet = ModuleSet(listOf(module))
+        val value = executeInstructions(
+            persistentListOf(
+                ModuleInit(moduleName),
+                ModuleLoad(moduleName),
+                FieldAccess(Identifier("moduleName"), receiverType = moduleType)
+            ),
+            type = StringType,
+            moduleSet = moduleSet
+        )
+
+        assertThat(value, isString("One.Two.Three"))
+    }
+
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
         val instructions = loader(types = types).loadExpression(node)
         return executeInstructions(instructions, type = type)
