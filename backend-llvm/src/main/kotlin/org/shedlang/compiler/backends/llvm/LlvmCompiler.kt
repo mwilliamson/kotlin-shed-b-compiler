@@ -13,7 +13,6 @@ import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
-import java.nio.file.Path
 
 internal class Compiler(
     private val image: Image,
@@ -34,7 +33,7 @@ internal class Compiler(
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
-    fun compile(target: Path, mainModule: ModuleName) {
+    fun compile(mainModule: ModuleName): String {
         val defineMainModule = moduleDefinition(mainModule)
 
         val mainModuleVariable = LlvmOperandLocal("mainModule")
@@ -71,11 +70,7 @@ internal class Compiler(
             ).flatten()
         )
 
-        val source = serialiseProgram(module)
-
-        println(withLineNumbers(source))
-
-        target.toFile().writeText(source)
+        return serialiseProgram(module)
     }
 
     private fun defineModule(moduleName: ModuleName): List<LlvmTopLevelEntity> {

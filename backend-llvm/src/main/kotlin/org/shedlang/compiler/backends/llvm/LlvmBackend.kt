@@ -15,10 +15,10 @@ object LlvmBackend : Backend {
             val llPath = file.resolve("main.ll")
             val objectPath = file.resolve("main.o")
             val compiler = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
-            compiler.compile(
-                target = llPath.toPath(),
+            val llSource = compiler.compile(
                 mainModule = mainModule
             )
+            llPath.writeText(llSource)
             run(listOf(
                 "llc", llPath.toString(),
                 "-filetype", "obj",
