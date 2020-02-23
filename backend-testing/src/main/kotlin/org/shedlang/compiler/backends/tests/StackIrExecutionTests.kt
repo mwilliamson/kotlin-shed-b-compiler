@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.tests
 
-import com.natpryce.hamkrest.*
+import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.Nested
@@ -1455,24 +1455,6 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     private fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet = ModuleSet(listOf())): IrValue {
         return environment.executeInstructions(instructions, type = type, moduleSet = moduleSet)
     }
-
-    private fun isBool(expected: Boolean): Matcher<IrValue> {
-        return cast(has(IrBool::value, equalTo(expected)))
-    }
-
-    private fun isUnicodeScalar(expected: Int): Matcher<IrValue> {
-        return cast(has(IrUnicodeScalar::value, equalTo(expected)))
-    }
-
-    private fun isInt(expected: Int): Matcher<IrValue> {
-        return cast(has(IrInt::value, equalTo(expected.toBigInteger())))
-    }
-
-    private fun isString(expected: String): Matcher<IrValue> {
-        return cast(has(IrString::value, equalTo(expected)))
-    }
-
-    private val isUnit = isA<IrUnit>()
 
     private fun createTypes(
         expressionTypes: Map<Int, Type> = mapOf(),
