@@ -13,14 +13,6 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
-interface StackIrExecutionEnvironment {
-    fun executeInstructions(
-        instructions: List<Instruction>,
-        type: Type,
-        moduleSet: ModuleSet = ModuleSet(listOf())
-    ): IrValue
-}
-
 abstract class StackIrExecutionTests(private val environment: StackIrExecutionEnvironment) {
     @Test
     fun trueLiteralIsEvaluatedToTrue() {
@@ -1453,7 +1445,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     private fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet = ModuleSet(listOf())): IrValue {
-        return environment.executeInstructions(instructions, type = type, moduleSet = moduleSet)
+        return environment.executeInstructions(instructions, type = type, moduleSet = moduleSet).value
     }
 
     private fun createTypes(

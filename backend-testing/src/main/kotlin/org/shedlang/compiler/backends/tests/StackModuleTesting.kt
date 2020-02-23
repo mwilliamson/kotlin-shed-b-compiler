@@ -1,4 +1,4 @@
-package org.shedlang.compiler.stackinterpreter.tests
+package org.shedlang.compiler.backends.tests
 
 import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.Module
@@ -7,18 +7,18 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
-import org.shedlang.compiler.stackinterpreter.InterpreterValue
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.moduleType
 import org.shedlang.compiler.types.AnyType
+import org.shedlang.compiler.types.Type
 
 internal fun callFunction(
+    environment: StackIrExecutionEnvironment,
     moduleName: ModuleName,
     functionName: String,
-    arguments: List<IrValue>
-): CallFunctionResult {
-    val world = InMemoryWorld()
-
+    arguments: List<IrValue>,
+    type: Type
+): StackExecutionResult {
     val instructions = persistentListOf(
         ModuleInit(moduleName),
         ModuleLoad(moduleName),
@@ -35,10 +35,6 @@ internal fun callFunction(
     val moduleSet = ModuleSet(optionsModules + listOf(
         Module.Native(name = moduleName, type = moduleType())
     ))
-    val image = loadModuleSet(moduleSet)
 
-    val value = executeInstructions(instructions, image = image, world = world)
-    return CallFunctionResult(value = value, stdout = world.stdout)
+    return environment.executeInstructions(instructions, type = type, moduleSet = moduleSet)
 }
-
-internal data class CallFunctionResult(val value: InterpreterValue, val stdout: String)

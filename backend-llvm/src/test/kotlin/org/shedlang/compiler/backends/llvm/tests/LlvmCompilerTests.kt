@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.llvm.*
+import org.shedlang.compiler.backends.tests.StackExecutionResult
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
 import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.backends.tests.temporaryDirectory
@@ -14,14 +15,14 @@ import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
 
 private val environment = object: StackIrExecutionEnvironment {
-    override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): IrValue {
+    override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): StackExecutionResult {
         val stdout = executeInstructionsOutput(
             instructions,
             moduleSet = moduleSet,
             type = type
         )
 
-        return when (type) {
+        val irValue = when (type) {
             BoolType ->
                 when (stdout) {
                     "0" -> IrBool(false)
@@ -47,6 +48,8 @@ private val environment = object: StackIrExecutionEnvironment {
             else ->
                 throw java.lang.UnsupportedOperationException("unsupported type: ${type.shortDescription}")
         }
+
+        return StackExecutionResult(value = irValue, stdout = "")
     }
 
     private fun executeInstructionsOutput(

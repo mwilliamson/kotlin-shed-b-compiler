@@ -105,6 +105,18 @@ private fun irValueToInterpreterValue(value: IrValue): InterpreterValue {
     }
 }
 
+internal fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrValue {
+    return when (interpreterValue) {
+        is InterpreterBool -> IrBool(interpreterValue.value)
+        is InterpreterUnicodeScalar -> IrUnicodeScalar(interpreterValue.value)
+        is InterpreterInt -> IrInt(interpreterValue.value)
+        is InterpreterString -> IrString(interpreterValue.value)
+        is InterpreterSymbol -> IrSymbol(interpreterValue.value)
+        is InterpreterUnit -> IrUnit
+        else -> throw UnsupportedOperationException()
+    }
+}
+
 internal class Stack<T>(private val stack: PersistentList<T>) {
     val size: Int
         get() = stack.size

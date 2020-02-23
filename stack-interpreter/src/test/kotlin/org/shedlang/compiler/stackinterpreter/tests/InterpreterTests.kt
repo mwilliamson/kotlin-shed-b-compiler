@@ -2,42 +2,19 @@ package org.shedlang.compiler.stackinterpreter.tests
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.TypesMap
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
-import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
 import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.backends.tests.loader
-import org.shedlang.compiler.stackinterpreter.*
-import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
-private val environment = object: StackIrExecutionEnvironment {
-    override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): IrValue {
-        val interpreterValue = executeInstructions(instructions, image = loadModuleSet(moduleSet))
-        return interpreterValueToIrValue(interpreterValue)
-    }
-
-    private fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrValue {
-        return when (interpreterValue) {
-            is InterpreterBool -> IrBool(interpreterValue.value)
-            is InterpreterUnicodeScalar -> IrUnicodeScalar(interpreterValue.value)
-            is InterpreterInt -> IrInt(interpreterValue.value)
-            is InterpreterString -> IrString(interpreterValue.value)
-            is InterpreterSymbol -> IrSymbol(interpreterValue.value)
-            is InterpreterUnit -> IrUnit
-            else -> throw UnsupportedOperationException()
-        }
-    }
-}
-
-class InterpreterTests: StackIrExecutionTests(environment) {
+class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironment) {
     @Test
     fun constantSymbolFieldsOnShapesHaveValueSet() {
         val shapeDeclaration = shape("Pair")
