@@ -409,7 +409,7 @@ internal data class LlvmFunctionDeclaration(
         } + if (hasVarargs) listOf("...") else listOf()
         val parametersString = parameterStrings.joinToString(", ")
 
-        return "declare ${returnType.serialise()} @$name($parametersString)"
+        return "declare ${returnType.serialise()} @$name($parametersString)\n"
     }
 }
 
