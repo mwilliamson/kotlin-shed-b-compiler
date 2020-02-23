@@ -8,8 +8,6 @@ import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackinterpreter.InterpreterValue
-import org.shedlang.compiler.stackinterpreter.NullWorld
-import org.shedlang.compiler.stackinterpreter.World
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.moduleType
 import org.shedlang.compiler.types.AnyType
@@ -17,9 +15,10 @@ import org.shedlang.compiler.types.AnyType
 internal fun callFunction(
     moduleName: ModuleName,
     functionName: String,
-    arguments: List<IrValue>,
-    world: World = NullWorld
-): InterpreterValue {
+    arguments: List<IrValue>
+): CallFunctionResult {
+    val world = InMemoryWorld()
+
     val instructions = persistentListOf(
         ModuleInit(moduleName),
         ModuleLoad(moduleName),
@@ -38,5 +37,8 @@ internal fun callFunction(
     ))
     val image = loadModuleSet(moduleSet)
 
-    return executeInstructions(instructions, image = image, world = world)
+    val value = executeInstructions(instructions, image = image, world = world)
+    return CallFunctionResult(value = value, stdout = world.stdout)
 }
+
+internal data class CallFunctionResult(val value: InterpreterValue, val stdout: String)

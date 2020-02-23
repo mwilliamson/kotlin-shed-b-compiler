@@ -10,17 +10,14 @@ class IntToStringModuleTests {
 
     @Test
     fun smallPositiveInteger() {
-        val world = InMemoryWorld()
-
-        val value = callFunction(
+        val result = callFunction(
             moduleName = moduleName,
             functionName = "intToString",
             arguments = listOf(
                 IrInt(42.toBigInteger())
-            ),
-            world = world
+            )
         )
 
-        assertThat(value, isString("42"))
+        assertThat(result.value, isString("42"))
     }
 }

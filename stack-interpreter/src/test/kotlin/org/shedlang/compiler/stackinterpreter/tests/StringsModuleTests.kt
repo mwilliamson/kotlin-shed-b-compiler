@@ -4,9 +4,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackinterpreter.InterpreterValue
-import org.shedlang.compiler.stackir.IrUnicodeScalar
 import org.shedlang.compiler.stackir.IrInt
 import org.shedlang.compiler.stackir.IrString
+import org.shedlang.compiler.stackir.IrUnicodeScalar
 import org.shedlang.compiler.stackir.IrValue
 
 class StringsModuleTests {
@@ -67,6 +67,6 @@ class StringsModuleTests {
             moduleName = moduleName,
             functionName = functionName,
             arguments = arguments
-        )
+        ).value
     }
 }

@@ -11,17 +11,14 @@ class IoModuleTests {
 
     @Test
     fun printBuiltinWritesToStdout() {
-        val world = InMemoryWorld()
-
-        callFunction(
+        val result = callFunction(
             moduleName = moduleName,
             functionName = "print",
             arguments = listOf(
                 IrString("hello")
-            ),
-            world = world
+            )
         )
 
-        assertThat(world.stdout, equalTo("hello"))
+        assertThat(result.stdout, equalTo("hello"))
     }
 }
