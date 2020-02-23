@@ -10,47 +10,6 @@ import org.shedlang.compiler.types.*
 
 object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
     override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): StackExecutionResult {
-        val stdout = executeInstructionsOutput(
-            instructions,
-            moduleSet = moduleSet,
-            type = type
-        )
-
-        val irValue = when (type) {
-            BoolType ->
-                when (stdout) {
-                    "0" -> IrBool(false)
-                    "1" -> IrBool(true)
-                    else -> throw UnsupportedOperationException()
-                }
-
-            UnicodeScalarType ->
-                IrUnicodeScalar(stdout.toInt())
-
-            IntType ->
-                IrInt(stdout.toBigInteger())
-
-            StringType ->
-                IrString(stdout)
-
-            UnitType ->
-                when (stdout) {
-                    "0" -> IrUnit
-                    else -> throw UnsupportedOperationException()
-                }
-
-            else ->
-                throw java.lang.UnsupportedOperationException("unsupported type: ${type.shortDescription}")
-        }
-
-        return StackExecutionResult(value = irValue, stdout = "")
-    }
-
-    private fun executeInstructionsOutput(
-        instructions: List<Instruction>,
-        moduleSet: ModuleSet,
-        type: Type
-    ): String {
         val image = loadModuleSet(moduleSet)
 
         val irBuilder = LlvmIrBuilder()
@@ -73,10 +32,39 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val context = compiler.compileInstructions(instructions, context = compiler.startFunction())
         val print = if (type == StringType) {
             val (context2, stringValue) = context.popTemporary()
-            builtins.print(stringValue)
+            listOf(
+                LlvmGetElementPtr(
+                    target = LlvmOperandLocal("boundary_pointer"),
+                    pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(17, LlvmTypes.i8)),
+                    pointer = LlvmOperandGlobal("boundary"),
+                    indices = listOf(
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                    )
+                ),
+                libc.write(
+                    fd = LlvmOperandInt(1),
+                    buf = LlvmOperandLocal("boundary_pointer"),
+                    count = LlvmOperandInt(16)
+                )
+            ) + builtins.print(stringValue)
         } else {
             val (context2, value) = context.popTemporary()
             listOf(
+                LlvmGetElementPtr(
+                    target = LlvmOperandLocal("boundary_pointer"),
+                    pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(17, LlvmTypes.i8)),
+                    pointer = LlvmOperandGlobal("boundary"),
+                    indices = listOf(
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
+                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                    )
+                ),
+                libc.printf(
+                    target = null,
+                    format = LlvmOperandLocal("boundary_pointer"),
+                    args = listOf()
+                ),
                 LlvmGetElementPtr(
                     target = LlvmOperandLocal("format_int64_pointer"),
                     pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(4, LlvmTypes.i8)),
@@ -112,10 +100,48 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         temporaryDirectory().use { temporaryDirectory ->
             val outputPath = temporaryDirectory.file.toPath().resolve("program.ll")
-            val program = serialiseProgram(module) + "@format_int64 = private unnamed_addr constant [4 x i8] c\"%ld\\00\""
+            val program = serialiseProgram(module) + """
+                @boundary = private unnamed_addr constant [17 x i8] c"=== BOUNDARY ===\00"
+                @format_int64 = private unnamed_addr constant [4 x i8] c"%ld\00"
+            """.trimIndent()
             println(withLineNumbers(program))
             outputPath.toFile().writeText(program)
-            return executeLlvmInterpreter(outputPath).throwOnError().stdout
+            val stdout = executeLlvmInterpreter(outputPath).throwOnError().stdout
+            val parts = stdout.split("=== BOUNDARY ===")
+            return StackExecutionResult(
+                value = stdoutToIrValue(parts[1], type = type),
+                stdout = parts[0]
+            )
         }
+    }
+
+    private fun stdoutToIrValue(stdout: String, type: Type): IrValue {
+        val irValue = when (type) {
+            BoolType ->
+                when (stdout) {
+                    "0" -> IrBool(false)
+                    "1" -> IrBool(true)
+                    else -> throw UnsupportedOperationException()
+                }
+
+            UnicodeScalarType ->
+                IrUnicodeScalar(stdout.toInt())
+
+            IntType ->
+                IrInt(stdout.toBigInteger())
+
+            StringType ->
+                IrString(stdout)
+
+            UnitType ->
+                when (stdout) {
+                    "0" -> IrUnit
+                    else -> throw UnsupportedOperationException()
+                }
+
+            else ->
+                throw java.lang.UnsupportedOperationException("unsupported type: ${type.shortDescription}")
+        }
+        return irValue
     }
 }
