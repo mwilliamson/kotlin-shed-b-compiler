@@ -92,7 +92,10 @@ class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironme
         ))
         val types = createTypes(
             expressionTypes = mapOf(
-                partialCall.nodeId to functionType(),
+                partialCall.nodeId to functionType(
+                    positionalParameters = listOf(IntType),
+                    returns = IntType
+                ),
                 parameterReference1.nodeId to IntType
             )
         )
@@ -136,7 +139,10 @@ class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironme
         ))
         val types = createTypes(
             expressionTypes = mapOf(
-                partialCall.nodeId to functionType(),
+                partialCall.nodeId to functionType(
+                    namedParameters = mapOf(Identifier("first") to IntType),
+                    returns = IntType
+                ),
                 parameterReference1.nodeId to IntType
             )
         )

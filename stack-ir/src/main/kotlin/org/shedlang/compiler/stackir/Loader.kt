@@ -289,13 +289,64 @@ class Loader(
             }
 
             override fun visit(node: PartialCallNode): PersistentList<Instruction> {
+                val partialFunctionType = types.typeOfExpression(node) as FunctionType
+
+                val receiverVariable = DeclareFunction.Parameter(name = Identifier("receiver"), variableId = freshNodeId())
                 val receiverInstructions = loadExpression(node.receiver)
-                val argumentInstructions = loadArguments(node)
-                val partialCall = CallPartial(
-                    positionalArgumentCount = node.positionalArguments.size,
-                    namedArgumentNames = node.namedArguments.map { argument -> argument.name }
+                    .add(LocalStore(receiverVariable))
+
+                val positionalArgumentVariables = (0 until node.positionalArguments.size).map { argumentIndex ->
+                    DeclareFunction.Parameter(name = Identifier("arg_$argumentIndex"), variableId = freshNodeId())
+                }
+                val positionalArgumentInstructions = node.positionalArguments.zip(positionalArgumentVariables) { argument, variable ->
+                    loadExpression(argument).add(LocalStore(variable))
+                }.flatten()
+
+                val positionalParameterVariables = (0 until partialFunctionType.positionalParameters.size).map { parameterIndex ->
+                    DeclareFunction.Parameter(
+                        name = Identifier("arg_${node.positionalArguments.size + parameterIndex}"),
+                        variableId = freshNodeId()
+                    )
+                }
+
+                val namedArgumentVariables = node.namedArguments.map { argument ->
+                    DeclareFunction.Parameter(name = argument.name, variableId = freshNodeId())
+                }
+                val namedArgumentInstructions = node.namedArguments.zip(namedArgumentVariables) { argument, variable ->
+                    loadExpression(argument.expression).add(LocalStore(variable))
+                }.flatten()
+
+                val namedParameterNames = partialFunctionType.namedParameters.keys.toList()
+                val namedParameterVariables = namedParameterNames.map { parameterName ->
+                    DeclareFunction.Parameter(name = parameterName, variableId = freshNodeId())
+                }
+
+                val callVariables = persistentListOf(receiverVariable)
+                    .addAll(positionalArgumentVariables)
+                    .addAll(positionalParameterVariables)
+                    .addAll(namedArgumentVariables)
+                    .addAll(namedParameterVariables)
+
+                val createPartial = listOf(
+                    DeclareFunction(
+                        name = "partial",
+                        positionalParameters = positionalParameterVariables,
+                        namedParameters = namedParameterVariables,
+                        bodyInstructions = persistentListOf<Instruction>()
+                            .addAll(callVariables.map { variable ->
+                                LocalLoad(variable)
+                            })
+                            .add(Call(
+                                positionalArgumentCount = node.positionalArguments.size + partialFunctionType.positionalParameters.size,
+                                namedArgumentNames = node.namedArguments.map { argument -> argument.name } + namedParameterNames
+                            ))
+                            .add(Return)
+                    )
                 )
-                return receiverInstructions.addAll(argumentInstructions).add(partialCall)
+                return receiverInstructions
+                    .addAll(positionalArgumentInstructions)
+                    .addAll(namedArgumentInstructions)
+                    .addAll(createPartial)
             }
 
             override fun visit(node: FieldAccessNode): PersistentList<Instruction> {

@@ -410,18 +410,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )
         }
 
-        is CallPartial -> {
-            val (state2, namedArgumentValues) = initialState.popTemporaries(namedArgumentNames.size)
-            val namedArguments = namedArgumentNames.zip(namedArgumentValues).toMap()
-            val (state3, positionalArguments) = state2.popTemporaries(positionalArgumentCount)
-            val (state4, receiver) = state3.popTemporary()
-            state4.pushTemporary(InterpreterPartialCall(
-                receiver = receiver,
-                positionalArguments = positionalArguments,
-                namedArguments = namedArguments
-            )).nextInstruction()
-        }
-
         is UnicodeScalarEquals -> {
             runBinaryUnicodeScalarOperation(initialState) { left, right ->
                 InterpreterBool(left == right)

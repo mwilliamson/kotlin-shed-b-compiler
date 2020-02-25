@@ -41,11 +41,6 @@ class Call(
     val namedArgumentNames: List<Identifier>
 ): Instruction()
 
-class CallPartial(
-    val positionalArgumentCount: Int,
-    val namedArgumentNames: List<Identifier>
-): Instruction()
-
 object UnicodeScalarEquals: Instruction()
 
 object UnicodeScalarNotEqual: Instruction()
@@ -110,6 +105,7 @@ class LocalLoad(val variableId: Int, val name: Identifier): Instruction() {
 
 class LocalStore(val variableId: Int, val name: Identifier): Instruction() {
     constructor(node: VariableBindingNode) : this(node.nodeId, node.name)
+    constructor(parameter: DeclareFunction.Parameter) : this(parameter.variableId, parameter.name)
 }
 
 class ModuleInit(val moduleName: ModuleName): Instruction()
