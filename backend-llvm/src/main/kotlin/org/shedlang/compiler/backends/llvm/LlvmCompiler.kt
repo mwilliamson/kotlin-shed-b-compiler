@@ -470,6 +470,10 @@ internal class Compiler(
                 return context3.pushTemporary(operand1).pushTemporary(operand2)
             }
 
+            is SymbolEquals -> {
+                throw UnsupportedOperationException(instruction.toString())
+            }
+
             is TagValueAccess -> {
                 val (context2, operand) = context.popTemporary()
                 val objectPointer = LlvmOperandLocal(generateName("objectPointer"))
@@ -556,10 +560,6 @@ internal class Compiler(
                         targetType = compiledValueType
                     )
                 ).pushTemporary(result)
-            }
-
-            else -> {
-                throw UnsupportedOperationException(instruction.toString())
             }
         }
     }
