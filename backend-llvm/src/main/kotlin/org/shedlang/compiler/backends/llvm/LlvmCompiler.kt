@@ -534,7 +534,7 @@ internal class Compiler(
                 val context2 = context.addInstructions(
                     libc.typedMalloc(
                         target = tuple,
-                        bytes = compiledValueTypeSize * instruction.length,
+                        bytes = compiledTupleType.byteSize,
                         type = compiledTupleType
                     )
                 )

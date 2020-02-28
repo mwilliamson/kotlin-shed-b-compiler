@@ -4,14 +4,14 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.types.*
 
 internal val compiledValueType = LlvmTypes.i64
-internal val compiledValueTypeSize = 8
+internal val compiledValueTypeSize = compiledValueType.byteSize
 internal val compiledBoolType = compiledValueType
 internal val compiledUnicodeScalarType = compiledValueType
 internal val compiledIntType = compiledValueType
 internal val compiledTagValueType = compiledValueType
 
 internal val compiledStringLengthType = LlvmTypes.i64
-internal val compiledStringLengthTypeSize = 8
+internal val compiledStringLengthTypeSize = compiledStringLengthType.byteSize
 internal fun compiledStringDataType(size: Int) = LlvmTypes.arrayType(size, LlvmTypes.i8)
 internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
     compiledStringLengthType,
@@ -19,7 +19,6 @@ internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
 ))
 internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
 
-internal val compiledObjectPointerSize = 8
 internal val compiledTupleType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal val compiledClosureEnvironmentType = LlvmTypes.arrayType(0, compiledValueType)
@@ -90,8 +89,11 @@ internal interface CompiledType {
         return LlvmTypes.pointer(llvmType())
     }
 
-    fun byteSize(): Int
     fun llvmType(): LlvmTypeStructure
+
+    fun byteSize(): Int {
+        return llvmType().byteSize
+    }
 
     val tagValue: TagValue?
 
@@ -121,10 +123,6 @@ internal class CompiledShapeType(
 
     override fun getElementPtrIndices(fieldName: Identifier): List<LlvmIndex> {
         return listOf(LlvmIndex.i32(1)) + compiledObjectType.getElementPtrIndices(fieldName)
-    }
-
-    override fun byteSize(): Int {
-        return compiledClosureSize(freeVariableCount = 0) + compiledObjectType.byteSize()
     }
 
     override val tagValue: TagValue?
@@ -161,10 +159,6 @@ internal class CompiledObjectType(
         } else {
             (if (tagValue == null) 0 else 1) + fieldIndex
         }
-    }
-
-    override fun byteSize(): Int {
-        return compiledValueTypeSize * llvmType().elementTypes.size
     }
 }
 

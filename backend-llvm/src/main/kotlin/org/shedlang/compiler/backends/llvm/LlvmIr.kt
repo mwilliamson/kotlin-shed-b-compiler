@@ -1,22 +1,29 @@
 package org.shedlang.compiler.backends.llvm
 
 internal interface LlvmType {
+    val byteSize: Int
     fun serialise(): String
 }
 
-internal data class LlvmTypeScalar(val name: String): LlvmType {
+internal data class LlvmTypeScalar(val name: String, override val byteSize: Int): LlvmType {
     override fun serialise(): String {
         return name
     }
 }
 
 internal data class LlvmTypePointer(val type: LlvmType): LlvmType {
+    override val byteSize: Int
+        get() = 8
+
     override fun serialise(): String {
         return "${type.serialise()} *"
     }
 }
 
 internal data class LlvmTypeArray(val size: Int, val elementType: LlvmType): LlvmType {
+    override val byteSize: Int
+        get() = elementType.byteSize * size
+
     override fun serialise(): String {
         return "[$size x ${elementType.serialise()}]"
     }
@@ -27,6 +34,9 @@ internal data class LlvmTypeFunction(
     val parameterTypes: List<LlvmType>,
     val hasVarargs: Boolean
 ): LlvmType {
+    override val byteSize: Int
+        get() = throw UnsupportedOperationException()
+
     override fun serialise(): String {
         val parameterStrings = parameterTypes.map(LlvmType::serialise) + (if (hasVarargs) listOf("...") else listOf())
         val parametersString = parameterStrings.joinToString(", ")
@@ -35,17 +45,20 @@ internal data class LlvmTypeFunction(
 }
 
 internal data class LlvmTypeStructure(val elementTypes: List<LlvmType>): LlvmType {
+    override val byteSize: Int
+        get() = elementTypes.sumBy { elementType -> elementType.byteSize }
+
     override fun serialise(): String {
         return "{${elementTypes.joinToString(", ") { elementType -> elementType.serialise() }}}"
     }
 }
 
 internal object LlvmTypes {
-    val i1 = LlvmTypeScalar("i1")
-    val i8 = LlvmTypeScalar("i8")
-    val i32 = LlvmTypeScalar("i32")
-    val i64 = LlvmTypeScalar("i64")
-    val void = LlvmTypeScalar("void")
+    val i1 = LlvmTypeScalar("i1", byteSize = 1)
+    val i8 = LlvmTypeScalar("i8", byteSize = 1)
+    val i32 = LlvmTypeScalar("i32", byteSize = 4)
+    val i64 = LlvmTypeScalar("i64", byteSize = 8)
+    val void = LlvmTypeScalar("void", byteSize = 0)
 
     fun pointer(type: LlvmType) = LlvmTypePointer(type = type)
 
