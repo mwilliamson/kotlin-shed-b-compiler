@@ -14,11 +14,41 @@ internal class ClosureCompiler(
         context: FunctionContext
     ): FunctionContext {
         val closurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))
-        val closureFunctionPointer = LlvmOperandLocal(irBuilder.generateName("closureFunctionPointer"))
-        val closureEnvironmentPointer = LlvmOperandLocal(irBuilder.generateName("closureEnvironmentPointer"))
+        val closurePointerType = compiledClosurePointerType(parameterTypes)
+        val closureMalloc = libc.typedMalloc(closurePointer, compiledClosureSize(freeVariables.size), type = closurePointerType)
+
+        val getClosureAddress = LlvmPtrToInt(
+            target = target,
+            targetType = compiledValueType,
+            value = closurePointer,
+            sourceType = closurePointerType
+        )
+
+        return context
+            .addInstructions(closureMalloc)
+            .let {
+                storeClosure(
+                    closurePointer = closurePointer,
+                    functionName = functionName,
+                    parameterTypes = parameterTypes,
+                    freeVariables = freeVariables,
+                    context = it
+                )
+            }
+            .addInstructions(getClosureAddress)
+    }
+
+    internal fun storeClosure(
+        closurePointer: LlvmOperand,
+        functionName: String,
+        parameterTypes: List<LlvmType>,
+        freeVariables: List<LocalLoad>,
+        context: FunctionContext
+    ): FunctionContext {
         val closurePointerType = compiledClosurePointerType(parameterTypes)
 
-        val closureMalloc = libc.typedMalloc(closurePointer, compiledClosureSize(freeVariables.size), type = closurePointerType)
+        val closureFunctionPointer = LlvmOperandLocal(irBuilder.generateName("closureFunctionPointer"))
+        val closureEnvironmentPointer = LlvmOperandLocal(irBuilder.generateName("closureEnvironmentPointer"))
 
         val getClosureFunctionPointer = closureFunctionPointer(
             target = closureFunctionPointer,
@@ -38,15 +68,7 @@ internal class ClosureCompiler(
             closurePointer = closurePointer
         )
 
-        val getClosureAddress = LlvmPtrToInt(
-            target = target,
-            targetType = compiledValueType,
-            value = closurePointer,
-            sourceType = closurePointerType
-        )
-
         return context
-            .addInstructions(closureMalloc)
             .addInstructions(getClosureFunctionPointer)
             .addInstructions(storeClosureFunction)
             .addInstructions(getClosureEnvironmentPointer)
@@ -55,7 +77,6 @@ internal class ClosureCompiler(
                 closureEnvironmentPointer = closureEnvironmentPointer,
                 context = it
             ) }
-            .addInstructions(getClosureAddress)
     }
 
     internal fun findFreeVariables(instruction: Instruction): List<LocalLoad> {
@@ -191,7 +212,7 @@ internal class ClosureCompiler(
     private fun closureFunctionPointer(
         target: LlvmOperandLocal,
         closurePointerType: LlvmTypePointer,
-        closurePointer: LlvmOperandLocal
+        closurePointer: LlvmOperand
     ): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
@@ -207,7 +228,7 @@ internal class ClosureCompiler(
     private fun closureEnvironmentPointer(
         target: LlvmOperandLocal,
         closurePointerType: LlvmTypePointer,
-        closurePointer: LlvmOperandLocal
+        closurePointer: LlvmOperand
     ): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
