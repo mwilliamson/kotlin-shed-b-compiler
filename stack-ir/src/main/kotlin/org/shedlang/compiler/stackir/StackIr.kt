@@ -66,7 +66,8 @@ class DeclareFunction(
 
 class DeclareShape(
     val tagValue: TagValue?,
-    val fields: List<FieldInspector>
+    val fields: List<FieldInspector>,
+    val shapeType: Type
 ): Instruction()
 
 object Discard: Instruction()

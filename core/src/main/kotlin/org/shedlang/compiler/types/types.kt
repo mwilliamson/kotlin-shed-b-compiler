@@ -111,10 +111,16 @@ object NothingType : Type {
 }
 
 data class MetaType(val type: Type): Type {
-    private val fieldsType = if (type is ShapeType) {
-        shapeFieldsInfoType(type)
-    } else {
-        null
+    private val fieldsType: Type?
+
+    init {
+        // TODO: better handling of generics
+        val rawType = rawType(type)
+        fieldsType = if (rawType is ShapeType) {
+            shapeFieldsInfoType(rawType)
+        } else {
+            null
+        }
     }
 
     override val shortDescription: String

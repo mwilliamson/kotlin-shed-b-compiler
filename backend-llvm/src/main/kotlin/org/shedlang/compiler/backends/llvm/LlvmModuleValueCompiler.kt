@@ -9,49 +9,41 @@ internal class ModuleValueCompiler(
     private val moduleSet: ModuleSet
 ) {
     internal fun defineModuleValue(moduleName: ModuleName): LlvmGlobalDefinition {
+        val compiledModuleType = compiledModuleType(moduleName)
         return LlvmGlobalDefinition(
             name = nameForModuleValue(moduleName),
-            type = compiledModuleType(moduleName).type,
-            value = LlvmOperandArray(
-                (0 until moduleSize(moduleName)).map {
-                    LlvmTypedOperand(compiledValueType, LlvmOperandInt(0))
+            type = compiledModuleType.llvmType(),
+            value = LlvmOperandStructure(
+                compiledModuleType.llvmType().elementTypes.map { elementType ->
+                    LlvmTypedOperand(elementType, LlvmOperandInt(0))
                 }
             )
         )
     }
 
-    internal fun load(target: LlvmVariable, moduleName: ModuleName): LlvmBitCast {
-        return LlvmBitCast(
-            target = target,
-            sourceType = compiledObjectPointerType(moduleSize(moduleName)),
-            value = operandForModuleValue(moduleName),
-            targetType = compiledObjectPointerType()
-        )
+    internal fun modulePointer(moduleName: ModuleName): LlvmOperand {
+        return operandForModuleValue(moduleName)
     }
 
     internal fun loadRaw(target: LlvmVariable, moduleName: ModuleName): LlvmInstruction {
         return LlvmPtrToInt(
             target = target,
-            sourceType = compiledModuleType(moduleName),
+            sourceType = compiledModuleType(moduleName).llvmPointerType(),
             value = operandForModuleValue(moduleName),
             targetType = compiledValueType
         )
     }
 
     internal fun storeFields(moduleName: ModuleName, exports: List<Pair<Identifier, LlvmOperand>>): List<LlvmInstruction> {
-        val moduleType = moduleType(moduleName)
+        val compiledObjectType = compiledType(moduleType(moduleName))
 
         return exports.flatMap { (exportName, exportValue) ->
             val fieldPointerVariable = LlvmOperandLocal(irBuilder.generateName("fieldPointer"))
             listOf(
-                LlvmGetElementPtr(
+                compiledObjectType.getFieldPointer(
                     target = fieldPointerVariable,
-                    pointerType = compiledObjectPointerType(moduleSize(moduleName)),
-                    pointer = operandForModuleValue(moduleName),
-                    indices = listOf(
-                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(fieldIndex(moduleType, exportName)))
-                    )
+                    receiver = operandForModuleValue(moduleName),
+                    fieldName = exportName
                 ),
                 LlvmStore(
                     type = compiledValueType,
@@ -74,10 +66,7 @@ internal class ModuleValueCompiler(
         moduleName.joinToString("_") { part -> part.value }
 
     private fun compiledModuleType(moduleName: ModuleName) =
-        compiledObjectPointerType(moduleSize(moduleName))
-
-    private fun moduleSize(moduleName: ModuleName) =
-        moduleType(moduleName).fields.size
+        compiledType(objectType = moduleType(moduleName))
 
     private fun moduleType(moduleName: ModuleName) =
         moduleSet.moduleType(moduleName)!!

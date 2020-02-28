@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.Types
 import org.shedlang.compiler.TypesMap
-import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.backends.SimpleCodeInspector
@@ -12,7 +11,9 @@ import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.backends.tests.loader
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.Symbol
+import org.shedlang.compiler.types.Type
 
 class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironment) {
     @Test
@@ -48,6 +49,9 @@ class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironme
             expressionTypes = mapOf(
                 receiverReference.nodeId to shapeType,
                 shapeReference.nodeId to MetaType(shapeType)
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to MetaType(shapeType)
             )
         )
 
@@ -62,13 +66,14 @@ class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironme
 
     private fun createTypes(
         expressionTypes: Map<Int, Type> = mapOf(),
-        targetTypes: Map<Int, Type> = mapOf()
+        targetTypes: Map<Int, Type> = mapOf(),
+        variableTypes: Map<Int, Type> = mapOf()
     ): Types {
         return TypesMap(
             discriminators = mapOf(),
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
-            variableTypes = mapOf()
+            variableTypes = variableTypes
         )
     }
 }

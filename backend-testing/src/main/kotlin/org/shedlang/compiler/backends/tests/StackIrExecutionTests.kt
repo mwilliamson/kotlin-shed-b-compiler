@@ -463,9 +463,13 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val shapeType = shapeType(tagValue = tagValue)
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType(tagValue = tagValue))
+                shapeReference.nodeId to MetaType(shapeType)
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to MetaType(shapeType)
             )
         )
 
@@ -508,9 +512,13 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
         ))
+        val shapeType = shapeType(tagValue = tagValue)
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to MetaType(shapeType(tagValue = tagValue))
+                shapeReference.nodeId to MetaType(shapeType)
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to MetaType(shapeType)
             )
         )
 
@@ -564,6 +572,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             expressionTypes = mapOf(
                 receiverReference.nodeId to shapeType,
                 shapeReference.nodeId to MetaType(shapeType)
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to MetaType(shapeType)
             )
         )
 
@@ -623,6 +634,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             expressionTypes = mapOf(
                 receiverReference.nodeId to shapeType,
                 shapeReference.nodeId to MetaType(shapeType)
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to MetaType(shapeType)
             )
         )
 
@@ -687,6 +701,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             ),
             targetTypes = mapOf(
                 fieldsTarget.nodeId to shapeType
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to MetaType(shapeType)
             )
         )
 
@@ -807,6 +824,12 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val types = createTypes(
             expressionTypes = mapOf(
                 shape2Reference.nodeId to MetaType(shapeType())
+            ),
+            variableTypes = mapOf(
+                shape1.nodeId to MetaType(shapeType(name = "Shape1", tagValue = tagValue(tag, "value1"))),
+                shape2.nodeId to MetaType(shapeType(name = "Shape2", tagValue = tagValue(tag, "value2"))),
+                shape3.nodeId to MetaType(shapeType(name = "Shape3", tagValue = tagValue(tag, "value3"))),
+                shape4.nodeId to MetaType(shapeType(name = "Shape4", tagValue = tagValue(tag, "value4")))
             )
         )
         val loader = loader(inspector = inspector, references = references, types = types)
@@ -1544,13 +1567,14 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
     private fun createTypes(
         expressionTypes: Map<Int, Type> = mapOf(),
-        targetTypes: Map<Int, Type> = mapOf()
+        targetTypes: Map<Int, Type> = mapOf(),
+        variableTypes: Map<Int, Type> = mapOf()
     ): Types {
         return TypesMap(
             discriminators = mapOf(),
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
-            variableTypes = mapOf()
+            variableTypes = variableTypes
         )
     }
 

@@ -9,7 +9,9 @@ import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.typechecker.CompilerError
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.Type
 
 internal class Compiler(
     private val image: Image,
@@ -33,7 +35,6 @@ internal class Compiler(
     fun compile(mainModule: ModuleName): String {
         val defineMainModule = moduleDefinition(mainModule)
 
-        val mainModuleVariable = LlvmOperandLocal("mainModule")
         val mainClosureVariable = LlvmOperandLocal("mainClosure")
         val exitCodeVariable = LlvmOperandLocal("exitCode")
         val main = LlvmFunctionDefinition(
@@ -41,9 +42,11 @@ internal class Compiler(
             name = "main",
             parameters = listOf(),
             body = listOf(
-                importModule(mainModule, target = mainModuleVariable),
+                listOf(
+                    callModuleInit(mainModule)
+                ),
                 fieldAccess(
-                    mainModuleVariable,
+                    modules.modulePointer(mainModule),
                     Identifier("main"),
                     receiverType = moduleType(mainModule),
                     target = mainClosureVariable
@@ -299,7 +302,7 @@ internal class Compiler(
                             target = instance,
                             sourceType = compiledValueType,
                             value = operand,
-                            targetType = compiledObjectPointerType()
+                            targetType = compiledType(objectType = instruction.receiverType).llvmPointerType()
                         )
                     )
                     .addInstructions(
@@ -482,15 +485,16 @@ internal class Compiler(
                         target = objectPointer,
                         sourceType = compiledValueType,
                         value = operand,
-                        targetType = compiledObjectPointerType()
+                        targetType = CompiledUnionType.llvmPointerType()
                     ),
                     tagValuePointer(
                         target = tagValuePointer,
-                        source = objectPointer
+                        source = objectPointer,
+                        sourceType = CompiledUnionType.llvmPointerType()
                     ),
                     LlvmLoad(
                         target = tagValue,
-                        type = compiledValueType,
+                        type = compiledTagValueType,
                         pointer = tagValuePointer
                     )
                 ).pushTemporary(tagValue)
@@ -680,14 +684,18 @@ internal class Compiler(
         )
     }
 
-    private fun tagValuePointer(target: LlvmOperandLocal, source: LlvmOperand): LlvmGetElementPtr {
+    private fun tagValuePointer(
+        target: LlvmOperandLocal,
+        source: LlvmOperand,
+        sourceType: LlvmTypePointer
+    ): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            pointerType = compiledObjectPointerType(),
+            pointerType = sourceType,
             pointer = source,
             indices = listOf(
-                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
+                LlvmIndex.i32(0),
+                LlvmIndex.i32(0)
             )
         )
     }
@@ -708,13 +716,9 @@ internal class Compiler(
         val value = LlvmOperandLocal(generateName("value"))
         val shapePointer = LlvmOperandLocal(generateName("shapePointer"))
         val closurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))
-        val objectPointer = LlvmOperandLocal(irBuilder.generateName("objectPointer"))
-        val objectPointerZeroSize = LlvmOperandLocal(irBuilder.generateName("objectPointerZeroSize"))
         val fieldsObjectPointer = LlvmOperandLocal(irBuilder.generateName("fieldsObjectPointer"))
         val constructorName = generateName("constructor")
-        val constructorPointer = LlvmOperandLocal(generateName("constructorPointer"))
         val instanceAsValue = LlvmOperandLocal(generateName("instanceAsValue"))
-        val tagValue = instruction.tagValue
 
         val fieldNames = instruction.fields.map { field -> field.name }
         val parameterNames = fieldNames
@@ -730,9 +734,9 @@ internal class Compiler(
             returnType = compiledValueType,
             parameters = listOf(closureEnvironmentParameter) + parameters,
             body = createObject(
-                tagValue = tagValue,
                 fields = fieldNames.zip(parameterNames.map { parameterName -> LlvmOperandLocal(parameterName) }),
-                target = instanceAsValue
+                target = instanceAsValue,
+                objectType = instruction.shapeType
             ) + listOf(
                 LlvmReturn(
                     type = compiledValueType,
@@ -741,18 +745,15 @@ internal class Compiler(
             )
         )
 
-        val shapePointerType = compiledShapePointerType(
-            fieldCount = instruction.fields.size,
-            parameterTypes = parameterTypes
-        )
-        val closurePointerType = compiledClosurePointerType(parameterTypes = parameterTypes)
+        // TODO: avoid recreating meta-type
+        val shapeType = compiledType(MetaType(instruction.shapeType))
 
         return context
             .addTopLevelEntities(listOf(constructorDefinition))
-            .addInstructions(libc.typedMalloc(shapePointer, compiledShapeSize(), type = shapePointerType))
+            .addInstructions(libc.typedMalloc(shapePointer, shapeType.byteSize(), type = shapeType.llvmPointerType()))
             .addInstructions(LlvmGetElementPtr(
                 target = closurePointer,
-                pointerType = shapePointerType,
+                pointerType = shapeType.llvmPointerType(),
                 pointer = shapePointer,
                 indices = listOf(
                     LlvmIndex.i64(0),
@@ -768,40 +769,27 @@ internal class Compiler(
                     context = it
                 )
             }
-            .addInstructions(LlvmGetElementPtr(
-                target = objectPointer,
-                pointerType = shapePointerType,
-                pointer = shapePointer,
-                indices = listOf(
-                    LlvmIndex.i64(0),
-                    LlvmIndex.i32(1)
-                )
-            ))
             .let {
                 createFieldsObject(
                     target = fieldsObjectPointer,
                     fieldNames = fieldNames,
+                    shapeType = instruction.shapeType,
                     context = it
                 )
             }
-            .addInstructions(LlvmBitCast(
-                target = objectPointerZeroSize,
-                sourceType = compiledObjectPointerType(size = instruction.fields.size),
-                value = objectPointer,
-                targetType = compiledObjectPointerType(size = 0)
-            ))
             .addInstructions(storeObject(
                 fields = listOf(
                     Identifier("fields") to fieldsObjectPointer
                 ),
-                tagValue = null,
-                objectPointer = objectPointerZeroSize
+                // TODO: avoid recreating meta-type
+                objectType = MetaType(instruction.shapeType),
+                objectPointer = shapePointer
             ))
             .addInstructions(LlvmPtrToInt(
                 target = value,
                 targetType = compiledValueType,
                 value = shapePointer,
-                sourceType = shapePointerType
+                sourceType = shapeType.llvmPointerType()
             ))
             .pushTemporary(value)
     }
@@ -809,8 +797,12 @@ internal class Compiler(
     private fun createFieldsObject(
         target: LlvmOperandLocal,
         fieldNames: List<Identifier>,
+        shapeType: Type,
         context: FunctionContext
     ): FunctionContext {
+        // TODO: avoid recreating meta-type
+        val fieldsObjectType = MetaType(shapeType).fieldType(Identifier("fields"))!!
+
         val (context3, fieldOperands) = fieldNames.fold(Pair(context, persistentListOf<LlvmOperand>())) { (context2, fieldOperands), fieldName ->
             val shapeFieldPointer = LlvmOperandLocal(generateName("shapeFieldPointer"))
             val shapeFieldNameDefinition = strings.defineString(generateName("shapeFieldName"), fieldName.value)
@@ -829,14 +821,13 @@ internal class Compiler(
                         target = objectPointer,
                         sourceType = compiledValueType,
                         value = LlvmOperandLocal("param"),
-                        targetType = compiledObjectPointerType()
+                        targetType = compiledType(objectType = shapeType).llvmPointerType()
                     ))
                     .addAll(fieldAccess(
                         target = getResult,
                         receiver = objectPointer,
                         fieldName = fieldName,
-                        fieldNames = fieldNames,
-                        tagValue = null
+                        receiverType = shapeType
                     ))
                     .add(LlvmReturn(type = compiledValueType, value = getResult))
             )
@@ -855,7 +846,7 @@ internal class Compiler(
                 }
                 .addInstructions(createObject(
                     target = shapeFieldPointer,
-                    tagValue = null,
+                    objectType = fieldsObjectType.fieldType(fieldName)!!,
                     fields = listOf(
                         Identifier("get") to get,
                         Identifier("name") to strings.operandRaw(shapeFieldNameDefinition)
@@ -867,35 +858,35 @@ internal class Compiler(
         return context3
             .addInstructions(createObject(
                 target = target,
-                tagValue = null,
+                objectType = fieldsObjectType,
                 fields = fieldNames.zip(fieldOperands)
             ))
     }
 
-    private fun createObject(tagValue: TagValue?, fields: List<Pair<Identifier, LlvmOperand>>, target: LlvmOperandLocal): List<LlvmInstruction> {
+    private fun createObject(
+        objectType: Type,
+        fields: List<Pair<Identifier, LlvmOperand>>,
+        target: LlvmOperandLocal
+    ): List<LlvmInstruction> {
         val instance = LlvmOperandLocal(generateName("instance"))
-        val fieldNames = fields.map { (fieldName, fieldValue) -> fieldName }
-        val shapeSize = shapeSize(
-            hasTagValue = tagValue != null,
-            fieldNames = fieldNames
-        )
+        val compiledObjectType = compiledType(objectType = objectType)
         return listOf(
             libc.typedMalloc(
                 target = instance,
-                bytes = compiledValueTypeSize * shapeSize,
-                type = compiledObjectPointerType()
+                bytes = compiledObjectType.byteSize(),
+                type = compiledObjectType.llvmPointerType()
             ),
 
             storeObject(
                 fields = fields,
-                tagValue = tagValue,
+                objectType = objectType,
                 objectPointer = instance
             ),
 
             listOf(
                 LlvmPtrToInt(
                     target = target,
-                    sourceType = compiledObjectPointerType(),
+                    sourceType = compiledObjectType.llvmPointerType(),
                     value = instance,
                     targetType = compiledValueType
                 )
@@ -905,18 +896,23 @@ internal class Compiler(
 
     private fun storeObject(
         fields: List<Pair<Identifier, LlvmOperand>>,
-        tagValue: TagValue?,
+        objectType: Type,
         objectPointer: LlvmOperand
     ): List<LlvmInstruction> {
-        val fieldNames = fields.map { (fieldName, _) -> fieldName }
+        val compiledObjectType = compiledType(objectType = objectType)
 
+        val tagValue = compiledObjectType.tagValue
         val storeTagValue = if (tagValue == null) {
             listOf()
         } else {
             val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
 
             listOf(
-                tagValuePointer(tagValuePointer, objectPointer),
+                tagValuePointer(
+                    target = tagValuePointer,
+                    source = objectPointer,
+                    sourceType = compiledObjectType.llvmPointerType()
+                ),
                 LlvmStore(
                     type = compiledTagValueType,
                     value = LlvmOperandInt(tagValueToInt(tagValue)),
@@ -928,13 +924,13 @@ internal class Compiler(
         val storeFields = fields.flatMap { (fieldName, fieldValue) ->
             val fieldPointer = LlvmOperandLocal(generateName("fieldPointer"))
 
-            val fieldIndex = fieldIndex(
-                fieldNames = fieldNames,
-                fieldName = fieldName,
-                hasTagValue = tagValue != null
-            )!!
             listOf(
-                fieldPointer(fieldPointer, objectPointer, fieldIndex),
+                fieldPointer(
+                    target = fieldPointer,
+                    receiver = objectPointer,
+                    receiverType = objectType,
+                    fieldName = fieldName
+                ),
                 LlvmStore(
                     type = compiledValueType,
                     value = fieldValue,
@@ -946,30 +942,16 @@ internal class Compiler(
         return storeTagValue + storeFields
     }
 
-    // TODO: remove duplication of fieldAccess()
-    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, fieldNames: List<Identifier>, tagValue: TagValue?, target: LlvmVariable): List<LlvmInstruction> {
-        val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
-
-        val fieldIndex = fieldIndex(
-            fieldNames = fieldNames,
-            hasTagValue = tagValue != null,
-            fieldName = fieldName
-        )!!
-        return listOf(
-            fieldPointer(fieldPointerVariable, receiver, fieldIndex),
-            LlvmLoad(
-                target = target,
-                type = compiledValueType,
-                pointer = fieldPointerVariable
-            )
-        )
-    }
-
     private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmInstruction> {
         val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
 
         return listOf(
-            fieldPointer(fieldPointerVariable, receiver, fieldIndex(receiverType, fieldName)),
+            fieldPointer(
+                target = fieldPointerVariable,
+                receiver = receiver,
+                receiverType = receiverType,
+                fieldName = fieldName
+            ),
             LlvmLoad(
                 target = target,
                 type = compiledValueType,
@@ -978,23 +960,9 @@ internal class Compiler(
         )
     }
 
-    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, fieldIndex: Int): LlvmGetElementPtr {
-        return LlvmGetElementPtr(
-            target = target,
-            pointerType = compiledObjectPointerType(),
-            pointer = receiver,
-            indices = listOf(
-                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0)),
-                LlvmIndex(LlvmTypes.i32, LlvmOperandInt(fieldIndex))
-            )
-        )
-    }
-
-    private fun importModule(moduleName: ModuleName, target: LlvmVariable): List<LlvmInstruction> {
-        return listOf(
-            callModuleInit(moduleName),
-            modules.load(target = target, moduleName = moduleName)
-        )
+    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, receiverType: Type, fieldName: Identifier): LlvmGetElementPtr {
+        val compiledObjectType = compiledType(objectType = receiverType)
+        return compiledObjectType.getFieldPointer(target = target, receiver = receiver, fieldName = fieldName)
     }
 
     private fun callModuleInit(moduleName: ModuleName): LlvmCall {
@@ -1099,53 +1067,6 @@ fun withLineNumbers(source: String): String {
     return source.lines().mapIndexed { index, line ->
         (index + 1).toString().padStart(3) + " " + line
     }.joinToString("\n")
-}
-
-internal fun fieldIndex(receiverType: Type, fieldName: Identifier): Int {
-    if (receiverType is MetaType && fieldName == Identifier("fields")) {
-        // TODO: use a more principled derivation (split out calculation of offset of the entire field set?)
-        // It's one since a shape is made of two parts:
-        //   * a closure with zero free variables
-        //   * the fields of the shape (as in the type, rather than an instance)
-        // A closure with zero free variables is a pointer, which is the same size as a field
-        // A shape only has one field i.e. "fields"
-        // Therefore, that field is always at a field index of 1
-        return 1
-    } else {
-        val (fieldNames, hasTagValue) = when (receiverType) {
-            is ModuleType -> receiverType.fields.keys to false
-            is ShapeType -> receiverType.fields.keys to (receiverType.tagValue != null)
-            else -> setOf<Identifier>() to false
-        }
-
-        val fieldIndex = fieldNames.sorted().indexOf(fieldName)
-
-        if (fieldIndex == -1) {
-            throw Exception("could not find field: ${fieldName.value}\nin type: ${receiverType.shortDescription}")
-        } else {
-            return (if (hasTagValue) 1 else 0) + fieldIndex
-        }
-    }
-}
-
-internal fun fieldIndex(
-    fieldNames: Collection<Identifier>,
-    fieldName: Identifier,
-    hasTagValue: Boolean
-): Int? {
-    val fieldIndex = fieldNames.sorted().indexOf(fieldName)
-
-    return if (fieldIndex == -1) {
-        null
-    } else {
-        (if (hasTagValue) 1 else 0) + fieldIndex
-    }
-}
-
-internal fun shapeSize(fieldNames: Collection<Identifier>, hasTagValue: Boolean): Int {
-    val tagValueOffset = if (hasTagValue) 1 else 0
-
-    return tagValueOffset + fieldNames.size
 }
 
 internal val compiledUnitValue = LlvmOperandInt(0)
