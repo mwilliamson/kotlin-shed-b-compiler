@@ -23,9 +23,9 @@ internal class ModuleValueCompiler(
     internal fun load(target: LlvmVariable, moduleName: ModuleName): LlvmBitCast {
         return LlvmBitCast(
             target = target,
-            sourceType = compiledObjectType(moduleSize(moduleName)),
+            sourceType = compiledObjectPointerType(moduleSize(moduleName)),
             value = operandForModuleValue(moduleName),
-            targetType = compiledObjectType()
+            targetType = compiledObjectPointerType()
         )
     }
 
@@ -46,7 +46,7 @@ internal class ModuleValueCompiler(
             listOf(
                 LlvmGetElementPtr(
                     target = fieldPointerVariable,
-                    pointerType = compiledObjectType(moduleSize(moduleName)),
+                    pointerType = compiledObjectPointerType(moduleSize(moduleName)),
                     pointer = operandForModuleValue(moduleName),
                     indices = listOf(
                         LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
@@ -74,7 +74,7 @@ internal class ModuleValueCompiler(
         moduleName.joinToString("_") { part -> part.value }
 
     private fun compiledModuleType(moduleName: ModuleName) =
-        compiledObjectType(moduleSize(moduleName))
+        compiledObjectPointerType(moduleSize(moduleName))
 
     private fun moduleSize(moduleName: ModuleName) =
         moduleType(moduleName).fields.size

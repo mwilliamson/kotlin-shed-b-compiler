@@ -15,10 +15,13 @@ internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
     compiledStringDataType(size)
 ))
 internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
-internal fun compiledObjectType(size: Int = 0) = LlvmTypes.pointer(LlvmTypes.arrayType(size = size, elementType = compiledValueType))
+internal fun compiledObjectPointerType(size: Int = 0) = LlvmTypes.pointer(compiledObjectType(size))
+private fun compiledObjectType(size: Int) = LlvmTypes.arrayType(size = size, elementType = compiledValueType)
+internal val compiledObjectPointerSize = 8
 internal val compiledTupleType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal val compiledClosureEnvironmentType = LlvmTypes.arrayType(0, compiledValueType)
+
 internal val compiledClosureEnvironmentPointerType = LlvmTypes.pointer(compiledClosureEnvironmentType)
 
 internal fun compiledClosureFunctionPointerType(parameterTypes: List<LlvmType>): LlvmTypePointer {
@@ -46,3 +49,25 @@ internal fun compiledClosureType(parameterTypes: List<LlvmType>): LlvmTypeStruct
 internal val compiledClosureFunctionPointerSize = 8
 
 internal fun compiledClosureSize(freeVariableCount: Int) = compiledClosureFunctionPointerSize + compiledValueTypeSize * freeVariableCount
+
+internal fun compiledShapePointerType(
+    fieldCount: Int,
+    parameterTypes: List<LlvmType>
+): LlvmTypePointer {
+    return LlvmTypes.pointer(compiledShapeType(
+        fieldCount = fieldCount,
+        parameterTypes = parameterTypes
+    ))
+}
+
+internal fun compiledShapeType(
+    fieldCount: Int,
+    parameterTypes: List<LlvmType>
+): LlvmType {
+    return LlvmTypes.structure(listOf(
+        compiledClosureType(parameterTypes = parameterTypes),
+        compiledObjectType(size = fieldCount)
+    ))
+}
+
+internal fun compiledShapeSize() = compiledClosureSize(0) + compiledObjectPointerSize
