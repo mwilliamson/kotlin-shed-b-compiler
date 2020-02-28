@@ -746,14 +746,15 @@ internal class Compiler(
         )
 
         // TODO: avoid recreating meta-type
-        val shapeType = compiledType(MetaType(instruction.shapeType))
+        val shapeMetaType = MetaType(instruction.shapeType)
+        val compiledShapeType = compiledType(shapeMetaType)
 
         return context
             .addTopLevelEntities(listOf(constructorDefinition))
-            .addInstructions(libc.typedMalloc(shapePointer, shapeType.byteSize(), type = shapeType.llvmPointerType()))
+            .addInstructions(libc.typedMalloc(shapePointer, compiledShapeType.byteSize(), type = compiledShapeType.llvmPointerType()))
             .addInstructions(LlvmGetElementPtr(
                 target = closurePointer,
-                pointerType = shapeType.llvmPointerType(),
+                pointerType = compiledShapeType.llvmPointerType(),
                 pointer = shapePointer,
                 indices = listOf(
                     LlvmIndex.i64(0),
@@ -773,6 +774,7 @@ internal class Compiler(
                 createFieldsObject(
                     target = fieldsObjectPointer,
                     fieldNames = fieldNames,
+                    shapeMetaType = shapeMetaType,
                     shapeType = instruction.shapeType,
                     context = it
                 )
@@ -781,15 +783,14 @@ internal class Compiler(
                 fields = listOf(
                     Identifier("fields") to fieldsObjectPointer
                 ),
-                // TODO: avoid recreating meta-type
-                objectType = MetaType(instruction.shapeType),
+                objectType = shapeMetaType,
                 objectPointer = shapePointer
             ))
             .addInstructions(LlvmPtrToInt(
                 target = value,
                 targetType = compiledValueType,
                 value = shapePointer,
-                sourceType = shapeType.llvmPointerType()
+                sourceType = compiledShapeType.llvmPointerType()
             ))
             .pushTemporary(value)
     }
@@ -797,11 +798,11 @@ internal class Compiler(
     private fun createFieldsObject(
         target: LlvmOperandLocal,
         fieldNames: List<Identifier>,
+        shapeMetaType: MetaType,
         shapeType: Type,
         context: FunctionContext
     ): FunctionContext {
-        // TODO: avoid recreating meta-type
-        val fieldsObjectType = MetaType(shapeType).fieldType(Identifier("fields"))!!
+        val fieldsObjectType = shapeMetaType.fieldType(Identifier("fields"))!!
 
         val (context3, fieldOperands) = fieldNames.fold(Pair(context, persistentListOf<LlvmOperand>())) { (context2, fieldOperands), fieldName ->
             val shapeFieldPointer = LlvmOperandLocal(generateName("shapeFieldPointer"))

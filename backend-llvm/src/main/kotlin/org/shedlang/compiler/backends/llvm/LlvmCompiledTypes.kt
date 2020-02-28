@@ -116,7 +116,6 @@ internal class CompiledShapeType(
     override fun llvmType(): LlvmTypeStructure {
         return LlvmTypes.structure(listOf(
             compiledClosureType(parameterTypes = parameterTypes),
-            // TODO: avoid recreating meta-type
             compiledObjectType.llvmType()
         ))
     }
