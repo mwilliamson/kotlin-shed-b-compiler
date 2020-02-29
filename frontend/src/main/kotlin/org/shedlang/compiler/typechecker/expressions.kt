@@ -179,7 +179,6 @@ internal fun inferFieldAccessType(receiverType: Type, fieldName: FieldNameNode):
     val fieldType = receiverType.fieldType(identifier)
 
     if (fieldType == null) {
-        println(receiverType)
         throw NoSuchFieldError(
             fieldName = fieldName.identifier,
             source = fieldName.source
