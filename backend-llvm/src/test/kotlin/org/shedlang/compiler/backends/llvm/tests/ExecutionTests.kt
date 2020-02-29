@@ -17,8 +17,7 @@ class ExecutionTests {
         "ConstantField.shed",
         "stdlib",
         "symbols",
-        "TailRec.shed",
-        "usingStdlib"
+        "TailRec.shed"
     )
 
     @TestFactory
