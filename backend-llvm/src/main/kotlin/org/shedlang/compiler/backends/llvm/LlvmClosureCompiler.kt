@@ -7,7 +7,7 @@ internal class ClosureCompiler(
     private val libc: LibcCallCompiler
 ) {
     internal fun createClosure(
-        target: LlvmOperandLocal,
+        target: LlvmVariable,
         functionName: String,
         parameterTypes: List<LlvmType>,
         freeVariables: List<LocalLoad>,
