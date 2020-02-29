@@ -180,20 +180,15 @@ internal data class LlvmPtrToInt(
 
 internal data class LlvmCall(
     val target: LlvmVariable?,
-    val callingConvention: LlvmCallingConvention? = null,
+    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.fastcc,
     val returnType: LlvmType,
     val functionPointer: LlvmOperand,
     val arguments: List<LlvmTypedOperand>
 ): LlvmInstruction {
     override fun serialise(): String {
         val prefix = if (target == null) { "" } else { "${target.serialise()} = " }
-        val callingConventionString = if (callingConvention == null) {
-            ""
-        } else {
-            "$callingConvention "
-        }
         val argumentsString = arguments.joinToString(", ") { argument -> argument.serialise() }
-        return "${prefix}call ${callingConventionString}${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)"
+        return "${prefix}call $callingConvention ${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)"
     }
 }
 
@@ -393,13 +388,15 @@ internal data class LlvmZext(
 }
 
 internal enum class LlvmCallingConvention {
-    ccc
+    ccc,
+    fastcc
 }
 
 internal data class LlvmFunctionDefinition(
     val name: String,
     val returnType: LlvmType,
     val parameters: List<LlvmParameter>,
+    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.fastcc,
     val body: List<LlvmInstruction>
 ): LlvmTopLevelEntity {
     override fun serialise(): String {
@@ -408,7 +405,7 @@ internal data class LlvmFunctionDefinition(
             if (instruction is LlvmLabel) { "" } else { "    " } + instruction.serialise()+ "\n"
         }
         val parametersString = parameters.joinToString(", ") { parameter -> parameter.serialise() }
-        return "define ${returnType.serialise()} @$name($parametersString) {\n$bodyString}\n"
+        return "define $callingConvention ${returnType.serialise()} @$name($parametersString) {\n$bodyString}\n"
     }
 }
 
@@ -416,7 +413,7 @@ internal data class LlvmFunctionDeclaration(
     val name: String,
     val returnType: LlvmType,
     val parameters: List<LlvmParameter>,
-    val callingConvention: LlvmCallingConvention? = null,
+    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.fastcc,
     val hasVarargs: Boolean = false
 ): LlvmTopLevelEntity {
     fun type(): LlvmType {
@@ -428,17 +425,12 @@ internal data class LlvmFunctionDeclaration(
     }
 
     override fun serialise(): String {
-        val callingConventionString = if (callingConvention == null) {
-            ""
-        } else {
-            "$callingConvention "
-        }
         val parameterStrings = parameters.map { parameter ->
             parameter.serialise()
         } + if (hasVarargs) listOf("...") else listOf()
         val parametersString = parameterStrings.joinToString(", ")
 
-        return "declare $callingConventionString${returnType.serialise()} @$name($parametersString)\n"
+        return "declare $callingConvention ${returnType.serialise()} @$name($parametersString)\n"
     }
 }
 
