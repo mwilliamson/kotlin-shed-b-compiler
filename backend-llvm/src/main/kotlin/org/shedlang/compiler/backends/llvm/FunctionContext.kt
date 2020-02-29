@@ -1,8 +1,9 @@
 package org.shedlang.compiler.backends.llvm
 
-import kotlinx.collections.immutable.*
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleName
+import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentMap
+import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 
 internal interface LabelPredecessor {
     val stack: PersistentList<LlvmOperand>
