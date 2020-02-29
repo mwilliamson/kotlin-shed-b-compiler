@@ -89,7 +89,9 @@ internal object LlvmNullPointer: LlvmOperand {
     }
 }
 
-internal data class LlvmOperandInt(val value: Int): LlvmOperand {
+internal data class LlvmOperandInt(val value: Long): LlvmOperand {
+    constructor(value: Int): this(value.toLong())
+
     override fun serialise(): String {
         return value.toString()
     }

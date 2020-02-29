@@ -105,7 +105,7 @@ private fun isLlvmOperandGlobal(name: String): Matcher<LlvmOperand> {
 }
 
 private fun isLlvmOperandInt(value: Int): Matcher<LlvmOperand> {
-    return cast(has(LlvmOperandInt::value, equalTo(value)))
+    return cast(has(LlvmOperandInt::value, equalTo(value.toLong())))
 }
 
 private fun isLlvmOperandPtrToInt(
