@@ -1,9 +1,9 @@
-val unicodeScalarToHexString: Fun (UnicodeScalar) -> String;
-val unicodeScalarToInt: Fun (UnicodeScalar) -> Int;
-val unicodeScalarToString: Fun (UnicodeScalar) -> String;
-val unicodeScalarCount: Fun (String) -> Int;
 val dropLeftUnicodeScalars: Fun (Int, String) -> String;
 val next: Fun (StringSlice) -> Option[#(UnicodeScalar, StringSlice)];
 val replace: Fun (String, String, String) -> String;
 val slice: Fun (String) -> StringSlice;
 val substring: Fun (Int, Int, String) -> String;
+val unicodeScalarCount: Fun (String) -> Int;
+val unicodeScalarToHexString: Fun (UnicodeScalar) -> String;
+val unicodeScalarToInt: Fun (UnicodeScalar) -> Int;
+val unicodeScalarToString: Fun (UnicodeScalar) -> String;
