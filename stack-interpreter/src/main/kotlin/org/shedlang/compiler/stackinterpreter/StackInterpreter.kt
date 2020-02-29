@@ -203,6 +203,10 @@ internal data class CallFrame(
         return copy(temporaryStack = temporaryStack.discard())
     }
 
+    fun hasEmptyTemporaryStack(): Boolean {
+        return temporaryStack.size == 0
+    }
+
     fun storeLocal(bindings: Bindings, variableId: Int, value: InterpreterValue): Bindings {
         val scope = scopes.last()
         return bindings.put(
@@ -337,9 +341,13 @@ internal data class InterpreterState(
     }
 
     fun exit(): InterpreterState {
-        return copy(
-            callStack = callStack.discard()
-        )
+        if (callStack.last().hasEmptyTemporaryStack()) {
+            return copy(
+                callStack = callStack.discard()
+            )
+        } else {
+            throw Exception("temporary stack not empty")
+        }
     }
 
     private fun currentCallFrame(): CallFrame {
