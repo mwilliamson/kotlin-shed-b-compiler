@@ -30,6 +30,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     private val mallocDeclaration = LlvmFunctionDeclaration(
         name = "malloc",
+        callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.voidPointer,
         parameters = listOf(
             LlvmParameter(CTypes.size_t, "size")
@@ -42,6 +43,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     private val memcmpDeclaration = LlvmFunctionDeclaration(
         name = "memcmp",
+        callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.int,
         parameters = listOf(
             LlvmParameter(CTypes.voidPointer, "s1"),
@@ -56,6 +58,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     private val memcpyDeclaration = LlvmFunctionDeclaration(
         name = "memcpy",
+        callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.voidPointer,
         parameters = listOf(
             LlvmParameter(CTypes.voidPointer, "dest"),
@@ -70,6 +73,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     private val printfDeclaration = LlvmFunctionDeclaration(
         name = "printf",
+        callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.int,
         parameters = listOf(
             LlvmParameter(CTypes.stringPointer, "format") // TODO: noalias nocapture
@@ -83,6 +87,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     private val snprintfDeclaration = LlvmFunctionDeclaration(
         name = "snprintf",
+        callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.int,
         parameters = listOf(
             LlvmParameter(CTypes.stringPointer, "str"),
@@ -104,6 +109,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     private val writeDeclaration = LlvmFunctionDeclaration(
         name = "write",
+        callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.ssize_t,
         parameters = listOf(
             LlvmParameter(CTypes.int, "fd"),
@@ -125,6 +131,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     ): LlvmCall {
         return LlvmCall(
             target = target,
+            callingConvention = function.callingConvention,
             returnType = if (varargs == null) function.returnType else function.type(),
             functionPointer = LlvmOperandGlobal(function.name),
             arguments = function.parameters.zip(arguments) { parameter, argument ->
