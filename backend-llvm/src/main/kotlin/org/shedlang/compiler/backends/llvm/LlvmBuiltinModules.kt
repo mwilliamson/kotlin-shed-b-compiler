@@ -1,9 +1,12 @@
 package org.shedlang.compiler.backends.llvm
 
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.types.FunctionType
 
 internal class BuiltinModuleCompiler(
+    private val moduleSet: ModuleSet,
     private val irBuilder: LlvmIrBuilder,
     private val closures: ClosureCompiler,
     private val libc: LibcCallCompiler,
@@ -12,7 +15,8 @@ internal class BuiltinModuleCompiler(
 ) {
     private val builtinModules = mapOf<ModuleName, (FunctionContext) -> FunctionContext>(
         listOf(Identifier("Core"), Identifier("Io")) to ::compileCoreIo,
-        listOf(Identifier("Core"), Identifier("IntToString")) to ::compileCoreIntToString
+        listOf(Identifier("Core"), Identifier("IntToString")) to ::compileCoreIntToString,
+        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")) to ::compileStdlibPlatformStrings
     )
 
     internal fun isBuiltinModule(moduleName: ModuleName): Boolean {
@@ -170,5 +174,75 @@ internal class BuiltinModuleCompiler(
                 )
             )
             .addTopLevelEntities(intToString, intToStringFormatStringDefinition)
+    }
+
+    private fun compileStdlibPlatformStrings(context: FunctionContext): FunctionContext {
+        return compileCModule(
+            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
+            functionNames = listOf(
+                "substring",
+                "unicodeScalarCount",
+                "unicodeScalarToInt",
+                "unicodeScalarToHexString",
+                "unicodeScalarToString"
+            ),
+            context = context
+        )
+    }
+
+    private fun compileCModule(
+        moduleName: ModuleName,
+        functionNames: List<String>,
+        context: FunctionContext
+    ): FunctionContext {
+        val moduleType = moduleSet.moduleType(moduleName)!!
+        val closures = mutableMapOf<String, LlvmOperand>()
+
+        return functionNames.fold(context) { context2, functionName ->
+            val closure = irBuilder.generateLocal(functionName)
+            closures[functionName] = closure
+            val functionType = moduleType.fieldType(Identifier(functionName)) as FunctionType
+            createClosureForCFunction(
+                target = closure,
+                functionName = "Shed_" + (moduleName.map(Identifier::value) + listOf(functionName)).joinToString("_"),
+                parameterCount = functionType.positionalParameters.size + functionType.namedParameters.size,
+                context = context2
+            )
+        }
+            .addInstructions(modules.storeFields(
+                moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
+                exports = functionNames.map { functionName ->
+                    Identifier(functionName) to closures.getValue(functionName)
+                }
+            ))
+    }
+
+    private fun createClosureForCFunction(
+        target: LlvmVariable,
+        functionName: String,
+        parameterCount: Int,
+        context: FunctionContext
+    ): FunctionContext {
+        val parameterTypes = (0 until parameterCount).map { compiledValueType }
+        return context
+            .let {
+                closures.createClosure(
+                    target = target,
+                    functionName = functionName,
+                    parameterTypes = parameterTypes,
+                    freeVariables = listOf(),
+                    context = it
+                )
+            }
+            .addTopLevelEntities(LlvmFunctionDeclaration(
+                name = functionName,
+                callingConvention = LlvmCallingConvention.ccc,
+                returnType = compiledValueType,
+                parameters = listOf(
+                    LlvmParameter(compiledClosureEnvironmentPointerType, "environment")
+                ) + parameterTypes.mapIndexed { parameterIndex, parameterType ->
+                    LlvmParameter(parameterType, "arg_$parameterIndex")
+                }
+            ))
     }
 }

@@ -23,6 +23,7 @@ internal class Compiler(
     private val modules = ModuleValueCompiler(irBuilder = irBuilder, moduleSet = moduleSet)
     private val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
     private val builtins = BuiltinModuleCompiler(
+        moduleSet = moduleSet,
         irBuilder = irBuilder,
         closures = closures,
         libc = libc,
@@ -1018,7 +1019,7 @@ internal class Compiler(
                 listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value)
 
             is IrInt ->
-                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.intValueExact())
+                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.toLong())
 
             is IrString -> {
                 val globalName = generateName("string")
