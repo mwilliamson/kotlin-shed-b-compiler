@@ -1,6 +1,6 @@
-.PHONY: package run-stdlib-tests stdlib-tests test
+.PHONY: package run-stdlib-tests stdlib-tests test build-stdlib-llvm
 
-package:
+package: build-stdlib-llvm
 	mvn package -Dmaven.test.skip=true
 
 stdlib-tests: package run-stdlib-tests
@@ -12,3 +12,8 @@ run-stdlib-tests:
 
 test: stdlib-tests
 	mvn test
+
+build-stdlib-llvm: stdlib-llvm/Strings.o
+
+stdlib-llvm/Strings.o: stdlib-llvm/Strings.c
+	gcc stdlib-llvm/Strings.c -c -Wall -Werror
