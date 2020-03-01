@@ -108,6 +108,9 @@ ShedStringSlice Shed_Stdlib_Platform_Strings_slice(ShedEnvironment env, ShedStri
 
 ShedString Shed_Stdlib_Platform_Strings_substring(ShedEnvironment env, ShedInt startIndex, ShedInt endIndex, ShedString string) {
     // TODO: handle non-ASCII characters
+    if (startIndex < 0) {
+        startIndex = string->length + startIndex;
+    }
     if (endIndex < 0) {
         endIndex = string->length + endIndex;
     }
