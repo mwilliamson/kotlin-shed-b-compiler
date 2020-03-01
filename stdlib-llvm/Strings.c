@@ -139,8 +139,14 @@ ShedString Shed_Stdlib_Platform_Strings_unicodeScalarToString(ShedEnvironment en
 }
 
 ShedInt Shed_Stdlib_Platform_Strings_unicodeScalarCount(ShedEnvironment env, ShedString string) {
-    // TODO: handle non-ASCII characters
-    return string->length;
+    StringLength length = string->length;
+    long count = 0;
+    for (StringLength index = 0; index < length; index++) {
+        if ((string->data[index] & 0xc0) != 0x80) {
+            count++;
+        }
+    }
+    return count;
 }
 
 ShedInt Shed_Stdlib_Platform_Strings_unicodeScalarToInt(ShedEnvironment env, ShedUnicodeScalar scalar) {
