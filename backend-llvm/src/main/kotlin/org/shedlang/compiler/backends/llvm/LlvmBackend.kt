@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.llvm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -25,7 +26,13 @@ object LlvmBackend : Backend {
                 "-relocation-model", "pic",
                 "-o", objectPath.toString()
             ))
-            run(listOf("gcc", objectPath.toString(), "-o", target.toString()))
+            run(listOf(
+                "gcc",
+                objectPath.toString(),
+                "${findRoot().resolve("stdlib-llvm/Strings.o")}",
+                "${findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")}",
+                "-o", target.toString()
+            ))
         } finally {
             file.deleteRecursively()
         }
