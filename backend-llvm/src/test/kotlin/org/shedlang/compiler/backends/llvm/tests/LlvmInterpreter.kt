@@ -6,7 +6,10 @@ import java.nio.file.Path
 
 internal fun executeLlvmInterpreter(path: Path, includeStrings: Boolean = false): ExecutionResult {
     val extraObjectArgs = if (includeStrings) {
-        listOf("-extra-object=${findRoot().resolve("stdlib-llvm/Strings.o")}")
+        listOf(
+            "-extra-object=${findRoot().resolve("stdlib-llvm/Strings.o")}",
+            "-extra-archive=${findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")}"
+        )
     } else {
         listOf()
     }

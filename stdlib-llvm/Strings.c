@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "utf8proc/utf8proc.h"
+
 typedef uint64_t ShedUnicodeScalar;
 typedef int64_t ShedInt;
 typedef uint64_t ShedValue;
@@ -39,13 +41,18 @@ struct ShedClosure {
 extern ShedValue shed__module_value__Core_Options[5];
 
 ShedValue Shed_Stdlib_Platform_Strings_next(ShedEnvironment env, ShedStringSlice slice) {
-    // TODO: handle non-ASCII characters
     if (slice->startIndex < slice->endIndex) {
-        ShedUnicodeScalar scalar = slice->string->data[slice->startIndex];
+        utf8proc_int32_t scalar;
+
+        utf8proc_ssize_t bytesRead = utf8proc_iterate(
+            &slice->string->data[slice->startIndex],
+            slice->endIndex - slice->startIndex,
+            &scalar
+        );
 
         ShedStringSlice newSlice = malloc(sizeof(struct ShedStringSlice));
         newSlice->string = slice->string;
-        newSlice->startIndex = slice->startIndex + 1;
+        newSlice->startIndex = slice->startIndex + bytesRead;
         newSlice->endIndex = slice->endIndex;
 
         ShedValue* result = malloc(sizeof(ShedValue) * 2);
