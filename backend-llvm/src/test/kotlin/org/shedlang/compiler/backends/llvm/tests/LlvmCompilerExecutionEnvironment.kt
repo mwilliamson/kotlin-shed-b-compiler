@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.llvm.tests
 
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.llvm.*
 import org.shedlang.compiler.backends.tests.StackExecutionResult
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
@@ -31,6 +32,7 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             irBuilder = irBuilder
         )
         val context = compiler.compileInstructions(instructions, context = compiler.startFunction())
+
         val print = if (type == StringType) {
             val (context2, stringValue) = context.popTemporary()
             listOf(
@@ -107,7 +109,8 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             """.trimIndent()
             println(withLineNumbers(program))
             outputPath.toFile().writeText(program)
-            val stdout = executeLlvmInterpreter(outputPath).throwOnError().stdout
+            val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
+            val stdout = executeLlvmInterpreter(outputPath, includeStrings = includeStrings).throwOnError().stdout
             val parts = stdout.split("=== BOUNDARY ===")
             return StackExecutionResult(
                 value = stdoutToIrValue(parts[1], type = type),

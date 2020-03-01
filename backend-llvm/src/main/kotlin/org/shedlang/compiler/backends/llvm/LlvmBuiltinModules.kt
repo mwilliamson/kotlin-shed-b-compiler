@@ -180,7 +180,10 @@ internal class BuiltinModuleCompiler(
         return compileCModule(
             moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
             functionNames = listOf(
+                "dropLeftUnicodeScalars",
+                "next",
                 "replace",
+                "slice",
                 "substring",
                 "unicodeScalarCount",
                 "unicodeScalarToInt",

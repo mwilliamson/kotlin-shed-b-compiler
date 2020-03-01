@@ -138,7 +138,13 @@ internal class Compiler(
 
     private fun compileModuleInitialisation(moduleName: ModuleName, context: FunctionContext): FunctionContext {
         if (builtins.isBuiltinModule(moduleName)) {
-            return builtins.compileBuiltinModule(moduleName, context = context)
+            val context2 = builtins.compileBuiltinModule(moduleName, context = context)
+            // TODO: better handling of dependencies
+            return if (moduleName == listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) {
+                context2.addTopLevelEntities(defineModule(listOf(Identifier("Core"), Identifier("Options"))))
+            } else {
+                context2
+            }
         } else {
             val moduleInitialisationInstructions = image.moduleInitialisation(moduleName)
             if (moduleInitialisationInstructions == null) {
