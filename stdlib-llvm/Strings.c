@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +18,44 @@ typedef struct ShedString* ShedString;
 
 ShedString alloc_string(uint64_t capacity) {
     return malloc(sizeof(StringLength) + sizeof(uint8_t) * capacity);
+}
+
+ShedString Shed_Stdlib_Platform_Strings_replace(void* env, ShedString old, ShedString new, ShedString string) {
+    // TODO: handle non-ASCII characters
+    // TODO: handle zero-length old
+    StringLength oldLength = old->length;
+    StringLength newLength = new->length;
+    StringLength stringLength = string->length;
+    StringLength capacity = new->length <= old->length
+        ? stringLength
+        : (new->length / oldLength + 1) * stringLength;
+    ShedString result = alloc_string(capacity);
+
+    StringLength stringIndex = 0;
+    StringLength resultIndex = 0;
+    while (stringIndex < stringLength) {
+        bool isMatch = true;
+        for (StringLength oldIndex = 0; oldIndex < oldLength; oldIndex++) {
+            if (!(stringIndex + oldIndex < stringLength && string->data[stringIndex + oldIndex] == old->data[oldIndex])) {
+                isMatch = false;
+                break;
+            }
+        }
+
+        if (isMatch) {
+            for (StringLength newIndex = 0; newIndex < newLength; newIndex++) {
+                result->data[resultIndex++] = new->data[newIndex];
+            }
+            stringIndex += oldLength;
+        } else {
+            result->data[resultIndex++] = string->data[stringIndex];
+            stringIndex++;
+        }
+    }
+
+    result->length = resultIndex;
+
+    return result;
 }
 
 ShedString Shed_Stdlib_Platform_Strings_substring(void* env, ShedInt startIndex, ShedInt endIndex, ShedString string) {
