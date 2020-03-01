@@ -62,7 +62,7 @@ static utf8proc_size_t unicodeScalarCountToIndex(ShedInt count, ShedString strin
     } else {
         utf8proc_ssize_t currentCount = 0;
 
-        for (utf8proc_size_t index = length - 1; index >= 0; index--) {
+        for (utf8proc_ssize_t index = length - 1; index >= 0; index--) {
             if (!isContinuationByte(string->data[index])) {
                 currentCount--;
             }
