@@ -118,10 +118,13 @@ ShedString Shed_Stdlib_Platform_Strings_substring(ShedEnvironment env, ShedInt s
     if (startIndex < 0) {
         startIndex = string->length + startIndex;
     }
+    if (startIndex < 0) {
+        startIndex = 0;
+    }
+
     if (endIndex < 0) {
         endIndex = string->length + endIndex;
     }
-
     if (endIndex > string->length) {
         endIndex = string->length;
     }
