@@ -40,6 +40,58 @@ struct ShedClosure {
 
 extern ShedValue shed__module_value__Core_Options[5];
 
+static bool isContinuationByte(uint8_t byte) {
+    return (byte & 0xc0) == 0x80;
+}
+
+static utf8proc_size_t unicodeScalarCountToIndex(ShedInt count, ShedString string) {
+    StringLength length = string->length;
+    if (count >= 0) {
+        utf8proc_ssize_t currentCount = -1;
+
+        for (utf8proc_size_t index = 0; index < length; index++) {
+            if (!isContinuationByte(string->data[index])) {
+                currentCount++;
+            }
+            if (currentCount == count) {
+                return index;
+            }
+        }
+
+        return length;
+    } else {
+        utf8proc_ssize_t currentCount = 0;
+
+        for (utf8proc_size_t index = length - 1; index >= 0; index--) {
+            if (!isContinuationByte(string->data[index])) {
+                currentCount--;
+            }
+            if (currentCount == count) {
+                return index;
+            }
+        }
+
+        return 0;
+    }
+}
+
+static ShedString substringAtIndices(utf8proc_size_t startIndex, utf8proc_size_t endIndex, ShedString string) {
+    if (startIndex < endIndex) {
+        StringLength length = endIndex - startIndex;
+        ShedString result = alloc_string(length);
+        result->length = length;
+        memcpy(result->data, &string->data[startIndex], length);
+        return result;
+    } else {
+        return &empty_string;
+    }
+}
+
+ShedString Shed_Stdlib_Platform_Strings_dropLeftUnicodeScalars(ShedEnvironment env, ShedInt toDrop, ShedString string) {
+    utf8proc_size_t startIndex = unicodeScalarCountToIndex(toDrop, string);
+    return substringAtIndices(startIndex, string->length, string);
+}
+
 ShedValue Shed_Stdlib_Platform_Strings_next(ShedEnvironment env, ShedStringSlice slice) {
     if (slice->startIndex < slice->endIndex) {
         utf8proc_int32_t scalar;
@@ -113,38 +165,15 @@ ShedStringSlice Shed_Stdlib_Platform_Strings_slice(ShedEnvironment env, ShedStri
     return slice;
 }
 
-ShedString Shed_Stdlib_Platform_Strings_substring(ShedEnvironment env, ShedInt startIndex, ShedInt endIndex, ShedString string) {
-    // TODO: handle non-ASCII characters
-    if (startIndex < 0) {
-        startIndex = string->length + startIndex;
-    }
-    if (startIndex < 0) {
-        startIndex = 0;
-    }
-
-    if (endIndex < 0) {
-        endIndex = string->length + endIndex;
-    }
-    if (endIndex > string->length) {
-        endIndex = string->length;
-    }
-
-    if (startIndex < endIndex) {
-        StringLength length = endIndex - startIndex;
-        ShedString result = alloc_string(length);
-        result->length = length;
-        memcpy(result->data, &string->data[startIndex], length);
-        return result;
-    } else {
-        return &empty_string;
-    }
+ShedString Shed_Stdlib_Platform_Strings_substring(ShedEnvironment env, ShedInt startCount, ShedInt endCount, ShedString string) {
+    utf8proc_size_t startIndex = unicodeScalarCountToIndex(startCount, string);
+    utf8proc_size_t endIndex = unicodeScalarCountToIndex(endCount, string);
+    return substringAtIndices(startIndex, endIndex, string);
 }
 
 ShedString Shed_Stdlib_Platform_Strings_unicodeScalarToString(ShedEnvironment env, ShedUnicodeScalar scalar) {
-    // TODO: handle non-ASCII characters
-    ShedString string = alloc_string(1);
-    string->length = 1;
-    string->data[0] = scalar;
+    ShedString string = alloc_string(4);
+    string->length = utf8proc_encode_char(scalar, &string->data[0]);
     return string;
 }
 
@@ -152,7 +181,7 @@ ShedInt Shed_Stdlib_Platform_Strings_unicodeScalarCount(ShedEnvironment env, She
     StringLength length = string->length;
     long count = 0;
     for (StringLength index = 0; index < length; index++) {
-        if ((string->data[index] & 0xc0) != 0x80) {
+        if (!isContinuationByte(string->data[index])) {
             count++;
         }
     }
@@ -189,8 +218,4 @@ ShedString Shed_Stdlib_Platform_Strings_unicodeScalarToHexString(ShedEnvironment
         string->length = length;
     }
     return string;
-}
-
-ShedString Shed_Stdlib_Platform_Strings_dropLeftUnicodeScalars(ShedEnvironment env, ShedInt toDrop, ShedString string) {
-    return Shed_Stdlib_Platform_Strings_substring(NULL, toDrop, string->length, string);
 }
