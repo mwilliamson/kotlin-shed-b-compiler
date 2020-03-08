@@ -13,7 +13,7 @@ run-stdlib-tests:
 test: stdlib-tests
 	mvn test
 
-build-stdlib-llvm: stdlib-llvm/Strings.o
+build-stdlib-llvm: stdlib-llvm/Strings.o stdlib-llvm/utf8proc-2.4.0/libutf8proc.a
 
 stdlib-llvm/Strings.o: stdlib-llvm/Strings.c
 	gcc stdlib-llvm/Strings.c -c -Wall -Werror -o stdlib-llvm/Strings.o
