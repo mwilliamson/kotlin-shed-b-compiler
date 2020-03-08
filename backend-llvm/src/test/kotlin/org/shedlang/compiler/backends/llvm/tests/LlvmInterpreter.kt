@@ -1,15 +1,15 @@
 package org.shedlang.compiler.backends.llvm.tests
 
+import org.shedlang.compiler.backends.llvm.LlvmBackend
 import org.shedlang.compiler.backends.tests.ExecutionResult
-import org.shedlang.compiler.findRoot
 import java.nio.file.Path
 
 internal fun executeLlvmInterpreter(path: Path, includeStrings: Boolean = false): ExecutionResult {
     val extraObjectArgs = if (includeStrings) {
         listOf(
-            "-extra-object=${findRoot().resolve("stdlib-llvm/Strings.o")}",
-            "-extra-archive=${findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")}"
-        )
+            LlvmBackend.archiveFiles().map { path -> "-extra-archive=${path}" },
+            LlvmBackend.objectFiles().map { path -> "-extra-object=${path}" }
+        ).flatten()
     } else {
         listOf()
     }

@@ -8,6 +8,18 @@ import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
 object LlvmBackend : Backend {
+    internal fun archiveFiles(): List<Path> {
+        return listOf(
+            findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")
+        )
+    }
+
+    internal fun objectFiles(): List<Path> {
+        return listOf(
+            findRoot().resolve("stdlib-llvm/Strings.o")
+        )
+    }
+
     override fun compile(moduleSet: ModuleSet, mainModule: ModuleName, target: Path) {
         val image = loadModuleSet(moduleSet)
 
@@ -26,13 +38,12 @@ object LlvmBackend : Backend {
                 "-relocation-model", "pic",
                 "-o", objectPath.toString()
             ))
-            run(listOf(
+            val gccCommand = listOf(
                 "gcc",
                 objectPath.toString(),
-                "${findRoot().resolve("stdlib-llvm/Strings.o")}",
-                "${findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")}",
                 "-o", target.toString()
-            ))
+            ) + (archiveFiles() + objectFiles()).map { path -> path.toString() }
+            run(gccCommand)
         } finally {
             file.deleteRecursively()
         }
