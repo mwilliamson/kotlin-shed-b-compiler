@@ -182,7 +182,7 @@ internal data class LlvmPtrToInt(
 
 internal data class LlvmCall(
     val target: LlvmVariable?,
-    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.fastcc,
+    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
     val returnType: LlvmType,
     val functionPointer: LlvmOperand,
     val arguments: List<LlvmTypedOperand>
@@ -398,7 +398,7 @@ internal data class LlvmFunctionDefinition(
     val name: String,
     val returnType: LlvmType,
     val parameters: List<LlvmParameter>,
-    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.fastcc,
+    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
     val body: List<LlvmInstruction>
 ): LlvmTopLevelEntity {
     override fun serialise(): String {
@@ -415,7 +415,7 @@ internal data class LlvmFunctionDeclaration(
     val name: String,
     val returnType: LlvmType,
     val parameters: List<LlvmParameter>,
-    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.fastcc,
+    val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
     val hasVarargs: Boolean = false
 ): LlvmTopLevelEntity {
     fun type(): LlvmType {

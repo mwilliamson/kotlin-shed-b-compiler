@@ -29,7 +29,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     }
 
     private val mallocDeclaration = LlvmFunctionDeclaration(
-        name = "malloc",
+        name = "GC_malloc",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.voidPointer,
         parameters = listOf(

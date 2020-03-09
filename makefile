@@ -13,10 +13,16 @@ run-stdlib-tests:
 test: stdlib-tests
 	mvn test
 
-build-stdlib-llvm: stdlib-llvm/Strings.o stdlib-llvm/utf8proc-2.4.0/libutf8proc.a
+build-stdlib-llvm: stdlib-llvm/Strings.o stdlib-llvm/utf8proc-2.4.0/libutf8proc.a stdlib-llvm/gc-8.0.4/.libs/libgc.a
 
 stdlib-llvm/Strings.o: stdlib-llvm/Strings.c
 	gcc stdlib-llvm/Strings.c -c -Wall -Werror -o stdlib-llvm/Strings.o
+
+stdlib-llvm/gc-8.0.4/.libs/libgc.a: stdlib-llvm/gc-8.0.4
+	cd stdlib-llvm/gc-8.0.4 && ./configure --disable-dynamic-loading --enable-static --enable-threads=no && make
+
+stdlib-llvm/gc-8.0.4:
+	curl -L https://github.com/ivmai/bdwgc/releases/download/v8.0.4/gc-8.0.4.tar.gz | tar xzf - -C stdlib-llvm
 
 stdlib-llvm/utf8proc-2.4.0/libutf8proc.a: stdlib-llvm/utf8proc-2.4.0
 	cd stdlib-llvm/utf8proc-2.4.0 && make

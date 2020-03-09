@@ -10,11 +10,17 @@ import java.nio.file.Path
 object LlvmBackend : Backend {
     internal fun archiveFiles(): List<Path> {
         return listOf(
+            findRoot().resolve("stdlib-llvm/gc-8.0.4/.libs/libgc.a")
+        )
+    }
+
+    internal fun stringArchiveFiles(): List<Path> {
+        return listOf(
             findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")
         )
     }
 
-    internal fun objectFiles(): List<Path> {
+    internal fun stringObjectFiles(): List<Path> {
         return listOf(
             findRoot().resolve("stdlib-llvm/Strings.o")
         )
@@ -26,23 +32,33 @@ object LlvmBackend : Backend {
         val file = createTempDir()
         try {
             val llPath = file.resolve("main.ll")
-            val objectPath = file.resolve("main.o")
             val compiler = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
             val llSource = compiler.compile(
                 mainModule = mainModule
             )
             llPath.writeText(llSource)
+            compileBinary(llPath = llPath.toPath(), target = target, includeStrings = true)
+        } finally {
+            file.deleteRecursively()
+        }
+    }
+
+    internal fun compileBinary(llPath: Path, target: Path, includeStrings: Boolean) {
+        val file = createTempDir()
+        try {
+            val objectPath = file.resolve("main.o")
             run(listOf(
                 "llc", llPath.toString(),
                 "-filetype", "obj",
                 "-relocation-model", "pic",
                 "-o", objectPath.toString()
             ))
+            val stringsCode = if (includeStrings) stringObjectFiles() + stringArchiveFiles() else listOf()
             val gccCommand = listOf(
                 "gcc",
                 objectPath.toString(),
                 "-o", target.toString()
-            ) + (archiveFiles() + objectFiles()).map { path -> path.toString() }
+            ) + (archiveFiles() + stringsCode).map { path -> path.toString() }
             run(gccCommand)
         } finally {
             file.deleteRecursively()

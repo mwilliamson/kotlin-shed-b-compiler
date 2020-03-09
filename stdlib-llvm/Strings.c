@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "gc-8.0.4/include/gc.h"
 #include "utf8proc/utf8proc.h"
 
 typedef uint64_t ShedUnicodeScalar;
@@ -28,7 +29,7 @@ struct ShedStringSlice {
 typedef struct ShedStringSlice* ShedStringSlice;
 
 ShedString alloc_string(uint64_t capacity) {
-    return malloc(sizeof(StringLength) + sizeof(uint8_t) * capacity);
+    return GC_malloc(sizeof(StringLength) + sizeof(uint8_t) * capacity);
 }
 
 typedef ShedValue* ShedEnvironment;
@@ -102,12 +103,12 @@ ShedValue Shed_Stdlib_Platform_Strings_next(ShedEnvironment env, ShedStringSlice
             &scalar
         );
 
-        ShedStringSlice newSlice = malloc(sizeof(struct ShedStringSlice));
+        ShedStringSlice newSlice = GC_malloc(sizeof(struct ShedStringSlice));
         newSlice->string = slice->string;
         newSlice->startIndex = slice->startIndex + bytesRead;
         newSlice->endIndex = slice->endIndex;
 
-        ShedValue* result = malloc(sizeof(ShedValue) * 2);
+        ShedValue* result = GC_malloc(sizeof(ShedValue) * 2);
         result[0] = scalar;
         result[1] = (ShedValue) newSlice;
 
@@ -158,7 +159,7 @@ ShedString Shed_Stdlib_Platform_Strings_replace(ShedEnvironment env, ShedString 
 }
 
 ShedStringSlice Shed_Stdlib_Platform_Strings_slice(ShedEnvironment env, ShedString string) {
-    ShedStringSlice slice = malloc(sizeof(struct ShedStringSlice));
+    ShedStringSlice slice = GC_malloc(sizeof(struct ShedStringSlice));
     slice->string = string;
     slice->startIndex = 0;
     slice->endIndex = string->length;

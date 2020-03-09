@@ -5,16 +5,15 @@ import org.shedlang.compiler.backends.tests.ExecutionResult
 import java.nio.file.Path
 
 internal fun executeLlvmInterpreter(path: Path, includeStrings: Boolean = false): ExecutionResult {
-    val extraObjectArgs = if (includeStrings) {
-        listOf(
-            LlvmBackend.archiveFiles().map { path -> "-extra-archive=${path}" },
-            LlvmBackend.objectFiles().map { path -> "-extra-object=${path}" }
-        ).flatten()
-    } else {
-        listOf()
+    val temporaryDirectory = createTempDir()
+    try {
+        val binaryPath = temporaryDirectory.resolve("binary")
+        LlvmBackend.compileBinary(llPath = path, target = binaryPath.toPath(), includeStrings = includeStrings)
+        return org.shedlang.compiler.backends.tests.run(
+            listOf(binaryPath.toString()),
+            workingDirectory = path.parent.toFile()
+        )
+    } finally {
+        temporaryDirectory.deleteRecursively()
     }
-    return org.shedlang.compiler.backends.tests.run(
-        listOf("lli") + extraObjectArgs + listOf(path.toString()),
-        workingDirectory = path.parent.toFile()
-    )
 }
