@@ -149,4 +149,30 @@ class TypeCheckBinaryOperationTests {
         val type = inferType(node, typeContext())
         assertThat(type, cast(isBoolType))
     }
+
+    @Test
+    fun leftOperandIsUnaliased() {
+        val reference = variableReference("x")
+        val node = binaryOperation(BinaryOperator.ADD, reference, literalInt())
+
+        val context = typeContext(referenceTypes = mapOf(
+            reference to typeAlias("Count", IntType)
+        ))
+        val type = inferType(node, context)
+
+        assertThat(type, isIntType)
+    }
+
+    @Test
+    fun rightOperandIsUnaliased() {
+        val reference = variableReference("x")
+        val node = binaryOperation(BinaryOperator.ADD, literalInt(), reference)
+
+        val context = typeContext(referenceTypes = mapOf(
+            reference to typeAlias("Count", IntType)
+        ))
+        val type = inferType(node, context)
+
+        assertThat(type, isIntType)
+    }
 }
