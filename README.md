@@ -108,22 +108,12 @@ The `not` operator transforms a `Bool` to its negation.
 
 The left operand is evaluated before the right operand.
 
-The `==` operator compares scalar values of the same type.
+The `==` operator operates on two scalar operands of the same type.
+It evaluates to true if the operands are equal, false otherwise.
+TODO: define string equality (normalised? scalar value equality? byte equality?)
 
-    𝚪 ⊢ e_1: Bool    𝚪 ⊢ e_2: Bool
-    __________________________
-    𝚪 ⊢ e_1 == e_2: Bool
-
-    𝚪 ⊢ e_1: Int    𝚪 ⊢ e_2: Int
-    __________________________
-    𝚪 ⊢ e_1 == e_2: Bool
-
-    𝚪 ⊢ e_1: String    𝚪 ⊢ e_2: String
-    __________________________                TODO: define string equality (normalised? scalar value equality? byte equality?)
-    𝚪 ⊢ e_1 == e_2: Bool
-
-    𝚪 ⊢ e_1: UnicodeScalar    𝚪 ⊢ e_2: UnicodeScalar
-    __________________________
+    𝚪 ⊢ e_1: τ    𝚪 ⊢ e_2: τ
+    __________________________  τ ∈ {Bool, Int, String, UnicodeScalar}
     𝚪 ⊢ e_1 == e_2: Bool
 
 ## State
