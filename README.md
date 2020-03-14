@@ -101,6 +101,30 @@ The `not` operator transforms a `Bool` to its negation.
     ___________
     𝚪 ⊢ -e: Bool
 
+#### Binary operations
+
+    <expr> ::= <expr> <binary-operator> <expr>
+    <binary-operator> ::= "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||" | "+" | "-" | "*"
+
+The `==` operator compares scalar values of the same type.
+
+
+    𝚪 ⊢ e_1: Bool    𝚪 ⊢ e_2: Bool
+    __________________________
+    𝚪 ⊢ e_1 == e_2: Bool
+
+    𝚪 ⊢ e_1: Int    𝚪 ⊢ e_2: Int
+    __________________________
+    𝚪 ⊢ e_1 == e_2: Bool
+
+    𝚪 ⊢ e_1: String    𝚪 ⊢ e_2: String
+    __________________________                TODO: define string equality (normalised? scalar value equality? byte equality?)
+    𝚪 ⊢ e_1 == e_2: Bool
+
+    𝚪 ⊢ e_1: UnicodeScalar    𝚪 ⊢ e_2: UnicodeScalar
+    __________________________
+    𝚪 ⊢ e_1 == e_2: Bool
+
 ## State
 
 State should be an effect over a heap.
