@@ -84,6 +84,23 @@ Tuple types correspond to their element types:
 
 Sub-expressions are evaluated from left to right.
 
+#### Unary operations
+
+    <expr> ::= <unary-operator> <expr>
+    <unary-operator> ::= "-" | "not"
+
+The `-` operator transforms an `Int` to its negation.
+
+    𝚪 ⊢ e: Int
+    ___________
+    𝚪 ⊢ -e: Int
+
+The `not` operator transforms a `Bool` to its negation.
+
+    𝚪 ⊢ e: Bool
+    ___________
+    𝚪 ⊢ -e: Bool
+
 ## State
 
 State should be an effect over a heap.
