@@ -10,6 +10,7 @@ import org.shedlang.compiler.ast.UnaryOperator
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.InvalidUnaryOperationError
 import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.types.IntType
 
 class TypeCheckUnaryOperationTests {
     @Test
@@ -48,5 +49,18 @@ class TypeCheckUnaryOperationTests {
                 has(InvalidUnaryOperationError::actualOperandType, isBoolType)
             ))
         )
+    }
+
+    @Test
+    fun unaryOperationsCanApplyToAliasedTypes() {
+        val reference = variableReference("x")
+        val node = unaryOperation(UnaryOperator.MINUS, reference)
+
+        val context = typeContext(referenceTypes = mapOf(
+            reference to typeAlias("Count", IntType)
+        ))
+        val type = inferType(node, context)
+
+        assertThat(type, isIntType)
     }
 }

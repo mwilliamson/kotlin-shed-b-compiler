@@ -78,7 +78,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
 private fun inferUnaryOperationType(node: UnaryOperationNode, context: TypeContext): Type {
     val operandType = inferType(node.operand, context)
 
-    return when (UnaryOperationType(node.operator, operandType)) {
+    return when (UnaryOperationType(node.operator, unalias(operandType))) {
         UnaryOperationType(UnaryOperator.NOT, BoolType) -> BoolType
         UnaryOperationType(UnaryOperator.MINUS, IntType) -> IntType
 

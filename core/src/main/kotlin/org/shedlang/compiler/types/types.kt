@@ -365,6 +365,14 @@ interface TypeAlias: Type {
     }
 }
 
+fun unalias(initialType: Type): Type {
+    var type = initialType
+    while (type is TypeAlias) {
+        type = type.aliasedType
+    }
+    return type
+}
+
 data class LazyTypeAlias(
     override val name: Identifier,
     private val getAliasedType: Lazy<Type>
