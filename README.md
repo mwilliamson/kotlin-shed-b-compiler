@@ -82,6 +82,8 @@ Tuple types correspond to their element types:
     ________________________________________________
     𝚪 ⊢ #(e_1, e_2, ..., e_n): #(τ_1, τ_2, ..., τ_n)
 
+Sub-expressions are evaluated from left to right.
+
 ## State
 
 State should be an effect over a heap.
