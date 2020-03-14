@@ -24,6 +24,11 @@ A `UnicodeScalar` is a single Unicode scalar.
 
 `Unit` has one possible value, `unit`.
 
+#### Tuples
+
+Tuples are fixed-length lists of values.
+For instance, the type `#(Int, Bool)` is a tuple where the first element is an `Int`, and the second element is a `Bool`.
+
 ### Expressions
 
 #### Boolean literal
@@ -65,6 +70,17 @@ Unicode scalar literals are of type `UnicodeScalar`.
 Unit literals are of type `Unit`.
 
     ⊢ u: Unit
+
+#### Tuple literal
+
+    <expr> ::= "#(" <tuple-contents> ? ")"
+    <tuple-contents> ::= <expr> ("," <expr>) * "," ?
+
+Tuple types correspond to their element types:
+
+    𝚪 ⊢ e_1: τ_1    𝚪 ⊢ e_2: τ_2    ...    𝚪 ⊢ e_n: τ_n
+    ________________________________________________
+    𝚪 ⊢ #(e_1, e_2, ..., e_n): #(τ_1, τ_2, ..., τ_n)
 
 ## State
 
