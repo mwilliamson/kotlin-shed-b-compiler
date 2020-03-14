@@ -106,8 +106,9 @@ The `not` operator transforms a `Bool` to its negation.
     <expr> ::= <expr> <binary-operator> <expr>
     <binary-operator> ::= "==" | "!=" | "<" | "<=" | ">" | ">=" | "&&" | "||" | "+" | "-" | "*"
 
-The `==` operator compares scalar values of the same type.
+The left operand is evaluated before the right operand.
 
+The `==` operator compares scalar values of the same type.
 
     𝚪 ⊢ e_1: Bool    𝚪 ⊢ e_2: Bool
     __________________________
