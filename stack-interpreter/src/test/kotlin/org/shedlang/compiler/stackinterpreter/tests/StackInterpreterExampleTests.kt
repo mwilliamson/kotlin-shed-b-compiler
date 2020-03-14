@@ -17,7 +17,7 @@ import org.shedlang.compiler.stackir.loadModuleSet
 import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
-class ExecutionTests {
+class StackInterpreterExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
         "symbols",

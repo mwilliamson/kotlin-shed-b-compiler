@@ -19,7 +19,7 @@ import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.UnitType
 import java.nio.file.Path
 
-class ExecutionTests {
+class Amd64ExampleTests {
     private val disabledTests = setOf<String>(
         "BooleanOperations.shed",
         "cast",
