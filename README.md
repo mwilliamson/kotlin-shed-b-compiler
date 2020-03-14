@@ -116,6 +116,12 @@ TODO: define string equality (normalised? scalar value equality? byte equality?)
     __________________________  τ ∈ {Bool, Int, String, UnicodeScalar}
     𝚪 ⊢ e_1 == e_2: Bool
 
+The `!=` operator is the negation of the `==` operator.
+
+    𝚪 ⊢ e_1: τ    𝚪 ⊢ e_2: τ
+    __________________________  τ ∈ {Bool, Int, String, UnicodeScalar}
+    𝚪 ⊢ e_1 != e_2: Bool
+
 ## State
 
 State should be an effect over a heap.
