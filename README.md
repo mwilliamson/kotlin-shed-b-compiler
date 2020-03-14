@@ -2,7 +2,37 @@
 
 ## Specification
 
+### Values
+
+#### `Bool`
+
+`Bool` has two possible values, `true` and `false`.
+
+#### `Int`
+
+Values of type `Int` are arbitary-precision integers.
+
+#### `String`
+
+Values of type `String` are strings of unicode scalars.
+
+#### `UnicodeScalar`
+
+A `UnicodeScalar` is a single Unicode scalar.
+
+#### `Unit`
+
+`Unit` has one possible value, `unit`.
+
 ### Expressions
+
+#### Boolean literal
+
+    <expr> ::= "true" | "false"
+
+Boolean literals are of type `Bool`.
+
+    ⊢ b: Bool
 
 #### Integer literal
 
@@ -11,6 +41,30 @@
 Integer literals are of type `Int`.
 
     ⊢ i: Int
+
+#### String literal
+
+    <expr> ::= '"' <Unicode scalar> * '"'
+
+String literals are of type `String`.
+
+    ⊢ s: String
+
+#### Unicode scalar literal
+
+    <expr> ::= "'" <Unicode scalar> "'"
+
+Unicode scalar literals are of type `UnicodeScalar`.
+
+    ⊢ c: UnicodeScalar
+
+#### Unit literal
+
+    <expr> ::= "unit"
+
+Unit literals are of type `Unit`.
+
+    ⊢ u: Unit
 
 ## State
 
