@@ -81,44 +81,6 @@ class TypeCheckExpressionTests {
     }
 
     @Test
-    fun negatingBooleanReturnsBoolean() {
-        val node = unaryOperation(UnaryOperator.NOT, literalBool(true))
-        val type = inferType(node, typeContext())
-        assertThat(type, isBoolType)
-    }
-
-    @Test
-    fun negatingNonBooleansThrowsError() {
-        val node = unaryOperation(UnaryOperator.NOT, literalInt(1))
-        assertThat(
-            { inferType(node, typeContext()) },
-            throws(allOf(
-                has(InvalidUnaryOperationError::operator, equalTo(UnaryOperator.NOT)),
-                has(InvalidUnaryOperationError::actualOperandType, isIntType)
-            ))
-        )
-    }
-
-    @Test
-    fun unaryMinusIntReturnsInt() {
-        val node = unaryOperation(UnaryOperator.MINUS, literalInt())
-        val type = inferType(node, typeContext())
-        assertThat(type, isIntType)
-    }
-
-    @Test
-    fun unaryMinusNonIntThrowsError() {
-        val node = unaryOperation(UnaryOperator.MINUS, literalBool())
-        assertThat(
-            { inferType(node, typeContext()) },
-            throws(allOf(
-                has(InvalidUnaryOperationError::operator, equalTo(UnaryOperator.MINUS)),
-                has(InvalidUnaryOperationError::actualOperandType, isBoolType)
-            ))
-        )
-    }
-
-    @Test
     fun addingTwoIntegersReturnsInteger() {
         val node = binaryOperation(BinaryOperator.ADD, literalInt(1), literalInt(2))
         val type = inferType(node, emptyTypeContext())
