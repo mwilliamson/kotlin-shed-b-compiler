@@ -99,7 +99,7 @@ The `not` operator transforms a `Bool` to its negation.
 
     𝚪 ⊢ e: Bool
     ___________
-    𝚪 ⊢ -e: Bool
+    𝚪 ⊢ not e: Bool
 
 #### Binary operations
 
