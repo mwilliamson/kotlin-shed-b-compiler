@@ -1,5 +1,17 @@
 # Shed programming language
 
+## Specification
+
+### Expressions
+
+#### Integer literal
+
+    <expr> ::= /-?[0-9]+/
+
+Integer literals are of type `Int`.
+
+    ⊢ i: Int
+
 ## State
 
 State should be an effect over a heap.
