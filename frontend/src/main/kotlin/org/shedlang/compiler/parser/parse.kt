@@ -108,7 +108,7 @@ private fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModul
 
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
-        parseElement = ::parseValType,
+        parseElement = ::parseTypesModuleStatement,
         isEnd = { tokens -> tokens.isNext(TokenType.END) },
         tokens = tokens
     )
@@ -126,6 +126,10 @@ private fun parseImports(tokens: TokenIterator<TokenType>): List<ImportNode> {
         isEnd = { tokens -> !tokens.isNext(TokenType.KEYWORD_IMPORT) },
         tokens = tokens
     )
+}
+
+private fun parseTypesModuleStatement(tokens: TokenIterator<TokenType>): TypesModuleStatementNode {
+    return parseValType(tokens)
 }
 
 private fun parseValType(tokens: TokenIterator<TokenType>): ValTypeNode {

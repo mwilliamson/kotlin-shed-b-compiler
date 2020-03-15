@@ -253,7 +253,7 @@ data class ModuleNode(
 
 data class TypesModuleNode(
     val imports: List<ImportNode>,
-    val body: List<ValTypeNode>,
+    val body: List<TypesModuleStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): Node {
@@ -261,14 +261,26 @@ data class TypesModuleNode(
         get() = listOf(NodeStructures.subEnv((imports + body).map(NodeStructures::staticEval)))
 }
 
+interface TypesModuleStatementNode: Node {
+    interface Visitor<T> {
+        fun visit(node: ValTypeNode): T
+    }
+
+    fun <T> accept(visitor: Visitor<T>): T
+}
+
 data class ValTypeNode(
     override val name: Identifier,
     val type: StaticExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode {
+): TypesModuleStatementNode, VariableBindingNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.staticEval(type), NodeStructures.initialise(this))
+
+    override fun <T> accept(visitor: TypesModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class ImportPath(val base: ImportPathBase, val parts: List<Identifier>) {

@@ -259,7 +259,7 @@ internal fun typeCheck(module: TypesModuleNode, context: TypeContext): ModuleTyp
     }
 
     for (statement in module.body) {
-        typeCheck(statement, context)
+        typeCheckTypesModuleStatement(statement, context)
     }
 
     return ModuleType(fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
@@ -281,7 +281,15 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
     typeCheckTarget(import.target, type, context)
 }
 
-internal fun typeCheck(valType: ValTypeNode, context: TypeContext) {
+internal fun typeCheckTypesModuleStatement(statement: TypesModuleStatementNode, context: TypeContext) {
+    return statement.accept(object : TypesModuleStatementNode.Visitor<Unit> {
+        override fun visit(node: ValTypeNode) {
+            typeCheckValType(node, context)
+        }
+    })
+}
+
+internal fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
     val type = evalType(valType.type, context)
     context.addVariableType(valType, type)
 }

@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.newTypeContext
-import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.typechecker.typeCheckTypesModuleStatement
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.MetaType
 
@@ -17,7 +17,7 @@ class TypeCheckValTypeTests {
         val typeContext = typeContext(referenceTypes = mapOf(intReference to IntType))
         assertThat(
             {
-                typeCheck(node, typeContext)
+                typeCheckTypesModuleStatement(node, typeContext)
             },
             throwsUnexpectedType(
                 expected = isMetaTypeGroup,
@@ -41,7 +41,7 @@ class TypeCheckValTypeTests {
             )),
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
-        typeCheck(node, typeContext)
+        typeCheckTypesModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isIntType)
     }
 }
