@@ -89,12 +89,24 @@ fun writeJsonValue(value: JsonValue) !StringBuilder.Write -> Unit {
     when (value) {
         is JsonObject {
             StringBuilder.write!("{");
-            Lists.forEach!(writeJsonProperty, value.properties);
+            Lists.forEachInterspersed!(
+                writeJsonProperty,
+                fun () !StringBuilder.Write -> Unit {
+                    StringBuilder.write!(",");
+                },
+                value.properties,
+            );
             StringBuilder.write!("}");
         }
         is JsonArray {
             StringBuilder.write!("[");
-            Lists.forEach!(writeJsonValue, value.elements);
+            Lists.forEachInterspersed!(
+                writeJsonValue,
+                fun () !StringBuilder.Write -> Unit {
+                    StringBuilder.write!(",");
+                },
+                value.elements,
+            );
             StringBuilder.write!("]");
         }
         is JsonNumber {

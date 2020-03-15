@@ -13,6 +13,7 @@ export
     findIndex,
     foldLeft,
     forEach,
+    forEachInterspersed,
     lazyFilter,
     lazyFlatten,
     lazyMap;
@@ -147,6 +148,24 @@ fun forEach[T, !E](func: Fun (T) !E -> Unit, sequence: Sequence[T, E]) !E -> Uni
         is SequenceItem {
             func!(item.head);
             tailrec forEach!(func, item.tail)
+        }
+    }
+}
+
+fun forEachInterspersed[T, !E](func: Fun (T) !E -> Unit, intersperse: Fun () !E -> Unit, sequence: Sequence[T, E]) !E -> Unit {
+    val item = sequence.next!();
+    when (item) {
+        is SequenceEnd {
+        }
+        is SequenceItem {
+            func!(item.head);
+            forEach!(
+                fun (element: T) !E -> Unit {
+                    intersperse!();
+                    func!(element);
+                },
+                item.tail,
+            );
         }
     }
 }
