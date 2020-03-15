@@ -78,8 +78,13 @@ internal class Compiler(
 
     internal fun linkerFiles(): List<String> {
         val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
-        val stringsLinkerFiles = if (includeStrings) listOf("stdlib-llvm/Strings.o", "stdlib-llvm/utf8proc/libutf8proc.a") else listOf()
-        return listOf("stdlib-llvm/gc-8.0.4/.libs/libgc.a") + stringsLinkerFiles
+        val includeStringBuilder = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder"))) != null
+
+        val shedFiles = if (includeStrings || includeStringBuilder) listOf("stdlib-llvm/shed.o") else listOf()
+        val stringsFiles = if (includeStrings) listOf("stdlib-llvm/Strings.o", "stdlib-llvm/utf8proc/libutf8proc.a") else listOf()
+        val stringBuilderFiles = if (includeStringBuilder) listOf("stdlib-llvm/StringBuilder.o") else listOf()
+
+        return listOf("stdlib-llvm/gc-8.0.4/.libs/libgc.a") + shedFiles + stringsFiles + stringBuilderFiles
     }
 
     private fun moduleInit(moduleName: ModuleName, context: FunctionContext): FunctionContext {

@@ -6,38 +6,7 @@
 #include "gc-8.0.4/include/gc.h"
 #include "utf8proc/utf8proc.h"
 
-typedef uint64_t ShedUnicodeScalar;
-typedef int64_t ShedInt;
-typedef uint64_t ShedValue;
-
-typedef uint64_t StringLength;
-struct ShedString {
-    StringLength length;
-    uint8_t data[];
-};
-
-struct ShedString empty_string = { .length = 0, .data = {} };
-
-typedef struct ShedString* ShedString;
-
-struct ShedStringSlice {
-    ShedString string;
-    StringLength startIndex;
-    StringLength endIndex;
-};
-
-typedef struct ShedStringSlice* ShedStringSlice;
-
-ShedString alloc_string(uint64_t capacity) {
-    return GC_malloc(sizeof(StringLength) + sizeof(uint8_t) * capacity);
-}
-
-typedef ShedValue* ShedEnvironment;
-
-struct ShedClosure {
-    void* function;
-    ShedValue environment[];
-};
+#include "./shed.h"
 
 extern ShedValue shed__module_value__Core_Options[5];
 

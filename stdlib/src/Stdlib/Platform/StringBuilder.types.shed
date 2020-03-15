@@ -1,0 +1,4 @@
+effect Write;
+
+val build: Fun (Fun () !Write -> Unit) -> String;
+val write: Fun (String) !Write -> Unit;

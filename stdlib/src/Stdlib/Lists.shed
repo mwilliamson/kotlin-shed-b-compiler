@@ -11,6 +11,7 @@ export
     flatten,
     foldLeft,
     forEach,
+    forEachInterspersed,
     map;
 
 import Sequences from .Sequences;
@@ -80,6 +81,10 @@ fun foldLeft[T, R, !E](func: Fun (R, T) !E -> R, initial: R, elements: List[T]) 
 
 fun forEach[T, !E](func: Fun (T) !E -> Unit, elements: List[T]) !E -> Unit {
     Sequences.forEach!(func, listToSequence(elements))
+}
+
+fun forEachInterspersed[T, !E](func: Fun (T) !E -> Unit, intersperse: Fun () !E -> Unit, elements: List[T]) !E -> Unit {
+    Sequences.forEachInterspersed!(func, intersperse, listToSequence(elements))
 }
 
 fun map[T, R, !E](func: Fun (T) !E -> R, elements: List[T]) !E -> List[R] {

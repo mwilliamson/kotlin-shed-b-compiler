@@ -1,0 +1,19 @@
+// stdout:
+//   apple banana coconut
+
+export main;
+
+import StringBuilder from Stdlib.Platform.StringBuilder;
+
+fun main() !Io -> Unit {
+    print!(StringBuilder.build(write));
+}
+
+fun write() !StringBuilder.Write -> Unit {
+    StringBuilder.write!("apple");
+    StringBuilder.write!(" ");
+    StringBuilder.write!("banana");
+    StringBuilder.write!(" ");
+    StringBuilder.write!("coconut");
+    StringBuilder.write!("\n");
+}

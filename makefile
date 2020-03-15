@@ -13,9 +13,15 @@ run-stdlib-tests:
 test: stdlib-tests
 	mvn test
 
-build-stdlib-llvm: stdlib-llvm/Strings.o stdlib-llvm/utf8proc-2.4.0/libutf8proc.a stdlib-llvm/gc-8.0.4/.libs/libgc.a
+build-stdlib-llvm: stdlib-llvm/shed.o stdlib-llvm/StringBuilder.o stdlib-llvm/Strings.o stdlib-llvm/utf8proc-2.4.0/libutf8proc.a stdlib-llvm/gc-8.0.4/.libs/libgc.a
 
-stdlib-llvm/Strings.o: stdlib-llvm/Strings.c
+stdlib-llvm/shed.o: stdlib-llvm/shed.h stdlib-llvm/shed.c
+	gcc stdlib-llvm/shed.c -c -Wall -Werror -o stdlib-llvm/shed.o
+
+stdlib-llvm/StringBuilder.o: stdlib-llvm/StringBuilder.c stdlib-llvm/shed.h
+	gcc stdlib-llvm/StringBuilder.c -c -Wall -Werror -o stdlib-llvm/StringBuilder.o
+
+stdlib-llvm/Strings.o: stdlib-llvm/Strings.c stdlib-llvm/shed.h
 	gcc stdlib-llvm/Strings.c -c -Wall -Werror -o stdlib-llvm/Strings.o
 
 stdlib-llvm/gc-8.0.4/.libs/libgc.a: stdlib-llvm/gc-8.0.4

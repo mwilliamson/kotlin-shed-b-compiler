@@ -24,7 +24,8 @@ export
 
 import ListBuilder from .ListBuilder;
 import Lists from .Lists;
-import @(.list as list, .List as List) from Stdlib.Lists;
+import @(.list as list, .List as List) from .Lists;
+import StringBuilder from .Platform.StringBuilder;
 import Sequences from .Sequences;
 import Unfold from .Sequences.Unfold;
 import UnicodeScalars from .Strings.UnicodeScalars;
@@ -79,36 +80,62 @@ fun boolean(value: Bool) -> JsonValue {
 val null = JsonNull();
 
 fun valueToText(value: JsonValue) -> String {
+    StringBuilder.build(fun () !StringBuilder.Write -> Unit {
+        writeJsonValue!(value)
+    })
+}
+
+fun writeJsonValue(value: JsonValue) !StringBuilder.Write -> Unit {
     when (value) {
         is JsonObject {
-            val properties = UnicodeScalars.join(",", Lists.map(propertyToText, value.properties));
-            "{" + properties + "}"
+            StringBuilder.write!("{");
+            Lists.forEachInterspersed!(
+                writeJsonProperty,
+                fun () !StringBuilder.Write -> Unit {
+                    StringBuilder.write!(",");
+                },
+                value.properties,
+            );
+            StringBuilder.write!("}");
         }
         is JsonArray {
-            val elements = UnicodeScalars.join(",", Lists.map(valueToText, value.elements));
-            "[" + elements +  "]"
+            StringBuilder.write!("[");
+            Lists.forEachInterspersed!(
+                writeJsonValue,
+                fun () !StringBuilder.Write -> Unit {
+                    StringBuilder.write!(",");
+                },
+                value.elements,
+            );
+            StringBuilder.write!("]");
         }
         is JsonNumber {
-            value.value
+            StringBuilder.write!(value.value);
         }
         is JsonString {
-            jsonStringToText(value.value)
+            writeJsonString!(value.value);
         }
         is JsonBoolean {
-            if (value.value) {
+            StringBuilder.write!(if (value.value) {
                 "true"
             } else {
                 "false"
-            }
+            });
         }
         is JsonNull {
-            "null"
+            StringBuilder.write!("null");
         }
     }
 }
 
-fun propertyToText(property: JsonProperty) -> String {
-    jsonStringToText(property.key) + ":" + valueToText(property.value)
+fun writeJsonProperty(property: JsonProperty) !StringBuilder.Write -> Unit {
+    writeJsonString!(property.key);
+    StringBuilder.write!(":");
+    writeJsonValue!(property.value);
+}
+
+fun writeJsonString(value: String) !StringBuilder.Write -> Unit {
+    StringBuilder.write!(jsonStringToText(value));
 }
 
 fun jsonStringToText(value: String) -> String {

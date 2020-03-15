@@ -117,6 +117,10 @@ internal fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrVa
     }
 }
 
+internal fun <T> stackOf(): Stack<T> {
+    return Stack(persistentListOf())
+}
+
 internal class Stack<T>(private val stack: PersistentList<T>) {
     val size: Int
         get() = stack.size
@@ -232,6 +236,7 @@ internal data class InterpreterState(
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<ModuleName, InterpreterModule>,
+    private val nativeContext: PersistentMap<ModuleName, Any>,
     private val world: World,
     private val labelToInstructionIndex: MutableMap<Int, Int>
 ) {
@@ -314,6 +319,14 @@ internal data class InterpreterState(
         }
     }
 
+    fun storeNativeContext(moduleName: ModuleName, context: Any): InterpreterState {
+        return copy(nativeContext = nativeContext.put(moduleName, context))
+    }
+
+    fun loadNativeContext(moduleName: ModuleName): Any? {
+        return nativeContext[moduleName]
+    }
+
     fun moduleInitialisation(moduleName: ModuleName): List<Instruction> {
         return image.moduleInitialisation(moduleName)!!
     }
@@ -332,7 +345,7 @@ internal data class InterpreterState(
             instructionIndex = 0,
             instructions = instructions,
             scopes = parentScopes.add(newScope),
-            temporaryStack = Stack(persistentListOf())
+            temporaryStack = stackOf()
         )
         return copy(
             bindings = bindings.put(newScope, persistentMapOf()),
@@ -378,7 +391,8 @@ internal fun initialState(
         bindings = persistentMapOf(defaultScope to defaultVariables.toPersistentMap()),
         defaultScope = defaultScope,
         image = image,
-        callStack = Stack(persistentListOf()),
+        callStack = stackOf(),
+        nativeContext = persistentMapOf(),
         modules = loadNativeModules(),
         world = world,
         labelToInstructionIndex = mutableMapOf()

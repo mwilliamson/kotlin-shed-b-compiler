@@ -16,6 +16,7 @@ internal class BuiltinModuleCompiler(
     private val builtinModules = mapOf<ModuleName, (FunctionContext) -> FunctionContext>(
         listOf(Identifier("Core"), Identifier("Io")) to ::compileCoreIo,
         listOf(Identifier("Core"), Identifier("IntToString")) to ::compileCoreIntToString,
+        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")) to ::compileStdlibPlatformStringBuilder,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")) to ::compileStdlibPlatformStrings
     )
 
@@ -176,6 +177,17 @@ internal class BuiltinModuleCompiler(
             .addTopLevelEntities(intToString, intToStringFormatStringDefinition)
     }
 
+    private fun compileStdlibPlatformStringBuilder(context: FunctionContext): FunctionContext {
+        return compileCModule(
+            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
+            functionNames = listOf(
+                "build",
+                "write"
+            ),
+            context = context
+        )
+    }
+
     private fun compileStdlibPlatformStrings(context: FunctionContext): FunctionContext {
         return compileCModule(
             moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
@@ -214,7 +226,7 @@ internal class BuiltinModuleCompiler(
             )
         }
             .addInstructions(modules.storeFields(
-                moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
+                moduleName = moduleName,
                 exports = functionNames.map { functionName ->
                     Identifier(functionName) to closures.getValue(functionName)
                 }
