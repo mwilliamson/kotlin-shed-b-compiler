@@ -263,10 +263,24 @@ data class TypesModuleNode(
 
 interface TypesModuleStatementNode: Node {
     interface Visitor<T> {
+        fun visit(node: EffectDeclarationNode): T
         fun visit(node: ValTypeNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
+}
+
+data class EffectDeclarationNode(
+    override val name: Identifier,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): TypesModuleStatementNode, VariableBindingNode {
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.initialise(this))
+
+    override fun <T> accept(visitor: TypesModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class ValTypeNode(
@@ -280,19 +294,6 @@ data class ValTypeNode(
 
     override fun <T> accept(visitor: TypesModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
-    }
-}
-
-data class EffectDeclarationNode(
-    override val name: Identifier,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-): TypesModuleStatementNode, VariableBindingNode {
-    override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.initialise(this))
-
-    override fun <T> accept(visitor: TypesModuleStatementNode.Visitor<T>): T {
-        throw UnsupportedOperationException("not implemented")
     }
 }
 

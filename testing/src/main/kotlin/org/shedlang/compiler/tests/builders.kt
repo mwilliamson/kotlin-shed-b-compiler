@@ -153,6 +153,13 @@ fun variableBinder(
     name: String
 ): VariableBindingNode = parameter(name = name)
 
+fun effectDeclaration(
+    name: String
+) = EffectDeclarationNode(
+    name = Identifier(name),
+    source = anySource()
+)
+
 fun valType(
     name: String = "<val name>",
     type: StaticExpressionNode

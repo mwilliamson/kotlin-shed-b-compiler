@@ -31,6 +31,11 @@ object IoEffect : Effect {
         get() = "!Io"
 }
 
+class OpaqueEffect(val name: Identifier): Effect {
+    override val shortDescription: String
+        get() = "!${name.value}"
+}
+
 interface TypeGroup {
     val shortDescription: String
 }

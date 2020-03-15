@@ -283,13 +283,22 @@ internal fun typeCheck(import: ImportNode, context: TypeContext) {
 
 internal fun typeCheckTypesModuleStatement(statement: TypesModuleStatementNode, context: TypeContext) {
     return statement.accept(object : TypesModuleStatementNode.Visitor<Unit> {
+        override fun visit(node: EffectDeclarationNode) {
+            typeCheckEffectDeclaration(node, context)
+        }
+
         override fun visit(node: ValTypeNode) {
             typeCheckValType(node, context)
         }
     })
 }
 
-internal fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
+private fun typeCheckEffectDeclaration(effectDeclaration: EffectDeclarationNode, context: TypeContext) {
+    val effect = OpaqueEffect(name = effectDeclaration.name)
+    context.addVariableType(effectDeclaration, EffectType(effect))
+}
+
+private fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
     val type = evalType(valType.type, context)
     context.addVariableType(valType, type)
 }
