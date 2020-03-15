@@ -45,7 +45,7 @@ class NoSuchFieldError(val fieldName: Identifier, source: Source)
 class FieldAlreadyDeclaredError(val fieldName: Identifier, source: Source)
     : TypeCheckError("Field has already been declared: ${fieldName.value}", source)
 class UnhandledEffectError(val effect: Effect, source: Source)
-    : TypeCheckError("Unhandled effect: ${effect}", source)
+    : TypeCheckError("Unhandled effect: ${effect.shortDescription}", source)
 class ReceiverHasNoEffectsError(source: Source)
     : TypeCheckError("Receiver has no effects", source)
 // TODO: specialise name and arguments to binary operations
