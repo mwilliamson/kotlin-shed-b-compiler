@@ -128,8 +128,32 @@ private fun parseImports(tokens: TokenIterator<TokenType>): List<ImportNode> {
     )
 }
 
-private fun parseTypesModuleStatement(tokens: TokenIterator<TokenType>): TypesModuleStatementNode {
-    return parseValType(tokens)
+internal fun parseTypesModuleStatement(tokens: TokenIterator<TokenType>): TypesModuleStatementNode {
+    val token = tokens.peek()
+
+    when {
+        token.tokenType == TokenType.KEYWORD_EFFECT ->
+            return parseEffectDeclaration(tokens)
+
+        token.tokenType == TokenType.KEYWORD_VAL ->
+            return parseValType(tokens)
+
+        else ->
+            throw UnexpectedTokenException(
+                location = tokens.location(),
+                expected = "types module statement",
+                actual = token.describe()
+            )
+    }
+}
+
+private fun parseEffectDeclaration(tokens: TokenIterator<TokenType>): EffectDeclarationNode {
+    val source = tokens.location()
+
+    tokens.skip(TokenType.KEYWORD_EFFECT)
+    val name = parseIdentifier(tokens)
+
+    return EffectDeclarationNode(name = name, source = source)
 }
 
 private fun parseValType(tokens: TokenIterator<TokenType>): ValTypeNode {

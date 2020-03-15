@@ -97,6 +97,10 @@ internal fun isValType(
     ))
 }
 
+internal fun isEffectDeclaration(name: Matcher<Identifier>): Matcher<TypesModuleStatementNode> {
+    return cast(has(EffectDeclarationNode::name, name))
+}
+
 internal fun isTypeAlias(
     name: Matcher<Identifier> = anything,
     expression: Matcher<StaticExpressionNode> = anything

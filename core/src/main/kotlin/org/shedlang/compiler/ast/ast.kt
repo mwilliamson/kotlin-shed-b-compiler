@@ -283,6 +283,19 @@ data class ValTypeNode(
     }
 }
 
+data class EffectDeclarationNode(
+    override val name: Identifier,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): TypesModuleStatementNode, VariableBindingNode {
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.initialise(this))
+
+    override fun <T> accept(visitor: TypesModuleStatementNode.Visitor<T>): T {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 data class ImportPath(val base: ImportPathBase, val parts: List<Identifier>) {
     companion object {
         fun absolute(parts: List<String>) = ImportPath(ImportPathBase.Absolute, parts.map(::Identifier))
