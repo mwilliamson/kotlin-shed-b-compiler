@@ -82,6 +82,12 @@ internal class Compiler(
         return listOf("stdlib-llvm/gc-8.0.4/.libs/libgc.a") + stringsLinkerFiles
     }
 
+    private fun moduleInit(moduleName: ModuleName, context: FunctionContext): FunctionContext {
+        return context
+            .addTopLevelEntities(defineModule(moduleName))
+            .addInstruction(callModuleInit(moduleName))
+    }
+
     private fun defineModule(moduleName: ModuleName): List<LlvmTopLevelEntity> {
         if (definedModules.contains(moduleName)) {
             return listOf()
@@ -146,13 +152,13 @@ internal class Compiler(
 
     private fun compileModuleInitialisation(moduleName: ModuleName, context: FunctionContext): FunctionContext {
         if (builtins.isBuiltinModule(moduleName)) {
-            val context2 = builtins.compileBuiltinModule(moduleName, context = context)
             // TODO: better handling of dependencies
-            return if (moduleName == listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) {
-                context2.addTopLevelEntities(defineModule(listOf(Identifier("Core"), Identifier("Options"))))
+            val context2 = if (moduleName == listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) {
+                moduleInit(listOf(Identifier("Core"), Identifier("Options")), context)
             } else {
-                context2
+                context
             }
+            return builtins.compileBuiltinModule(moduleName, context = context2)
         } else {
             val moduleInitialisationInstructions = image.moduleInitialisation(moduleName)
             if (moduleInitialisationInstructions == null) {
@@ -429,9 +435,7 @@ internal class Compiler(
             }
 
             is ModuleInit -> {
-                return context
-                    .addTopLevelEntities(defineModule(instruction.moduleName))
-                    .addInstruction(callModuleInit(instruction.moduleName))
+                return moduleInit(instruction.moduleName, context)
             }
 
             is ModuleLoad -> {
