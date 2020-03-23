@@ -235,8 +235,8 @@ internal data class InterpreterState(
     private val defaultScope: ScopeReference,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
-    private val stringBuilderStack: Stack<StringBuilder>,
     private val modules: PersistentMap<ModuleName, InterpreterModule>,
+    private val nativeContext: PersistentMap<ModuleName, Any>,
     private val world: World,
     private val labelToInstructionIndex: MutableMap<Int, Int>
 ) {
@@ -319,17 +319,12 @@ internal data class InterpreterState(
         }
     }
 
-    fun pushStringBuilder(): InterpreterState {
-        return copy(stringBuilderStack = stringBuilderStack.push(StringBuilder()))
+    fun storeNativeContext(moduleName: ModuleName, context: Any): InterpreterState {
+        return copy(nativeContext = nativeContext.put(moduleName, context))
     }
 
-    fun peekStringBuilder(): StringBuilder {
-        return stringBuilderStack.last()
-    }
-
-    fun popStringBuilder(): Pair<InterpreterState, StringBuilder> {
-        val (newStringBuilderStack, stringBuilder) = stringBuilderStack.pop()
-        return copy(stringBuilderStack = newStringBuilderStack) to stringBuilder
+    fun loadNativeContext(moduleName: ModuleName): Any? {
+        return nativeContext[moduleName]
     }
 
     fun moduleInitialisation(moduleName: ModuleName): List<Instruction> {
@@ -397,7 +392,7 @@ internal fun initialState(
         defaultScope = defaultScope,
         image = image,
         callStack = stackOf(),
-        stringBuilderStack = stackOf(),
+        nativeContext = persistentMapOf(),
         modules = loadNativeModules(),
         world = world,
         labelToInstructionIndex = mutableMapOf()

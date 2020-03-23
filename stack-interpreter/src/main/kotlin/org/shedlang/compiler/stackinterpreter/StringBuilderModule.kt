@@ -35,3 +35,21 @@ internal val stringBuilderModule = createNativeModule(
         }
     )
 )
+
+private fun InterpreterState.pushStringBuilder(): InterpreterState {
+    return storeNativeContext(moduleName, stringBuilderStack().push(StringBuilder()))
+}
+
+private fun InterpreterState.peekStringBuilder(): StringBuilder {
+    return stringBuilderStack().last()
+}
+
+private fun InterpreterState.popStringBuilder(): Pair<InterpreterState, StringBuilder> {
+    val (newStringBuilderStack, stringBuilder) = stringBuilderStack().pop()
+    return storeNativeContext(moduleName, newStringBuilderStack) to stringBuilder
+}
+
+private fun InterpreterState.stringBuilderStack(): Stack<StringBuilder> {
+    val nativeContext = loadNativeContext(moduleName)
+    return nativeContext as Stack<StringBuilder>? ?: stackOf()
+}
