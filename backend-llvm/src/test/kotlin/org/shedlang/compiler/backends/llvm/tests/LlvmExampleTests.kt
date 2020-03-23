@@ -37,8 +37,7 @@ class LlvmExampleTests {
                     println(withLineNumbers(compilationResult.llvmIr))
                     outputPath.toFile().writeText(compilationResult.llvmIr)
 
-                    val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
-                    val result = executeLlvmInterpreter(outputPath, includeStrings = includeStrings)
+                    val result = executeLlvmInterpreter(outputPath, includeStrings = compilationResult.includeStrings)
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {

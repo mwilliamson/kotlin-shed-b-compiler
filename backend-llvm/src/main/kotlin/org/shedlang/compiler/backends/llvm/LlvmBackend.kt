@@ -37,7 +37,7 @@ object LlvmBackend : Backend {
                 mainModule = mainModule
             )
             llPath.writeText(compilationResult.llvmIr)
-            compileBinary(llPath = llPath.toPath(), target = target, includeStrings = true)
+            compileBinary(llPath = llPath.toPath(), target = target, includeStrings = compilationResult.includeStrings)
         } finally {
             file.deleteRecursively()
         }

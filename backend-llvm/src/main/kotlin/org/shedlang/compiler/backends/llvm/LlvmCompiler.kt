@@ -33,7 +33,7 @@ internal class Compiler(
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
-    class CompilationResult(val llvmIr: String)
+    class CompilationResult(val llvmIr: String, val includeStrings: Boolean)
 
     fun compile(mainModule: ModuleName): CompilationResult {
         val defineMainModule = moduleDefinition(mainModule)
@@ -73,7 +73,9 @@ internal class Compiler(
             ).flatten()
         )
 
-        return CompilationResult(llvmIr = serialiseProgram(module))
+        val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
+
+        return CompilationResult(llvmIr = serialiseProgram(module), includeStrings = includeStrings)
     }
 
     private fun defineModule(moduleName: ModuleName): List<LlvmTopLevelEntity> {
