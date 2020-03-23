@@ -36,7 +36,7 @@ class LlvmExampleTests {
                     println(withLineNumbers(compilationResult.llvmIr))
                     outputPath.toFile().writeText(compilationResult.llvmIr)
 
-                    val result = executeLlvmInterpreter(outputPath, linkerFiles = compilationResult.linkerFiles)
+                    val result = executeLlvmIr(outputPath, linkerFiles = compilationResult.linkerFiles)
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {

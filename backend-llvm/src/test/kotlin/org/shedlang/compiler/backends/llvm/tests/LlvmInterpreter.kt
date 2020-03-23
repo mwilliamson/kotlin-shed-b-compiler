@@ -4,7 +4,7 @@ import org.shedlang.compiler.backends.llvm.LlvmBackend
 import org.shedlang.compiler.backends.tests.ExecutionResult
 import java.nio.file.Path
 
-internal fun executeLlvmInterpreter(path: Path, linkerFiles: List<String>): ExecutionResult {
+internal fun executeLlvmIr(path: Path, linkerFiles: List<String>): ExecutionResult {
     val temporaryDirectory = createTempDir()
     try {
         val binaryPath = temporaryDirectory.resolve("binary")

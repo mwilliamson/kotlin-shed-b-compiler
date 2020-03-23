@@ -108,7 +108,7 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             """.trimIndent()
             println(withLineNumbers(program))
             outputPath.toFile().writeText(program)
-            val stdout = executeLlvmInterpreter(outputPath, linkerFiles = compiler.linkerFiles()).throwOnError().stdout
+            val stdout = executeLlvmIr(outputPath, linkerFiles = compiler.linkerFiles()).throwOnError().stdout
             val parts = stdout.split("=== BOUNDARY ===")
             return StackExecutionResult(
                 value = stdoutToIrValue(parts[1], type = type),
