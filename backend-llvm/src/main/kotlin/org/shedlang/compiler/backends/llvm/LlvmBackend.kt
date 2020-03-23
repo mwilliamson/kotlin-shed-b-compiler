@@ -33,10 +33,10 @@ object LlvmBackend : Backend {
         try {
             val llPath = file.resolve("main.ll")
             val compiler = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
-            val llSource = compiler.compile(
+            val compilationResult = compiler.compile(
                 mainModule = mainModule
             )
-            llPath.writeText(llSource)
+            llPath.writeText(compilationResult.llvmIr)
             compileBinary(llPath = llPath.toPath(), target = target, includeStrings = true)
         } finally {
             file.deleteRecursively()

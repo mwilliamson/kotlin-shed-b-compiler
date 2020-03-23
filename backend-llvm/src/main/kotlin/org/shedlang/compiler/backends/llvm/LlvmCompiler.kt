@@ -33,7 +33,9 @@ internal class Compiler(
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
-    fun compile(mainModule: ModuleName): String {
+    class CompilationResult(val llvmIr: String)
+
+    fun compile(mainModule: ModuleName): CompilationResult {
         val defineMainModule = moduleDefinition(mainModule)
 
         val mainClosureVariable = LlvmOperandLocal("mainClosure")
@@ -71,7 +73,7 @@ internal class Compiler(
             ).flatten()
         )
 
-        return serialiseProgram(module)
+        return CompilationResult(llvmIr = serialiseProgram(module))
     }
 
     private fun defineModule(moduleName: ModuleName): List<LlvmTopLevelEntity> {

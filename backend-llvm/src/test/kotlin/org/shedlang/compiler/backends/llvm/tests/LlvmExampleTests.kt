@@ -31,11 +31,11 @@ class LlvmExampleTests {
                     val moduleSet = testProgram.load()
                     val image = loadModuleSet(moduleSet)
 
-                    val llSource = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder()).compile(
+                    val compilationResult = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder()).compile(
                         mainModule = testProgram.mainModule
                     )
-                    println(withLineNumbers(llSource))
-                    outputPath.toFile().writeText(llSource)
+                    println(withLineNumbers(compilationResult.llvmIr))
+                    outputPath.toFile().writeText(compilationResult.llvmIr)
 
                     val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
                     val result = executeLlvmInterpreter(outputPath, includeStrings = includeStrings)
