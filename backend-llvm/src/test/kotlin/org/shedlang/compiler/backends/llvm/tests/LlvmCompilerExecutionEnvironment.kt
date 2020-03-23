@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.llvm.tests
 
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.llvm.*
 import org.shedlang.compiler.backends.tests.StackExecutionResult
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
@@ -109,8 +108,7 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             """.trimIndent()
             println(withLineNumbers(program))
             outputPath.toFile().writeText(program)
-            val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
-            val stdout = executeLlvmInterpreter(outputPath, includeStrings = includeStrings).throwOnError().stdout
+            val stdout = executeLlvmInterpreter(outputPath, linkerFiles = compiler.linkerFiles()).throwOnError().stdout
             val parts = stdout.split("=== BOUNDARY ===")
             return StackExecutionResult(
                 value = stdoutToIrValue(parts[1], type = type),

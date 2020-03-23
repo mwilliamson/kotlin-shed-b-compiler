@@ -8,24 +8,6 @@ import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
 object LlvmBackend : Backend {
-    internal fun archiveFiles(): List<Path> {
-        return listOf(
-            findRoot().resolve("stdlib-llvm/gc-8.0.4/.libs/libgc.a")
-        )
-    }
-
-    internal fun stringArchiveFiles(): List<Path> {
-        return listOf(
-            findRoot().resolve("stdlib-llvm/utf8proc/libutf8proc.a")
-        )
-    }
-
-    internal fun stringObjectFiles(): List<Path> {
-        return listOf(
-            findRoot().resolve("stdlib-llvm/Strings.o")
-        )
-    }
-
     override fun compile(moduleSet: ModuleSet, mainModule: ModuleName, target: Path) {
         val image = loadModuleSet(moduleSet)
 
@@ -37,13 +19,13 @@ object LlvmBackend : Backend {
                 mainModule = mainModule
             )
             llPath.writeText(compilationResult.llvmIr)
-            compileBinary(llPath = llPath.toPath(), target = target, includeStrings = compilationResult.includeStrings)
+            compileBinary(llPath = llPath.toPath(), target = target, linkerFiles = compilationResult.linkerFiles)
         } finally {
             file.deleteRecursively()
         }
     }
 
-    internal fun compileBinary(llPath: Path, target: Path, includeStrings: Boolean) {
+    internal fun compileBinary(llPath: Path, target: Path, linkerFiles: List<String>) {
         val file = createTempDir()
         try {
             val objectPath = file.resolve("main.o")
@@ -53,12 +35,11 @@ object LlvmBackend : Backend {
                 "-relocation-model", "pic",
                 "-o", objectPath.toString()
             ))
-            val stringsCode = if (includeStrings) stringObjectFiles() + stringArchiveFiles() else listOf()
             val gccCommand = listOf(
                 "gcc",
                 objectPath.toString(),
                 "-o", target.toString()
-            ) + (archiveFiles() + stringsCode).map { path -> path.toString() }
+            ) + linkerFiles.map { path -> findRoot().resolve(path).toString() }
             run(gccCommand)
         } finally {
             file.deleteRecursively()

@@ -3,7 +3,6 @@ package org.shedlang.compiler.backends.llvm.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.llvm.Compiler
 import org.shedlang.compiler.backends.llvm.LlvmIrBuilder
 import org.shedlang.compiler.backends.llvm.withLineNumbers
@@ -37,7 +36,7 @@ class LlvmExampleTests {
                     println(withLineNumbers(compilationResult.llvmIr))
                     outputPath.toFile().writeText(compilationResult.llvmIr)
 
-                    val result = executeLlvmInterpreter(outputPath, includeStrings = compilationResult.includeStrings)
+                    val result = executeLlvmInterpreter(outputPath, linkerFiles = compilationResult.linkerFiles)
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {

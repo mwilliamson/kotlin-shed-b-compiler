@@ -33,7 +33,7 @@ internal class Compiler(
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
-    class CompilationResult(val llvmIr: String, val includeStrings: Boolean)
+    class CompilationResult(val llvmIr: String, val linkerFiles: List<String>)
 
     fun compile(mainModule: ModuleName): CompilationResult {
         val defineMainModule = moduleDefinition(mainModule)
@@ -73,9 +73,13 @@ internal class Compiler(
             ).flatten()
         )
 
-        val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
+        return CompilationResult(llvmIr = serialiseProgram(module), linkerFiles = linkerFiles())
+    }
 
-        return CompilationResult(llvmIr = serialiseProgram(module), includeStrings = includeStrings)
+    internal fun linkerFiles(): List<String> {
+        val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
+        val stringsLinkerFiles = if (includeStrings) listOf("stdlib-llvm/Strings.o", "stdlib-llvm/utf8proc/libutf8proc.a") else listOf()
+        return listOf("stdlib-llvm/gc-8.0.4/.libs/libgc.a") + stringsLinkerFiles
     }
 
     private fun defineModule(moduleName: ModuleName): List<LlvmTopLevelEntity> {
