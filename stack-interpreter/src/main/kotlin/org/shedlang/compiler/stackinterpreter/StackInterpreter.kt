@@ -117,6 +117,10 @@ internal fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrVa
     }
 }
 
+internal fun <T> stackOf(): Stack<T> {
+    return Stack(persistentListOf())
+}
+
 internal class Stack<T>(private val stack: PersistentList<T>) {
     val size: Int
         get() = stack.size
@@ -231,6 +235,7 @@ internal data class InterpreterState(
     private val defaultScope: ScopeReference,
     private val image: Image,
     private val callStack: Stack<CallFrame>,
+    private val stringBuilderStack: Stack<StringBuilder>,
     private val modules: PersistentMap<ModuleName, InterpreterModule>,
     private val world: World,
     private val labelToInstructionIndex: MutableMap<Int, Int>
@@ -314,6 +319,19 @@ internal data class InterpreterState(
         }
     }
 
+    fun pushStringBuilder(): InterpreterState {
+        return copy(stringBuilderStack = stringBuilderStack.push(StringBuilder()))
+    }
+
+    fun peekStringBuilder(): StringBuilder {
+        return stringBuilderStack.last()
+    }
+
+    fun popStringBuilder(): Pair<InterpreterState, StringBuilder> {
+        val (newStringBuilderStack, stringBuilder) = stringBuilderStack.pop()
+        return copy(stringBuilderStack = newStringBuilderStack) to stringBuilder
+    }
+
     fun moduleInitialisation(moduleName: ModuleName): List<Instruction> {
         return image.moduleInitialisation(moduleName)!!
     }
@@ -332,7 +350,7 @@ internal data class InterpreterState(
             instructionIndex = 0,
             instructions = instructions,
             scopes = parentScopes.add(newScope),
-            temporaryStack = Stack(persistentListOf())
+            temporaryStack = stackOf()
         )
         return copy(
             bindings = bindings.put(newScope, persistentMapOf()),
@@ -378,7 +396,8 @@ internal fun initialState(
         bindings = persistentMapOf(defaultScope to defaultVariables.toPersistentMap()),
         defaultScope = defaultScope,
         image = image,
-        callStack = Stack(persistentListOf()),
+        callStack = stackOf(),
+        stringBuilderStack = stackOf(),
         modules = loadNativeModules(),
         world = world,
         labelToInstructionIndex = mutableMapOf()
