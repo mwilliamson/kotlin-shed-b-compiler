@@ -12,6 +12,8 @@ import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
+import java.nio.file.Path
+import java.nio.file.Paths
 
 internal class Compiler(
     private val image: Image,
@@ -80,11 +82,16 @@ internal class Compiler(
         val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
         val includeStringBuilder = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder"))) != null
 
-        val shedFiles = if (includeStrings || includeStringBuilder) listOf("stdlib-llvm/shed.o") else listOf()
-        val stringsFiles = if (includeStrings) listOf("stdlib-llvm/Strings.o", "stdlib-llvm/utf8proc/libutf8proc.a") else listOf()
-        val stringBuilderFiles = if (includeStringBuilder) listOf("stdlib-llvm/StringBuilder.o") else listOf()
+        val stdlibPath = Paths.get("stdlib-llvm")
+        val objectDirectoryPath = stdlibPath.resolve("obj")
 
-        return listOf("stdlib-llvm/gc-8.0.4/.libs/libgc.a") + shedFiles + stringsFiles + stringBuilderFiles
+        val shedFiles = if (includeStrings || includeStringBuilder) listOf(objectDirectoryPath.resolve("shed.o")) else listOf()
+        val stringsFiles = if (includeStrings) listOf(objectDirectoryPath.resolve("Stdlib.Platform.Strings.o"), stdlibPath.resolve("utf8proc/libutf8proc.a")) else listOf()
+        val stringBuilderFiles = if (includeStringBuilder) listOf(objectDirectoryPath.resolve("Stdlib.Platform.StringBuilder.o")) else listOf()
+
+        val files = listOf(stdlibPath.resolve("gc-8.0.4/.libs/libgc.a")) + shedFiles + stringsFiles + stringBuilderFiles
+
+        return files.map(Path::toString)
     }
 
     private fun moduleInit(moduleName: ModuleName, context: FunctionContext): FunctionContext {

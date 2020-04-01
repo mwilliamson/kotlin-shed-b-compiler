@@ -1,5 +1,7 @@
 .PHONY: package run-stdlib-tests stdlib-tests test build-stdlib-llvm
 
+CFLAGS = -Wall -Werror
+
 package: build-stdlib-llvm
 	mvn package -Dmaven.test.skip=true
 
@@ -13,16 +15,19 @@ run-stdlib-tests:
 test: stdlib-tests
 	mvn test
 
-build-stdlib-llvm: stdlib-llvm/utf8proc-2.4.0/libutf8proc.a stdlib-llvm/gc-8.0.4/.libs/libgc.a stdlib-llvm/shed.o stdlib-llvm/StringBuilder.o stdlib-llvm/Strings.o
+build-stdlib-llvm: stdlib-llvm/utf8proc-2.4.0/libutf8proc.a stdlib-llvm/gc-8.0.4/.libs/libgc.a stdlib-llvm/obj/shed.o stdlib-llvm/obj/Stdlib.Platform.StringBuilder.o stdlib-llvm/obj/Stdlib.Platform.Strings.o
 
-stdlib-llvm/shed.o: stdlib-llvm/shed.h stdlib-llvm/shed.c
-	gcc stdlib-llvm/shed.c -c -Wall -Werror -o stdlib-llvm/shed.o
+stdlib-llvm/obj/shed.o: stdlib-llvm/src/shed.c stdlib-llvm/src/shed.h
+	mkdir -p $$(dirname $@)
+	gcc $< -c $(CFLAGS) -o $@
 
-stdlib-llvm/StringBuilder.o: stdlib-llvm/StringBuilder.c stdlib-llvm/shed.h
-	gcc stdlib-llvm/StringBuilder.c -c -Wall -Werror -o stdlib-llvm/StringBuilder.o
+stdlib-llvm/obj/Stdlib.Platform.StringBuilder.o: stdlib-llvm/src/Stdlib.Platform.StringBuilder.c stdlib-llvm/src/shed.h
+	mkdir -p $$(dirname $@)
+	gcc $< -c $(CFLAGS) -o $@
 
-stdlib-llvm/Strings.o: stdlib-llvm/Strings.c stdlib-llvm/shed.h
-	gcc stdlib-llvm/Strings.c -c -Wall -Werror -o stdlib-llvm/Strings.o
+stdlib-llvm/obj/Stdlib.Platform.Strings.o: stdlib-llvm/src/Stdlib.Platform.Strings.c stdlib-llvm/src/shed.h
+	mkdir -p $$(dirname $@)
+	gcc $< -c $(CFLAGS) -o $@
 
 stdlib-llvm/gc-8.0.4/.libs/libgc.a: stdlib-llvm/gc-8.0.4
 	cd stdlib-llvm/gc-8.0.4 && ./configure --enable-static --enable-threads=no && make

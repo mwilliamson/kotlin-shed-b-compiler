@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "gc-8.0.4/include/gc.h"
+#include "../gc-8.0.4/include/gc.h"
 
 typedef uint64_t ShedUnicodeScalar;
 typedef int64_t ShedInt;

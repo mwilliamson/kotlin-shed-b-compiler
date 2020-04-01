@@ -14,7 +14,7 @@
 /interpreter/target
 /stack-interpreter/target
 /stack-ir/target
-/stdlib-llvm/*.o
+/stdlib-llvm/obj/*.o
 /stdlib-llvm/gc-8.0.4/
 /stdlib-llvm/utf8proc-2.4.0/
 /testing/target

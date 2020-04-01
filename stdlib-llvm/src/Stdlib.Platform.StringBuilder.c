@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include "gc-8.0.4/include/gc.h"
+#include "../gc-8.0.4/include/gc.h"
 
 #include "./shed.h"
 
