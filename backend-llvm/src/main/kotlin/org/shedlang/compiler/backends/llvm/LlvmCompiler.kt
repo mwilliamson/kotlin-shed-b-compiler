@@ -83,13 +83,14 @@ internal class Compiler(
         val includeStringBuilder = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder"))) != null
 
         val stdlibPath = Paths.get("stdlib-llvm")
+        val depsPath = stdlibPath.resolve("deps")
         val objectDirectoryPath = stdlibPath.resolve("obj")
 
         val shedFiles = if (includeStrings || includeStringBuilder) listOf(objectDirectoryPath.resolve("shed.o")) else listOf()
-        val stringsFiles = if (includeStrings) listOf(objectDirectoryPath.resolve("Stdlib.Platform.Strings.o"), stdlibPath.resolve("utf8proc/libutf8proc.a")) else listOf()
+        val stringsFiles = if (includeStrings) listOf(objectDirectoryPath.resolve("Stdlib.Platform.Strings.o"), depsPath.resolve("utf8proc/libutf8proc.a")) else listOf()
         val stringBuilderFiles = if (includeStringBuilder) listOf(objectDirectoryPath.resolve("Stdlib.Platform.StringBuilder.o")) else listOf()
 
-        val files = listOf(stdlibPath.resolve("gc-8.0.4/.libs/libgc.a")) + shedFiles + stringsFiles + stringBuilderFiles
+        val files = listOf(depsPath.resolve("gc/.libs/libgc.a")) + shedFiles + stringsFiles + stringBuilderFiles
 
         return files.map(Path::toString)
     }

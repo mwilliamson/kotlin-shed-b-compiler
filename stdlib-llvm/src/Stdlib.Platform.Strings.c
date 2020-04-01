@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../gc-8.0.4/include/gc.h"
-#include "../utf8proc/utf8proc.h"
+#include "../deps/gc/include/gc.h"
+#include "../deps/utf8proc/utf8proc.h"
 
 #include "./shed.h"
 

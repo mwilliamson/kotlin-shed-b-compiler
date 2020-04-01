@@ -1,4 +1,4 @@
-.PHONY: package run-stdlib-tests stdlib-tests test build-stdlib-llvm
+.PHONY: package run-stdlib-tests stdlib-tests test clean-deps build-bdwgc build-utf8proc
 
 CFLAGS = -Wall -Werror
 
@@ -15,7 +15,9 @@ run-stdlib-tests:
 test: stdlib-tests
 	mvn test
 
-build-stdlib-llvm: stdlib-llvm/utf8proc-2.4.0/libutf8proc.a stdlib-llvm/gc-8.0.4/.libs/libgc.a stdlib-llvm/obj/shed.o stdlib-llvm/obj/Stdlib.Platform.StringBuilder.o stdlib-llvm/obj/Stdlib.Platform.Strings.o
+build-stdlib-llvm: build-deps compile-stdlib-llvm
+
+compile-stdlib-llvm: stdlib-llvm/obj/shed.o stdlib-llvm/obj/Stdlib.Platform.StringBuilder.o stdlib-llvm/obj/Stdlib.Platform.Strings.o
 
 stdlib-llvm/obj/shed.o: stdlib-llvm/src/shed.c stdlib-llvm/src/shed.h
 	mkdir -p $$(dirname $@)
@@ -29,14 +31,15 @@ stdlib-llvm/obj/Stdlib.Platform.Strings.o: stdlib-llvm/src/Stdlib.Platform.Strin
 	mkdir -p $$(dirname $@)
 	gcc $< -c $(CFLAGS) -o $@
 
-stdlib-llvm/gc-8.0.4/.libs/libgc.a: stdlib-llvm/gc-8.0.4
-	cd stdlib-llvm/gc-8.0.4 && ./configure --enable-static --enable-threads=no && make
+build-deps: build-bdwgc build-utf8proc
 
-stdlib-llvm/gc-8.0.4:
-	curl -L https://github.com/ivmai/bdwgc/releases/download/v8.0.4/gc-8.0.4.tar.gz | tar xzf - -C stdlib-llvm
+build-bdwgc:
+	rm -r stdlib-llvm/deps/gc-8.0.4
+	curl -L https://github.com/ivmai/bdwgc/releases/download/v8.0.4/gc-8.0.4.tar.gz | tar xzf - -C stdlib-llvm/deps
+	cd stdlib-llvm/deps/gc-8.0.4 && ./configure --enable-static --enable-threads=no && make
 
-stdlib-llvm/utf8proc-2.4.0/libutf8proc.a: stdlib-llvm/utf8proc-2.4.0
-	cd stdlib-llvm/utf8proc-2.4.0 && make
+build-utf8proc:
+	rm -r stdlib-llvm/deps/utf8proc-2.4.0
+	curl -L https://github.com/JuliaStrings/utf8proc/archive/v2.4.0.tar.gz | tar xzf - -C stdlib-llvm/deps
+	cd stdlib-llvm/deps/utf8proc-2.4.0 && make
 
-stdlib-llvm/utf8proc-2.4.0:
-	curl -L https://github.com/JuliaStrings/utf8proc/archive/v2.4.0.tar.gz | tar xzf - -C stdlib-llvm/

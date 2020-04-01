@@ -15,7 +15,7 @@
 /stack-interpreter/target
 /stack-ir/target
 /stdlib-llvm/obj/*.o
-/stdlib-llvm/gc-8.0.4/
-/stdlib-llvm/utf8proc-2.4.0/
+/stdlib-llvm/deps/gc-8.0.4/
+/stdlib-llvm/deps/utf8proc-2.4.0/
 /testing/target
 shedDependencies
