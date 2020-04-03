@@ -82,9 +82,11 @@ internal class Compiler(
         val stdlibPath = Paths.get("stdlib-llvm")
         val depsPath = stdlibPath.resolve("deps")
 
-        val shedFiles = listOf(stdlibPath.resolve("build/libshed.a"), depsPath.resolve("utf8proc/libutf8proc.a"))
-
-        val files = listOf(depsPath.resolve("gc/.libs/libgc.a")) + shedFiles
+        val files = listOf(
+            stdlibPath.resolve("build/libshed.a"),
+            depsPath.resolve("gc/.libs/libgc.a"),
+            depsPath.resolve("utf8proc/libutf8proc.a")
+        )
 
         return files.map(Path::toString)
     }
