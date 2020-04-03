@@ -1,4 +1,4 @@
-.PHONY: package run-stdlib-tests stdlib-tests test clean-deps build-bdwgc build-utf8proc
+.PHONY: package run-stdlib-tests stdlib-tests test clean-deps build-bdwgc build-utf8proc stdlib-llvm/build/libshed.a
 
 CFLAGS = -Wall -Werror
 
@@ -15,21 +15,11 @@ run-stdlib-tests:
 test: stdlib-tests
 	mvn test
 
-build-stdlib-llvm: build-deps compile-stdlib-llvm
+build-stdlib-llvm: build-deps stdlib-llvm/build/libshed.a
 
-compile-stdlib-llvm: stdlib-llvm/obj/shed.o stdlib-llvm/obj/Stdlib.Platform.StringBuilder.o stdlib-llvm/obj/Stdlib.Platform.Strings.o
-
-stdlib-llvm/obj/shed.o: stdlib-llvm/src/shed.c stdlib-llvm/src/shed.h
-	mkdir -p $$(dirname $@)
-	gcc $< -c $(CFLAGS) -o $@
-
-stdlib-llvm/obj/Stdlib.Platform.StringBuilder.o: stdlib-llvm/src/Stdlib.Platform.StringBuilder.c stdlib-llvm/src/shed.h
-	mkdir -p $$(dirname $@)
-	gcc $< -c $(CFLAGS) -o $@
-
-stdlib-llvm/obj/Stdlib.Platform.Strings.o: stdlib-llvm/src/Stdlib.Platform.Strings.c stdlib-llvm/src/shed.h
-	mkdir -p $$(dirname $@)
-	gcc $< -c $(CFLAGS) -o $@
+stdlib-llvm/build/libshed.a:
+	mkdir -p stdlib-llvm/build
+	cd stdlib-llvm/build && cmake .. && make
 
 build-deps: build-bdwgc build-utf8proc
 

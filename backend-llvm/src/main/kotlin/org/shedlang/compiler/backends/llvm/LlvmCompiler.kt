@@ -79,18 +79,12 @@ internal class Compiler(
     }
 
     internal fun linkerFiles(): List<String> {
-        val includeStrings = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) != null
-        val includeStringBuilder = moduleSet.module(listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder"))) != null
-
         val stdlibPath = Paths.get("stdlib-llvm")
         val depsPath = stdlibPath.resolve("deps")
-        val objectDirectoryPath = stdlibPath.resolve("obj")
 
-        val shedFiles = if (includeStrings || includeStringBuilder) listOf(objectDirectoryPath.resolve("shed.o")) else listOf()
-        val stringsFiles = if (includeStrings) listOf(objectDirectoryPath.resolve("Stdlib.Platform.Strings.o"), depsPath.resolve("utf8proc/libutf8proc.a")) else listOf()
-        val stringBuilderFiles = if (includeStringBuilder) listOf(objectDirectoryPath.resolve("Stdlib.Platform.StringBuilder.o")) else listOf()
+        val shedFiles = listOf(stdlibPath.resolve("build/libshed.a"), depsPath.resolve("utf8proc/libutf8proc.a"))
 
-        val files = listOf(depsPath.resolve("gc/.libs/libgc.a")) + shedFiles + stringsFiles + stringBuilderFiles
+        val files = listOf(depsPath.resolve("gc/.libs/libgc.a")) + shedFiles
 
         return files.map(Path::toString)
     }
