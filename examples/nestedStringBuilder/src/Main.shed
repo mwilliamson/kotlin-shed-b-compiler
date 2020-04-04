@@ -1,0 +1,25 @@
+// stdout:
+//   outer1
+//   outer2
+//   inner
+//   outer3
+
+export main;
+
+import StringBuilder from Stdlib.Platform.StringBuilder;
+
+fun main() !Io -> Unit {
+    print!(StringBuilder.build(outer));
+}
+
+fun outer() !StringBuilder.Write -> Unit {
+    StringBuilder.write!("outer1\n");
+    val innerString = StringBuilder.build(inner);
+    StringBuilder.write!("outer2\n");
+    StringBuilder.write!(innerString);
+    StringBuilder.write!("outer3\n");
+}
+
+fun inner() !StringBuilder.Write -> Unit {
+    StringBuilder.write!("inner\n");
+}

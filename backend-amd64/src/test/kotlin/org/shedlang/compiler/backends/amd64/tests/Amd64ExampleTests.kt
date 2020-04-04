@@ -32,6 +32,7 @@ class Amd64ExampleTests {
         "Matchers.shed",
         "moduleName",
         "NamedArguments.shed",
+        "nestedStringBuilder",
         "PolymorphicCons.shed",
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",
