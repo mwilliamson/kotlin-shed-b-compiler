@@ -163,11 +163,11 @@ ShedInt Shed_Stdlib_Platform_Strings_unicodeScalarToInt(ShedEnvironment env, She
 }
 
 ShedString Shed_Stdlib_Platform_Strings_unicodeScalarToHexString(ShedEnvironment env, ShedUnicodeScalar scalar) {
-    ShedString string = alloc_string(16);
-
     if (scalar == 0) {
+        ShedString string = alloc_string(1);
         string->length = 1;
         string->data[0] = '0';
+        return string;
     } else {
         StringLength length = 0;
 
@@ -177,6 +177,9 @@ ShedString Shed_Stdlib_Platform_Strings_unicodeScalarToHexString(ShedEnvironment
             remaining = remaining >> 4;
         }
 
+        ShedString string = alloc_string(length);
+        string->length = length;
+
         StringLength index = length;
         remaining = scalar;
         while (remaining != 0) {
@@ -185,7 +188,6 @@ ShedString Shed_Stdlib_Platform_Strings_unicodeScalarToHexString(ShedEnvironment
             remaining = remaining >> 4;
         }
 
-        string->length = length;
+        return string;
     }
-    return string;
 }
