@@ -7,6 +7,7 @@
 #include "../deps/utf8proc/utf8proc.h"
 
 #include "./shed.h"
+#include "./stringbuilder.h"
 
 extern ShedValue shed__module_value__Core_Options[5];
 
@@ -92,39 +93,29 @@ ShedValue Shed_Stdlib_Platform_Strings_next(ShedEnvironment env, ShedStringSlice
 ShedString Shed_Stdlib_Platform_Strings_replace(ShedEnvironment env, ShedString old, ShedString new, ShedString string) {
     // TODO: handle non-ASCII characters
     // TODO: handle zero-length old
-    StringLength oldLength = old->length;
-    StringLength newLength = new->length;
-    StringLength stringLength = string->length;
-    StringLength capacity = new->length <= old->length
-        ? stringLength
-        : (new->length / oldLength + 1) * stringLength;
-    ShedString result = alloc_string(capacity);
+    StringLength old_length = old->length;
+    StringLength new_length = new->length;
+    StringLength string_length = string->length;
 
-    StringLength stringIndex = 0;
-    StringLength resultIndex = 0;
-    while (stringIndex < stringLength) {
-        bool isMatch = true;
-        for (StringLength oldIndex = 0; oldIndex < oldLength; oldIndex++) {
-            if (!(stringIndex + oldIndex < stringLength && string->data[stringIndex + oldIndex] == old->data[oldIndex])) {
-                isMatch = false;
-                break;
-            }
-        }
+    struct StringBuilder string_builder;
+    string_builder_init(&string_builder, string_length);
 
-        if (isMatch) {
-            for (StringLength newIndex = 0; newIndex < newLength; newIndex++) {
-                result->data[resultIndex++] = new->data[newIndex];
-            }
-            stringIndex += oldLength;
+    StringLength string_index = 0;
+    StringLength last_index = 0;
+
+    while (string_index + old_length <= string_length) {
+        if (memcmp(&string->data[string_index], old->data, old_length) == 0) {
+            string_builder_append(&string_builder, &string->data[last_index], string_index - last_index);
+            string_builder_append(&string_builder, new->data, new_length);
+            string_index += old_length;
+            last_index = string_index;
         } else {
-            result->data[resultIndex++] = string->data[stringIndex];
-            stringIndex++;
+            string_index++;
         }
     }
+    string_builder_append(&string_builder, &string->data[last_index], string_length - last_index);
 
-    result->length = resultIndex;
-
-    return result;
+    return string_builder_build(&string_builder);
 }
 
 ShedStringSlice Shed_Stdlib_Platform_Strings_slice(ShedEnvironment env, ShedString string) {

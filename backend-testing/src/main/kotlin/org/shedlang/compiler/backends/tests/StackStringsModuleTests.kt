@@ -47,10 +47,10 @@ abstract class StackStringsModuleTests(private val environment: StackIrExecution
         val value = call("replace", listOf(
             IrString("bc"),
             IrString("d"),
-            IrString("abc abc")
+            IrString("abc abce")
         ), type = StringType)
 
-        assertThat(value, isString("ad ad"))
+        assertThat(value, isString("ad ade"))
     }
 
     @Test
