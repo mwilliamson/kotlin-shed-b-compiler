@@ -209,25 +209,21 @@ TODO: define string equality (normalised? scalar value equality? byte equality?)
 .. math::
 
     \frac{
+        \uptau \in {Bool, Int, String, UnicodeScalar} \qquad
         \Gamma \turnstile e_1: \uptau \qquad
         \Gamma \turnstile e_2: \uptau
     } {
         \Gamma \turnstile e_1 \> \literal{==} \> e_2: Bool
     }
 
-    \\
-    \textrm{where} \quad \uptau \in {Bool, Int, String, UnicodeScalar}
-
 The ``!=`` operator is the negation of the ``==`` operator.
 
 .. math::
 
     \frac{
+        \uptau \in {Bool, Int, String, UnicodeScalar} \qquad
         \Gamma \turnstile e_1: \uptau \qquad
         \Gamma \turnstile e_2: \uptau
     } {
         \Gamma \turnstile e_1 \> \literal{!=} \> e_2: Bool
     }
-
-    \\
-    \textrm{where} \quad \uptau \in {Bool, Int, String, UnicodeScalar}
