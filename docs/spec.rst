@@ -39,16 +39,19 @@ Expressions
 -----------
 
 .. math::
+    :nowrap:
 
+    \begin{align*}
     e
-        \produces bool
-        \choice int
-        \choice string
-        \choice unicode\_scalar
-        \choice unit
-        \choice tuple
-        \choice unary\_operation
-        \choice binary\_operation
+        \produces & bool \\
+        \choice & int \\
+        \choice & string \\
+        \choice & unicode\_scalar \\
+        \choice & unit \\
+        \choice & tuple \\
+        \choice & unary\_operation \\
+        \choice & binary\_operation \\
+    \end{align*}
 
 Boolean literal
 ~~~~~~~~~~~~~~~
@@ -122,10 +125,12 @@ Tuple literal
 ~~~~~~~~~~~~~
 
 .. math::
+    :nowrap:
 
-    tuple \produces \literal{\#(} \seq \optional{tuple\_contents} \seq \literal{)}
-
-    tuple\_contents \produces e \seq (\literal{,} \seq e) * \seq \literal{,} ?
+    \begin{align*}
+    tuple \produces & \literal{\#(} \seq \optional{tuple\_contents} \seq \literal{)} \\
+    tuple\_contents \produces & e \seq (\literal{,} \seq e) * \seq \literal{,} ?
+    \end{align*}
 
 Tuple types correspond to their element types:
 
@@ -146,10 +151,12 @@ Unary operations
 ~~~~~~~~~~~~~~~~
 
 .. math::
+    :nowrap:
 
-    unary\_operation \produces unary\_operator \seq e
-
-    unary\_operator \produces \literal{-} \choice \literal{not}
+    \begin{align*}
+    unary\_operation \produces & unary\_operator \seq e \\
+    unary\_operator \produces & \literal{-} \choice \literal{not}
+    \end{align*}
 
 The ``-`` operator transforms an ``Int`` to its negation.
 
@@ -175,21 +182,23 @@ Binary operations
 ~~~~~~~~~~~~~~~~~
 
 .. math::
+    :nowrap:
 
-    binary\_operation \produces e \seq binary\_operator \seq e
-
+    \begin{align*}
+    binary\_operation \produces & e \seq binary\_operator \seq e \\
     binary\_operator
-        \produces \literal{==}
-        \choice \literal{!=}
-        \choice \literal{<}
-        \choice \literal{<=}
-        \choice \literal{>}
-        \choice \literal{>=}
-        \choice \literal{\&\&}
-        \choice \literal{||}
-        \choice \literal{+}
-        \choice \literal{-}
-        \choice \literal{*}
+        \produces & \literal{==} \\
+        \choice & \literal{!=} \\
+        \choice & \literal{<} \\
+        \choice & \literal{<=} \\
+        \choice & \literal{>} \\
+        \choice & \literal{>=} \\
+        \choice & \literal{\&\&} \\
+        \choice & \literal{||} \\
+        \choice & \literal{+} \\
+        \choice & \literal{-} \\
+        \choice & \literal{*} \\
+    \end{align*}
 
 The left operand is evaluated before the right operand.
 
