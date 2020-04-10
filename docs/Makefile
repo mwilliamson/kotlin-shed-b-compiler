@@ -15,7 +15,7 @@ help:
 .PHONY: help Makefile watch-html
 
 watch-html:
-	_virtualenv/bin/sphinx-autobuild . _build/html
+	sh -c '. _virtualenv/bin/activate && sphinx-autobuild . _build/html'
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
