@@ -209,7 +209,7 @@ TODO: define string equality (normalised? scalar value equality? byte equality?)
 .. math::
 
     \frac{
-        \uptau \in {Bool, Int, String, UnicodeScalar} \qquad
+        \uptau \in \{Bool, Int, String, UnicodeScalar\} \qquad
         \Gamma \turnstile e_1: \uptau \qquad
         \Gamma \turnstile e_2: \uptau
     } {
@@ -221,9 +221,94 @@ The ``!=`` operator is the negation of the ``==`` operator.
 .. math::
 
     \frac{
-        \uptau \in {Bool, Int, String, UnicodeScalar} \qquad
+        \uptau \in \{Bool, Int, String, UnicodeScalar\} \qquad
         \Gamma \turnstile e_1: \uptau \qquad
         \Gamma \turnstile e_2: \uptau
     } {
         \Gamma \turnstile e_1 \> \literal{!=} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \uptau \in \{Int, UnicodeScalar\} \qquad
+        \Gamma \turnstile e_1: \uptau \qquad
+        \Gamma \turnstile e_2: \uptau
+    } {
+        \Gamma \turnstile e_1 \> \literal{<} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \uptau \in \{Int, UnicodeScalar\} \qquad
+        \Gamma \turnstile e_1: \uptau \qquad
+        \Gamma \turnstile e_2: \uptau
+    } {
+        \Gamma \turnstile e_1 \> \literal{<=} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \uptau \in \{Int, UnicodeScalar\} \qquad
+        \Gamma \turnstile e_1: \uptau \qquad
+        \Gamma \turnstile e_2: \uptau
+    } {
+        \Gamma \turnstile e_1 \> \literal{>} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \uptau \in \{Int, UnicodeScalar\} \qquad
+        \Gamma \turnstile e_1: \uptau \qquad
+        \Gamma \turnstile e_2: \uptau
+    } {
+        \Gamma \turnstile e_1 \> \literal{>=} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e_1: Bool \qquad
+        \Gamma \turnstile e_2: Bool
+    } {
+        \Gamma \turnstile e_1 \> \literal{\&\&} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e_1: Bool \qquad
+        \Gamma \turnstile e_2: Bool
+    } {
+        \Gamma \turnstile e_1 \> \literal{||} \> e_2: Bool
+    }
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e_1: Int \qquad
+        \Gamma \turnstile e_2: Int
+    } {
+        \Gamma \turnstile e_1 \> \literal{+} \> e_2: Int
+    }
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e_1: Int \qquad
+        \Gamma \turnstile e_2: Int
+    } {
+        \Gamma \turnstile e_1 \> \literal{-} \> e_2: Int
+    }
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e_1: Int \qquad
+        \Gamma \turnstile e_2: Int
+    } {
+        \Gamma \turnstile e_1 \> \literal{*} \> e_2: Int
     }
