@@ -44,6 +44,7 @@ imgmath_latex_preamble = r"""
 \newcommand{\seq}{\quad}
 
 \newcommand{\turnstile}{\vdash}
+\newcommand{\effect}{\> ! \>}
 \usepackage{syntax}
 """
 

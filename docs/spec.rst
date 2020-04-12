@@ -137,12 +137,12 @@ Tuple types correspond to their element types:
 .. math::
 
     \frac{
-    \Gamma \turnstile e_1: \uptau_1 \qquad
-    \Gamma \turnstile e_2: \uptau_2 \qquad
+    \Gamma \turnstile e_1 \effect \varepsilon : \uptau_1 \qquad
+    \Gamma \turnstile e_2 \effect \varepsilon : \uptau_2 \qquad
     ... \qquad
-    \Gamma \turnstile e_n: \uptau_n
+    \Gamma \turnstile e_n \effect \varepsilon : \uptau_n
     }{
-    \Gamma \turnstile \literal{\#(}e_1\literal{,} e_2\literal{,} ...\literal{,} e_n\literal{)}: \#(\uptau_1, \uptau_2, ..., \uptau_n)
+    \Gamma \turnstile \literal{\#(}e_1\literal{,} e_2\literal{,} ...\literal{,} e_n\literal{)} \effect \varepsilon  : \#(\uptau_1, \uptau_2, ..., \uptau_n)
     }
 
 Sub-expressions are evaluated from left to right.
@@ -163,9 +163,9 @@ The ``-`` operator transforms an ``Int`` to its negation.
 .. math::
 
     \frac{
-        \Gamma \turnstile e: Int
+        \Gamma \turnstile e \effect \varepsilon : Int
     } {
-        \Gamma \turnstile \literal{-}e: Int
+        \Gamma \turnstile \literal{-}e \effect \varepsilon : Int
     }
 
 The ``not`` operator transforms a ``Bool`` to its negation.
@@ -173,9 +173,9 @@ The ``not`` operator transforms a ``Bool`` to its negation.
 .. math::
 
     \frac{
-        \Gamma \turnstile e: Bool
+        \Gamma \turnstile e \effect \varepsilon : Bool
     } {
-        \Gamma \turnstile \literal{not} \> e: Bool
+        \Gamma \turnstile \literal{not} \> e \effect \varepsilon : Bool
     }
 
 Binary operations
@@ -210,10 +210,10 @@ TODO: define string equality (normalised? scalar value equality? byte equality?)
 
     \frac{
         \uptau \in \{Bool, Int, String, UnicodeScalar\} \qquad
-        \Gamma \turnstile e_1: \uptau \qquad
-        \Gamma \turnstile e_2: \uptau
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau
     } {
-        \Gamma \turnstile e_1 \> \literal{==} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{==} \> e_2 \effect \varepsilon : Bool
     }
 
 The ``!=`` operator is the negation of the ``==`` operator.
@@ -222,93 +222,93 @@ The ``!=`` operator is the negation of the ``==`` operator.
 
     \frac{
         \uptau \in \{Bool, Int, String, UnicodeScalar\} \qquad
-        \Gamma \turnstile e_1: \uptau \qquad
-        \Gamma \turnstile e_2: \uptau
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau
     } {
-        \Gamma \turnstile e_1 \> \literal{!=} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{!=} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
         \uptau \in \{Int, UnicodeScalar\} \qquad
-        \Gamma \turnstile e_1: \uptau \qquad
-        \Gamma \turnstile e_2: \uptau
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau
     } {
-        \Gamma \turnstile e_1 \> \literal{<} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{<} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
         \uptau \in \{Int, UnicodeScalar\} \qquad
-        \Gamma \turnstile e_1: \uptau \qquad
-        \Gamma \turnstile e_2: \uptau
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau
     } {
-        \Gamma \turnstile e_1 \> \literal{<=} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{<=} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
         \uptau \in \{Int, UnicodeScalar\} \qquad
-        \Gamma \turnstile e_1: \uptau \qquad
-        \Gamma \turnstile e_2: \uptau
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau
     } {
-        \Gamma \turnstile e_1 \> \literal{>} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{>} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
         \uptau \in \{Int, UnicodeScalar\} \qquad
-        \Gamma \turnstile e_1: \uptau \qquad
-        \Gamma \turnstile e_2: \uptau
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau
     } {
-        \Gamma \turnstile e_1 \> \literal{>=} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{>=} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
-        \Gamma \turnstile e_1: Bool \qquad
-        \Gamma \turnstile e_2: Bool
+        \Gamma \turnstile e_1 \effect \varepsilon : Bool \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : Bool
     } {
-        \Gamma \turnstile e_1 \> \literal{\&\&} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{\&\&} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
-        \Gamma \turnstile e_1: Bool \qquad
-        \Gamma \turnstile e_2: Bool
+        \Gamma \turnstile e_1 \effect \varepsilon : Bool \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : Bool
     } {
-        \Gamma \turnstile e_1 \> \literal{||} \> e_2: Bool
+        \Gamma \turnstile e_1 \> \literal{||} \> e_2 \effect \varepsilon : Bool
     }
 
 .. math::
 
     \frac{
-        \Gamma \turnstile e_1: Int \qquad
-        \Gamma \turnstile e_2: Int
+        \Gamma \turnstile e_1 \effect \varepsilon : Int \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : Int
     } {
-        \Gamma \turnstile e_1 \> \literal{+} \> e_2: Int
+        \Gamma \turnstile e_1 \> \literal{+} \> e_2 \effect \varepsilon : Int
     }
 
 .. math::
 
     \frac{
-        \Gamma \turnstile e_1: Int \qquad
-        \Gamma \turnstile e_2: Int
+        \Gamma \turnstile e_1 \effect \varepsilon : Int \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : Int
     } {
-        \Gamma \turnstile e_1 \> \literal{-} \> e_2: Int
+        \Gamma \turnstile e_1 \> \literal{-} \> e_2 \effect \varepsilon : Int
     }
 
 .. math::
 
     \frac{
-        \Gamma \turnstile e_1: Int \qquad
-        \Gamma \turnstile e_2: Int
+        \Gamma \turnstile e_1 \effect \varepsilon : Int \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : Int
     } {
-        \Gamma \turnstile e_1 \> \literal{*} \> e_2: Int
+        \Gamma \turnstile e_1 \> \literal{*} \> e_2 \effect \varepsilon : Int
     }
