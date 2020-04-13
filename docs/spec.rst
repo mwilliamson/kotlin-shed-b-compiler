@@ -35,6 +35,39 @@ Tuples
 Tuples are fixed-length lists of values.
 For instance, the type ``#(Int, Bool)`` is a tuple where the first element is an ``Int``, and the second element is a ``Bool``.
 
+Typing rules
+------------
+
+Typing judgements are in the form:
+
+.. math::
+
+    \Gamma \turnstile e \effect \varepsilon : \uptau
+
+meaning that in the context :math:`\Gamma`, the expression :math:`e` has effect :math:`\varepsilon` and type :math:`\uptau`.
+
+An expression with an effect can be treated as having a super-effect.
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e \effect \varepsilon_1 : \uptau \qquad
+        \varepsilon_1 \leq \varepsilon_2
+    } {
+        \Gamma \turnstile e \effect \varepsilon_2 : \uptau
+    }
+
+An expression of a type can be treated as having a supertype.
+
+.. math::
+
+    \frac{
+        \Gamma \turnstile e \effect \varepsilon : \uptau_1 \qquad
+        \uptau_1 <: \uptau_2
+    } {
+        \Gamma \turnstile e \effect \varepsilon : \uptau_2
+    }
+
 Expressions
 -----------
 
@@ -137,15 +170,30 @@ Tuple types correspond to their element types:
 .. math::
 
     \frac{
-    \Gamma \turnstile e_1 \effect \varepsilon : \uptau_1 \qquad
-    \Gamma \turnstile e_2 \effect \varepsilon : \uptau_2 \qquad
-    ... \qquad
-    \Gamma \turnstile e_n \effect \varepsilon : \uptau_n
+        \Gamma \turnstile e_1 \effect \varepsilon : \uptau_1 \qquad
+        \Gamma \turnstile e_2 \effect \varepsilon : \uptau_2 \qquad
+        \dots \qquad
+        \Gamma \turnstile e_n \effect \varepsilon : \uptau_n
     }{
-    \Gamma \turnstile \literal{\#(}e_1\literal{,} e_2\literal{,} ...\literal{,} e_n\literal{)} \effect \varepsilon  : \#(\uptau_1, \uptau_2, ..., \uptau_n)
+        \Gamma \turnstile \literal{\#(}e_1\literal{,} e_2\literal{,} \dots\literal{,} e_n\literal{)} \effect \varepsilon  : \#(\uptau_1, \uptau_2, \dots, \uptau_n)
     }
 
 Sub-expressions are evaluated from left to right.
+
+.. math::
+
+    \frac{
+        \left(
+            isvalue(e_1) \qquad
+            isvalue(e_2) \qquad
+            \dots \qquad
+            isvalue(e_{i-1})
+        \right) \qquad
+        e_i \rightarrow e_i'
+    }{
+        \literal{\#(}e_1\literal{,} e_2\literal{,} \dots \literal{,} e_i \literal{,} \dots \literal{,} e_n\literal{)} \rightarrow
+        \literal{\#(}e_1\literal{,} e_2\literal{,} \dots \literal{,} e_i' \literal{,} \dots \literal{,} e_n\literal{)}
+    }
 
 Unary operations
 ~~~~~~~~~~~~~~~~
@@ -201,6 +249,9 @@ Binary operations
     \end{align*}
 
 The left operand is evaluated before the right operand.
+Depending on the value of the left operand,
+:math:`\literal{\&\&}` and :math:`\literal{||}` operations may not evaluate the right operand.
+All other operations will evaluate both operands.
 
 The ``==`` operator operates on two scalar operands of the same type.
 It evaluates to true if the operands are equal, false otherwise.
