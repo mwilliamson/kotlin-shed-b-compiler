@@ -11,6 +11,7 @@ Welcome to Shed's documentation!
    :caption: Contents:
 
    spec
+   devlog
 
 
 

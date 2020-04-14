@@ -1,0 +1,98 @@
+2020-04-14: File IO
+===================
+
+File IO should happen with the ``Io`` effect.
+We should be able to create narrower subeffects to allow more precise typing of functions
+i.e. to restrict a function to file IO, rather than any IO.
+Further restriction may also be useful e.g. reads only.
+It would also be useful to find a way to apply further restrictions,
+such as only allowing file IO within a particular directory,
+although the enforcement of this restriction would rely more on user-written code than the runtime (more on this later).
+
+.. code-block::
+
+    fun parseJsonFile(path: Path) !FileIo.Read -> FileIo.Result<JsonValue> {
+        val contents = FileIo.read!(path);
+        map(parseJson, contents)
+    }
+
+Working out how to enforce restrictions on IO, such as only IO within a particular directory,
+requires some thought around how effects in Shed work.
+The current (unimplemented) design of Shed would support two categories of effect:
+
+* Concrete effects.
+  These are effects with handlers defined by the runtime,
+  such as IO or state.
+  In the case of IO, main is implicitly wrapped in the IO handler.
+  For other handlers such as state,
+  the programmer can create a handler and run code within that handler,
+  but cannot define a new handler for an effect.
+  Concrete effects can only be defined by the language or native modules.
+
+* Abstract effects.
+  The programmer can define an effect value, which must then be handled by a corresponding programmer-defined effect handler.
+  In principle, this could be an implementation of algebraic effects and all that entails,
+  although this may introduce unwanted complexity both in implementation and conceptual model.
+  At a minimum, it seems useful to allow exceptions (don't resume from effect handler) and immediate resumption exactly once,
+  both of which are comparatively straightforward both to implement and understand.
+
+At the moment, IO is a concrete effect, and is likely to remain that way.
+Although there are various arguments for doing this,
+the main one is that abstract effects effectively create interfaces,
+and therefore suffer the same problem that an interface,
+once implemented by third parties,
+cannot be extended without breaking those third-party implementations.
+In particular, the nature of IO is that we may wish to extend it in the future without constraint,
+whether to support completely new functionality, or new approaches to existing functionality.
+
+This suggests two possible approaches for restricting access to a particular directory:
+
+* Have the runtime provide an IO effect handler that allows restriction to a particular directory.
+  This has the advantage of not requiring an additional effect to be defined,
+  but has essentially the same problems as making IO an abstract effect.
+  Although it's first-party rather than third-party code we'd be breaking when extending IO,
+  there is still a maintenance overhead with the potential for error.
+
+* Have the restricted code use IO through an abstract effect,
+  where restrictions are checked before passing through to the concrete IO effect.
+  This only requires a more general notion of programmer-defined effects and effect handlers,
+  at the cost of forcing the programmer to write more code.
+  However, this may be useful for explicitness.
+
+Some pseudo-code for the latter approach:
+
+.. code-block::
+
+    effect JsonFileIo {
+        read(path: Path) -> FileIo.Result<String>
+    }
+
+    fun parseJsonFile(path: Path) !JsonFileIo -> Result<JsonValue> {
+        // Do we make read directly accessible, or do we access it through JsonFileIo as below?
+        val contents = JsonFileIo.read!(path);
+        map(parseJson, contents)
+    }
+
+    fun main() !Io -> Unit {
+        // Pass straight through to Io without restriction
+        val jsonResult = handler for JsonFileIo(
+            read = fun(path: Path) !Io -> FileIo.Result<String> {
+                FileIo.read!(path)
+            },
+        ) {
+            parseJsonFile(path)
+        }
+
+        // Only allow access under a particular path
+        val jsonResult = handler for JsonFileIo(
+            fileRead = fun(path: Path) !Io -> FileIo.String {
+                if (isAllowedPath(path)) {
+                    FileIo.read!(path)
+                } else {
+                    FileIo.error("accessing path is not allowed")
+                }
+            },
+        ) {
+            parseJsonFile(path)
+        }
+    }
