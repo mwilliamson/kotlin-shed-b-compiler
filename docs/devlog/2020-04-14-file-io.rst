@@ -11,9 +11,12 @@ although the enforcement of this restriction would rely more on user-written cod
 
 .. code-block::
 
-    fun parseJsonFile(path: Path) !FileIo.Read -> FileIo.Result<JsonValue> {
+    import FileIo from Stdlib.FileIo;
+    import Json from Stdlib.Json;
+
+    fun parseJsonFile(path: Path) !FileIo.Read -> FileIo.Result<Json.JsonValue> {
         val contents = FileIo.read!(path);
-        map(parseJson, contents)
+        map(Json.parse, contents)
     }
 
 Working out how to enforce restrictions on IO, such as only IO within a particular directory,
@@ -63,14 +66,17 @@ Some pseudo-code for the latter approach:
 
 .. code-block::
 
+    import FileIo from Stdlib.FileIo;
+    import Json from Stdlib.Json;
+
     effect JsonFileIo {
         read(path: Path) -> FileIo.Result<String>
     }
 
-    fun parseJsonFile(path: Path) !JsonFileIo -> Result<JsonValue> {
+    fun parseJsonFile(path: Path) !JsonFileIo -> FileIo.Result<Json.JsonValue> {
         // Do we make read directly accessible, or do we access it through JsonFileIo as below?
         val contents = JsonFileIo.read!(path);
-        map(parseJson, contents)
+        map(Json.parse, contents)
     }
 
     fun main() !Io -> Unit {
@@ -85,7 +91,7 @@ Some pseudo-code for the latter approach:
 
         // Only allow access under a particular path
         val jsonResult = handler for JsonFileIo(
-            fileRead = fun(path: Path) !Io -> FileIo.String {
+            read = fun(path: Path) !Io -> FileIo.String {
                 if (isAllowedPath(path)) {
                     FileIo.read!(path)
                 } else {
