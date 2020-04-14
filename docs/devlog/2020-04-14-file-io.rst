@@ -102,3 +102,10 @@ Some pseudo-code for the latter approach:
             parseJsonFile(path)
         }
     }
+
+This seems to have parallels with dependency injection:
+code defines what it needs and relies on the caller to provide appropriate implementations.
+It has similar advantages of allowing explicit, precise dependencies and allowing implementations to be substituted.
+Unlike normal dependency injection, there's no explicit reference to an effect handler (equivalent to an object implementing an interface).
+This has the benefit of not needing to pass the effect handler around,
+but some thought is needed to how to handle cases where, in other languages, you'd simultaneously hold references to two separate instances of the same interface.
