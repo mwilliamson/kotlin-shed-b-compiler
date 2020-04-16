@@ -2,13 +2,13 @@ package org.shedlang.compiler.backends.llvm
 
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.types.MetaType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type

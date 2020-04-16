@@ -447,10 +447,15 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to MetaType(UnitType))
         )
 
-        typeCheckFunctionStatement(node, typeContext)
+        val functionContext = typeContext.enterFunction(function(), effect = EmptyEffect)
+        typeCheckFunctionStatement(node, functionContext)
         typeContext.undefer()
         assertThat(
-            typeContext.typeOf(node),
+            functionContext.typeOf(node),
+            isFunctionType()
+        )
+        assertThat(
+            typeContext.toTypes().functionType(node),
             isFunctionType()
         )
     }

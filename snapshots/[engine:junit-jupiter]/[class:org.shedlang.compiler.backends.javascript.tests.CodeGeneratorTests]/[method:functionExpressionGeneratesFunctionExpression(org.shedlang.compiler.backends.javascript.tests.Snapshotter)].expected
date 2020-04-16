@@ -1,0 +1,9 @@
+(function () {
+    const anonymous = (function (x, y) {
+        42n;
+    });
+    anonymous.async = (function (x, y) {
+        42n;
+    });
+    return anonymous;
+})()

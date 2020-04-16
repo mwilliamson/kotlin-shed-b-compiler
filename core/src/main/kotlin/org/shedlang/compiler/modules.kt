@@ -1,10 +1,7 @@
 package org.shedlang.compiler
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.metaTypeToType
+import org.shedlang.compiler.types.*
 
 class ModuleSet(val modules: Collection<Module>) {
     fun module(name: ModuleName): Module? {
@@ -44,17 +41,19 @@ interface Types {
     fun typeOfStaticExpression(node: StaticExpressionNode): Type
     fun typeOfTarget(target: TargetNode): Type
     fun declaredType(node: TypeDeclarationNode): Type
+    fun functionType(node: FunctionNode): FunctionType
 
     fun discriminatorForCast(node: CallBaseNode): Discriminator
     fun discriminatorForIsExpression(node: IsNode): Discriminator
     fun discriminatorForWhenBranch(node: WhenBranchNode): Discriminator
 }
 
-val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf(), mapOf(), mapOf())
+val EMPTY_TYPES: Types = TypesMap(mapOf(), mapOf(), mapOf(), mapOf(), mapOf())
 
 class TypesMap(
     private val discriminators: Map<Int, Discriminator>,
     private val expressionTypes: Map<Int, Type>,
+    private val functionTypes: Map<Int, FunctionType>,
     private val targetTypes: Map<Int, Type>,
     private val variableTypes: Map<Int, Type>
 ) : Types {
@@ -84,5 +83,10 @@ class TypesMap(
 
     override fun declaredType(node: TypeDeclarationNode): Type {
         return metaTypeToType(variableTypes[node.nodeId]!!)!!
+    }
+
+    override fun functionType(node: FunctionNode): FunctionType {
+        // TODO: better error
+        return functionTypes[node.nodeId] ?: throw CompilerError("type of function is unknown: ${node}", source = node.source)
     }
 }

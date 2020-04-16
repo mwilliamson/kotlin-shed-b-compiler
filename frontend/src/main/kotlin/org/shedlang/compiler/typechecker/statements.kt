@@ -301,6 +301,7 @@ private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, con
 
 internal fun typeCheckFunctionDeclaration(function: FunctionDeclarationNode, context: TypeContext) {
     val type = typeCheckFunction(function, context)
+    context.addFunctionType(function, type)
     context.addVariableType(function, type)
 }
 

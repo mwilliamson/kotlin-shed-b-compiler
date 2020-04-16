@@ -1,0 +1,11 @@
+const f = (function () {
+    const f = (function (x, y, $named) {
+        const z = $named.z;
+        42n;
+    });
+    f.async = (function (x, y, $named) {
+        const z = $named.z;
+        42n;
+    });
+    return f;
+})();

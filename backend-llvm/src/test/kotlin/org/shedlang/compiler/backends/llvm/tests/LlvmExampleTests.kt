@@ -3,13 +3,13 @@ package org.shedlang.compiler.backends.llvm.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.backends.llvm.Compiler
 import org.shedlang.compiler.backends.llvm.LlvmIrBuilder
 import org.shedlang.compiler.backends.llvm.withLineNumbers
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackir.loadModuleSet
-import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class LlvmExampleTests {

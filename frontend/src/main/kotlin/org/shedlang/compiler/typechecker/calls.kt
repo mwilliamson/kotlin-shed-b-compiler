@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*

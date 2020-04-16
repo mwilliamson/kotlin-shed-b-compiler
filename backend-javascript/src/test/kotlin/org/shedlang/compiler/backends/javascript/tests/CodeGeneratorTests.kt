@@ -5,6 +5,10 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.extension.ExtensionContext
+import org.junit.jupiter.api.extension.ParameterContext
+import org.junit.jupiter.api.extension.ParameterResolver
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
@@ -14,11 +18,14 @@ import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
+import org.shedlang.compiler.backends.javascript.serialise
+import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
+@ExtendWith(SnapshotterResolver::class)
 class CodeGeneratorTests {
     @Test
     fun emptyModuleGeneratesEmptyModule() {
@@ -56,14 +63,14 @@ class CodeGeneratorTests {
     fun moduleIncludesBodyAndExports() {
         val shed = stubbedModule(node = module(
             exports = listOf(export("f")),
-            body = listOf(function(name = "f"))
+            body = listOf(valStatement(name = "x"))
         ))
 
         val node = generateCode(shed)
 
         assertThat(node, isJavascriptModule(
             body = isSequence(
-                isJavascriptFunction(name = equalTo("f")),
+                isJavascriptConst(target = isJavascriptVariableReference("x")),
                 isJavascriptAssignmentStatement(
                     isJavascriptPropertyAccess(
                         isJavascriptVariableReference("exports"),
@@ -202,21 +209,22 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun functionDeclarationAsModuleStatementGeneratesFunctionDeclaration() {
-        assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
-            generateCodeForModuleStatement(function).single()
+    fun functionDeclarationAsModuleStatementGeneratesFunctionDeclaration(snapshotter: Snapshotter) {
+        assertFunctionDeclarationGeneratesFunctionDeclaration(snapshotter) { function, context ->
+            generateCodeForModuleStatement(function, context).single()
         }
     }
 
     @Test
-    fun functionDeclarationAsFunctionStatementGeneratesFunctionDeclaration() {
-        assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
-            generateCodeForFunctionStatement(function)
+    fun functionDeclarationAsFunctionStatementGeneratesFunctionDeclaration(snapshotter: Snapshotter) {
+        assertFunctionDeclarationGeneratesFunctionDeclaration(snapshotter) { function, context ->
+            generateCodeForFunctionStatement(function, context).single()
         }
     }
 
     private fun assertFunctionDeclarationGeneratesFunctionDeclaration(
-        generateCode: (node: FunctionDeclarationNode) -> JavascriptStatementNode
+        snapshotter: Snapshotter,
+        generateCode: (node: FunctionDeclarationNode, context: CodeGenerationContext) -> JavascriptStatementNode
     ) {
         val shed = function(
             name = "f",
@@ -225,37 +233,33 @@ class CodeGeneratorTests {
             body = listOf(expressionStatement(literalInt(42)))
         )
 
-        val node = generateCode(shed)
-
-        assertThat(node, isJavascriptFunction(
-            name = equalTo("f"),
-            parameters = isSequence(equalTo("x"), equalTo("y"), equalTo("\$named")),
-            body = isSequence(
-                isJavascriptConst(
-                    target = isJavascriptVariableReference("z"),
-                    expression = isJavascriptPropertyAccess(
-                        receiver = isJavascriptVariableReference("\$named"),
-                        propertyName = equalTo("z")
-                    )
-                ),
-                isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42))
+        val context = context(
+            functionTypes = mapOf(
+                shed to functionType(effect = EmptyEffect)
             )
-        ))
+        )
+
+        val node = generateCode(shed, context)
+
+        snapshotter.assertSnapshot(serialise(node, indentation = 0))
     }
 
     @Test
-    fun functionExpressionGeneratesFunctionExpression() {
+    fun functionExpressionGeneratesFunctionExpression(snapshotter: Snapshotter) {
         val shed = functionExpression(
             parameters = listOf(parameter("x"), parameter("y")),
             body = listOf(expressionStatement(literalInt(42)))
         )
 
-        val node = generateCode(shed)
+        val context = context(
+            expressionTypes = mapOf(
+                shed to functionType(effect = EmptyEffect)
+            )
+        )
 
-        assertThat(node, isJavascriptFunctionExpression(
-            parameters = isSequence(equalTo("x"), equalTo("y")),
-            body = isSequence(isJavascriptExpressionStatement(isJavascriptIntegerLiteral(42)))
-        ))
+        val node = generateCode(shed, context)
+
+        snapshotter.assertSnapshot(serialise(node, indentation = 0))
     }
 
     @Test
@@ -264,10 +268,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, cast(has(
+        assertThat(node, isSequence(cast(has(
             JavascriptExpressionStatementNode::expression,
             isJavascriptIntegerLiteral(42)
-        )))
+        ))))
     }
 
     @Test
@@ -276,10 +280,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, cast(has(
+        assertThat(node, isSequence(cast(has(
             JavascriptReturnNode::expression,
             isJavascriptIntegerLiteral(42)
-        )))
+        ))))
     }
 
     @Test
@@ -368,10 +372,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, isJavascriptConst(
+        assertThat(node, isSequence(isJavascriptConst(
             target = isJavascriptVariableReference("x"),
             expression = isJavascriptBooleanLiteral(true)
-        ))
+        )))
     }
 
     @Test
@@ -383,7 +387,7 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, isJavascriptConst(
+        assertThat(node, isSequence(isJavascriptConst(
             target = isJavascriptArrayDestructuring(
                 elements = isSequence(
                     isJavascriptVariableReference("x"),
@@ -391,7 +395,7 @@ class CodeGeneratorTests {
                 )
             ),
             expression = isJavascriptBooleanLiteral(true)
-        ))
+        )))
     }
 
     @Test
@@ -406,7 +410,7 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, isJavascriptConst(
+        assertThat(node, isSequence(isJavascriptConst(
             target = isJavascriptObjectDestructuring(
                 properties = isSequence(
                     isPair(equalTo("x"), isJavascriptVariableReference("targetX")),
@@ -414,7 +418,7 @@ class CodeGeneratorTests {
                 )
             ),
             expression = isJavascriptBooleanLiteral(true)
-        ))
+        )))
     }
 
     @Test
@@ -567,9 +571,15 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val shed = call(variableReference("f"), listOf(literalInt(42)))
+        val receiver = variableReference("f")
+        val shed = call(receiver, listOf(literalInt(42)))
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = EmptyEffect)
+            )
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -579,12 +589,18 @@ class CodeGeneratorTests {
 
     @Test
     fun namedArgumentsArePassedAsObject() {
+        val receiver = variableReference("f")
         val shed = call(
-            variableReference("f"),
+            receiver,
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = EmptyEffect)
+            )
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -594,13 +610,19 @@ class CodeGeneratorTests {
 
     @Test
     fun whenThereAreBothPositionalAndNamedArgumentsThenNamedArgumentsObjectIsLastArgument() {
+        val receiver = variableReference("f")
         val shed = call(
-            variableReference("f"),
+            receiver,
             positionalArguments = listOf(literalInt(1)),
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = EmptyEffect)
+            )
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -609,6 +631,28 @@ class CodeGeneratorTests {
                 isJavascriptObject(isMap("a" to isJavascriptBooleanLiteral(true)))
             )
         ))
+    }
+
+    @Test
+    fun callWithIoEffectIsAwaited() {
+        val receiver = variableReference("f")
+        val shed = call(receiver, listOf(literalInt(42)))
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = IoEffect)
+            )
+        )
+        context.enterFunction(isAsync = true)
+
+        val node = generateCode(shed, context)
+
+        assertThat(node, isJavascriptAwait(isJavascriptFunctionCall(
+            isJavascriptPropertyAccess(
+                receiver = isJavascriptVariableReference("f"),
+                propertyName = equalTo("async")
+            ),
+            isSequence(isJavascriptIntegerLiteral(42))
+        )))
     }
 
     @Test
@@ -752,8 +796,16 @@ class CodeGeneratorTests {
         ))
     }
 
-    private fun generateCodeForModuleStatement(node: ModuleStatementNode) = generateCode(node, context())
-    private fun generateCodeForFunctionStatement(node: FunctionStatementNode) = generateCode(node, context())
+    private fun generateCodeForModuleStatement(
+        node: ModuleStatementNode,
+        context: CodeGenerationContext = context()
+    ) = generateCode(node, context)
+
+    private fun generateCodeForFunctionStatement(
+        node: FunctionStatementNode,
+        context: CodeGenerationContext = context()
+    ) = generateCode(node, context)
+
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
     private fun context(
@@ -761,6 +813,7 @@ class CodeGeneratorTests {
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
         expressionTypes: Map<ExpressionNode, Type> = mapOf(),
+        functionTypes: Map<FunctionNode, FunctionType> = mapOf(),
         shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
         shapeTagValues: Map<ShapeBaseNode, TagValue> = mapOf()
     ): CodeGenerationContext {
@@ -770,6 +823,7 @@ class CodeGeneratorTests {
                 discriminatorsForIsExpressions = discriminatorsForIsExpressions,
                 discriminatorsForWhenBranches = discriminatorsForWhenBranches,
                 expressionTypes = expressionTypes,
+                functionTypes = functionTypes,
                 shapeFields = shapeFields,
                 shapeTagValues = shapeTagValues
             )
@@ -801,7 +855,7 @@ class CodeGeneratorTests {
 
     private fun isJavascriptConst(
         target: Matcher<JavascriptTargetNode>,
-        expression: Matcher<JavascriptExpressionNode>
+        expression: Matcher<JavascriptExpressionNode> = anything
     ): Matcher<JavascriptStatementNode>  = cast(allOf(
         has(JavascriptConstNode::target, target),
         has(JavascriptConstNode::expression, expression)
@@ -861,6 +915,13 @@ class CodeGeneratorTests {
         has(JavascriptUnaryOperationNode::operator, operator),
         has(JavascriptUnaryOperationNode::operand, operand)
     ))
+
+    private fun isJavascriptAwait(
+        operand: Matcher<JavascriptExpressionNode>
+    ): Matcher<JavascriptExpressionNode> = isJavascriptUnaryOperation(
+        operator = equalTo(JavascriptUnaryOperator.AWAIT),
+        operand = operand
+    )
 
     private fun isJavascriptBinaryOperation(
         operator: Matcher<JavascriptBinaryOperator>,
@@ -953,5 +1014,39 @@ class CodeGeneratorTests {
             ),
             arguments = isSequence()
         )
+    }
+}
+
+class SnapshotterResolver : ParameterResolver {
+    override fun supportsParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Boolean {
+        return parameterContext.parameter.type == Snapshotter::class.java
+    }
+
+    override fun resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Any {
+        return Snapshotter(uniqueId = extensionContext.uniqueId)
+    }
+}
+
+class Snapshotter(val uniqueId: String) {
+    fun assertSnapshot(actualSnapshot: String) {
+        val snapshotDirectory = findRoot().resolve("snapshots")
+
+        val expectedSnapshotPath = snapshotDirectory.resolve(uniqueId + ".expected")
+        val expectedSnapshotFile = expectedSnapshotPath.toFile()
+
+        try {
+            if (expectedSnapshotFile.exists()) {
+                val expectedSnapshot = expectedSnapshotFile.readText()
+                assertThat(actualSnapshot, equalTo(expectedSnapshot))
+            } else {
+                throw AssertionError("snapshot does not exist, got:\n" + actualSnapshot)
+            }
+        } catch (error: AssertionError) {
+            val actualSnapshotPath = snapshotDirectory.resolve(uniqueId + ".actual")
+            val actualSnapshotFile = actualSnapshotPath.toFile()
+            actualSnapshotFile.parentFile.mkdirs()
+            actualSnapshotFile.writeText(actualSnapshot)
+            throw error
+        }
     }
 }

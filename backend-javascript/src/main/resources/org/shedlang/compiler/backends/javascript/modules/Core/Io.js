@@ -3,5 +3,5 @@ function print(value) {
 }
 
 module.exports = {
-    print: print,
+    print: {async: print},
 };

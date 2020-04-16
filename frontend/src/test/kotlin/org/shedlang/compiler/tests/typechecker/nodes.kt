@@ -2,6 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.*
@@ -43,6 +44,7 @@ internal fun typeContext(
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = HashMap(finalTypes),
+        functionTypes = mutableMapOf(),
         discriminators = mutableMapOf(),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
         deferred = LinkedList(),

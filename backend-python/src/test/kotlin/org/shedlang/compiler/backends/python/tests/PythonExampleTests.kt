@@ -3,13 +3,13 @@ package org.shedlang.compiler.backends.python.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.python.compile
 import org.shedlang.compiler.backends.python.topLevelPythonPackageName
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 
 class PythonExampleTests {

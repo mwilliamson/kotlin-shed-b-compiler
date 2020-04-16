@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.amd64.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
@@ -12,7 +13,6 @@ import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.stackir.Instruction
-import org.shedlang.compiler.typechecker.CompilerError
 import org.shedlang.compiler.typechecker.SourceError
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.ModuleType

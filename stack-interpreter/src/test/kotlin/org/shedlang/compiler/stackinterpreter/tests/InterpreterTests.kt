@@ -72,6 +72,7 @@ class InterpreterTests: StackIrExecutionTests(StackInterpreterExecutionEnvironme
         return TypesMap(
             discriminators = mapOf(),
             expressionTypes = expressionTypes,
+            functionTypes = mapOf(),
             targetTypes = targetTypes,
             variableTypes = variableTypes
         )
