@@ -259,6 +259,7 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
     val body = namedParameterAssignments + generateBlockCode(node.body, context)
 
     return object: JavascriptFunctionNode {
+        override val isAsync = false
         override val parameters = positionalParameters + namedParameters
         override val body = body
     }

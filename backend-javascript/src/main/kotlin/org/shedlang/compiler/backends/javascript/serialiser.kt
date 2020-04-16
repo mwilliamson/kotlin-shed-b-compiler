@@ -65,7 +65,8 @@ private fun serialiseFunction(
     node: JavascriptFunctionNode,
     indentation: Int
 ): String {
-    val signature = "function " +
+    val signature = (if (node.isAsync) "async " else "") +
+        "function " +
         name.orEmpty() +
         "(" + node.parameters.joinToString(", ") + ") {\n"
     val body = serialiseBlock(node.body, indentation = indentation)

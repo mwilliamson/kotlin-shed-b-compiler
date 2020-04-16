@@ -138,10 +138,12 @@ fun jsObject(
 
 fun jsFunction(
     name: String,
+    isAsync: Boolean = false,
     parameters: List<String> = listOf(),
     body: List<JavascriptStatementNode> = listOf()
 ) = JavascriptFunctionDeclarationNode(
     name = name,
+    isAsync = isAsync,
     parameters = parameters,
     body = body,
     source = anySource()

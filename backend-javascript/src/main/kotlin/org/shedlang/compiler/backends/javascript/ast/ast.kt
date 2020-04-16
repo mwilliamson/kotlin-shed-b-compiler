@@ -60,6 +60,7 @@ data class JavascriptExpressionStatementNode(
 
 data class JavascriptFunctionDeclarationNode(
     val name: String,
+    override val isAsync: Boolean = false,
     override val parameters: List<String>,
     override val body: List<JavascriptStatementNode>,
     override val source: Source
@@ -70,6 +71,7 @@ data class JavascriptFunctionDeclarationNode(
 }
 
 data class JavascriptFunctionExpressionNode(
+    override val isAsync: Boolean = false,
     override val parameters: List<String>,
     override val body: List<JavascriptStatementNode>,
     override val source: Source
@@ -80,6 +82,7 @@ data class JavascriptFunctionExpressionNode(
 }
 
 interface JavascriptFunctionNode {
+    val isAsync: Boolean
     val parameters: List<String>
     val body: List<JavascriptStatementNode>
 }

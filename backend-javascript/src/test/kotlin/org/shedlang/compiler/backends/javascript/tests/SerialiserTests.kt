@@ -41,6 +41,18 @@ class SerialiserTests {
     }
 
     @Test
+    fun whenFunctionIsAsyncThenAsyncKeywordIsPrepended() {
+        assertThat(
+            indentedSerialise(jsFunction(name = "f", isAsync = true)),
+            equalTo(listOf(
+                "    async function f() {",
+                "    }",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun functionBodyIsSerialised() {
         assertThat(
             indentedSerialise(jsFunction(name = "f", body = listOf(
