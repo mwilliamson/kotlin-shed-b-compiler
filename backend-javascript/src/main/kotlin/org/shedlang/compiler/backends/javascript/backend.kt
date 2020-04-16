@@ -48,6 +48,12 @@ val backend = object: Backend {
     }
 
     private fun writeModule(target: Path, javascriptModule: JavascriptModule) {
+        println(javascriptModule.name.joinToString("."))
+        println(withLineNumbers(javascriptModule.source))
+        println()
+        println()
+        println()
+
         moduleWriter(target, javascriptModule.name).use { writer ->
             writer.write(javascriptModule.source)
         }
@@ -86,12 +92,16 @@ private fun compileModule(module: Module.Shed): JavascriptModule {
     val main = if (module.hasMain()) {
         """
             if (require.main === module) {
-                (function() {
-                    const exitCode = main();
+                const EventEmitter = require("events");
+                // Create an event emitter to prevent exiting before main is done
+                const eventEmitter = new EventEmitter();
+                eventEmitter.on("run", async function() {
+                    const exitCode = await main();
                     if (exitCode != null) {
                         process.exit(Number(exitCode));
                     }
-                })();
+                });
+                eventEmitter.emit("run")
             }
         """.trimIndent()
     } else {
@@ -134,3 +144,10 @@ private fun builtinModule(): JavascriptModule {
 val builtinNames = listOf(
     "intToString"
 );
+
+
+fun withLineNumbers(source: String): String {
+    return source.lines().mapIndexed { index, line ->
+        (index + 1).toString().padStart(3) + " " + line
+    }.joinToString("\n")
+}

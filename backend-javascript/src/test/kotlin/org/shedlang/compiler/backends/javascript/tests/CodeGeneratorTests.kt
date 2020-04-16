@@ -567,9 +567,15 @@ class CodeGeneratorTests {
 
     @Test
     fun functionCallGeneratesFunctionCall() {
-        val shed = call(variableReference("f"), listOf(literalInt(42)))
+        val receiver = variableReference("f")
+        val shed = call(receiver, listOf(literalInt(42)))
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = EmptyEffect)
+            )
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -579,12 +585,18 @@ class CodeGeneratorTests {
 
     @Test
     fun namedArgumentsArePassedAsObject() {
+        val receiver = variableReference("f")
         val shed = call(
-            variableReference("f"),
+            receiver,
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = EmptyEffect)
+            )
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -594,13 +606,19 @@ class CodeGeneratorTests {
 
     @Test
     fun whenThereAreBothPositionalAndNamedArgumentsThenNamedArgumentsObjectIsLastArgument() {
+        val receiver = variableReference("f")
         val shed = call(
-            variableReference("f"),
+            receiver,
             positionalArguments = listOf(literalInt(1)),
             namedArguments = listOf(callNamedArgument("a", literalBool(true)))
         )
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = EmptyEffect)
+            )
+        )
 
-        val node = generateCode(shed)
+        val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
@@ -609,6 +627,24 @@ class CodeGeneratorTests {
                 isJavascriptObject(isMap("a" to isJavascriptBooleanLiteral(true)))
             )
         ))
+    }
+
+    @Test
+    fun callWithEffectIsAwaited() {
+        val receiver = variableReference("f")
+        val shed = call(receiver, listOf(literalInt(42)))
+        val context = context(
+            expressionTypes = mapOf(
+                receiver to functionType(effect = IoEffect)
+            )
+        )
+
+        val node = generateCode(shed, context)
+
+        assertThat(node, isJavascriptAwait(isJavascriptFunctionCall(
+            isJavascriptVariableReference("f"),
+            isSequence(isJavascriptIntegerLiteral(42))
+        )))
     }
 
     @Test
@@ -861,6 +897,13 @@ class CodeGeneratorTests {
         has(JavascriptUnaryOperationNode::operator, operator),
         has(JavascriptUnaryOperationNode::operand, operand)
     ))
+
+    private fun isJavascriptAwait(
+        operand: Matcher<JavascriptExpressionNode>
+    ): Matcher<JavascriptExpressionNode> = isJavascriptUnaryOperation(
+        operator = equalTo(JavascriptUnaryOperator.AWAIT),
+        operand = operand
+    )
 
     private fun isJavascriptBinaryOperation(
         operator: Matcher<JavascriptBinaryOperator>,

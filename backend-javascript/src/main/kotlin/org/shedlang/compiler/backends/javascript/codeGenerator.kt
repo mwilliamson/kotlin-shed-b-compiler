@@ -8,6 +8,7 @@ import org.shedlang.compiler.backends.ModuleCodeInspector
 import org.shedlang.compiler.backends.isConstant
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.EmptyEffect
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.Symbol
 
@@ -34,7 +35,24 @@ internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: ModuleName,
     var hasCast: Boolean = false
-)
+) {
+    private var hasAwaitStack: MutableList<Boolean> = mutableListOf()
+
+    fun enterFunction() {
+        hasAwaitStack.add(false)
+    }
+
+    fun markAwait() {
+        hasAwaitStack[hasAwaitStack.lastIndex] = true
+    }
+
+    fun exitFunction(): FunctionContext {
+        val hasAwait = hasAwaitStack.removeAt(hasAwaitStack.lastIndex)
+        return FunctionContext(hasAwait = hasAwait)
+    }
+}
+
+internal class FunctionContext(val hasAwait: Boolean)
 
 private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
     val source = NodeSource(import)
@@ -228,6 +246,7 @@ private fun generateCodeForFunctionDeclaration(node: FunctionDeclarationNode, co
     val javascriptFunction = generateFunction(node, context)
     return JavascriptFunctionDeclarationNode(
         name = generateName(node.name),
+        isAsync = javascriptFunction.isAsync,
         parameters = javascriptFunction.parameters,
         body = javascriptFunction.body,
         source = NodeSource(node)
@@ -256,10 +275,13 @@ private fun generateFunction(node: FunctionNode, context: CodeGenerationContext)
             source = NodeSource(parameter)
         )
     }
+
+    context.enterFunction()
     val body = namedParameterAssignments + generateBlockCode(node.body, context)
+    val bodyContext = context.exitFunction()
 
     return object: JavascriptFunctionNode {
-        override val isAsync = false
+        override val isAsync = bodyContext.hasAwait
         override val parameters = positionalParameters + namedParameters
         override val body = body
     }
@@ -395,65 +417,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: CallNode): JavascriptExpressionNode {
-            val positionalArguments = node.positionalArguments.map { argument ->
-                generateCode(argument, context)
-            }
-            val namedArguments = if (node.namedArguments.isEmpty()) {
-                listOf()
-            } else {
-                listOf(JavascriptObjectLiteralNode(
-                    node.namedArguments.associate({ argument ->
-                        generateName(argument.name) to generateCode(argument.expression, context)
-                    }),
-                    source = NodeSource(node)
-                ))
-            }
-            val arguments = positionalArguments + namedArguments
-
-            if (context.inspector.isCast(node)) {
-                context.hasCast = true
-                val parameterName = "value"
-                val parameterReference = JavascriptVariableReferenceNode(
-                    name = parameterName,
-                    source = NodeSource(node)
-                )
-                val typeCondition = generateTypeCondition(
-                    expression = parameterReference,
-                    discriminator = context.inspector.discriminatorForCast(node),
-                    source = NodeSource(node)
-                )
-                return JavascriptFunctionExpressionNode(
-                    parameters = listOf(parameterName),
-                    body = listOf(
-                        JavascriptReturnNode(
-                            expression = JavascriptConditionalOperationNode(
-                                condition = typeCondition,
-                                trueExpression = JavascriptFunctionCallNode(
-                                    function = JavascriptVariableReferenceNode(
-                                        name = "\$some",
-                                        source = NodeSource(node)
-                                    ),
-                                    arguments = listOf(parameterReference),
-                                    source = NodeSource(node)
-                                ),
-                                falseExpression = JavascriptVariableReferenceNode(
-                                    name = "\$none",
-                                    source = NodeSource(node)
-                                ),
-                                source = NodeSource(node)
-                            ),
-                            source = NodeSource(node)
-                        )
-                    ),
-                    source = NodeSource(node)
-                )
-            } else {
-                return JavascriptFunctionCallNode(
-                    generateCode(node.receiver, context),
-                    arguments,
-                    source = NodeSource(node)
-                )
-            }
+            return generateCodeForCall(node, context)
         }
 
         override fun visit(node: PartialCallNode): JavascriptExpressionNode {
@@ -558,6 +522,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: FunctionExpressionNode): JavascriptExpressionNode {
             val javascriptFunction = generateFunction(node, context)
             return JavascriptFunctionExpressionNode(
+                isAsync = javascriptFunction.isAsync,
                 parameters = javascriptFunction.parameters,
                 body = javascriptFunction.body,
                 source = node.source
@@ -567,6 +532,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: IfNode): JavascriptExpressionNode {
             val source = NodeSource(node)
 
+            context.enterFunction()
             val body = listOf(
                 JavascriptIfStatementNode(
                     conditionalBranches = node.conditionalBranches.map { branch ->
@@ -580,14 +546,21 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                     source = source
                 )
             )
+            val bodyContext = context.exitFunction()
 
-            return immediatelyInvokedFunction(body = body, source = source)
+            return immediatelyInvokedFunction(
+                isAsync = bodyContext.hasAwait,
+                body = body,
+                source = source,
+                context = context
+            )
         }
 
         override fun visit(node: WhenNode): JavascriptExpressionNode {
             val source = NodeSource(node)
             val temporaryName = "\$shed_tmp"
 
+            context.enterFunction()
             val branches = node.branches.map { branch ->
                 val expression = NodeSource(branch)
                 val discriminator = context.inspector.discriminatorForWhenBranch(node, branch)
@@ -608,56 +581,155 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             val elseBranch = generateBlockCode(node.elseBranch, context)
 
-            return immediatelyInvokedFunction(
-                body = listOf(
-                    javascriptConst(
-                        name = temporaryName,
-                        expression = generateCode(node.expression, context),
-                        source = source
-                    ),
-                    JavascriptIfStatementNode(
-                        conditionalBranches = branches,
-                        elseBranch = elseBranch,
-                        source = source
-                    )
+            val body = listOf(
+                javascriptConst(
+                    name = temporaryName,
+                    expression = generateCode(node.expression, context),
+                    source = source
                 ),
-                source = source
+                JavascriptIfStatementNode(
+                    conditionalBranches = branches,
+                    elseBranch = elseBranch,
+                    source = source
+                )
             )
-        }
 
-        private fun generateTypeCondition(
-            expression: JavascriptExpressionNode,
-            discriminator: Discriminator,
-            source: NodeSource
-        ): JavascriptExpressionNode {
-            return JavascriptBinaryOperationNode(
-                JavascriptBinaryOperator.EQUALS,
-                JavascriptPropertyAccessNode(
-                    expression,
-                    tagValuePropertyName,
-                    source
-                ),
-                JavascriptStringLiteralNode(discriminator.tagValue.value.value, source),
-                source = source
+            val bodyContext = context.exitFunction()
+
+            return immediatelyInvokedFunction(
+                isAsync = bodyContext.hasAwait,
+                body = body,
+                source = source,
+                context = context
             )
         }
     })
 }
 
-private fun immediatelyInvokedFunction(
-    body: List<JavascriptStatementNode>,
+private fun generateCodeForCall(node: CallNode, context: CodeGenerationContext): JavascriptExpressionNode {
+    val positionalArguments = node.positionalArguments.map { argument ->
+        generateCode(argument, context)
+    }
+    val namedArguments = if (node.namedArguments.isEmpty()) {
+        listOf()
+    } else {
+        listOf(JavascriptObjectLiteralNode(
+            node.namedArguments.associate { argument ->
+                generateName(argument.name) to generateCode(argument.expression, context)
+            },
+            source = NodeSource(node)
+        ))
+    }
+    val arguments = positionalArguments + namedArguments
+
+    if (context.inspector.isCast(node)) {
+        return generateCodeForCast(node, context)
+    } else {
+        val jsCall = JavascriptFunctionCallNode(
+            function = generateCode(node.receiver, context),
+            arguments = arguments,
+            source = NodeSource(node)
+        )
+        val receiverType = context.inspector.typeOfExpression(node.receiver)
+        if (receiverType is FunctionType && receiverType.effect != EmptyEffect) {
+            return await(operand = jsCall, context = context, source = NodeSource(node))
+        } else {
+            return jsCall
+        }
+    }
+}
+
+private fun generateCodeForCast(node: CallNode, context: CodeGenerationContext): JavascriptFunctionExpressionNode {
+    context.hasCast = true
+    val parameterName = "value"
+    val parameterReference = JavascriptVariableReferenceNode(
+        name = parameterName,
+        source = NodeSource(node)
+    )
+    val typeCondition = generateTypeCondition(
+        expression = parameterReference,
+        discriminator = context.inspector.discriminatorForCast(node),
+        source = NodeSource(node)
+    )
+    return JavascriptFunctionExpressionNode(
+        parameters = listOf(parameterName),
+        body = listOf(
+            JavascriptReturnNode(
+                expression = JavascriptConditionalOperationNode(
+                    condition = typeCondition,
+                    trueExpression = JavascriptFunctionCallNode(
+                        function = JavascriptVariableReferenceNode(
+                            name = "\$some",
+                            source = NodeSource(node)
+                        ),
+                        arguments = listOf(parameterReference),
+                        source = NodeSource(node)
+                    ),
+                    falseExpression = JavascriptVariableReferenceNode(
+                        name = "\$none",
+                        source = NodeSource(node)
+                    ),
+                    source = NodeSource(node)
+                ),
+                source = NodeSource(node)
+            )
+        ),
+        source = NodeSource(node)
+    )
+}
+
+private fun await(
+    operand: JavascriptExpressionNode,
+    context: CodeGenerationContext,
     source: Source
 ): JavascriptExpressionNode {
+    context.markAwait()
+    return JavascriptUnaryOperationNode(
+        operator = JavascriptUnaryOperator.AWAIT,
+        operand = operand,
+        source = source
+    )
+}
+
+private fun generateTypeCondition(
+    expression: JavascriptExpressionNode,
+    discriminator: Discriminator,
+    source: NodeSource
+): JavascriptExpressionNode {
+    return JavascriptBinaryOperationNode(
+        JavascriptBinaryOperator.EQUALS,
+        JavascriptPropertyAccessNode(
+            expression,
+            tagValuePropertyName,
+            source
+        ),
+        JavascriptStringLiteralNode(discriminator.tagValue.value.value, source),
+        source = source
+    )
+}
+
+private fun immediatelyInvokedFunction(
+    isAsync: Boolean,
+    body: List<JavascriptStatementNode>,
+    source: Source,
+    context: CodeGenerationContext
+): JavascriptExpressionNode {
     val function = JavascriptFunctionExpressionNode(
+        isAsync = isAsync,
         parameters = listOf(),
         body = body,
         source = source
     )
-    return JavascriptFunctionCallNode(
+    val call = JavascriptFunctionCallNode(
         function = function,
         arguments = listOf(),
         source = source
     )
+    if (isAsync) {
+        return await(operand = call, source = source, context = context)
+    } else {
+        return call
+    }
 }
 
 private fun generateSymbolCode(symbol: Symbol, source: Source): JavascriptExpressionNode {
