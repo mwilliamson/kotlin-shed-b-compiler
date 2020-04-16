@@ -104,6 +104,7 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
 
         override fun visit(node: JavascriptUnaryOperationNode): String {
             val prefix = when (node.operator) {
+                JavascriptUnaryOperator.AWAIT -> "await "
                 JavascriptUnaryOperator.MINUS -> "-"
                 JavascriptUnaryOperator.NOT -> "!"
             }

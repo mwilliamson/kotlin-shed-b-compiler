@@ -36,6 +36,11 @@ fun jsUnaryOperation(
     source = anySource()
 )
 
+fun jsAwait(expression: JavascriptExpressionNode) = jsUnaryOperation(
+    operator = JavascriptUnaryOperator.AWAIT,
+    operand = expression
+)
+
 fun jsBinaryOperation(
     operator: JavascriptBinaryOperator,
     left: JavascriptExpressionNode,

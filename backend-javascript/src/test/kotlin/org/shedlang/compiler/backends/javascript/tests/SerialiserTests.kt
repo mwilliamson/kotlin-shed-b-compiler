@@ -289,6 +289,13 @@ class SerialiserTests {
     }
 
     @Test
+    fun awaitSerialisation() {
+        val node = jsAwait(expression = jsVariableReference("x"))
+        val output = serialise(node)
+        assertThat(output, equalTo("await x"))
+    }
+
+    @Test
     fun unaryOperationsCanBeRepeatedWithoutParens() {
         val node = jsUnaryOperation(
             operator = JavascriptUnaryOperator.NOT,
