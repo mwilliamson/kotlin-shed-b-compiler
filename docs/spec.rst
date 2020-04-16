@@ -183,16 +183,10 @@ Sub-expressions are evaluated from left to right.
 .. math::
 
     \frac{
-        \left(
-            isvalue(e_1) \qquad
-            isvalue(e_2) \qquad
-            \dots \qquad
-            isvalue(e_{i-1})
-        \right) \qquad
         e_i \rightarrow e_i'
     }{
-        \literal{\#(}e_1\literal{,} e_2\literal{,} \dots \literal{,} e_i \literal{,} \dots \literal{,} e_n\literal{)} \rightarrow
-        \literal{\#(}e_1\literal{,} e_2\literal{,} \dots \literal{,} e_i' \literal{,} \dots \literal{,} e_n\literal{)}
+        \literal{\#(}v_1\literal{,} v_2\literal{,} \dots \literal{,} v_{i - 1} \literal{,} e_i \literal{,} \dots \literal{,} e_n\literal{)} \rightarrow
+        \literal{\#(}v_1\literal{,} v_2\literal{,} \dots \literal{,} v_{i - 1} \literal{,} e_i' \literal{,} \dots \literal{,} e_n\literal{)}
     }
 
 Unary operations
