@@ -13,6 +13,7 @@ interface CodeInspector {
     fun shapeFields(node: ShapeBaseNode): List<FieldInspector>
     fun shapeTagValue(node: ShapeBaseNode): TagValue?
     fun typeOfExpression(node: ExpressionNode): Type
+    fun functionType(node: FunctionNode): FunctionType
 }
 
 data class FieldInspector(
@@ -87,6 +88,10 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     override fun typeOfExpression(node: ExpressionNode): Type {
         return module.types.typeOfExpression(node)
     }
+
+    override fun functionType(node: FunctionNode): FunctionType {
+        return module.types.functionType(node)
+    }
 }
 
 class SimpleCodeInspector(
@@ -96,7 +101,8 @@ class SimpleCodeInspector(
     private val expressionTypes: Map<ExpressionNode, Type> = mapOf(),
     private val references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
     private val shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
-    private val shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf()
+    private val shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf(),
+    private val functionTypes: Map<FunctionNode, FunctionType> = mapOf()
 ): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
         return discriminatorsForCasts[node] ?: error("missing discriminator for node: $node")
@@ -128,5 +134,9 @@ class SimpleCodeInspector(
 
     override fun typeOfExpression(node: ExpressionNode): Type {
         return expressionTypes[node] ?: error("expression without type: $node")
+    }
+
+    override fun functionType(node: FunctionNode): FunctionType {
+        return functionTypes[node] ?: error("function without type: $node")
     }
 }

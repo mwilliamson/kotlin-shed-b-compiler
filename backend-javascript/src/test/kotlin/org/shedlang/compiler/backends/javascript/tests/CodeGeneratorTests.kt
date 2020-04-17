@@ -638,7 +638,7 @@ class CodeGeneratorTests {
                 receiver to functionType(effect = IoEffect)
             )
         )
-        context.enterFunction()
+        context.enterFunction(isAsync = true)
 
         val node = generateCode(shed, context)
 

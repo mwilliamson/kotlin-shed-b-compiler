@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.Type
@@ -9,7 +10,6 @@ import org.shedlang.compiler.types.TypeParameter
 /**
  * This indicates a bug in the compiler or its calling code
  */
-open class CompilerError(message: String, val source: Source) : Exception(message)
 class UnknownTypeError(val name: Identifier, source: Source)
     : CompilerError("type of ${name.value} is unknown", source = source)
 

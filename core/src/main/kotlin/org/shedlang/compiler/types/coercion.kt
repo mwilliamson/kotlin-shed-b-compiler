@@ -8,6 +8,10 @@ fun isSubEffect(subEffect: Effect, superEffect: Effect): Boolean {
     return solver.coerceEffect(from = subEffect, to = superEffect)
 }
 
+fun hasGenericEffect(effect: Effect): Boolean {
+    return effect is EffectParameter
+}
+
 fun canCoerce(from: Type, to: Type): Boolean {
     return coerce(from = from, to = to) is CoercionResult.Success
 }

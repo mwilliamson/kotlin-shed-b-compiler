@@ -23,6 +23,7 @@ val backend = object: Backend {
         for (module in moduleSet.modules) {
             when (module) {
                 is Module.Shed -> {
+                    println(module.name.joinToString(".") { part -> part.value })
                     val javascriptModule = compileModule(
                         module = module
                     )
@@ -48,7 +49,6 @@ val backend = object: Backend {
     }
 
     private fun writeModule(target: Path, javascriptModule: JavascriptModule) {
-        println(javascriptModule.name.joinToString("."))
         println(withLineNumbers(javascriptModule.source))
         println()
         println()

@@ -1,9 +1,6 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.ModuleResult
-import org.shedlang.compiler.ResolvedReferences
-import org.shedlang.compiler.Types
-import org.shedlang.compiler.TypesMap
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 import java.util.*
@@ -21,6 +18,7 @@ internal fun newTypeContext(
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = nodeTypes.toMutableMap(),
+        functionTypes = mutableMapOf(),
         discriminators = mutableMapOf(),
         resolvedReferences = resolvedReferences,
         getModule = getModule,
@@ -32,6 +30,7 @@ internal class TypeContext(
     val moduleName: List<String>?,
     val effect: Effect,
     private val variableTypes: MutableMap<Int, Type>,
+    private val functionTypes: MutableMap<Int, FunctionType>,
     private val discriminators: MutableMap<Int, Discriminator>,
     private val expressionTypes: MutableMap<Int, Type>,
     private val targetTypes: MutableMap<Int, Type>,
@@ -86,6 +85,10 @@ internal class TypeContext(
         variableTypes[targetNode.nodeId] = type
     }
 
+    fun addFunctionType(node: FunctionNode, type: FunctionType) {
+        functionTypes[node.nodeId] = type
+    }
+
     fun addDiscriminator(node: Node, discriminator: Discriminator) {
         discriminators[node.nodeId] = discriminator
     }
@@ -109,6 +112,7 @@ internal class TypeContext(
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = variableTypes,
+            functionTypes = functionTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
@@ -123,6 +127,7 @@ internal class TypeContext(
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = HashMap(variableTypes),
+            functionTypes = functionTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
             getModule = getModule,
@@ -145,6 +150,7 @@ internal class TypeContext(
         return TypesMap(
             discriminators = discriminators,
             expressionTypes = expressionTypes,
+            functionTypes = functionTypes,
             targetTypes = targetTypes,
             variableTypes = variableTypes
         )
@@ -303,7 +309,7 @@ private fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
     context.addVariableType(valType, type)
 }
 
-internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): Type {
+internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): FunctionType {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
     val positionalParameterTypes = function.parameters.map(

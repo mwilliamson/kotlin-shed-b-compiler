@@ -1573,6 +1573,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         return TypesMap(
             discriminators = mapOf(),
             expressionTypes = expressionTypes,
+            functionTypes = mapOf(),
             targetTypes = targetTypes,
             variableTypes = variableTypes
         )
