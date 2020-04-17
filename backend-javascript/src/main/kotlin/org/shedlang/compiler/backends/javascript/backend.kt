@@ -96,7 +96,7 @@ private fun compileModule(module: Module.Shed): JavascriptModule {
                 // Create an event emitter to prevent exiting before main is done
                 const eventEmitter = new EventEmitter();
                 eventEmitter.on("run", async function() {
-                    const exitCode = await main();
+                    const exitCode = await (main.async ? main.async : main)();
                     if (exitCode != null) {
                         process.exit(Number(exitCode));
                     }

@@ -211,7 +211,7 @@ class CodeGeneratorTests {
     @Test
     fun functionDeclarationAsFunctionStatementGeneratesFunctionDeclaration() {
         assertFunctionDeclarationGeneratesFunctionDeclaration { function ->
-            generateCodeForFunctionStatement(function)
+            generateCodeForFunctionStatement(function).single()
         }
     }
 
@@ -264,10 +264,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, cast(has(
+        assertThat(node, isSequence(cast(has(
             JavascriptExpressionStatementNode::expression,
             isJavascriptIntegerLiteral(42)
-        )))
+        ))))
     }
 
     @Test
@@ -276,10 +276,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, cast(has(
+        assertThat(node, isSequence(cast(has(
             JavascriptReturnNode::expression,
             isJavascriptIntegerLiteral(42)
-        )))
+        ))))
     }
 
     @Test
@@ -368,10 +368,10 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, isJavascriptConst(
+        assertThat(node, isSequence(isJavascriptConst(
             target = isJavascriptVariableReference("x"),
             expression = isJavascriptBooleanLiteral(true)
-        ))
+        )))
     }
 
     @Test
@@ -383,7 +383,7 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, isJavascriptConst(
+        assertThat(node, isSequence(isJavascriptConst(
             target = isJavascriptArrayDestructuring(
                 elements = isSequence(
                     isJavascriptVariableReference("x"),
@@ -391,7 +391,7 @@ class CodeGeneratorTests {
                 )
             ),
             expression = isJavascriptBooleanLiteral(true)
-        ))
+        )))
     }
 
     @Test
@@ -406,7 +406,7 @@ class CodeGeneratorTests {
 
         val node = generateCodeForFunctionStatement(shed)
 
-        assertThat(node, isJavascriptConst(
+        assertThat(node, isSequence(isJavascriptConst(
             target = isJavascriptObjectDestructuring(
                 properties = isSequence(
                     isPair(equalTo("x"), isJavascriptVariableReference("targetX")),
@@ -414,7 +414,7 @@ class CodeGeneratorTests {
                 )
             ),
             expression = isJavascriptBooleanLiteral(true)
-        ))
+        )))
     }
 
     @Test
@@ -630,7 +630,7 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun callWithEffectIsAwaited() {
+    fun callWithIoEffectIsAwaited() {
         val receiver = variableReference("f")
         val shed = call(receiver, listOf(literalInt(42)))
         val context = context(
@@ -638,11 +638,15 @@ class CodeGeneratorTests {
                 receiver to functionType(effect = IoEffect)
             )
         )
+        context.enterFunction()
 
         val node = generateCode(shed, context)
 
         assertThat(node, isJavascriptAwait(isJavascriptFunctionCall(
-            isJavascriptVariableReference("f"),
+            isJavascriptPropertyAccess(
+                receiver = isJavascriptVariableReference("f"),
+                propertyName = equalTo("async")
+            ),
             isSequence(isJavascriptIntegerLiteral(42))
         )))
     }
