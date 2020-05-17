@@ -32,7 +32,11 @@ object IoEffect : Effect {
         get() = "!Io"
 }
 
-class OpaqueEffect(val name: Identifier, val arguments: List<StaticValue>): Effect {
+data class OpaqueEffect(
+    val definitionId: Int,
+    val name: Identifier,
+    val arguments: List<StaticValue>
+): Effect {
     override val shortDescription: String
         get() = "!${name.value}"
 }
@@ -656,12 +660,20 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
 }
 
 public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
-    val effectParameter = effect as? EffectParameter
-    if (effectParameter == null) {
-        return effect
-    } else {
-        // TODO: handle non-effect bindings
-        return bindings.getOrElse(effect, { effect }) as Effect
+    when (effect) {
+        is EffectParameter ->
+            // TODO: handle non-effect bindings
+            return bindings.getOrElse(effect, { effect }) as Effect
+
+        is OpaqueEffect ->
+            return OpaqueEffect(
+                definitionId = effect.definitionId,
+                name = effect.name,
+                arguments = effect.arguments.map { argument -> replaceStaticValues(argument, bindings) }
+            )
+
+        else ->
+            return effect
     }
 }
 
