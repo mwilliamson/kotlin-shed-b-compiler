@@ -32,7 +32,7 @@ object IoEffect : Effect {
         get() = "!Io"
 }
 
-class OpaqueEffect(val name: Identifier): Effect {
+class OpaqueEffect(val name: Identifier, val arguments: List<StaticValue>): Effect {
     override val shortDescription: String
         get() = "!${name.value}"
 }
@@ -194,7 +194,7 @@ fun metaTypeToType(type: Type): Type? {
 
 fun rawValue(value: StaticValue): StaticValue {
     return when (value) {
-        is ParameterizedStaticValue -> value.value as Type
+        is ParameterizedStaticValue -> value.value
         else -> value
     }
 }
