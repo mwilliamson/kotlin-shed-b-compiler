@@ -152,9 +152,15 @@ private fun parseEffectDeclaration(tokens: TokenIterator<TokenType>): EffectDecl
 
     tokens.skip(TokenType.KEYWORD_EFFECT)
     val name = parseIdentifier(tokens)
+    val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
+
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
-    return EffectDeclarationNode(name = name, source = source)
+    return EffectDeclarationNode(
+        name = name,
+        staticParameters = staticParameters,
+        source = source
+    )
 }
 
 private fun parseValType(tokens: TokenIterator<TokenType>): ValTypeNode {

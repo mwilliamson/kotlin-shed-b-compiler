@@ -272,6 +272,7 @@ interface TypesModuleStatementNode: Node {
 
 data class EffectDeclarationNode(
     override val name: Identifier,
+    val staticParameters: List<StaticParameterNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypesModuleStatementNode, VariableBindingNode {

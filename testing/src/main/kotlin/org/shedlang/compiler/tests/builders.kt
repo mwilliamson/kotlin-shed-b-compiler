@@ -154,9 +154,11 @@ fun variableBinder(
 ): VariableBindingNode = parameter(name = name)
 
 fun effectDeclaration(
-    name: String
+    name: String,
+    staticParameters: List<StaticParameterNode> = listOf()
 ) = EffectDeclarationNode(
     name = Identifier(name),
+    staticParameters = staticParameters,
     source = anySource()
 )
 
