@@ -38,7 +38,7 @@ data class OpaqueEffect(
     val arguments: List<StaticValue>
 ): Effect {
     override val shortDescription: String
-        get() = "!${name.value}"
+        get() = "!${name.value}${staticArgumentsString(arguments)}"
 }
 
 interface TypeGroup {
@@ -308,14 +308,7 @@ data class FunctionType(
 
     override val shortDescription: String
         get() {
-            val typeParameters = if (staticParameters.isEmpty()) {
-                ""
-            } else {
-                val typeParameterStrings = staticParameters
-                    .map({ parameter -> parameter.shortDescription })
-                    .joinToString(", ")
-                "[${typeParameterStrings}]"
-            }
+            val typeParameters = staticArgumentsString(staticParameters)
 
             val positionalParameterStrings = positionalParameters
                 .map({ parameter -> parameter.shortDescription })
@@ -334,6 +327,18 @@ data class FunctionType(
 
             return "${typeParameters}(${parameters})${effect} -> ${returns.shortDescription}"
         }
+}
+
+private fun staticArgumentsString(values: List<StaticValue>): String {
+    val typeParameters = if (values.isEmpty()) {
+        ""
+    } else {
+        val typeParameterStrings = values
+            .map({ parameter -> parameter.shortDescription })
+            .joinToString(", ")
+        "[${typeParameterStrings}]"
+    }
+    return typeParameters
 }
 
 data class TupleType(val elementTypes: List<Type>): Type {
