@@ -398,7 +398,7 @@ internal fun evalType(type: StaticExpressionNode, context: TypeContext): Type {
     }
 }
 
-private fun evalStaticValue(node: StaticExpressionNode, context: TypeContext): StaticValue {
+internal fun evalStaticValue(node: StaticExpressionNode, context: TypeContext): StaticValue {
     val staticValue = evalStatic(node, context)
     if (staticValue is StaticValueType) {
         return staticValue.value
@@ -435,9 +435,9 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
         }
 
         override fun visit(node: StaticApplicationNode): Type {
-            val receiver = evalType(node.receiver, context)
+            val receiver = evalStaticValue(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
-            if (receiver is TypeFunction) {
+            if (receiver is ParameterizedStaticValue) {
                 return StaticValueType(applyStatic(receiver, arguments))
             } else {
                 // TODO: throw a more appropriate exception
@@ -463,7 +463,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 returns = returnType,
                 effect = effect
             )
-            checkType(type, source = node.source)
+            checkStaticValue(type, source = node.source)
             return StaticValueType(type)
         }
 
@@ -497,8 +497,8 @@ internal fun verifyType(expected: Type, actual: Type, source: Source) {
     }
 }
 
-internal fun checkType(type: Type, source: Source) {
-    val result = validateType(type)
+internal fun checkStaticValue(value: StaticValue, source: Source) {
+    val result = validateStaticValue(value)
     if (result.errors.isNotEmpty()) {
         // TODO: add more appropriate subclass
         throw TypeCheckError(result.errors.first(), source = source)

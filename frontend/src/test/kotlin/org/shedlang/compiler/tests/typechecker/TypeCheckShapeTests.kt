@@ -411,9 +411,9 @@ class TypeCheckShapeTests {
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
+        assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
-            type = isShapeType(
+            value = isShapeType(
                 name = isIdentifier("X"),
                 fields = isSequence(
                     isField(name = isIdentifier("a"), type = isTypeParameter(name = isIdentifier("T"), variance = isInvariant))
@@ -435,7 +435,7 @@ class TypeCheckShapeTests {
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
+        assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isCovariant))
         )))
     }

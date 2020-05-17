@@ -79,7 +79,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     }
 
     private fun shapeType(node: ShapeBaseNode) =
-        rawType(module.types.declaredType(node)) as ShapeType
+        rawValue(module.types.declaredType(node)) as ShapeType
 
     override fun typeOfExpression(node: ExpressionNode): Type {
         return module.types.typeOfExpression(node)

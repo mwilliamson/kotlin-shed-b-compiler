@@ -63,8 +63,8 @@ class TypeConstraintsTests {
             )
         )
         val result = coerce(
-            from = applyStatic(shapeType, listOf(BoolType)),
-            to = applyStatic(shapeType, listOf(BoolType))
+            from = applyStatic(shapeType, listOf(BoolType)) as Type,
+            to = applyStatic(shapeType, listOf(BoolType)) as Type
         )
         assertThat(result, isSuccess())
     }
@@ -80,8 +80,8 @@ class TypeConstraintsTests {
             )
         )
         val result = coerce(
-            from = applyStatic(shapeType, listOf(BoolType)),
-            to = applyStatic(shapeType, listOf(IntType))
+            from = applyStatic(shapeType, listOf(BoolType)) as Type,
+            to = applyStatic(shapeType, listOf(IntType)) as Type
         )
         assertThat(result, isFailure)
     }

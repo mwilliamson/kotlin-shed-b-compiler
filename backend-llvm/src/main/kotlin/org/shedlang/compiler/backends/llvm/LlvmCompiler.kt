@@ -9,9 +9,9 @@ import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.TagValue
-import org.shedlang.compiler.types.Type
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -823,7 +823,7 @@ internal class Compiler(
         target: LlvmOperandLocal,
         fieldNames: List<Identifier>,
         shapeMetaType: StaticValueType,
-        shapeType: Type,
+        shapeType: StaticValue,
         context: FunctionContext
     ): FunctionContext {
         val fieldsObjectType = shapeMetaType.fieldType(Identifier("fields"))!!
@@ -889,7 +889,7 @@ internal class Compiler(
     }
 
     private fun createObject(
-        objectType: Type,
+        objectType: StaticValue,
         fields: List<Pair<Identifier, LlvmOperand>>,
         target: LlvmOperandLocal
     ): List<LlvmInstruction> {
@@ -921,7 +921,7 @@ internal class Compiler(
 
     private fun storeObject(
         fields: List<Pair<Identifier, LlvmOperand>>,
-        objectType: Type,
+        objectType: StaticValue,
         objectPointer: LlvmOperand
     ): List<LlvmInstruction> {
         val compiledObjectType = compiledType(objectType = objectType)
@@ -967,7 +967,7 @@ internal class Compiler(
         return storeTagValue + storeFields
     }
 
-    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: Type, target: LlvmVariable): List<LlvmInstruction> {
+    private fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: StaticValue, target: LlvmVariable): List<LlvmInstruction> {
         val fieldPointerVariable = LlvmOperandLocal(generateName("fieldPointer"))
 
         return listOf(
@@ -985,7 +985,7 @@ internal class Compiler(
         )
     }
 
-    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, receiverType: Type, fieldName: Identifier): LlvmGetElementPtr {
+    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, receiverType: StaticValue, fieldName: Identifier): LlvmGetElementPtr {
         val compiledObjectType = compiledType(objectType = receiverType)
         return compiledObjectType.getFieldPointer(target = target, receiver = receiver, fieldName = fieldName)
     }

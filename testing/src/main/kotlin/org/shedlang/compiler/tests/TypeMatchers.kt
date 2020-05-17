@@ -96,12 +96,12 @@ fun isEffectType(effect: Matcher<Effect>) = isStaticValueType(cast(effect))
 fun isMetaType(value: Matcher<Type>): Matcher<StaticValue> = isStaticValueType(cast(value))
 fun isStaticValueType(value: Matcher<StaticValue>): Matcher<StaticValue> = cast(has(StaticValueType::value, value))
 
-fun isTypeFunction(
+fun isParameterizedStaticValue(
     parameters: Matcher<List<StaticParameter>>,
-    type: Matcher<Type> = anything
-): Matcher<Type> = cast(allOf(
-    has(TypeFunction::parameters, parameters),
-    has(TypeFunction::type, type)
+    value: Matcher<StaticValue> = anything
+): Matcher<StaticValue> = cast(allOf(
+    has(ParameterizedStaticValue::parameters, parameters),
+    has(ParameterizedStaticValue::value, cast(value))
 ))
 
 fun isTypeParameter(

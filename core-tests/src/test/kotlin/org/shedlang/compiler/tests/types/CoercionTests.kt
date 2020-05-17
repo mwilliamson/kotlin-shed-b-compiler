@@ -317,8 +317,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)),
-            to = applyStatic(shapeType, listOf(BoolType))
+            from = applyStatic(shapeType, listOf(BoolType)) as Type,
+            to = applyStatic(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -334,8 +334,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)),
-            to = applyStatic(shapeType, listOf(IntType))
+            from = applyStatic(shapeType, listOf(BoolType)) as Type,
+            to = applyStatic(shapeType, listOf(IntType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }
@@ -351,8 +351,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)),
-            to = applyStatic(shapeType, listOf(AnyType))
+            from = applyStatic(shapeType, listOf(BoolType)) as Type,
+            to = applyStatic(shapeType, listOf(AnyType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -368,8 +368,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(AnyType)),
-            to = applyStatic(shapeType, listOf(BoolType))
+            from = applyStatic(shapeType, listOf(AnyType)) as Type,
+            to = applyStatic(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }
@@ -383,8 +383,8 @@ class CoercionTests {
             fields = listOf()
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(AnyType)),
-            to = applyStatic(shapeType, listOf(BoolType))
+            from = applyStatic(shapeType, listOf(AnyType)) as Type,
+            to = applyStatic(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -398,8 +398,8 @@ class CoercionTests {
             fields = listOf()
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)),
-            to = applyStatic(shapeType, listOf(AnyType))
+            from = applyStatic(shapeType, listOf(BoolType)) as Type,
+            to = applyStatic(shapeType, listOf(AnyType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }

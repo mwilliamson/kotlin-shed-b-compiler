@@ -41,7 +41,7 @@ private fun generateShapeType(
     node: ShapeBaseNode,
     context: TypeContext,
     tagValue: TagValue? = null
-): Type {
+): StaticValue {
     val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
 
     val shapeId = freshTypeId()
@@ -60,7 +60,7 @@ private fun generateShapeType(
     val type = if (node.staticParameters.isEmpty()) {
         shapeType
     } else {
-        TypeFunction(staticParameters, shapeType)
+        ParameterizedStaticValue(staticParameters, shapeType)
     }
     context.addVariableType(node, StaticValueType(type))
     context.defer({
@@ -70,7 +70,7 @@ private fun generateShapeType(
                 verifyType(fieldValue, context, expected = shapeType.fields[field.name]!!.type)
             }
         }
-        checkType(type, source = node.source)
+        checkStaticValue(type, source = node.source)
     })
     return type
 }
@@ -260,7 +260,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         )
         if (type is ShapeType) {
             type
-        } else if (type is TypeFunction) {
+        } else if (type is ParameterizedStaticValue) {
             applyStatic(type, type.parameters.map { shapeParameter ->
                 staticParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
             }) as ShapeType
@@ -278,13 +278,13 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     val type = if (node.staticParameters.isEmpty()) {
         unionType
     } else {
-        TypeFunction(staticParameters, unionType)
+        ParameterizedStaticValue(staticParameters, unionType)
     }
 
     context.addVariableType(node, StaticValueType(type))
     context.defer({
         memberTypes.forEach { memberType -> memberType.fields }
-        checkType(type, source = node.source)
+        checkStaticValue(type, source = node.source)
     })
 }
 

@@ -518,8 +518,8 @@ fun parametrizedShapeType(
     parameters: List<TypeParameter>,
     tagValue: TagValue? = null,
     fields: List<Field> = listOf()
-) = TypeFunction(
-    type = shapeType(
+) = ParameterizedStaticValue(
+    value = shapeType(
         name = name,
         tagValue = tagValue,
         fields = fields,
@@ -563,8 +563,8 @@ fun parametrizedUnionType(
     tag: Tag = Tag(listOf(), Identifier(name)),
     parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
     members: List<ShapeType> = listOf()
-) = TypeFunction(
-    type = LazyUnionType(
+) = ParameterizedStaticValue(
+    value = LazyUnionType(
         name = Identifier(name),
         tag = tag,
         getMembers = lazy { members },

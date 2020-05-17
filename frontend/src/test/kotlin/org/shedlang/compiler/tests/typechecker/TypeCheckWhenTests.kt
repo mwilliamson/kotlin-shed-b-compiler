@@ -1,10 +1,7 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.allOf
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
@@ -59,7 +56,7 @@ class TypeCheckWhenTests {
             { typeCheck(expression, typeContext) },
             throws(allOf(
                 has(CouldNotFindDiscriminator::sourceType, isType(unionType)),
-                has(CouldNotFindDiscriminator::targetType, isType(memberType))
+                has(CouldNotFindDiscriminator::targetType, cast(isType(memberType)))
             ))
         )
     }

@@ -2,10 +2,7 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.types.Effect
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.TypeGroup
-import org.shedlang.compiler.types.TypeParameter
+import org.shedlang.compiler.types.*
 
 /**
  * This indicates a bug in the compiler or its calling code
@@ -99,7 +96,7 @@ class ModuleNotFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("Module not found: " + name.map(Identifier::value).joinToString("."), source = source)
 class MultipleModulesWithSameNameFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("More than one module with the name ${name.map(Identifier::value).joinToString(".")} was found", source = source)
-class CouldNotFindDiscriminator(val sourceType: Type, val targetType: Type, source: Source)
+class CouldNotFindDiscriminator(val sourceType: Type, val targetType: StaticValue, source: Source)
     : TypeCheckError("Could not find discriminator from ${sourceType.shortDescription} to ${targetType.shortDescription}", source = source)
 
 class InvalidTailCall(source: Source): TypeCheckError("tail calls must be self-recursive calls", source = source)

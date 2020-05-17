@@ -22,7 +22,7 @@ val builtins = listOf(
     builtinType("StringSlice", StringSliceType),
     builtinType("UnicodeScalar", UnicodeScalarType),
     builtinType("Bool", BoolType),
-    builtinType("ShapeField", ShapeFieldTypeFunction),
+    builtinVariable("ShapeField", StaticValueType(ShapeFieldTypeFunction)),
 
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect),

@@ -40,7 +40,7 @@ interface Types {
     fun typeOfExpression(node: ExpressionNode): Type
     fun typeOfStaticExpression(node: StaticExpressionNode): Type
     fun typeOfTarget(target: TargetNode): Type
-    fun declaredType(node: TypeDeclarationNode): Type
+    fun declaredType(node: TypeDeclarationNode): StaticValue
     fun functionType(node: FunctionNode): FunctionType
 
     fun discriminatorForCast(node: CallBaseNode): Discriminator
@@ -81,8 +81,13 @@ class TypesMap(
         return expressionTypes[node.nodeId]!!
     }
 
-    override fun declaredType(node: TypeDeclarationNode): Type {
-        return metaTypeToType(variableTypes[node.nodeId]!!)!!
+    override fun declaredType(node: TypeDeclarationNode): StaticValue {
+        val type = variableTypes[node.nodeId]
+        if (type is StaticValueType) {
+            return type.value
+        } else {
+            throw CompilerError("could not find declared type", source = node.source)
+        }
     }
 
     override fun functionType(node: FunctionNode): FunctionType {

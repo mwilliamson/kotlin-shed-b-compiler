@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
+import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.math.BigInteger
@@ -64,7 +65,7 @@ class DeclareFunction(
 class DeclareShape(
     val tagValue: TagValue?,
     val fields: List<FieldInspector>,
-    val shapeType: Type
+    val shapeType: StaticValue
 ): Instruction()
 
 object Discard: Instruction()

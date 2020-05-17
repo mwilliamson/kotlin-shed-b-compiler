@@ -11,6 +11,7 @@ interface StaticValue {
 
     interface Visitor<T> {
         fun visit(effect: Effect): T
+        fun visit(value: ParameterizedStaticValue): T
         fun visit(type: Type): T
     }
 }
@@ -105,13 +106,9 @@ data class StaticValueType(val value: StaticValue): Type {
 
     init {
         // TODO: better handling of generics
-        fieldsType = if (value is Type) {
-            val rawType = rawType(value)
-            if (rawType is ShapeType) {
-                shapeFieldsInfoType(rawType)
-            } else {
-                null
-            }
+        val rawType = rawValue(value)
+        fieldsType = if (rawType is ShapeType) {
+            shapeFieldsInfoType(rawType)
         } else {
             null
         }
@@ -153,9 +150,9 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
 val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
 val shapeFieldTypeFunctionShapeId = freshTypeId()
-val ShapeFieldTypeFunction = TypeFunction(
+val ShapeFieldTypeFunction = ParameterizedStaticValue(
     parameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
-    type = lazyShapeType(
+    value = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("ShapeField"),
         tagValue = null,
@@ -184,7 +181,7 @@ val ShapeFieldTypeFunction = TypeFunction(
 )
 
 private fun shapeFieldInfoType(type: Type, field: Field): Type {
-    return applyStatic(ShapeFieldTypeFunction, listOf(type, field.type))
+    return applyStatic(ShapeFieldTypeFunction, listOf(type, field.type)) as Type
 }
 
 fun metaTypeToType(type: Type): Type? {
@@ -195,10 +192,10 @@ fun metaTypeToType(type: Type): Type? {
     }
 }
 
-fun rawType(type: Type): Type {
-    return when (type) {
-        is TypeFunction -> type.type
-        else -> type
+fun rawValue(value: StaticValue): StaticValue {
+    return when (value) {
+        is ParameterizedStaticValue -> value.value as Type
+        else -> value
     }
 }
 
@@ -271,15 +268,17 @@ enum class Variance {
     CONTRAVARIANT
 }
 
-data class TypeFunction (
+data class ParameterizedStaticValue(
     val parameters: List<StaticParameter>,
-    val type: Type
-): Type {
-    override fun fieldType(fieldName: Identifier): Type? = null
-
+    val value: StaticValue
+): StaticValue {
     override val shortDescription: String
     // TODO: should be something like (T, U) => Shape[T, U]
         get() = "TypeFunction(TODO)"
+
+    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+        throw UnsupportedOperationException("not implemented")
+    }
 }
 
 data class ModuleType(
@@ -552,14 +551,14 @@ data class ValidateTypeResult(val errors: List<String>) {
     }
 }
 
-fun validateType(type: Type): ValidateTypeResult {
-    if (type is BasicType || type == AnyType || type == NothingType || type is TypeParameter) {
+fun validateStaticValue(value: StaticValue): ValidateTypeResult {
+    if (value is BasicType || value == AnyType || value == NothingType || value is TypeParameter) {
         return ValidateTypeResult.success
-    } else if (type is FunctionType) {
-        if (type.returns is TypeParameter && type.returns.variance == Variance.CONTRAVARIANT) {
+    } else if (value is FunctionType) {
+        if (value.returns is TypeParameter && value.returns.variance == Variance.CONTRAVARIANT) {
             return ValidateTypeResult(listOf("return type cannot be contravariant"))
         } else {
-            val parameterTypes = type.positionalParameters + type.namedParameters.values
+            val parameterTypes = value.positionalParameters + value.namedParameters.values
             return ValidateTypeResult(parameterTypes.mapNotNull({ parameterType ->
                 if (parameterType is TypeParameter && parameterType.variance == Variance.COVARIANT) {
                     "parameter type cannot be covariant"
@@ -568,8 +567,8 @@ fun validateType(type: Type): ValidateTypeResult {
                 }
             }))
         }
-    } else if (type is ShapeType) {
-        return ValidateTypeResult(type.fields.mapNotNull({ field ->
+    } else if (value is ShapeType) {
+        return ValidateTypeResult(value.fields.mapNotNull({ field ->
             val fieldType = field.value.type
             if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
                 "field type cannot be contravariant"
@@ -577,18 +576,18 @@ fun validateType(type: Type): ValidateTypeResult {
                 null
             }
         }))
-    } else if (type is UnionType) {
+    } else if (value is UnionType) {
         return ValidateTypeResult.success
-    } else if (type is TypeFunction) {
-        return validateType(type.type)
+    } else if (value is ParameterizedStaticValue) {
+        return validateStaticValue(value.value)
     } else {
-        throw NotImplementedError("not implemented for type: ${type.shortDescription}")
+        throw NotImplementedError("not implemented for static value: ${value.shortDescription}")
     }
 }
 
-fun applyStatic(receiver: TypeFunction, arguments: List<StaticValue>): Type {
+fun applyStatic(receiver: ParameterizedStaticValue, arguments: List<StaticValue>): StaticValue {
     val bindings = receiver.parameters.zip(arguments).toMap()
-    return replaceStaticValuesInType(receiver.type, bindings = bindings)
+    return replaceStaticValues(receiver.value, bindings = bindings)
 }
 
 typealias StaticBindings = Map<StaticParameter, StaticValue>
@@ -597,6 +596,10 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
     return value.acceptStaticValueVisitor(object : StaticValue.Visitor<StaticValue> {
         override fun visit(effect: Effect): StaticValue {
             return replaceEffects(effect, bindings)
+        }
+
+        override fun visit(value: ParameterizedStaticValue): StaticValue {
+            throw UnsupportedOperationException("not implemented")
         }
 
         override fun visit(type: Type): StaticValue {
@@ -667,14 +670,14 @@ data class Discriminator(
     val targetType: Type
 )
 
-fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
+fun findDiscriminator(sourceType: Type, targetType: StaticValue): Discriminator? {
     // TODO: handle generics
 
     if (sourceType !is UnionType) {
         return null
     }
 
-    val tagValue = (rawType(targetType) as? ShapeType)?.tagValue
+    val tagValue = (rawValue(targetType) as? ShapeType)?.tagValue
     if (tagValue?.tag != sourceType.tag) {
         return null
     }
@@ -686,8 +689,9 @@ fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
         if (!canCoerce(from = refinedType, to = targetType)) {
             return null
         }
-    } else if (targetType is TypeFunction) {
-        if (!canCoerce(from = refinedType, to = targetType.type, freeParameters = targetType.parameters.toSet())) {
+    } else if (targetType is ParameterizedStaticValue) {
+        val targetTypeValue = targetType.value
+        if (targetTypeValue !is Type || !canCoerce(from = refinedType, to = targetTypeValue, freeParameters = targetType.parameters.toSet())) {
             return null
         }
     } else {

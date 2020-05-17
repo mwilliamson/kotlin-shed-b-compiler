@@ -768,7 +768,7 @@ class TypeCheckCallTests {
 
         assertThat(type, isEquivalentType(functionType(
             positionalParameters = listOf(union),
-            returns = applyStatic(optionType, listOf(member1))
+            returns = applyStatic(optionType, listOf(member1)) as Type
         )))
 
         assertThat(

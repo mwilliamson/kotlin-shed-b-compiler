@@ -31,12 +31,12 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
         return inferFunctionCallType(node, receiverType, context)
     }
 
-    val receiverInnerType = metaTypeToType(receiverType)
-    if (receiverInnerType != null) {
+    if (receiverType is StaticValueType) {
+        val receiverInnerType = receiverType.value
         if (receiverInnerType is ShapeType) {
             return inferConstructorCallType(node, null, receiverInnerType, context)
-        } else if (receiverInnerType is TypeFunction) {
-            val typeFunctionInnerType = receiverInnerType.type
+        } else if (receiverInnerType is ParameterizedStaticValue) {
+            val typeFunctionInnerType = receiverInnerType.value
             if (typeFunctionInnerType is ShapeType) {
                 return inferConstructorCallType(node, receiverInnerType, typeFunctionInnerType, context)
             }
@@ -84,7 +84,7 @@ private fun inferFunctionCallType(
 
 private fun inferConstructorCallType(
     node: CallNode,
-    typeFunction: TypeFunction?,
+    typeFunction: ParameterizedStaticValue?,
     shapeType: ShapeType,
     context: TypeContext
 ): Type {
@@ -108,7 +108,7 @@ private fun inferConstructorCallType(
     } else {
         return applyStatic(typeFunction, typeFunction.parameters.map({ parameter ->
             typeParameterBindings[parameter]!!
-        }))
+        })) as Type
     }
 }
 
@@ -306,10 +306,10 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
     val optionsModuleResult = context.module(ImportPath.absolute(listOf("Core", "Options")))
     when (optionsModuleResult) {
         is ModuleResult.Found -> {
-            val someType = metaTypeToType(optionsModuleResult.module.type.fieldType(Identifier("Option"))!!) as TypeFunction
+            val someType = (optionsModuleResult.module.type.fieldType(Identifier("Option")) as StaticValueType).value as ParameterizedStaticValue
             return functionType(
                 positionalParameters = listOf(fromType),
-                returns = applyStatic(someType, listOf(toType))
+                returns = applyStatic(someType, listOf(toType)) as Type
             )
         }
         else -> throw NotImplementedError()

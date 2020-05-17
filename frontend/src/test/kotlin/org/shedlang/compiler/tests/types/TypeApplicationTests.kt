@@ -4,7 +4,6 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
@@ -61,13 +60,13 @@ class TypeApplicationTests {
         val shapeType = parametrizedShapeType(
             "Shape",
             parameters = listOf(shapeTypeParameter),
-            fields = listOf(field("value", applyStatic(innerShapeType, listOf(shapeTypeParameter))))
+            fields = listOf(field("value", applyStatic(innerShapeType, listOf(shapeTypeParameter)) as Type))
         )
 
         assertThat(
             applyStatic(shapeType, listOf(BoolType)),
             isShapeType(fields = isSequence(
-                isField(name = isIdentifier("value"), type = isEquivalentType(applyStatic(innerShapeType, listOf(BoolType))))
+                isField(name = isIdentifier("value"), type = isEquivalentType(applyStatic(innerShapeType, listOf(BoolType)) as Type))
             ))
         )
     }
@@ -109,7 +108,7 @@ class TypeApplicationTests {
         assertThat(
             applyStatic(union, listOf(BoolType)),
             isUnionType(members = isSequence(
-                isEquivalentType(applyStatic(shapeType, listOf(BoolType)))
+                isEquivalentType(applyStatic(shapeType, listOf(BoolType)) as Type)
             ))
         )
     }

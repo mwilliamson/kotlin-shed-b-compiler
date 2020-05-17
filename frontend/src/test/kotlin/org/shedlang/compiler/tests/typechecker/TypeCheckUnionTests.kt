@@ -72,12 +72,12 @@ class TypeCheckUnionTests {
 
         val typeContext = typeContext(moduleName = listOf("Example"))
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isTypeFunction(
+        assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
             parameters = isSequence(
                 isTypeParameter(name = isIdentifier("T1"), variance = isInvariant),
                 isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
             ),
-            type = isUnionType(
+            value = isUnionType(
                 name = isIdentifier("Union"),
                 members = isSequence(
                     isShapeType(
