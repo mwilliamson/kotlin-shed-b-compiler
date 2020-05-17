@@ -185,7 +185,6 @@ fun literalBool(
 fun literalInt(value: Int = 0) = IntegerLiteralNode(value.toBigInteger(), anySource())
 fun literalString(value: String = "") = StringLiteralNode(value, anySource())
 fun literalUnicodeScalar(value: Char = '!') = UnicodeScalarLiteralNode(value.toInt(), anySource())
-fun symbolName(name: String) = SymbolNode(name, anySource())
 fun tupleNode(elements: List<ExpressionNode>) = TupleNode(elements, anySource())
 fun variableReference(name: String) = ReferenceNode(Identifier(name), anySource())
 
@@ -598,10 +597,6 @@ fun varargsType() = VarargsType(
 fun moduleType(fields: Map<String, Type> = mapOf()) = ModuleType(
     fields = fields.mapKeys { (name, type) -> Identifier(name) }
 )
-
-fun symbolType(module: List<String>, name: String): SymbolType {
-    return SymbolType(Symbol(module.map(::Identifier), name))
-}
 
 fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator {
     return Discriminator(

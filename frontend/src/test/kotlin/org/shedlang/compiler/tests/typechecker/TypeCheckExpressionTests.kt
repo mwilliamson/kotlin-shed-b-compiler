@@ -1,13 +1,10 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import org.junit.jupiter.api.DynamicTest
+import com.natpryce.hamkrest.cast
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.InvalidOperationError
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.newTypeContext
@@ -47,13 +44,6 @@ class TypeCheckExpressionTests {
         val node = literalUnicodeScalar()
         val type = inferType(node, emptyTypeContext())
         assertThat(type, cast(equalTo(UnicodeScalarType)))
-    }
-
-    @Test
-    fun symbolIsTypedAsSymbol() {
-        val node = symbolName("`blah")
-        val type = inferType(node, typeContext(moduleName = listOf("Some", "Module")))
-        assertThat(type, isType(symbolType(listOf("Some", "Module"), "`blah")))
     }
 
     @Test

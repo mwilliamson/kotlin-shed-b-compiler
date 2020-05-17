@@ -5,7 +5,6 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
-import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.math.BigInteger
@@ -21,8 +20,6 @@ class IrInt(val value: BigInteger): IrValue() {
 }
 
 class IrString(val value: String): IrValue()
-
-class IrSymbol(val value: Symbol): IrValue()
 
 class IrTagValue(val value: TagValue): IrValue()
 
@@ -129,8 +126,6 @@ object StringEquals: Instruction()
 object StringNotEqual: Instruction()
 
 object Swap: Instruction()
-
-object SymbolEquals: Instruction()
 
 object TagValueAccess: Instruction()
 

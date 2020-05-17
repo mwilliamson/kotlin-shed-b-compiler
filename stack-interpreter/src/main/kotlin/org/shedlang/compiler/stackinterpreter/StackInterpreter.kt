@@ -5,10 +5,8 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.AnyType
-import org.shedlang.compiler.types.Symbol
 import org.shedlang.compiler.types.TagValue
 import java.math.BigInteger
 
@@ -40,8 +38,6 @@ internal data class InterpreterInt(val value: BigInteger): InterpreterValue()
 internal data class InterpreterString(val value: String): InterpreterValue()
 
 internal data class InterpreterStringSlice(val string: String, val startIndex: Int, val endIndex: Int): InterpreterValue()
-
-internal data class InterpreterSymbol(val value: Symbol): InterpreterValue()
 
 internal class InterpreterTuple(val elements: List<InterpreterValue>): InterpreterValue()
 
@@ -99,7 +95,6 @@ private fun irValueToInterpreterValue(value: IrValue): InterpreterValue {
         is IrUnicodeScalar -> InterpreterUnicodeScalar(value.value)
         is IrInt -> InterpreterInt(value.value)
         is IrString -> InterpreterString(value.value)
-        is IrSymbol -> InterpreterSymbol(value.value)
         is IrTagValue -> InterpreterString(value.value.value.value)
         is IrUnit -> InterpreterUnit
     }
@@ -111,7 +106,6 @@ internal fun interpreterValueToIrValue(interpreterValue: InterpreterValue): IrVa
         is InterpreterUnicodeScalar -> IrUnicodeScalar(interpreterValue.value)
         is InterpreterInt -> IrInt(interpreterValue.value)
         is InterpreterString -> IrString(interpreterValue.value)
-        is InterpreterSymbol -> IrSymbol(interpreterValue.value)
         is InterpreterUnit -> IrUnit
         else -> throw UnsupportedOperationException()
     }
@@ -478,16 +472,10 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         }
 
         is DeclareShape -> {
-            val constantFieldValues = fields
-                .mapNotNull { field ->
-                    when (val fieldValue = field.value) {
-                        null -> null
-                        is FieldValue.Expression -> throw NotImplementedError()
-                        is FieldValue.Symbol -> field.name to InterpreterSymbol(fieldValue.symbol)
-                    }
-                }
-                .toMap()
-                .toPersistentMap()
+            if (fields.any { field -> field.value != null }) {
+                throw NotImplementedError()
+            }
+            val constantFieldValues = persistentMapOf<Identifier, InterpreterValue>()
 
             val runtimeFields = mapOf(
                 Identifier("fields") to InterpreterShapeValue(
@@ -673,12 +661,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             state3.pushTemporary(value1).pushTemporary(value2).nextInstruction()
         }
 
-        is SymbolEquals -> {
-            runBinarySymbolOperation(initialState) { left, right ->
-                InterpreterBool(left == right)
-            }
-        }
-
         is TagValueAccess -> {
             val (state2, value) = initialState.popTemporary()
             val tagValue = (value as InterpreterShapeValue).tagValue!!
@@ -741,16 +723,6 @@ private fun runBinaryStringOperation(
     val (state2, right) = initialState.popTemporary()
     val (state3, left) = state2.popTemporary()
     val result = func((left as InterpreterString).value, (right as InterpreterString).value)
-    return state3.pushTemporary(result).nextInstruction()
-}
-
-private fun runBinarySymbolOperation(
-    initialState: InterpreterState,
-    func: (left: Symbol, right: Symbol) -> InterpreterValue
-): InterpreterState {
-    val (state2, right) = initialState.popTemporary()
-    val (state3, left) = state2.popTemporary()
-    val result = func((left as InterpreterSymbol).value, (right as InterpreterSymbol).value)
     return state3.pushTemporary(result).nextInstruction()
 }
 

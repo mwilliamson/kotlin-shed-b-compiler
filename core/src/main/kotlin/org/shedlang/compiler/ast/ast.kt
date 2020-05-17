@@ -751,7 +751,6 @@ interface ExpressionNode : Node {
         fun visit(node: IntegerLiteralNode): T
         fun visit(node: StringLiteralNode): T
         fun visit(node: UnicodeScalarLiteralNode): T
-        fun visit(node: SymbolNode): T
         fun visit(node: TupleNode): T
         fun visit(node: ReferenceNode): T
         fun visit(node: UnaryOperationNode): T
@@ -821,19 +820,6 @@ data class StringLiteralNode(
 
 data class UnicodeScalarLiteralNode(
     val value: Int,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-) : ExpressionNode {
-    override val structure: List<NodeStructure>
-        get() = listOf()
-
-    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
-        return visitor.visit(this)
-    }
-}
-
-data class SymbolNode(
-    val name: String,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {

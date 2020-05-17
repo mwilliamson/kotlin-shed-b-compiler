@@ -42,7 +42,6 @@ class Amd64ExampleTests {
         "ShapeTypeInfo.shed",
         "stdlib",
         "stringBuilder",
-        "symbols",
         "TailRec.shed",
         "Tuples.shed",
         "TypeAlias.shed",

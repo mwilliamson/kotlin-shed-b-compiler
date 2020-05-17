@@ -22,10 +22,6 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: IntegerLiteralNode) = IntType
         override fun visit(node: StringLiteralNode) = StringType
         override fun visit(node: UnicodeScalarLiteralNode) = UnicodeScalarType
-        // TODO: handle missing module name
-        override fun visit(node: SymbolNode): SymbolType {
-            return SymbolType(Symbol(context.moduleName!!.map(::Identifier), node.name))
-        }
 
         override fun visit(node: TupleNode): Type {
             return TupleType(node.elements.map { element ->
@@ -93,14 +89,6 @@ private fun inferUnaryOperationType(node: UnaryOperationNode, context: TypeConte
 private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeContext): Type {
     val leftType = inferType(node.left, context)
     val rightType = inferType(node.right, context)
-
-    if (
-        leftType is SymbolType &&
-        rightType is SymbolType &&
-        (node.operator == BinaryOperator.EQUALS || node.operator == BinaryOperator.NOT_EQUAL)
-    ) {
-        return BoolType
-    }
 
     return when (BinaryOperationType(node.operator, unalias(leftType), unalias(rightType))) {
         BinaryOperationType(BinaryOperator.EQUALS, IntType, IntType) -> BoolType

@@ -73,7 +73,6 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     symbol(TokenType.SYMBOL_HASH, "#"),
 
     RegexTokeniser.rule(TokenType.IDENTIFIER, identifierPattern),
-    RegexTokeniser.rule(TokenType.SYMBOL_NAME, "`" + identifierPattern),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
     RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
     RegexTokeniser.rule(TokenType.CODE_POINT, "'(?:[^\\\\'\n\r]|\\\\.)*'"),
@@ -116,7 +115,6 @@ internal enum class TokenType {
     KEYWORD_WHEN,
 
     IDENTIFIER,
-    SYMBOL_NAME,
 
     SYMBOL_ARROW,
     SYMBOL_FAT_ARROW,

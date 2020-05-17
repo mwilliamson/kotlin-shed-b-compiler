@@ -123,20 +123,6 @@ class TypeCheckBinaryOperationTests {
     }
 
     @Test
-    fun symbolEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(BinaryOperator.EQUALS, symbolName("`x"), symbolName("`y"))
-        val type = inferType(node, typeContext(moduleName = listOf("A")))
-        assertThat(type, cast(isBoolType))
-    }
-
-    @Test
-    fun symbolInequalityOperationReturnsBoolean() {
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, symbolName("`x"), symbolName("`y"))
-        val type = inferType(node, typeContext(moduleName = listOf("A")))
-        assertThat(type, cast(isBoolType))
-    }
-
-    @Test
     fun logicalAndReturnsBoolean() {
         val node = binaryOperation(BinaryOperator.AND, literalBool(), literalBool())
         val type = inferType(node, typeContext())

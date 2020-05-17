@@ -27,7 +27,6 @@ val FieldInspector.isConstant: Boolean
 
 sealed class FieldValue {
     data class Expression(val expression: ExpressionNode): FieldValue()
-    data class Symbol(val symbol: org.shedlang.compiler.types.Symbol): FieldValue()
 }
 
 class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
@@ -59,11 +58,8 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
             val fieldSource = NodeSource(fieldNode ?: node)
 
             val fieldValueNode = fieldNode?.value
-            val fieldType = field.type
             val value = if (fieldValueNode != null) {
                 FieldValue.Expression(fieldValueNode)
-            } else if (fieldType is SymbolType) {
-                FieldValue.Symbol(fieldType.symbol)
             } else if (field.isConstant) {
                 // TODO: throw better exception
                 throw Exception("Could not find value for constant field")

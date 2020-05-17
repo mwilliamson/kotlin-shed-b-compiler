@@ -10,7 +10,6 @@ import org.shedlang.compiler.backends.isConstant
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
-import org.shedlang.compiler.types.Symbol
 
 // TODO: check that builtins aren't renamed
 // TODO: check imports aren't renamed
@@ -271,9 +270,6 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
 
             is FieldValue.Expression ->
                 generateExpressionCode(fieldValue.expression, context).pureExpression()
-
-            is FieldValue.Symbol ->
-                symbol(fieldValue.symbol, source = shapeSource)
         }
         if (value == null) {
             null
@@ -721,12 +717,6 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             )
         }
 
-        override fun visit(node: SymbolNode): GeneratedExpression {
-            val source = NodeSource(node)
-            val symbol = Symbol(context.moduleName, node.name)
-            return GeneratedExpression.pure(symbol(symbol, source))
-        }
-
         override fun visit(node: TupleNode): GeneratedExpression {
             return GeneratedCode.flatten(
                 node.elements.map { element ->
@@ -1070,10 +1060,6 @@ private fun assign(
         expression = expression,
         source = source
     )
-}
-
-private fun symbol(symbol: Symbol, source: Source): PythonExpressionNode {
-    return PythonStringLiteralNode(symbol.fullName, source = source)
 }
 
 private fun <T1, T2> handleSpillage(

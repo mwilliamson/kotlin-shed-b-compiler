@@ -87,21 +87,6 @@ object StringType : BasicType {
 object StringSliceType : BasicType {
     override val shortDescription = "StringSlice"
 }
-data class SymbolType(val symbol: Symbol): BasicType {
-    override val shortDescription: String
-        get() = "Symbol[${symbol.module}.${symbol.name}]"
-}
-
-data class Symbol(val module: ModuleName, val name: String) {
-    val fullName: String = (module.map(Identifier::value) + listOf(name)).joinToString(".")
-}
-
-object AnySymbolType : Type {
-    override fun fieldType(fieldName: Identifier): Type? = null
-
-    override val shortDescription: String
-        get() = "Symbol"
-}
 
 object AnyType : Type {
     override fun fieldType(fieldName: Identifier): Type? = null
@@ -663,7 +648,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
                 replaceStaticValuesInType(elementType, bindings)
             }
         )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is StringSliceType || type is UnicodeScalarType || type is AnyType || type is NothingType || type is SymbolType || type is TypeAlias) {
+    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is StringSliceType || type is UnicodeScalarType || type is AnyType || type is NothingType || type is TypeAlias) {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)
@@ -713,41 +698,4 @@ fun findDiscriminator(sourceType: Type, targetType: Type): Discriminator? {
     }
 
     return Discriminator(tagValue = tagValue, targetType = refinedType)
-
-//    var refinedTargetType = targetType
-//    if (sourceType is UnionType && targetType is TypeFunction) {
-//        val innerTargetType = targetType.type
-//        val matchingMembers = sourceType.members
-//            .filterIsInstance<ShapeType>()
-//            .filter { member ->
-//                innerTargetType is ShapeType && member.shapeId == innerTargetType.shapeId
-//            }
-//        if (matchingMembers.size == 1) {
-//            refinedTargetType = matchingMembers.single()
-//        }
-//    }
-//
-//    if (sourceType is UnionType && refinedTargetType is ShapeType) {
-//        val candidateDiscriminators = refinedTargetType.fields.values.mapNotNull { field ->
-//            val fieldType = field.type
-//            if (fieldType is SymbolType) {
-//                Discriminator(field = field, symbolType = fieldType, targetType = refinedTargetType)
-//            } else {
-//                null
-//            }
-//        }
-//        return candidateDiscriminators.find { candidateDiscriminator ->
-//            sourceType.members.all { member ->
-//                canCoerce(from = member, to = refinedTargetType) || run {
-//                    val memberShape = member as ShapeType
-//                    val memberField = memberShape.fields[candidateDiscriminator.fieldName]
-//                    val memberSymbolType = memberField?.type as? SymbolType
-//                    memberField?.shapeId == candidateDiscriminator.field.shapeId &&
-//                        memberSymbolType != null &&
-//                        memberSymbolType != candidateDiscriminator.symbolType
-//                }
-//            }
-//        }
-//    }
-//    return null
 }

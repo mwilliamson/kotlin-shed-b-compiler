@@ -111,10 +111,6 @@ class Loader(
                 return persistentListOf(push)
             }
 
-            override fun visit(node: SymbolNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
-            }
-
             override fun visit(node: TupleNode): PersistentList<Instruction> {
                 val elementInstructions = node.elements.flatMap { element -> loadExpression(element) }
                 return elementInstructions.toPersistentList().add(TupleCreate(node.elements.size))

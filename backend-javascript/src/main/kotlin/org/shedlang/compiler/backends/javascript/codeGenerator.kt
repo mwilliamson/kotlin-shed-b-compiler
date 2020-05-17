@@ -159,9 +159,6 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
 
                             is FieldValue.Expression ->
                                 generateCode(fieldValue.expression, context)
-
-                            is FieldValue.Symbol ->
-                                generateSymbolCode(fieldValue.symbol, source = fieldSource)
                         }
 
                         val jsFieldName = generateName(field.name)
@@ -462,11 +459,6 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         override fun visit(node: UnicodeScalarLiteralNode): JavascriptExpressionNode {
             val value = Character.toChars(node.value).joinToString()
             return JavascriptStringLiteralNode(value, NodeSource(node))
-        }
-
-        override fun visit(node: SymbolNode): JavascriptExpressionNode {
-            val symbol = Symbol(context.moduleName, node.name)
-            return generateSymbolCode(symbol, NodeSource(node))
         }
 
         override fun visit(node: TupleNode): JavascriptExpressionNode {
@@ -871,10 +863,6 @@ private fun immediatelyInvokedFunction(
     } else {
         return call
     }
-}
-
-private fun generateSymbolCode(symbol: Symbol, source: Source): JavascriptExpressionNode {
-    return JavascriptStringLiteralNode(symbol.fullName, source = source)
 }
 
 private fun generateCode(operator: UnaryOperator): JavascriptUnaryOperator {

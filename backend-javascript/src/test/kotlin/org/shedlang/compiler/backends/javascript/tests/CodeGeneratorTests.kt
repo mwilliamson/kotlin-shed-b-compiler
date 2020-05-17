@@ -461,13 +461,6 @@ class CodeGeneratorTests {
     }
 
     @Test
-    fun symbolNameGeneratesString() {
-        val shed = symbolName("`blah")
-        val node = generateCode(shed, context(moduleName = listOf("A", "B")))
-        assertThat(node, isJavascriptStringLiteral("A.B.`blah"))
-    }
-
-    @Test
     fun tupleGeneratesTuple() {
         val shed = tupleNode(listOf(literalInt(42), literalBool(true)))
         val node = generateCode(shed, context())

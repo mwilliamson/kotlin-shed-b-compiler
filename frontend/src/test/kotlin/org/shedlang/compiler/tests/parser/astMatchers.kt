@@ -341,9 +341,6 @@ internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
 
 internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))
 
-internal fun isSymbolName(name: String): Matcher<ExpressionNode>
-    = cast(has(SymbolNode::name, equalTo(name)))
-
 internal fun isStringSource(contents: String, characterIndex: Int): Matcher<Source> = cast(allOf(
     has(StringSource::contents, equalTo(contents)),
     has(StringSource::characterIndex, equalTo(characterIndex))
