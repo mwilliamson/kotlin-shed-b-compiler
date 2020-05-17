@@ -10,7 +10,7 @@ import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.typeCheckFunctionDeclaration
 import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
 import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
 
@@ -61,7 +61,7 @@ class TypeCheckExpressionStatementTests {
                 boolReference to boolDeclaration
             ),
             types = mapOf(
-                boolDeclaration to MetaType(BoolType)
+                boolDeclaration to StaticValueType(BoolType)
             )
         )
         typeCheckFunctionDeclaration(functionDeclaration, context)

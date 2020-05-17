@@ -7,7 +7,7 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.typeCheckTypesModuleStatement
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.StaticValueType
 
 class TypeCheckValTypeTests {
     @Test
@@ -34,7 +34,7 @@ class TypeCheckValTypeTests {
         val typeContext = newTypeContext(
             moduleName = null,
             nodeTypes = mapOf(
-                intDeclaration.nodeId to MetaType(IntType)
+                intDeclaration.nodeId to StaticValueType(IntType)
             ),
             resolvedReferences = ResolvedReferencesMap(mapOf(
                 intReference.nodeId to intDeclaration

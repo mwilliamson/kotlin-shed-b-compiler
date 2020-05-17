@@ -6,7 +6,6 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.frontend.tests.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.typechecker.TypeCheckError
@@ -56,7 +55,7 @@ class EvalTypeTests {
 
         val type = evalType(
             reference,
-            typeContext(referenceTypes = mapOf(reference to MetaType(IntType)))
+            typeContext(referenceTypes = mapOf(reference to StaticValueType(IntType)))
         )
         assertThat(type, isIntType)
     }
@@ -79,8 +78,8 @@ class EvalTypeTests {
         val type = evalType(
             application,
             typeContext(referenceTypes = mapOf(
-                listReference to MetaType(listType),
-                boolReference to MetaType(BoolType)
+                listReference to StaticValueType(listType),
+                boolReference to StaticValueType(BoolType)
             ))
         )
         assertThat(type, isShapeType(
@@ -96,7 +95,7 @@ class EvalTypeTests {
     fun staticFieldAccessHasTypeOfField() {
         val moduleReference = staticReference("M")
         val moduleType = moduleType(fields = mapOf(
-            "T" to MetaType(IntType)
+            "T" to StaticValueType(IntType)
         ))
 
         val application = staticFieldAccess(moduleReference, "T")
@@ -129,9 +128,9 @@ class EvalTypeTests {
             node,
             typeContext(
                 referenceTypes = mapOf(
-                    boolReference to MetaType(BoolType),
-                    intReference to MetaType(IntType),
-                    effectReference to EffectType(IoEffect)
+                    boolReference to StaticValueType(BoolType),
+                    intReference to StaticValueType(IntType),
+                    effectReference to StaticValueType(IoEffect)
                 ),
                 references = mapOf(typeParameterReference to typeParameter)
             )
@@ -151,7 +150,7 @@ class EvalTypeTests {
 
         val node = functionTypeNode(returnType = typeParameterReference)
         val typeContext = typeContext(referenceTypes = mapOf(
-            typeParameterReference to MetaType(typeParameter)
+            typeParameterReference to StaticValueType(typeParameter)
         ))
 
         assertThat(
@@ -185,8 +184,8 @@ class EvalTypeTests {
             node,
             typeContext(
                 referenceTypes = mapOf(
-                    boolReference to MetaType(BoolType),
-                    intReference to MetaType(IntType)
+                    boolReference to StaticValueType(BoolType),
+                    intReference to StaticValueType(IntType)
                 )
             )
         )

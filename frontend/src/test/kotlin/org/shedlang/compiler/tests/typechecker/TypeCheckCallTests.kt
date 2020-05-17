@@ -68,8 +68,8 @@ class TypeCheckCallTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType,
-            intReference to MetaType(IntType),
-            unitReference to MetaType(UnitType)
+            intReference to StaticValueType(IntType),
+            unitReference to StaticValueType(UnitType)
         ))
         val type = inferCallType(node, typeContext)
 
@@ -94,7 +94,7 @@ class TypeCheckCallTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType,
-            unitReference to MetaType(UnitType)
+            unitReference to StaticValueType(UnitType)
         ))
 
         assertThat(
@@ -275,7 +275,7 @@ class TypeCheckCallTests {
         val node = call(receiver = shapeReference)
 
         val shapeType = shapeType(name = "X")
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
         val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(shapeType)))
@@ -297,7 +297,7 @@ class TypeCheckCallTests {
             callNamedArgument("value", literalBool())
         ))
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
@@ -325,7 +325,7 @@ class TypeCheckCallTests {
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            shapeReference to MetaType(shapeType),
+            shapeReference to StaticValueType(shapeType),
             argumentReference to functionType(positionalParameters = listOf(IntType), returns = UnitType)
         ))
         val type = inferCallType(node, typeContext)
@@ -348,7 +348,7 @@ class TypeCheckCallTests {
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -368,7 +368,7 @@ class TypeCheckCallTests {
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
@@ -388,7 +388,7 @@ class TypeCheckCallTests {
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
@@ -426,7 +426,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X")
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -440,7 +440,7 @@ class TypeCheckCallTests {
         val node = call(receiver = shapeReference)
 
         val shapeType = shapeType(name = "X", fields = listOf(field("a", BoolType)))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -457,7 +457,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X", fields = listOf(field("a", BoolType)))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -474,7 +474,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X")
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -493,7 +493,7 @@ class TypeCheckCallTests {
         val shapeType = shapeType(name = "X", fields = listOf(
             field("a", IntType, isConstant = true)
         ))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -513,7 +513,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X", fields = listOf(field("a", IntType)))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to MetaType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -634,7 +634,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 functionReference to functionType,
-                effectReference to EffectType(IoEffect)
+                effectReference to StaticValueType(IoEffect)
             ),
             effect = EmptyEffect
         )
@@ -675,7 +675,7 @@ class TypeCheckCallTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                effectReference to EffectType(IoEffect)
+                effectReference to StaticValueType(IoEffect)
             ),
             effect = EmptyEffect
         )
@@ -715,7 +715,7 @@ class TypeCheckCallTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                effectReference to EffectType(IoEffect)
+                effectReference to StaticValueType(IoEffect)
             ),
             effect = EmptyEffect
         )
@@ -739,7 +739,7 @@ class TypeCheckCallTests {
         val optionsModule = ModuleResult.Found(Module.Native(
             name = listOf(Identifier("Core"), Identifier("Options")),
             type = moduleType(fields = mapOf(
-                "Option" to MetaType(optionType)
+                "Option" to StaticValueType(optionType)
             ))
         ))
 
@@ -760,8 +760,8 @@ class TypeCheckCallTests {
             ),
             referenceTypes = mapOf(
                 castReference to CastType,
-                memberReference to MetaType(member1),
-                unionReference to MetaType(union)
+                memberReference to StaticValueType(member1),
+                unionReference to StaticValueType(union)
             )
         )
         val type = inferCallType(node, typeContext)

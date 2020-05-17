@@ -92,9 +92,9 @@ val isIntType: Matcher<StaticValue> = cast(equalTo(IntType))
 val isBoolType: Matcher<StaticValue> = cast(equalTo(BoolType))
 val isStringType: Matcher<StaticValue> = cast(equalTo(StringType))
 
-fun isMetaType(type: Matcher<Type>): Matcher<StaticValue> = cast(has(MetaType::type, type))
-
-fun isEffectType(effect: Matcher<Effect>): Matcher<StaticValue> = cast(has(EffectType::effect, effect))
+fun isEffectType(effect: Matcher<Effect>) = isStaticValueType(cast(effect))
+fun isMetaType(value: Matcher<Type>): Matcher<StaticValue> = isStaticValueType(cast(value))
+fun isStaticValueType(value: Matcher<StaticValue>): Matcher<StaticValue> = cast(has(StaticValueType::value, value))
 
 fun isTypeFunction(
     parameters: Matcher<List<StaticParameter>>,

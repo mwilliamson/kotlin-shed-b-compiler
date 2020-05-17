@@ -26,7 +26,7 @@ private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {
             evalType(node.expression, context)
         }
     )
-    context.addVariableType(node, MetaType(type))
+    context.addVariableType(node, StaticValueType(type))
 
     context.defer {
         type.aliasedType
@@ -62,7 +62,7 @@ private fun generateShapeType(
     } else {
         TypeFunction(staticParameters, shapeType)
     }
-    context.addVariableType(node, MetaType(type))
+    context.addVariableType(node, StaticValueType(type))
     context.defer({
         for (field in node.fields) {
             val fieldValue = field.value
@@ -281,7 +281,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         TypeFunction(staticParameters, unionType)
     }
 
-    context.addVariableType(node, MetaType(type))
+    context.addVariableType(node, StaticValueType(type))
     context.defer({
         memberTypes.forEach { memberType -> memberType.fields }
         checkType(type, source = node.source)

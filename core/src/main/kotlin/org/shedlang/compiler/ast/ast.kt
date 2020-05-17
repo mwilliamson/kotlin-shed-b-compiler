@@ -1,7 +1,10 @@
 package org.shedlang.compiler.ast
 
 import org.shedlang.compiler.nullableToList
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.Effect
+import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 
 interface Node {
@@ -94,12 +97,12 @@ data class BuiltinVariable(
 
 fun builtinType(name: String, type: Type) = BuiltinVariable(
     name = Identifier(name),
-    type = MetaType(type)
+    type = StaticValueType(type)
 )
 
 fun builtinEffect(name: String, effect: Effect) = BuiltinVariable(
     name = Identifier(name),
-    type = EffectType(effect)
+    type = StaticValueType(effect)
 )
 
 fun builtinVariable(name: String, type: Type) = BuiltinVariable(

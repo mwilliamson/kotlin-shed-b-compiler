@@ -100,21 +100,25 @@ object NothingType : Type {
     override val shortDescription = "Nothing"
 }
 
-data class MetaType(val type: Type): Type {
+data class StaticValueType(val value: StaticValue): Type {
     private val fieldsType: Type?
 
     init {
         // TODO: better handling of generics
-        val rawType = rawType(type)
-        fieldsType = if (rawType is ShapeType) {
-            shapeFieldsInfoType(rawType)
+        fieldsType = if (value is Type) {
+            val rawType = rawType(value)
+            if (rawType is ShapeType) {
+                shapeFieldsInfoType(rawType)
+            } else {
+                null
+            }
         } else {
             null
         }
     }
 
     override val shortDescription: String
-        get() = "Type[${type.shortDescription}]"
+        get() = "StaticValue[${value.shortDescription}]"
 
     override fun fieldType(fieldName: Identifier): Type? {
         if (fieldName == Identifier("fields")) {
@@ -184,8 +188,8 @@ private fun shapeFieldInfoType(type: Type, field: Field): Type {
 }
 
 fun metaTypeToType(type: Type): Type? {
-    if (type is MetaType) {
-        return type.type
+    if (type is StaticValueType) {
+        return type.value as? Type
     } else {
         return null
     }
@@ -196,13 +200,6 @@ fun rawType(type: Type): Type {
         is TypeFunction -> type.type
         else -> type
     }
-}
-
-class EffectType(val effect: Effect): Type {
-    override fun fieldType(fieldName: Identifier): Type? = null
-
-    override val shortDescription: String
-        get() = "EffectType(${effect})"
 }
 
 private var nextEffectParameterId = 0

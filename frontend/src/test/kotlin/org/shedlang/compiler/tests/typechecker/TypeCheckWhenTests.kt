@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.StaticValueType
 
 class TypeCheckWhenTests {
     private val inputTag = tag(listOf("Example"), "Union")
@@ -51,7 +51,7 @@ class TypeCheckWhenTests {
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                memberReference to MetaType(memberType),
+                memberReference to StaticValueType(memberType),
                 valueReference to unionType
             )
         )
@@ -88,8 +88,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to MetaType(inputMember1),
-                inputMember2TypeReference to MetaType(inputMember2),
+                inputMember1TypeReference to StaticValueType(inputMember1),
+                inputMember2TypeReference to StaticValueType(inputMember2),
                 outputMember1Reference to outputMember1,
                 outputMember2Reference to outputMember2
             )
@@ -120,8 +120,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to MetaType(inputMember1),
-                inputMember2TypeReference to MetaType(inputMember2),
+                inputMember1TypeReference to StaticValueType(inputMember1),
+                inputMember2TypeReference to StaticValueType(inputMember2),
                 outputMember1Reference to outputMember1,
                 outputMember2Reference to outputMember2
             )
@@ -155,8 +155,8 @@ class TypeCheckWhenTests {
                 refinedVariableReference to declaration
             ),
             referenceTypes = mapOf(
-                inputMember1TypeReference to MetaType(inputMember1),
-                inputMember2TypeReference to MetaType(inputMember2)
+                inputMember1TypeReference to StaticValueType(inputMember1),
+                inputMember2TypeReference to StaticValueType(inputMember2)
             ),
             types = mapOf(declaration to inputUnion)
         )
@@ -181,7 +181,7 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to MetaType(inputMember1)
+                inputMember1TypeReference to StaticValueType(inputMember1)
             )
         )
 
@@ -215,8 +215,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to MetaType(inputMember1),
-                inputMember2TypeReference to MetaType(inputMember2)
+                inputMember1TypeReference to StaticValueType(inputMember1),
+                inputMember2TypeReference to StaticValueType(inputMember2)
             )
         )
 
@@ -248,8 +248,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to MetaType(inputMember1),
-                inputMember2TypeReference to MetaType(inputMember2)
+                inputMember1TypeReference to StaticValueType(inputMember1),
+                inputMember2TypeReference to StaticValueType(inputMember2)
             )
         )
         inferType(expression, typeContext)

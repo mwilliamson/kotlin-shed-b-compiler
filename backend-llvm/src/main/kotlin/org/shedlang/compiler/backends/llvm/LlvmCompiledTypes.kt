@@ -55,8 +55,8 @@ internal fun compiledType(objectType: Type): CompiledType {
     if (objectType is TypeAlias) {
         // TODO: better handling of type aliases
         return compiledType(objectType.aliasedType)
-    } else if (objectType is MetaType && rawType(objectType.type) is ShapeType) {
-        val shapeType = rawType(objectType.type) as ShapeType
+    } else if (objectType is StaticValueType && rawType(objectType.value as Type) is ShapeType) {
+        val shapeType = rawType(objectType.value as Type) as ShapeType
         return CompiledShapeType(
             parameterTypes = shapeType.fields.map { compiledValueType },
             compiledObjectType = CompiledObjectType(

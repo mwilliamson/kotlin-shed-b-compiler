@@ -9,7 +9,7 @@ import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.MetaType
+import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.nio.file.Path
@@ -770,7 +770,7 @@ internal class Compiler(
         )
 
         // TODO: avoid recreating meta-type
-        val shapeMetaType = MetaType(instruction.shapeType)
+        val shapeMetaType = StaticValueType(instruction.shapeType)
         val compiledShapeType = compiledType(shapeMetaType)
 
         return context
@@ -822,7 +822,7 @@ internal class Compiler(
     private fun createFieldsObject(
         target: LlvmOperandLocal,
         fieldNames: List<Identifier>,
-        shapeMetaType: MetaType,
+        shapeMetaType: StaticValueType,
         shapeType: Type,
         context: FunctionContext
     ): FunctionContext {

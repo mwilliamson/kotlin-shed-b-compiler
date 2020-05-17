@@ -25,7 +25,7 @@ class TypeCheckFunctionTests {
         )
         val typeContext = typeContext(
             references = mapOf(typeParameterReference to typeParameter),
-            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
         typeCheckFunctionDeclaration(node, typeContext)
@@ -62,7 +62,7 @@ class TypeCheckFunctionTests {
         )
         val typeContext = typeContext(
             references = mapOf(effectParameterReference to effectParameter),
-            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
         typeCheckFunctionDeclaration(node, typeContext)
@@ -73,7 +73,7 @@ class TypeCheckFunctionTests {
         ))
         assertThat(
             (typeContext.typeOf(node) as FunctionType).effect,
-            equalTo((typeContext.typeOf(effectParameter) as EffectType).effect)
+            equalTo((typeContext.typeOf(effectParameter) as StaticValueType).value)
         )
         assertThat(
             typeContext.typeOf(node),
@@ -88,7 +88,7 @@ class TypeCheckFunctionTests {
     @Test
     fun bodyOfFunctionIsTypeChecked() {
         val unit = staticReference("Unit")
-        val typeContext = typeContext(referenceTypes = mapOf(unit to MetaType(UnitType)))
+        val typeContext = typeContext(referenceTypes = mapOf(unit to StaticValueType(UnitType)))
 
         assertStatementIsTypeChecked(fun(badStatement) {
             val node = function(
@@ -103,7 +103,7 @@ class TypeCheckFunctionTests {
     @Test
     fun finalStatementInBodyMustReturnCorrectType() {
         val intType = staticReference("Int")
-        val typeContext = typeContext(referenceTypes = mapOf(intType to MetaType(IntType)))
+        val typeContext = typeContext(referenceTypes = mapOf(intType to StaticValueType(IntType)))
         val node = function(
             returnType = intType,
             body = listOf(expressionStatementReturn(literalBool(true)))
@@ -127,7 +127,7 @@ class TypeCheckFunctionTests {
             body = listOf(expressionStatementReturn(parameterReference))
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(intType to MetaType(IntType)),
+            referenceTypes = mapOf(intType to StaticValueType(IntType)),
             references = mapOf(parameterReference to parameter)
         )
         typeCheckFunctionDeclaration(node, typeContext)
@@ -153,7 +153,7 @@ class TypeCheckFunctionTests {
             body = listOf(expressionStatementReturn(parameterReference))
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(intType to MetaType(IntType)),
+            referenceTypes = mapOf(intType to StaticValueType(IntType)),
             references = mapOf(parameterReference to parameter)
         )
         typeCheckFunctionDeclaration(node, typeContext)
@@ -181,8 +181,8 @@ class TypeCheckFunctionTests {
             body = listOf(expressionStatement(literalInt()))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            intType to MetaType(IntType),
-            boolType to MetaType(BoolType)
+            intType to StaticValueType(IntType),
+            boolType to StaticValueType(BoolType)
         ))
         typeCheckFunctionDeclaration(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
@@ -201,8 +201,8 @@ class TypeCheckFunctionTests {
             effects = listOf(effect)
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            unitType to MetaType(UnitType),
-            effect to EffectType(IoEffect)
+            unitType to StaticValueType(UnitType),
+            effect to StaticValueType(IoEffect)
         ))
         typeCheckFunctionDeclaration(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
@@ -230,8 +230,8 @@ class TypeCheckFunctionTests {
                 effect = IoEffect,
                 returns = UnitType
             ),
-            unitType to MetaType(UnitType),
-            effect to EffectType(IoEffect)
+            unitType to StaticValueType(UnitType),
+            effect to StaticValueType(IoEffect)
         ))
         typeCheckFunctionDeclaration(node, typeContext)
         // TODO: come up with a way of ensuring undefer() is eventually called
@@ -255,7 +255,7 @@ class TypeCheckFunctionTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                unitType to MetaType(UnitType)
+                unitType to StaticValueType(UnitType)
             )
         )
         assertThat(
@@ -284,7 +284,7 @@ class TypeCheckFunctionTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                unitType to MetaType(UnitType)
+                unitType to StaticValueType(UnitType)
             ),
             effect = IoEffect
         )
@@ -312,7 +312,7 @@ class TypeCheckFunctionTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                unitType to MetaType(UnitType)
+                unitType to StaticValueType(UnitType)
             ),
             effect = IoEffect
         )
@@ -334,7 +334,7 @@ class TypeCheckFunctionTests {
             body = literalBool()
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(intType to MetaType(IntType))
+            referenceTypes = mapOf(intType to StaticValueType(IntType))
         )
         assertThat(
             {
@@ -367,7 +367,7 @@ class TypeCheckFunctionTests {
             body = literalBool()
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(anyReference to MetaType(AnyType))
+            referenceTypes = mapOf(anyReference to StaticValueType(AnyType))
         )
         assertThat(
             inferType(node, typeContext),
@@ -426,7 +426,7 @@ class TypeCheckFunctionTests {
             returnType = unitReference
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
         typeCheckModuleStatement(node, typeContext)
@@ -444,7 +444,7 @@ class TypeCheckFunctionTests {
             returnType = unitReference
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(unitReference to MetaType(UnitType))
+            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
         val functionContext = typeContext.enterFunction(function(), effect = EmptyEffect)

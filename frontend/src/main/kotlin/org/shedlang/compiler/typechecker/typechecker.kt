@@ -301,7 +301,7 @@ internal fun typeCheckTypesModuleStatement(statement: TypesModuleStatementNode, 
 
 private fun typeCheckEffectDeclaration(effectDeclaration: EffectDeclarationNode, context: TypeContext) {
     val effect = OpaqueEffect(name = effectDeclaration.name)
-    context.addVariableType(effectDeclaration, EffectType(effect))
+    context.addVariableType(effectDeclaration, StaticValueType(effect))
 }
 
 private fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
@@ -400,11 +400,8 @@ internal fun evalType(type: StaticExpressionNode, context: TypeContext): Type {
 
 private fun evalStaticValue(node: StaticExpressionNode, context: TypeContext): StaticValue {
     val staticValue = evalStatic(node, context)
-    val metaTypeValue = metaTypeToType(staticValue)
-    if (staticValue is EffectType) {
-        return staticValue.effect
-    } else if (metaTypeValue != null) {
-        return metaTypeValue
+    if (staticValue is StaticValueType) {
+        return staticValue.value
     } else {
         throw UnexpectedTypeError(
             expected = StaticValueTypeGroup,
@@ -441,7 +438,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             val receiver = evalType(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
             if (receiver is TypeFunction) {
-                return MetaType(applyStatic(receiver, arguments))
+                return StaticValueType(applyStatic(receiver, arguments))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.source)
@@ -467,14 +464,14 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 effect = effect
             )
             checkType(type, source = node.source)
-            return MetaType(type)
+            return StaticValueType(type)
         }
 
         override fun visit(node: TupleTypeNode): Type {
             val elementTypes = node.elementTypes.map { typeNode ->
                 evalType(typeNode, context)
             }
-            return MetaType(TupleType(elementTypes = elementTypes))
+            return StaticValueType(TupleType(elementTypes = elementTypes))
         }
     })
     context.addStaticExpressionType(node, type)
@@ -483,12 +480,15 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
 
 internal fun evalEffect(node: StaticExpressionNode, context: TypeContext): Effect {
     val effectType = evalStatic(node, context)
-    if (effectType is EffectType) {
-        return effectType.effect
-    } else {
-        // TODO: throw a more appropriate exception
-        throw CompilerError("Was: " + effectType, source = node.source)
+    if (effectType is StaticValueType) {
+        val value = effectType.value
+        if (value is Effect) {
+            return value
+        }
     }
+
+    // TODO: throw a more appropriate exception
+    throw CompilerError("Was: " + effectType, source = node.source)
 }
 
 internal fun verifyType(expected: Type, actual: Type, source: Source) {
