@@ -1,0 +1,21 @@
+// stdout:
+//   local return
+//   nonlocal return 42
+export main;
+
+import NonLocalReturn from Stdlib.Platform.NonLocalReturn;
+
+fun main() !Io -> Unit {
+    print!(run(fun () !NonLocalReturn.Effect[Int] -> String {
+       "local return\n"
+    }));
+
+    print!(run(fun () !NonLocalReturn.Effect[Int] -> String {
+        NonLocalReturn.nonLocalReturn!(42);
+        "local return\n"
+    }));
+}
+
+fun run(func: Fun () !NonLocalReturn.Effect[Int] -> String) -> String {
+    NonLocalReturn.run[Int, String](func, fun (value: Int) -> String => "nonlocal return " + intToString(value) + "\n")
+}

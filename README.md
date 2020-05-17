@@ -239,3 +239,7 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
   * Function bodies can be deferred, but should be checked on first use
 
 * Use canonical representation for Unicode comparisons?
+
+* Consider how to handle functions that have multiple non local return effects
+  * Forbid?
+  * Allow if different, non-overlapping types? How to distinguish them in type system and implementation?

@@ -1,0 +1,7 @@
+effect Effect[T];
+
+val nonLocalReturn: Fun [T] (T) !Effect[T] -> Nothing;
+val run: Fun [T, R] (
+    Fun () !Effect[T] -> R,
+    Fun (T) -> R,
+) -> R;
