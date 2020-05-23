@@ -68,7 +68,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: HandleNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return inferHandleType(node, context)
         }
     })
     context.addExpressionType(expression, type)
@@ -273,4 +273,15 @@ private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeC
 internal fun inferReferenceType(reference: ReferenceNode, context: TypeContext): Type {
     val targetNode = context.resolveReference(reference)
     return context.typeOf(targetNode)
+}
+
+private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
+    val effect = evalEffect(node.effect, context)
+    val bodyContext = context.enterScope(extraEffect = effect)
+    val bodyType = typeCheckBlock(node.body, bodyContext)
+    val handlerReturnTypes = node.handlers.map { (_, handler) ->
+        val handlerType = inferType(handler, context) as FunctionType
+        handlerType.returns
+    }
+    return unionAll(listOf(bodyType) + handlerReturnTypes)
 }

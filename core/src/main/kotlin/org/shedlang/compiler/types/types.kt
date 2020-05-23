@@ -139,6 +139,7 @@ data class StaticValueType(val value: StaticValue): Type {
     }
 }
 
+fun effectType(effect: Effect) = StaticValueType(effect)
 fun metaType(type: Type) = StaticValueType(type)
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {

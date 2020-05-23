@@ -268,6 +268,17 @@ fun fieldName(
     source: Source = anySource()
 ) = FieldNameNode(Identifier(name), source = source)
 
+fun handle(
+    effect: StaticExpressionNode,
+    body: Block,
+    handlers: List<Pair<Identifier, FunctionExpressionNode>>
+) = HandleNode(
+    effect = effect,
+    body = body,
+    handlers = handlers,
+    source = anySource()
+)
+
 fun function(
     name: String = "f",
     staticParameters: List<StaticParameterNode> = listOf(),
@@ -613,3 +624,12 @@ fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator
         targetType = targetType
     )
 }
+
+fun computationalEffect(
+    name: Identifier,
+    operations: Map<Identifier, FunctionType>
+) = ComputationalEffect(
+    definitionId = freshNodeId(),
+    name = name,
+    operations = operations
+)

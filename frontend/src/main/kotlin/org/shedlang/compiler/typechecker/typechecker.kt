@@ -120,10 +120,11 @@ internal class TypeContext(
         ).enterScope()
     }
 
-    fun enterScope(): TypeContext {
+    fun enterScope(extraEffect: Effect? = null): TypeContext {
         return TypeContext(
             moduleName = moduleName,
-            effect = effect,
+            // TODO: properly handle union of effects
+            effect = extraEffect ?: effect,
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = HashMap(variableTypes),
