@@ -37,6 +37,7 @@ class TypeCheckEffectDefinitionTests {
             operations = isMap(
                 Identifier("throw") to isFunctionType(
                     positionalParameters = isSequence(isStringType),
+                    effect = isComputationalEffect(name = isIdentifier("Try")),
                     returnType = isNothingType
                 )
             )

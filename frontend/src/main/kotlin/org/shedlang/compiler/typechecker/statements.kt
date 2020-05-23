@@ -20,14 +20,17 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
 }
 
 private fun typeCheckEffectDefinition(node: EffectDefinitionNode, context: TypeContext) {
-    val effect = ComputationalEffect(
+    var effect: ComputationalEffect? = null
+    effect = ComputationalEffect(
         definitionId = node.nodeId,
         name = node.name,
-        operations = node.operations.map { (operationName, operationTypeNode) ->
-            // TODO: throw appropriate error on wrong type
-            val operationType = evalStaticValue(operationTypeNode, context) as FunctionType
-            operationName to operationType
-        }.toMap()
+        getOperations = lazy {
+            node.operations.map { (operationName, operationTypeNode) ->
+                // TODO: throw appropriate error on wrong type
+                val operationType = evalStaticValue(operationTypeNode, context) as FunctionType
+                operationName to operationType.copy(effect = effectUnion(operationType.effect, effect!!))
+            }.toMap()
+        }
     )
     context.addVariableType(node, StaticValueType(effect))
 }

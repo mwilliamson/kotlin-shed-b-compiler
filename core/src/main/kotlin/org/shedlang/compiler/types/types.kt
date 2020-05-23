@@ -22,6 +22,17 @@ interface Effect: StaticValue {
     }
 }
 
+fun effectUnion(effect1: Effect, effect2: Effect): Effect {
+    if (effect1 == EmptyEffect) {
+        return effect2
+    } else if (effect2 == EmptyEffect) {
+        return effect1
+    } else {
+        // TODO
+        throw UnsupportedOperationException()
+    }
+}
+
 object EmptyEffect : Effect{
     override val shortDescription: String
         get() = "!Empty"
@@ -44,8 +55,10 @@ data class OpaqueEffect(
 data class ComputationalEffect(
     val definitionId: Int,
     val name: Identifier,
-    val operations: Map<Identifier, FunctionType>
+    private val getOperations: Lazy<Map<Identifier, FunctionType>>
 ): Effect {
+    val operations: Map<Identifier, FunctionType> by getOperations
+
     override val shortDescription: String
         get() = "!${name.value}"
 }

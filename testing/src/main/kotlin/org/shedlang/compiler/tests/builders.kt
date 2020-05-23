@@ -631,5 +631,5 @@ fun computationalEffect(
 ) = ComputationalEffect(
     definitionId = freshNodeId(),
     name = name,
-    operations = operations
+    getOperations = lazy { operations }
 )
