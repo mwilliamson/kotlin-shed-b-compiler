@@ -326,6 +326,7 @@ interface StatementNode: Node
 
 interface ModuleStatementNode: StatementNode {
     interface Visitor<T> {
+        fun visit(node: EffectDefinitionNode): T
         fun visit(node: TypeAliasNode): T
         fun visit(node: ShapeNode): T
         fun visit(node: UnionNode): T
@@ -335,6 +336,20 @@ interface ModuleStatementNode: StatementNode {
     }
 
     fun <T> accept(visitor: Visitor<T>): T
+}
+
+data class EffectDefinitionNode(
+    override val name: Identifier,
+    val operations: List<Pair<Identifier, FunctionTypeNode>>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): VariableBindingNode, ModuleStatementNode {
+    override val structure: List<NodeStructure>
+        get() = listOf()
+
+    override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class TypeAliasNode(

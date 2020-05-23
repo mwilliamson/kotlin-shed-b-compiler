@@ -165,6 +165,7 @@ private fun generateCastImports(node: ModuleNode, context: CodeGenerationContext
 
 internal fun generateModuleStatementCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
+        override fun visit(node: EffectDefinitionNode): List<PythonStatementNode> = listOf()
         override fun visit(node: TypeAliasNode): List<PythonStatementNode> = listOf()
         override fun visit(node: ShapeNode) = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)

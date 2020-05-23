@@ -473,6 +473,10 @@ class Loader(
 
     fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
         return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
+            override fun visit(node: EffectDefinitionNode): PersistentList<Instruction> {
+                return persistentListOf()
+            }
+
             override fun visit(node: TypeAliasNode): PersistentList<Instruction> {
                 return persistentListOf()
             }

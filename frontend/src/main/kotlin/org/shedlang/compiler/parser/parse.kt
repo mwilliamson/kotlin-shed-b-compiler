@@ -205,7 +205,9 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
 }
 
 internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleStatementNode {
-    if (tokens.isNext(TokenType.KEYWORD_TYPE)) {
+    if (tokens.isNext(TokenType.KEYWORD_EFFECT)) {
+        return parseEffectDefinition(tokens)
+    } else if (tokens.isNext(TokenType.KEYWORD_TYPE)) {
         return parseTypeAlias(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_SHAPE)) {
         return parseShape(tokens)
@@ -224,6 +226,47 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
             location = tokens.location()
         )
     }
+}
+
+private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefinitionNode {
+    val source = tokens.location()
+
+    tokens.skip(TokenType.KEYWORD_EFFECT)
+    val name = parseIdentifier(tokens)
+    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
+    val operations = parseMany(
+        parseElement = { tokens ->
+            val operationSource = tokens.location()
+
+            tokens.skip(TokenType.SYMBOL_DOT)
+            val operationName = parseIdentifier(tokens)
+            tokens.skip(TokenType.SYMBOL_COLON)
+            val parameters = parseFunctionTypeParameters(tokens)
+            tokens.skip(TokenType.SYMBOL_ARROW)
+            val returnType = parseStaticExpression(tokens)
+
+            operationName to FunctionTypeNode(
+                staticParameters = listOf(),
+                positionalParameters = parameters.positional,
+                namedParameters = parameters.named,
+                effects = listOf(),
+                returnType = returnType,
+                source = operationSource
+            )
+        },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        allowZero = false,
+        allowTrailingSeparator = true,
+        tokens = tokens
+    )
+    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
+
+    return EffectDefinitionNode(
+        name = name,
+        operations = operations,
+        source = source
+    )
 }
 
 private fun parseTypeAlias(tokens: TokenIterator<TokenType>): TypeAliasNode {
