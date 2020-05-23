@@ -41,6 +41,15 @@ data class OpaqueEffect(
         get() = "!${name.value}${staticArgumentsString(arguments)}"
 }
 
+data class ComputationalEffect(
+    val definitionId: Int,
+    val name: Identifier,
+    val operations: Map<Identifier, FunctionType>
+): Effect {
+    override val shortDescription: String
+        get() = "!${name.value}"
+}
+
 interface TypeGroup {
     val shortDescription: String
 }
@@ -129,6 +138,8 @@ data class StaticValueType(val value: StaticValue): Type {
         }
     }
 }
+
+fun metaType(type: Type) = StaticValueType(type)
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {
     val shapeId = freshTypeId()

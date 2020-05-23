@@ -9,9 +9,7 @@ import org.shedlang.compiler.types.*
 
 internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: TypeContext) {
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
-        override fun visit(node: EffectDefinitionNode) {
-            throw UnsupportedOperationException("not implemented")
-        }
+        override fun visit(node: EffectDefinitionNode) = typeCheckEffectDefinition(node, context)
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
@@ -19,6 +17,19 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
         override fun visit(node: ValNode) = typeCheck(node, context)
         override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node, context)
     })
+}
+
+private fun typeCheckEffectDefinition(node: EffectDefinitionNode, context: TypeContext) {
+    val effect = ComputationalEffect(
+        definitionId = node.nodeId,
+        name = node.name,
+        operations = node.operations.map { (operationName, operationTypeNode) ->
+            // TODO: throw appropriate error on wrong type
+            val operationType = evalStaticValue(operationTypeNode, context) as FunctionType
+            operationName to operationType
+        }.toMap()
+    )
+    context.addVariableType(node, StaticValueType(effect))
 }
 
 private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {

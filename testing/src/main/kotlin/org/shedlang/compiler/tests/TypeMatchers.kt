@@ -139,3 +139,10 @@ fun isDiscriminator(tagValue: Matcher<TagValue>, targetType: Matcher<Type> = any
     has(Discriminator::tagValue, tagValue),
     has(Discriminator::targetType, targetType)
 )
+
+fun isComputationalEffect(name: Matcher<Identifier>, operations: Matcher<Map<Identifier, FunctionType>>): Matcher<Effect> {
+    return cast(allOf(
+        has(ComputationalEffect::name, name),
+        has(ComputationalEffect::operations, operations)
+    ))
+}

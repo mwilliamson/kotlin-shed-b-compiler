@@ -328,6 +328,15 @@ fun functionExpression(
     inferReturnType = inferReturnType
 )
 
+fun effectDefinition(
+    name: String,
+    operations: List<Pair<Identifier, FunctionTypeNode>>
+) = EffectDefinitionNode(
+    name = Identifier(name),
+    operations = operations,
+    source = anySource()
+)
+
 fun typeAliasDeclaration(
     name: String,
     expression: StaticExpressionNode
