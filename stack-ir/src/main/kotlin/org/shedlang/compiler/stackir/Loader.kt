@@ -387,6 +387,10 @@ class Loader(
                 ))
             }
 
+            override fun visit(node: HandleNode): PersistentList<Instruction> {
+                throw UnsupportedOperationException("not implemented")
+            }
+
             private fun generateBranches(
                 conditionInstructions: List<PersistentList<Instruction>>,
                 conditionalBodies: List<Block>,

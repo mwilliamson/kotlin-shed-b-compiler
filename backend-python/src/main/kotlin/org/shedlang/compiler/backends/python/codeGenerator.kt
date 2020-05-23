@@ -965,6 +965,10 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 spilled = true
             )
         }
+
+        override fun visit(node: HandleNode): GeneratedExpression {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

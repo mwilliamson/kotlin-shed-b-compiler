@@ -66,6 +66,10 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         override fun visit(node: WhenNode): Type {
             return inferWhenExpressionType(node, context)
         }
+
+        override fun visit(node: HandleNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
     context.addExpressionType(expression, type)
     return type

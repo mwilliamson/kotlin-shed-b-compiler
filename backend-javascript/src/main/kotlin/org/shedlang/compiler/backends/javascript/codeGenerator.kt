@@ -683,6 +683,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 source = source
             )
         }
+
+        override fun visit(node: HandleNode): JavascriptExpressionNode {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

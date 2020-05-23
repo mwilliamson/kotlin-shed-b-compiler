@@ -504,6 +504,29 @@ private data class FunctionSignature(
 private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
     val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
 
+    val parameters = parseParameters(tokens)
+
+    // TODO: allow trailing commas?
+    val effects = parseEffects(tokens)
+
+    val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
+        parseStaticExpression(tokens)
+    } else {
+        null
+    }
+
+    return FunctionSignature(
+        staticParameters = staticParameters,
+        parameters = parameters.positional,
+        namedParameters = parameters.named,
+        effects = effects,
+        returnType = returnType
+    )
+}
+
+class Parameters(val positional: List<ParameterNode>, val named: List<ParameterNode>)
+
+private fun parseParameters(tokens: TokenIterator<TokenType>): Parameters {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val parameters = parseZeroOrMore(
         parseElement = ::parseParametersPart,
@@ -525,22 +548,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
-    // TODO: allow trailing commas?
-    val effects = parseEffects(tokens)
-
-    val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
-        parseStaticExpression(tokens)
-    } else {
-        null
-    }
-
-    return FunctionSignature(
-        staticParameters = staticParameters,
-        parameters = positionalParameters,
-        namedParameters = namedParameters,
-        effects = effects,
-        returnType = returnType
-    )
+    return Parameters(positional = positionalParameters, named = namedParameters)
 }
 
 internal fun parseStaticParameters(
@@ -1285,6 +1293,48 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             return UnaryOperationNode(
                 operator = UnaryOperator.MINUS,
                 operand = operand,
+                source = source
+            )
+        }
+        TokenType.KEYWORD_HANDLE -> {
+            tokens.skip()
+
+            val effect = parseStaticExpression(tokens)
+            val body = parseFunctionStatements(tokens)
+            tokens.skip(TokenType.KEYWORD_ON)
+            tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
+            val handlers = parseMany(
+                parseElement = { tokens ->
+                    tokens.skip(TokenType.SYMBOL_DOT)
+                    val operationName = parseIdentifier(tokens)
+                    tokens.skip(TokenType.SYMBOL_EQUALS)
+
+                    val handlerSource = tokens.location()
+                    val handlerParameters = parseParameters(tokens)
+                    val handlerBody = parseFunctionStatements(tokens)
+                    operationName to FunctionExpressionNode(
+                        staticParameters = listOf(),
+                        parameters = handlerParameters.positional,
+                        namedParameters = handlerParameters.named,
+                        effects = listOf(),
+                        returnType = null,
+                        inferReturnType = true,
+                        body = handlerBody,
+                        source = handlerSource
+                    )
+                },
+                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+                isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+                allowTrailingSeparator = true,
+                allowZero = false,
+                tokens = tokens
+            )
+            tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
+
+            return HandleNode(
+                effect = effect,
+                body = body,
+                handlers = handlers,
                 source = source
             )
         }

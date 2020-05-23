@@ -51,6 +51,16 @@ internal fun isWhenBranch(
     has(WhenBranchNode::body, body)
 )
 
+internal fun isHandle(
+    effect: Matcher<StaticExpressionNode>,
+    body: Matcher<Block>,
+    handlers: Matcher<List<Pair<Identifier, FunctionExpressionNode>>>
+): Matcher<ExpressionNode> = cast(allOf(
+    has(HandleNode::effect, effect),
+    has(HandleNode::body, body),
+    has(HandleNode::handlers, handlers)
+))
+
 internal fun isBlock(vararg statements: Matcher<FunctionStatementNode>) = has(Block::statements, isSequence(*statements))
 
 internal fun isExpressionStatement(
