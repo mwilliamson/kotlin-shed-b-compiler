@@ -345,7 +345,7 @@ data class EffectDefinitionNode(
     override val nodeId: Int = freshNodeId()
 ): VariableBindingNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
-        get() = listOf()
+        get() = operations.map { (_, operationType) -> NodeStructures.staticEval(operationType) }
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
