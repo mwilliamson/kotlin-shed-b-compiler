@@ -682,7 +682,8 @@ data class HandleNode(
     override val nodeId: Int = freshNodeId()
 ): ExpressionNode {
     override val structure: List<NodeStructure>
-        get() = handlers.map { (_, handler) -> NodeStructures.eval(handler) } +
+        get() = listOf(NodeStructures.staticEval(effect)) +
+            handlers.map { (_, handler) -> NodeStructures.eval(handler) } +
             listOf(NodeStructures.subEnv(listOf(NodeStructures.eval(body))))
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
