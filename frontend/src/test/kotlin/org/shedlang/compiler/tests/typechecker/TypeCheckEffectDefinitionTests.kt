@@ -19,7 +19,7 @@ class TypeCheckEffectDefinitionTests {
             operations = listOf(
                 Identifier("throw") to functionTypeNode(
                     positionalParameters = listOf(stringReference),
-                   returnType = nothingReference
+                    returnType = nothingReference
                 )
             )
         )
