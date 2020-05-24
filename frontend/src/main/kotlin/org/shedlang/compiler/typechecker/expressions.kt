@@ -276,8 +276,12 @@ internal fun inferReferenceType(reference: ReferenceNode, context: TypeContext):
 }
 
 private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
-    // TODO: check that effect is computational effect
-    val effect = evalEffect(node.effect, context) as ComputationalEffect
+    val effect = evalEffect(node.effect, context)
+
+    if (effect !is ComputationalEffect) {
+        throw ExpectedComputationalEffectError(source = node.effect.source)
+    }
+
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
     val handlerReturnTypes = node.handlers.map { (_, handler) ->

@@ -92,6 +92,10 @@ class WhenElseIsNotReachableError(source: Source) : TypeCheckError(
     "else branch of when is not reachable",
     source = source
 )
+class ExpectedComputationalEffectError(source: Source): TypeCheckError(
+    "expected computational effect",
+    source = source
+)
 class MissingHandlerError(val name: Identifier, source: Source) : TypeCheckError(
     "missing handler for ${name.value}",
     source = source

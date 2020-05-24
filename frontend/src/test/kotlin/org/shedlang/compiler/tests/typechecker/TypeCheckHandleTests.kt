@@ -6,8 +6,10 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.ExpectedComputationalEffectError
 import org.shedlang.compiler.typechecker.MissingHandlerError
 import org.shedlang.compiler.typechecker.inferType
+import org.shedlang.compiler.types.IoEffect
 import org.shedlang.compiler.types.effectType
 import org.shedlang.compiler.types.functionType
 
@@ -55,6 +57,24 @@ class TypeCheckHandleTests {
             isEquivalentType(member1),
             isEquivalentType(member2)
         )))
+    }
+
+    @Test
+    fun whenEffectIsNotComputationalEffectThenErrorIsThrown() {
+        val effectReference = staticReference("Io")
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf()
+        )
+
+        val context = typeContext(
+            referenceTypes = mapOf(
+                effectReference to effectType(IoEffect)
+            )
+        )
+        assertThat({ inferType(expression, context) }, throws<ExpectedComputationalEffectError>())
     }
 
     @Test
