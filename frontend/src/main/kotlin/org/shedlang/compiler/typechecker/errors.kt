@@ -100,6 +100,10 @@ class MissingHandlerError(val name: Identifier, source: Source) : TypeCheckError
     "missing handler for ${name.value}",
     source = source
 )
+class UnknownOperationError(val effect: Effect, val operationName: Identifier, source: Source) : TypeCheckError(
+    "effect ${effect.shortDescription} has no operation ${operationName.value}",
+    source = source
+)
 class ModuleNotFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("Module not found: " + name.map(Identifier::value).joinToString("."), source = source)
 class MultipleModulesWithSameNameFoundError(val name: ModuleName, source: Source)

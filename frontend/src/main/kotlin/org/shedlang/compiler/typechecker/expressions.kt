@@ -289,9 +289,16 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         handlerType.returns
     }
 
-    val missingHandlerNames = effect.operations.keys.minus(node.handlers.map { (name, _) -> name })
+    val handlerNames = node.handlers.map { (name, _) -> name }
+
+    val missingHandlerNames = effect.operations.keys.minus(handlerNames)
     if (missingHandlerNames.isNotEmpty()) {
         throw MissingHandlerError(missingHandlerNames.first(), source = node.source)
+    }
+
+    val unknownOperationNames = handlerNames.minus(effect.operations.keys)
+    if (unknownOperationNames.isNotEmpty()) {
+        throw UnknownOperationError(effect = effect, operationName = unknownOperationNames.first(), source = node.source)
     }
 
     return unionAll(listOf(bodyType) + handlerReturnTypes)

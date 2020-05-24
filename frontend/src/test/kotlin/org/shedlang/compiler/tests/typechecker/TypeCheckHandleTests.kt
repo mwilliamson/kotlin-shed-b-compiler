@@ -1,13 +1,13 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ExpectedComputationalEffectError
 import org.shedlang.compiler.typechecker.MissingHandlerError
+import org.shedlang.compiler.typechecker.UnknownOperationError
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.types.IoEffect
 import org.shedlang.compiler.types.effectType
@@ -101,5 +101,41 @@ class TypeCheckHandleTests {
         assertThat({ inferType(expression, context) }, throws<MissingHandlerError>(
             has(MissingHandlerError::name, isIdentifier("throw"))
         ))
+    }
+
+    @Test
+    fun whenHandlerForUnknownOperationIsPresentThenErrorIsThrown() {
+        val effectReference = staticReference("Try")
+        val effect = computationalEffect(
+            name = Identifier("Try"),
+            operations = mapOf(
+                Identifier("throw") to functionType()
+            )
+        )
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf(
+                Identifier("throw") to functionExpression(
+                    body = listOf(),
+                    inferReturnType = true
+                ),
+                Identifier("raise") to functionExpression(
+                    body = listOf(),
+                    inferReturnType = true
+                )
+            )
+        )
+
+        val context = typeContext(
+            referenceTypes = mapOf(
+                effectReference to effectType(effect)
+            )
+        )
+        assertThat({ inferType(expression, context) }, throws<UnknownOperationError>(allOf(
+            has(UnknownOperationError::operationName, isIdentifier("raise")),
+            has(UnknownOperationError::effect, cast(equalTo(effect)))
+        )))
     }
 }
