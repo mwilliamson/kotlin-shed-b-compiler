@@ -633,3 +633,12 @@ fun computationalEffect(
     name = name,
     getOperations = lazy { operations }
 )
+
+fun computationalEffect(
+    name: Identifier,
+    getOperations: Lazy<Map<Identifier, FunctionType>>
+) = ComputationalEffect(
+    definitionId = freshNodeId(),
+    name = name,
+    getOperations = getOperations
+)

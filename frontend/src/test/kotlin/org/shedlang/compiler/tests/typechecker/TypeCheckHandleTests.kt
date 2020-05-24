@@ -76,14 +76,18 @@ class TypeCheckHandleTests {
     fun whenHandlerHasWrongTypeThenErrorIsThrown() {
         val booleanReference = staticReference("Bool")
         val effectReference = staticReference("Try")
-        val effect = computationalEffect(
+        var effect: ComputationalEffect? = null
+        effect = computationalEffect(
             name = Identifier("Try"),
-            operations = mapOf(
-                Identifier("throw") to functionType(
-                    positionalParameters = listOf(StringType),
-                    returns = IntType
+            getOperations = lazy {
+                mapOf(
+                    Identifier("throw") to functionType(
+                        positionalParameters = listOf(StringType),
+                        effect = effect!!,
+                        returns = IntType
+                    )
                 )
-            )
+            }
         )
 
         val expression = handle(
@@ -107,6 +111,7 @@ class TypeCheckHandleTests {
         assertThat({ inferType(expression, context) }, throws<UnexpectedTypeError>(allOf(
             has(UnexpectedTypeError::expected, cast(isFunctionType(
                 positionalParameters = isSequence(isStringType),
+                effect = equalTo(EmptyEffect),
                 returnType = isAnyType
             )))
         )))

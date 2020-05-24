@@ -292,8 +292,10 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             throw UnknownOperationError(effect = effect, operationName = operationName, source = node.source)
         }
 
+        // TODO: support effects in effect handlers
+
         verifyType(
-            expected = operationType.copy(returns = AnyType),
+            expected = operationType.copy(effect = effectMinus(operationType.effect, effect), returns = AnyType),
             actual = handlerType,
             source = handler.source
         )

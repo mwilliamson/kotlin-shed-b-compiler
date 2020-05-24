@@ -33,6 +33,17 @@ fun effectUnion(effect1: Effect, effect2: Effect): Effect {
     }
 }
 
+fun effectMinus(effect1: Effect, effect2: Effect): Effect {
+    if (effect2 == EmptyEffect) {
+        return effect1
+    } else if (isSubEffect(subEffect = effect1, superEffect = effect2)) {
+        return EmptyEffect
+    } else {
+        // TODO
+        throw UnsupportedOperationException()
+    }
+}
+
 object EmptyEffect : Effect{
     override val shortDescription: String
         get() = "!Empty"
@@ -61,6 +72,10 @@ data class ComputationalEffect(
 
     override val shortDescription: String
         get() = "!${name.value}"
+
+    override fun toString(): String {
+        return "ComputationalEffect(definitionId = $definitionId, name = $name)"
+    }
 }
 
 interface TypeGroup {
