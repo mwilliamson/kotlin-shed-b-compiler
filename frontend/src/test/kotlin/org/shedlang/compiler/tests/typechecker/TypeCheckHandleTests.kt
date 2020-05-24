@@ -1,9 +1,12 @@
 package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.MissingHandlerError
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.types.effectType
 import org.shedlang.compiler.types.functionType
@@ -20,7 +23,7 @@ class TypeCheckHandleTests {
         val effect = computationalEffect(
             name = Identifier("Try"),
             operations = mapOf(
-                Identifier("handle") to functionType()
+                Identifier("throw") to functionType()
             )
         )
 
@@ -30,7 +33,7 @@ class TypeCheckHandleTests {
                 expressionStatementReturn(call(functionReference, hasEffect = true))
             )),
             handlers = listOf(
-                Identifier("handle") to functionExpression(
+                Identifier("throw") to functionExpression(
                     body = listOf(
                         expressionStatementReturn(member2Reference)
                     ),
@@ -52,5 +55,31 @@ class TypeCheckHandleTests {
             isEquivalentType(member1),
             isEquivalentType(member2)
         )))
+    }
+
+    @Test
+    fun whenHandlerForOperationIsMissingThenErrorIsThrown() {
+        val effectReference = staticReference("Try")
+        val effect = computationalEffect(
+            name = Identifier("Try"),
+            operations = mapOf(
+                Identifier("throw") to functionType()
+            )
+        )
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf()
+        )
+
+        val context = typeContext(
+            referenceTypes = mapOf(
+                effectReference to effectType(effect)
+            )
+        )
+        assertThat({ inferType(expression, context) }, throws<MissingHandlerError>(
+            has(MissingHandlerError::name, isIdentifier("throw"))
+        ))
     }
 }
