@@ -284,21 +284,26 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
 
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
-    val handlerReturnTypes = node.handlers.map { (_, handler) ->
+    val handlerReturnTypes = node.handlers.map { (operationName, handler) ->
         val handlerType = inferType(handler, context) as FunctionType
+
+        val operationType = effect.operations[operationName]
+        if (operationType == null) {
+            throw UnknownOperationError(effect = effect, operationName = operationName, source = node.source)
+        }
+
+        verifyType(
+            expected = operationType.copy(returns = AnyType),
+            actual = handlerType,
+            source = handler.source
+        )
         handlerType.returns
     }
 
     val handlerNames = node.handlers.map { (name, _) -> name }
-
     val missingHandlerNames = effect.operations.keys.minus(handlerNames)
     if (missingHandlerNames.isNotEmpty()) {
         throw MissingHandlerError(missingHandlerNames.first(), source = node.source)
-    }
-
-    val unknownOperationNames = handlerNames.minus(effect.operations.keys)
-    if (unknownOperationNames.isNotEmpty()) {
-        throw UnknownOperationError(effect = effect, operationName = unknownOperationNames.first(), source = node.source)
     }
 
     return unionAll(listOf(bodyType) + handlerReturnTypes)

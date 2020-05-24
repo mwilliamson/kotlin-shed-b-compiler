@@ -5,13 +5,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.ExpectedComputationalEffectError
-import org.shedlang.compiler.typechecker.MissingHandlerError
-import org.shedlang.compiler.typechecker.UnknownOperationError
-import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.types.IoEffect
-import org.shedlang.compiler.types.effectType
-import org.shedlang.compiler.types.functionType
+import org.shedlang.compiler.typechecker.*
+import org.shedlang.compiler.types.*
 
 class TypeCheckHandleTests {
     @Test
@@ -75,6 +70,46 @@ class TypeCheckHandleTests {
             )
         )
         assertThat({ inferType(expression, context) }, throws<ExpectedComputationalEffectError>())
+    }
+
+    @Test
+    fun whenHandlerHasWrongTypeThenErrorIsThrown() {
+        val booleanReference = staticReference("Bool")
+        val effectReference = staticReference("Try")
+        val effect = computationalEffect(
+            name = Identifier("Try"),
+            operations = mapOf(
+                Identifier("throw") to functionType(
+                    positionalParameters = listOf(StringType),
+                    returns = IntType
+                )
+            )
+        )
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf(
+                Identifier("throw") to functionExpression(
+                    parameters = listOf(parameter(type = booleanReference)),
+                    body = listOf(),
+                    inferReturnType = true
+                )
+            )
+        )
+
+        val context = typeContext(
+            referenceTypes = mapOf(
+                booleanReference to metaType(BoolType),
+                effectReference to effectType(effect)
+            )
+        )
+        assertThat({ inferType(expression, context) }, throws<UnexpectedTypeError>(allOf(
+            has(UnexpectedTypeError::expected, cast(isFunctionType(
+                positionalParameters = isSequence(isStringType),
+                returnType = isAnyType
+            )))
+        )))
     }
 
     @Test
