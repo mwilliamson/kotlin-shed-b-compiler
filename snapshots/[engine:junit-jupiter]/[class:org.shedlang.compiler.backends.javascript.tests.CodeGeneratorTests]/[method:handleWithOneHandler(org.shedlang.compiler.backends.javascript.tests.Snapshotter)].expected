@@ -1,0 +1,11 @@
+$shed.handle((function () {
+    return f();
+}), [["exit", (function () {
+    const anonymous = (function () {
+        return 42n;
+    });
+    anonymous.async = (function () {
+        return 42n;
+    });
+    return anonymous;
+})()]])
