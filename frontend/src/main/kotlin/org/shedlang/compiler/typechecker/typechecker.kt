@@ -325,7 +325,12 @@ private fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
     context.addVariableType(valType, type)
 }
 
-internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hint: Type? = null): FunctionType {
+internal fun typeCheckFunction(
+    function: FunctionNode,
+    context: TypeContext,
+    hint: Type? = null,
+    implicitEffect: Effect = EmptyEffect
+): FunctionType {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
     val positionalParameterTypes = function.parameters.map(
@@ -339,7 +344,8 @@ internal fun typeCheckFunction(function: FunctionNode, context: TypeContext, hin
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
 
-    val effect = evalEffects(function.effects, context)
+    val explicitEffect = evalEffects(function.effects, context)
+    val effect = effectUnion(implicitEffect, explicitEffect)
 
     val body = function.body
     val returnTypeNode = function.returnType

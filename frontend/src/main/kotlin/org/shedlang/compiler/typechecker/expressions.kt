@@ -286,7 +286,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
     val handlerReturnTypes = node.handlers.map { (operationName, handler) ->
-        val handlerType = inferType(handler, context) as FunctionType
+        val handlerType = typeCheckFunction(handler, context, implicitEffect = context.effect)
 
         val operationType = effect.operations[operationName]
         if (operationType == null) {
@@ -297,10 +297,8 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             throw CompilerError("operation has unexpected effect", source = node.source)
         }
 
-        // TODO: support effects in effect handlers
-
         verifyType(
-            expected = operationType.copy(effect = EmptyEffect, returns = AnyType),
+            expected = operationType.copy(effect = context.effect, returns = AnyType),
             actual = handlerType,
             source = handler.source
         )

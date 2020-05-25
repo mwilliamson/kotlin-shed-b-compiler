@@ -58,6 +58,42 @@ class TypeCheckHandleTests {
     }
 
     @Test
+    fun whenHandleContextAllowsEffectThenHandlersCanUseEffect() {
+        val effectReference = staticReference("Try")
+        val functionReference = variableReference("f")
+        val effect = createEffect(
+            name = Identifier("Try"),
+            getOperations = { effect ->
+                mapOf(
+                    Identifier("throw") to functionType(effect = effect)
+                )
+            }
+        )
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf(
+                Identifier("throw") to functionExpression(
+                    body = listOf(
+                        expressionStatementNoReturn(call(functionReference, hasEffect = true))
+                    ),
+                    inferReturnType = true
+                )
+            )
+        )
+
+        val context = typeContext(
+            effect = IoEffect,
+            referenceTypes = mapOf(
+                effectReference to effectType(effect),
+                functionReference to functionType(effect = IoEffect)
+            )
+        )
+        inferType(expression, context)
+    }
+
+    @Test
     fun whenEffectIsNotComputationalEffectThenErrorIsThrown() {
         val effectReference = staticReference("Io")
 
