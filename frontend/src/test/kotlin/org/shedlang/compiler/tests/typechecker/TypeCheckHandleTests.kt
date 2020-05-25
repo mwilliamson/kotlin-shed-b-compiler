@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
@@ -114,6 +115,43 @@ class TypeCheckHandleTests {
                 effect = equalTo(EmptyEffect),
                 returnType = isAnyType
             )))
+        )))
+    }
+
+    @Test
+    fun whenHandlerHasWrongEffectThenErrorIsThrown() {
+        val effectReference = staticReference("Try")
+        var effect: ComputationalEffect? = null
+        effect = computationalEffect(
+            name = Identifier("Try"),
+            getOperations = lazy {
+                mapOf(
+                    Identifier("throw") to functionType(
+                        effect = IoEffect,
+                        returns = IntType
+                    )
+                )
+            }
+        )
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf(
+                Identifier("throw") to functionExpression(
+                    body = listOf(),
+                    inferReturnType = true
+                )
+            )
+        )
+
+        val context = typeContext(
+            referenceTypes = mapOf(
+                effectReference to effectType(effect)
+            )
+        )
+        assertThat({ inferType(expression, context) }, throws<CompilerError>(allOf(
+            has(CompilerError::message, equalTo("operation has unexpected effect"))
         )))
     }
 

@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
@@ -292,10 +293,14 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             throw UnknownOperationError(effect = effect, operationName = operationName, source = node.source)
         }
 
+        if (operationType.effect != effect) {
+            throw CompilerError("operation has unexpected effect", source = node.source)
+        }
+
         // TODO: support effects in effect handlers
 
         verifyType(
-            expected = operationType.copy(effect = effectMinus(operationType.effect, effect), returns = AnyType),
+            expected = operationType.copy(effect = EmptyEffect, returns = AnyType),
             actual = handlerType,
             source = handler.source
         )
