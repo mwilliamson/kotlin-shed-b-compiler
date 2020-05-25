@@ -174,6 +174,18 @@ class TypeConstraintSolver(
             return true
         }
 
+        if (from is EffectUnion) {
+            return from.members.all { member ->
+                coerceEffect(from = member, to = to)
+            }
+        }
+
+        if (to is EffectUnion) {
+            return to.members.any { member ->
+                coerceEffect(from = from, to = member)
+            }
+        }
+
         if (to is EffectParameter && to in parameters) {
             val boundEffect = effectBindings[to]
             if (boundEffect == null) {

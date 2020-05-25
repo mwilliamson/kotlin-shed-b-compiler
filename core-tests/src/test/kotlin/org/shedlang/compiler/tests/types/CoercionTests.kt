@@ -473,6 +473,40 @@ class CoercionTests {
     }
 
     @Test
+    fun memberEffectIsSubEffectOfUnion() {
+        val effect1 = opaqueEffect(name = "A")
+        val effect2 = opaqueEffect(name = "B")
+
+        assertThat(
+            isSubEffect(subEffect = effect1, superEffect = effectUnion(effect1, effect2)),
+            equalTo(true)
+        )
+    }
+
+    @Test
+    fun memberEffectIsNotSuperEffectOfUnion() {
+        val effect1 = opaqueEffect(name = "A")
+        val effect2 = opaqueEffect(name = "B")
+
+        assertThat(
+            isSubEffect(subEffect = effectUnion(effect1, effect2), superEffect = effect1),
+            equalTo(false)
+        )
+    }
+
+    @Test
+    fun whenEffectUnionHasSubsetOfEffectsOfOtherEffectUnionThenEffectUnionIsSubEffect() {
+        val effect1 = opaqueEffect(name = "A")
+        val effect2 = opaqueEffect(name = "B")
+        val effect3 = opaqueEffect(name = "C")
+
+        assertThat(
+            isSubEffect(subEffect = effectUnion(effect1, effect2), superEffect = effectUnion(effectUnion(effect1, effect2), effect3)),
+            equalTo(true)
+        )
+    }
+
+    @Test
     fun whenEffectParameterIsNotInParameterSetThenCoercingEffectToEffectParameterFails() {
         val effectParameter = effectParameter("E")
         val solver = TypeConstraintSolver(parameters = setOf())
