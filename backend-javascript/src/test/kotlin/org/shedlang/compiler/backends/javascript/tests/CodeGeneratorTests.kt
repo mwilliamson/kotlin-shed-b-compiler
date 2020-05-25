@@ -6,9 +6,6 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.extension.ExtendWith
-import org.junit.jupiter.api.extension.ExtensionContext
-import org.junit.jupiter.api.extension.ParameterContext
-import org.junit.jupiter.api.extension.ParameterResolver
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
@@ -20,7 +17,6 @@ import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.backends.javascript.serialise
 import org.shedlang.compiler.backends.javascript.serialiseStatements
-import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
@@ -1055,39 +1051,5 @@ class CodeGeneratorTests {
             ),
             arguments = isSequence()
         )
-    }
-}
-
-class SnapshotterResolver : ParameterResolver {
-    override fun supportsParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Boolean {
-        return parameterContext.parameter.type == Snapshotter::class.java
-    }
-
-    override fun resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Any {
-        return Snapshotter(uniqueId = extensionContext.uniqueId)
-    }
-}
-
-class Snapshotter(val uniqueId: String) {
-    fun assertSnapshot(actualSnapshot: String) {
-        val snapshotDirectory = findRoot().resolve("snapshots")
-
-        val expectedSnapshotPath = snapshotDirectory.resolve(uniqueId + ".expected")
-        val expectedSnapshotFile = expectedSnapshotPath.toFile()
-
-        try {
-            if (expectedSnapshotFile.exists()) {
-                val expectedSnapshot = expectedSnapshotFile.readText()
-                assertThat(actualSnapshot, equalTo(expectedSnapshot))
-            } else {
-                throw AssertionError("snapshot does not exist, got:\n" + actualSnapshot)
-            }
-        } catch (error: AssertionError) {
-            val actualSnapshotPath = snapshotDirectory.resolve(uniqueId + ".actual")
-            val actualSnapshotFile = actualSnapshotPath.toFile()
-            actualSnapshotFile.parentFile.mkdirs()
-            actualSnapshotFile.writeText(actualSnapshot)
-            throw error
-        }
     }
 }
