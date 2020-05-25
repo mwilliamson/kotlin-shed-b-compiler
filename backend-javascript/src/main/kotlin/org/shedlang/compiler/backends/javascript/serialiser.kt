@@ -7,13 +7,15 @@ import org.shedlang.compiler.backends.serialiseCStringLiteral
 private val INDENTATION_WIDTH = 4
 
 internal fun serialise(node: JavascriptModuleNode): String {
-    return node.body
-        .map({ statement -> serialise(statement, indentation = 0) })
-        .joinToString("")
+    return serialiseStatements(node.body, indentation = 0)
 }
 
 private fun line(text: String, indentation: Int) = indent(text, indentation) + "\n"
 private fun indent(text: String, indentation: Int) = " ".repeat(indentation * INDENTATION_WIDTH) + text
+
+internal fun serialiseStatements(statements: List<JavascriptStatementNode>, indentation: Int): String {
+    return statements.map { statement -> serialise(statement, indentation = indentation) }.joinToString("")
+}
 
 internal fun serialise(node: JavascriptStatementNode, indentation: Int): String {
     fun line(text: String) = line(text, indentation)

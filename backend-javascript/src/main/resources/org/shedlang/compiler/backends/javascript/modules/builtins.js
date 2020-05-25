@@ -17,6 +17,34 @@ function declareShape(name, tagValue, fields) {
     return shape;
 }
 
+function defineEffect(operationNames) {
+    const effect = {};
+
+    for (const operationName of operationNames) {
+        effect[operationName] = (...args) => {
+            const error = new Error();
+            error.args = args;
+            error.operationName = operationName;
+            throw error;
+        };
+    }
+
+    return effect;
+}
+
+function handle(func, handlers) {
+    try {
+        return func();
+    } catch (error) {
+        for ([operationName, handler] of handlers) {
+            if (error.operationName === operationName) {
+                return handler(error.args);
+            }
+        }
+        throw error;
+    }
+}
+
 function varargs(cons, nil) {
     return (...args) => {
         let result = nil;
@@ -29,6 +57,8 @@ function varargs(cons, nil) {
 
 module.exports = {
     declareShape: declareShape,
+    defineEffect: defineEffect,
+    handle: handle,
 
     varargs: varargs,
 };

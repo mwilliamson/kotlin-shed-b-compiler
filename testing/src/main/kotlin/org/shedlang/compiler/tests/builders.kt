@@ -269,7 +269,7 @@ fun fieldName(
 ) = FieldNameNode(Identifier(name), source = source)
 
 fun handle(
-    effect: StaticExpressionNode,
+    effect: StaticExpressionNode = staticReference("Eff"),
     body: Block,
     handlers: List<Pair<Identifier, FunctionExpressionNode>>
 ) = HandleNode(
@@ -510,7 +510,7 @@ fun functionTypeNode(
     staticParameters: List<StaticParameterNode> = listOf(),
     positionalParameters: List<StaticExpressionNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    returnType: StaticExpressionNode,
+    returnType: StaticExpressionNode = staticReference("Unit"),
     effects: List<StaticExpressionNode> = listOf()
 ) = FunctionTypeNode(
     staticParameters = staticParameters,
@@ -627,12 +627,17 @@ fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator
 
 fun computationalEffect(
     name: Identifier,
-    operations: Map<Identifier, FunctionType>
-) = ComputationalEffect(
-    definitionId = freshNodeId(),
-    name = name,
-    getOperations = lazy { operations }
-)
+    getOperations: (ComputationalEffect) -> Map<Identifier, FunctionType>
+): ComputationalEffect {
+    var effect: ComputationalEffect? = null
+    effect = computationalEffect(
+        name = name,
+        getOperations = lazy {
+            getOperations(effect!!)
+        }
+    )
+    return effect
+}
 
 fun computationalEffect(
     name: Identifier,

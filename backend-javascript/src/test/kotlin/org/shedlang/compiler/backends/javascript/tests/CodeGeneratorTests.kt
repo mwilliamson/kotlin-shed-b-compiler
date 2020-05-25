@@ -19,6 +19,7 @@ import org.shedlang.compiler.backends.javascript.CodeGenerationContext
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.backends.javascript.generateCode
 import org.shedlang.compiler.backends.javascript.serialise
+import org.shedlang.compiler.backends.javascript.serialiseStatements
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -787,6 +788,53 @@ class CodeGeneratorTests {
             isJavascriptVariableReference("x"),
             equalTo("y")
         ))
+    }
+
+    @Test
+    fun effectDefinitionWithOneOperation(snapshotter: Snapshotter) {
+        val shed = effectDefinition(
+            name = "EarlyExit",
+            operations = listOf(
+                Identifier("exit") to functionTypeNode()
+            )
+        )
+
+        val node = generateCodeForModuleStatement(shed)
+
+        snapshotter.assertSnapshot(serialiseStatements(node, indentation = 0))
+    }
+
+    @Test
+    fun handleWithOneHandler(snapshotter: Snapshotter) {
+        val effectReference = staticReference("EarlyExit")
+        val functionReference = variableReference("f")
+        val handlerDefinition = functionExpression(body = listOf(
+            expressionStatementReturn(literalInt(42))
+        ))
+        val shed = handle(
+            effect = effectReference,
+            body = block(listOf(
+                expressionStatementReturn(call(receiver = functionReference))
+            )),
+            handlers = listOf(
+                Identifier("exit") to handlerDefinition
+            )
+        )
+        val effect = computationalEffect(Identifier("Exit"), { effect ->
+            mapOf(
+                Identifier("exit") to functionType()
+            )
+        })
+
+        val context = context(
+            expressionTypes = mapOf(
+                functionReference to functionType(effect = effect),
+                handlerDefinition to functionType()
+            )
+        )
+        val node = generateCode(shed, context)
+
+        snapshotter.assertSnapshot(serialise(node, indentation = 0))
     }
 
     private fun generateCodeForModuleStatement(

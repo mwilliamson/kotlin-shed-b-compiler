@@ -18,8 +18,7 @@ class TypeCheckHandleTests {
         val effectReference = staticReference("Try")
         val functionReference = variableReference("f")
         val member2Reference = variableReference("member2")
-        val effect = createEffect(
-            name = Identifier("Try"),
+        val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
                     Identifier("throw") to functionType(effect = effect)
@@ -61,8 +60,7 @@ class TypeCheckHandleTests {
     fun whenHandleContextAllowsEffectThenHandlersCanUseEffect() {
         val effectReference = staticReference("Try")
         val functionReference = variableReference("f")
-        val effect = createEffect(
-            name = Identifier("Try"),
+        val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
                     Identifier("throw") to functionType(effect = effect)
@@ -115,8 +113,7 @@ class TypeCheckHandleTests {
     fun whenHandlerHasWrongTypeThenErrorIsThrown() {
         val booleanReference = staticReference("Bool")
         val effectReference = staticReference("Try")
-        val effect = createEffect(
-            name = Identifier("Try"),
+        val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
                     Identifier("throw") to functionType(
@@ -158,8 +155,7 @@ class TypeCheckHandleTests {
     @Test
     fun whenOperationTypeHasWrongEffectThenErrorIsThrown() {
         val effectReference = staticReference("Try")
-        val effect = createEffect(
-            name = Identifier("Try"),
+        val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { _ ->
                 mapOf(
                     Identifier("throw") to functionType(
@@ -194,8 +190,7 @@ class TypeCheckHandleTests {
     @Test
     fun whenHandlerForOperationIsMissingThenErrorIsThrown() {
         val effectReference = staticReference("Try")
-        val effect = createEffect(
-            name = Identifier("Try"),
+        val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
                     Identifier("throw") to functionType(effect = effect)
@@ -222,8 +217,7 @@ class TypeCheckHandleTests {
     @Test
     fun whenHandlerForUnknownOperationIsPresentThenErrorIsThrown() {
         val effectReference = staticReference("Try")
-        val effect = createEffect(
-            name = Identifier("Try"),
+        val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
                     Identifier("throw") to functionType(effect = effect)
@@ -257,17 +251,4 @@ class TypeCheckHandleTests {
         )))
     }
 
-    private fun createEffect(
-        name: Identifier,
-        getOperations: (ComputationalEffect) -> Map<Identifier, FunctionType>
-    ): ComputationalEffect {
-        var effect: ComputationalEffect? = null
-        effect = computationalEffect(
-            name = name,
-            getOperations = lazy {
-                getOperations(effect!!)
-            }
-        )
-        return effect
-    }
 }

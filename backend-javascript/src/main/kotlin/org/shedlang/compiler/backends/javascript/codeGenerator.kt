@@ -119,7 +119,7 @@ private fun generateExport(export: ReferenceNode, source: Source): JavascriptExp
 
 internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
-        override fun visit(node: EffectDefinitionNode): List<JavascriptStatementNode> = listOf()
+        override fun visit(node: EffectDefinitionNode): List<JavascriptStatementNode> = generateCodeForEffectDefinition(node)
         override fun visit(node: TypeAliasNode): List<JavascriptStatementNode> = listOf()
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
@@ -127,6 +127,64 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
         override fun visit(node: VarargsDeclarationNode) = listOf(generateCodeForVarargsDeclaration(node, context))
     })
+}
+
+private fun generateCodeForEffectDefinition(node: EffectDefinitionNode) : List<JavascriptStatementNode> {
+    val source = NodeSource(node)
+
+    val const = javascriptConst(
+        name = generateName(node.name),
+        expression = JavascriptFunctionCallNode(
+            function = JavascriptVariableReferenceNode(
+                "\$shed.defineEffect",
+                source = source
+            ),
+            arguments = listOf(
+                JavascriptArrayLiteralNode(
+                    elements = node.operations.map { (operationName, _) ->
+                        JavascriptStringLiteralNode(generateName(operationName), source = source)
+                    },
+                    source = source
+                )
+            ),
+            source = source
+        ),
+        source = source
+    )
+
+    return listOf(const)
+}
+
+private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationContext): JavascriptExpressionNode {
+    // TODO: sort out async effects
+    val source = NodeSource(node)
+
+    return JavascriptFunctionCallNode(
+        function = JavascriptVariableReferenceNode(
+            "\$shed.handle",
+            source = source
+        ),
+        arguments = listOf(
+            JavascriptFunctionExpressionNode(
+                parameters = listOf(),
+                body = generateBlockCode(node.body, context),
+                source = source
+            ),
+            JavascriptArrayLiteralNode(
+                elements = node.handlers.map { (operationName, handler) ->
+                    JavascriptArrayLiteralNode(
+                        elements = listOf(
+                            JavascriptStringLiteralNode(generateName(operationName), source = source),
+                            generateCode(handler, context)
+                        ),
+                        source = source
+                    )
+                },
+                source = source
+            )
+        ),
+        source = source
+    )
 }
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext) : JavascriptStatementNode {
@@ -685,7 +743,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: HandleNode): JavascriptExpressionNode {
-            throw UnsupportedOperationException("not implemented")
+            return generateCodeForHandle(node, context)
         }
     })
 }

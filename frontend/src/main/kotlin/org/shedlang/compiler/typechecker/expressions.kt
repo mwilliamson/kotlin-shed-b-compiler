@@ -287,6 +287,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
     val bodyType = typeCheckBlock(node.body, bodyContext)
     val handlerReturnTypes = node.handlers.map { (operationName, handler) ->
         val handlerType = typeCheckFunction(handler, context, implicitEffect = context.effect)
+        context.addExpressionType(handler, handlerType)
 
         val operationType = effect.operations[operationName]
         if (operationType == null) {
