@@ -23,14 +23,28 @@ interface Effect: StaticValue {
 }
 
 fun effectUnion(effect1: Effect, effect2: Effect): Effect {
-    if (effect1 == EmptyEffect) {
+    if (isSubEffect(subEffect = effect1, superEffect = effect2)) {
         return effect2
-    } else if (effect2 == EmptyEffect) {
+    } else if (isSubEffect(subEffect = effect2, superEffect = effect1)) {
         return effect1
     } else {
-        // TODO
-        throw UnsupportedOperationException()
+        fun findMembers(effect: Effect): List<Effect> {
+            if (effect is EffectUnion) {
+                return effect.members
+            } else {
+                return listOf(effect)
+            }
+        }
+
+        return EffectUnion(members = findMembers(effect1) + findMembers(effect2))
     }
+}
+
+class EffectUnion(val members: List<Effect>) : Effect {
+    override val shortDescription: String
+        get() = members.joinToString(" | ") {
+            member -> member.shortDescription
+        }
 }
 
 fun effectMinus(effect1: Effect, effect2: Effect): Effect {

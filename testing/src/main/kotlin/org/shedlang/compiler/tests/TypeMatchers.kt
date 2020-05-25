@@ -149,3 +149,9 @@ fun isComputationalEffect(
         has(ComputationalEffect::operations, operations)
     ))
 }
+
+fun isEffectUnion(members: Matcher<List<Effect>>): Matcher<Effect> = cast(has(EffectUnion::members, members))
+
+val isIoEffect: Matcher<Effect> = equalTo(IoEffect)
+
+fun isEffect(effect: Effect): Matcher<Effect> = equalTo(effect)

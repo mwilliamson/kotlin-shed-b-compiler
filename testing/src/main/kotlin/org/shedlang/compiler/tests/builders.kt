@@ -642,3 +642,9 @@ fun computationalEffect(
     name = name,
     getOperations = getOperations
 )
+
+fun opaqueEffect(name: String) = OpaqueEffect(
+    definitionId = freshNodeId(),
+    name = Identifier(name),
+    arguments = listOf()
+)
