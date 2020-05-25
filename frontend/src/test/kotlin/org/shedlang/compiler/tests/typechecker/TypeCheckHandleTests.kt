@@ -119,7 +119,7 @@ class TypeCheckHandleTests {
     }
 
     @Test
-    fun whenHandlerHasWrongEffectThenErrorIsThrown() {
+    fun whenOperationTypeHasWrongEffectThenErrorIsThrown() {
         val effectReference = staticReference("Try")
         var effect: ComputationalEffect? = null
         effect = computationalEffect(
