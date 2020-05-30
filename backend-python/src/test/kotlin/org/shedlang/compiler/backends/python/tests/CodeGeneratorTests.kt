@@ -1346,7 +1346,7 @@ class CodeGeneratorTests {
         val shed = effectDefinition(
             name = "EarlyExit",
             operations = listOf(
-                Identifier("exit") to functionTypeNode()
+                operationDefinition(name = "exit", type = functionTypeNode())
             )
         )
 

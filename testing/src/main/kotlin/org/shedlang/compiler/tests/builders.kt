@@ -341,10 +341,19 @@ fun functionExpression(
 
 fun effectDefinition(
     name: String,
-    operations: List<Pair<Identifier, FunctionTypeNode>>
+    operations: List<OperationDefinitionNode>
 ) = EffectDefinitionNode(
     name = Identifier(name),
     operations = operations,
+    source = anySource()
+)
+
+fun operationDefinition(
+    name: String,
+    type: FunctionTypeNode
+) = OperationDefinitionNode(
+    name = Identifier(name),
+    type = type,
     source = anySource()
 )
 

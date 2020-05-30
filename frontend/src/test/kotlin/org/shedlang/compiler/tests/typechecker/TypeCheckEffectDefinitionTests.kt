@@ -17,9 +17,12 @@ class TypeCheckEffectDefinitionTests {
         val effectDefinition = effectDefinition(
             name = "Try",
             operations = listOf(
-                Identifier("throw") to functionTypeNode(
-                    positionalParameters = listOf(stringReference),
-                    returnType = nothingReference
+                operationDefinition(
+                    name = "throw",
+                    type = functionTypeNode(
+                        positionalParameters = listOf(stringReference),
+                        returnType = nothingReference
+                    )
                 )
             )
         )

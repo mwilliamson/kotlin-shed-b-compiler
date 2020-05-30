@@ -6,9 +6,9 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.EffectDefinitionNode
+import org.shedlang.compiler.ast.OperationDefinitionNode
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
-import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 
 class ParseEffectDefinitionTests {
@@ -21,12 +21,12 @@ class ParseEffectDefinitionTests {
         assertThat(definition, cast(allOf(
             has(EffectDefinitionNode::name, isIdentifier("Try")),
             has(EffectDefinitionNode::operations, isSequence(
-                isPair(
-                    isIdentifier("throw"),
-                    isFunctionType(
+                allOf(
+                    has(OperationDefinitionNode::name, isIdentifier("throw")),
+                    has(OperationDefinitionNode::type, isFunctionType(
                         positionalParameters = isSequence(isStaticReference("String")),
                         returnType = isStaticReference("Nothing")
-                    )
+                    ))
                 )
             ))
         )))

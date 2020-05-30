@@ -241,16 +241,22 @@ private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefin
             tokens.skip(TokenType.SYMBOL_DOT)
             val operationName = parseIdentifier(tokens)
             tokens.skip(TokenType.SYMBOL_COLON)
+
+            val typeSource = tokens.location()
             val parameters = parseFunctionTypeParameters(tokens)
             tokens.skip(TokenType.SYMBOL_ARROW)
             val returnType = parseStaticExpression(tokens)
 
-            operationName to FunctionTypeNode(
-                staticParameters = listOf(),
-                positionalParameters = parameters.positional,
-                namedParameters = parameters.named,
-                effects = listOf(),
-                returnType = returnType,
+            OperationDefinitionNode(
+                name = operationName,
+                type = FunctionTypeNode(
+                    staticParameters = listOf(),
+                    positionalParameters = parameters.positional,
+                    namedParameters = parameters.named,
+                    effects = listOf(),
+                    returnType = returnType,
+                    source = typeSource
+                ),
                 source = operationSource
             )
         },

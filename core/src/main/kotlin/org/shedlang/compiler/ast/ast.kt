@@ -340,16 +340,26 @@ interface ModuleStatementNode: StatementNode {
 
 data class EffectDefinitionNode(
     override val name: Identifier,
-    val operations: List<Pair<Identifier, FunctionTypeNode>>,
+    val operations: List<OperationDefinitionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): VariableBindingNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
-        get() = operations.map { (_, operationType) -> NodeStructures.staticEval(operationType) } + NodeStructures.initialise(this)
+        get() = operations.map { operation -> NodeStructures.eval(operation) } + NodeStructures.initialise(this)
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class OperationDefinitionNode(
+    val name: Identifier,
+    val type: FunctionTypeNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.staticEval(type))
 }
 
 data class TypeAliasNode(
