@@ -39,6 +39,26 @@ fun pythonReturn(expression: PythonExpressionNode)
 fun pythonRaise(expression: PythonExpressionNode)
     = PythonRaiseNode(expression, source = anySource())
 
+fun pythonTry(
+    body: List<PythonStatementNode>,
+    exceptClauses: List<PythonExceptNode>
+) = PythonTryNode(
+    body = body,
+    exceptClauses = exceptClauses,
+    source = anySource()
+)
+
+fun pythonExcept(
+    exceptionType: PythonExpressionNode,
+    target: String,
+    body: List<PythonStatementNode>
+) = PythonExceptNode(
+    exceptionType = exceptionType,
+    target = target,
+    body = body,
+    source = anySource()
+)
+
 fun pythonExpressionStatement(expression: PythonExpressionNode)
     = PythonExpressionStatementNode(expression, source = anySource())
 

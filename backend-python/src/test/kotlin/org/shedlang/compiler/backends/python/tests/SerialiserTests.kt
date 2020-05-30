@@ -197,6 +197,40 @@ class SerialiserTests {
     }
 
     @Test
+    fun tryWithExceptClausesIsSerialised() {
+        assertThat(
+            indentedSerialise(
+                pythonTry(
+                    body = listOf(
+                        pythonRaise(pythonLiteralInt(1))
+                    ),
+                    exceptClauses = listOf(
+                        pythonExcept(
+                            pythonVariableReference("ErrorA"),
+                            "error_a",
+                            listOf(pythonReturn(pythonLiteralInt(2)))
+                        ),
+                        pythonExcept(
+                            pythonVariableReference("ErrorB"),
+                            "error_b",
+                            listOf(pythonReturn(pythonLiteralInt(3)))
+                        )
+                    )
+                )
+            ),
+            equalTo(listOf(
+                "    try:",
+                "        raise 1",
+                "    except ErrorA as error_a:",
+                "        return 2",
+                "    except ErrorB as error_b:",
+                "        return 3",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun serialisingIfStatementWithSingleConditionalBranchAndElseBranch() {
         assertThat(
             indentedSerialise(

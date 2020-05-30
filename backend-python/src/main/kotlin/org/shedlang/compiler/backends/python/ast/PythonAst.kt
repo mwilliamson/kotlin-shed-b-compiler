@@ -20,6 +20,7 @@ interface PythonStatementNode : PythonNode {
         fun visit(node: PythonExpressionStatementNode): T
         fun visit(node: PythonReturnNode): T
         fun visit(node: PythonRaiseNode): T
+        fun visit(node: PythonTryNode): T
         fun visit(node: PythonIfStatementNode): T
         fun visit(node: PythonPassNode): T
         fun visit(node: PythonAssignmentNode): T
@@ -98,6 +99,23 @@ data class PythonRaiseNode(
         return visitor.visit(this)
     }
 }
+
+data class PythonTryNode(
+    val body: List<PythonStatementNode>,
+    val exceptClauses: List<PythonExceptNode>,
+    override val source: Source
+) : PythonStatementNode {
+    override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class PythonExceptNode(
+    val exceptionType: PythonExpressionNode,
+    val target: String,
+    val body: List<PythonStatementNode>,
+    override val source: Source
+): PythonNode
 
 data class PythonIfStatementNode(
     val conditionalBranches: List<PythonConditionalBranchNode>,

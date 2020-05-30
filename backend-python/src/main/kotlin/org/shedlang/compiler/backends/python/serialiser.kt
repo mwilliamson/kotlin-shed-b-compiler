@@ -60,6 +60,17 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
             return line("raise " + serialise(node.expression))
         }
 
+        override fun visit(node: PythonTryNode): String {
+            return line("try:") +
+                serialiseBlock(node, node.body, indentation) +
+                node.exceptClauses.map(::serialiseExcept).joinToString("")
+        }
+
+        private fun serialiseExcept(node: PythonExceptNode): String {
+            return line("except ${serialise(node.exceptionType)} as ${node.target}:") +
+                serialiseBlock(node, node.body, indentation)
+        }
+
         override fun visit(node: PythonIfStatementNode): String {
             val conditionalBranches = node.conditionalBranches.mapIndexed { branchIndex, branch ->
                 val keyword = if (branchIndex == 0) { "if" } else { "elif" }
