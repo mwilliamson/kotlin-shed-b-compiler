@@ -141,8 +141,8 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode) : List<J
             ),
             arguments = listOf(
                 JavascriptArrayLiteralNode(
-                    elements = node.operations.map { (operationName, _) ->
-                        JavascriptStringLiteralNode(generateName(operationName), source = source)
+                    elements = node.operations.map { operation ->
+                        JavascriptStringLiteralNode(generateName(operation.name), source = NodeSource(operation))
                     },
                     source = source
                 )

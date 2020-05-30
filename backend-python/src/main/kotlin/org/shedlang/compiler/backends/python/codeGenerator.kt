@@ -181,11 +181,12 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
     return listOf(
         PythonClassNode(
             name = context.name(node),
-            body = node.operations.flatMap { (operationName, _) ->
+            body = node.operations.flatMap { operation ->
+                val operationSource = NodeSource(operation)
                 val exceptionDefinition = PythonClassNode(
-                    name = operationNameToExceptionName(operationName),
+                    name = operationNameToExceptionName(operation.name),
                     // TODO: handle shed values named Exception
-                    baseClasses = listOf(PythonVariableReferenceNode("Exception", source = source)),
+                    baseClasses = listOf(PythonVariableReferenceNode("Exception", source = operationSource)),
                     body = listOf(
                         PythonFunctionNode(
                             name = "__init__",
@@ -193,45 +194,45 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
                             body = listOf(
                                 assignSelf(
                                     "operation_args",
-                                    PythonVariableReferenceNode("operation_args", source = source),
-                                    source = source
+                                    PythonVariableReferenceNode("operation_args", source = operationSource),
+                                    source = operationSource
                                 ),
                                 assignSelf(
                                     "operation_kwargs",
-                                    PythonVariableReferenceNode("operation_kwargs", source = source),
-                                    source = source
+                                    PythonVariableReferenceNode("operation_kwargs", source = operationSource),
+                                    source = operationSource
                                 )
                             ),
-                            source = source
+                            source = operationSource
                         )
                     ),
-                    source = source
+                    source = operationSource
                 )
 
                 val operationDefinition = PythonFunctionNode(
-                    decorators = listOf(PythonVariableReferenceNode("staticmethod", source = source)),
-                    name = pythoniseName(operationName),
+                    decorators = listOf(PythonVariableReferenceNode("staticmethod", source = operationSource)),
+                    name = pythoniseName(operation.name),
                     // TODO: proper support for *args, **kwargs? Or explicitly list all args?
                     parameters = listOf("self", "*operation_args, **operation_kwargs"),
                     body = listOf(
                         PythonRaiseNode(
                             expression = PythonFunctionCallNode(
                                 function = PythonAttributeAccessNode(
-                                    receiver = PythonVariableReferenceNode("self", source = source),
-                                    attributeName = operationNameToExceptionName(operationName),
-                                    source = source
+                                    receiver = PythonVariableReferenceNode("self", source = operationSource),
+                                    attributeName = operationNameToExceptionName(operation.name),
+                                    source = operationSource
                                 ),
                                 arguments = listOf(
-                                    PythonVariableReferenceNode("operation_args", source = source),
-                                    PythonVariableReferenceNode("operation_kwargs", source = source)
+                                    PythonVariableReferenceNode("operation_args", source = operationSource),
+                                    PythonVariableReferenceNode("operation_kwargs", source = operationSource)
                                 ),
                                 keywordArguments = listOf(),
-                                source = source
+                                source = operationSource
                             ),
-                            source = source
+                            source = operationSource
                         )
                     ),
-                    source = source
+                    source = operationSource
                 )
 
                 listOf(
