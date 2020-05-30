@@ -245,6 +245,67 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
     )
 }
 
+private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationContext): GeneratedExpression {
+    val handleSource = NodeSource(node)
+    val targetName = context.freshName()
+
+    fun returnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
+        return generateExpressionCode(expression, context).toStatements { pythonExpression ->
+            listOf(assign(targetName, pythonExpression, source = source))
+        }
+    }
+
+    val body = generateBlockCode(node.body, context, returnValue = ::returnValue)
+
+    val statement = PythonTryNode(
+        body = body,
+        exceptClauses = node.handlers.map { (operationName, handler) ->
+            val operationValueName = context.freshName()
+            PythonExceptNode(
+                exceptionType = PythonAttributeAccessNode(
+                    receiver = generateCode(node.effect, context),
+                    attributeName = operationNameToExceptionName(operationName),
+                    source = handleSource
+                ),
+                target = operationValueName,
+                body = generateExpressionCode(handler, context).toStatements { pythonHandler ->
+                    val pythonExpression = PythonFunctionCallNode(
+                        function = pythonHandler,
+                        arguments = listOf(
+                            PythonUnaryOperationNode(
+                                operator = PythonUnaryOperator.STAR,
+                                operand = PythonAttributeAccessNode(
+                                    PythonVariableReferenceNode(operationValueName, source = handleSource),
+                                    attributeName = "operation_args",
+                                    source = handleSource
+                                ),
+                                source = handleSource
+                            ),
+                            PythonUnaryOperationNode(
+                                operator = PythonUnaryOperator.DOUBLE_STAR,
+                                operand = PythonAttributeAccessNode(
+                                    PythonVariableReferenceNode(operationValueName, source = handleSource),
+                                    attributeName = "operation_kwargs",
+                                    source = handleSource
+                                ),
+                                source = handleSource
+                            )
+                        ),
+                        keywordArguments = listOf(),
+                        source = handleSource
+                    )
+                    listOf(assign(targetName, pythonExpression, source = handleSource))
+                },
+                source = handleSource
+            )
+        },
+        source = handleSource
+    )
+
+    return GeneratedExpression.pure(PythonVariableReferenceNode(targetName, source = handleSource))
+        .copy(statements = listOf(statement))
+}
+
 private fun operationNameToExceptionName(operationName: Identifier) =
     "Exception_" + pythoniseName(operationName)
 
@@ -1040,7 +1101,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: HandleNode): GeneratedExpression {
-            throw UnsupportedOperationException("not implemented")
+            return generateCodeForHandle(node, context)
         }
     })
 }

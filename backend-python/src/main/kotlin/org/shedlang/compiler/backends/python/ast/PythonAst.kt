@@ -246,8 +246,10 @@ data class PythonUnaryOperationNode(
 }
 
 enum class PythonUnaryOperator {
+    DOUBLE_STAR,
     MINUS,
-    NOT
+    NOT,
+    STAR
 }
 
 data class PythonBinaryOperationNode(

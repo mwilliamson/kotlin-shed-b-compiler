@@ -147,8 +147,10 @@ internal fun serialise(node: PythonExpressionNode): String {
 
         override fun visit(node: PythonUnaryOperationNode): String {
             val prefix = when (node.operator) {
+                PythonUnaryOperator.DOUBLE_STAR -> "**"
                 PythonUnaryOperator.MINUS -> "-"
                 PythonUnaryOperator.NOT -> "not "
+                PythonUnaryOperator.STAR -> "*"
             }
             return prefix + serialiseSubExpression(node, node.operand, associative = true)
         }

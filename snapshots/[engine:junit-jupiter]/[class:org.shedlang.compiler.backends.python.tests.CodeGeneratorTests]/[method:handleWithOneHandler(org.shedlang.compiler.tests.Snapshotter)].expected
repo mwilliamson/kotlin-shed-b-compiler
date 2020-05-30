@@ -1,0 +1,6 @@
+try:
+    anonymous = f()
+except EarlyExit.Exception_exit as anonymous_1:
+    anonymous = (lambda : 42)(*anonymous_1.operation_args, **anonymous_1.operation_kwargs)
+
+anonymous

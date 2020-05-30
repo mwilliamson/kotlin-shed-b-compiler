@@ -1355,38 +1355,38 @@ class CodeGeneratorTests {
         snapshotter.assertSnapshot(serialise(node))
     }
 
-//    @Test
-//    fun handleWithOneHandler(snapshotter: Snapshotter) {
-//        val effectReference = staticReference("EarlyExit")
-//        val functionReference = variableReference("f")
-//        val handlerDefinition = functionExpression(body = listOf(
-//            expressionStatementReturn(literalInt(42))
-//        ))
-//        val shed = handle(
-//            effect = effectReference,
-//            body = block(listOf(
-//                expressionStatementReturn(call(receiver = functionReference))
-//            )),
-//            handlers = listOf(
-//                Identifier("exit") to handlerDefinition
-//            )
-//        )
-//        val effect = computationalEffect(Identifier("Exit"), { effect ->
-//            mapOf(
-//                Identifier("exit") to functionType()
-//            )
-//        })
-//
-//        val context = context(
-//            expressionTypes = mapOf(
-//                functionReference to functionType(effect = effect),
-//                handlerDefinition to functionType()
-//            )
-//        )
-//        val node = generateCode(shed, context)
-//
-//        snapshotter.assertSnapshot(serialise(node, indentation = 0))
-//    }
+    @Test
+    fun handleWithOneHandler(snapshotter: Snapshotter) {
+        val effectReference = staticReference("EarlyExit")
+        val functionReference = variableReference("f")
+        val handlerDefinition = functionExpression(body = listOf(
+            expressionStatementReturn(literalInt(42))
+        ))
+        val shed = handle(
+            effect = effectReference,
+            body = block(listOf(
+                expressionStatementReturn(call(receiver = functionReference))
+            )),
+            handlers = listOf(
+                Identifier("exit") to handlerDefinition
+            )
+        )
+        val effect = computationalEffect(Identifier("Exit"), { effect ->
+            mapOf(
+                Identifier("exit") to functionType()
+            )
+        })
+
+        val context = context(
+            references = mapOf(
+                effectReference to declaration("EarlyExit"),
+                functionReference to function()
+            )
+        )
+        val node = generateExpressionCode(shed, context)
+
+        snapshotter.assertSnapshot(serialise(node.statements) + "\n" + serialise(node.value))
+    }
 
     private fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
         return generateCode(
