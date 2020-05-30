@@ -1,0 +1,10 @@
+class EarlyExit(object):
+    class Exception_exit(Exception):
+        def __init__(self, operation_args, operation_kwargs):
+            self.operation_args = operation_args
+            self.operation_kwargs = operation_kwargs
+
+    @staticmethod
+    def exit(self, *operation_args, **operation_kwargs):
+        raise self.Exception_exit(operation_args, operation_kwargs)
+

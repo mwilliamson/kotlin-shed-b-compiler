@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
+import org.junit.jupiter.api.extension.ExtendWith
 import org.shedlang.compiler.EMPTY_TYPES
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
@@ -23,6 +24,7 @@ import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
+@ExtendWith(SnapshotterResolver::class)
 class CodeGeneratorTests {
     @Test
     fun moduleWithoutOtherModulesIsNotPackage() {
@@ -1338,6 +1340,53 @@ class CodeGeneratorTests {
             attributeName = equalTo("some_value")
         ))
     }
+
+    @Test
+    fun effectDefinitionWithOneOperation(snapshotter: Snapshotter) {
+        val shed = effectDefinition(
+            name = "EarlyExit",
+            operations = listOf(
+                Identifier("exit") to functionTypeNode()
+            )
+        )
+
+        val node = generateCodeForModuleStatement(shed)
+
+        snapshotter.assertSnapshot(serialise(node))
+    }
+
+//    @Test
+//    fun handleWithOneHandler(snapshotter: Snapshotter) {
+//        val effectReference = staticReference("EarlyExit")
+//        val functionReference = variableReference("f")
+//        val handlerDefinition = functionExpression(body = listOf(
+//            expressionStatementReturn(literalInt(42))
+//        ))
+//        val shed = handle(
+//            effect = effectReference,
+//            body = block(listOf(
+//                expressionStatementReturn(call(receiver = functionReference))
+//            )),
+//            handlers = listOf(
+//                Identifier("exit") to handlerDefinition
+//            )
+//        )
+//        val effect = computationalEffect(Identifier("Exit"), { effect ->
+//            mapOf(
+//                Identifier("exit") to functionType()
+//            )
+//        })
+//
+//        val context = context(
+//            expressionTypes = mapOf(
+//                functionReference to functionType(effect = effect),
+//                handlerDefinition to functionType()
+//            )
+//        )
+//        val node = generateCode(shed, context)
+//
+//        snapshotter.assertSnapshot(serialise(node, indentation = 0))
+//    }
 
     private fun generateCode(node: ModuleNode, references: ResolvedReferences): PythonModuleNode {
         return generateCode(

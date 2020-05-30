@@ -165,7 +165,7 @@ private fun generateCastImports(node: ModuleNode, context: CodeGenerationContext
 
 internal fun generateModuleStatementCode(node: ModuleStatementNode, context: CodeGenerationContext): List<PythonStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<PythonStatementNode>> {
-        override fun visit(node: EffectDefinitionNode): List<PythonStatementNode> = listOf()
+        override fun visit(node: EffectDefinitionNode): List<PythonStatementNode> = generateCodeForEffectDefinition(node, context)
         override fun visit(node: TypeAliasNode): List<PythonStatementNode> = listOf()
         override fun visit(node: ShapeNode) = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<PythonStatementNode> = generateCodeForUnion(node, context)
@@ -174,6 +174,78 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
         override fun visit(node: VarargsDeclarationNode) = generateCodeForVarargsDeclaration(node, context)
     })
 }
+
+private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context: CodeGenerationContext): List<PythonStatementNode> {
+    val source = NodeSource(node)
+
+    return listOf(
+        PythonClassNode(
+            name = context.name(node),
+            body = node.operations.flatMap { (operationName, _) ->
+                val exceptionDefinition = PythonClassNode(
+                    name = operationNameToExceptionName(operationName),
+                    // TODO: handle shed values named Exception
+                    baseClasses = listOf(PythonVariableReferenceNode("Exception", source = source)),
+                    body = listOf(
+                        PythonFunctionNode(
+                            name = "__init__",
+                            parameters = listOf("self", "operation_args", "operation_kwargs"),
+                            body = listOf(
+                                assignSelf(
+                                    "operation_args",
+                                    PythonVariableReferenceNode("operation_args", source = source),
+                                    source = source
+                                ),
+                                assignSelf(
+                                    "operation_kwargs",
+                                    PythonVariableReferenceNode("operation_kwargs", source = source),
+                                    source = source
+                                )
+                            ),
+                            source = source
+                        )
+                    ),
+                    source = source
+                )
+
+                val operationDefinition = PythonFunctionNode(
+                    decorators = listOf(PythonVariableReferenceNode("staticmethod", source = source)),
+                    name = pythoniseName(operationName),
+                    // TODO: proper support for *args, **kwargs? Or explicitly list all args?
+                    parameters = listOf("self", "*operation_args, **operation_kwargs"),
+                    body = listOf(
+                        PythonRaiseNode(
+                            expression = PythonFunctionCallNode(
+                                function = PythonAttributeAccessNode(
+                                    receiver = PythonVariableReferenceNode("self", source = source),
+                                    attributeName = operationNameToExceptionName(operationName),
+                                    source = source
+                                ),
+                                arguments = listOf(
+                                    PythonVariableReferenceNode("operation_args", source = source),
+                                    PythonVariableReferenceNode("operation_kwargs", source = source)
+                                ),
+                                keywordArguments = listOf(),
+                                source = source
+                            ),
+                            source = source
+                        )
+                    ),
+                    source = source
+                )
+
+                listOf(
+                    exceptionDefinition,
+                    operationDefinition
+                )
+            },
+            source = source
+        )
+    )
+}
+
+private fun operationNameToExceptionName(operationName: Identifier) =
+    "Exception_" + pythoniseName(operationName)
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
     val shapeFields = context.inspector.shapeFields(node)
@@ -1060,6 +1132,22 @@ private fun assign(
     return PythonAssignmentNode(
         target = PythonVariableReferenceNode(
             name = targetName,
+            source = source
+        ),
+        expression = expression,
+        source = source
+    )
+}
+
+private fun assignSelf(
+    targetName: String,
+    expression: PythonExpressionNode,
+    source: Source
+): PythonStatementNode {
+    return PythonAssignmentNode(
+        target = PythonAttributeAccessNode(
+            receiver = PythonVariableReferenceNode("self", source = source),
+            attributeName = targetName,
             source = source
         ),
         expression = expression,
