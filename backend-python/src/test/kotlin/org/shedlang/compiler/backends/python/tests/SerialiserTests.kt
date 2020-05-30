@@ -133,6 +133,25 @@ class SerialiserTests {
     }
 
     @Test
+    fun classBaseClassesAreSerialised() {
+        assertThat(
+            indentedSerialise(pythonClass(
+                name = "X",
+                baseClasses = listOf(
+                    pythonVariableReference("A"),
+                    pythonVariableReference("B")
+                )
+            )),
+            equalTo(listOf(
+                "    class X(A, B):",
+                "        pass",
+                "",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun functionParametersAreSeparatedByCommas() {
         assertThat(
             indentedSerialise(

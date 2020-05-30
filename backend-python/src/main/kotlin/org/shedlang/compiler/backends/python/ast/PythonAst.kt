@@ -41,6 +41,7 @@ data class PythonImportFromNode(
 data class PythonClassNode(
     val name: String,
     val body: List<PythonStatementNode>,
+    val baseClasses: List<PythonExpressionNode> = listOf(),
     override val source: Source
 ): PythonStatementNode {
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {

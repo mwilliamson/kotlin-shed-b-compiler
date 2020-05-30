@@ -26,7 +26,15 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         }
 
         override fun visit(node: PythonClassNode): String {
-            val declaration = line("class ${node.name}(object):")
+            val baseClasses = if (node.baseClasses.isEmpty()) {
+                "object"
+            } else {
+                node.baseClasses
+                    .map { baseClass -> serialise(baseClass) }
+                    .joinToString(", ")
+            }
+
+            val declaration = line("class ${node.name}($baseClasses):")
             val body = serialiseBlock(node, node.body, indentation)
             return ensureTrailingBlankLine(declaration + body)
         }

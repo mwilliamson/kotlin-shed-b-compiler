@@ -11,10 +11,12 @@ fun pythonImportFrom(module: String, names: List<Pair<String, String>>)
 
 fun pythonClass(
     name: String,
-    body: List<PythonStatementNode> = listOf()
+    body: List<PythonStatementNode> = listOf(),
+    baseClasses: List<PythonExpressionNode> = listOf()
 ) = PythonClassNode(
     name = name,
     body = body,
+    baseClasses = baseClasses,
     source = anySource()
 )
 
