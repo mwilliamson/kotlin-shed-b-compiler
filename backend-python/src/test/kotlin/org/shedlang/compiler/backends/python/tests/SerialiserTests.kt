@@ -84,6 +84,27 @@ class SerialiserTests {
     }
 
     @Test
+    fun functionDecoratorsAreSerialised() {
+        assertThat(
+            indentedSerialise(pythonFunction(
+                decorators = listOf(
+                    pythonVariableReference("a"),
+                    pythonVariableReference("b")
+                ),
+                name = "f"
+            )),
+            equalTo(listOf(
+                "    @a",
+                "    @b",
+                "    def f():",
+                "        pass",
+                "",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun emptyClassSerialisation() {
         assertThat(
             indentedSerialise(pythonClass(name = "X")),

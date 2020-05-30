@@ -32,9 +32,12 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         }
 
         override fun visit(node: PythonFunctionNode): String {
+            val decorators = node.decorators
+                .map { decorator -> line("@" + serialise(decorator)) }
+                .joinToString("")
             val signature = line("def " + node.name + "(" + node.parameters.joinToString(", ") + "):")
             val body = serialiseBlock(node, node.body, indentation)
-            return ensureTrailingBlankLine(signature + body)
+            return ensureTrailingBlankLine(decorators + signature + body)
         }
 
         override fun visit(node: PythonExpressionStatementNode): String {

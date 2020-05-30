@@ -21,11 +21,13 @@ fun pythonClass(
 fun pythonFunction(
     name: String,
     parameters: List<String> = listOf(),
-    body: List<PythonStatementNode> = listOf()
+    body: List<PythonStatementNode> = listOf(),
+    decorators: List<PythonExpressionNode> = listOf()
 ) = PythonFunctionNode(
     name = name,
     parameters = parameters,
     body = body,
+    decorators = decorators,
     source = anySource()
 )
 

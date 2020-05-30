@@ -52,6 +52,7 @@ data class PythonFunctionNode(
     val name: String,
     val parameters: List<String>,
     val body: List<PythonStatementNode>,
+    val decorators: List<PythonExpressionNode> = listOf(),
     override val source: Source
 ): PythonStatementNode {
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {
