@@ -178,9 +178,10 @@ internal fun generateModuleStatementCode(node: ModuleStatementNode, context: Cod
 private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context: CodeGenerationContext): List<PythonStatementNode> {
     val source = NodeSource(node)
 
+    val className = context.name(node)
     return listOf(
         PythonClassNode(
-            name = context.name(node),
+            name = className,
             body = node.operations.flatMap { operation ->
                 val operationSource = NodeSource(operation)
                 val exceptionDefinition = PythonClassNode(
@@ -213,12 +214,12 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
                     decorators = listOf(PythonVariableReferenceNode("staticmethod", source = operationSource)),
                     name = pythoniseName(operation.name),
                     // TODO: proper support for *args, **kwargs? Or explicitly list all args?
-                    parameters = listOf("self", "*operation_args, **operation_kwargs"),
+                    parameters = listOf("*operation_args, **operation_kwargs"),
                     body = listOf(
                         PythonRaiseNode(
                             expression = PythonFunctionCallNode(
                                 function = PythonAttributeAccessNode(
-                                    receiver = PythonVariableReferenceNode("self", source = operationSource),
+                                    receiver = PythonVariableReferenceNode(className, source = operationSource),
                                     attributeName = operationNameToExceptionName(operation.name),
                                     source = operationSource
                                 ),

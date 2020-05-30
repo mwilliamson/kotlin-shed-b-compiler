@@ -5,6 +5,6 @@ class EarlyExit(object):
             self.operation_kwargs = operation_kwargs
 
     @staticmethod
-    def exit(self, *operation_args, **operation_kwargs):
-        raise self.Exception_exit(operation_args, operation_kwargs)
+    def exit(*operation_args, **operation_kwargs):
+        raise EarlyExit.Exception_exit(operation_args, operation_kwargs)
 
