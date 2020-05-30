@@ -56,6 +56,10 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
             return line("return " + serialise(node.expression))
         }
 
+        override fun visit(node: PythonRaiseNode): String {
+            return line("raise " + serialise(node.expression))
+        }
+
         override fun visit(node: PythonIfStatementNode): String {
             val conditionalBranches = node.conditionalBranches.mapIndexed { branchIndex, branch ->
                 val keyword = if (branchIndex == 0) { "if" } else { "elif" }

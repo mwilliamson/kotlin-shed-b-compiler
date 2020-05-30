@@ -36,6 +36,9 @@ fun pythonFunction(
 fun pythonReturn(expression: PythonExpressionNode)
     = PythonReturnNode(expression, source = anySource())
 
+fun pythonRaise(expression: PythonExpressionNode)
+    = PythonRaiseNode(expression, source = anySource())
+
 fun pythonExpressionStatement(expression: PythonExpressionNode)
     = PythonExpressionStatementNode(expression, source = anySource())
 

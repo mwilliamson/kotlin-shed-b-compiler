@@ -187,6 +187,16 @@ class SerialiserTests {
     }
 
     @Test
+    fun raiseWithValueIsSerialised() {
+        assertThat(
+            indentedSerialise(
+                pythonRaise(pythonLiteralBoolean(true))
+            ),
+            equalTo("    raise True\n")
+        )
+    }
+
+    @Test
     fun serialisingIfStatementWithSingleConditionalBranchAndElseBranch() {
         assertThat(
             indentedSerialise(
