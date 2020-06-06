@@ -7,6 +7,7 @@ import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.AnyType
+import org.shedlang.compiler.types.ComputationalEffect
 import org.shedlang.compiler.types.TagValue
 import java.math.BigInteger
 
@@ -89,6 +90,13 @@ internal class InterpreterModule(
     }
 }
 
+internal class InterpreterOperation(
+    val effect: ComputationalEffect,
+    val operationName: Identifier
+): InterpreterValue() {
+
+}
+
 private fun irValueToInterpreterValue(value: IrValue): InterpreterValue {
     return when (value) {
         is IrBool -> InterpreterBool(value.value)
@@ -141,6 +149,10 @@ internal class Stack<T>(private val stack: PersistentList<T>) {
         val value = stack.last()
         return Stack(stack.removeAt(stack.lastIndex).add(func(value)))
     }
+
+    fun find(predicate: (T) -> Boolean): T? {
+        return stack.findLast(predicate)
+    }
 }
 
 private var nextScopeId = 1
@@ -153,10 +165,17 @@ internal fun createScopeReference(): ScopeReference {
 
 internal typealias Bindings = PersistentMap<ScopeReference, PersistentMap<Int, InterpreterValue>>
 
+internal data class EffectHandler(
+    val effect: ComputationalEffect,
+    val operationHandlers: Map<Identifier, InterpreterValue>,
+    val exitInstructionIndex: Int
+)
+
 internal data class CallFrame(
     private val instructionIndex: Int,
     private val instructions: List<Instruction>,
     private val temporaryStack: Stack<InterpreterValue>,
+    private val effectHandlerStack: Stack<EffectHandler>,
     internal val scopes: PersistentList<ScopeReference>
 ) {
     fun currentInstruction(): Instruction? {
@@ -203,6 +222,20 @@ internal data class CallFrame(
 
     fun hasEmptyTemporaryStack(): Boolean {
         return temporaryStack.size == 0
+    }
+
+    fun effectHandlersPush(effectHandler: EffectHandler): CallFrame {
+        return copy(effectHandlerStack = effectHandlerStack.push(effectHandler))
+    }
+
+    fun effectHandlersPop(): CallFrame {
+        return copy(effectHandlerStack = effectHandlerStack.discard())
+    }
+
+    fun findEffectHandler(effect: ComputationalEffect): EffectHandler? {
+        return effectHandlerStack.find { effectHandler ->
+            effectHandler.effect.definitionId == effect.definitionId
+        }
     }
 
     fun storeLocal(bindings: Bindings, variableId: Int, value: InterpreterValue): Bindings {
@@ -278,16 +311,61 @@ internal data class InterpreterState(
         return updateCurrentCallFrame { frame -> frame.discardTemporary() }
     }
 
+    fun effectHandlersPush(
+        effect: ComputationalEffect,
+        operationHandlers: Map<Identifier, InterpreterValue>,
+        exitLabel: Int
+    ): InterpreterState {
+        val effectHandler = EffectHandler(
+            effect = effect,
+            operationHandlers = operationHandlers,
+            exitInstructionIndex = instructionIndex(exitLabel)
+        )
+        return updateCurrentCallFrame { frame ->
+            frame.effectHandlersPush(effectHandler)
+        }
+    }
+
+    fun effectHandlersDiscard(): InterpreterState {
+        return updateCurrentCallFrame { frame ->
+            frame.effectHandlersPop()
+        }
+    }
+
+    fun handle(effect: ComputationalEffect, operationName: Identifier, positionalArguments: List<InterpreterValue>, namedArguments: Map<Identifier, InterpreterValue>): InterpreterState {
+        var newCallStack = callStack
+        while (true) {
+            val effectHandler = newCallStack.last().findEffectHandler(effect)
+            if (effectHandler == null) {
+                newCallStack = newCallStack.discard()
+            } else {
+                newCallStack = newCallStack.replace { frame ->
+                    frame.jump(effectHandler.exitInstructionIndex)
+                }
+                return call(
+                    copy(callStack = newCallStack),
+                    receiver = effectHandler.operationHandlers.getValue(operationName),
+                    positionalArguments = positionalArguments,
+                    namedArguments = namedArguments
+                )
+            }
+        }
+    }
+
     fun nextInstruction(): InterpreterState {
         return updateCurrentCallFrame { frame -> frame.nextInstruction() }
     }
 
     fun jump(label: Int): InterpreterState {
+        val instructionIndex = instructionIndex(label)
+        return updateCurrentCallFrame { frame -> frame.jump(instructionIndex) }
+    }
+
+    private fun instructionIndex(label: Int): Int {
         if (!labelToInstructionIndex.containsKey(label)) {
             labelToInstructionIndex[label] = currentCallFrame().findInstructionIndex(label)
         }
-        val instructionIndex = labelToInstructionIndex.getValue(label)
-        return updateCurrentCallFrame { frame -> frame.jump(instructionIndex) }
+        return labelToInstructionIndex.getValue(label)
     }
 
     fun storeLocal(variableId: Int, value: InterpreterValue): InterpreterState {
@@ -339,7 +417,8 @@ internal data class InterpreterState(
             instructionIndex = 0,
             instructions = instructions,
             scopes = parentScopes.add(newScope),
-            temporaryStack = stackOf()
+            temporaryStack = stackOf(),
+            effectHandlerStack = stackOf()
         )
         return copy(
             bindings = bindings.put(newScope, persistentMapOf()),
@@ -518,6 +597,30 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
         is Duplicate -> {
             initialState.duplicateTemporary().nextInstruction()
+        }
+
+        is EffectDefine -> {
+            val effectValue = InterpreterShapeValue(
+                tagValue = null,
+                fields = effect.operations.keys.associate { operationName ->
+                    operationName to InterpreterOperation(effect = effect, operationName = operationName)
+                }
+            )
+            initialState.pushTemporary(effectValue).nextInstruction()
+        }
+
+        is EffectHandlersDiscard -> {
+            initialState.effectHandlersDiscard().nextInstruction()
+        }
+
+        is EffectHandlersPush -> {
+            val (state2, handlerValues) = initialState.popTemporaries(effect.operations.size)
+            val operationHandlers = effect.operations.keys.sorted().zip(handlerValues).toMap()
+            state2.effectHandlersPush(
+                effect = effect,
+                operationHandlers = operationHandlers,
+                exitLabel = untilLabel
+            ).nextInstruction()
         }
 
         is Exit -> {
@@ -765,6 +868,10 @@ internal fun call(
         is InterpreterShape -> {
             val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
             state.pushTemporary(InterpreterShapeValue(tagValue = receiver.tagValue, fields = fieldValues))
+        }
+
+        is InterpreterOperation -> {
+            state.handle(receiver.effect, receiver.operationName, positionalArguments, namedArguments)
         }
 
         else -> throw Exception("cannot call: $receiver")

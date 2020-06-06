@@ -316,6 +316,18 @@ internal class Compiler(
                 return context.duplicateTemporary()
             }
 
+            is EffectDefine -> {
+                throw NotImplementedError()
+            }
+
+            is EffectHandlersDiscard -> {
+                throw NotImplementedError()
+            }
+
+            is EffectHandlersPush -> {
+                throw NotImplementedError()
+            }
+
             is Exit -> {
                 return context
             }

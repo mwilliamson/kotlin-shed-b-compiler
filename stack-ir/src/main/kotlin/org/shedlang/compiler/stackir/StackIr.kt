@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
+import org.shedlang.compiler.types.ComputationalEffect
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
@@ -71,6 +72,15 @@ class DeclareShape(
 object Discard: Instruction()
 
 object Duplicate: Instruction()
+
+class EffectDefine(val effect: ComputationalEffect): Instruction()
+
+class EffectHandlersPush(
+    val effect: ComputationalEffect,
+    val untilLabel: Int
+): Instruction()
+
+object EffectHandlersDiscard: Instruction()
 
 object Exit: Instruction()
 

@@ -388,7 +388,25 @@ class Loader(
             }
 
             override fun visit(node: HandleNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as ComputationalEffect
+                val untilLabel = createLabel()
+
+                val effectHandlerInstructions = node.handlers
+                    .sortedBy { (operationName, _) -> operationName }
+                    .flatMap { (_, handler) ->
+                        loadExpression(handler)
+                    }
+
+                val effectHandleInstruction = EffectHandlersPush(effect = effect, untilLabel = untilLabel.value)
+
+                val body = loadBlock(node.body)
+
+                return persistentListOf<Instruction>()
+                    .addAll(effectHandlerInstructions)
+                    .add(effectHandleInstruction)
+                    .addAll(body)
+                    .add(untilLabel)
+                    .add(EffectHandlersDiscard)
             }
 
             private fun generateBranches(
@@ -478,7 +496,11 @@ class Loader(
     fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
         return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: EffectDefinitionNode): PersistentList<Instruction> {
-                return persistentListOf()
+                val effect = (types.variableType(node) as StaticValueType).value as ComputationalEffect
+                return persistentListOf(
+                    EffectDefine(effect),
+                    LocalStore(node)
+                )
             }
 
             override fun visit(node: TypeAliasNode): PersistentList<Instruction> {

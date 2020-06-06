@@ -42,6 +42,7 @@ interface Types {
     fun typeOfTarget(target: TargetNode): Type
     fun declaredType(node: TypeDeclarationNode): StaticValue
     fun functionType(node: FunctionNode): FunctionType
+    fun variableType(node: VariableBindingNode): Type
 
     fun discriminatorForCast(node: CallBaseNode): Discriminator
     fun discriminatorForIsExpression(node: IsNode): Discriminator
@@ -93,5 +94,9 @@ class TypesMap(
     override fun functionType(node: FunctionNode): FunctionType {
         // TODO: better error
         return functionTypes[node.nodeId] ?: throw CompilerError("type of function is unknown: ${node}", source = node.source)
+    }
+
+    override fun variableType(node: VariableBindingNode): Type {
+        return variableTypes[node.nodeId]!!
     }
 }
