@@ -3,19 +3,27 @@
 //   nonlocal return 42
 export main;
 
-import NonLocalReturn from Stdlib.Platform.NonLocalReturn;
+effect NonLocalReturn {
+    .nonLocalReturn: (Int) -> Nothing,
+}
 
 fun main() !Io -> Unit {
-    print!(run(fun () !NonLocalReturn.Effect[Int] -> String {
+    print!(run(fun () !NonLocalReturn -> String {
        "local return\n"
     }));
 
-    print!(run(fun () !NonLocalReturn.Effect[Int] -> String {
+    print!(run(fun () !NonLocalReturn -> String {
         NonLocalReturn.nonLocalReturn!(42);
         "local return\n"
     }));
 }
 
-fun run(func: Fun () !NonLocalReturn.Effect[Int] -> String) -> String {
-    NonLocalReturn.run[Int, String](func, fun (value: Int) -> String => "nonlocal return " + intToString(value) + "\n")
+fun run(func: Fun () !NonLocalReturn -> String) -> String {
+    handle NonLocalReturn {
+        func!()
+    } on {
+        .nonLocalReturn = (value: Int) {
+            "nonlocal return " + intToString(value) + "\n"
+        }
+    }
 }

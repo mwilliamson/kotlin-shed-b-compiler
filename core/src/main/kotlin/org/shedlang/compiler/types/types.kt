@@ -173,7 +173,9 @@ data class StaticValueType(val value: StaticValue): Type {
         get() = "StaticValue[${value.shortDescription}]"
 
     override fun fieldType(fieldName: Identifier): Type? {
-        if (fieldName == Identifier("fields")) {
+        if (value is ComputationalEffect) {
+            return value.operations[fieldName]
+        } else if (fieldName == Identifier("fields")) {
             return fieldsType
         } else {
             return null
