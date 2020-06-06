@@ -54,7 +54,7 @@ class StackValueToLlvmOperandTests {
                         LlvmTypes.i64,
                         LlvmTypes.arrayType(5, LlvmTypes.i8)
                     ))),
-                    value = isStructureConstant(isSequence(
+                    value = present(isStructureConstant(isSequence(
                         isLlvmTypedOperand(
                             equalTo(LlvmTypes.i64),
                             isLlvmOperandInt(5)
@@ -69,7 +69,7 @@ class StackValueToLlvmOperandTests {
                                 isLlvmTypedOperand(equalTo(LlvmTypes.i8), isLlvmOperandInt('o'.toInt()))
                             ))
                         )
-                    )),
+                    ))),
                     isConstant = equalTo(true),
                     unnamedAddr = equalTo(true)
                 )
@@ -141,7 +141,7 @@ private fun isLlvmTypedOperand(
 private fun isLlvmGlobalDefinition(
     name: Matcher<String>,
     type: Matcher<LlvmType>,
-    value: Matcher<LlvmOperand>,
+    value: Matcher<LlvmOperand?>,
     isConstant: Matcher<Boolean>,
     unnamedAddr: Matcher<Boolean>
 ): Matcher<LlvmTopLevelEntity> {

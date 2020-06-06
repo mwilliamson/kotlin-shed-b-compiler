@@ -2,6 +2,7 @@
 #define SHED_H
 
 #include <stdint.h>
+#include <setjmp.h>
 
 #include "../deps/gc/include/gc.h"
 
@@ -37,5 +38,13 @@ struct ShedClosure {
     void* function;
     ShedValue environment[];
 };
+
+typedef uint32_t EffectId;
+
+ShedValue* active_operation_arguments;
+
+void shed_effect_handlers_discard();
+ShedValue shed_effect_handlers_push(EffectId effect_id, struct ShedClosure** operation_handlers);
+void shed_effect_handlers_call(EffectId effect_id, size_t operation_index, ShedValue* operation_arguments);
 
 #endif

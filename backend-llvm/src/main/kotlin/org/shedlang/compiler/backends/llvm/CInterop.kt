@@ -7,6 +7,8 @@ internal object CTypes {
     val size_t = LlvmTypes.i64
     val stringPointer = LlvmTypes.pointer(char)
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
+    val void = LlvmTypes.void
+    val jmp_buf = voidPointer
 }
 
 internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
@@ -123,6 +125,20 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         return call(writeDeclaration, target = null, arguments = listOf(fd, buf, count))
     }
 
+    internal val setjmpReturnType = CTypes.int
+    private val setjmpDeclaration = LlvmFunctionDeclaration(
+        name = "setjmp",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = setjmpReturnType,
+        parameters = listOf(
+            LlvmParameter(CTypes.jmp_buf, "env")
+        )
+    )
+
+    internal fun setjmp(target: LlvmOperandLocal, env: LlvmOperand): LlvmCall {
+        return call(setjmpDeclaration, target = target, arguments = listOf(env))
+    }
+
     internal fun call(
         function: LlvmFunctionDeclaration,
         target: LlvmVariable?,
@@ -147,7 +163,9 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
             memcpyDeclaration,
             printfDeclaration,
             snprintfDeclaration,
-            writeDeclaration
+            writeDeclaration,
+
+            setjmpDeclaration
         )
     }
 }

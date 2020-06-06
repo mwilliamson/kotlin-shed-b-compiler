@@ -237,6 +237,22 @@ internal data class LlvmBrUnconditional(val label: String): LlvmInstruction {
     }
 }
 
+internal data class LlvmSwitch(
+    val type: LlvmType,
+    val value: LlvmOperand,
+    val defaultLabel: String,
+    val destinations: List<Pair<Int, String>>
+): LlvmInstruction {
+    override fun serialise(): String {
+        val destinationsString = destinations
+            .map { (destinationValue, destinationLabel) ->
+                "${type.serialise()} $destinationValue, label %$destinationLabel"
+            }
+            .joinToString("\n")
+        return "switch ${type.serialise()} ${value.serialise()}, label %$defaultLabel [ $destinationsString ]"
+    }
+}
+
 internal data class LlvmExtractValue(
     val target: LlvmVariable,
     val valueType: LlvmType,
@@ -448,14 +464,16 @@ internal data class LlvmParameter(
 internal data class LlvmGlobalDefinition(
     val name: String,
     val type: LlvmType,
-    val value: LlvmOperand,
+    val value: LlvmOperand?,
     val isConstant: Boolean = false,
     val unnamedAddr: Boolean = false
 ): LlvmTopLevelEntity {
     override fun serialise(): String {
         val unnamedAddrString = if (unnamedAddr) "unnamed_addr " else ""
+        val external = if (value == null) "external " else ""
         val keyword = if (isConstant) "constant" else "global"
-        return "@$name = $unnamedAddrString$keyword ${type.serialise()} ${value.serialise()}\n"
+        val valueString = if (value == null) "" else " ${value.serialise()}"
+        return "@$name = $unnamedAddrString$external$keyword ${type.serialise()} ${valueString}\n"
     }
 }
 

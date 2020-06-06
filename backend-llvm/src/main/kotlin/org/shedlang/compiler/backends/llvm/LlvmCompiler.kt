@@ -12,6 +12,7 @@ import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.effectType
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -32,6 +33,7 @@ internal class Compiler(
         modules = modules,
         strings = strings
     )
+    private val effectCompiler = EffectCompiler(irBuilder = irBuilder)
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
@@ -71,7 +73,8 @@ internal class Compiler(
             listOf(
                 defineMainModule,
                 listOf(main),
-                libc.declarations()
+                libc.declarations(),
+                effectCompiler.declarations()
             ).flatten()
         )
 
@@ -317,15 +320,167 @@ internal class Compiler(
             }
 
             is EffectDefine -> {
-                throw NotImplementedError()
+                val target = generateLocal("effect")
+
+                val operationOperands = instruction.effect.operations.keys.associate { operationName ->
+                    operationName to generateLocal(operationName)
+                }
+
+                return context
+                    .let {
+                        instruction.effect.operations.entries.fold(it) { context2, (operationName, operationType) ->
+                            val functionName = generateName(operationName)
+                            val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
+                            val returnValue = generateLocal("return")
+                            val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, generateName("environment"))
+                            val llvmParameters = (0 until parameterCount).map { parameterIndex ->
+                                LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
+                            }
+                            val operationArguments = generateLocal("arguments")
+                            val operationArgumentsType = effectCompiler.compiledOperationArgumentsType(operationType)
+
+                            closures.createClosure(
+                                target = operationOperands.getValue(operationName),
+                                functionName = functionName,
+                                parameterTypes = llvmParameters.map { llvmParameter -> llvmParameter.type },
+                                freeVariables = listOf(),
+                                context = context2
+                            ).addTopLevelEntities(LlvmFunctionDefinition(
+                                name = functionName,
+                                returnType = compiledValueType,
+                                parameters = listOf(closureEnvironmentParameter) + llvmParameters,
+                                body = persistentListOf<LlvmInstruction>()
+                                    .addAll(libc.typedMalloc(
+                                        target = operationArguments,
+                                        bytes = operationArgumentsType.byteSize,
+                                        type = LlvmTypes.pointer(operationArgumentsType)
+                                    ))
+                                    .addAll(llvmParameters.flatMapIndexed { parameterIndex, llvmParameter ->
+                                        val operationArgumentPointer = generateLocal("operationArgumentPointer")
+                                        persistentListOf<LlvmInstruction>()
+                                            .add(LlvmGetElementPtr(
+                                                target = operationArgumentPointer,
+                                                pointerType = LlvmTypes.pointer(operationArgumentsType),
+                                                pointer = operationArguments,
+                                                indices = listOf(
+                                                    LlvmIndex.i64(0),
+                                                    LlvmIndex.i64(parameterIndex)
+                                                )
+                                            ))
+                                            .add(LlvmStore(
+                                                type = compiledValueType,
+                                                value = LlvmOperandLocal(llvmParameter.name),
+                                                pointer = operationArgumentPointer
+                                            ))
+                                    })
+                                    .addAll(effectCompiler.effectHandlersCall(
+                                        target = returnValue,
+                                        effect = instruction.effect,
+                                        operationName = operationName,
+                                        operationArguments = LlvmTypedOperand(
+                                            type = LlvmTypes.pointer(operationArgumentsType),
+                                            operand = operationArguments
+                                        )
+                                    ))
+                                    .add(LlvmReturn(type = compiledValueType, value = returnValue))
+                            ))
+                        }
+                    }
+                    .addInstructions(createObject(
+                        target = target,
+                        objectType = effectType(instruction.effect),
+                        fields = operationOperands.map { (operationName, operationOperand) ->
+                            operationName to operationOperand
+                        }
+                    ))
+                    .pushTemporary(target)
             }
 
             is EffectHandlersDiscard -> {
-                throw NotImplementedError()
+                return context.addInstructions(effectCompiler.effectHandlersDiscard())
             }
 
             is EffectHandlersPush -> {
-                throw NotImplementedError()
+                val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
+
+                val setjmpResult = generateLocal("setjmpResult")
+                val isNormalReturn = generateLocal("isNormalReturn")
+                val normalLabel = generateName("normal")
+                val setjmp = libc.setjmp(
+                    target = setjmpResult,
+                    env = LlvmOperandGlobal("shed_jmp_buf")
+                )
+                val operations = instruction.effect.operations.entries.sortedBy { (operationName, _) -> operationName }
+                val handlerLabels = operations.associate { (operationName, _) ->
+                    operationName to generateName(operationName)
+                }
+
+                return context2
+                    .addInstructions(setjmp)
+                    .addInstructions(LlvmIcmp(
+                        target = isNormalReturn,
+                        conditionCode = LlvmIcmp.ConditionCode.EQ,
+                        type = libc.setjmpReturnType,
+                        left = setjmpResult,
+                        right = LlvmOperandInt(0)
+                    ))
+                    .addInstructions(LlvmSwitch(
+                        type = libc.setjmpReturnType,
+                        value = setjmpResult,
+                        defaultLabel = normalLabel,
+                        destinations = listOf(0 to normalLabel) + operations.mapIndexed { operationIndex, (operationName, _) ->
+                            operationIndex + 1 to handlerLabels.getValue(operationName)
+                        }
+                    ))
+                    .let {
+                        operations.foldIndexed(it) { operationIndex, context, (operationName, operationType) ->
+                            val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
+                            val handlerResult = generateLocal("handlerResult")
+                            val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
+                            val argumentPointers = (0 until parameterCount).map { argumentIndex ->
+                                generateLocal("argPointer" + argumentIndex)
+                            }
+                            val arguments = (0 until parameterCount).map { argumentIndex ->
+                                generateLocal("arg" + argumentIndex)
+                            }
+                            val argumentInstructions = (0 until parameterCount).flatMap { argumentIndex ->
+                                listOf(
+                                    LlvmLoad(
+                                        target = activeOperationArgumentsPointer,
+                                        pointer = LlvmOperandGlobal("active_operation_arguments"),
+                                        type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
+                                    ),
+                                    LlvmGetElementPtr(
+                                        target = argumentPointers[argumentIndex],
+                                        pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)),
+                                        pointer = activeOperationArgumentsPointer,
+                                        indices = listOf(LlvmIndex.i32(0), LlvmIndex.i32(argumentIndex))
+                                    ),
+                                    LlvmLoad(
+                                        target = arguments[argumentIndex],
+                                        pointer = argumentPointers[argumentIndex],
+                                        type = compiledValueType
+                                    )
+                                )
+                            }
+                            context
+                                .addInstructions(LlvmLabel(handlerLabels.getValue(operationName)))
+                                .addInstructions(argumentInstructions)
+                                .addInstructions(closures.callClosure(
+                                    target = handlerResult,
+                                    closurePointer = operationHandlers[operationIndex],
+                                    arguments = (0 until parameterCount).map { argumentIndex ->
+                                        LlvmTypedOperand(
+                                            type = compiledValueType,
+                                            operand = arguments[argumentIndex]
+                                        )
+                                    }
+                                ))
+                                .pushTemporary(handlerResult)
+                                .addInstructions(LlvmBrUnconditional(labelToLlvmLabel(instruction.untilLabel)))
+                        }
+                    }
+                    .addInstructions(LlvmLabel(normalLabel))
             }
 
             is Exit -> {
@@ -1032,6 +1187,8 @@ internal class Compiler(
 
     private fun generateName(prefix: Identifier) = irBuilder.generateName(prefix)
     private fun generateName(prefix: String) = irBuilder.generateName(prefix)
+    private fun generateLocal(prefix: Identifier) = LlvmOperandLocal(generateName(prefix))
+    private fun generateLocal(prefix: String) = LlvmOperandLocal(generateName(prefix))
 
     var nextLabelIndex = 1
 
@@ -1107,3 +1264,7 @@ fun withLineNumbers(source: String): String {
 }
 
 internal val compiledUnitValue = LlvmOperandInt(0)
+
+private fun <T, R> Iterable<T>.flatMapIndexed(func: (Int, T) -> List<R>): List<R> {
+    return this.mapIndexed(func).flatten()
+}

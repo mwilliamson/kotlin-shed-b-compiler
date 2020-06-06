@@ -405,6 +405,7 @@ class Loader(
                     .addAll(effectHandlerInstructions)
                     .add(effectHandleInstruction)
                     .addAll(body)
+                    .add(Jump(untilLabel.value))
                     .add(untilLabel)
                     .add(EffectHandlersDiscard)
             }
