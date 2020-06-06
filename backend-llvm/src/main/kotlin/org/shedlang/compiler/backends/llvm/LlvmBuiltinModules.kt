@@ -16,7 +16,6 @@ internal class BuiltinModuleCompiler(
     private val builtinModules = mapOf<ModuleName, (FunctionContext) -> FunctionContext>(
         listOf(Identifier("Core"), Identifier("Io")) to ::compileCoreIo,
         listOf(Identifier("Core"), Identifier("IntToString")) to ::compileCoreIntToString,
-        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("NonLocalReturn")) to ::compileStdlibPlatformNonLocalReturn,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")) to ::compileStdlibPlatformStringBuilder,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")) to ::compileStdlibPlatformStrings
     )
@@ -176,17 +175,6 @@ internal class BuiltinModuleCompiler(
                 )
             )
             .addTopLevelEntities(intToString, intToStringFormatStringDefinition)
-    }
-
-    private fun compileStdlibPlatformNonLocalReturn(context: FunctionContext): FunctionContext {
-        return compileCModule(
-            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("NonLocalReturn")),
-            functionNames = listOf(
-                "nonLocalReturn",
-                "run"
-            ),
-            context = context
-        )
     }
 
     private fun compileStdlibPlatformStringBuilder(context: FunctionContext): FunctionContext {
