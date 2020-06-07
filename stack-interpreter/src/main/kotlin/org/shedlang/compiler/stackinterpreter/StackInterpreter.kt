@@ -166,7 +166,6 @@ internal fun createScopeReference(): ScopeReference {
 internal typealias Bindings = PersistentMap<ScopeReference, PersistentMap<Int, InterpreterValue>>
 
 internal data class EffectHandler(
-    val effect: ComputationalEffect,
     val operationHandlers: Map<Identifier, InterpreterValue>
 )
 
@@ -581,7 +580,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         is EffectHandle -> {
             val (state2, handlerValues) = initialState.popTemporaries(effect.operations.size)
             val operationHandlers = effect.operations.keys.sorted().zip(handlerValues).toMap()
-            val effectHandler = EffectHandler(effect = effect, operationHandlers = operationHandlers)
+            val effectHandler = EffectHandler(operationHandlers = operationHandlers)
             state2.nextInstruction().enter(
                 instructions = instructions,
                 parentScopes = state2.currentScopes(),
