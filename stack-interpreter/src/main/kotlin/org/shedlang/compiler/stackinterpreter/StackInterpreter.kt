@@ -53,6 +53,10 @@ internal class InterpreterBuiltinFunction(
     val func: (InterpreterState, List<InterpreterValue>) -> InterpreterState
 ): InterpreterValue()
 
+internal class InterpreterBuiltinOperationHandler(
+    val func: (InterpreterState, List<InterpreterValue>, Stack<CallFrame>) -> InterpreterState
+): InterpreterValue()
+
 internal class InterpreterPartialCall(
     val receiver: InterpreterValue,
     val positionalArguments: List<InterpreterValue>,
@@ -174,6 +178,7 @@ internal data class CallFrame(
     private val instructions: List<Instruction>,
     private val temporaryStack: Stack<InterpreterValue>,
     private val effectHandlers: Map<Int, EffectHandler>,
+    internal val resume: Stack<CallFrame>? = null,
     internal val scopes: PersistentList<ScopeReference>
 ) {
     fun currentInstruction(): Instruction? {
@@ -222,8 +227,8 @@ internal data class CallFrame(
         return temporaryStack.size == 0
     }
 
-    fun findEffectHandler(effect: ComputationalEffect): EffectHandler? {
-        return effectHandlers[effect.definitionId]
+    fun findEffectHandler(effectId: Int): EffectHandler? {
+        return effectHandlers[effectId]
     }
 
     fun storeLocal(bindings: Bindings, variableId: Int, value: InterpreterValue): Bindings {
@@ -299,10 +304,10 @@ internal data class InterpreterState(
         return updateCurrentCallFrame { frame -> frame.discardTemporary() }
     }
 
-    fun handle(effect: ComputationalEffect, operationName: Identifier, positionalArguments: List<InterpreterValue>, namedArguments: Map<Identifier, InterpreterValue>): InterpreterState {
+    fun handle(effectId: Int, operationName: Identifier, positionalArguments: List<InterpreterValue>, namedArguments: Map<Identifier, InterpreterValue>): InterpreterState {
         var newCallStack = callStack
         while (true) {
-            val effectHandler = newCallStack.last().findEffectHandler(effect)
+            val effectHandler = newCallStack.last().findEffectHandler(effectId)
             if (effectHandler == null) {
                 newCallStack = newCallStack.discard()
             } else {
@@ -310,10 +315,17 @@ internal data class InterpreterState(
                     copy(callStack = newCallStack.discard()),
                     receiver = effectHandler.operationHandlers.getValue(operationName),
                     positionalArguments = positionalArguments,
-                    namedArguments = namedArguments
+                    namedArguments = namedArguments,
+                    resume = callStack.replace { frame -> frame.nextInstruction() }
                 )
             }
         }
+    }
+
+    fun resume(): InterpreterState {
+        return copy(
+            callStack = currentCallFrame().resume!!
+        )
     }
 
     fun nextInstruction(): InterpreterState {
@@ -378,7 +390,8 @@ internal data class InterpreterState(
     fun enter(
         instructions: List<Instruction>,
         parentScopes: PersistentList<ScopeReference>,
-        effectHandlers: Map<Int, EffectHandler> = mapOf()
+        effectHandlers: Map<Int, EffectHandler> = mapOf(),
+        resume: Stack<CallFrame>? = null
     ): InterpreterState {
         val newScope = createScopeReference()
         val frame = CallFrame(
@@ -798,14 +811,16 @@ internal fun call(
     state: InterpreterState,
     receiver: InterpreterValue,
     positionalArguments: List<InterpreterValue>,
-    namedArguments: Map<Identifier, InterpreterValue>
+    namedArguments: Map<Identifier, InterpreterValue>,
+    resume: Stack<CallFrame>? = null
 ): InterpreterState {
     return when (receiver) {
         is InterpreterFunction -> {
             val state2 = receiver.positionalParameters.zip(positionalArguments).fold(
                 state.enter(
                     instructions = receiver.bodyInstructions,
-                    parentScopes = receiver.scopes
+                    parentScopes = receiver.scopes,
+                    resume = resume
                 ),
                 { state, (parameter, argument) ->
                     state.storeLocal(parameter.variableId, argument)
@@ -822,6 +837,9 @@ internal fun call(
         is InterpreterBuiltinFunction ->
             receiver.func(state, positionalArguments)
 
+        is InterpreterBuiltinOperationHandler ->
+            receiver.func(state, positionalArguments, resume!!)
+
         is InterpreterPartialCall ->
             call(
                 state = state,
@@ -836,7 +854,7 @@ internal fun call(
         }
 
         is InterpreterOperation -> {
-            state.handle(receiver.effect, receiver.operationName, positionalArguments, namedArguments)
+            state.handle(receiver.effect.definitionId, receiver.operationName, positionalArguments, namedArguments)
         }
 
         else -> throw Exception("cannot call: $receiver")
