@@ -16,6 +16,7 @@ class JavascriptExampleTests {
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
         "NonLocalReturnInline.shed",
+        "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
         "stringBuilder",
         "TailRec.shed"

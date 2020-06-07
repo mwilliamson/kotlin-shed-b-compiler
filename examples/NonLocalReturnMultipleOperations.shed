@@ -1,0 +1,71 @@
+// stdout:
+//   a
+//   b
+//   c
+//   c
+export main;
+
+effect NonLocalReturn {
+    .a: () -> Nothing,
+    .b: () -> Nothing,
+    .c: () -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    print!(handle NonLocalReturn {
+        NonLocalReturn.a!()
+    } on {
+        .a = () {
+            "a\n"
+        },
+        .b = () {
+            "b\n"
+        },
+        .c = () {
+            "c\n"
+        },
+    });
+
+    print!(handle NonLocalReturn {
+        NonLocalReturn.b!()
+    } on {
+        .a = () {
+            "a\n"
+        },
+        .b = () {
+            "b\n"
+        },
+        .c = () {
+            "c\n"
+        },
+    });
+
+    print!(handle NonLocalReturn {
+        NonLocalReturn.c!()
+    } on {
+        .a = () {
+            "a\n"
+        },
+        .b = () {
+            "b\n"
+        },
+        .c = () {
+            "c\n"
+        },
+    });
+
+    // Check that handler order can differ from operation definition order
+    print!(handle NonLocalReturn {
+        NonLocalReturn.c!()
+    } on {
+        .a = () {
+            "a\n"
+        },
+        .c = () {
+            "c\n"
+        },
+        .b = () {
+            "b\n"
+        },
+    });
+}
