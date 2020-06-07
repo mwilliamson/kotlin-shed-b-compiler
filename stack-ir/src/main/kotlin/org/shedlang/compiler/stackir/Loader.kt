@@ -389,25 +389,19 @@ class Loader(
 
             override fun visit(node: HandleNode): PersistentList<Instruction> {
                 val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as ComputationalEffect
-                val untilLabel = createLabel()
 
-                val effectHandlerInstructions = node.handlers
+                val operationHandlerInstructions = node.handlers
                     .sortedBy { (operationName, _) -> operationName }
                     .flatMap { (_, handler) ->
                         loadExpression(handler)
                     }
 
-                val effectHandleInstruction = EffectHandlersPush(effect = effect, untilLabel = untilLabel.value)
-
-                val body = loadBlock(node.body)
+                val body = loadBlock(node.body).add(Return)
+                val effectHandleInstruction = EffectHandle(effect = effect, instructions = body)
 
                 return persistentListOf<Instruction>()
-                    .addAll(effectHandlerInstructions)
+                    .addAll(operationHandlerInstructions)
                     .add(effectHandleInstruction)
-                    .addAll(body)
-                    .add(Jump(untilLabel.value))
-                    .add(untilLabel)
-                    .add(EffectHandlersDiscard)
             }
 
             private fun generateBranches(

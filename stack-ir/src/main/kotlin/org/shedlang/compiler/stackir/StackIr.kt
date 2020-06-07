@@ -75,12 +75,10 @@ object Duplicate: Instruction()
 
 class EffectDefine(val effect: ComputationalEffect): Instruction()
 
-class EffectHandlersPush(
+class EffectHandle(
     val effect: ComputationalEffect,
-    val untilLabel: Int
+    val instructions: List<Instruction>
 ): Instruction()
-
-object EffectHandlersDiscard: Instruction()
 
 object Exit: Instruction()
 
@@ -149,6 +147,7 @@ class TupleCreate(val length: Int): Instruction()
 fun Instruction.children(): List<Instruction> {
     return when (this) {
         is DeclareFunction -> bodyInstructions
+        is EffectHandle -> instructions
         else -> listOf()
     }
 }

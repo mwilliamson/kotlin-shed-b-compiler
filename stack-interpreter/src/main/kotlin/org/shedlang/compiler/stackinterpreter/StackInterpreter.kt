@@ -167,15 +167,14 @@ internal typealias Bindings = PersistentMap<ScopeReference, PersistentMap<Int, I
 
 internal data class EffectHandler(
     val effect: ComputationalEffect,
-    val operationHandlers: Map<Identifier, InterpreterValue>,
-    val exitInstructionIndex: Int
+    val operationHandlers: Map<Identifier, InterpreterValue>
 )
 
 internal data class CallFrame(
     private val instructionIndex: Int,
     private val instructions: List<Instruction>,
     private val temporaryStack: Stack<InterpreterValue>,
-    private val effectHandlerStack: Stack<EffectHandler>,
+    private val effectHandlers: Map<Int, EffectHandler>,
     internal val scopes: PersistentList<ScopeReference>
 ) {
     fun currentInstruction(): Instruction? {
@@ -224,18 +223,8 @@ internal data class CallFrame(
         return temporaryStack.size == 0
     }
 
-    fun effectHandlersPush(effectHandler: EffectHandler): CallFrame {
-        return copy(effectHandlerStack = effectHandlerStack.push(effectHandler))
-    }
-
-    fun effectHandlersPop(): CallFrame {
-        return copy(effectHandlerStack = effectHandlerStack.discard())
-    }
-
     fun findEffectHandler(effect: ComputationalEffect): EffectHandler? {
-        return effectHandlerStack.find { effectHandler ->
-            effectHandler.effect.definitionId == effect.definitionId
-        }
+        return effectHandlers[effect.definitionId]
     }
 
     fun storeLocal(bindings: Bindings, variableId: Int, value: InterpreterValue): Bindings {
@@ -311,27 +300,6 @@ internal data class InterpreterState(
         return updateCurrentCallFrame { frame -> frame.discardTemporary() }
     }
 
-    fun effectHandlersPush(
-        effect: ComputationalEffect,
-        operationHandlers: Map<Identifier, InterpreterValue>,
-        exitLabel: Int
-    ): InterpreterState {
-        val effectHandler = EffectHandler(
-            effect = effect,
-            operationHandlers = operationHandlers,
-            exitInstructionIndex = instructionIndex(exitLabel)
-        )
-        return updateCurrentCallFrame { frame ->
-            frame.effectHandlersPush(effectHandler)
-        }
-    }
-
-    fun effectHandlersDiscard(): InterpreterState {
-        return updateCurrentCallFrame { frame ->
-            frame.effectHandlersPop()
-        }
-    }
-
     fun handle(effect: ComputationalEffect, operationName: Identifier, positionalArguments: List<InterpreterValue>, namedArguments: Map<Identifier, InterpreterValue>): InterpreterState {
         var newCallStack = callStack
         while (true) {
@@ -339,11 +307,8 @@ internal data class InterpreterState(
             if (effectHandler == null) {
                 newCallStack = newCallStack.discard()
             } else {
-                newCallStack = newCallStack.replace { frame ->
-                    frame.jump(effectHandler.exitInstructionIndex)
-                }
                 return call(
-                    copy(callStack = newCallStack),
+                    copy(callStack = newCallStack.discard()),
                     receiver = effectHandler.operationHandlers.getValue(operationName),
                     positionalArguments = positionalArguments,
                     namedArguments = namedArguments
@@ -411,14 +376,18 @@ internal data class InterpreterState(
         return enter(instructions = instructions, parentScopes = persistentListOf(defaultScope))
     }
 
-    fun enter(instructions: List<Instruction>, parentScopes: PersistentList<ScopeReference>): InterpreterState {
+    fun enter(
+        instructions: List<Instruction>,
+        parentScopes: PersistentList<ScopeReference>,
+        effectHandlers: Map<Int, EffectHandler> = mapOf()
+    ): InterpreterState {
         val newScope = createScopeReference()
         val frame = CallFrame(
             instructionIndex = 0,
             instructions = instructions,
             scopes = parentScopes.add(newScope),
             temporaryStack = stackOf(),
-            effectHandlerStack = stackOf()
+            effectHandlers = effectHandlers
         )
         return copy(
             bindings = bindings.put(newScope, persistentMapOf()),
@@ -609,18 +578,15 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             initialState.pushTemporary(effectValue).nextInstruction()
         }
 
-        is EffectHandlersDiscard -> {
-            initialState.effectHandlersDiscard().nextInstruction()
-        }
-
-        is EffectHandlersPush -> {
+        is EffectHandle -> {
             val (state2, handlerValues) = initialState.popTemporaries(effect.operations.size)
             val operationHandlers = effect.operations.keys.sorted().zip(handlerValues).toMap()
-            state2.effectHandlersPush(
-                effect = effect,
-                operationHandlers = operationHandlers,
-                exitLabel = untilLabel
-            ).nextInstruction()
+            val effectHandler = EffectHandler(effect = effect, operationHandlers = operationHandlers)
+            state2.nextInstruction().enter(
+                instructions = instructions,
+                parentScopes = state2.currentScopes(),
+                effectHandlers = mapOf(effect.definitionId to effectHandler)
+            )
         }
 
         is Exit -> {

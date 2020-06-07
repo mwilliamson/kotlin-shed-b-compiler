@@ -396,11 +396,7 @@ internal class Compiler(
                     .pushTemporary(target)
             }
 
-            is EffectHandlersDiscard -> {
-                return context.addInstructions(effectCompiler.effectHandlersDiscard())
-            }
-
-            is EffectHandlersPush -> {
+            is EffectHandle -> {
                 val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
 
                 val setjmpResult = generateLocal("setjmpResult")
@@ -414,6 +410,7 @@ internal class Compiler(
                 val handlerLabels = operations.associate { (operationName, _) ->
                     operationName to generateName(operationName)
                 }
+                val untilLabel = generateName("until")
 
                 return context2
                     .addInstructions(setjmp)
@@ -477,10 +474,12 @@ internal class Compiler(
                                     }
                                 ))
                                 .pushTemporary(handlerResult)
-                                .addInstructions(LlvmBrUnconditional(labelToLlvmLabel(instruction.untilLabel)))
+                                .addInstructions(LlvmBrUnconditional(untilLabel))
                         }
                     }
                     .addInstructions(LlvmLabel(normalLabel))
+                    .let { compileInstructions(instruction.instructions, it) }
+                    .addInstructions(LlvmLabel(untilLabel))
             }
 
             is Exit -> {
