@@ -406,6 +406,7 @@ internal class Compiler(
                     target = setjmpResult,
                     env = LlvmOperandGlobal("shed_jmp_buf")
                 )
+                val effectHandlerPush = effectCompiler.effectHandlersPush(instruction.effect.definitionId)
                 val operations = instruction.effect.operations.entries.sortedBy { (operationName, _) -> operationName }
                 val handlerLabels = operations.associate { (operationName, _) ->
                     operationName to generateName(operationName)
@@ -478,6 +479,7 @@ internal class Compiler(
                         }
                     }
                     .addInstructions(LlvmLabel(normalLabel))
+                    .addInstructions(effectHandlerPush)
                     .let { compileInstructions(instruction.instructions, it) }
                     .addInstructions(LlvmLabel(untilLabel))
             }

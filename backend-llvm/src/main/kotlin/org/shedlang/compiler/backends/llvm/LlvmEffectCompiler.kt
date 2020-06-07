@@ -19,10 +19,19 @@ internal class EffectCompiler(private val irBuilder: LlvmIrBuilder) {
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf(
-            LlvmParameter(type = effectIdType, name = "effect_id"),
-            LlvmParameter(type = CTypes.voidPointer, name = "operation_handlers")
+            LlvmParameter(type = effectIdType, name = "effect_id")
         )
     )
+
+    internal fun effectHandlersPush(effectId: Int): LlvmCall {
+        return LlvmCall(
+            target = null,
+            functionPointer = LlvmOperandGlobal(effectHandlersPushDeclaration.name),
+            callingConvention = effectHandlersPushDeclaration.callingConvention,
+            returnType = effectHandlersPushDeclaration.returnType,
+            arguments = listOf(LlvmTypedOperand(effectIdType, LlvmOperandInt(effectId)))
+        )
+    }
 
     private val effectHandlersDiscardDeclaration = LlvmFunctionDeclaration(
         name = "shed_effect_handlers_discard",
