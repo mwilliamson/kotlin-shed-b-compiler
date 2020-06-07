@@ -636,7 +636,7 @@ fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator
 
 fun computationalEffect(
     name: Identifier,
-    getOperations: (ComputationalEffect) -> Map<Identifier, FunctionType>
+    getOperations: (ComputationalEffect) -> Map<Identifier, FunctionType> = { mapOf() }
 ): ComputationalEffect {
     var effect: ComputationalEffect? = null
     effect = computationalEffect(

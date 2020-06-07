@@ -22,6 +22,10 @@ interface Effect: StaticValue {
     }
 }
 
+fun effectUnion(effects: List<Effect>): Effect {
+    return effects.fold(EmptyEffect, ::effectUnion)
+}
+
 fun effectUnion(effect1: Effect, effect2: Effect): Effect {
     if (isSubEffect(subEffect = effect1, superEffect = effect2)) {
         return effect2
@@ -720,7 +724,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
     }
 }
 
-public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
+fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
     when (effect) {
         is EffectParameter ->
             // TODO: handle non-effect bindings
@@ -732,6 +736,9 @@ public fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticV
                 name = effect.name,
                 arguments = effect.arguments.map { argument -> replaceStaticValues(argument, bindings) }
             )
+
+        is EffectUnion ->
+            return effectUnion(effect.members.map { member -> replaceEffects(member, bindings) })
 
         else ->
             return effect
