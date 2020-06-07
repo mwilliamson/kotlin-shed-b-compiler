@@ -595,7 +595,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             val operationHandlers = effect.operations.keys.sorted().zip(handlerValues).toMap()
             val effectHandler = EffectHandler(operationHandlers = operationHandlers)
             state2.nextInstruction().enter(
-                instructions = instructions,
+                instructions = instructions + listOf(Return),
                 parentScopes = state2.currentScopes(),
                 effectHandlers = mapOf(effect.definitionId to effectHandler)
             )

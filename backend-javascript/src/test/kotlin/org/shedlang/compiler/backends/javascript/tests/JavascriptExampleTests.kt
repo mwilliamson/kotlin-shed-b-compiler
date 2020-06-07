@@ -15,6 +15,7 @@ class JavascriptExampleTests {
     private val disabledTests = setOf<String>(
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
+        "NonLocalReturnInline.shed",
         "NonLocalReturnMultipleValues.shed",
         "stringBuilder",
         "TailRec.shed"

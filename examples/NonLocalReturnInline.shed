@@ -1,0 +1,26 @@
+// stdout:
+//   local return
+//   nonlocal return 42
+export main;
+
+effect NonLocalReturn {
+    .nonLocalReturn: (Int) -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    print!(handle NonLocalReturn {
+        "local return\n"
+    } on {
+        .nonLocalReturn = (value: Int) {
+            "nonlocal return " + intToString(value) + "\n"
+        }
+    });
+    print!(handle NonLocalReturn {
+        NonLocalReturn.nonLocalReturn!(42);
+        "local return\n"
+    } on {
+        .nonLocalReturn = (value: Int) {
+            "nonlocal return " + intToString(value) + "\n"
+        }
+    });
+}

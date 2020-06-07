@@ -38,6 +38,12 @@ internal class FunctionContext(
                 labelPredecessors
                     .add(newInstruction.ifTrue, this)
                     .add(newInstruction.ifFalse, this)
+            is LlvmSwitch ->
+                labelPredecessors
+                    .add(newInstruction.defaultLabel, this)
+                    .let { newInstruction.destinations.fold(it) { labelPredecessors, (_, label) ->
+                        labelPredecessors.add(label, this)
+                    } }
             is LlvmLabel -> {
                 val previousInstruction = instructions.lastOrNull()
                 if (previousInstruction == null || isTerminator(previousInstruction)) {

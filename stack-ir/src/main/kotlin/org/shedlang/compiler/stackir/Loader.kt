@@ -396,7 +396,7 @@ class Loader(
                         loadExpression(handler)
                     }
 
-                val body = loadBlock(node.body).add(Return)
+                val body = loadBlock(node.body)
                 val effectHandleInstruction = EffectHandle(effect = effect, instructions = body)
 
                 return persistentListOf<Instruction>()
