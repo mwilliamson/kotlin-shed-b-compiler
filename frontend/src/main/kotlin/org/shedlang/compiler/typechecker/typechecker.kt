@@ -391,15 +391,8 @@ internal fun typeCheckFunction(
 }
 
 private fun evalEffects(effectNodes: List<StaticExpressionNode>, context: TypeContext): Effect {
-    val effects = effectNodes.map({ effect -> evalEffect(effect, context) }).toSet()
-    val effect = if (effects.size == 0) {
-        EmptyEffect
-    } else if (effects.size == 1) {
-        effects.single()
-    } else {
-        throw NotImplementedError()
-    }
-    return effect
+    val effects = effectNodes.map { effect -> evalEffect(effect, context) }
+    return effectUnion(effects)
 }
 
 private fun typeCheck(type: StaticExpressionNode, context: TypeContext) {
