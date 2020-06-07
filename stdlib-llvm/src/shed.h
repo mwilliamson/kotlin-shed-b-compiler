@@ -43,8 +43,20 @@ typedef uint32_t EffectId;
 
 ShedValue* active_operation_arguments;
 
+struct EffectHandler {
+    EffectId effect_id;
+    struct EffectHandler* next;
+    ShedValue (*handle)(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments);
+    void* context;
+};
+
 void shed_effect_handlers_discard();
 void shed_effect_handlers_push(EffectId effect_id);
-void shed_effect_handlers_call(EffectId effect_id, size_t operation_index, ShedValue* operation_arguments);
+void shed_effect_handlers_push_effect_handler(
+    EffectId effect_id,
+    ShedValue (*handle)(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments),
+    void* context
+);
+ShedValue shed_effect_handlers_call(EffectId effect_id, size_t operation_index, ShedValue* operation_arguments);
 
 #endif

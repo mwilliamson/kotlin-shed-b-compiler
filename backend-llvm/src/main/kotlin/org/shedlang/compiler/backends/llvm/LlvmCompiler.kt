@@ -482,6 +482,7 @@ internal class Compiler(
                     .addInstructions(effectHandlerPush)
                     .let { compileInstructions(instruction.instructions, it) }
                     .addInstructions(LlvmLabel(untilLabel))
+                    .addInstructions(effectCompiler.effectHandlersDiscard())
             }
 
             is Exit -> {
