@@ -20,6 +20,7 @@ jmp_buf shed_jmp_buf;
 
 ShedValue shed_handle_computational_effect(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments) {
     active_operation_arguments = operation_arguments;
+    effect_handler_stack = effect_handler->next;
     longjmp(*(jmp_buf*)effect_handler->context, 1 + operation_index);
 }
 

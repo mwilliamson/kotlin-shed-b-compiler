@@ -18,6 +18,7 @@ class JavascriptExampleTests {
         "NonLocalReturnInline.shed",
         "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
+        "NonLocalReturnNested.shed",
         "stringBuilder",
         "TailRec.shed"
     )

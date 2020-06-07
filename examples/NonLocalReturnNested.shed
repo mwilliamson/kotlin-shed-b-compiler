@@ -1,0 +1,95 @@
+// stdout:
+//   effect1
+//   effect2a
+//   effect2b
+//   effect1inner
+//   effect1outer
+export main;
+
+effect Effect1 {
+    .exit: () -> Nothing,
+}
+
+effect Effect2 {
+    .exit: () -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    // Nested handlers for different effects, outer effect
+    print!(handle Effect1 {
+        handle Effect2 {
+            Effect1.exit!()
+        } on {
+            .exit = () {
+                "effect2\n"
+            },
+        }
+    } on {
+        .exit = () {
+            "effect1\n"
+        },
+    });
+
+    // Nested handlers for different effects, inner effect
+    print!(handle Effect1 {
+        handle Effect2 {
+            Effect2.exit!()
+        } on {
+            .exit = () {
+                "effect2a\n"
+            },
+        } + handle Effect2 {
+            Effect2.exit!()
+        } on {
+            .exit = () {
+                "effect2b\n"
+            },
+        }
+    } on {
+        .exit = () {
+            "effect1\n"
+        },
+    });
+
+    // Nested handlers for same effects uses inner-most effect handler
+    print!(handle Effect1 {
+        handle Effect2 {
+            handle Effect1 {
+                Effect1.exit!()
+            } on {
+                .exit = () {
+                    "effect1inner\n"
+                },
+            }
+        } on {
+            .exit = () {
+                "effect2\n"
+            },
+        }
+    } on {
+        .exit = () {
+            "effect1outer\n"
+        },
+    });
+
+    // Nested effect handlers for same effect, can raise effect in handler
+    print!(handle Effect1 {
+        handle Effect2 {
+            handle Effect1 {
+                Effect1.exit!()
+            } on {
+                .exit = () {
+                    Effect1.exit!()
+                },
+            }
+        } on {
+            .exit = () {
+                "effect2\n"
+            },
+        }
+    } on {
+        .exit = () {
+            "effect1outer\n"
+        },
+    });
+}

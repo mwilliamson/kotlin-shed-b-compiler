@@ -38,6 +38,7 @@ class Amd64ExampleTests {
         "NonLocalReturnInline.shed",
         "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
+        "NonLocalReturnNested.shed",
         "PolymorphicCons.shed",
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",
