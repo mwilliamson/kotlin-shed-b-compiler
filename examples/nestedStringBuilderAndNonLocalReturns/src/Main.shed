@@ -1,0 +1,38 @@
+// stdout:
+//   outer1
+//   outer2
+//   nonlocal return inner1
+//   outer3
+
+export main;
+
+import StringBuilder from Stdlib.Platform.StringBuilder;
+
+effect NonLocalReturn {
+    .nonLocalReturn: (String) -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    print!(StringBuilder.build(outer));
+}
+
+fun outer() !StringBuilder.Write -> Unit {
+    StringBuilder.write!("outer1\n");
+
+    val innerString = handle NonLocalReturn {
+        StringBuilder.build!(inner)
+    } on {
+        .nonLocalReturn = (value: String) {
+            "nonlocal return " + value
+        }
+    };
+
+    StringBuilder.write!("outer2\n");
+    StringBuilder.write!(innerString);
+    StringBuilder.write!("outer3\n");
+}
+
+fun inner() !StringBuilder.Write, !NonLocalReturn -> Unit {
+    NonLocalReturn.nonLocalReturn!("inner1\n");
+    StringBuilder.write!("inner2\n");
+}

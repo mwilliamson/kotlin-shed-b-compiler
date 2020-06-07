@@ -3,7 +3,12 @@ _string_builder_stack = []
 
 def build(func):
     _string_builder_stack.append([])
-    func()
+    try:
+        func()
+    except:
+        _string_builder_stack.pop()
+        raise
+
     string_builder = _string_builder_stack.pop()
     return "".join(string_builder)
 
