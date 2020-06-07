@@ -12,7 +12,10 @@ import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.typechecker.SourceError
 
 class JavascriptExampleTests {
-    private val disabledTests = setOf<String>("TailRec.shed")
+    private val disabledTests = setOf<String>(
+        "NonLocalReturnMultipleValues.shed",
+        "TailRec.shed"
+    )
 
     @TestFactory
     fun testProgram(): List<DynamicTest> {

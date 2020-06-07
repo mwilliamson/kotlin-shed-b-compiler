@@ -34,6 +34,7 @@ class Amd64ExampleTests {
         "NamedArguments.shed",
         "nestedStringBuilder",
         "NonLocalReturn.shed",
+        "NonLocalReturnMultipleValues.shed",
         "PolymorphicCons.shed",
         "PolymorphicForEach.shed",
         "PolymorphicIdentity.shed",

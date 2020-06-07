@@ -1,0 +1,26 @@
+// stdout:
+//   positional one
+//   positional two
+//   named a
+//   named b
+export main;
+
+effect NonLocalReturn {
+    .nonLocalReturn: (String, String, .a: String, .b: String) -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    val result = handle NonLocalReturn {
+        NonLocalReturn.nonLocalReturn!(
+            "positional one\n",
+            "positional two\n",
+            .b = "named b\n",
+            .a = "named a\n"
+        )
+    } on {
+        .nonLocalReturn = (arg0: String, arg1: String, .a: String, .b: String) {
+            arg0 + arg1 + a + b
+        }
+    };
+    print!(result);
+}

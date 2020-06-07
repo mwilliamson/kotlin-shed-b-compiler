@@ -434,7 +434,6 @@ internal class Compiler(
                     ))
                     .let {
                         operations.foldIndexed(it) { operationIndex, context, (operationName, operationType) ->
-                            val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
                             val handlerResult = generateLocal("handlerResult")
                             val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
                             val argumentPointers = (0 until parameterCount).map { argumentIndex ->
@@ -444,6 +443,7 @@ internal class Compiler(
                                 generateLocal("arg" + argumentIndex)
                             }
                             val argumentInstructions = (0 until parameterCount).flatMap { argumentIndex ->
+                                val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
                                 listOf(
                                     LlvmLoad(
                                         target = activeOperationArgumentsPointer,
