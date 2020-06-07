@@ -13,7 +13,9 @@ import org.shedlang.compiler.typechecker.SourceError
 
 class JavascriptExampleTests {
     private val disabledTests = setOf<String>(
+        "nestedStringBuilder",
         "NonLocalReturnMultipleValues.shed",
+        "stringBuilder",
         "TailRec.shed"
     )
 
