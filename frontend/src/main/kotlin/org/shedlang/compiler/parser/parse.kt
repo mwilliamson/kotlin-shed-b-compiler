@@ -1338,6 +1338,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
                     body = handlerBody,
                     source = handlerFunctionSource
                 ),
+                type = HandlerNode.Type.EXIT,
                 source = handlerSource
             )
         },

@@ -8,6 +8,7 @@ import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
+import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
@@ -31,7 +32,8 @@ class ParseHandleTests {
                     function = allOf(
                         has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
                         has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
-                    )
+                    ),
+                    type = equalTo(HandlerNode.Type.EXIT)
                 )
             )
         ))
@@ -52,7 +54,8 @@ class ParseHandleTests {
                             isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_RETURN)),
                             isExpressionStatement(isIntLiteral(42), type = equalTo(ExpressionStatementNode.Type.RETURN))
                         ))
-                    )
+                    ),
+                    type = equalTo(HandlerNode.Type.EXIT)
                 )
             )
         ))

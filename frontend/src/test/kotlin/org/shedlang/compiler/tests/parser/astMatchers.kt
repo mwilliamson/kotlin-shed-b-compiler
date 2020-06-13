@@ -63,10 +63,12 @@ internal fun isHandle(
 
 internal fun isHandler(
     operationName: Matcher<Identifier>,
-    function: Matcher<FunctionExpressionNode>
+    function: Matcher<FunctionExpressionNode>,
+    type: Matcher<HandlerNode.Type>
 ) = allOf(
     has(HandlerNode::operationName, operationName),
-    has(HandlerNode::function, function)
+    has(HandlerNode::function, function),
+    has(HandlerNode::type, type)
 )
 
 internal fun isBlock(vararg statements: Matcher<FunctionStatementNode>) = has(Block::statements, isSequence(*statements))

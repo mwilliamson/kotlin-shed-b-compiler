@@ -32,7 +32,7 @@ class TypeCheckHandleTests {
                 expressionStatementReturn(call(functionReference, hasEffect = true))
             )),
             handlers = listOf(
-                handler("throw", functionExpression(
+                handlerExit("throw", functionExpression(
                     body = listOf(
                         expressionStatementReturn(member2Reference)
                     ),
@@ -72,7 +72,7 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handler("throw", functionExpression(
+                handlerExit("throw", functionExpression(
                     body = listOf(
                         expressionStatementNoReturn(call(functionReference, hasEffect = true))
                     ),
@@ -129,7 +129,7 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handler("throw", functionExpression(
+                handlerExit("throw", functionExpression(
                     parameters = listOf(parameter(type = booleanReference)),
                     body = listOf(),
                     inferReturnType = true
@@ -170,7 +170,7 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handler("throw", functionExpression(
+                handlerExit("throw", functionExpression(
                     body = listOf(),
                     inferReturnType = true
                 ))
@@ -229,11 +229,11 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handler("throw", functionExpression(
+                handlerExit("throw", functionExpression(
                     body = listOf(),
                     inferReturnType = true
                 )),
-                handler("raise", functionExpression(
+                handlerExit("raise", functionExpression(
                     body = listOf(),
                     inferReturnType = true
                 ))

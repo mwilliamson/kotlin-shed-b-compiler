@@ -279,12 +279,13 @@ fun handle(
     source = anySource()
 )
 
-fun handler(
+fun handlerExit(
     operationName: String,
     function: FunctionExpressionNode
 ) = HandlerNode(
     operationName = Identifier(operationName),
     function = function,
+    type = HandlerNode.Type.EXIT,
     source = anySource()
 )
 
