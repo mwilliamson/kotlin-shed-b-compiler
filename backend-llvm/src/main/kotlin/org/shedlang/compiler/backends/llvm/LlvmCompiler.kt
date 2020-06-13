@@ -642,6 +642,10 @@ internal class Compiler(
                 return context.addTopLevelEntities(topLevelEntities).pushTemporary(operand)
             }
 
+            is Resume -> {
+                throw UnsupportedOperationException()
+            }
+
             is Return -> {
                 val (context2, returnVariable) = context.popTemporary()
 

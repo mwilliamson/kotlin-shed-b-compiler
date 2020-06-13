@@ -16,6 +16,7 @@ class LlvmExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
         "Resume.shed",
+        "ResumeWithValue.shed",
         "TailRec.shed"
     )
 

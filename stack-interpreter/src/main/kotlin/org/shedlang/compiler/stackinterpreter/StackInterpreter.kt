@@ -316,16 +316,16 @@ internal data class InterpreterState(
                     receiver = effectHandler.operationHandlers.getValue(operationName),
                     positionalArguments = positionalArguments,
                     namedArguments = namedArguments,
-                    resume = callStack.replace { frame -> frame.nextInstruction() }
+                    resume = callStack
                 )
             }
         }
     }
 
-    fun resume(): InterpreterState {
+    fun resume(value: InterpreterValue): InterpreterState {
         return copy(
             callStack = currentCallFrame().resume!!
-        )
+        ).pushTemporary(value)
     }
 
     fun nextInstruction(): InterpreterState {
@@ -715,7 +715,8 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         }
 
         is Resume -> {
-            initialState.resume()
+            val (state2, value) = initialState.popTemporary()
+            state2.resume(value)
         }
 
         is Return -> {

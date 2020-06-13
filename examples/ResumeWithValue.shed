@@ -1,0 +1,24 @@
+// stdout:
+//   one
+//   one
+//   two
+//   two
+//   three
+//   three
+export main;
+
+effect Converter {
+    .convert: (String) -> String,
+}
+
+fun main() !Io -> Unit {
+    handle Converter {
+        print!(Converter.convert!("one\n"));
+        print!(Converter.convert!("two\n"));
+        print!(Converter.convert!("three\n"));
+    } on {
+        .convert = (value: String) {
+            resume value + value
+        },
+    }
+}

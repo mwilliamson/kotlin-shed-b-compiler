@@ -23,7 +23,7 @@ internal val stringBuilderModule = createNativeModule(
                     Identifier("write") to InterpreterBuiltinOperationHandler { state, arguments, resume ->
                         val value = arguments[0] as InterpreterString
                         stringBuilder.append(value.value)
-                        state.copy(callStack = resume)
+                        state.copy(callStack = resume).pushTemporary(InterpreterUnit)
                     }
                 )
             )
