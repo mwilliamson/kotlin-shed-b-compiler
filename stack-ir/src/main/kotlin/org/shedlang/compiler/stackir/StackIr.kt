@@ -126,6 +126,8 @@ class ModuleStore(
 
 class PushValue(val value: IrValue): Instruction()
 
+object Resume: Instruction()
+
 object Return: Instruction()
 
 object StringAdd: Instruction()

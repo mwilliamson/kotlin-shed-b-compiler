@@ -399,7 +399,8 @@ internal data class InterpreterState(
             instructions = instructions,
             scopes = parentScopes.add(newScope),
             temporaryStack = stackOf(),
-            effectHandlers = effectHandlers
+            effectHandlers = effectHandlers,
+            resume = resume
         )
         return copy(
             bindings = bindings.put(newScope, persistentMapOf()),
@@ -711,6 +712,10 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
         is PushValue -> {
             initialState.pushTemporary(irValueToInterpreterValue(value)).nextInstruction()
+        }
+
+        is Resume -> {
+            initialState.resume()
         }
 
         is Return -> {

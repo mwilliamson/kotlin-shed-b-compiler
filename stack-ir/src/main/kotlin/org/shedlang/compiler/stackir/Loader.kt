@@ -392,8 +392,26 @@ class Loader(
 
                 val operationHandlerInstructions = node.handlers
                     .sortedBy { handler -> handler.operationName }
-                    .flatMap { handler ->
-                        loadExpression(handler.function)
+                    .map { handler ->
+                        val declareFunction = loadFunctionValue(handler.function)
+                        when (handler.type) {
+                            HandlerNode.Type.EXIT -> {
+                                declareFunction
+                            }
+                            HandlerNode.Type.RESUME -> {
+                                if (declareFunction.bodyInstructions.last() != Return) {
+                                    throw UnsupportedOperationException("expected last instruction to be return")
+                                }
+                                DeclareFunction(
+                                    name = declareFunction.name,
+                                    positionalParameters = declareFunction.positionalParameters,
+                                    namedParameters = declareFunction.namedParameters,
+                                    bodyInstructions = declareFunction.bodyInstructions.dropLast(1)
+                                        .toPersistentList()
+                                        .add(Resume)
+                                )
+                            }
+                        }
                     }
 
                 val body = loadBlock(node.body)
