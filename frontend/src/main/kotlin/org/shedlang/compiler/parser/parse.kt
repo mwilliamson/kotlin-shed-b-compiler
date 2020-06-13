@@ -1,5 +1,6 @@
 package org.shedlang.compiler.parser
 
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 import org.shedlang.compiler.typechecker.SourceError
@@ -1325,7 +1326,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
 
             val handlerFunctionSource = tokens.location()
             val handlerParameters = parseParameters(tokens)
-            val handlerBody = parseHandlerBody(tokens)
+            val (handlerType, handlerBody) = parseHandlerBody(tokens)
             HandlerNode(
                 operationName = operationName,
                 function = FunctionExpressionNode(
@@ -1338,7 +1339,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
                     body = handlerBody,
                     source = handlerFunctionSource
                 ),
-                type = HandlerNode.Type.EXIT,
+                type = handlerType,
                 source = handlerSource
             )
         },
@@ -1358,7 +1359,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
     )
 }
 
-private fun parseHandlerBody(tokens: TokenIterator<TokenType>): Block {
+private fun parseHandlerBody(tokens: TokenIterator<TokenType>): Pair<HandlerNode.Type, Block> {
     val source = tokens.location()
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val statements = parseMany(
@@ -1370,14 +1371,22 @@ private fun parseHandlerBody(tokens: TokenIterator<TokenType>): Block {
                 statement
             }
         },
-        isEnd = { tokens -> tokens.isNext(TokenType.KEYWORD_EXIT) },
+        isEnd = { tokens -> tokens.isNext(TokenType.KEYWORD_EXIT) || tokens.isNext(TokenType.KEYWORD_RESUME) },
         allowZero = true,
         tokens = tokens
     )
-    tokens.skip(TokenType.KEYWORD_EXIT)
+
+    val handlerType = if (tokens.trySkip(TokenType.KEYWORD_EXIT)) {
+        HandlerNode.Type.EXIT
+    } else if (tokens.trySkip(TokenType.KEYWORD_RESUME)) {
+        HandlerNode.Type.RESUME
+    } else {
+        throw CompilerError("unknown handler type", source = source)
+    }
+
     val exitExpression = parseExpression(tokens)
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-    return Block(
+    val body = Block(
         statements = statements + listOf(
             ExpressionStatementNode(
                 expression = exitExpression,
@@ -1387,6 +1396,7 @@ private fun parseHandlerBody(tokens: TokenIterator<TokenType>): Block {
         ),
         source = source
     )
+    return handlerType to body
 }
 
 private fun parseVariableReference(tokens: TokenIterator<TokenType>): ReferenceNode {

@@ -60,6 +60,25 @@ class ParseHandleTests {
             )
         ))
     }
+    @Test
+    fun canParseHandleWithOneHandlerThatResumes() {
+        val source = "handle Try { f() } on { .throw = (value: String) { resume 42 } }"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isHandle(
+            handlers = isSequence(
+                isHandler(
+                    operationName = isIdentifier("throw"),
+                    function = allOf(
+                        has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
+                        has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
+                    ),
+                    type = equalTo(HandlerNode.Type.RESUME)
+                )
+            )
+        ))
+    }
 
     @Test
     fun returningExpressionStatementBeforeExitThrowsError() {
