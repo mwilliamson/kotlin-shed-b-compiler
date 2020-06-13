@@ -1303,49 +1303,53 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             )
         }
         TokenType.KEYWORD_HANDLE -> {
-            tokens.skip()
-
-            val effect = parseStaticExpression(tokens)
-            val body = parseFunctionStatements(tokens)
-            tokens.skip(TokenType.KEYWORD_ON)
-            tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
-            val handlers = parseMany(
-                parseElement = { tokens ->
-                    tokens.skip(TokenType.SYMBOL_DOT)
-                    val operationName = parseIdentifier(tokens)
-                    tokens.skip(TokenType.SYMBOL_EQUALS)
-
-                    val handlerSource = tokens.location()
-                    val handlerParameters = parseParameters(tokens)
-                    val handlerBody = parseFunctionStatements(tokens)
-                    operationName to FunctionExpressionNode(
-                        staticParameters = listOf(),
-                        parameters = handlerParameters.positional,
-                        namedParameters = handlerParameters.named,
-                        effects = listOf(),
-                        returnType = null,
-                        inferReturnType = true,
-                        body = handlerBody,
-                        source = handlerSource
-                    )
-                },
-                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-                isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
-                allowTrailingSeparator = true,
-                allowZero = false,
-                tokens = tokens
-            )
-            tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-
-            return HandleNode(
-                effect = effect,
-                body = body,
-                handlers = handlers,
-                source = source
-            )
+            return parseHandle(tokens, source)
         }
         else -> return null
     }
+}
+
+private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource): HandleNode {
+    tokens.skip()
+
+    val effect = parseStaticExpression(tokens)
+    val body = parseFunctionStatements(tokens)
+    tokens.skip(TokenType.KEYWORD_ON)
+    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
+    val handlers = parseMany(
+        parseElement = { tokens ->
+            tokens.skip(TokenType.SYMBOL_DOT)
+            val operationName = parseIdentifier(tokens)
+            tokens.skip(TokenType.SYMBOL_EQUALS)
+
+            val handlerSource = tokens.location()
+            val handlerParameters = parseParameters(tokens)
+            val handlerBody = parseFunctionStatements(tokens)
+            operationName to FunctionExpressionNode(
+                staticParameters = listOf(),
+                parameters = handlerParameters.positional,
+                namedParameters = handlerParameters.named,
+                effects = listOf(),
+                returnType = null,
+                inferReturnType = true,
+                body = handlerBody,
+                source = handlerSource
+            )
+        },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        allowTrailingSeparator = true,
+        allowZero = false,
+        tokens = tokens
+    )
+    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
+
+    return HandleNode(
+        effect = effect,
+        body = body,
+        handlers = handlers,
+        source = source
+    )
 }
 
 private fun parseVariableReference(tokens: TokenIterator<TokenType>): ReferenceNode {
