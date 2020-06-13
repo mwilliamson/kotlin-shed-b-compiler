@@ -45,6 +45,7 @@ class Amd64ExampleTests {
         "PolymorphicMap.shed",
         "RecursiveFactorial.shed",
         "RecursiveFibonacci.shed",
+        "Resume.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
         "stringBuilder",

@@ -13,7 +13,10 @@ import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.typechecker.SourceError
 
 class PythonExampleTests {
-    private val disabledTests = setOf<String>("TailRec.shed")
+    private val disabledTests = setOf<String>(
+        "Resume.shed",
+        "TailRec.shed"
+    )
 
     @TestFactory
     fun testProgram(): List<DynamicTest> {

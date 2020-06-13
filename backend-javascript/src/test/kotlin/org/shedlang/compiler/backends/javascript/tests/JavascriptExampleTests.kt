@@ -19,6 +19,7 @@ class JavascriptExampleTests {
         "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
         "NonLocalReturnNested.shed",
+        "Resume.shed",
         "stringBuilder",
         "TailRec.shed"
     )
