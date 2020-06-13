@@ -298,6 +298,11 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             throw CompilerError("operation has unexpected effect", source = node.source)
         }
 
+        // TODO: handle resume
+        if (handler.type != HandlerNode.Type.EXIT) {
+            throw CompilerError("only exit is supported", source = handler.source)
+        }
+
         verifyType(
             expected = operationType.copy(effect = context.effect, returns = AnyType),
             actual = handlerType,
