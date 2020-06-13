@@ -260,16 +260,16 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
 
     val statement = PythonTryNode(
         body = body,
-        exceptClauses = node.handlers.map { (operationName, handler) ->
+        exceptClauses = node.handlers.map { handler ->
             val operationValueName = context.freshName()
             PythonExceptNode(
                 exceptionType = PythonAttributeAccessNode(
                     receiver = generateCode(node.effect, context),
-                    attributeName = operationNameToExceptionName(operationName),
+                    attributeName = operationNameToExceptionName(handler.operationName),
                     source = handleSource
                 ),
                 target = operationValueName,
-                body = generateExpressionCode(handler, context).toStatements { pythonHandler ->
+                body = generateExpressionCode(handler.function, context).toStatements { pythonHandler ->
                     val pythonExpression = PythonFunctionCallNode(
                         function = pythonHandler,
                         arguments = listOf(

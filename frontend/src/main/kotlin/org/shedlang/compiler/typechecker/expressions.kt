@@ -285,13 +285,13 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
 
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
-    val handlerReturnTypes = node.handlers.map { (operationName, handler) ->
-        val handlerType = typeCheckFunction(handler, context, implicitEffect = context.effect)
-        context.addExpressionType(handler, handlerType)
+    val handlerReturnTypes = node.handlers.map { handler ->
+        val handlerType = typeCheckFunction(handler.function, context, implicitEffect = context.effect)
+        context.addExpressionType(handler.function, handlerType)
 
-        val operationType = effect.operations[operationName]
+        val operationType = effect.operations[handler.operationName]
         if (operationType == null) {
-            throw UnknownOperationError(effect = effect, operationName = operationName, source = node.source)
+            throw UnknownOperationError(effect = effect, operationName = handler.operationName, source = node.source)
         }
 
         if (operationType.effect != effect) {
@@ -306,7 +306,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         handlerType.returns
     }
 
-    val handlerNames = node.handlers.map { (name, _) -> name }
+    val handlerNames = node.handlers.map { handler -> handler.operationName }
     val missingHandlerNames = effect.operations.keys.minus(handlerNames)
     if (missingHandlerNames.isNotEmpty()) {
         throw MissingHandlerError(missingHandlerNames.first(), source = node.source)

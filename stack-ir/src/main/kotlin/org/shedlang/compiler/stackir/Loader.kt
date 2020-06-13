@@ -391,9 +391,9 @@ class Loader(
                 val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as ComputationalEffect
 
                 val operationHandlerInstructions = node.handlers
-                    .sortedBy { (operationName, _) -> operationName }
-                    .flatMap { (_, handler) ->
-                        loadExpression(handler)
+                    .sortedBy { handler -> handler.operationName }
+                    .flatMap { handler ->
+                        loadExpression(handler.function)
                     }
 
                 val body = loadBlock(node.body)

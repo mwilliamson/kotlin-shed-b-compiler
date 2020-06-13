@@ -171,11 +171,11 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
                 source = source
             ),
             JavascriptArrayLiteralNode(
-                elements = node.handlers.map { (operationName, handler) ->
+                elements = node.handlers.map { handler ->
                     JavascriptArrayLiteralNode(
                         elements = listOf(
-                            JavascriptStringLiteralNode(generateName(operationName), source = source),
-                            generateCode(handler, context)
+                            JavascriptStringLiteralNode(generateName(handler.operationName), source = source),
+                            generateCode(handler.function, context)
                         ),
                         source = source
                     )
