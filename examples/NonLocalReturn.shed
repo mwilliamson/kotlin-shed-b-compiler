@@ -23,7 +23,7 @@ fun run(func: Fun () !NonLocalReturn -> String) -> String {
         func!()
     } on {
         .nonLocalReturn = (value: Int) {
-            "nonlocal return " + intToString(value) + "\n"
+            exit "nonlocal return " + intToString(value) + "\n"
         }
     }
 }

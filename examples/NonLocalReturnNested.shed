@@ -21,12 +21,12 @@ fun main() !Io -> Unit {
             Effect1.leave!()
         } on {
             .leave = () {
-                "effect2\n"
+                exit "effect2\n"
             },
         }
     } on {
         .leave = () {
-            "effect1\n"
+            exit "effect1\n"
         },
     });
 
@@ -36,18 +36,18 @@ fun main() !Io -> Unit {
             Effect2.leave!()
         } on {
             .leave = () {
-                "effect2a\n"
+                exit "effect2a\n"
             },
         } + handle Effect2 {
             Effect2.leave!()
         } on {
             .leave = () {
-                "effect2b\n"
+                exit "effect2b\n"
             },
         }
     } on {
         .leave = () {
-            "effect1\n"
+            exit "effect1\n"
         },
     });
 
@@ -58,17 +58,17 @@ fun main() !Io -> Unit {
                 Effect1.leave!()
             } on {
                 .leave = () {
-                    "effect1inner\n"
+                    exit "effect1inner\n"
                 },
             }
         } on {
             .leave = () {
-                "effect2\n"
+                exit "effect2\n"
             },
         }
     } on {
         .leave = () {
-            "effect1outer\n"
+            exit "effect1outer\n"
         },
     });
 
@@ -79,17 +79,17 @@ fun main() !Io -> Unit {
                 Effect1.leave!()
             } on {
                 .leave = () {
-                    Effect1.leave!()
+                    exit Effect1.leave!()
                 },
             }
         } on {
             .leave = () {
-                "effect2\n"
+                exit "effect2\n"
             },
         }
     } on {
         .leave = () {
-            "effect1outer\n"
+            exit "effect1outer\n"
         },
     });
 }

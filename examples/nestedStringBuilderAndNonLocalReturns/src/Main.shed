@@ -23,7 +23,7 @@ fun outer() !StringBuilder.Write -> Unit {
         StringBuilder.build!(inner)
     } on {
         .nonLocalReturn = (value: String) {
-            "nonlocal return " + value
+            exit "nonlocal return " + value
         }
     };
 

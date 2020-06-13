@@ -1324,7 +1324,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
 
             val handlerSource = tokens.location()
             val handlerParameters = parseParameters(tokens)
-            val handlerBody = parseFunctionStatements(tokens)
+            val handlerBody = parseHandlerBody(tokens)
             operationName to FunctionExpressionNode(
                 staticParameters = listOf(),
                 parameters = handlerParameters.positional,
@@ -1348,6 +1348,37 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
         effect = effect,
         body = body,
         handlers = handlers,
+        source = source
+    )
+}
+
+private fun parseHandlerBody(tokens: TokenIterator<TokenType>): Block {
+    val source = tokens.location()
+    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
+    val statements = parseMany(
+        parseElement = { tokens ->
+            val statement = parseFunctionStatement(tokens)
+            if (statement.isReturn) {
+                throw ParseError("cannot return from a handler without explicit exit", source = statement.source)
+            } else {
+                statement
+            }
+        },
+        isEnd = { tokens -> tokens.isNext(TokenType.KEYWORD_EXIT) },
+        allowZero = true,
+        tokens = tokens
+    )
+    tokens.skip(TokenType.KEYWORD_EXIT)
+    val exitExpression = parseExpression(tokens)
+    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
+    return Block(
+        statements = statements + listOf(
+            ExpressionStatementNode(
+                expression = exitExpression,
+                type = ExpressionStatementNode.Type.RETURN,
+                source = exitExpression.source
+            )
+        ),
         source = source
     )
 }

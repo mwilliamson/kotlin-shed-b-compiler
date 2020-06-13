@@ -52,8 +52,8 @@ internal fun isWhenBranch(
 )
 
 internal fun isHandle(
-    effect: Matcher<StaticExpressionNode>,
-    body: Matcher<Block>,
+    effect: Matcher<StaticExpressionNode> = anything,
+    body: Matcher<Block> = anything,
     handlers: Matcher<List<Pair<Identifier, FunctionExpressionNode>>>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(HandleNode::effect, effect),
@@ -350,6 +350,8 @@ internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
     = cast(has(IntegerLiteralNode::value, has(BigInteger::intValueExact, value)))
 
 internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))
+
+internal fun isUnitLiteral() = isA<UnitLiteralNode>()
 
 internal fun isStringSource(contents: String, characterIndex: Int): Matcher<Source> = cast(allOf(
     has(StringSource::contents, equalTo(contents)),

@@ -2,9 +2,13 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
+import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isPair
@@ -12,8 +16,8 @@ import org.shedlang.compiler.tests.isSequence
 
 class ParseHandleTests {
     @Test
-    fun canParseHandleWithOneHandler() {
-        val source = "handle Try { f() } on { .throw = (value: String) { 42 } }"
+    fun canParseHandleWithOneHandlerThatExits() {
+        val source = "handle Try { f() } on { .throw = (value: String) { exit 42 } }"
 
         val node = parseString(::parseExpression, source)
 
@@ -28,6 +32,33 @@ class ParseHandleTests {
                     has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
                 ))
             )
+        ))
+    }
+
+    @Test
+    fun canParseHandlerWithStatementsBeforeExiting() {
+        val source = "handle Try { f() } on { .throw = (value: String) { unit; exit 42 } }"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isHandle(
+            handlers = isSequence(
+                isPair(isIdentifier("throw"), allOf(
+                    has(FunctionExpressionNode::body, isBlock(
+                        isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_RETURN)),
+                        isExpressionStatement(isIntLiteral(42), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                    ))
+                ))
+            )
+        ))
+    }
+
+    @Test
+    fun returningExpressionStatementBeforeExitThrowsError() {
+        val source = "handle Try { f() } on { .throw = (value: String) { unit exit 42 } }"
+
+        assertThat({ parseString(::parseExpression, source) }, throws<ParseError>(
+            has(ParseError::message, equalTo("cannot return from a handler without explicit exit"))
         ))
     }
 }

@@ -12,7 +12,7 @@ fun main() !Io -> Unit {
         "local return\n"
     } on {
         .nonLocalReturn = (value: Int) {
-            "nonlocal return " + intToString(value) + "\n"
+            exit "nonlocal return " + intToString(value) + "\n"
         }
     });
     print!(handle NonLocalReturn {
@@ -20,7 +20,7 @@ fun main() !Io -> Unit {
         "local return\n"
     } on {
         .nonLocalReturn = (value: Int) {
-            "nonlocal return " + intToString(value) + "\n"
+            exit "nonlocal return " + intToString(value) + "\n"
         }
     });
 }

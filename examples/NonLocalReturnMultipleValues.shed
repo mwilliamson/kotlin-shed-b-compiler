@@ -19,7 +19,7 @@ fun main() !Io -> Unit {
         )
     } on {
         .nonLocalReturn = (arg0: String, arg1: String, .a: String, .b: String) {
-            arg0 + arg1 + a + b
+            exit arg0 + arg1 + a + b
         }
     };
     print!(result);
