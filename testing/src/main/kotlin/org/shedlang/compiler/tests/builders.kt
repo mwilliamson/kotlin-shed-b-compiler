@@ -289,6 +289,16 @@ fun handlerExit(
     source = anySource()
 )
 
+fun handlerResume(
+    operationName: String,
+    function: FunctionExpressionNode
+) = HandlerNode(
+    operationName = Identifier(operationName),
+    function = function,
+    type = HandlerNode.Type.RESUME,
+    source = anySource()
+)
+
 fun function(
     name: String = "f",
     staticParameters: List<StaticParameterNode> = listOf(),

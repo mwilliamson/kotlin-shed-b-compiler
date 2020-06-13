@@ -11,7 +11,7 @@ import org.shedlang.compiler.types.*
 
 class TypeCheckHandleTests {
     @Test
-    fun typeOfHandleExpressionIsTypeOfUnionOfBodyAndHandlers() {
+    fun typeOfHandleExpressionIsTypeOfUnionOfBodyAndHandlersThatExit() {
         val tag = tag(listOf("Example"), "X")
         val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
@@ -21,7 +21,14 @@ class TypeCheckHandleTests {
         val effect = computationalEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
-                    Identifier("throw") to functionType(effect = effect)
+                    Identifier("throw") to functionType(
+                        effect = effect,
+                        returns = NothingType
+                    ),
+                    Identifier("get") to functionType(
+                        effect = effect,
+                        returns = StringType
+                    )
                 )
             }
         )
@@ -35,6 +42,12 @@ class TypeCheckHandleTests {
                 handlerExit("throw", functionExpression(
                     body = listOf(
                         expressionStatementReturn(member2Reference)
+                    ),
+                    inferReturnType = true
+                )),
+                handlerResume("get", functionExpression(
+                    body = listOf(
+                        expressionStatementReturn(literalString())
                     ),
                     inferReturnType = true
                 ))
@@ -110,7 +123,7 @@ class TypeCheckHandleTests {
     }
 
     @Test
-    fun whenHandlerHasWrongTypeThenErrorIsThrown() {
+    fun whenHandlerThatExitsHasWrongTypeThenErrorIsThrown() {
         val booleanReference = staticReference("Bool")
         val effectReference = staticReference("Try")
         val effect = computationalEffect(name = Identifier("Try"),
@@ -148,6 +161,50 @@ class TypeCheckHandleTests {
                 positionalParameters = isSequence(isStringType),
                 effect = equalTo(EmptyEffect),
                 returnType = isAnyType
+            )))
+        )))
+    }
+
+    @Test
+    fun whenHandlerThatResumesHasWrongTypeThenErrorIsThrown() {
+        val booleanReference = staticReference("Bool")
+        val effectReference = staticReference("Get")
+        val effect = computationalEffect(
+            name = Identifier("Get"),
+            getOperations = { effect ->
+                mapOf(
+                    Identifier("get") to functionType(
+                        positionalParameters = listOf(StringType),
+                        effect = effect,
+                        returns = IntType
+                    )
+                )
+            }
+        )
+
+        val expression = handle(
+            effect = effectReference,
+            body = block(listOf()),
+            handlers = listOf(
+                handlerResume("get", functionExpression(
+                    parameters = listOf(parameter(type = booleanReference)),
+                    body = listOf(),
+                    inferReturnType = true
+                ))
+            )
+        )
+
+        val context = typeContext(
+            referenceTypes = mapOf(
+                booleanReference to metaType(BoolType),
+                effectReference to effectType(effect)
+            )
+        )
+        assertThat({ inferType(expression, context) }, throws<UnexpectedTypeError>(allOf(
+            has(UnexpectedTypeError::expected, cast(isFunctionType(
+                positionalParameters = isSequence(isStringType),
+                effect = equalTo(EmptyEffect),
+                returnType = isIntType
             )))
         )))
     }

@@ -298,17 +298,24 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             throw CompilerError("operation has unexpected effect", source = node.source)
         }
 
-        // TODO: handle resume
-        if (handler.type != HandlerNode.Type.EXIT) {
-            throw CompilerError("only exit is supported", source = handler.source)
+        when (handler.type) {
+            HandlerNode.Type.EXIT -> {
+                verifyType(
+                    expected = operationType.copy(effect = context.effect, returns = AnyType),
+                    actual = handlerType,
+                    source = handler.source
+                )
+                handlerType.returns
+            }
+            HandlerNode.Type.RESUME -> {
+                verifyType(
+                    expected = operationType.copy(effect = context.effect),
+                    actual = handlerType,
+                    source = handler.source
+                )
+                NothingType
+            }
         }
-
-        verifyType(
-            expected = operationType.copy(effect = context.effect, returns = AnyType),
-            actual = handlerType,
-            source = handler.source
-        )
-        handlerType.returns
     }
 
     val handlerNames = node.handlers.map { handler -> handler.operationName }
