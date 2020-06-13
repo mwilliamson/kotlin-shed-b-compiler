@@ -7,25 +7,25 @@
 export main;
 
 effect Effect1 {
-    .exit: () -> Nothing,
+    .leave: () -> Nothing,
 }
 
 effect Effect2 {
-    .exit: () -> Nothing,
+    .leave: () -> Nothing,
 }
 
 fun main() !Io -> Unit {
     // Nested handlers for different effects, outer effect
     print!(handle Effect1 {
         handle Effect2 {
-            Effect1.exit!()
+            Effect1.leave!()
         } on {
-            .exit = () {
+            .leave = () {
                 "effect2\n"
             },
         }
     } on {
-        .exit = () {
+        .leave = () {
             "effect1\n"
         },
     });
@@ -33,20 +33,20 @@ fun main() !Io -> Unit {
     // Nested handlers for different effects, inner effect
     print!(handle Effect1 {
         handle Effect2 {
-            Effect2.exit!()
+            Effect2.leave!()
         } on {
-            .exit = () {
+            .leave = () {
                 "effect2a\n"
             },
         } + handle Effect2 {
-            Effect2.exit!()
+            Effect2.leave!()
         } on {
-            .exit = () {
+            .leave = () {
                 "effect2b\n"
             },
         }
     } on {
-        .exit = () {
+        .leave = () {
             "effect1\n"
         },
     });
@@ -55,19 +55,19 @@ fun main() !Io -> Unit {
     print!(handle Effect1 {
         handle Effect2 {
             handle Effect1 {
-                Effect1.exit!()
+                Effect1.leave!()
             } on {
-                .exit = () {
+                .leave = () {
                     "effect1inner\n"
                 },
             }
         } on {
-            .exit = () {
+            .leave = () {
                 "effect2\n"
             },
         }
     } on {
-        .exit = () {
+        .leave = () {
             "effect1outer\n"
         },
     });
@@ -76,19 +76,19 @@ fun main() !Io -> Unit {
     print!(handle Effect1 {
         handle Effect2 {
             handle Effect1 {
-                Effect1.exit!()
+                Effect1.leave!()
             } on {
-                .exit = () {
-                    Effect1.exit!()
+                .leave = () {
+                    Effect1.leave!()
                 },
             }
         } on {
-            .exit = () {
+            .leave = () {
                 "effect2\n"
             },
         }
     } on {
-        .exit = () {
+        .leave = () {
             "effect1outer\n"
         },
     });
