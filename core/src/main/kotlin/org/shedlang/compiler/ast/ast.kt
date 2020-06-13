@@ -687,18 +687,28 @@ data class WhenBranchNode(
 data class HandleNode(
     val effect: StaticExpressionNode,
     val body: Block,
-    val handlers: List<Pair<Identifier, FunctionExpressionNode>>,
+    val handlers: List<HandlerNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): ExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.staticEval(effect)) +
-            handlers.map { (_, handler) -> NodeStructures.eval(handler) } +
+            handlers.map { handler -> NodeStructures.eval(handler) } +
             listOf(NodeStructures.subEnv(listOf(NodeStructures.eval(body))))
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class HandlerNode(
+    val operationName: Identifier,
+    val function: FunctionExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): Node {
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.eval(function))
 }
 
 data class ExpressionStatementNode(

@@ -813,7 +813,7 @@ class CodeGeneratorTests {
                 expressionStatementReturn(call(receiver = functionReference))
             )),
             handlers = listOf(
-                Identifier("exit") to handlerDefinition
+                handler("exit", handlerDefinition)
             )
         )
         val effect = computationalEffect(Identifier("Exit"), { effect ->

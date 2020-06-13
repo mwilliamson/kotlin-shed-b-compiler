@@ -11,7 +11,6 @@ import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
-import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 
 class ParseHandleTests {
@@ -27,10 +26,13 @@ class ParseHandleTests {
                 isExpressionStatement(expression = isCall(receiver = isVariableReference("f")))
             ),
             handlers = isSequence(
-                isPair(isIdentifier("throw"), allOf(
-                    has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
-                    has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
-                ))
+                isHandler(
+                    operationName = isIdentifier("throw"),
+                    function = allOf(
+                        has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
+                        has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
+                    )
+                )
             )
         ))
     }
@@ -43,12 +45,15 @@ class ParseHandleTests {
 
         assertThat(node, isHandle(
             handlers = isSequence(
-                isPair(isIdentifier("throw"), allOf(
-                    has(FunctionExpressionNode::body, isBlock(
-                        isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_RETURN)),
-                        isExpressionStatement(isIntLiteral(42), type = equalTo(ExpressionStatementNode.Type.RETURN))
-                    ))
-                ))
+                isHandler(
+                    operationName = isIdentifier("throw"),
+                    function = allOf(
+                        has(FunctionExpressionNode::body, isBlock(
+                            isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_RETURN)),
+                            isExpressionStatement(isIntLiteral(42), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                        ))
+                    )
+                )
             )
         ))
     }

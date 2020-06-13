@@ -271,11 +271,20 @@ fun fieldName(
 fun handle(
     effect: StaticExpressionNode = staticReference("Eff"),
     body: Block,
-    handlers: List<Pair<Identifier, FunctionExpressionNode>>
+    handlers: List<HandlerNode>
 ) = HandleNode(
     effect = effect,
     body = body,
     handlers = handlers,
+    source = anySource()
+)
+
+fun handler(
+    operationName: String,
+    function: FunctionExpressionNode
+) = HandlerNode(
+    operationName = Identifier(operationName),
+    function = function,
     source = anySource()
 )
 

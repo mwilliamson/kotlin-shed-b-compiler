@@ -1318,21 +1318,26 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val handlers = parseMany(
         parseElement = { tokens ->
+            val handlerSource = tokens.location()
             tokens.skip(TokenType.SYMBOL_DOT)
             val operationName = parseIdentifier(tokens)
             tokens.skip(TokenType.SYMBOL_EQUALS)
 
-            val handlerSource = tokens.location()
+            val handlerFunctionSource = tokens.location()
             val handlerParameters = parseParameters(tokens)
             val handlerBody = parseHandlerBody(tokens)
-            operationName to FunctionExpressionNode(
-                staticParameters = listOf(),
-                parameters = handlerParameters.positional,
-                namedParameters = handlerParameters.named,
-                effects = listOf(),
-                returnType = null,
-                inferReturnType = true,
-                body = handlerBody,
+            HandlerNode(
+                operationName = operationName,
+                function = FunctionExpressionNode(
+                    staticParameters = listOf(),
+                    parameters = handlerParameters.positional,
+                    namedParameters = handlerParameters.named,
+                    effects = listOf(),
+                    returnType = null,
+                    inferReturnType = true,
+                    body = handlerBody,
+                    source = handlerFunctionSource
+                ),
                 source = handlerSource
             )
         },

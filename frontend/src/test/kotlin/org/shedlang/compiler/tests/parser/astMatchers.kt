@@ -54,12 +54,20 @@ internal fun isWhenBranch(
 internal fun isHandle(
     effect: Matcher<StaticExpressionNode> = anything,
     body: Matcher<Block> = anything,
-    handlers: Matcher<List<Pair<Identifier, FunctionExpressionNode>>>
+    handlers: Matcher<List<HandlerNode>>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(HandleNode::effect, effect),
     has(HandleNode::body, body),
     has(HandleNode::handlers, handlers)
 ))
+
+internal fun isHandler(
+    operationName: Matcher<Identifier>,
+    function: Matcher<FunctionExpressionNode>
+) = allOf(
+    has(HandlerNode::operationName, operationName),
+    has(HandlerNode::function, function)
+)
 
 internal fun isBlock(vararg statements: Matcher<FunctionStatementNode>) = has(Block::statements, isSequence(*statements))
 

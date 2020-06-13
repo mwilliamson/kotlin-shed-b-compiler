@@ -32,12 +32,12 @@ class TypeCheckHandleTests {
                 expressionStatementReturn(call(functionReference, hasEffect = true))
             )),
             handlers = listOf(
-                Identifier("throw") to functionExpression(
+                handler("throw", functionExpression(
                     body = listOf(
                         expressionStatementReturn(member2Reference)
                     ),
                     inferReturnType = true
-                )
+                ))
             )
         )
 
@@ -72,12 +72,12 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                Identifier("throw") to functionExpression(
+                handler("throw", functionExpression(
                     body = listOf(
                         expressionStatementNoReturn(call(functionReference, hasEffect = true))
                     ),
                     inferReturnType = true
-                )
+                ))
             )
         )
 
@@ -129,11 +129,11 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                Identifier("throw") to functionExpression(
+                handler("throw", functionExpression(
                     parameters = listOf(parameter(type = booleanReference)),
                     body = listOf(),
                     inferReturnType = true
-                )
+                ))
             )
         )
 
@@ -170,10 +170,10 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                Identifier("throw") to functionExpression(
+                handler("throw", functionExpression(
                     body = listOf(),
                     inferReturnType = true
-                )
+                ))
             )
         )
 
@@ -229,14 +229,14 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                Identifier("throw") to functionExpression(
+                handler("throw", functionExpression(
                     body = listOf(),
                     inferReturnType = true
-                ),
-                Identifier("raise") to functionExpression(
+                )),
+                handler("raise", functionExpression(
                     body = listOf(),
                     inferReturnType = true
-                )
+                ))
             )
         )
 
