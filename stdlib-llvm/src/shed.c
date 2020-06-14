@@ -16,38 +16,55 @@ void shed_effect_handlers_discard() {
     effect_handler_stack = effect_handler_stack->next;
 }
 
-ShedValue shed_handle_computational_effect(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments) {
+ShedValue shed_operation_handler_exit(
+    struct EffectHandler* effect_handler,
+    OperationIndex operation_index,
+    void* context,
+    ShedValue* operation_arguments
+) {
     active_operation_arguments = operation_arguments;
     effect_handler_stack = effect_handler->next;
-    longjmp(*(jmp_buf*)effect_handler->context, 1 + operation_index);
+    longjmp(*(jmp_buf*)context, 1 + operation_index);
 }
 
-void shed_effect_handlers_push_effect_handler(
+//~ ShedValue shed_operation_handler_resume(struct EffectHandler* effect_handler, OperationIndex operation_index, ShedValue* operation_arguments) {
+    //~ // TODO: test switching of effect handler stack
+    //~ struct EffectHandler* previous_effect_handler_stack = effect_handler_stack;
+    //~ effect_handler_stack = effect_handler->next;
+
+    //~ struct UserDefinedEffectHandlerContext* context = effect_handler->context;
+    //~ struct ShedClosure* closure = &context->operation_handlers[operation_index];
+
+    //~ effect_handler_stack = previous_effect_handler_stack;
+//~ }
+
+struct EffectHandler* shed_effect_handlers_push(
     EffectId effect_id,
-    ShedValue (*handle)(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments),
-    void* context
+    OperationIndex operation_count
 ) {
-    struct EffectHandler* effect_handler = GC_malloc(sizeof(struct EffectHandler));
+    struct EffectHandler* effect_handler = GC_malloc(sizeof(struct EffectHandler) + operation_count * sizeof(struct OperationHandler));
     effect_handler->effect_id = effect_id;
     effect_handler->next = effect_handler_stack;
-    effect_handler->handle = handle;
-    effect_handler->context = context;
     effect_handler_stack = effect_handler;
+    return effect_handler;
 }
 
-jmp_buf* alloc_jmp_buf() {
-    return GC_malloc(sizeof(jmp_buf));
+void shed_effect_handlers_set_operation_handler(
+    struct EffectHandler* effect_handler,
+    OperationIndex operation_index,
+    OperationHandlerFunction* function,
+    void* context
+) {
+    effect_handler->operation_handlers[operation_index].function = function;
+    effect_handler->operation_handlers[operation_index].context = context;
 }
 
-void shed_effect_handlers_push(EffectId effect_id, jmp_buf* env) {
-    shed_effect_handlers_push_effect_handler(effect_id, &shed_handle_computational_effect, env);
-}
-
-ShedValue shed_effect_handlers_call(EffectId effect_id, size_t operation_index, ShedValue* operation_arguments) {
+ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedValue* operation_arguments) {
     struct EffectHandler* effect_handler = effect_handler_stack;
     while (effect_handler != NULL) {
         if (effect_handler->effect_id == effect_id) {
-            return effect_handler->handle(effect_handler, operation_index, operation_arguments);
+            struct OperationHandler* operation_handler = &effect_handler->operation_handlers[operation_index];
+            return operation_handler->function(effect_handler, operation_index, operation_handler->context, operation_arguments);
         } else {
             effect_handler = effect_handler->next;
         }

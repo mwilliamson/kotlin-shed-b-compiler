@@ -33,3 +33,6 @@ build-utf8proc:
 	curl -L https://github.com/JuliaStrings/utf8proc/archive/v2.4.0.tar.gz | tar xzf - -C stdlib-llvm/deps
 	cd stdlib-llvm/deps/utf8proc-2.4.0 && make
 
+stdlib-llvm/sizeof_jmp_buf.txt: stdlib-llvm/sizeof_jmp_buf.c
+	gcc stdlib-llvm/sizeof_jmp_buf.c -o stdlib-llvm/sizeof_jmp_buf
+	stdlib-llvm/sizeof_jmp_buf > stdlib-llvm/sizeof_jmp_buf.txt

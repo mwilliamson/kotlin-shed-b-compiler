@@ -7,9 +7,9 @@
 
 static EffectId effect_id = -10;
 
-static ShedValue handle_write(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments) {
+static ShedValue handle_write(struct EffectHandler* effect_handler, OperationIndex operation_index, void* context, ShedValue* operation_arguments) {
     ShedString value = *(ShedString*)operation_arguments;
-    string_builder_append(effect_handler->context, value->data, value->length);
+    string_builder_append(context, value->data, value->length);
     return shed_unit;
 }
 
@@ -19,7 +19,8 @@ ShedString Shed_Stdlib_Platform_StringBuilder_build(ShedEnvironment env, struct 
     struct StringBuilder string_builder;
     string_builder_init(&string_builder, initial_capacity);
 
-    shed_effect_handlers_push_effect_handler(effect_id, handle_write, &string_builder);
+    struct EffectHandler* effect_handler = shed_effect_handlers_push(effect_id, 1);
+    shed_effect_handlers_set_operation_handler(effect_handler, 0, handle_write, &string_builder);
 
     ShedValue (*func)(ShedEnvironment) = (ShedValue (*)(ShedEnvironment)) closure->function;
     func(closure->environment);
