@@ -106,6 +106,7 @@ internal class EffectCompiler(
                             ))
 
                         HandlerNode.Type.RESUME -> {
+                            // TODO: handle swapping of effect handler stack
                             val operationHandlerName = irBuilder.generateName("operationHandler")
                             val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
                             val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
