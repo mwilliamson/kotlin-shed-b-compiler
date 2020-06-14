@@ -51,7 +51,7 @@ struct EffectHandler {
 };
 
 void shed_effect_handlers_discard();
-void shed_effect_handlers_push(EffectId effect_id);
+void shed_effect_handlers_push(EffectId effect_id, jmp_buf* env);
 void shed_effect_handlers_push_effect_handler(
     EffectId effect_id,
     ShedValue (*handle)(struct EffectHandler* effect_handler, size_t operation_index, ShedValue* operation_arguments),

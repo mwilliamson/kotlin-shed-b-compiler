@@ -4,7 +4,10 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.types.ComputationalEffect
 import org.shedlang.compiler.types.FunctionType
 
-internal class EffectCompiler(private val irBuilder: LlvmIrBuilder) {
+internal class EffectCompiler(
+    private val irBuilder: LlvmIrBuilder,
+    private val libc: LibcCallCompiler
+) {
     private val effectIdType = LlvmTypes.i32
     private val operationIndexType = CTypes.size_t
     private val operationArgumentsPointerType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
@@ -19,17 +22,21 @@ internal class EffectCompiler(private val irBuilder: LlvmIrBuilder) {
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf(
-            LlvmParameter(type = effectIdType, name = "effect_id")
+            LlvmParameter(type = effectIdType, name = "effect_id"),
+            LlvmParameter(type = CTypes.jmpBufPointer, name = "env")
         )
     )
 
-    internal fun effectHandlersPush(effectId: Int): LlvmCall {
+    internal fun effectHandlersPush(effectId: Int, env: LlvmOperand): LlvmCall {
         return LlvmCall(
             target = null,
             functionPointer = LlvmOperandGlobal(effectHandlersPushDeclaration.name),
             callingConvention = effectHandlersPushDeclaration.callingConvention,
             returnType = effectHandlersPushDeclaration.returnType,
-            arguments = listOf(LlvmTypedOperand(effectIdType, LlvmOperandInt(effectId)))
+            arguments = listOf(
+                LlvmTypedOperand(effectIdType, LlvmOperandInt(effectId)),
+                LlvmTypedOperand(CTypes.jmpBufPointer, env)
+            )
         )
     }
 
@@ -89,8 +96,36 @@ internal class EffectCompiler(private val irBuilder: LlvmIrBuilder) {
         return listOf(cast, call)
     }
 
+    private val allocJmpBufDeclaration = LlvmFunctionDeclaration(
+        name = "alloc_jmp_buf",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = CTypes.jmpBufPointer,
+        parameters = listOf()
+    )
+
+    private fun allocJmpBuf(target: LlvmVariable): LlvmCall {
+        return LlvmCall(
+            target = target,
+            functionPointer = LlvmOperandGlobal(allocJmpBufDeclaration.name),
+            callingConvention = allocJmpBufDeclaration.callingConvention,
+            returnType = allocJmpBufDeclaration.returnType,
+            arguments = listOf()
+        )
+    }
+
+    internal fun setjmp(env: LlvmOperandLocal, target: LlvmOperandLocal): List<LlvmInstruction> {
+        return listOf(
+            allocJmpBuf(target = env),
+            libc.setjmp(
+                target = target,
+                env = env
+            )
+        )
+    }
+
     internal fun declarations(): List<LlvmTopLevelEntity> {
         return listOf(
+            allocJmpBufDeclaration,
             effectHandlersPushDeclaration,
             effectHandlersDiscardDeclaration,
             effectHandlersCallDeclaration,

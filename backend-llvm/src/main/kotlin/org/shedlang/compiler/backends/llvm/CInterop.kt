@@ -8,7 +8,7 @@ internal object CTypes {
     val stringPointer = LlvmTypes.pointer(char)
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
     val void = LlvmTypes.void
-    val jmp_buf = voidPointer
+    val jmpBufPointer = voidPointer
 }
 
 internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
@@ -131,7 +131,7 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         callingConvention = LlvmCallingConvention.ccc,
         returnType = setjmpReturnType,
         parameters = listOf(
-            LlvmParameter(CTypes.jmp_buf, "env")
+            LlvmParameter(CTypes.jmpBufPointer, "env")
         )
     )
 

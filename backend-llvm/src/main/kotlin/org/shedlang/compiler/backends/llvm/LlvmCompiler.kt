@@ -33,7 +33,7 @@ internal class Compiler(
         modules = modules,
         strings = strings
     )
-    private val effectCompiler = EffectCompiler(irBuilder = irBuilder)
+    private val effectCompiler = EffectCompiler(irBuilder = irBuilder, libc = libc)
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
@@ -400,13 +400,11 @@ internal class Compiler(
                 val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
 
                 val setjmpResult = generateLocal("setjmpResult")
+                val env = irBuilder.generateLocal("env")
                 val isNormalReturn = generateLocal("isNormalReturn")
                 val normalLabel = generateName("normal")
-                val setjmp = libc.setjmp(
-                    target = setjmpResult,
-                    env = LlvmOperandGlobal("shed_jmp_buf")
-                )
-                val effectHandlerPush = effectCompiler.effectHandlersPush(instruction.effect.definitionId)
+                val setjmp = effectCompiler.setjmp(env = env, target = setjmpResult)
+                val effectHandlerPush = effectCompiler.effectHandlersPush(instruction.effect.definitionId, env)
                 val operations = instruction.effect.operations.entries.sortedBy { (operationName, _) -> operationName }
                 val handlerLabels = operations.associate { (operationName, _) ->
                     operationName to generateName(operationName)
