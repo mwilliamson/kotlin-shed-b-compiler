@@ -434,35 +434,19 @@ internal class Compiler(
                         operations.foldIndexed(it) { operationIndex, context, (operationName, operationType) ->
                             val handlerResult = generateLocal("handlerResult")
                             val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
-                            val argumentPointers = (0 until parameterCount).map { argumentIndex ->
-                                generateLocal("argPointer" + argumentIndex)
-                            }
-                            val arguments = (0 until parameterCount).map { argumentIndex ->
-                                generateLocal("arg" + argumentIndex)
-                            }
-                            val argumentInstructions = (0 until parameterCount).flatMap { argumentIndex ->
-                                val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
-                                listOf(
-                                    LlvmLoad(
-                                        target = activeOperationArgumentsPointer,
-                                        pointer = LlvmOperandGlobal("active_operation_arguments"),
-                                        type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
-                                    ),
-                                    LlvmGetElementPtr(
-                                        target = argumentPointers[argumentIndex],
-                                        pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)),
-                                        pointer = activeOperationArgumentsPointer,
-                                        indices = listOf(LlvmIndex.i32(0), LlvmIndex.i32(argumentIndex))
-                                    ),
-                                    LlvmLoad(
-                                        target = arguments[argumentIndex],
-                                        pointer = argumentPointers[argumentIndex],
-                                        type = compiledValueType
-                                    )
-                                )
-                            }
+                            val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
+                            val loadPackedArgumentsPointer = LlvmLoad(
+                                target = activeOperationArgumentsPointer,
+                                pointer = LlvmOperandGlobal("active_operation_arguments"),
+                                type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
+                            )
+                            val (arguments, argumentInstructions) = effectCompiler.loadArguments(
+                                packedArgumentsPointer = activeOperationArgumentsPointer,
+                                parameterCount = parameterCount
+                            )
                             context
                                 .addInstructions(LlvmLabel(handlerLabels.getValue(operationName)))
+                                .addInstructions(loadPackedArgumentsPointer)
                                 .addInstructions(argumentInstructions)
                                 .addInstructions(closures.callClosure(
                                     target = handlerResult,

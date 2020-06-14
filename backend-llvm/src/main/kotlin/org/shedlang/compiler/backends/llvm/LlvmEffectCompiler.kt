@@ -106,4 +106,27 @@ internal class EffectCompiler(private val irBuilder: LlvmIrBuilder) {
             )
         )
     }
+
+    internal fun loadArguments(packedArgumentsPointer: LlvmOperand, parameterCount: Int): Pair<List<LlvmOperandLocal>, List<LlvmInstruction>> {
+        val arguments = (0 until parameterCount).map { argumentIndex ->
+            irBuilder.generateLocal("arg" + argumentIndex)
+        }
+        val argumentInstructions = (0 until parameterCount).flatMap { argumentIndex ->
+            val packageArgumentPointer = irBuilder.generateLocal("argPointer" + argumentIndex)
+            listOf(
+                LlvmGetElementPtr(
+                    target = packageArgumentPointer,
+                    pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)),
+                    pointer = packedArgumentsPointer,
+                    indices = listOf(LlvmIndex.i32(0), LlvmIndex.i32(argumentIndex))
+                ),
+                LlvmLoad(
+                    target = arguments[argumentIndex],
+                    pointer = packageArgumentPointer,
+                    type = compiledValueType
+                )
+            )
+        }
+        return Pair(arguments, argumentInstructions)
+    }
 }
