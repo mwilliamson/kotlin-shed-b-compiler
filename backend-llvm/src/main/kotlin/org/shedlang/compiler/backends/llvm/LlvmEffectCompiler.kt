@@ -1,14 +1,19 @@
 package org.shedlang.compiler.backends.llvm
 
+import kotlinx.collections.immutable.persistentListOf
+import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.types.ComputationalEffect
 import org.shedlang.compiler.types.FunctionType
 
 internal class EffectCompiler(
+    private val closures: ClosureCompiler,
     private val irBuilder: LlvmIrBuilder,
     private val libc: LibcCallCompiler
 ) {
     private val effectIdType = LlvmTypes.i32
+    private val effectHandlerType = CTypes.voidPointer
+    private val operationHandlerType = CTypes.voidPointer
     private val operationIndexType = CTypes.size_t
     private val operationArgumentsPointerType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
@@ -17,27 +22,145 @@ internal class EffectCompiler(
         return LlvmTypes.arrayType(size = parameterCount, elementType = compiledValueType)
     }
 
-    private val effectHandlersPushDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_push",
+    private val effectHandlersSetOperationHandlerDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_set_operation_handler",
         callingConvention = LlvmCallingConvention.ccc,
-        returnType = CTypes.void,
+        returnType = effectHandlerType,
         parameters = listOf(
-            LlvmParameter(type = effectIdType, name = "effect_id"),
-            LlvmParameter(type = CTypes.jmpBufPointer, name = "env")
+            LlvmParameter(type = effectHandlerType, name = "effect_handler"),
+            LlvmParameter(type = operationIndexType, name = "operation_index"),
+            LlvmParameter(type = operationHandlerType, name = "function"),
+            LlvmParameter(type = CTypes.voidPointer, name = "context")
         )
     )
 
-    internal fun effectHandlersPush(effectId: Int, env: LlvmOperand): LlvmCall {
+    private fun effectHandlersSetOperationHandler(
+        effectHandler: LlvmOperand,
+        operationIndex: Int,
+        operationHandlerFunction: LlvmOperand,
+        operationHandlerContext: LlvmOperand
+    ): LlvmInstruction {
         return LlvmCall(
             target = null,
-            functionPointer = LlvmOperandGlobal(effectHandlersPushDeclaration.name),
-            callingConvention = effectHandlersPushDeclaration.callingConvention,
-            returnType = effectHandlersPushDeclaration.returnType,
+            functionPointer = LlvmOperandGlobal(effectHandlersSetOperationHandlerDeclaration.name),
+            callingConvention = effectHandlersSetOperationHandlerDeclaration.callingConvention,
+            returnType = effectHandlersSetOperationHandlerDeclaration.returnType,
             arguments = listOf(
-                LlvmTypedOperand(effectIdType, LlvmOperandInt(effectId)),
-                LlvmTypedOperand(CTypes.jmpBufPointer, env)
+                LlvmTypedOperand(effectHandlerType, effectHandler),
+                LlvmTypedOperand(operationIndexType, LlvmOperandInt(operationIndex)),
+                LlvmTypedOperand(operationHandlerType, operationHandlerFunction),
+                LlvmTypedOperand(CTypes.voidPointer, operationHandlerContext)
             )
         )
+    }
+
+    private val effectHandlersPushDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_push",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = effectHandlerType,
+        parameters = listOf(
+            LlvmParameter(type = effectIdType, name = "effect_id"),
+            LlvmParameter(type = CTypes.int, name = "operation_count")
+        )
+    )
+
+    internal fun effectHandlersPush(
+        effect: ComputationalEffect,
+        operationHandlers: List<LlvmOperand>,
+        handlerTypes: List<HandlerNode.Type>,
+        setjmpEnv: LlvmOperand,
+        context: FunctionContext
+    ): FunctionContext {
+        val effectHandler = irBuilder.generateLocal("effectHandler")
+        val setjmpEnvAsVoidPointer = irBuilder.generateLocal("setjmpEnvVoidPointer")
+
+        val operations = effect.operations.entries.sortedBy { (operationName, _) -> operationName }
+        val operationTypes = operations.map { (_, operationType) -> operationType }
+
+        return context
+            .addInstructions(LlvmBitCast(
+                target = setjmpEnvAsVoidPointer,
+                targetType = CTypes.voidPointer,
+                value = setjmpEnv,
+                sourceType = CTypes.jmpBufPointer
+            ))
+            .addInstructions(LlvmCall(
+                target = effectHandler,
+                functionPointer = LlvmOperandGlobal(effectHandlersPushDeclaration.name),
+                callingConvention = effectHandlersPushDeclaration.callingConvention,
+                returnType = effectHandlersPushDeclaration.returnType,
+                arguments = listOf(
+                    LlvmTypedOperand(effectIdType, LlvmOperandInt(effect.definitionId)),
+                    LlvmTypedOperand(CTypes.int, LlvmOperandInt(effect.operations.size))
+                )
+            ))
+            .let {
+                handlerTypes.foldIndexed(it) { operationIndex, context, handlerType ->
+                    when (handlerType) {
+                        HandlerNode.Type.EXIT ->
+                            context.addInstructions(effectHandlersSetOperationHandler(
+                                effectHandler = effectHandler,
+                                operationIndex = operationIndex,
+                                operationHandlerFunction = LlvmOperandGlobal(operationHandlerExitDeclaration.name),
+                                operationHandlerContext = setjmpEnvAsVoidPointer
+                            ))
+
+                        HandlerNode.Type.RESUME -> {
+                            val operationHandlerName = irBuilder.generateName("operationHandler")
+                            val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
+                            val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
+                            val operationType = operationTypes[operationIndex]
+                            val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
+                            val closure = irBuilder.generateLocal("operationHandlerClosure")
+                            context
+                                .addTopLevelEntities(LlvmFunctionDefinition(
+                                    name = operationHandlerName,
+                                    returnType = compiledValueType,
+                                    parameters = listOf(
+                                        LlvmParameter(effectHandlerType, "effect_handler"),
+                                        LlvmParameter(operationIndexType, "operation_index"),
+                                        LlvmParameter(compiledValueType, "context"),
+                                        LlvmParameter(LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)), "operation_arguments")
+                                    ),
+                                    body = persistentListOf<LlvmInstruction>()
+                                        .addAll(callOperationHandler(
+                                            target = operationHandlerResult,
+                                            operationHandler = LlvmOperandLocal("context"),
+                                            operationType = operationType,
+                                            packedArgumentsPointer = LlvmOperandLocal("operation_arguments")
+                                        ))
+                                        .add(LlvmReturn(compiledValueType, operationHandlerResult))
+                                ))
+                                .addInstructions(LlvmBitCast(
+                                    target = operationHandlerAsVoidPointer,
+                                    targetType = operationHandlerType,
+                                    value = LlvmOperandGlobal(operationHandlerName),
+                                    sourceType = LlvmTypes.pointer(LlvmTypes.function(
+                                        parameterTypes = listOf(
+                                            effectHandlerType,
+                                            operationIndexType,
+                                            compiledValueType,
+                                            LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
+                                        ),
+                                        returnType = compiledValueType
+                                    ))
+                                ))
+                                .addInstructions(LlvmIntToPtr(
+                                    target = closure,
+                                    targetType = CTypes.voidPointer,
+                                    value = operationHandlers[operationIndex],
+                                    sourceType = compiledValueType
+                                ))
+                                .addInstructions(effectHandlersSetOperationHandler(
+                                    effectHandler = effectHandler,
+                                    operationIndex = operationIndex,
+                                    operationHandlerFunction = operationHandlerAsVoidPointer,
+                                    operationHandlerContext = closure
+                                ))
+                        }
+                    }
+                }
+            }
     }
 
     private val effectHandlersDiscardDeclaration = LlvmFunctionDeclaration(
@@ -96,44 +219,19 @@ internal class EffectCompiler(
         return listOf(cast, call)
     }
 
-    private val allocJmpBufDeclaration = LlvmFunctionDeclaration(
-        name = "alloc_jmp_buf",
-        callingConvention = LlvmCallingConvention.ccc,
-        returnType = CTypes.jmpBufPointer,
-        parameters = listOf()
+    private val operationHandlerExitDeclaration = LlvmGlobalDefinition(
+        name = "shed_operation_handler_exit",
+        type = operationHandlerType.type,
+        value = null
     )
-
-    private fun allocJmpBuf(target: LlvmVariable): LlvmCall {
-        return LlvmCall(
-            target = target,
-            functionPointer = LlvmOperandGlobal(allocJmpBufDeclaration.name),
-            callingConvention = allocJmpBufDeclaration.callingConvention,
-            returnType = allocJmpBufDeclaration.returnType,
-            arguments = listOf()
-        )
-    }
-
-    internal fun setjmp(env: LlvmOperandLocal, target: LlvmOperandLocal): List<LlvmInstruction> {
-        return listOf(
-            allocJmpBuf(target = env),
-            libc.setjmp(
-                target = target,
-                env = env
-            )
-        )
-    }
 
     internal fun declarations(): List<LlvmTopLevelEntity> {
         return listOf(
-            allocJmpBufDeclaration,
+            effectHandlersSetOperationHandlerDeclaration,
             effectHandlersPushDeclaration,
             effectHandlersDiscardDeclaration,
             effectHandlersCallDeclaration,
-            LlvmGlobalDefinition(
-                name = "shed_jmp_buf",
-                type = LlvmTypes.i8,
-                value = null
-            ),
+            operationHandlerExitDeclaration,
             LlvmGlobalDefinition(
                 name = "active_operation_arguments",
                 type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)),
@@ -142,7 +240,36 @@ internal class EffectCompiler(
         )
     }
 
-    internal fun loadArguments(packedArgumentsPointer: LlvmOperand, parameterCount: Int): Pair<List<LlvmOperandLocal>, List<LlvmInstruction>> {
+    internal fun callOperationHandler(
+        target: LlvmOperandLocal,
+        operationHandler: LlvmOperand,
+        operationType: FunctionType,
+        packedArgumentsPointer: LlvmOperand
+    ): List<LlvmInstruction> {
+        val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
+        val (arguments, argumentInstructions) = unpackArguments(
+            packedArgumentsPointer = packedArgumentsPointer,
+            parameterCount = parameterCount
+        )
+
+        return persistentListOf<LlvmInstruction>()
+            .addAll(argumentInstructions)
+            .addAll(closures.callClosure(
+                target = target,
+                closurePointer = operationHandler,
+                arguments = (0 until parameterCount).map { argumentIndex ->
+                    LlvmTypedOperand(
+                        type = compiledValueType,
+                        operand = arguments[argumentIndex]
+                    )
+                }
+            ))
+    }
+
+    private fun unpackArguments(
+        packedArgumentsPointer: LlvmOperand,
+        parameterCount: Int
+    ): Pair<List<LlvmOperandLocal>, List<LlvmInstruction>> {
         val arguments = (0 until parameterCount).map { argumentIndex ->
             irBuilder.generateLocal("arg" + argumentIndex)
         }

@@ -1,5 +1,7 @@
 package org.shedlang.compiler.backends.llvm
 
+import org.shedlang.compiler.findRoot
+
 internal object CTypes {
     val char = LlvmTypes.i8
     val int = LlvmTypes.i32
@@ -8,7 +10,15 @@ internal object CTypes {
     val stringPointer = LlvmTypes.pointer(char)
     val voidPointer = LlvmTypes.pointer(LlvmTypes.i8)
     val void = LlvmTypes.void
-    val jmpBufPointer = voidPointer
+    val jmpBuf by lazy {
+        LlvmTypes.arrayType(
+            size = findRoot().resolve("stdlib-llvm/sizeof_jmp_buf.txt").toFile().readText().trim().toInt(),
+            elementType = LlvmTypes.i8
+        )
+    }
+    val jmpBufPointer by lazy {
+        LlvmTypes.pointer(jmpBuf)
+    }
 }
 
 internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {

@@ -4,10 +4,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleName
-import org.shedlang.compiler.ast.NullSource
-import org.shedlang.compiler.ast.formatModuleName
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.StaticValueType
@@ -33,7 +30,11 @@ internal class Compiler(
         modules = modules,
         strings = strings
     )
-    private val effectCompiler = EffectCompiler(irBuilder = irBuilder, libc = libc)
+    private val effectCompiler = EffectCompiler(
+        closures = closures,
+        irBuilder = irBuilder,
+        libc = libc
+    )
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
@@ -400,19 +401,25 @@ internal class Compiler(
                 val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
 
                 val setjmpResult = generateLocal("setjmpResult")
-                val env = irBuilder.generateLocal("env")
+                val setjmpEnv = irBuilder.generateLocal("setjmpEnv")
                 val isNormalReturn = generateLocal("isNormalReturn")
                 val normalLabel = generateName("normal")
-                val setjmp = effectCompiler.setjmp(env = env, target = setjmpResult)
-                val effectHandlerPush = effectCompiler.effectHandlersPush(instruction.effect.definitionId, env)
                 val operations = instruction.effect.operations.entries.sortedBy { (operationName, _) -> operationName }
-                val handlerLabels = operations.associate { (operationName, _) ->
-                    operationName to generateName(operationName)
+                val handlerLabels = operations.map { (operationName, _) ->
+                    generateName(operationName)
                 }
                 val untilLabel = generateName("until")
 
                 return context2
-                    .addInstructions(setjmp)
+                    .addInstructions(libc.typedMalloc(
+                        target = setjmpEnv,
+                        bytes = CTypes.jmpBuf.byteSize,
+                        type = CTypes.jmpBufPointer
+                    ))
+                    .addInstructions(libc.setjmp(
+                        target = setjmpResult,
+                        env = setjmpEnv
+                    ))
                     .addInstructions(LlvmIcmp(
                         target = isNormalReturn,
                         conditionCode = LlvmIcmp.ConditionCode.EQ,
@@ -424,44 +431,54 @@ internal class Compiler(
                         type = libc.setjmpReturnType,
                         value = setjmpResult,
                         defaultLabel = normalLabel,
-                        destinations = listOf(0 to normalLabel) + operations.mapIndexed { operationIndex, (operationName, _) ->
-                            operationIndex + 1 to handlerLabels.getValue(operationName)
+                        destinations = listOf(0 to normalLabel) + instruction.handlerTypes.mapIndexedNotNull { operationIndex, handlerType ->
+                            when (handlerType) {
+                                HandlerNode.Type.EXIT ->
+                                    operationIndex + 1 to handlerLabels[operationIndex]
+                                HandlerNode.Type.RESUME ->
+                                    null
+                            }
                         }
                     ))
                     .let {
-                        operations.foldIndexed(it) { operationIndex, context, (operationName, operationType) ->
-                            val handlerResult = generateLocal("handlerResult")
-                            val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
-                            val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
-                            val loadPackedArgumentsPointer = LlvmLoad(
-                                target = activeOperationArgumentsPointer,
-                                pointer = LlvmOperandGlobal("active_operation_arguments"),
-                                type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
-                            )
-                            val (arguments, argumentInstructions) = effectCompiler.loadArguments(
-                                packedArgumentsPointer = activeOperationArgumentsPointer,
-                                parameterCount = parameterCount
-                            )
-                            context
-                                .addInstructions(LlvmLabel(handlerLabels.getValue(operationName)))
-                                .addInstructions(loadPackedArgumentsPointer)
-                                .addInstructions(argumentInstructions)
-                                .addInstructions(closures.callClosure(
-                                    target = handlerResult,
-                                    closurePointer = operationHandlers[operationIndex],
-                                    arguments = (0 until parameterCount).map { argumentIndex ->
-                                        LlvmTypedOperand(
-                                            type = compiledValueType,
-                                            operand = arguments[argumentIndex]
-                                        )
-                                    }
-                                ))
-                                .pushTemporary(handlerResult)
-                                .addInstructions(LlvmBrUnconditional(untilLabel))
+                        operations.foldIndexed(it) { operationIndex, context, (_, operationType) ->
+                            when (instruction.handlerTypes[operationIndex]) {
+                                HandlerNode.Type.RESUME ->
+                                    context
+                                HandlerNode.Type.EXIT -> {
+                                    val handlerResult = generateLocal("handlerResult")
+                                    val activeOperationArgumentsPointer = generateLocal("activeOperationArgumentsPointer")
+                                    val loadPackedArgumentsPointer = LlvmLoad(
+                                        target = activeOperationArgumentsPointer,
+                                        pointer = LlvmOperandGlobal("active_operation_arguments"),
+                                        type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
+                                    )
+                                    context
+                                        .addInstructions(LlvmLabel(handlerLabels[operationIndex]))
+                                        .addInstructions(loadPackedArgumentsPointer)
+                                        .addInstructions(effectCompiler.callOperationHandler(
+                                            target = handlerResult,
+                                            operationHandler = operationHandlers[operationIndex],
+                                            operationType = operationType,
+                                            packedArgumentsPointer = activeOperationArgumentsPointer
+                                        ))
+                                        .pushTemporary(handlerResult)
+                                        .addInstructions(LlvmBrUnconditional(untilLabel))
+                                }
+
+                            }
                         }
                     }
                     .addInstructions(LlvmLabel(normalLabel))
-                    .addInstructions(effectHandlerPush)
+                    .let {
+                        effectCompiler.effectHandlersPush(
+                            effect = instruction.effect,
+                            operationHandlers = operationHandlers,
+                            handlerTypes = instruction.handlerTypes,
+                            setjmpEnv = setjmpEnv,
+                            context = it
+                        )
+                    }
                     .let { compileInstructions(instruction.instructions, it) }
                     .addInstructions(effectCompiler.effectHandlersDiscard())
                     .addInstructions(LlvmBrUnconditional(untilLabel))
@@ -625,7 +642,11 @@ internal class Compiler(
             }
 
             is Resume -> {
-                throw UnsupportedOperationException()
+                val (context2, returnVariable) = context.popTemporary()
+
+                return context2.addInstructions(
+                    LlvmReturn(type = compiledValueType, value = returnVariable)
+                )
             }
 
             is Return -> {

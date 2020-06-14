@@ -17,5 +17,7 @@
 /stdlib-llvm/build/
 /stdlib-llvm/deps/gc-8.0.4/
 /stdlib-llvm/deps/utf8proc-2.4.0/
+/stdlib-llvm/sizeof_jmp_buf
+stdlib-llvm/sizeof_jmp_buf.txt
 /testing/target
 shedDependencies
