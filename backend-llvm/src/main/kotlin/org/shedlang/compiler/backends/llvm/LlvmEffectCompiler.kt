@@ -110,7 +110,6 @@ internal class EffectCompiler(
                             val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
                             val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
                             val operationType = operationTypes[operationIndex]
-                            val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
                             val closure = irBuilder.generateLocal("operationHandlerClosure")
                             context
                                 .addTopLevelEntities(LlvmFunctionDefinition(
