@@ -60,7 +60,8 @@ internal class EffectCompiler(
         returnType = effectHandlerType,
         parameters = listOf(
             LlvmParameter(type = effectIdType, name = "effect_id"),
-            LlvmParameter(type = CTypes.int, name = "operation_count")
+            LlvmParameter(type = CTypes.int, name = "operation_count"),
+            LlvmParameter(type = CTypes.jmpBufPointer, name = "env")
         )
     )
 
@@ -72,93 +73,99 @@ internal class EffectCompiler(
         context: FunctionContext
     ): FunctionContext {
         val effectHandler = irBuilder.generateLocal("effectHandler")
-        val setjmpEnvAsVoidPointer = irBuilder.generateLocal("setjmpEnvVoidPointer")
 
         val operations = effect.operations.entries.sortedBy { (operationName, _) -> operationName }
         val operationTypes = operations.map { (_, operationType) -> operationType }
 
         return context
-            .addInstructions(LlvmBitCast(
-                target = setjmpEnvAsVoidPointer,
-                targetType = CTypes.voidPointer,
-                value = setjmpEnv,
-                sourceType = CTypes.jmpBufPointer
-            ))
-            .addInstructions(LlvmCall(
+            .addInstructions(libc.call(
                 target = effectHandler,
-                functionPointer = LlvmOperandGlobal(effectHandlersPushDeclaration.name),
-                callingConvention = effectHandlersPushDeclaration.callingConvention,
-                returnType = effectHandlersPushDeclaration.returnType,
+                function = effectHandlersPushDeclaration,
                 arguments = listOf(
-                    LlvmTypedOperand(effectIdType, LlvmOperandInt(effect.definitionId)),
-                    LlvmTypedOperand(CTypes.int, LlvmOperandInt(effect.operations.size))
+                    LlvmOperandInt(effect.definitionId),
+                    LlvmOperandInt(effect.operations.size),
+                    setjmpEnv
                 )
             ))
             .let {
                 handlerTypes.foldIndexed(it) { operationIndex, context, handlerType ->
-                    when (handlerType) {
-                        HandlerNode.Type.EXIT ->
-                            context.addInstructions(effectHandlersSetOperationHandler(
-                                effectHandler = effectHandler,
-                                operationIndex = operationIndex,
-                                operationHandlerFunction = LlvmOperandGlobal(operationHandlerExitDeclaration.name),
-                                operationHandlerContext = setjmpEnvAsVoidPointer
-                            ))
+                    val operationHandlerName = irBuilder.generateName("operationHandler")
+                    val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
+                    val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
+                    val operationType = operationTypes[operationIndex]
+                    val closure = irBuilder.generateLocal("operationHandlerClosure")
+                    val previousEffectHandlerStack = irBuilder.generateLocal("previousEffectHandlerStack")
 
-                        HandlerNode.Type.RESUME -> {
-                            // TODO: handle swapping of effect handler stack
-                            val operationHandlerName = irBuilder.generateName("operationHandler")
-                            val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
-                            val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
-                            val operationType = operationTypes[operationIndex]
-                            val closure = irBuilder.generateLocal("operationHandlerClosure")
-                            context
-                                .addTopLevelEntities(LlvmFunctionDefinition(
-                                    name = operationHandlerName,
-                                    returnType = compiledValueType,
-                                    parameters = listOf(
-                                        LlvmParameter(effectHandlerType, "effect_handler"),
-                                        LlvmParameter(operationIndexType, "operation_index"),
-                                        LlvmParameter(compiledValueType, "context"),
-                                        LlvmParameter(LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)), "operation_arguments")
-                                    ),
-                                    body = persistentListOf<LlvmInstruction>()
-                                        .addAll(callOperationHandler(
-                                            target = operationHandlerResult,
-                                            operationHandler = LlvmOperandLocal("context"),
-                                            operationType = operationType,
-                                            packedArgumentsPointer = LlvmOperandLocal("operation_arguments")
-                                        ))
-                                        .add(LlvmReturn(compiledValueType, operationHandlerResult))
-                                ))
-                                .addInstructions(LlvmBitCast(
-                                    target = operationHandlerAsVoidPointer,
-                                    targetType = operationHandlerType,
-                                    value = LlvmOperandGlobal(operationHandlerName),
-                                    sourceType = LlvmTypes.pointer(LlvmTypes.function(
-                                        parameterTypes = listOf(
-                                            effectHandlerType,
-                                            operationIndexType,
-                                            compiledValueType,
-                                            LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
-                                        ),
-                                        returnType = compiledValueType
-                                    ))
-                                ))
-                                .addInstructions(LlvmIntToPtr(
-                                    target = closure,
-                                    targetType = CTypes.voidPointer,
-                                    value = operationHandlers[operationIndex],
-                                    sourceType = compiledValueType
-                                ))
-                                .addInstructions(effectHandlersSetOperationHandler(
-                                    effectHandler = effectHandler,
-                                    operationIndex = operationIndex,
-                                    operationHandlerFunction = operationHandlerAsVoidPointer,
-                                    operationHandlerContext = closure
-                                ))
-                        }
+                    val returnInstructions = when (handlerType) {
+                        HandlerNode.Type.EXIT ->
+                            listOf(
+                                libc.call(
+                                    target = null,
+                                    function = operationHandlerExitDeclaration,
+                                    arguments = listOf(
+                                        LlvmOperandLocal("effect_handler"),
+                                        operationHandlerResult
+                                    )
+                                ),
+                                LlvmUnreachable
+                            )
+
+                        HandlerNode.Type.RESUME ->
+                            listOf(
+                                restore(previousEffectHandlerStack),
+                                LlvmReturn(compiledValueType, operationHandlerResult)
+                            )
                     }
+
+                    context
+                        .addTopLevelEntities(LlvmFunctionDefinition(
+                            name = operationHandlerName,
+                            returnType = compiledValueType,
+                            parameters = listOf(
+                                LlvmParameter(effectHandlerType, "effect_handler"),
+                                LlvmParameter(operationIndexType, "operation_index"),
+                                LlvmParameter(compiledValueType, "context"),
+                                LlvmParameter(LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)), "operation_arguments")
+                            ),
+                            body = persistentListOf<LlvmInstruction>()
+                                .add(enter(
+                                    target = previousEffectHandlerStack,
+                                    effectHandler = LlvmOperandLocal("effect_handler")
+                                ))
+                                .addAll(callOperationHandler(
+                                    target = operationHandlerResult,
+                                    operationHandler = LlvmOperandLocal("context"),
+                                    operationType = operationType,
+                                    packedArgumentsPointer = LlvmOperandLocal("operation_arguments")
+                                ))
+                                .addAll(returnInstructions)
+                        ))
+                        .addInstructions(LlvmBitCast(
+                            target = operationHandlerAsVoidPointer,
+                            targetType = operationHandlerType,
+                            value = LlvmOperandGlobal(operationHandlerName),
+                            sourceType = LlvmTypes.pointer(LlvmTypes.function(
+                                parameterTypes = listOf(
+                                    effectHandlerType,
+                                    operationIndexType,
+                                    compiledValueType,
+                                    LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
+                                ),
+                                returnType = compiledValueType
+                            ))
+                        ))
+                        .addInstructions(LlvmIntToPtr(
+                            target = closure,
+                            targetType = CTypes.voidPointer,
+                            value = operationHandlers[operationIndex],
+                            sourceType = compiledValueType
+                        ))
+                        .addInstructions(effectHandlersSetOperationHandler(
+                            effectHandler = effectHandler,
+                            operationIndex = operationIndex,
+                            operationHandlerFunction = operationHandlerAsVoidPointer,
+                            operationHandlerContext = closure
+                        ))
                 }
             }
     }
@@ -219,26 +226,15 @@ internal class EffectCompiler(
         return listOf(cast, call)
     }
 
-    private val operationHandlerExitDeclaration = LlvmGlobalDefinition(
+    private val operationHandlerExitDeclaration = LlvmFunctionDeclaration(
         name = "shed_operation_handler_exit",
-        type = operationHandlerType.type,
-        value = null
+        returnType = LlvmTypes.void,
+        parameters = listOf(
+            LlvmParameter(effectHandlerType, "effect_handler"),
+            LlvmParameter(compiledValueType, "exit_value")
+        ),
+        noReturn = true
     )
-
-    internal fun declarations(): List<LlvmTopLevelEntity> {
-        return listOf(
-            effectHandlersSetOperationHandlerDeclaration,
-            effectHandlersPushDeclaration,
-            effectHandlersDiscardDeclaration,
-            effectHandlersCallDeclaration,
-            operationHandlerExitDeclaration,
-            LlvmGlobalDefinition(
-                name = "active_operation_arguments",
-                type = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)),
-                value = null
-            )
-        )
-    }
 
     internal fun callOperationHandler(
         target: LlvmOperandLocal,
@@ -290,5 +286,66 @@ internal class EffectCompiler(
             )
         }
         return Pair(arguments, argumentInstructions)
+    }
+
+    private val effectHandlersEnterDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_enter",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = effectHandlerType,
+        parameters = listOf(
+            LlvmParameter(type = effectHandlerType, name = "effect_handler")
+        )
+    )
+
+    internal fun enter(target: LlvmOperandLocal, effectHandler: LlvmOperand): LlvmInstruction {
+        return libc.call(
+            target = target,
+            function = effectHandlersEnterDeclaration,
+            arguments = listOf(effectHandler)
+        )
+    }
+
+    private val effectHandlersRestoreDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_restore",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = CTypes.void,
+        parameters = listOf(
+            LlvmParameter(type = effectHandlerType, name = "effect_handler")
+        )
+    )
+
+    internal fun restore(effectHandler: LlvmOperand): LlvmInstruction {
+        return libc.call(
+            target = null,
+            function = effectHandlersRestoreDeclaration,
+            arguments = listOf(effectHandler)
+        )
+    }
+
+    private val exitValueDeclaration = LlvmGlobalDefinition(
+        name = "shed_exit_value",
+        type = compiledValueType,
+        value = null
+    )
+
+    internal fun loadExitValue(target: LlvmVariable): LlvmLoad {
+        return LlvmLoad(
+            target = target,
+            type = compiledValueType,
+            pointer = LlvmOperandGlobal(exitValueDeclaration.name)
+        )
+    }
+
+    internal fun declarations(): List<LlvmTopLevelEntity> {
+        return listOf(
+            effectHandlersSetOperationHandlerDeclaration,
+            effectHandlersPushDeclaration,
+            effectHandlersDiscardDeclaration,
+            effectHandlersCallDeclaration,
+            effectHandlersEnterDeclaration,
+            effectHandlersRestoreDeclaration,
+            operationHandlerExitDeclaration,
+            exitValueDeclaration
+        )
     }
 }

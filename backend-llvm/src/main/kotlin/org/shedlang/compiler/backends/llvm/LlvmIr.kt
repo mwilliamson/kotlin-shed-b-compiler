@@ -185,12 +185,18 @@ internal data class LlvmCall(
     val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
     val returnType: LlvmType,
     val functionPointer: LlvmOperand,
-    val arguments: List<LlvmTypedOperand>
+    val arguments: List<LlvmTypedOperand>,
+    val noReturn: Boolean = false
 ): LlvmInstruction {
     override fun serialise(): String {
         val prefix = if (target == null) { "" } else { "${target.serialise()} = " }
         val argumentsString = arguments.joinToString(", ") { argument -> argument.serialise() }
-        return "${prefix}call $callingConvention ${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)"
+        val attributesString = if (noReturn) {
+            " noreturn"
+        } else {
+            ""
+        }
+        return "${prefix}call $callingConvention ${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)$attributesString"
     }
 }
 
@@ -394,6 +400,12 @@ internal data class LlvmTrunc(
     }
 }
 
+internal object LlvmUnreachable: LlvmInstruction {
+    override fun serialise(): String {
+        return "unreachable"
+    }
+}
+
 internal data class LlvmZext(
     val target: LlvmVariable,
     val sourceType: LlvmType,
@@ -432,7 +444,8 @@ internal data class LlvmFunctionDeclaration(
     val returnType: LlvmType,
     val parameters: List<LlvmParameter>,
     val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
-    val hasVarargs: Boolean = false
+    val hasVarargs: Boolean = false,
+    val noReturn: Boolean = false
 ): LlvmTopLevelEntity {
     fun type(): LlvmType {
         return LlvmTypes.function(
@@ -448,7 +461,13 @@ internal data class LlvmFunctionDeclaration(
         } + if (hasVarargs) listOf("...") else listOf()
         val parametersString = parameterStrings.joinToString(", ")
 
-        return "declare $callingConvention ${returnType.serialise()} @$name($parametersString)\n"
+        val attributesString = if (noReturn) {
+            " noreturn"
+        } else {
+            ""
+        }
+
+        return "declare $callingConvention ${returnType.serialise()} @$name($parametersString)$attributesString\n"
     }
 }
 
@@ -493,6 +512,8 @@ internal fun isTerminator(instruction: LlvmInstruction): Boolean {
         is LlvmBrUnconditional -> true
         is LlvmReturn -> true
         is LlvmReturnVoid -> true
+        is LlvmSwitch -> true
+        is LlvmUnreachable -> true
         else -> false
     }
 }

@@ -162,7 +162,8 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
             functionPointer = LlvmOperandGlobal(function.name),
             arguments = function.parameters.zip(arguments) { parameter, argument ->
                 LlvmTypedOperand(parameter.type, argument)
-            } + varargs.orEmpty()
+            } + varargs.orEmpty(),
+            noReturn = function.noReturn
         )
     }
 

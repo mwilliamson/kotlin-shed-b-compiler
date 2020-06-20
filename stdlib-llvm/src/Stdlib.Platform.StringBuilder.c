@@ -19,7 +19,7 @@ ShedString Shed_Stdlib_Platform_StringBuilder_build(ShedEnvironment env, struct 
     struct StringBuilder string_builder;
     string_builder_init(&string_builder, initial_capacity);
 
-    struct EffectHandler* effect_handler = shed_effect_handlers_push(effect_id, 1);
+    struct EffectHandler* effect_handler = shed_effect_handlers_push(effect_id, 1, 0);
     shed_effect_handlers_set_operation_handler(effect_handler, 0, handle_write, &string_builder);
 
     ShedValue (*func)(ShedEnvironment) = (ShedValue (*)(ShedEnvironment)) closure->function;

@@ -18,33 +18,21 @@ void shed_effect_handlers_discard() {
 
 ShedValue shed_operation_handler_exit(
     struct EffectHandler* effect_handler,
-    OperationIndex operation_index,
-    void* context,
-    ShedValue* operation_arguments
+    ShedValue exit_value
 ) {
-    active_operation_arguments = operation_arguments;
-    effect_handler_stack = effect_handler->next;
-    longjmp(*(jmp_buf*)context, 1 + operation_index);
+    shed_exit_value = exit_value;
+    longjmp(*effect_handler->env, 1);
 }
-
-//~ ShedValue shed_operation_handler_resume(struct EffectHandler* effect_handler, OperationIndex operation_index, ShedValue* operation_arguments) {
-    //~ // TODO: test switching of effect handler stack
-    //~ struct EffectHandler* previous_effect_handler_stack = effect_handler_stack;
-    //~ effect_handler_stack = effect_handler->next;
-
-    //~ struct UserDefinedEffectHandlerContext* context = effect_handler->context;
-    //~ struct ShedClosure* closure = &context->operation_handlers[operation_index];
-
-    //~ effect_handler_stack = previous_effect_handler_stack;
-//~ }
 
 struct EffectHandler* shed_effect_handlers_push(
     EffectId effect_id,
-    OperationIndex operation_count
+    OperationIndex operation_count,
+    jmp_buf* env
 ) {
     struct EffectHandler* effect_handler = GC_malloc(sizeof(struct EffectHandler) + operation_count * sizeof(struct OperationHandler));
     effect_handler->effect_id = effect_id;
     effect_handler->next = effect_handler_stack;
+    effect_handler->env = env;
     effect_handler_stack = effect_handler;
     return effect_handler;
 }
@@ -70,4 +58,14 @@ ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation
         }
     }
     return shed_unit;
+}
+
+struct EffectHandler* shed_effect_handlers_enter(struct EffectHandler* effect_handler) {
+    struct EffectHandler* previous_stack = effect_handler_stack;
+    effect_handler_stack = effect_handler->next;
+    return previous_stack;
+}
+
+void shed_effect_handlers_restore(struct EffectHandler* effect_handler) {
+    effect_handler_stack = effect_handler;
 }

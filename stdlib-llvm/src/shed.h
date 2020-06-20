@@ -42,7 +42,7 @@ struct ShedClosure {
 typedef uint32_t EffectId;
 typedef size_t OperationIndex;
 
-ShedValue* active_operation_arguments;
+ShedValue shed_exit_value;
 
 struct EffectHandler;
 
@@ -61,11 +61,12 @@ struct OperationHandler {
 struct EffectHandler {
     EffectId effect_id;
     struct EffectHandler* next;
+    jmp_buf* env;
     struct OperationHandler operation_handlers[];
 };
 
 void shed_effect_handlers_discard();
-struct EffectHandler* shed_effect_handlers_push(EffectId effect_id, OperationIndex operation_count);
+struct EffectHandler* shed_effect_handlers_push(EffectId effect_id, OperationIndex operation_count, jmp_buf* env);
 void shed_effect_handlers_set_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index,
@@ -76,8 +77,6 @@ ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation
 
 ShedValue shed_operation_handler_exit(
     struct EffectHandler* effect_handler,
-    OperationIndex operation_index,
-    void* context,
-    ShedValue* operation_arguments
+    ShedValue exit_value
 );
 #endif
