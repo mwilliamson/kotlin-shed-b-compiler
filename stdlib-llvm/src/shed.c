@@ -52,7 +52,7 @@ ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation
     while (effect_handler != NULL) {
         if (effect_handler->effect_id == effect_id) {
             struct OperationHandler* operation_handler = &effect_handler->operation_handlers[operation_index];
-            return operation_handler->function(effect_handler, operation_index, operation_handler->context, operation_arguments);
+            return operation_handler->function(effect_handler, operation_handler->context, operation_arguments);
         } else {
             effect_handler = effect_handler->next;
         }

@@ -123,7 +123,6 @@ internal class EffectCompiler(
                             returnType = compiledValueType,
                             parameters = listOf(
                                 LlvmParameter(effectHandlerType, "effect_handler"),
-                                LlvmParameter(operationIndexType, "operation_index"),
                                 LlvmParameter(compiledValueType, "context"),
                                 LlvmParameter(LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)), "operation_arguments")
                             ),
@@ -147,7 +146,6 @@ internal class EffectCompiler(
                             sourceType = LlvmTypes.pointer(LlvmTypes.function(
                                 parameterTypes = listOf(
                                     effectHandlerType,
-                                    operationIndexType,
                                     compiledValueType,
                                     LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
                                 ),

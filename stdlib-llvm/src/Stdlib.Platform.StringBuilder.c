@@ -7,7 +7,7 @@
 
 static EffectId effect_id = -10;
 
-static ShedValue handle_write(struct EffectHandler* effect_handler, OperationIndex operation_index, void* context, ShedValue* operation_arguments) {
+static ShedValue handle_write(struct EffectHandler* effect_handler, void* context, ShedValue* operation_arguments) {
     ShedString value = *(ShedString*)operation_arguments;
     string_builder_append(context, value->data, value->length);
     return shed_unit;

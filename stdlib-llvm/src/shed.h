@@ -48,7 +48,6 @@ struct EffectHandler;
 
 typedef ShedValue (OperationHandlerFunction)(
     struct EffectHandler* effect_handler,
-    OperationIndex operation_index,
     void* context,
     ShedValue* operation_arguments
 );
