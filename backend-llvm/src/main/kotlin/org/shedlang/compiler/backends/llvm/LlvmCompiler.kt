@@ -34,7 +34,7 @@ internal class Compiler(
         modules = modules,
         strings = strings
     )
-    private val effectCompiler = EffectCompiler(
+    private val effects = EffectCompiler(
         closures = closures,
         irBuilder = irBuilder,
         libc = libc
@@ -79,7 +79,7 @@ internal class Compiler(
                 defineMainModule,
                 listOf(main),
                 libc.declarations(),
-                effectCompiler.declarations()
+                effects.declarations()
             ).flatten()
         )
 
@@ -342,7 +342,7 @@ internal class Compiler(
                                 LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
                             }
                             val operationArguments = generateLocal("arguments")
-                            val operationArgumentsType = effectCompiler.compiledOperationArgumentsType(operationType)
+                            val operationArgumentsType = effects.compiledOperationArgumentsType(operationType)
 
                             closures.createClosure(
                                 target = operationOperands.getValue(operationName),
@@ -378,7 +378,7 @@ internal class Compiler(
                                                 pointer = operationArgumentPointer
                                             ))
                                     })
-                                    .addAll(effectCompiler.effectHandlersCall(
+                                    .addAll(effects.effectHandlersCall(
                                         target = returnValue,
                                         effect = instruction.effect,
                                         operationName = operationName,
@@ -402,7 +402,7 @@ internal class Compiler(
             }
 
             is EffectHandle -> {
-                return effectCompiler.handle(
+                return effects.handle(
                     effect = instruction.effect,
                     compileBody = { context -> compileInstructions(instruction.instructions, context) },
                     handlerTypes = instruction.handlerTypes,
