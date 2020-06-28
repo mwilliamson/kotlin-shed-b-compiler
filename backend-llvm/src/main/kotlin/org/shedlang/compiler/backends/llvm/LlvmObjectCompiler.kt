@@ -13,7 +13,7 @@ internal class LlvmObjectCompiler(
         fields: List<Pair<Identifier, LlvmOperand>>,
         target: LlvmOperandLocal
     ): List<LlvmInstruction> {
-        val instance = LlvmOperandLocal(irBuilder.generateName("instance"))
+        val instance = irBuilder.generateLocal("instance")
         val compiledObjectType = compiledType(objectType = objectType)
         return listOf(
             libc.typedMalloc(
@@ -50,7 +50,7 @@ internal class LlvmObjectCompiler(
         val storeTagValue = if (tagValue == null) {
             listOf()
         } else {
-            val tagValuePointer = LlvmOperandLocal(irBuilder.generateName("tagValuePointer"))
+            val tagValuePointer = irBuilder.generateLocal("tagValuePointer")
 
             listOf(
                 tagValuePointer(
@@ -67,7 +67,7 @@ internal class LlvmObjectCompiler(
         }
 
         val storeFields = fields.flatMap { (fieldName, fieldValue) ->
-            val fieldPointer = LlvmOperandLocal(irBuilder.generateName("fieldPointer"))
+            val fieldPointer = irBuilder.generateLocal("fieldPointer")
 
             listOf(
                 fieldPointer(
@@ -88,7 +88,7 @@ internal class LlvmObjectCompiler(
     }
 
     internal fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: StaticValue, target: LlvmVariable): List<LlvmInstruction> {
-        val fieldPointerVariable = LlvmOperandLocal(irBuilder.generateName("fieldPointer"))
+        val fieldPointerVariable = irBuilder.generateLocal("fieldPointer")
 
         return listOf(
             fieldPointer(
@@ -111,8 +111,8 @@ internal class LlvmObjectCompiler(
     }
 
     internal fun tagValueAccess(target: LlvmVariable, operand: LlvmOperand): List<LlvmInstruction> {
-        val objectPointer = LlvmOperandLocal(irBuilder.generateName("objectPointer"))
-        val tagValuePointer = LlvmOperandLocal(irBuilder.generateName("tagValuePointer"))
+        val objectPointer = irBuilder.generateLocal("objectPointer")
+        val tagValuePointer = irBuilder.generateLocal("tagValuePointer")
 
         return listOf(
             LlvmIntToPtr(
