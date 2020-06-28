@@ -119,7 +119,7 @@ internal class EffectCompiler(
         )
     )
 
-    internal fun effectHandlersPush(
+    private fun effectHandlersPush(
         effect: ComputationalEffect,
         operationHandlers: List<LlvmOperand>,
         handlerTypes: List<HandlerNode.Type>,
@@ -229,7 +229,7 @@ internal class EffectCompiler(
         parameters = listOf()
     )
 
-    internal fun effectHandlersDiscard(): LlvmCall {
+    private fun effectHandlersDiscard(): LlvmCall {
         return LlvmCall(
             target = null,
             functionPointer = LlvmOperandGlobal(effectHandlersDiscardDeclaration.name),
@@ -288,7 +288,7 @@ internal class EffectCompiler(
         noReturn = true
     )
 
-    internal fun callOperationHandler(
+    private fun callOperationHandler(
         target: LlvmOperandLocal,
         operationHandler: LlvmOperand,
         operationType: FunctionType,
@@ -349,7 +349,7 @@ internal class EffectCompiler(
         )
     )
 
-    internal fun enter(target: LlvmOperandLocal, effectHandler: LlvmOperand): LlvmInstruction {
+    private fun enter(target: LlvmOperandLocal, effectHandler: LlvmOperand): LlvmInstruction {
         return libc.call(
             target = target,
             function = effectHandlersEnterDeclaration,
@@ -366,7 +366,7 @@ internal class EffectCompiler(
         )
     )
 
-    internal fun restore(effectHandler: LlvmOperand): LlvmInstruction {
+    private fun restore(effectHandler: LlvmOperand): LlvmInstruction {
         return libc.call(
             target = null,
             function = effectHandlersRestoreDeclaration,
@@ -380,7 +380,7 @@ internal class EffectCompiler(
         value = null
     )
 
-    internal fun loadExitValue(target: LlvmVariable): LlvmLoad {
+    private fun loadExitValue(target: LlvmVariable): LlvmLoad {
         return LlvmLoad(
             target = target,
             type = compiledValueType,
