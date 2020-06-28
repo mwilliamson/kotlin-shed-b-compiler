@@ -46,6 +46,10 @@ fun <T> Iterable<T>.distinctWith(areEqual: (T, T) -> Boolean): List<T> {
     return result
 }
 
+fun <T, R> Iterable<T>.flatMapIndexed(func: (Int, T) -> List<R>): List<R> {
+    return this.mapIndexed(func).flatten()
+}
+
 internal fun <T> Iterable<T>.isUnique(): Boolean {
     val list = toList()
     return list.toSet().size == list.size

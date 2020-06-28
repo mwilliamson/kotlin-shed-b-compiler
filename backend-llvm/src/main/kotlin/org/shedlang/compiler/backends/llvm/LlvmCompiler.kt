@@ -8,6 +8,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
+import org.shedlang.compiler.flatMapIndexed
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.StaticValueType
@@ -1198,7 +1199,3 @@ fun withLineNumbers(source: String): String {
 }
 
 internal val compiledUnitValue = LlvmOperandInt(0)
-
-private fun <T, R> Iterable<T>.flatMapIndexed(func: (Int, T) -> List<R>): List<R> {
-    return this.mapIndexed(func).flatten()
-}
