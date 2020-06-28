@@ -50,7 +50,10 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     )
 
     private fun malloc(target: LlvmOperandLocal, size: LlvmOperand): LlvmCall {
-        return call(mallocDeclaration, target = target, arguments = listOf(size))
+        return mallocDeclaration.call(
+            target = target,
+            arguments = listOf(size)
+        )
     }
 
     private val memcmpDeclaration = LlvmFunctionDeclaration(
@@ -65,7 +68,10 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     )
 
     internal fun memcmp(target: LlvmOperandLocal, s1: LlvmOperand, s2: LlvmOperand, n: LlvmOperand): LlvmCall {
-        return call(memcmpDeclaration, target = target, arguments = listOf(s1, s2, n))
+        return memcmpDeclaration.call(
+            target = target,
+            arguments = listOf(s1, s2, n)
+        )
     }
 
     private val memcpyDeclaration = LlvmFunctionDeclaration(
@@ -80,7 +86,10 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     )
 
     internal fun memcpy(target: LlvmOperandLocal?, dest: LlvmOperand, src: LlvmOperand, n: LlvmOperand): LlvmCall {
-        return call(memcpyDeclaration, target = target, arguments = listOf(dest, src, n))
+        return memcpyDeclaration.call(
+            target = target,
+            arguments = listOf(dest, src, n)
+        )
     }
 
     private val printfDeclaration = LlvmFunctionDeclaration(
@@ -94,7 +103,11 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     )
 
     internal fun printf(target: LlvmOperandLocal?, format: LlvmOperand, args: List<LlvmTypedOperand>): LlvmCall {
-        return call(printfDeclaration, target = null, arguments = listOf(format), varargs = args)
+        return printfDeclaration.call(
+            target = null,
+            arguments = listOf(format),
+            varargs = args
+        )
     }
 
     private val snprintfDeclaration = LlvmFunctionDeclaration(
@@ -116,7 +129,11 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         format: LlvmOperand,
         args: List<LlvmTypedOperand>
     ): LlvmInstruction {
-        return call(snprintfDeclaration, target = target, arguments = listOf(str, size, format), varargs = args)
+        return snprintfDeclaration.call(
+            target = target,
+            arguments = listOf(str, size, format),
+            varargs = args
+        )
     }
 
     private val writeDeclaration = LlvmFunctionDeclaration(
@@ -132,7 +149,10 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
 
     internal fun write(fd: LlvmOperand, buf: LlvmOperand, count: LlvmOperand): LlvmCall {
         // TODO: handle number of bytes written less than count
-        return call(writeDeclaration, target = null, arguments = listOf(fd, buf, count))
+        return writeDeclaration.call(
+            target = null,
+            arguments = listOf(fd, buf, count)
+        )
     }
 
     internal val setjmpReturnType = CTypes.int
@@ -146,24 +166,9 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
     )
 
     internal fun setjmp(target: LlvmOperandLocal, env: LlvmOperand): LlvmCall {
-        return call(setjmpDeclaration, target = target, arguments = listOf(env))
-    }
-
-    internal fun call(
-        function: LlvmFunctionDeclaration,
-        target: LlvmVariable?,
-        arguments: List<LlvmOperand>,
-        varargs: List<LlvmTypedOperand>? = null
-    ): LlvmCall {
-        return LlvmCall(
+        return setjmpDeclaration.call(
             target = target,
-            callingConvention = function.callingConvention,
-            returnType = if (varargs == null) function.returnType else function.type(),
-            functionPointer = LlvmOperandGlobal(function.name),
-            arguments = function.parameters.zip(arguments) { parameter, argument ->
-                LlvmTypedOperand(parameter.type, argument)
-            } + varargs.orEmpty(),
-            noReturn = function.noReturn
+            arguments = listOf(env)
         )
     }
 

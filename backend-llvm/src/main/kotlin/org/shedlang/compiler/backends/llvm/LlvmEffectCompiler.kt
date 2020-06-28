@@ -94,9 +94,8 @@ internal class EffectCompiler(
         operationHandlerFunction: LlvmOperand,
         operationHandlerContext: LlvmOperand
     ): LlvmInstruction {
-        return libc.call(
+        return effectHandlersSetOperationHandlerDeclaration.call(
             target = null,
-            function = effectHandlersSetOperationHandlerDeclaration,
             arguments = listOf(
                 effectHandler,
                 LlvmOperandInt(operationIndex),
@@ -130,14 +129,13 @@ internal class EffectCompiler(
         val operationTypes = operations.map { (_, operationType) -> operationType }
 
         return context
-            .addInstructions(libc.call(
+            .addInstructions(effectHandlersPushDeclaration.call(
                 target = effectHandler,
-                function = effectHandlersPushDeclaration,
                 arguments = listOf(
-                    LlvmOperandInt(effect.definitionId),
-                    LlvmOperandInt(effect.operations.size),
-                    setjmpEnv
-                )
+                        LlvmOperandInt(effect.definitionId),
+                        LlvmOperandInt(effect.operations.size),
+                        setjmpEnv
+                    )
             ))
             .let {
                 handlerTypes.foldIndexed(it) { operationIndex, context, handlerType ->
@@ -151,13 +149,12 @@ internal class EffectCompiler(
                     val returnInstructions = when (handlerType) {
                         HandlerNode.Type.EXIT ->
                             listOf(
-                                libc.call(
+                                operationHandlerExitDeclaration.call(
                                     target = null,
-                                    function = operationHandlerExitDeclaration,
                                     arguments = listOf(
-                                        LlvmOperandLocal("effect_handler"),
-                                        operationHandlerResult
-                                    )
+                                                                LlvmOperandLocal("effect_handler"),
+                                                                operationHandlerResult
+                                                            )
                                 ),
                                 LlvmUnreachable
                             )
@@ -228,9 +225,8 @@ internal class EffectCompiler(
     )
 
     private fun effectHandlersDiscard(): LlvmCall {
-        return libc.call(
+        return effectHandlersDiscardDeclaration.call(
             target = null,
-            function = effectHandlersDiscardDeclaration,
             arguments = listOf()
         )
     }
@@ -260,9 +256,8 @@ internal class EffectCompiler(
             targetType = operationArgumentsPointerType
         )
         val operationIndex = effect.operations.keys.sorted().indexOf(operationName)
-        val call = libc.call(
+        val call = effectHandlersCallDeclaration.call(
             target = target,
-            function = effectHandlersCallDeclaration,
             arguments = listOf(
                 LlvmOperandInt(effect.definitionId),
                 LlvmOperandInt(operationIndex),
@@ -344,9 +339,8 @@ internal class EffectCompiler(
     )
 
     private fun enter(target: LlvmOperandLocal, effectHandler: LlvmOperand): LlvmInstruction {
-        return libc.call(
+        return effectHandlersEnterDeclaration.call(
             target = target,
-            function = effectHandlersEnterDeclaration,
             arguments = listOf(effectHandler)
         )
     }
@@ -361,9 +355,8 @@ internal class EffectCompiler(
     )
 
     private fun restore(effectHandler: LlvmOperand): LlvmInstruction {
-        return libc.call(
+        return effectHandlersRestoreDeclaration.call(
             target = null,
-            function = effectHandlersRestoreDeclaration,
             arguments = listOf(effectHandler)
         )
     }

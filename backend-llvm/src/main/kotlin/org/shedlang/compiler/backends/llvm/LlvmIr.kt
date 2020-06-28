@@ -447,7 +447,24 @@ internal data class LlvmFunctionDeclaration(
     val hasVarargs: Boolean = false,
     val noReturn: Boolean = false
 ): LlvmTopLevelEntity {
-    fun type(): LlvmType {
+    internal fun call(
+        target: LlvmVariable?,
+        arguments: List<LlvmOperand>,
+        varargs: List<LlvmTypedOperand>? = null
+    ): LlvmCall {
+        return LlvmCall(
+            target = target,
+            callingConvention = callingConvention,
+            returnType = if (varargs == null) returnType else type(),
+            functionPointer = LlvmOperandGlobal(name),
+            arguments = parameters.zip(arguments) { parameter, argument ->
+                LlvmTypedOperand(parameter.type, argument)
+            } + varargs.orEmpty(),
+            noReturn = noReturn
+        )
+    }
+
+    private fun type(): LlvmType {
         return LlvmTypes.function(
             returnType = returnType,
             parameterTypes = parameters.map { parameter -> parameter.type },
