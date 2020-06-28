@@ -94,16 +94,14 @@ internal class EffectCompiler(
         operationHandlerFunction: LlvmOperand,
         operationHandlerContext: LlvmOperand
     ): LlvmInstruction {
-        return LlvmCall(
+        return libc.call(
             target = null,
-            functionPointer = LlvmOperandGlobal(effectHandlersSetOperationHandlerDeclaration.name),
-            callingConvention = effectHandlersSetOperationHandlerDeclaration.callingConvention,
-            returnType = effectHandlersSetOperationHandlerDeclaration.returnType,
+            function = effectHandlersSetOperationHandlerDeclaration,
             arguments = listOf(
-                LlvmTypedOperand(effectHandlerType, effectHandler),
-                LlvmTypedOperand(operationIndexType, LlvmOperandInt(operationIndex)),
-                LlvmTypedOperand(operationHandlerType, operationHandlerFunction),
-                LlvmTypedOperand(CTypes.voidPointer, operationHandlerContext)
+                effectHandler,
+                LlvmOperandInt(operationIndex),
+                operationHandlerFunction,
+                operationHandlerContext
             )
         )
     }
@@ -230,11 +228,9 @@ internal class EffectCompiler(
     )
 
     private fun effectHandlersDiscard(): LlvmCall {
-        return LlvmCall(
+        return libc.call(
             target = null,
-            functionPointer = LlvmOperandGlobal(effectHandlersDiscardDeclaration.name),
-            callingConvention = effectHandlersDiscardDeclaration.callingConvention,
-            returnType = effectHandlersDiscardDeclaration.returnType,
+            function = effectHandlersDiscardDeclaration,
             arguments = listOf()
         )
     }
@@ -264,15 +260,13 @@ internal class EffectCompiler(
             targetType = operationArgumentsPointerType
         )
         val operationIndex = effect.operations.keys.sorted().indexOf(operationName)
-        val call = LlvmCall(
+        val call = libc.call(
             target = target,
-            functionPointer = LlvmOperandGlobal(effectHandlersCallDeclaration.name),
-            callingConvention = effectHandlersCallDeclaration.callingConvention,
-            returnType = effectHandlersCallDeclaration.returnType,
+            function = effectHandlersCallDeclaration,
             arguments = listOf(
-                LlvmTypedOperand(effectIdType, LlvmOperandInt(effect.definitionId)),
-                LlvmTypedOperand(operationIndexType, LlvmOperandInt(operationIndex)),
-                LlvmTypedOperand(operationArgumentsPointerType, argumentsPointer)
+                LlvmOperandInt(effect.definitionId),
+                LlvmOperandInt(operationIndex),
+                argumentsPointer
             )
         )
         return listOf(cast, call)
