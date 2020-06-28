@@ -474,6 +474,10 @@ internal class EffectCompiler(
         )
     }
 
+    internal fun resume(value: LlvmOperand): LlvmInstruction {
+        return LlvmReturn(type = compiledValueType, value = value)
+    }
+
     internal fun declarations(): List<LlvmTopLevelEntity> {
         return listOf(
             effectHandlersSetOperationHandlerDeclaration,

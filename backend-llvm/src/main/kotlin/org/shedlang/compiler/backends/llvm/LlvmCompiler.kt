@@ -504,9 +504,7 @@ internal class Compiler(
             is Resume -> {
                 val (context2, returnVariable) = context.popTemporary()
 
-                return context2.addInstructions(
-                    LlvmReturn(type = compiledValueType, value = returnVariable)
-                )
+                return context2.addInstructions(effects.resume(returnVariable))
             }
 
             is Return -> {
