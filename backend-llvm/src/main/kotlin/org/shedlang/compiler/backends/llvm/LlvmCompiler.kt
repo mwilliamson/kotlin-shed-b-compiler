@@ -43,7 +43,8 @@ internal class Compiler(
     private val effects = EffectCompiler(
         closures = closures,
         irBuilder = irBuilder,
-        libc = libc
+        libc = libc,
+        objects = objects
     )
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
@@ -333,77 +334,7 @@ internal class Compiler(
             is EffectDefine -> {
                 val target = generateLocal("effect")
 
-                val operationOperands = instruction.effect.operations.keys.associate { operationName ->
-                    operationName to generateLocal(operationName)
-                }
-
-                return context
-                    .let {
-                        instruction.effect.operations.entries.fold(it) { context2, (operationName, operationType) ->
-                            val functionName = generateName(operationName)
-                            val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
-                            val returnValue = generateLocal("return")
-                            val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, generateName("environment"))
-                            val llvmParameters = (0 until parameterCount).map { parameterIndex ->
-                                LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
-                            }
-                            val operationArguments = generateLocal("arguments")
-                            val operationArgumentsType = effects.compiledOperationArgumentsType(operationType)
-
-                            closures.createClosure(
-                                target = operationOperands.getValue(operationName),
-                                functionName = functionName,
-                                parameterTypes = llvmParameters.map { llvmParameter -> llvmParameter.type },
-                                freeVariables = listOf(),
-                                context = context2
-                            ).addTopLevelEntities(LlvmFunctionDefinition(
-                                name = functionName,
-                                returnType = compiledValueType,
-                                parameters = listOf(closureEnvironmentParameter) + llvmParameters,
-                                body = persistentListOf<LlvmInstruction>()
-                                    .addAll(libc.typedMalloc(
-                                        target = operationArguments,
-                                        bytes = operationArgumentsType.byteSize,
-                                        type = LlvmTypes.pointer(operationArgumentsType)
-                                    ))
-                                    .addAll(llvmParameters.flatMapIndexed { parameterIndex, llvmParameter ->
-                                        val operationArgumentPointer = generateLocal("operationArgumentPointer")
-                                        persistentListOf<LlvmInstruction>()
-                                            .add(LlvmGetElementPtr(
-                                                target = operationArgumentPointer,
-                                                pointerType = LlvmTypes.pointer(operationArgumentsType),
-                                                pointer = operationArguments,
-                                                indices = listOf(
-                                                    LlvmIndex.i64(0),
-                                                    LlvmIndex.i64(parameterIndex)
-                                                )
-                                            ))
-                                            .add(LlvmStore(
-                                                type = compiledValueType,
-                                                value = LlvmOperandLocal(llvmParameter.name),
-                                                pointer = operationArgumentPointer
-                                            ))
-                                    })
-                                    .addAll(effects.effectHandlersCall(
-                                        target = returnValue,
-                                        effect = instruction.effect,
-                                        operationName = operationName,
-                                        operationArguments = LlvmTypedOperand(
-                                            type = LlvmTypes.pointer(operationArgumentsType),
-                                            operand = operationArguments
-                                        )
-                                    ))
-                                    .add(LlvmReturn(type = compiledValueType, value = returnValue))
-                            ))
-                        }
-                    }
-                    .addInstructions(objects.createObject(
-                        target = target,
-                        objectType = effectType(instruction.effect),
-                        fields = operationOperands.map { (operationName, operationOperand) ->
-                            operationName to operationOperand
-                        }
-                    ))
+                return effects.define(target = target, effect = instruction.effect, context = context)
                     .pushTemporary(target)
             }
 

@@ -3,13 +3,16 @@ package org.shedlang.compiler.backends.llvm
 import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.flatMapIndexed
 import org.shedlang.compiler.types.ComputationalEffect
 import org.shedlang.compiler.types.FunctionType
+import org.shedlang.compiler.types.effectType
 
 internal class EffectCompiler(
     private val closures: ClosureCompiler,
     private val irBuilder: LlvmIrBuilder,
-    private val libc: LibcCallCompiler
+    private val libc: LibcCallCompiler,
+    private val objects: LlvmObjectCompiler
 ) {
     private val effectIdType = LlvmTypes.i32
     private val effectHandlerType = CTypes.voidPointer
@@ -17,7 +20,88 @@ internal class EffectCompiler(
     private val operationIndexType = CTypes.size_t
     private val operationArgumentsPointerType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
-    internal fun compiledOperationArgumentsType(operationType: FunctionType): LlvmType {
+    internal fun define(
+        target: LlvmOperandLocal,
+        effect: ComputationalEffect,
+        context: FunctionContext
+    ): FunctionContext {
+        val operationOperands = effect.operations.keys.associate { operationName ->
+            operationName to irBuilder.generateLocal(operationName)
+        }
+
+        return context
+            .let {
+                effect.operations.entries.fold(it) { context2, (operationName, operationType) ->
+                    val functionName = irBuilder.generateName(operationName)
+                    val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
+                    val returnValue = irBuilder.generateLocal("return")
+                    val closureEnvironmentParameter = LlvmParameter(
+                        compiledClosureEnvironmentPointerType,
+                        irBuilder.generateName("environment")
+                    )
+                    val llvmParameters = (0 until parameterCount).map { parameterIndex ->
+                        LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
+                    }
+                    val operationArguments = irBuilder.generateLocal("arguments")
+                    val operationArgumentsType = compiledOperationArgumentsType(operationType)
+
+                    closures.createClosure(
+                        target = operationOperands.getValue(operationName),
+                        functionName = functionName,
+                        parameterTypes = llvmParameters.map { llvmParameter -> llvmParameter.type },
+                        freeVariables = listOf(),
+                        context = context2
+                    ).addTopLevelEntities(LlvmFunctionDefinition(
+                        name = functionName,
+                        returnType = compiledValueType,
+                        parameters = listOf(closureEnvironmentParameter) + llvmParameters,
+                        body = persistentListOf<LlvmInstruction>()
+                            .addAll(libc.typedMalloc(
+                                target = operationArguments,
+                                bytes = operationArgumentsType.byteSize,
+                                type = LlvmTypes.pointer(operationArgumentsType)
+                            ))
+                            .addAll(llvmParameters.flatMapIndexed { parameterIndex, llvmParameter ->
+                                val operationArgumentPointer = irBuilder.generateLocal("operationArgumentPointer")
+                                persistentListOf<LlvmInstruction>()
+                                    .add(LlvmGetElementPtr(
+                                        target = operationArgumentPointer,
+                                        pointerType = LlvmTypes.pointer(operationArgumentsType),
+                                        pointer = operationArguments,
+                                        indices = listOf(
+                                            LlvmIndex.i64(0),
+                                            LlvmIndex.i64(parameterIndex)
+                                        )
+                                    ))
+                                    .add(LlvmStore(
+                                        type = compiledValueType,
+                                        value = LlvmOperandLocal(llvmParameter.name),
+                                        pointer = operationArgumentPointer
+                                    ))
+                            })
+                            .addAll(effectHandlersCall(
+                                target = returnValue,
+                                effect = effect,
+                                operationName = operationName,
+                                operationArguments = LlvmTypedOperand(
+                                    type = LlvmTypes.pointer(operationArgumentsType),
+                                    operand = operationArguments
+                                )
+                            ))
+                            .add(LlvmReturn(type = compiledValueType, value = returnValue))
+                    ))
+                }
+            }
+            .addInstructions(objects.createObject(
+                target = target,
+                objectType = effectType(effect),
+                fields = operationOperands.map { (operationName, operationOperand) ->
+                    operationName to operationOperand
+                }
+            ))
+    }
+
+    private fun compiledOperationArgumentsType(operationType: FunctionType): LlvmType {
         val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
         return LlvmTypes.arrayType(size = parameterCount, elementType = compiledValueType)
     }
@@ -152,9 +236,9 @@ internal class EffectCompiler(
                                 operationHandlerExitDeclaration.call(
                                     target = null,
                                     arguments = listOf(
-                                                                LlvmOperandLocal("effect_handler"),
-                                                                operationHandlerResult
-                                                            )
+                                        LlvmOperandLocal("effect_handler"),
+                                        operationHandlerResult
+                                    )
                                 ),
                                 LlvmUnreachable
                             )
