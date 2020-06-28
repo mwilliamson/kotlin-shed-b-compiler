@@ -337,12 +337,16 @@ internal class Compiler(
             }
 
             is EffectHandle -> {
-                return effects.handle(
+                val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
+
+                val (context3, result) = effects.handle(
                     effect = instruction.effect,
                     compileBody = { context -> compileInstructions(instruction.instructions, context) },
                     handlerTypes = instruction.handlerTypes,
-                    context = context
+                    operationHandlers = operationHandlers,
+                    context = context2
                 )
+                return context3.pushTemporary(result)
             }
 
             is Exit -> {

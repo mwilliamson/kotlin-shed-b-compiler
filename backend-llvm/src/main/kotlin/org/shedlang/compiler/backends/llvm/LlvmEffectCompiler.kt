@@ -98,10 +98,9 @@ internal class EffectCompiler(
         effect: UserDefinedEffect,
         compileBody: (FunctionContext) -> FunctionContext,
         handlerTypes: List<HandlerNode.Type>,
+        operationHandlers: List<LlvmOperand>,
         context: FunctionContext
-    ): FunctionContext {
-        val (context2, operationHandlers) = context.popTemporaries(effect.operations.size)
-
+    ): Pair<FunctionContext, LlvmOperand> {
         val setjmpResult = irBuilder.generateLocal("setjmpResult")
         val setjmpEnv = irBuilder.generateLocal("setjmpEnv")
         val normalLabel = irBuilder.generateName("normal")
@@ -109,7 +108,7 @@ internal class EffectCompiler(
         val exitLabel = irBuilder.generateName("exit")
         val exitResult = irBuilder.generateLocal("exitResult")
 
-        return context2
+        val context2 = context
             .addInstructions(libc.typedMalloc(
                 target = setjmpEnv,
                 bytes = CTypes.jmpBuf.byteSize,
@@ -146,6 +145,8 @@ internal class EffectCompiler(
             .pushTemporary(exitResult)
             .addInstructions(LlvmBrUnconditional(untilLabel))
             .addInstructions(LlvmLabel(untilLabel))
+
+        return context2.popTemporary()
     }
 
     private val effectHandlersSetOperationHandlerDeclaration = LlvmFunctionDeclaration(

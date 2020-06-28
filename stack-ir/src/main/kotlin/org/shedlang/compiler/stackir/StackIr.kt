@@ -6,10 +6,10 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
-import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.UserDefinedEffect
 import java.math.BigInteger
 
 sealed class IrValue
