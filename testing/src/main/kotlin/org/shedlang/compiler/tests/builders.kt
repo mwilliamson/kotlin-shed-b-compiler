@@ -654,12 +654,12 @@ fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator
     )
 }
 
-fun computationalEffect(
+fun userDefinedEffect(
     name: Identifier,
-    getOperations: (ComputationalEffect) -> Map<Identifier, FunctionType> = { mapOf() }
-): ComputationalEffect {
-    var effect: ComputationalEffect? = null
-    effect = computationalEffect(
+    getOperations: (UserDefinedEffect) -> Map<Identifier, FunctionType> = { mapOf() }
+): UserDefinedEffect {
+    var effect: UserDefinedEffect? = null
+    effect = userDefinedEffect(
         name = name,
         getOperations = lazy {
             getOperations(effect!!)
@@ -668,10 +668,10 @@ fun computationalEffect(
     return effect
 }
 
-fun computationalEffect(
+fun userDefinedEffect(
     name: Identifier,
     getOperations: Lazy<Map<Identifier, FunctionType>>
-) = ComputationalEffect(
+) = UserDefinedEffect(
     definitionId = freshNodeId(),
     name = name,
     getOperations = getOperations

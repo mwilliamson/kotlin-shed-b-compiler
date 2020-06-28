@@ -6,7 +6,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
-import org.shedlang.compiler.types.ComputationalEffect
+import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
@@ -74,10 +74,10 @@ object Discard: Instruction()
 
 object Duplicate: Instruction()
 
-class EffectDefine(val effect: ComputationalEffect): Instruction()
+class EffectDefine(val effect: UserDefinedEffect): Instruction()
 
 class EffectHandle(
-    val effect: ComputationalEffect,
+    val effect: UserDefinedEffect,
     val handlerTypes: List<HandlerNode.Type>,
     val instructions: List<Instruction>
 ): Instruction()

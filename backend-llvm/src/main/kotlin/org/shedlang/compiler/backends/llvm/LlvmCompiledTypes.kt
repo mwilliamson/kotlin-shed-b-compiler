@@ -66,8 +66,8 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
                 tagValue = null
             )
         )
-    } else if (objectType is StaticValueType && objectType.value is ComputationalEffect) {
-        val effect = objectType.value as ComputationalEffect
+    } else if (objectType is StaticValueType && objectType.value is UserDefinedEffect) {
+        val effect = objectType.value as UserDefinedEffect
         return CompiledObjectType(
             tagValue = null,
             fieldTypes = effect.operations.map { (operationName, operationType) ->

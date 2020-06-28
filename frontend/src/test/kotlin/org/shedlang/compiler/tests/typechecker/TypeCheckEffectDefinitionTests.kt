@@ -11,7 +11,7 @@ import org.shedlang.compiler.types.metaType
 
 class TypeCheckEffectDefinitionTests {
     @Test
-    fun effectDefinitionCreatesComputationalEffect() {
+    fun effectDefinitionCreatesUserDefinedEffect() {
         val stringReference = staticReference("String")
         val nothingReference = staticReference("Nothing")
         val effectDefinition = effectDefinition(
@@ -35,12 +35,12 @@ class TypeCheckEffectDefinitionTests {
         )
         typeCheckModuleStatement(effectDefinition, typeContext)
 
-        assertThat(typeContext.typeOf(effectDefinition), isEffectType(isComputationalEffect(
+        assertThat(typeContext.typeOf(effectDefinition), isEffectType(isUserDefinedEffect(
             name = isIdentifier("Try"),
             operations = isMap(
                 Identifier("throw") to isFunctionType(
                     positionalParameters = isSequence(isStringType),
-                    effect = isComputationalEffect(name = isIdentifier("Try")),
+                    effect = isUserDefinedEffect(name = isIdentifier("Try")),
                     returnType = isNothingType
                 )
             )

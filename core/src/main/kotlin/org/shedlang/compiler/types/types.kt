@@ -81,7 +81,7 @@ data class OpaqueEffect(
         get() = "!${name.value}${staticArgumentsString(arguments)}"
 }
 
-data class ComputationalEffect(
+data class UserDefinedEffect(
     val definitionId: Int,
     val name: Identifier,
     private val getOperations: Lazy<Map<Identifier, FunctionType>>
@@ -92,7 +92,7 @@ data class ComputationalEffect(
         get() = "!${name.value}"
 
     override fun toString(): String {
-        return "ComputationalEffect(definitionId = $definitionId, name = $name)"
+        return "UserDefinedEffect(definitionId = $definitionId, name = $name)"
     }
 }
 
@@ -177,7 +177,7 @@ data class StaticValueType(val value: StaticValue): Type {
         get() = "StaticValue[${value.shortDescription}]"
 
     override fun fieldType(fieldName: Identifier): Type? {
-        if (value is ComputationalEffect) {
+        if (value is UserDefinedEffect) {
             return value.operations[fieldName]
         } else if (fieldName == Identifier("fields")) {
             return fieldsType

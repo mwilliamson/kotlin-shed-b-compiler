@@ -92,8 +92,8 @@ class WhenElseIsNotReachableError(source: Source) : TypeCheckError(
     "else branch of when is not reachable",
     source = source
 )
-class ExpectedComputationalEffectError(source: Source): TypeCheckError(
-    "expected computational effect",
+class ExpectedUserDefinedEffectError(source: Source): TypeCheckError(
+    "expected user-defined effect",
     source = source
 )
 class MissingHandlerError(val name: Identifier, source: Source) : TypeCheckError(

@@ -388,7 +388,7 @@ class Loader(
             }
 
             override fun visit(node: HandleNode): PersistentList<Instruction> {
-                val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as ComputationalEffect
+                val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as UserDefinedEffect
 
                 val operationHandlers = node.handlers
                     .sortedBy { handler -> handler.operationName }
@@ -515,7 +515,7 @@ class Loader(
     fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
         return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: EffectDefinitionNode): PersistentList<Instruction> {
-                val effect = (types.variableType(node) as StaticValueType).value as ComputationalEffect
+                val effect = (types.variableType(node) as StaticValueType).value as UserDefinedEffect
                 return persistentListOf(
                     EffectDefine(effect),
                     LocalStore(node)

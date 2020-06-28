@@ -20,8 +20,8 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
 }
 
 private fun typeCheckEffectDefinition(node: EffectDefinitionNode, context: TypeContext) {
-    var effect: ComputationalEffect? = null
-    effect = ComputationalEffect(
+    var effect: UserDefinedEffect? = null
+    effect = UserDefinedEffect(
         definitionId = node.nodeId,
         name = node.name,
         getOperations = lazy {

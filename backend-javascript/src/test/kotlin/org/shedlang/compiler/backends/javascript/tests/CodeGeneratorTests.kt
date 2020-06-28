@@ -816,7 +816,7 @@ class CodeGeneratorTests {
                 handlerExit("exit", handlerDefinition)
             )
         )
-        val effect = computationalEffect(Identifier("Exit"), { effect ->
+        val effect = userDefinedEffect(Identifier("Exit"), { effect ->
             mapOf(
                 Identifier("exit") to functionType()
             )

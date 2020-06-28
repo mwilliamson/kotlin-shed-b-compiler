@@ -7,7 +7,7 @@ import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.AnyType
-import org.shedlang.compiler.types.ComputationalEffect
+import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.TagValue
 import java.math.BigInteger
 
@@ -95,7 +95,7 @@ internal class InterpreterModule(
 }
 
 internal class InterpreterOperation(
-    val effect: ComputationalEffect,
+    val effect: UserDefinedEffect,
     val operationName: Identifier
 ): InterpreterValue() {
 

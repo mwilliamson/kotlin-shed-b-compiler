@@ -5,7 +5,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.flatMapIndexed
-import org.shedlang.compiler.types.ComputationalEffect
+import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.effectType
 
@@ -23,7 +23,7 @@ internal class EffectCompiler(
 
     internal fun define(
         target: LlvmOperandLocal,
-        effect: ComputationalEffect,
+        effect: UserDefinedEffect,
         context: FunctionContext
     ): FunctionContext {
         val operationOperands = effect.operations.keys.associate { operationName ->
@@ -95,7 +95,7 @@ internal class EffectCompiler(
     }
 
     internal fun handle(
-        effect: ComputationalEffect,
+        effect: UserDefinedEffect,
         compileBody: (FunctionContext) -> FunctionContext,
         handlerTypes: List<HandlerNode.Type>,
         context: FunctionContext
@@ -189,7 +189,7 @@ internal class EffectCompiler(
     )
 
     private fun effectHandlersPush(
-        effect: ComputationalEffect,
+        effect: UserDefinedEffect,
         operationHandlers: List<LlvmOperand>,
         handlerTypes: List<HandlerNode.Type>,
         setjmpEnv: LlvmOperand,
@@ -316,7 +316,7 @@ internal class EffectCompiler(
 
     internal fun effectHandlersCall(
         target: LlvmOperandLocal,
-        effect: ComputationalEffect,
+        effect: UserDefinedEffect,
         operationName: Identifier,
         operationArguments: LlvmTypedOperand
     ): List<LlvmInstruction> {

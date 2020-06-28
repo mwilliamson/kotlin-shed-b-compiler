@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.cast
 import com.natpryce.hamkrest.sameInstance
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.tests.computationalEffect
+import org.shedlang.compiler.tests.userDefinedEffect
 import org.shedlang.compiler.tests.isEffectUnion
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.*
@@ -15,8 +15,8 @@ class ReplaceEffectsTests {
     fun whenEffectParameterHasBindingThenEffectParameterIsReplaced() {
         val effectParameterA = effectParameter(name = "A")
         val effectParameterB = effectParameter(name = "B")
-        val boundEffectA = computationalEffect(Identifier("BoundA"))
-        val boundEffectB = computationalEffect(Identifier("BoundB"))
+        val boundEffectA = userDefinedEffect(Identifier("BoundA"))
+        val boundEffectB = userDefinedEffect(Identifier("BoundB"))
 
         val bindings = mapOf<StaticParameter, StaticValue>(
             effectParameterA to boundEffectA,
@@ -31,7 +31,7 @@ class ReplaceEffectsTests {
     fun whenEffectParameterHasNoBindingThenEffectParameterIsUnchanged() {
         val effectParameterA = effectParameter(name = "A")
         val effectParameterB = effectParameter(name = "B")
-        val boundEffectB = computationalEffect(Identifier("BoundB"))
+        val boundEffectB = userDefinedEffect(Identifier("BoundB"))
 
         val bindings = mapOf<StaticParameter, StaticValue>(
             effectParameterB to boundEffectB
@@ -45,8 +45,8 @@ class ReplaceEffectsTests {
     fun membersOfEffectUnionAreReplaced() {
         val effectParameterA = effectParameter(name = "A")
         val effectParameterB = effectParameter(name = "B")
-        val boundEffectA = computationalEffect(Identifier("BoundA"))
-        val boundEffectB = computationalEffect(Identifier("BoundB"))
+        val boundEffectA = userDefinedEffect(Identifier("BoundA"))
+        val boundEffectB = userDefinedEffect(Identifier("BoundB"))
 
         val bindings = mapOf<StaticParameter, StaticValue>(
             effectParameterA to boundEffectA,
@@ -64,7 +64,7 @@ class ReplaceEffectsTests {
     fun whenReplacingMembersOfUnionThenDuplicateMembersAreCollapsed() {
         val effectParameterA = effectParameter(name = "A")
         val effectParameterB = effectParameter(name = "B")
-        val boundEffectA = computationalEffect(Identifier("BoundA"))
+        val boundEffectA = userDefinedEffect(Identifier("BoundA"))
 
         val bindings = mapOf<StaticParameter, StaticValue>(
             effectParameterA to boundEffectA,

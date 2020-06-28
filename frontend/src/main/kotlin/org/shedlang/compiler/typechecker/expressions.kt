@@ -279,8 +279,8 @@ internal fun inferReferenceType(reference: ReferenceNode, context: TypeContext):
 private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
     val effect = evalEffect(node.effect, context)
 
-    if (effect !is ComputationalEffect) {
-        throw ExpectedComputationalEffectError(source = node.effect.source)
+    if (effect !is UserDefinedEffect) {
+        throw ExpectedUserDefinedEffectError(source = node.effect.source)
     }
 
     val bodyContext = context.enterScope(extraEffect = effect)
