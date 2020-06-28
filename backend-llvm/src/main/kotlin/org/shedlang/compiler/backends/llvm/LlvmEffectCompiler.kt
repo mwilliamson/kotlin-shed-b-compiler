@@ -22,6 +22,60 @@ internal class EffectCompiler(
         return LlvmTypes.arrayType(size = parameterCount, elementType = compiledValueType)
     }
 
+    internal fun handle(
+        effect: ComputationalEffect,
+        compileBody: (FunctionContext) -> FunctionContext,
+        handlerTypes: List<HandlerNode.Type>,
+        context: FunctionContext
+    ): FunctionContext {
+        val (context2, operationHandlers) = context.popTemporaries(effect.operations.size)
+
+        val setjmpResult = irBuilder.generateLocal("setjmpResult")
+        val setjmpEnv = irBuilder.generateLocal("setjmpEnv")
+        val normalLabel = irBuilder.generateName("normal")
+        val untilLabel = irBuilder.generateName("until")
+        val exitLabel = irBuilder.generateName("exit")
+        val exitResult = irBuilder.generateLocal("exitResult")
+
+        return context2
+            .addInstructions(libc.typedMalloc(
+                target = setjmpEnv,
+                bytes = CTypes.jmpBuf.byteSize,
+                type = CTypes.jmpBufPointer
+            ))
+            .addInstructions(libc.setjmp(
+                target = setjmpResult,
+                env = setjmpEnv
+            ))
+            .addInstructions(LlvmSwitch(
+                type = libc.setjmpReturnType,
+                value = setjmpResult,
+                defaultLabel = normalLabel,
+                destinations = listOf(
+                    0 to normalLabel,
+                    1 to exitLabel
+                )
+            ))
+            .addInstructions(LlvmLabel(normalLabel))
+            .let {
+                effectHandlersPush(
+                    effect = effect,
+                    operationHandlers = operationHandlers,
+                    handlerTypes = handlerTypes,
+                    setjmpEnv = setjmpEnv,
+                    context = it
+                )
+            }
+            .let { compileBody(it) }
+            .addInstructions(effectHandlersDiscard())
+            .addInstructions(LlvmBrUnconditional(untilLabel))
+            .addInstructions(LlvmLabel(exitLabel))
+            .addInstructions(loadExitValue(target = exitResult))
+            .pushTemporary(exitResult)
+            .addInstructions(LlvmBrUnconditional(untilLabel))
+            .addInstructions(LlvmLabel(untilLabel))
+    }
+
     private val effectHandlersSetOperationHandlerDeclaration = LlvmFunctionDeclaration(
         name = "shed_effect_handlers_set_operation_handler",
         callingConvention = LlvmCallingConvention.ccc,

@@ -401,52 +401,12 @@ internal class Compiler(
             }
 
             is EffectHandle -> {
-                val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
-
-                val setjmpResult = generateLocal("setjmpResult")
-                val setjmpEnv = irBuilder.generateLocal("setjmpEnv")
-                val normalLabel = generateName("normal")
-                val untilLabel = generateName("until")
-                val exitLabel = generateName("exit")
-                val exitResult = generateLocal("exitResult")
-
-                return context2
-                    .addInstructions(libc.typedMalloc(
-                        target = setjmpEnv,
-                        bytes = CTypes.jmpBuf.byteSize,
-                        type = CTypes.jmpBufPointer
-                    ))
-                    .addInstructions(libc.setjmp(
-                        target = setjmpResult,
-                        env = setjmpEnv
-                    ))
-                    .addInstructions(LlvmSwitch(
-                        type = libc.setjmpReturnType,
-                        value = setjmpResult,
-                        defaultLabel = normalLabel,
-                        destinations = listOf(
-                            0 to normalLabel,
-                            1 to exitLabel
-                        )
-                    ))
-                    .addInstructions(LlvmLabel(normalLabel))
-                    .let {
-                        effectCompiler.effectHandlersPush(
-                            effect = instruction.effect,
-                            operationHandlers = operationHandlers,
-                            handlerTypes = instruction.handlerTypes,
-                            setjmpEnv = setjmpEnv,
-                            context = it
-                        )
-                    }
-                    .let { compileInstructions(instruction.instructions, it) }
-                    .addInstructions(effectCompiler.effectHandlersDiscard())
-                    .addInstructions(LlvmBrUnconditional(untilLabel))
-                    .addInstructions(LlvmLabel(exitLabel))
-                    .addInstructions(effectCompiler.loadExitValue(target = exitResult))
-                    .pushTemporary(exitResult)
-                    .addInstructions(LlvmBrUnconditional(untilLabel))
-                    .addInstructions(LlvmLabel(untilLabel))
+                return effectCompiler.handle(
+                    effect = instruction.effect,
+                    compileBody = { context -> compileInstructions(instruction.instructions, context) },
+                    handlerTypes = instruction.handlerTypes,
+                    context = context
+                )
             }
 
             is Exit -> {
