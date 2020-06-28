@@ -110,7 +110,31 @@ internal class LlvmObjectCompiler(
         return compiledObjectType.getFieldPointer(target = target, receiver = receiver, fieldName = fieldName)
     }
 
-    internal fun tagValuePointer(
+    internal fun tagValueAccess(target: LlvmVariable, operand: LlvmOperand): List<LlvmInstruction> {
+        val objectPointer = LlvmOperandLocal(irBuilder.generateName("objectPointer"))
+        val tagValuePointer = LlvmOperandLocal(irBuilder.generateName("tagValuePointer"))
+
+        return listOf(
+            LlvmIntToPtr(
+                target = objectPointer,
+                sourceType = compiledValueType,
+                value = operand,
+                targetType = CompiledUnionType.llvmPointerType()
+            ),
+            tagValuePointer(
+                target = tagValuePointer,
+                source = objectPointer,
+                sourceType = CompiledUnionType.llvmPointerType()
+            ),
+            LlvmLoad(
+                target = target,
+                type = compiledTagValueType,
+                pointer = tagValuePointer
+            )
+        )
+    }
+
+    private fun tagValuePointer(
         target: LlvmOperandLocal,
         source: LlvmOperand,
         sourceType: LlvmTypePointer

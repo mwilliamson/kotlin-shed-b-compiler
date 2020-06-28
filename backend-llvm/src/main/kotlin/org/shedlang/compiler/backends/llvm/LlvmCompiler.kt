@@ -605,28 +605,11 @@ internal class Compiler(
 
             is TagValueAccess -> {
                 val (context2, operand) = context.popTemporary()
-                val objectPointer = LlvmOperandLocal(generateName("objectPointer"))
-                val tagValuePointer = LlvmOperandLocal(generateName("tagValuePointer"))
                 val tagValue = LlvmOperandLocal(generateName("tagValue"))
 
-                return context2.addInstructions(
-                    LlvmIntToPtr(
-                        target = objectPointer,
-                        sourceType = compiledValueType,
-                        value = operand,
-                        targetType = CompiledUnionType.llvmPointerType()
-                    ),
-                    objects.tagValuePointer(
-                        target = tagValuePointer,
-                        source = objectPointer,
-                        sourceType = CompiledUnionType.llvmPointerType()
-                    ),
-                    LlvmLoad(
-                        target = tagValue,
-                        type = compiledTagValueType,
-                        pointer = tagValuePointer
-                    )
-                ).pushTemporary(tagValue)
+                return context2
+                    .addInstructions(objects.tagValueAccess(target = tagValue, operand = operand))
+                    .pushTemporary(tagValue)
             }
 
             is TagValueEquals -> {
