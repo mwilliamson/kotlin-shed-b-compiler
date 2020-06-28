@@ -108,15 +108,6 @@ internal interface CompiledType {
 
     val tagValue: TagValue?
 
-    fun getFieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, fieldName: Identifier): LlvmGetElementPtr {
-        return LlvmGetElementPtr(
-            target = target,
-            pointerType = llvmPointerType(),
-            pointer = receiver,
-            indices = listOf(LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0))) + getElementPtrIndices(fieldName)
-        )
-    }
-
     fun getElementPtrIndices(fieldName: Identifier): List<LlvmIndex>
 }
 

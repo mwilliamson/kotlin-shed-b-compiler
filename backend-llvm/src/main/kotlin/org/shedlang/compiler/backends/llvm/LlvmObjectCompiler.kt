@@ -107,7 +107,12 @@ internal class LlvmObjectCompiler(
 
     private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, receiverType: StaticValue, fieldName: Identifier): LlvmGetElementPtr {
         val compiledObjectType = compiledType(objectType = receiverType)
-        return compiledObjectType.getFieldPointer(target = target, receiver = receiver, fieldName = fieldName)
+        return LlvmGetElementPtr(
+            target = target,
+            pointerType = compiledObjectType.llvmPointerType(),
+            pointer = receiver,
+            indices = listOf(LlvmIndex(LlvmTypes.i32, LlvmOperandInt(0))) + compiledObjectType.getElementPtrIndices(fieldName = fieldName)
+        )
     }
 
     internal fun tagValueAccess(target: LlvmVariable, operand: LlvmOperand): List<LlvmInstruction> {
