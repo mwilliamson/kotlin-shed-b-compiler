@@ -5,7 +5,6 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 
 internal class ModuleValueCompiler(
-    private val irBuilder: LlvmIrBuilder,
     private val moduleSet: ModuleSet,
     private val objects: LlvmObjectCompiler
 ) {

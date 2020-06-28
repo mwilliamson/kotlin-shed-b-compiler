@@ -28,7 +28,6 @@ internal class Compiler(
         libc = libc
     )
     private val modules = ModuleValueCompiler(
-        irBuilder = irBuilder,
         moduleSet = moduleSet,
         objects = objects
     )

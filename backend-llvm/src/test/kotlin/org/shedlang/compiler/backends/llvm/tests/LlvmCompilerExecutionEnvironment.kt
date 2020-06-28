@@ -16,7 +16,7 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val libc = LibcCallCompiler(irBuilder = irBuilder)
         val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
         val objects = LlvmObjectCompiler(irBuilder = irBuilder, libc = libc)
-        val modules = ModuleValueCompiler(irBuilder = irBuilder, moduleSet = moduleSet, objects = objects)
+        val modules = ModuleValueCompiler(moduleSet = moduleSet, objects = objects)
         val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
         val builtins = BuiltinModuleCompiler(
             moduleSet = moduleSet,
