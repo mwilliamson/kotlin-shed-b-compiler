@@ -5,8 +5,8 @@ import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.flatMapIndexed
-import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.FunctionType
+import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.effectType
 
 internal class EffectCompiler(
@@ -314,7 +314,7 @@ internal class EffectCompiler(
         )
     )
 
-    internal fun effectHandlersCall(
+    private fun effectHandlersCall(
         target: LlvmOperandLocal,
         effect: UserDefinedEffect,
         operationName: Identifier,
