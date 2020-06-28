@@ -92,13 +92,18 @@ internal class ClosureCompiler(
         return loads.filter { load -> !localIds.contains(load.variableId) }
     }
 
-    internal fun callClosure(target: LlvmOperandLocal, closurePointer: LlvmOperand, arguments: List<LlvmTypedOperand>): List<LlvmInstruction> {
+    internal fun callClosure(
+        target: LlvmOperandLocal,
+        closurePointer: LlvmOperand,
+        arguments: List<LlvmOperand>
+    ): List<LlvmInstruction> {
         val typedClosurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))
         val functionPointerPointer = LlvmOperandLocal(irBuilder.generateName("functionPointerPointer"))
         val functionPointer = LlvmOperandLocal(irBuilder.generateName("functionPointer"))
         val environmentPointer = LlvmOperandLocal(irBuilder.generateName("environmentPointer"))
 
-        val compiledClosurePointerType = compiledClosurePointerType(arguments.map { argument -> argument.type })
+        val argumentTypes = arguments.map { compiledValueType }
+        val compiledClosurePointerType = compiledClosurePointerType(argumentTypes)
 
         return listOf(
             LlvmIntToPtr(
@@ -114,7 +119,7 @@ internal class ClosureCompiler(
             ),
             LlvmLoad(
                 target = functionPointer,
-                type = compiledClosureFunctionPointerType(arguments.map { argument -> argument.type }),
+                type = compiledClosureFunctionPointerType(arguments.map { compiledValueType }),
                 pointer = functionPointerPointer
             ),
             closureEnvironmentPointer(
@@ -126,7 +131,8 @@ internal class ClosureCompiler(
                 target = target,
                 returnType = compiledValueType,
                 functionPointer = functionPointer,
-                arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, environmentPointer)) + arguments
+                arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, environmentPointer)) +
+                    arguments.map { argument -> LlvmTypedOperand(compiledValueType, argument) }
             )
         )
     }

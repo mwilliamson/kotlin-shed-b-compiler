@@ -366,12 +366,7 @@ internal class EffectCompiler(
             .addAll(closures.callClosure(
                 target = target,
                 closurePointer = operationHandler,
-                arguments = (0 until parameterCount).map { argumentIndex ->
-                    LlvmTypedOperand(
-                        type = compiledValueType,
-                        operand = arguments[argumentIndex]
-                    )
-                }
+                arguments = arguments
             ))
     }
 

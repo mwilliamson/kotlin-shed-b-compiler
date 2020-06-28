@@ -8,11 +8,9 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
-import org.shedlang.compiler.flatMapIndexed
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.StaticValue
 import org.shedlang.compiler.types.StaticValueType
-import org.shedlang.compiler.types.effectType
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -230,14 +228,10 @@ internal class Compiler(
                     .sortedBy { (name, value) -> name }
                     .map { (name, value) -> value }
 
-                val typedArguments = (positionalArguments + namedArguments).map { argument ->
-                    LlvmTypedOperand(compiledValueType, argument)
-                }
-
                 val callInstructions = closures.callClosure(
                     target = result,
                     closurePointer = receiver,
-                    arguments = typedArguments
+                    arguments = positionalArguments + namedArguments
                 )
 
                 return context4.addInstructions(callInstructions).pushTemporary(result)
