@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.llvm
 
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
@@ -56,29 +57,12 @@ internal class EffectCompiler(
                         returnType = compiledValueType,
                         parameters = listOf(closureEnvironmentParameter) + llvmParameters,
                         body = persistentListOf<LlvmInstruction>()
-                            .addAll(libc.typedMalloc(
+                            .addAll(packArguments(
                                 target = operationArguments,
-                                bytes = operationArgumentsType.byteSize,
-                                type = LlvmTypes.pointer(operationArgumentsType)
+                                arguments = llvmParameters.map { llvmParameter ->
+                                    LlvmOperandLocal(llvmParameter.name)
+                                }
                             ))
-                            .addAll(llvmParameters.flatMapIndexed { parameterIndex, llvmParameter ->
-                                val operationArgumentPointer = irBuilder.generateLocal("operationArgumentPointer")
-                                persistentListOf<LlvmInstruction>()
-                                    .add(LlvmGetElementPtr(
-                                        target = operationArgumentPointer,
-                                        pointerType = LlvmTypes.pointer(operationArgumentsType),
-                                        pointer = operationArguments,
-                                        indices = listOf(
-                                            LlvmIndex.i64(0),
-                                            LlvmIndex.i64(parameterIndex)
-                                        )
-                                    ))
-                                    .add(LlvmStore(
-                                        type = compiledValueType,
-                                        value = LlvmOperandLocal(llvmParameter.name),
-                                        pointer = operationArgumentPointer
-                                    ))
-                            })
                             .addAll(effectHandlersCall(
                                 target = returnValue,
                                 effect = effect,
@@ -103,7 +87,11 @@ internal class EffectCompiler(
 
     private fun compiledOperationArgumentsType(operationType: FunctionType): LlvmType {
         val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
-        return LlvmTypes.arrayType(size = parameterCount, elementType = compiledValueType)
+        return compiledOperationArgumentsType(parameterCount)
+    }
+
+    private fun compiledOperationArgumentsType(argumentCount: Int): LlvmType {
+        return LlvmTypes.arrayType(size = argumentCount, elementType = compiledValueType)
     }
 
     internal fun handle(
@@ -385,6 +373,38 @@ internal class EffectCompiler(
                     )
                 }
             ))
+    }
+
+    private fun packArguments(
+        target: LlvmOperandLocal,
+        arguments: List<LlvmOperand>
+    ): PersistentList<LlvmInstruction> {
+        val operationArgumentsType = compiledOperationArgumentsType(arguments.size)
+
+        return persistentListOf<LlvmInstruction>()
+            .addAll(libc.typedMalloc(
+                target = target,
+                bytes = operationArgumentsType.byteSize,
+                type = LlvmTypes.pointer(operationArgumentsType)
+            ))
+            .addAll(arguments.flatMapIndexed { argumentIndex, argument ->
+                val operationArgumentPointer = irBuilder.generateLocal("operationArgumentPointer")
+                persistentListOf<LlvmInstruction>()
+                    .add(LlvmGetElementPtr(
+                        target = operationArgumentPointer,
+                        pointerType = LlvmTypes.pointer(operationArgumentsType),
+                        pointer = target,
+                        indices = listOf(
+                            LlvmIndex.i64(0),
+                            LlvmIndex.i64(argumentIndex)
+                        )
+                    ))
+                    .add(LlvmStore(
+                        type = compiledValueType,
+                        value = argument,
+                        pointer = operationArgumentPointer
+                    ))
+            })
     }
 
     private fun unpackArguments(
