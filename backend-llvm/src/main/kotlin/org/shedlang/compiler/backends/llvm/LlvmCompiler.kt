@@ -44,6 +44,10 @@ internal class Compiler(
         libc = libc,
         objects = objects
     )
+    private val tuples = LlvmTupleCompiler(
+        irBuilder = irBuilder,
+        libc = libc
+    )
 
     private val definedModules: MutableSet<ModuleName> = mutableSetOf()
 
@@ -547,60 +551,28 @@ internal class Compiler(
             is TupleAccess -> {
                 val (context2, operand) = context.popTemporary()
 
-                val tuple = LlvmOperandLocal(generateName("tuple"))
-                val elementPointer = LlvmOperandLocal(generateName("elementPointer"))
                 val element = LlvmOperandLocal(generateName("element"))
 
-                return context2.addInstructions(
-                    LlvmIntToPtr(
-                        target = tuple,
-                        sourceType = compiledValueType,
-                        value = operand,
-                        targetType = compiledTupleType
-                    ),
-                    tupleElementPointer(elementPointer, tuple, instruction.elementIndex),
-                    LlvmLoad(
+                return context2
+                    .addInstructions(tuples.tupleAccess(
                         target = element,
-                        type = compiledValueType,
-                        pointer = elementPointer
-                    )
-                ).pushTemporary(element)
+                        receiver = operand,
+                        elementIndex = instruction.elementIndex
+                    ))
+                    .pushTemporary(element)
             }
 
             is TupleCreate -> {
-                val tuple = LlvmOperandLocal(generateName("tuple"))
                 val result = LlvmOperandLocal(generateName("result"))
 
-                val context2 = context.addInstructions(
-                    libc.typedMalloc(
-                        target = tuple,
-                        bytes = compiledTupleType.byteSize,
-                        type = compiledTupleType
-                    )
-                )
+                val (context2, elements) = context.popTemporaries(instruction.length)
 
-                val (context3, elements) = context2.popTemporaries(instruction.length)
-
-                val context4 = elements.foldIndexed(context3) { elementIndex, newContext, element ->
-                    val elementPointer = LlvmOperandLocal(generateName("element"))
-                    newContext.addInstructions(
-                        tupleElementPointer(elementPointer, tuple, elementIndex),
-                        LlvmStore(
-                            type = compiledValueType,
-                            value = element,
-                            pointer = elementPointer
-                        )
-                    )
-                }
-
-                return context4.addInstructions(
-                    LlvmPtrToInt(
+                return context2
+                    .addInstructions(tuples.tupleCreate(
                         target = result,
-                        sourceType = compiledTupleType,
-                        value = tuple,
-                        targetType = compiledValueType
-                    )
-                ).pushTemporary(result)
+                        elements = elements
+                    ))
+                    .pushTemporary(result)
             }
         }
     }
@@ -721,18 +693,6 @@ internal class Compiler(
             sourceType = LlvmTypes.i1,
             operand = source,
             targetType = compiledBoolType
-        )
-    }
-
-    private fun tupleElementPointer(target: LlvmOperandLocal, receiver: LlvmOperandLocal, elementIndex: Int): LlvmGetElementPtr {
-        return LlvmGetElementPtr(
-            target = target,
-            pointerType = compiledTupleType,
-            pointer = receiver,
-            indices = listOf(
-                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                LlvmIndex(LlvmTypes.i64, LlvmOperandInt(elementIndex))
-            )
         )
     }
 
