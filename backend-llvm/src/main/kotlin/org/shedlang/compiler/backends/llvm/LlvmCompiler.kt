@@ -23,7 +23,15 @@ internal class Compiler(
 ) {
     private val libc = LibcCallCompiler(irBuilder = irBuilder)
     private val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
-    private val modules = ModuleValueCompiler(irBuilder = irBuilder, moduleSet = moduleSet)
+    private val objects = LlvmObjectCompiler(
+        irBuilder = irBuilder,
+        libc = libc
+    )
+    private val modules = ModuleValueCompiler(
+        irBuilder = irBuilder,
+        moduleSet = moduleSet,
+        objects = objects
+    )
     private val strings = StringCompiler(irBuilder = irBuilder, libc = libc)
     private val builtins = BuiltinModuleCompiler(
         moduleSet = moduleSet,
@@ -32,10 +40,6 @@ internal class Compiler(
         libc = libc,
         modules = modules,
         strings = strings
-    )
-    private val objects = LlvmObjectCompiler(
-        irBuilder = irBuilder,
-        libc = libc
     )
     private val effects = EffectCompiler(
         closures = closures,

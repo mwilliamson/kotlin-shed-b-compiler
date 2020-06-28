@@ -6,7 +6,8 @@ import org.shedlang.compiler.ast.ModuleName
 
 internal class ModuleValueCompiler(
     private val irBuilder: LlvmIrBuilder,
-    private val moduleSet: ModuleSet
+    private val moduleSet: ModuleSet,
+    private val objects: LlvmObjectCompiler
 ) {
     internal fun defineModuleValue(moduleName: ModuleName): LlvmGlobalDefinition {
         val compiledModuleType = compiledModuleType(moduleName)
@@ -35,23 +36,11 @@ internal class ModuleValueCompiler(
     }
 
     internal fun storeFields(moduleName: ModuleName, exports: List<Pair<Identifier, LlvmOperand>>): List<LlvmInstruction> {
-        val compiledObjectType = compiledType(moduleType(moduleName))
-
-        return exports.flatMap { (exportName, exportValue) ->
-            val fieldPointerVariable = LlvmOperandLocal(irBuilder.generateName("fieldPointer"))
-            listOf(
-                compiledObjectType.getFieldPointer(
-                    target = fieldPointerVariable,
-                    receiver = operandForModuleValue(moduleName),
-                    fieldName = exportName
-                ),
-                LlvmStore(
-                    type = compiledValueType,
-                    value = exportValue,
-                    pointer = fieldPointerVariable
-                )
-            )
-        }
+        return objects.storeObject(
+            fields = exports,
+            objectType = moduleType(moduleName),
+            objectPointer = operandForModuleValue(moduleName)
+        )
     }
 
     private fun operandForModuleValue(moduleName: ModuleName): LlvmVariable {
