@@ -20,6 +20,7 @@ internal fun emptyTypeContext(): TypeContext {
 internal fun typeContext(
     moduleName: List<String>? = null,
     effect: Effect = EmptyEffect,
+    resumeValueType: Type? = null,
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
@@ -41,6 +42,7 @@ internal fun typeContext(
     return TypeContext(
         moduleName = moduleName,
         effect = effect,
+        resumeValueType = resumeValueType,
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = HashMap(finalTypes),

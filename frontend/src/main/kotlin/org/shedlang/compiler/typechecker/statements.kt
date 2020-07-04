@@ -333,6 +333,12 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
             val type = inferType(node.expression, context)
 
             return if (node.type == ExpressionStatementNode.Type.RESUME) {
+                verifyType(
+                    // TODO: check that we can resume in this context
+                    expected = context.resumeValueType!!,
+                    actual = type,
+                    source = node.source
+                )
                 NothingType
             } else if (node.isReturn) {
                 type

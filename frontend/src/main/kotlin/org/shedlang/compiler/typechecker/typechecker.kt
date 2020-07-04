@@ -15,6 +15,7 @@ internal fun newTypeContext(
     return TypeContext(
         moduleName = moduleName,
         effect = EmptyEffect,
+        resumeValueType = null,
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = nodeTypes.toMutableMap(),
@@ -29,6 +30,7 @@ internal fun newTypeContext(
 internal class TypeContext(
     val moduleName: List<String>?,
     val effect: Effect,
+    val resumeValueType: Type?,
     private val variableTypes: MutableMap<Int, Type>,
     private val functionTypes: MutableMap<Int, FunctionType>,
     private val discriminators: MutableMap<Int, Discriminator>,
@@ -105,10 +107,11 @@ internal class TypeContext(
         targetTypes[target.nodeId] = type
     }
 
-    fun enterFunction(function: FunctionNode, effect: Effect): TypeContext {
+    fun enterFunction(function: FunctionNode, effect: Effect, resumeValueType: Type?): TypeContext {
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
+            resumeValueType = resumeValueType,
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = variableTypes,
@@ -124,6 +127,7 @@ internal class TypeContext(
         return TypeContext(
             moduleName = moduleName,
             effect = effectUnion(effect, extraEffect),
+            resumeValueType = resumeValueType,
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = HashMap(variableTypes),
@@ -329,6 +333,7 @@ internal fun typeCheckFunction(
     function: FunctionNode,
     context: TypeContext,
     hint: Type? = null,
+    resumeValueType: Type? = null,
     implicitEffect: Effect = EmptyEffect
 ): FunctionType {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
@@ -358,6 +363,7 @@ internal fun typeCheckFunction(
     val actualReturnType = lazy {
         val bodyContext = context.enterFunction(
             function,
+            resumeValueType = resumeValueType,
             effect = effect
         )
         typeCheckBlock(body, bodyContext)

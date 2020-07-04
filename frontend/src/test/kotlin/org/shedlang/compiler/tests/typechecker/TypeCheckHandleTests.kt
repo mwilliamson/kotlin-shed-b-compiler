@@ -206,11 +206,8 @@ class TypeCheckHandleTests {
             )
         )
         assertThat({ inferType(expression, context) }, throws<UnexpectedTypeError>(allOf(
-            has(UnexpectedTypeError::expected, cast(isFunctionType(
-                positionalParameters = isSequence(isStringType),
-                effect = equalTo(EmptyEffect),
-                returnType = isIntType
-            )))
+            has(UnexpectedTypeError::expected, cast(isIntType)),
+            has(UnexpectedTypeError::actual, isUnitType)
         )))
     }
 

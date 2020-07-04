@@ -286,9 +286,6 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
     val handlerReturnTypes = node.handlers.map { handler ->
-        val handlerType = typeCheckFunction(handler.function, context, implicitEffect = context.effect)
-        context.addExpressionType(handler.function, handlerType)
-
         val operationType = effect.operations[handler.operationName]
         if (operationType == null) {
             throw UnknownOperationError(effect = effect, operationName = handler.operationName, source = node.source)
@@ -297,6 +294,14 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         if (operationType.effect != effect) {
             throw CompilerError("operation has unexpected effect", source = node.source)
         }
+
+        val handlerType = typeCheckFunction(
+            handler.function,
+            context,
+            resumeValueType = operationType.returns,
+            implicitEffect = context.effect
+        )
+        context.addExpressionType(handler.function, handlerType)
 
         val lastStatement = handler.function.body.statements.last() as ExpressionStatementNode
 
