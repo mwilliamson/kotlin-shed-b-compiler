@@ -1,0 +1,37 @@
+// stdout:
+//   resumed one
+//   resume one
+//   exit oh no
+//   resumed two
+//   resume two
+//   exit oh no
+export main;
+
+effect E {
+    .f: (String) -> String,
+}
+
+fun main() !Io -> Unit {
+    f!("one\n");
+    f!("oh no\n");
+    f!("two\n");
+    f!("oh no\n");
+}
+
+fun f(value: String) !Io -> Unit {
+    val result = handle E {
+        val result = E.f!(value);
+        print!("resumed " + value);
+        result
+    } on {
+        .f = (value: String) {
+            if (value == "oh no\n") {
+                exit "exit " + value
+            } else {
+                resume "resume " + value
+            }
+        },
+    };
+
+    print!(result);
+}

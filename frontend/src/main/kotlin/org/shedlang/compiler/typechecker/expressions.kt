@@ -303,27 +303,13 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         )
         context.addExpressionType(handler.function, handlerType)
 
-        val lastStatement = handler.function.body.statements.last() as ExpressionStatementNode
+        verifyType(
+            expected = operationType.copy(effect = context.effect, returns = AnyType),
+            actual = handlerType,
+            source = handler.source
+        )
 
-        when (lastStatement.type) {
-            ExpressionStatementNode.Type.EXIT -> {
-                verifyType(
-                    expected = operationType.copy(effect = context.effect, returns = AnyType),
-                    actual = handlerType,
-                    source = handler.source
-                )
-                handlerType.returns
-            }
-            ExpressionStatementNode.Type.RESUME -> {
-                verifyType(
-                    expected = operationType.copy(effect = context.effect),
-                    actual = handlerType,
-                    source = handler.source
-                )
-                NothingType
-            }
-            else -> throw NotImplementedError()
-        }
+        handlerType.returns
     }
 
     val handlerNames = node.handlers.map { handler -> handler.operationName }

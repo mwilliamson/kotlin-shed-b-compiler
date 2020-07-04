@@ -26,6 +26,7 @@ class Amd64ExampleTests {
         "Cons.shed",
         "ConstantField.shed",
         "dependencies",
+        "EffectHandlerExitOrResume.shed",
         "FieldDestructuring.shed",
         "HelloWorld.shed",
         "localImports",

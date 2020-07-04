@@ -14,6 +14,7 @@ import org.shedlang.compiler.typechecker.SourceError
 
 class PythonExampleTests {
     private val disabledTests = setOf<String>(
+        "EffectHandlerExitOrResume.shed",
         "Resume.shed",
         "ResumeWithValue.shed",
         "TailRec.shed"
