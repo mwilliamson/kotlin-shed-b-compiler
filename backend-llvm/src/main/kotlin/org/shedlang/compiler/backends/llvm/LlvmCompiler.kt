@@ -342,11 +342,16 @@ internal class Compiler(
                 val (context3, result) = effects.handle(
                     effect = instruction.effect,
                     compileBody = { context -> compileInstructions(instruction.instructions, context) },
-                    handlerTypes = instruction.handlerTypes,
                     operationHandlers = operationHandlers,
                     context = context2
                 )
                 return context3.pushTemporary(result)
+            }
+
+            is Exit -> {
+                val (context2, returnVariable) = context.popTemporary()
+
+                return context2.addInstructions(effects.exit(returnVariable))
             }
 
             is FieldAccess -> {

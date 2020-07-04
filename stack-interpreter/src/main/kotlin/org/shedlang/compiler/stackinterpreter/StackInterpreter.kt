@@ -602,6 +602,11 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )
         }
 
+        is Exit -> {
+            val (state2, value) = initialState.popTemporary()
+            state2.exit().pushTemporary(value)
+        }
+
         is FieldAccess -> {
             val (state2, receiver) = initialState.popTemporary()
             val module = receiver as InterpreterHasFields

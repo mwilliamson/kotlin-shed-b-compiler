@@ -298,8 +298,10 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             throw CompilerError("operation has unexpected effect", source = node.source)
         }
 
-        when (handler.type) {
-            HandlerNode.Type.EXIT -> {
+        val lastStatement = handler.function.body.statements.last() as ExpressionStatementNode
+
+        when (lastStatement.type) {
+            ExpressionStatementNode.Type.EXIT -> {
                 verifyType(
                     expected = operationType.copy(effect = context.effect, returns = AnyType),
                     actual = handlerType,
@@ -307,7 +309,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
                 )
                 handlerType.returns
             }
-            HandlerNode.Type.RESUME -> {
+            ExpressionStatementNode.Type.RESUME -> {
                 verifyType(
                     expected = operationType.copy(effect = context.effect),
                     actual = handlerType,
@@ -315,6 +317,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
                 )
                 NothingType
             }
+            else -> throw NotImplementedError()
         }
     }
 

@@ -704,15 +704,9 @@ data class HandleNode(
 data class HandlerNode(
     val operationName: Identifier,
     val function: FunctionExpressionNode,
-    val type: Type,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): Node {
-    enum class Type {
-        EXIT,
-        RESUME
-    }
-
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(function))
 }
@@ -725,8 +719,12 @@ data class ExpressionStatementNode(
 ): FunctionStatementNode {
     enum class Type {
         NO_RETURN,
+
         RETURN,
-        TAILREC_RETURN
+        TAILREC_RETURN,
+
+        EXIT,
+        RESUME
     }
 
     override val isReturn: Boolean

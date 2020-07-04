@@ -39,15 +39,15 @@ class TypeCheckHandleTests {
                 expressionStatementReturn(call(functionReference, hasEffect = true))
             )),
             handlers = listOf(
-                handlerExit("throw", functionExpression(
+                handler("throw", functionExpression(
                     body = listOf(
-                        expressionStatementReturn(member2Reference)
+                        exit(member2Reference)
                     ),
                     inferReturnType = true
                 )),
-                handlerResume("get", functionExpression(
+                handler("get", functionExpression(
                     body = listOf(
-                        expressionStatementReturn(literalString())
+                        resume(literalString())
                     ),
                     inferReturnType = true
                 ))
@@ -85,9 +85,10 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handlerExit("throw", functionExpression(
+                handler("throw", functionExpression(
                     body = listOf(
-                        expressionStatementNoReturn(call(functionReference, hasEffect = true))
+                        expressionStatementNoReturn(call(functionReference, hasEffect = true)),
+                        exit(literalUnit())
                     ),
                     inferReturnType = true
                 ))
@@ -142,9 +143,11 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handlerExit("throw", functionExpression(
+                handler("throw", functionExpression(
                     parameters = listOf(parameter(type = booleanReference)),
-                    body = listOf(),
+                    body = listOf(
+                        exit(literalUnit())
+                    ),
                     inferReturnType = true
                 ))
             )
@@ -186,9 +189,11 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handlerResume("get", functionExpression(
+                handler("get", functionExpression(
                     parameters = listOf(parameter(type = booleanReference)),
-                    body = listOf(),
+                    body = listOf(
+                        resume(literalUnit())
+                    ),
                     inferReturnType = true
                 ))
             )
@@ -227,8 +232,10 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handlerExit("throw", functionExpression(
-                    body = listOf(),
+                handler("throw", functionExpression(
+                    body = listOf(
+                        exit(literalUnit())
+                    ),
                     inferReturnType = true
                 ))
             )
@@ -286,12 +293,16 @@ class TypeCheckHandleTests {
             effect = effectReference,
             body = block(listOf()),
             handlers = listOf(
-                handlerExit("throw", functionExpression(
-                    body = listOf(),
+                handler("throw", functionExpression(
+                    body = listOf(
+                        exit(literalUnit())
+                    ),
                     inferReturnType = true
                 )),
-                handlerExit("raise", functionExpression(
-                    body = listOf(),
+                handler("raise", functionExpression(
+                    body = listOf(
+                        exit(literalUnit())
+                    ),
                     inferReturnType = true
                 ))
             )

@@ -108,6 +108,24 @@ fun expressionStatementTailRecReturn(
     source = source
 )
 
+fun exit(
+    expression: ExpressionNode = expression(),
+    source: Source = anySource()
+) = ExpressionStatementNode(
+    expression = expression,
+    type = ExpressionStatementNode.Type.EXIT,
+    source = source
+)
+
+fun resume(
+    expression: ExpressionNode = expression(),
+    source: Source = anySource()
+) = ExpressionStatementNode(
+    expression = expression,
+    type = ExpressionStatementNode.Type.RESUME,
+    source = source
+)
+
 fun expressionStatement(
     expression: ExpressionNode = expression(),
     source: Source = anySource()
@@ -279,23 +297,12 @@ fun handle(
     source = anySource()
 )
 
-fun handlerExit(
+fun handler(
     operationName: String,
     function: FunctionExpressionNode
 ) = HandlerNode(
     operationName = Identifier(operationName),
     function = function,
-    type = HandlerNode.Type.EXIT,
-    source = anySource()
-)
-
-fun handlerResume(
-    operationName: String,
-    function: FunctionExpressionNode
-) = HandlerNode(
-    operationName = Identifier(operationName),
-    function = function,
-    type = HandlerNode.Type.RESUME,
     source = anySource()
 )
 

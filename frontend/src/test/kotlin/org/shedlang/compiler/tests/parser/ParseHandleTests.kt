@@ -4,12 +4,9 @@ import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
-import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
-import org.shedlang.compiler.ast.HandlerNode
-import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
@@ -31,9 +28,10 @@ class ParseHandleTests {
                     operationName = isIdentifier("throw"),
                     function = allOf(
                         has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
-                        has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
-                    ),
-                    type = equalTo(HandlerNode.Type.EXIT)
+                        has(FunctionExpressionNode::body, isBlock(
+                            isExit(isIntLiteral(42))
+                        ))
+                    )
                 )
             )
         ))
@@ -52,10 +50,9 @@ class ParseHandleTests {
                     function = allOf(
                         has(FunctionExpressionNode::body, isBlock(
                             isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_RETURN)),
-                            isExpressionStatement(isIntLiteral(42), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                            isExit(isIntLiteral(42))
                         ))
-                    ),
-                    type = equalTo(HandlerNode.Type.EXIT)
+                    )
                 )
             )
         ))
@@ -72,20 +69,12 @@ class ParseHandleTests {
                     operationName = isIdentifier("throw"),
                     function = allOf(
                         has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
-                        has(FunctionExpressionNode::body, isBlock(isExpressionStatement(isIntLiteral(42))))
-                    ),
-                    type = equalTo(HandlerNode.Type.RESUME)
+                        has(FunctionExpressionNode::body, isBlock(
+                            isResume(isIntLiteral(42))
+                        ))
+                    )
                 )
             )
-        ))
-    }
-
-    @Test
-    fun returningExpressionStatementBeforeExitThrowsError() {
-        val source = "handle Try { f() } on { .throw = (value: String) { unit exit 42 } }"
-
-        assertThat({ parseString(::parseExpression, source) }, throws<ParseError>(
-            has(ParseError::message, equalTo("cannot return from a handler without explicit exit"))
         ))
     }
 }

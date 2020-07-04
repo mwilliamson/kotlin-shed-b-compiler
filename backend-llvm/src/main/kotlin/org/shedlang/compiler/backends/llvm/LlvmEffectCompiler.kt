@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.llvm
 
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.flatMapIndexed
 import org.shedlang.compiler.types.FunctionType
@@ -97,7 +96,6 @@ internal class EffectCompiler(
     internal fun handle(
         effect: UserDefinedEffect,
         compileBody: (FunctionContext) -> FunctionContext,
-        handlerTypes: List<HandlerNode.Type>,
         operationHandlers: List<LlvmOperand>,
         context: FunctionContext
     ): Pair<FunctionContext, LlvmOperand> {
@@ -132,7 +130,6 @@ internal class EffectCompiler(
                 effectHandlersPush(
                     effect = effect,
                     operationHandlers = operationHandlers,
-                    handlerTypes = handlerTypes,
                     setjmpEnv = setjmpEnv,
                     context = it
                 )
@@ -192,7 +189,6 @@ internal class EffectCompiler(
     private fun effectHandlersPush(
         effect: UserDefinedEffect,
         operationHandlers: List<LlvmOperand>,
-        handlerTypes: List<HandlerNode.Type>,
         setjmpEnv: LlvmOperand,
         context: FunctionContext
     ): FunctionContext {
@@ -211,7 +207,7 @@ internal class EffectCompiler(
                     )
             ))
             .let {
-                handlerTypes.foldIndexed(it) { operationIndex, context, handlerType ->
+                operationHandlers.foldIndexed(it) { operationIndex, context, operationHandler ->
                     val operationHandlerName = irBuilder.generateName("operationHandler")
                     val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
                     val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
@@ -219,25 +215,10 @@ internal class EffectCompiler(
                     val closure = irBuilder.generateLocal("operationHandlerClosure")
                     val previousEffectHandlerStack = irBuilder.generateLocal("previousEffectHandlerStack")
 
-                    val returnInstructions = when (handlerType) {
-                        HandlerNode.Type.EXIT ->
-                            listOf(
-                                operationHandlerExitDeclaration.call(
-                                    target = null,
-                                    arguments = listOf(
-                                        LlvmOperandLocal("effect_handler"),
-                                        operationHandlerResult
-                                    )
-                                ),
-                                LlvmUnreachable
-                            )
-
-                        HandlerNode.Type.RESUME ->
-                            listOf(
-                                restore(previousEffectHandlerStack),
-                                LlvmReturn(compiledValueType, operationHandlerResult)
-                            )
-                    }
+                    val returnInstructions = listOf(
+                        restore(previousEffectHandlerStack),
+                        LlvmReturn(compiledValueType, operationHandlerResult)
+                    )
 
                     context
                         .addTopLevelEntities(LlvmFunctionDefinition(
@@ -277,7 +258,7 @@ internal class EffectCompiler(
                         .addInstructions(LlvmIntToPtr(
                             target = closure,
                             targetType = CTypes.voidPointer,
-                            value = operationHandlers[operationIndex],
+                            value = operationHandler,
                             sourceType = compiledValueType
                         ))
                         .addInstructions(effectHandlersSetOperationHandler(
@@ -344,7 +325,6 @@ internal class EffectCompiler(
         name = "shed_operation_handler_exit",
         returnType = LlvmTypes.void,
         parameters = listOf(
-            LlvmParameter(effectHandlerType, "effect_handler"),
             LlvmParameter(compiledValueType, "exit_value")
         ),
         noReturn = true
@@ -472,6 +452,18 @@ internal class EffectCompiler(
             target = target,
             type = compiledValueType,
             pointer = LlvmOperandGlobal(exitValueDeclaration.name)
+        )
+    }
+
+    internal fun exit(value: LlvmOperand): List<LlvmInstruction> {
+        return listOf(
+            operationHandlerExitDeclaration.call(
+                target = null,
+                arguments = listOf(
+                    value
+                )
+            ),
+            LlvmUnreachable
         )
     }
 

@@ -394,32 +394,11 @@ class Loader(
                     .sortedBy { handler -> handler.operationName }
 
                 val operationHandlerInstructions = operationHandlers
-                    .map { handler ->
-                        val declareFunction = loadFunctionValue(handler.function)
-                        when (handler.type) {
-                            HandlerNode.Type.EXIT -> {
-                                declareFunction
-                            }
-                            HandlerNode.Type.RESUME -> {
-                                if (declareFunction.bodyInstructions.last() != Return) {
-                                    throw UnsupportedOperationException("expected last instruction to be return")
-                                }
-                                DeclareFunction(
-                                    name = declareFunction.name,
-                                    positionalParameters = declareFunction.positionalParameters,
-                                    namedParameters = declareFunction.namedParameters,
-                                    bodyInstructions = declareFunction.bodyInstructions.dropLast(1)
-                                        .toPersistentList()
-                                        .add(Resume)
-                                )
-                            }
-                        }
-                    }
+                    .map { handler -> loadFunctionValue(handler.function) }
 
                 val body = loadBlock(node.body)
                 val effectHandleInstruction = EffectHandle(
                     effect = effect,
-                    handlerTypes = operationHandlers.map { handler -> handler.type },
                     instructions = body
                 )
 
@@ -493,12 +472,25 @@ class Loader(
         return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
                 val expressionInstructions = loadExpression(node.expression)
-                if (node.type == ExpressionStatementNode.Type.RETURN || node.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
-                    return expressionInstructions
-                } else if (node.type == ExpressionStatementNode.Type.NO_RETURN) {
-                    return expressionInstructions.add(Discard)
-                } else {
-                    throw UnsupportedOperationException("not implemented")
+                when (node.type) {
+                    ExpressionStatementNode.Type.RETURN,
+                    ExpressionStatementNode.Type.TAILREC_RETURN ->
+                        return expressionInstructions
+
+                    ExpressionStatementNode.Type.NO_RETURN ->
+                        return expressionInstructions.add(Discard)
+
+                    ExpressionStatementNode.Type.EXIT ->
+                        return expressionInstructions
+                            .add(Exit)
+                            // TODO: remove this? necessary since functions must have a value to return
+                            .add(PushValue(IrUnit))
+
+                    ExpressionStatementNode.Type.RESUME ->
+                        return expressionInstructions
+                            .add(Resume)
+                            // TODO: remove this? necessary since functions must have a value to return
+                            .add(PushValue(IrUnit))
                 }
             }
 

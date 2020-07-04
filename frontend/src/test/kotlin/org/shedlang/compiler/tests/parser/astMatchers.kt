@@ -63,12 +63,10 @@ internal fun isHandle(
 
 internal fun isHandler(
     operationName: Matcher<Identifier>,
-    function: Matcher<FunctionExpressionNode>,
-    type: Matcher<HandlerNode.Type>
+    function: Matcher<FunctionExpressionNode>
 ) = allOf(
     has(HandlerNode::operationName, operationName),
-    has(HandlerNode::function, function),
-    has(HandlerNode::type, type)
+    has(HandlerNode::function, function)
 )
 
 internal fun isBlock(vararg statements: Matcher<FunctionStatementNode>) = has(Block::statements, isSequence(*statements))
@@ -81,6 +79,14 @@ internal fun isExpressionStatement(
         has(ExpressionStatementNode::expression, expression),
         has(ExpressionStatementNode::type, type)
     ))
+}
+
+internal fun isExit(expression: Matcher<ExpressionNode>): Matcher<FunctionStatementNode> {
+    return isExpressionStatement(expression = expression, type = equalTo(ExpressionStatementNode.Type.EXIT))
+}
+
+internal fun isResume(expression: Matcher<ExpressionNode>): Matcher<FunctionStatementNode> {
+    return isExpressionStatement(expression = expression, type = equalTo(ExpressionStatementNode.Type.RESUME))
 }
 
 inline internal fun isVal(

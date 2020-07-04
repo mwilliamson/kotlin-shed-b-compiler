@@ -805,7 +805,7 @@ class CodeGeneratorTests {
         val effectReference = staticReference("EarlyExit")
         val functionReference = variableReference("f")
         val handlerDefinition = functionExpression(body = listOf(
-            expressionStatementReturn(literalInt(42))
+            exit(literalInt(42))
         ))
         val shed = handle(
             effect = effectReference,
@@ -813,7 +813,7 @@ class CodeGeneratorTests {
                 expressionStatementReturn(call(receiver = functionReference))
             )),
             handlers = listOf(
-                handlerExit("exit", handlerDefinition)
+                handler("exit", handlerDefinition)
             )
         )
         val effect = userDefinedEffect(Identifier("Exit"), { effect ->

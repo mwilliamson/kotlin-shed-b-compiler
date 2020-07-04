@@ -1,6 +1,5 @@
 package org.shedlang.compiler.parser
 
-import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
 import org.shedlang.compiler.typechecker.SourceError
@@ -696,6 +695,24 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
             expression = expression,
             source = source
         )
+    } else if (token.tokenType == TokenType.KEYWORD_EXIT) {
+        val source = tokens.location()
+        tokens.skip()
+        val expression = parseExpression(tokens)
+        return ExpressionStatementNode(
+            type = ExpressionStatementNode.Type.EXIT,
+            expression = expression,
+            source = source
+        )
+    } else if (token.tokenType == TokenType.KEYWORD_RESUME) {
+        val source = tokens.location()
+        tokens.skip()
+        val expression = parseExpression(tokens)
+        return ExpressionStatementNode(
+            type = ExpressionStatementNode.Type.RESUME,
+            expression = expression,
+            source = source
+        )
     } else {
         val expression = tryParseExpression(tokens)
         if (expression == null) {
@@ -1326,7 +1343,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
 
             val handlerFunctionSource = tokens.location()
             val handlerParameters = parseParameters(tokens)
-            val (handlerType, handlerBody) = parseHandlerBody(tokens)
+            val handlerBody = parseFunctionStatements(tokens)
             HandlerNode(
                 operationName = operationName,
                 function = FunctionExpressionNode(
@@ -1339,7 +1356,6 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
                     body = handlerBody,
                     source = handlerFunctionSource
                 ),
-                type = handlerType,
                 source = handlerSource
             )
         },
@@ -1357,46 +1373,6 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
         handlers = handlers,
         source = source
     )
-}
-
-private fun parseHandlerBody(tokens: TokenIterator<TokenType>): Pair<HandlerNode.Type, Block> {
-    val source = tokens.location()
-    tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
-    val statements = parseMany(
-        parseElement = { tokens ->
-            val statement = parseFunctionStatement(tokens)
-            if (statement.isReturn) {
-                throw ParseError("cannot return from a handler without explicit exit", source = statement.source)
-            } else {
-                statement
-            }
-        },
-        isEnd = { tokens -> tokens.isNext(TokenType.KEYWORD_EXIT) || tokens.isNext(TokenType.KEYWORD_RESUME) },
-        allowZero = true,
-        tokens = tokens
-    )
-
-    val handlerType = if (tokens.trySkip(TokenType.KEYWORD_EXIT)) {
-        HandlerNode.Type.EXIT
-    } else if (tokens.trySkip(TokenType.KEYWORD_RESUME)) {
-        HandlerNode.Type.RESUME
-    } else {
-        throw CompilerError("unknown handler type", source = source)
-    }
-
-    val exitExpression = parseExpression(tokens)
-    tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-    val body = Block(
-        statements = statements + listOf(
-            ExpressionStatementNode(
-                expression = exitExpression,
-                type = ExpressionStatementNode.Type.RETURN,
-                source = exitExpression.source
-            )
-        ),
-        source = source
-    )
-    return handlerType to body
 }
 
 private fun parseVariableReference(tokens: TokenIterator<TokenType>): ReferenceNode {

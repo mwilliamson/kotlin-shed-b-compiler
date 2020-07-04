@@ -1,7 +1,6 @@
 package org.shedlang.compiler.stackir
 
 import kotlinx.collections.immutable.PersistentList
-import org.shedlang.compiler.ast.HandlerNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
@@ -78,9 +77,10 @@ class EffectDefine(val effect: UserDefinedEffect): Instruction()
 
 class EffectHandle(
     val effect: UserDefinedEffect,
-    val handlerTypes: List<HandlerNode.Type>,
     val instructions: List<Instruction>
 ): Instruction()
+
+object Exit: Instruction()
 
 class FieldAccess(val fieldName: Identifier, val receiverType: Type): Instruction()
 

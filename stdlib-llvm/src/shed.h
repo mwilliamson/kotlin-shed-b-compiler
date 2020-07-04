@@ -60,7 +60,7 @@ struct OperationHandler {
 struct EffectHandler {
     EffectId effect_id;
     struct EffectHandler* next;
-    jmp_buf* env;
+    jmp_buf* exit_env;
     struct OperationHandler operation_handlers[];
 };
 
@@ -74,8 +74,5 @@ void shed_effect_handlers_set_operation_handler(
 );
 ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedValue* operation_arguments);
 
-ShedValue shed_operation_handler_exit(
-    struct EffectHandler* effect_handler,
-    ShedValue exit_value
-);
+ShedValue shed_operation_handler_exit(ShedValue exit_value);
 #endif
