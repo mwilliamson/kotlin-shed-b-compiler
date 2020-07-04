@@ -349,10 +349,6 @@ internal class Compiler(
                 return context3.pushTemporary(result)
             }
 
-            is Exit -> {
-                return context
-            }
-
             is FieldAccess -> {
                 val (context2, operand) = context.popTemporary()
 
@@ -478,6 +474,10 @@ internal class Compiler(
 
             is ModuleInit -> {
                 return moduleInit(instruction.moduleName, context)
+            }
+
+            is ModuleInitExit -> {
+                return context
             }
 
             is ModuleLoad -> {

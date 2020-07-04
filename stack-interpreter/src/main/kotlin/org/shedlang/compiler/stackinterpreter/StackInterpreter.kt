@@ -7,8 +7,8 @@ import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.AnyType
-import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.UserDefinedEffect
 import java.math.BigInteger
 
 interface World {
@@ -602,10 +602,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )
         }
 
-        is Exit -> {
-            initialState.exit()
-        }
-
         is FieldAccess -> {
             val (state2, receiver) = initialState.popTemporary()
             val module = receiver as InterpreterHasFields
@@ -696,6 +692,10 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                     instructions = initialState.moduleInitialisation(moduleName)
                 )
             }
+        }
+
+        is ModuleInitExit -> {
+            initialState.exit()
         }
 
         is ModuleLoad -> {

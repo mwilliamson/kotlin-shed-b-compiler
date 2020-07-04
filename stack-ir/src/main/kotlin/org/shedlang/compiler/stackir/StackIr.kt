@@ -82,8 +82,6 @@ class EffectHandle(
     val instructions: List<Instruction>
 ): Instruction()
 
-object Exit: Instruction()
-
 class FieldAccess(val fieldName: Identifier, val receiverType: Type): Instruction()
 
 object IntAdd: Instruction()
@@ -118,6 +116,8 @@ class LocalStore(val variableId: Int, val name: Identifier): Instruction() {
 }
 
 class ModuleInit(val moduleName: ModuleName): Instruction()
+
+object ModuleInitExit: Instruction()
 
 class ModuleLoad(val moduleName: ModuleName): Instruction()
 

@@ -78,7 +78,7 @@ class Loader(
                     export.name to module.references[export].nodeId
                 }
             ))
-            .add(Exit)
+            .add(ModuleInitExit)
     }
 
     private fun isReferenced(module: Module.Shed, variableBinder: VariableBindingNode) =

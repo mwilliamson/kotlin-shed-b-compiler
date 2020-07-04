@@ -264,7 +264,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
                         )
                     }
             }
-            is Exit -> {
+            is ModuleInitExit -> {
                 CompilationResult.EMPTY
             }
             is PushValue -> {
