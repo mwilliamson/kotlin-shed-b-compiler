@@ -332,7 +332,9 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         override fun visit(node: ExpressionStatementNode): Type {
             val type = inferType(node.expression, context)
 
-            return if (node.isReturn) {
+            return if (node.type == ExpressionStatementNode.Type.RESUME) {
+                NothingType
+            } else if (node.isReturn) {
                 type
             } else {
                 UnitType

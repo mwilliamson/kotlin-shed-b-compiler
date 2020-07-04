@@ -74,4 +74,11 @@ class TypeCheckExpressionStatementTests {
         val type = typeCheckFunctionStatement(node, typeContext())
         assertThat(type, isBoolType)
     }
+
+    @Test
+    fun resumeHasNothingType() {
+        val node = resume(literalBool())
+        val type = typeCheckFunctionStatement(node, typeContext())
+        assertThat(type, isNothingType)
+    }
 }
