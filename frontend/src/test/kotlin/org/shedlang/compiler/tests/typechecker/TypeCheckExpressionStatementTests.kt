@@ -67,4 +67,11 @@ class TypeCheckExpressionStatementTests {
         typeCheckFunctionDeclaration(functionDeclaration, context)
         context.undefer()
     }
+
+    @Test
+    fun exitHasTypeOfExpression() {
+        val node = exit(literalBool())
+        val type = typeCheckFunctionStatement(node, typeContext())
+        assertThat(type, isBoolType)
+    }
 }
