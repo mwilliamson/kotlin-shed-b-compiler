@@ -707,7 +707,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
             val isReturn = if (branches == null) {
                 !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
             } else {
-                branchesReturn(expression, branches)
+                isTerminatingExpression(expression)
             }
             val type = if (isReturn) {
                 ExpressionStatementNode.Type.VALUE
@@ -720,17 +720,6 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
                 source = expression.source
             )
         }
-    }
-}
-
-private fun branchesReturn(expression: Node, branches: Iterable<Block>): Boolean {
-    val isTerminateds = branches.map { body ->
-        body.isTerminated
-    }.toSet()
-    return if (isTerminateds.size == 1) {
-        isTerminateds.single()
-    } else {
-        throw InconsistentBranchTerminationError(source = expression.source)
     }
 }
 
