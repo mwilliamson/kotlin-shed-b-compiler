@@ -19,14 +19,14 @@ fun readStandalone(directory: Path, moduleName: ModuleName): ModuleSet {
     return ModuleSet(reader.modules)
 }
 
-private val sourceDirectoryName = "src"
+private const val sourceDirectoryName = "src"
 
 fun readPackage(base: Path, name: ModuleName): ModuleSet {
     val dependencyDirectories = base.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
     val dependencies = dependencyDirectories
-        .map({ file -> file.resolve(sourceDirectoryName) })
-        .filter({ file -> file.exists() && file.isDirectory })
-        .map({ file -> file.toPath() })
+        .map { file -> file.resolve(sourceDirectoryName) }
+        .filter { file -> file.exists() && file.isDirectory }
+        .map { file -> file.toPath() }
     val sourceDirectories = listOf(base.resolve(sourceDirectoryName)) + dependencies
 
     val reader = ModuleReader(sourceDirectories = sourceDirectories)
@@ -41,7 +41,7 @@ private fun readModule(
 ): Module {
     val moduleText = path.toFile().readText()
 
-    val nodeTypes = builtins.associate({ builtin -> builtin.nodeId to builtin.type })
+    val nodeTypes = builtins.associate { builtin -> builtin.nodeId to builtin.type }
     val importPathToModule: (ImportPath) -> ModuleResult = { importPath ->
         val fullPath = resolveImport(name, importPath)
         getModule(fullPath)
@@ -143,7 +143,7 @@ private val coreImports = listOf(intToStringImport, ioImport, optionsImport)
 private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
     return resolve(
         moduleNode,
-        builtins.associate({ builtin -> builtin.name to builtin })
+        builtins.associate { builtin -> builtin.name to builtin }
     )
 }
 
@@ -154,9 +154,9 @@ internal sealed class ModuleResult(val name: ModuleName) {
 }
 
 private class ModuleReader(private val sourceDirectories: List<Path>) {
-    private val modulesByName = LazyMap<ModuleName, ModuleResult>({ name ->
+    private val modulesByName = LazyMap<ModuleName, ModuleResult> { name ->
         readModuleInPackage(name = name)
-    })
+    }
 
     internal fun load(name: ModuleName) {
         modulesByName.get(name) as ModuleResult.Found
@@ -173,12 +173,12 @@ private class ModuleReader(private val sourceDirectories: List<Path>) {
 
     private fun readModuleInPackage(name: ModuleName): ModuleResult {
         val bases = listOf(findRoot().resolve("corelib").resolve(sourceDirectoryName)) + sourceDirectories
-        val possiblePaths = bases.flatMap({ base ->
+        val possiblePaths = bases.flatMap { base ->
             listOf(".shed", ".types.shed").map { extension ->
                 pathAppend(name.fold(base, { path, part -> path.resolve(part.value) }), extension)
             }
-        })
-        val matchingPaths = possiblePaths.filter({ path -> path.toFile().exists() })
+        }
+        val matchingPaths = possiblePaths.filter { path -> path.toFile().exists() }
         if (matchingPaths.size == 0) {
             return ModuleResult.NotFound(name)
         } else if (matchingPaths.size > 1) {
@@ -202,9 +202,9 @@ private fun pathAppend(path: Path, suffix: String): Path {
 
 fun installDependencies(path: Path) {
     val packageConfig = readPackageConfig(path)
-    packageConfig.dependencies().forEach({ dependency ->
+    packageConfig.dependencies().forEach { dependency ->
         installDependency(path, dependency)
-    })
+    }
 }
 
 private fun installDependency(root: Path, dependency: Dependency) {
@@ -223,7 +223,7 @@ private fun installDependency(root: Path, dependency: Dependency) {
     Files.createSymbolicLink(dependencyDestinationPath, Paths.get("../").resolve(dependency.source))
 }
 
-private val dependenciesDirectoryName = "shedDependencies"
+private const val dependenciesDirectoryName = "shedDependencies"
 
 private fun readPackageConfig(path: Path): PackageConfig {
     val configPath = path.resolve("shed.toml")
