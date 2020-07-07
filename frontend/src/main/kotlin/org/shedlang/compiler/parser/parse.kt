@@ -1077,14 +1077,15 @@ private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<Expr
 
     for (argument in arguments) {
         when (argument) {
-            is ParsedArgument.Positional -> {
+            is ParsedArgument.Positional ->
                 if (namedArguments.isEmpty()) {
                     positionalArguments.add(argument.expression)
                 } else {
-                    throw ParseError("Positional argument cannot appear after named argument", source = argument.expression.source)
+                    throw PositionalArgumentAfterNamedArgumentError(source = argument.expression.source)
                 }
-            }
-            is ParsedArgument.Named -> namedArguments.add(argument.node)
+
+            is ParsedArgument.Named ->
+                namedArguments.add(argument.node)
         }
     }
 

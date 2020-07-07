@@ -2,10 +2,10 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.ParseError
+import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.parser.PositionalArgumentAfterNamedArgumentError
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
@@ -63,7 +63,7 @@ class ParseCallTests {
         val source = "f(.x = y, z)"
         assertThat(
             { parseString(::parseExpression, source) },
-            throws(has(ParseError::message, equalTo("Positional argument cannot appear after named argument")))
+            throwsException<PositionalArgumentAfterNamedArgumentError>()
         )
     }
 

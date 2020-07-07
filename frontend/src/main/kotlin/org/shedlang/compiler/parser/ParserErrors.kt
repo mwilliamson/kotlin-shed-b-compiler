@@ -28,6 +28,12 @@ internal class InconsistentBranchTerminationError(source: Source): ParseError(
     source = source
 )
 
+internal class PositionalArgumentAfterNamedArgumentError(source: Source): ParseError(
+    message = "positional arguments are not allowed after named arguments",
+    source = source
+)
+
+
 internal class PositionalParameterAfterNamedParameterError(source: Source): ParseError(
     message = "positional parameters are not allowed after named parameters",
     source = source
