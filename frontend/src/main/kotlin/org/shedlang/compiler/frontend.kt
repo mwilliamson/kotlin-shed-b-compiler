@@ -49,13 +49,9 @@ private fun readModule(
 
     if (path.toString().endsWith(".types.shed")) {
         val parsedModuleNode = parseTypesModule(filename = path.toString(), input = moduleText)
-        // TODO: fix duplication with .shed modules
-        val moduleNode = if (!isCoreModule(name)) {
-            val imports = coreImports + parsedModuleNode.imports
-            parsedModuleNode.copy(imports = imports)
-        } else {
-            parsedModuleNode
-        }
+        val moduleNode = parsedModuleNode.copy(
+            imports = addCoreModuleImports(name = name, imports = parsedModuleNode.imports)
+        )
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         val typeCheckResult = typeCheck(
@@ -73,12 +69,9 @@ private fun readModule(
     } else {
         val parsedModuleNode = parse(filename = path.toString(), input = moduleText)
         // TODO: fix duplication with .types.shed modules
-        val moduleNode = if (!isCoreModule(name)) {
-            val imports = coreImports + parsedModuleNode.imports
-            parsedModuleNode.copy(imports = imports)
-        } else {
-            parsedModuleNode
-        }
+        val moduleNode = parsedModuleNode.copy(
+            imports = addCoreModuleImports(name = name, imports = parsedModuleNode.imports)
+        )
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         checkTailCalls(moduleNode, references = resolvedReferences)
@@ -97,6 +90,14 @@ private fun readModule(
             types = typeCheckResult.types,
             references = resolvedReferences
         )
+    }
+}
+
+private fun addCoreModuleImports(name: ModuleName, imports: List<ImportNode>): List<ImportNode> {
+    return if (isCoreModule(name)) {
+        imports
+    } else {
+        coreImports + imports
     }
 }
 
