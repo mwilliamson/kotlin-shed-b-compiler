@@ -373,7 +373,7 @@ class Loader(
             override fun visit(node: WhenNode): PersistentList<Instruction> {
                 val expressionInstructions = loadExpression(node.expression)
 
-                val conditionInstructions = node.branches.map { branch ->
+                val conditionInstructions = node.conditionalBranches.map { branch ->
                     val discriminator = inspector.discriminatorForWhenBranch(node, branch)
 
                     persistentListOf<Instruction>(Duplicate).addAll(typeConditionInstructions(discriminator))
@@ -381,7 +381,7 @@ class Loader(
 
                 return expressionInstructions.addAll(generateBranches(
                     conditionInstructions = conditionInstructions,
-                    conditionalBodies = node.branches.map { branch -> branch.body },
+                    conditionalBodies = node.conditionalBranches.map { branch -> branch.body },
                     elseBranch = node.elseBranch,
                     beforeBranch = listOf(Discard)
                 ))

@@ -707,7 +707,7 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             val temporaryName = "\$shed_tmp"
 
             context.enterFunction(isAsync = context.isAsync())
-            val branches = node.branches.map { branch ->
+            val branches = node.conditionalBranches.map { branch ->
                 val expression = NodeSource(branch)
                 val discriminator = context.inspector.discriminatorForWhenBranch(node, branch)
                 val condition = generateTypeCondition(

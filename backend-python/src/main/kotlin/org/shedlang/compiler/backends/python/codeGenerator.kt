@@ -1163,7 +1163,7 @@ private fun generateWhenCode(
             Pair(assignment, expressionName)
         }
 
-        val branches = node.branches.map { branch ->
+        val branches = node.conditionalBranches.map { branch ->
             PythonConditionalBranchNode(
                 condition = generateTypeCondition(
                     expression = PythonVariableReferenceNode(

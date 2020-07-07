@@ -850,7 +850,7 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
 
     val node = WhenNode(
         expression = expression,
-        branches = branches,
+        conditionalBranches = branches,
         elseBranch = elseBranch,
         source = source
     )

@@ -63,11 +63,11 @@ fun conditionalBranch(
 
 fun whenExpression(
     expression: ExpressionNode,
-    branches: List<WhenBranchNode> = listOf(),
+    conditionalBranches: List<WhenBranchNode> = listOf(),
     elseBranch: List<FunctionStatementNode>? = null
 ) = WhenNode(
     expression = expression,
-    branches = branches,
+    conditionalBranches = conditionalBranches,
     elseBranch = if (elseBranch == null) null else Block(elseBranch, source = anySource()),
     source = anySource()
 )

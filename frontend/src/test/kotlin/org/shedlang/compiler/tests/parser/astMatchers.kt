@@ -39,7 +39,7 @@ internal fun isWhen(
     elseBranch: Matcher<Block?>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(WhenNode::expression, expression),
-    has(WhenNode::branches, branches),
+    has(WhenNode::conditionalBranches, branches),
     has(WhenNode::elseBranch, elseBranch)
 ))
 

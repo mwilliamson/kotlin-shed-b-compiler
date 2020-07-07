@@ -213,7 +213,7 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
 private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type {
     val expressionType = checkTypeConditionOperand(node.expression, context)
 
-    val branchResults = node.branches.map { branch ->
+    val branchResults = node.conditionalBranches.map { branch ->
         val conditionType = evalStaticValue(branch.type, context)
         val discriminator = evalTypeCondition(
             expressionType = expressionType,

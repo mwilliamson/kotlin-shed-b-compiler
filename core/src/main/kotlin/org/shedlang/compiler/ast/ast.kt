@@ -660,13 +660,13 @@ data class ConditionalBranchNode(
 
 data class WhenNode(
     val expression: ExpressionNode,
-    val branches: List<WhenBranchNode>,
+    val conditionalBranches: List<WhenBranchNode>,
     val elseBranch: Block?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val structure: List<NodeStructure>
-        get() = (listOf(expression) + branches).map(NodeStructures::eval) +
+        get() = (listOf(expression) + conditionalBranches).map(NodeStructures::eval) +
             NodeStructures.subEnv(elseBranch.nullableToList().map(NodeStructures::eval))
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
@@ -674,7 +674,7 @@ data class WhenNode(
     }
 
     val branchBodies: Iterable<Block>
-        get() = branches.map { branch -> branch.body } + elseBranch.nullableToList()
+        get() = conditionalBranches.map { branch -> branch.body } + elseBranch.nullableToList()
 }
 
 data class WhenBranchNode(
