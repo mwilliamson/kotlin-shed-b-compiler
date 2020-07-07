@@ -2,12 +2,11 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
+import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.parser.InconsistentBranchTerminationError
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.typechecker.SourceError
 
 class ParseIfTests {
     @Test
@@ -76,7 +75,7 @@ class ParseIfTests {
 
         assertThat(
             { parseString(::parseExpression, source) },
-            throwsException(has(SourceError::message, equalTo("Some branches do not provide a value")))
+            throws<InconsistentBranchTerminationError>()
         )
     }
 }

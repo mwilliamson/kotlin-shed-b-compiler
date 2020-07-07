@@ -749,9 +749,7 @@ private fun branchesReturn(expression: Node, branches: Iterable<Block>): Boolean
     return if (isTerminateds.size == 1) {
         isTerminateds.single()
     } else {
-        // TODO: raise a more specific exception
-        // TODO: should these checks be in the expression nodes themselves?
-        throw SourceError("Some branches do not provide a value", source = expression.source)
+        throw InconsistentBranchTerminationError(source = expression.source)
     }
 }
 
@@ -1628,9 +1626,7 @@ private fun isTerminatingExpression(node: ExpressionNode): Boolean {
         return if (isTerminateds.size == 1) {
             isTerminateds.single()
         } else {
-            // TODO: raise a more specific exception
-            // TODO: should these checks be in the expression nodes themselves?
-            throw SourceError("Some branches do not provide a value", source = node.source)
+            throw InconsistentBranchTerminationError(source = node.source)
         }
     }
 }
