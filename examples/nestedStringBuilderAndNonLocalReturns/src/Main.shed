@@ -32,7 +32,7 @@ fun outer() !StringBuilder.Write -> Unit {
     StringBuilder.write!("outer3\n");
 }
 
-fun inner() !StringBuilder.Write, !NonLocalReturn -> Unit {
+fun inner() ! StringBuilder.Write | NonLocalReturn -> Unit {
     NonLocalReturn.nonLocalReturn!("inner1\n");
     StringBuilder.write!("inner2\n");
 }

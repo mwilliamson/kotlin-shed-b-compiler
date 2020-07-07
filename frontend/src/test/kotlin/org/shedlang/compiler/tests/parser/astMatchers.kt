@@ -362,6 +362,12 @@ internal fun isTupleTypeNode(
     has(TupleTypeNode::elementTypes, elementTypes)
 )
 
+internal fun isStaticUnion(
+    elements: Matcher<List<StaticExpressionNode>> = anything
+): Matcher<StaticExpressionNode> = cast(
+    has(StaticUnionNode::elements, elements)
+)
+
 internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
     = cast(has(IntegerLiteralNode::value, has(BigInteger::intValueExact, value)))
 

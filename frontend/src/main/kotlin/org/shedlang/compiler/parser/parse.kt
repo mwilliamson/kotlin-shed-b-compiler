@@ -1534,7 +1534,8 @@ private interface StaticOperationParser: ExpressionParser<StaticExpressionNode> 
     companion object {
         private val parsers = listOf(
             StaticCallParser,
-            StaticFieldAccessParser
+            StaticFieldAccessParser,
+            StaticUnionParser
         ).associateBy({ parser -> parser.operatorToken })
 
         fun lookup(tokenType: TokenType): StaticOperationParser? {
@@ -1584,6 +1585,20 @@ private object StaticFieldAccessParser : StaticOperationParser {
 
     override val precedence: Int
         get() = 14
+}
+
+private object StaticUnionParser : StaticOperationParser {
+    override val operatorToken: TokenType
+        get() = TokenType.SYMBOL_BAR
+
+    override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+        tokens.skip()
+        val right = parseStaticExpression(tokens, precedence = precedence)
+        return StaticUnionNode(elements = listOf(left, right), source = left.source)
+    }
+
+    override val precedence: Int
+        get() = 13
 }
 
 private fun parseIdentifier(tokens: TokenIterator<TokenType>) = Identifier(tokens.nextValue(TokenType.IDENTIFIER))
