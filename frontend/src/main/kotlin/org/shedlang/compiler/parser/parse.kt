@@ -767,11 +767,13 @@ private fun parseIf(tokens: TokenIterator<TokenType>) : IfNode {
         Block(statements = listOf(), source = elseSource)
     }
 
-    return IfNode(
+    val node = IfNode(
         conditionalBranches = conditionalBranches,
         elseBranch = elseBranch,
         source = source
     )
+    verifyConsistentBranchTermination(node)
+    return node
 }
 
 private fun parseConditionalBranches(tokens: TokenIterator<TokenType>, source: StringSource): List<ConditionalBranchNode> {
@@ -846,12 +848,16 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
 
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
 
-    return WhenNode(
+    val node = WhenNode(
         expression = expression,
         branches = branches,
         elseBranch = elseBranch,
         source = source
     )
+
+    verifyConsistentBranchTermination(node)
+
+    return node
 }
 
 private fun parseWhenBranch(tokens: TokenIterator<TokenType>): WhenBranchNode {
@@ -1606,6 +1612,28 @@ private object StaticFieldAccessParser : StaticOperationParser {
 }
 
 private fun parseIdentifier(tokens: TokenIterator<TokenType>) = Identifier(tokens.nextValue(TokenType.IDENTIFIER))
+
+private fun verifyConsistentBranchTermination(node: ExpressionNode) {
+    isTerminatingExpression(node)
+}
+
+private fun isTerminatingExpression(node: ExpressionNode): Boolean {
+    val branches = expressionBranches(node)
+    if (branches == null) {
+        return true
+    } else {
+        val isTerminateds = branches.map { body ->
+            body.isTerminated
+        }.toSet()
+        return if (isTerminateds.size == 1) {
+            isTerminateds.single()
+        } else {
+            // TODO: raise a more specific exception
+            // TODO: should these checks be in the expression nodes themselves?
+            throw SourceError("Some branches do not provide a value", source = node.source)
+        }
+    }
+}
 
 private fun <T> parseOneOrMoreWithSeparator(
     parseElement: (TokenIterator<TokenType>) -> T,
