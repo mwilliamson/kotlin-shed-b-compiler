@@ -494,6 +494,11 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             }
             return StaticValueType(TupleType(elementTypes = elementTypes))
         }
+
+        override fun visit(node: StaticUnionNode): Type {
+            val effects = node.elements.map { element -> evalEffect(element, context) }
+            return StaticValueType(effectUnion(effects))
+        }
     })
     context.addStaticExpressionType(node, type)
     return type

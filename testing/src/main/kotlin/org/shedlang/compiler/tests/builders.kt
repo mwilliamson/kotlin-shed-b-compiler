@@ -564,6 +564,13 @@ fun tupleTypeNode(
     source = anySource()
 )
 
+fun staticUnion(
+    elements: List<StaticExpressionNode>
+) = StaticUnionNode(
+    elements = elements,
+    source = anySource()
+)
+
 fun typeAlias(
     name: String,
     aliasedType: Type

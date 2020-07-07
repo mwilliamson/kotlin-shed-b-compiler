@@ -150,7 +150,7 @@ fun isUserDefinedEffect(
     ))
 }
 
-fun isEffectUnion(members: Matcher<List<Effect>>): Matcher<Effect> = cast(has(EffectUnion::members, members))
+fun isEffectUnion(members: Matcher<List<Effect>>): Matcher<StaticValue> = cast(has(EffectUnion::members, members))
 
 val isIoEffect: Matcher<Effect> = equalTo(IoEffect)
 

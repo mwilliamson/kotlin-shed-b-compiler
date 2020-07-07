@@ -176,6 +176,7 @@ interface StaticExpressionNode : Node {
         fun visit(node: StaticApplicationNode): T
         fun visit(node: FunctionTypeNode): T
         fun visit(node: TupleTypeNode): T
+        fun visit(node: StaticUnionNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -240,7 +241,19 @@ data class TupleTypeNode(
     override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
 
+data class StaticUnionNode(
+    val elements: List<StaticExpressionNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): StaticExpressionNode {
+    override val structure: List<NodeStructure>
+        get() = elements.map(NodeStructures::staticEval)
+
+    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class ModuleNode(
