@@ -2,28 +2,9 @@ package org.shedlang.compiler.parser
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
-import org.shedlang.compiler.typechecker.SourceError
 import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
-
-internal open class InvalidUnicodeScalar(
-    source: Source,
-    message: String
-) : SourceError(message, source = source)
-
-internal class UnrecognisedEscapeSequenceError(
-    val escapeSequence: String,
-    source: Source
-) : InvalidUnicodeScalar(
-    source = source,
-    message = "Unrecognised escape sequence"
-)
-
-internal class InvalidUnicodeScalarLiteral(message: String, source: Source) : SourceError(
-    message = message,
-    source = source
-)
 
 fun parse(filename: String, input: String): ModuleNode {
     return parse(
