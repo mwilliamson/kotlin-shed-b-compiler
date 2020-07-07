@@ -549,7 +549,7 @@ class CodeGeneratorTests {
         )
         val shed = whenExpression(
             fieldAccess(variableReference, "f"),
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch
             ),
             elseBranch = listOf(
@@ -613,7 +613,7 @@ class CodeGeneratorTests {
         )
         val shed = whenExpression(
             variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch
             )
         )
@@ -663,7 +663,7 @@ class CodeGeneratorTests {
         )
         val whenExpression = whenExpression(
             variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch
             ),
             elseBranch = listOf(

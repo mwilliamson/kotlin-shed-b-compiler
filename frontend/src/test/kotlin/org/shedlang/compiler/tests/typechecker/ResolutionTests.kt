@@ -362,7 +362,7 @@ class ResolutionTests {
         val typeReference = staticReference("T")
         val node = whenExpression(
             expression = literalInt(),
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(type = typeReference)
             )
         )
@@ -380,7 +380,7 @@ class ResolutionTests {
 
         val node = whenExpression(
             expression = literalInt(),
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(
                     type = staticReference("T"),
                     body = listOf(

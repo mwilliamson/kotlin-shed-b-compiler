@@ -794,7 +794,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
         val node = whenExpression(
             expression = call(shape2Reference),
-            branches = listOf(branch1, branch2, branch3, branch4)
+            conditionalBranches = listOf(branch1, branch2, branch3, branch4)
         )
 
         val tag = tag(listOf("Example"), "Tag")

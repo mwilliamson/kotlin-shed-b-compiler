@@ -322,7 +322,7 @@ class CodeGeneratorTests {
         )
         val shed = whenExpression(
             variableReference("x"),
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch
             ),
             elseBranch = listOf(

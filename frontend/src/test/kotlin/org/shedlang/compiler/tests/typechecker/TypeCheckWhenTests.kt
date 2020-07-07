@@ -42,7 +42,7 @@ class TypeCheckWhenTests {
         val valueReference = variableReference("value")
         val expression = whenExpression(
             expression = valueReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(type = memberReference)
             )
         )
@@ -67,7 +67,7 @@ class TypeCheckWhenTests {
 
         val expression = whenExpression(
             expression = variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(
                     type = inputMember1TypeReference,
                     body = listOf(
@@ -102,7 +102,7 @@ class TypeCheckWhenTests {
 
         val expression = whenExpression(
             expression = variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(
                     type = inputMember1TypeReference,
                     body = listOf(
@@ -137,7 +137,7 @@ class TypeCheckWhenTests {
         val types = captureTypes(
             whenExpression(
                 expression = variableReference,
-                branches = listOf(
+                conditionalBranches = listOf(
                     whenBranch(
                         type = inputMember1TypeReference,
                         body = listOf(
@@ -167,7 +167,7 @@ class TypeCheckWhenTests {
 
         val statement = whenExpression(
             expression = variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(
                     type = inputMember1TypeReference,
                     body = listOf()
@@ -197,7 +197,7 @@ class TypeCheckWhenTests {
 
         val expression = whenExpression(
             expression = variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 whenBranch(
                     type = inputMember1TypeReference,
                     body = listOf()
@@ -237,7 +237,7 @@ class TypeCheckWhenTests {
         )
         val expression = whenExpression(
             expression = variableReference,
-            branches = listOf(
+            conditionalBranches = listOf(
                 branch1,
                 branch2
             )

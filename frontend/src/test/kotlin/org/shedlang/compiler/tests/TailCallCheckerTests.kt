@@ -128,7 +128,7 @@ class TailCallCheckerTests {
         val expressionStatement = expressionStatementReturn(
             whenExpression(
                 expression = literalBool(),
-                branches = listOf(),
+                conditionalBranches = listOf(),
                 elseBranch = listOf(expressionStatementTailRecReturn(call(receiver = functionReference)))
             )
         )
@@ -151,7 +151,7 @@ class TailCallCheckerTests {
         val expressionStatement = expressionStatementReturn(
             whenExpression(
                 expression = literalBool(),
-                branches = listOf(),
+                conditionalBranches = listOf(),
                 elseBranch = listOf(expressionStatementTailRecReturn(literalBool()))
             )
         )
