@@ -523,13 +523,19 @@ private fun parseParameters(tokens: TokenIterator<TokenType>): Parameters {
         allowTrailingSeparator = true
     )
 
-    // TODO: don't allow positional parameter after named
     val positionalParameters = mutableListOf<ParameterNode>()
     val namedParameters = mutableListOf<ParameterNode>()
     for (parameter in parameters) {
         when (parameter) {
-            is Parameter.Positional -> positionalParameters.add(parameter.node)
-            is Parameter.Named -> namedParameters.add(parameter.node)
+            is Parameter.Positional ->
+                if (namedParameters.isEmpty()) {
+                    positionalParameters.add(parameter.node)
+                } else {
+                    throw PositionalParameterAfterNamedParameterError(source = parameter.node.source)
+                }
+
+            is Parameter.Named ->
+                namedParameters.add(parameter.node)
         }
     }
 

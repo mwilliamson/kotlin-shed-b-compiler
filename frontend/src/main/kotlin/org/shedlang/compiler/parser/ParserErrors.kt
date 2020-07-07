@@ -27,3 +27,8 @@ internal class InconsistentBranchTerminationError(source: Source): ParseError(
     message = "inconsistent branch termination: either all branches must terminate, or all branches must not terminate",
     source = source
 )
+
+internal class PositionalParameterAfterNamedParameterError(source: Source): ParseError(
+    message = "positional parameters are not allowed after named parameters",
+    source = source
+)

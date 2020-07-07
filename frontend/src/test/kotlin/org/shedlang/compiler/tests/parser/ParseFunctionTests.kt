@@ -7,6 +7,7 @@ import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionDeclarationNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.ast.FunctionNode
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isInvariant
@@ -63,6 +64,16 @@ class ParseFunctionTests {
             has(FunctionNode::parameters, isSequence(isParameter("x", "Int"))),
             has(FunctionNode::namedParameters, isSequence(isParameter("y", "Int")))
         ))
+    }
+
+    @Test
+    fun whenPositionalParameterFollowsNamedParameterThenErrorIsThrown() {
+        val source = "fun f(.x: Int, y: Int) -> Unit { }"
+
+        assertThat(
+            { parseString(::parseFunctionDeclaration, source) },
+            throwsException<PositionalParameterAfterNamedParameterError>()
+        )
     }
 
     @Test
