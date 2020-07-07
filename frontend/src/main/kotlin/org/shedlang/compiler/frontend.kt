@@ -68,7 +68,6 @@ private fun readModule(
         )
     } else {
         val parsedModuleNode = parse(filename = path.toString(), input = moduleText)
-        // TODO: fix duplication with .types.shed modules
         val moduleNode = parsedModuleNode.copy(
             imports = addCoreModuleImports(name = name, imports = parsedModuleNode.imports)
         )
