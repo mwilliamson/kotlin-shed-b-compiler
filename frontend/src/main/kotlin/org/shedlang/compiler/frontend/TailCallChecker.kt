@@ -36,16 +36,12 @@ private fun checkStatement(statement: FunctionStatementNode, function: FunctionN
             checkTailCall(expression, function = function, references = references, checkedTailCalls = checkedTailCalls)
             checkedTailCalls.add(statement.nodeId)
         } else if (statement.type == ExpressionStatementNode.Type.RETURN) {
-            val blocks = if (expression is IfNode) {
-                expression.branchBodies
-            } else if (expression is WhenNode) {
-                expression.branchBodies
-            } else {
-                listOf()
-            }
+            val blocks = expressionBranches(expression)
 
-            for (block in blocks) {
-                checkBlock(block, function = function, references = references, checkedTailCalls = checkedTailCalls)
+            if (blocks != null) {
+                for (block in blocks) {
+                    checkBlock(block, function = function, references = references, checkedTailCalls = checkedTailCalls)
+                }
             }
         }
     }

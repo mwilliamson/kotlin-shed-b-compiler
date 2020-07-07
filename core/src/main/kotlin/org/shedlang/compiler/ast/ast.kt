@@ -1059,3 +1059,25 @@ enum class BinaryOperator {
     AND,
     OR
 }
+
+fun expressionBranches(expression: ExpressionNode): Iterable<Block>? {
+    return expression.accept(object : ExpressionNode.Visitor<Iterable<Block>?> {
+        override fun visit(node: UnitLiteralNode): Iterable<Block>? = null
+        override fun visit(node: BooleanLiteralNode): Iterable<Block>? = null
+        override fun visit(node: IntegerLiteralNode): Iterable<Block>? = null
+        override fun visit(node: StringLiteralNode): Iterable<Block>? = null
+        override fun visit(node: UnicodeScalarLiteralNode): Iterable<Block>? = null
+        override fun visit(node: TupleNode): Iterable<Block>? = null
+        override fun visit(node: ReferenceNode): Iterable<Block>? = null
+        override fun visit(node: UnaryOperationNode): Iterable<Block>? = null
+        override fun visit(node: BinaryOperationNode): Iterable<Block>? = null
+        override fun visit(node: IsNode): Iterable<Block>? = null
+        override fun visit(node: CallNode): Iterable<Block>? = null
+        override fun visit(node: PartialCallNode): Iterable<Block>? = null
+        override fun visit(node: FieldAccessNode): Iterable<Block>? = null
+        override fun visit(node: FunctionExpressionNode): Iterable<Block>? = null
+        override fun visit(node: IfNode): Iterable<Block>? = node.branchBodies
+        override fun visit(node: WhenNode): Iterable<Block>? = node.branchBodies
+        override fun visit(node: HandleNode): Iterable<Block>? = null
+    })
+}

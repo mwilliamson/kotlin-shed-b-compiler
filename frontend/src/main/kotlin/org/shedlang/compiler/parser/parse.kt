@@ -722,12 +722,11 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
                 actual = token.describe()
             )
         } else {
-            val isReturn = if (expression is IfNode) {
-                branchesReturn(expression, expression.branchBodies)
-            } else if (expression is WhenNode) {
-                branchesReturn(expression, expression.branches.map { branch -> branch.body })
-            } else {
+            val branches = expressionBranches(expression)
+            val isReturn = if (branches == null) {
                 !tokens.trySkip(TokenType.SYMBOL_SEMICOLON)
+            } else {
+                branchesReturn(expression, branches)
             }
             val type = if (isReturn) {
                 ExpressionStatementNode.Type.RETURN
