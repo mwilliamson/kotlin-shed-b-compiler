@@ -215,13 +215,13 @@ data class FunctionTypeNode(
     val positionalParameters: List<StaticExpressionNode>,
     val namedParameters: List<ParameterNode>,
     val returnType: StaticExpressionNode,
-    val effects: List<StaticExpressionNode>,
+    val effect: StaticExpressionNode?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): StaticExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.subEnv(
-            (staticParameters + positionalParameters + namedParameters + effects + listOf(returnType)).map(NodeStructures::staticEval)
+            (staticParameters + positionalParameters + namedParameters + effect.nullableToList() + listOf(returnType)).map(NodeStructures::staticEval)
         ))
 
 
@@ -484,7 +484,7 @@ interface FunctionNode : Node {
     val parameters: List<ParameterNode>
     val namedParameters: List<ParameterNode>
     val returnType: StaticExpressionNode?
-    val effects: List<StaticExpressionNode>
+    val effect: StaticExpressionNode?
     val body: Block
     val inferReturnType: Boolean
 }
@@ -509,7 +509,7 @@ data class FunctionExpressionNode(
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode?,
-    override val effects: List<StaticExpressionNode>,
+    override val effect: StaticExpressionNode?,
     override val body: Block,
     override val inferReturnType: Boolean,
     override val source: Source,
@@ -529,7 +529,7 @@ data class FunctionDeclarationNode(
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode,
-    override val effects: List<StaticExpressionNode>,
+    override val effect: StaticExpressionNode?,
     override val body: Block,
     override val inferReturnType: Boolean,
     override val source: Source,
@@ -553,7 +553,7 @@ data class FunctionDeclarationNode(
 private fun functionSubEnv(function: FunctionNode): NodeStructure {
     return NodeStructures.subEnv(
         function.staticParameters.map(NodeStructures::staticEval) +
-            (function.parameters + function.namedParameters + function.returnType.nullableToList() + function.effects + listOf(function.body)).map(NodeStructures::eval)
+            (function.parameters + function.namedParameters + function.returnType.nullableToList() + function.effect.nullableToList() + listOf(function.body)).map(NodeStructures::eval)
     )
 }
 

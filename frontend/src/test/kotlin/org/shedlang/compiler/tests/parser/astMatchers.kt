@@ -347,13 +347,13 @@ internal fun isFunctionType(
     positionalParameters: Matcher<List<StaticExpressionNode>> = anything,
     namedParameters: Matcher<List<ParameterNode>> = anything,
     returnType: Matcher<StaticExpressionNode> = anything,
-    effects: Matcher<List<StaticExpressionNode>> = anything
+    effect: Matcher<StaticExpressionNode?> = anything
 ): Matcher<StaticExpressionNode> = cast(allOf(
     has(FunctionTypeNode::staticParameters, staticParameters),
     has(FunctionTypeNode::positionalParameters, positionalParameters),
     has(FunctionTypeNode::namedParameters, namedParameters),
     has(FunctionTypeNode::returnType, returnType),
-    has(FunctionTypeNode::effects, effects)
+    has(FunctionTypeNode::effect, effect)
 ))
 
 internal fun isTupleTypeNode(

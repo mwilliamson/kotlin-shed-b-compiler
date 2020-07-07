@@ -311,7 +311,7 @@ fun function(
     staticParameters: List<StaticParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effects: List<StaticExpressionNode> = listOf(),
+    effect: StaticExpressionNode? = null,
     returnType: StaticExpressionNode = staticReference("Unit"),
     body: List<FunctionStatementNode> = listOf(),
     inferReturnType: Boolean = false
@@ -321,7 +321,7 @@ fun function(
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
-    effects = effects,
+    effect = effect,
     body = Block(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
@@ -331,7 +331,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effects: List<StaticExpressionNode> = listOf(),
+    effect: StaticExpressionNode? = null,
     returnType: StaticExpressionNode? = null,
     body: List<FunctionStatementNode> = listOf(),
     inferReturnType: Boolean = false
@@ -340,7 +340,7 @@ fun functionExpression(
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
-    effects = effects,
+    effect = effect,
     body = Block(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
@@ -350,7 +350,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effects: List<StaticExpressionNode> = listOf(),
+    effect: StaticExpressionNode? = null,
     returnType: StaticExpressionNode? = staticReference("Unit"),
     body: ExpressionNode,
     inferReturnType: Boolean = true
@@ -359,7 +359,7 @@ fun functionExpression(
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
-    effects = effects,
+    effect = effect,
     body = listOf(
         ExpressionStatementNode(body, type = ExpressionStatementNode.Type.VALUE, source = body.source)
     ),
@@ -547,13 +547,13 @@ fun functionTypeNode(
     positionalParameters: List<StaticExpressionNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
     returnType: StaticExpressionNode = staticReference("Unit"),
-    effects: List<StaticExpressionNode> = listOf()
+    effect: StaticExpressionNode? = null
 ) = FunctionTypeNode(
     staticParameters = staticParameters,
     positionalParameters = positionalParameters,
     namedParameters = namedParameters,
     returnType = returnType,
-    effects = effects,
+    effect = effect,
     source = anySource()
 )
 

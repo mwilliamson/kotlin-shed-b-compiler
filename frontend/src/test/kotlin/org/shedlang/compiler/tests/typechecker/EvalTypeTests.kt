@@ -120,7 +120,7 @@ class EvalTypeTests {
             staticParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameterReference),
             namedParameters = listOf(parameter("x", intReference)),
-            effects = listOf(effectReference),
+            effect = effectReference,
             returnType = boolReference
         )
 

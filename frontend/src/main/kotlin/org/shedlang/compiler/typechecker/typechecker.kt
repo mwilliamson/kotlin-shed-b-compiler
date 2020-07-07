@@ -349,7 +349,7 @@ internal fun typeCheckFunction(
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
 
-    val explicitEffect = evalEffects(function.effects, context)
+    val explicitEffect = evalEffect(function.effect, context)
     val effect = effectUnion(implicitEffect, explicitEffect)
 
     val body = function.body
@@ -475,7 +475,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 { parameter -> parameter.name },
                 { parameter -> evalType(parameter.type, context) }
             )
-            val effect = evalEffects(node.effects, context)
+            val effect = evalEffect(node.effect, context)
             val returnType = evalType(node.returnType, context)
             val type = FunctionType(
                 staticParameters = staticParameters,
@@ -504,7 +504,11 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
     return type
 }
 
-internal fun evalEffect(node: StaticExpressionNode, context: TypeContext): Effect {
+internal fun evalEffect(node: StaticExpressionNode?, context: TypeContext): Effect {
+    if (node == null) {
+        return EmptyEffect
+    }
+
     val effectType = evalStatic(node, context)
     if (effectType is StaticValueType) {
         val value = effectType.value

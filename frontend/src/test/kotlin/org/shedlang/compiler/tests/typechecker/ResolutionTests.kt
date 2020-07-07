@@ -142,7 +142,7 @@ class ResolutionTests {
     fun functionEffectsAreResolved() {
         val effect = staticReference("Io")
         val node = function(
-            effects = listOf(effect),
+            effect = effect,
             returnType = staticReference("Int"),
             body = listOf()
         )

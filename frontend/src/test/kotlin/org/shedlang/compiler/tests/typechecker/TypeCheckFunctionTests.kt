@@ -57,7 +57,7 @@ class TypeCheckFunctionTests {
         val node = function(
             staticParameters = listOf(effectParameter),
             parameters = listOf(),
-            effects = listOf(effectParameterReference),
+            effect = effectParameterReference,
             returnType = unitReference
         )
         val typeContext = typeContext(
@@ -198,7 +198,7 @@ class TypeCheckFunctionTests {
 
         val node = function(
             returnType = unitType,
-            effects = listOf(effect)
+            effect = effect
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             unitType to StaticValueType(UnitType),
@@ -220,7 +220,7 @@ class TypeCheckFunctionTests {
 
         val node = function(
             returnType = unitType,
-            effects = listOf(effect),
+            effect = effect,
             body = listOf(
                 expressionStatement(call(functionReference, hasEffect = true))
             )

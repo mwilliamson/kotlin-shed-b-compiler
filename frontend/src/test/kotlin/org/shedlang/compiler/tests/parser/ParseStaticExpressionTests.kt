@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.parseStaticExpression
 import org.shedlang.compiler.tests.isIdentifier
@@ -85,7 +86,7 @@ class ParseStaticExpressionTests {
         val source = "Fun () !E -> R"
         val node = parseString(::parseStaticExpression, source)
         assertThat(node, isFunctionType(
-            effects = isSequence(isStaticReference("E"))
+            effect = present(isStaticReference("E"))
         ))
     }
 

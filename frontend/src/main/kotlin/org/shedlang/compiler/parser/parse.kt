@@ -234,7 +234,7 @@ private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefin
                     staticParameters = listOf(),
                     positionalParameters = parameters.positional,
                     namedParameters = parameters.named,
-                    effects = listOf(),
+                    effect = null,
                     returnType = returnType,
                     source = typeSource
                 ),
@@ -472,7 +472,7 @@ internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): Functio
             parameters = signature.parameters,
             namedParameters = signature.namedParameters,
             returnType = signature.returnType,
-            effects = signature.effects,
+            effect = signature.effect,
             body = body,
             inferReturnType = false,
             source = source
@@ -484,7 +484,7 @@ private data class FunctionSignature(
     val staticParameters: List<StaticParameterNode>,
     val parameters: List<ParameterNode>,
     val namedParameters: List<ParameterNode>,
-    val effects: List<StaticExpressionNode>,
+    val effect: StaticExpressionNode?,
     val returnType: StaticExpressionNode?
 )
 
@@ -493,8 +493,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
 
     val parameters = parseParameters(tokens)
 
-    // TODO: allow trailing commas?
-    val effects = parseEffects(tokens)
+    val effect = parseSignatureEffect(tokens)
 
     val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
         parseStaticExpression(tokens)
@@ -506,7 +505,7 @@ private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSi
         staticParameters = staticParameters,
         parameters = parameters.positional,
         namedParameters = parameters.named,
-        effects = effects,
+        effect = effect,
         returnType = returnType
     )
 }
@@ -564,22 +563,12 @@ internal fun parseStaticParameters(
     }
 }
 
-private fun parseEffects(tokens: TokenIterator<TokenType>): List<StaticExpressionNode> {
-    return parseZeroOrMore(
-        parseElement = ::parseEffect,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = {
-            tokens.isNext(TokenType.SYMBOL_ARROW) ||
-                tokens.isNext(TokenType.SYMBOL_FAT_ARROW) ||
-                tokens.isNext(TokenType.SYMBOL_OPEN_BRACE)
-        },
-        tokens = tokens
-    )
-}
-
-private fun parseEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode {
-    tokens.skip(TokenType.SYMBOL_BANG)
-    return parseStaticExpression(tokens)
+private fun parseSignatureEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode? {
+    if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
+        return parseStaticExpression(tokens)
+    } else {
+        return null
+    }
 }
 
 private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): Block {
@@ -1276,7 +1265,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                 parameters = signature.parameters,
                 namedParameters = signature.namedParameters,
                 returnType = signature.returnType,
-                effects = signature.effects,
+                effect = signature.effect,
                 body = body,
                 inferReturnType = inferReturnType,
                 source = source
@@ -1330,7 +1319,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
                     staticParameters = listOf(),
                     parameters = handlerParameters.positional,
                     namedParameters = handlerParameters.named,
-                    effects = listOf(),
+                    effect = null,
                     returnType = null,
                     inferReturnType = true,
                     body = handlerBody,
@@ -1457,7 +1446,7 @@ private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressio
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
     val parameters = parseFunctionTypeParameters(tokens)
 
-    val effects = parseEffects(tokens)
+    val effect = parseSignatureEffect(tokens)
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = parseStaticExpression(tokens)
     return FunctionTypeNode(
@@ -1465,7 +1454,7 @@ private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressio
         positionalParameters = parameters.positional,
         namedParameters = parameters.named,
         returnType = returnType,
-        effects = effects,
+        effect = effect,
         source = source
     )
 }
