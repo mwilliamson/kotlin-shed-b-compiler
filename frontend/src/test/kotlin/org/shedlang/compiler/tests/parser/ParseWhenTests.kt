@@ -29,13 +29,13 @@ class ParseWhenTests {
                 isWhenBranch(
                     type = isStaticReference("Some"),
                     body = isBlock(
-                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 ),
                 isWhenBranch(
                     type = isStaticReference("None"),
                     body = isBlock(
-                        isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                        isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 )
             ),
@@ -62,12 +62,12 @@ class ParseWhenTests {
                 isWhenBranch(
                     type = isStaticReference("Some"),
                     body = isBlock(
-                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 )
             ),
             elseBranch = present(isBlock(
-                isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.RETURN))
+                isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
             ))
         ))
     }

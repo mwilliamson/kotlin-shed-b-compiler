@@ -483,6 +483,12 @@ data class Block(
 ): Node {
     override val structure: List<NodeStructure>
         get() = statements.map(NodeStructures::eval)
+
+    val isTerminated: Boolean
+        get() {
+            val last = statements.lastOrNull()
+            return last != null && last.terminatesBlock
+        }
 }
 
 data class FunctionExpressionNode(
@@ -516,7 +522,7 @@ data class FunctionDeclarationNode(
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : FunctionNode, VariableBindingNode, ModuleStatementNode, FunctionStatementNode {
-    override val isReturn: Boolean
+    override val terminatesBlock: Boolean
         get() = false
 
     override val structure: List<NodeStructure>
@@ -603,7 +609,7 @@ interface FunctionStatementNode : StatementNode {
         fun visit(node: FunctionDeclarationNode): T
     }
 
-    val isReturn: Boolean
+    val terminatesBlock: Boolean
     fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T
 }
 
@@ -614,7 +620,7 @@ data class BadStatementNode(
     override val structure: List<NodeStructure>
         get() = TODO("not implemented")
 
-    override val isReturn: Boolean
+    override val terminatesBlock: Boolean
         get() = false
 
     override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
@@ -718,17 +724,17 @@ data class ExpressionStatementNode(
     override val nodeId: Int = freshNodeId()
 ): FunctionStatementNode {
     enum class Type {
-        NO_RETURN,
+        NO_VALUE,
 
-        RETURN,
-        TAILREC_RETURN,
+        VALUE,
+        TAILREC,
 
         EXIT,
         RESUME
     }
 
-    override val isReturn: Boolean
-        get() = type != Type.NO_RETURN
+    override val terminatesBlock: Boolean
+        get() = type != Type.NO_VALUE
 
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(expression))
@@ -747,7 +753,7 @@ data class ValNode(
     override val structure: List<NodeStructure>
         get() = listOf(expression, target).map(NodeStructures::eval)
 
-    override val isReturn: Boolean
+    override val terminatesBlock: Boolean
         get() = false
 
     override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {

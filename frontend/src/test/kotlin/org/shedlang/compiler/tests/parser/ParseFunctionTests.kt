@@ -172,7 +172,7 @@ class ParseFunctionTests {
                 isBlock(
                     isExpressionStatement(
                         expression = isIntLiteral(equalTo(4)),
-                        type = equalTo(ExpressionStatementNode.Type.RETURN)
+                        type = equalTo(ExpressionStatementNode.Type.VALUE)
                     )
                 )
             )
@@ -190,7 +190,7 @@ class ParseFunctionTests {
                 isBlock(
                     isExpressionStatement(
                         expression = isIntLiteral(equalTo(4)),
-                        type = equalTo(ExpressionStatementNode.Type.RETURN)
+                        type = equalTo(ExpressionStatementNode.Type.VALUE)
                     )
                 )
             )

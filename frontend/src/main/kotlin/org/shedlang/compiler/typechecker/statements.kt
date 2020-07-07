@@ -332,18 +332,24 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         override fun visit(node: ExpressionStatementNode): Type {
             val type = inferType(node.expression, context)
 
-            return if (node.type == ExpressionStatementNode.Type.RESUME) {
-                verifyType(
-                    // TODO: check that we can resume in this context
-                    expected = context.resumeValueType!!,
-                    actual = type,
-                    source = node.source
-                )
-                NothingType
-            } else if (node.isReturn) {
-                type
-            } else {
-                UnitType
+            return when (node.type) {
+                ExpressionStatementNode.Type.RESUME -> {
+                    verifyType(
+                        // TODO: check that we can resume in this context
+                        expected = context.resumeValueType!!,
+                        actual = type,
+                        source = node.source
+                    )
+                    NothingType
+                }
+
+                ExpressionStatementNode.Type.EXIT,
+                ExpressionStatementNode.Type.TAILREC,
+                ExpressionStatementNode.Type.VALUE ->
+                    type
+
+                ExpressionStatementNode.Type.NO_VALUE ->
+                    UnitType
             }
         }
 

@@ -456,16 +456,11 @@ class Loader(
             loadFunctionStatement(statement)
         }.toPersistentList()
 
-        return if (blockHasReturnValue(block)) {
+        return if (block.isTerminated) {
             statementInstructions
         } else {
             statementInstructions.add(PushValue(IrUnit))
         }
-    }
-
-    private fun blockHasReturnValue(block: Block): Boolean {
-        val last = block.statements.lastOrNull()
-        return last != null && last is ExpressionStatementNode && last.isReturn
     }
 
     fun loadFunctionStatement(statement: FunctionStatementNode): PersistentList<Instruction> {
@@ -473,11 +468,11 @@ class Loader(
             override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
                 val expressionInstructions = loadExpression(node.expression)
                 when (node.type) {
-                    ExpressionStatementNode.Type.RETURN,
-                    ExpressionStatementNode.Type.TAILREC_RETURN ->
+                    ExpressionStatementNode.Type.VALUE,
+                    ExpressionStatementNode.Type.TAILREC ->
                         return expressionInstructions
 
-                    ExpressionStatementNode.Type.NO_RETURN ->
+                    ExpressionStatementNode.Type.NO_VALUE ->
                         return expressionInstructions.add(Discard)
 
                     ExpressionStatementNode.Type.EXIT ->

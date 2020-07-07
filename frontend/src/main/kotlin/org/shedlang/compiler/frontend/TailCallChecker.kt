@@ -13,7 +13,7 @@ internal fun checkTailCalls(moduleNode: ModuleNode, references: ResolvedReferenc
 
     moduleNode.descendants()
         .filterIsInstance<ExpressionStatementNode>()
-        .filter { statement -> statement.type == ExpressionStatementNode.Type.TAILREC_RETURN && !checkedTailCalls.contains(statement.nodeId) }
+        .filter { statement -> statement.type == ExpressionStatementNode.Type.TAILREC && !checkedTailCalls.contains(statement.nodeId) }
         .forEach { statement ->
             throw InvalidTailCall(source = statement.source)
         }
@@ -32,10 +32,10 @@ private fun checkBlock(block: Block, function: FunctionNode, references: Resolve
 private fun checkStatement(statement: FunctionStatementNode, function: FunctionNode, references: ResolvedReferences, checkedTailCalls: MutableSet<Int>) {
     if (statement is ExpressionStatementNode) {
         val expression = statement.expression
-        if (statement.type == ExpressionStatementNode.Type.TAILREC_RETURN) {
+        if (statement.type == ExpressionStatementNode.Type.TAILREC) {
             checkTailCall(expression, function = function, references = references, checkedTailCalls = checkedTailCalls)
             checkedTailCalls.add(statement.nodeId)
-        } else if (statement.type == ExpressionStatementNode.Type.RETURN) {
+        } else if (statement.type == ExpressionStatementNode.Type.VALUE) {
             val blocks = expressionBranches(expression)
 
             if (blocks != null) {

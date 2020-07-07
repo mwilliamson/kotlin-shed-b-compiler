@@ -16,7 +16,7 @@ class ParseExpressionStatementTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isExpressionStatement(
             isIntLiteral(4),
-            type = equalTo(ExpressionStatementNode.Type.NO_RETURN)
+            type = equalTo(ExpressionStatementNode.Type.NO_VALUE)
         ))
     }
 
@@ -26,7 +26,7 @@ class ParseExpressionStatementTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isExpressionStatement(
             isIntLiteral(4),
-            type = equalTo(ExpressionStatementNode.Type.RETURN)
+            type = equalTo(ExpressionStatementNode.Type.VALUE)
         ))
     }
 
@@ -36,7 +36,7 @@ class ParseExpressionStatementTests {
         val node = parseString(::parseFunctionStatement, source)
         assertThat(node, isExpressionStatement(
             isCall(),
-            type = equalTo(ExpressionStatementNode.Type.TAILREC_RETURN)
+            type = equalTo(ExpressionStatementNode.Type.TAILREC)
         ))
     }
 
@@ -44,14 +44,14 @@ class ParseExpressionStatementTests {
     fun whenAllBranchesOfIfReturnThenIfExpressionIsReadAsReturning() {
         val source = "if (true) { 1 } else { 2 }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node.isReturn, equalTo(true))
+        assertThat(node.terminatesBlock, equalTo(true))
     }
 
     @Test
     fun whenAllBranchesOfIfDoNotReturnThenIfExpressionIsReadAsNotReturning() {
         val source = "if (true) { 1; } else { 2; }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node.isReturn, equalTo(false))
+        assertThat(node.terminatesBlock, equalTo(false))
     }
 
     @Test
@@ -66,14 +66,14 @@ class ParseExpressionStatementTests {
     fun whenAllBranchesOfWhenReturnThenWhenExpressionIsReadAsReturning() {
         val source = "when (x) { is T1 { 1 } is T2 { 2 } }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node.isReturn, equalTo(true))
+        assertThat(node.terminatesBlock, equalTo(true))
     }
 
     @Test
     fun whenAllBranchesOfWhenDoNotReturnThenWhenExpressionIsReadAsNotReturning() {
         val source = "when (x) { is T1 { 1; } is T2 { 2; } }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node.isReturn, equalTo(false))
+        assertThat(node.terminatesBlock, equalTo(false))
     }
 
     @Test

@@ -620,14 +620,21 @@ private fun generateCode(
     returnValue: ReturnValue
 ): List<PythonStatementNode> {
     fun expressionReturnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
-        if (node.isReturn) {
-            return returnValue(expression, source)
-        } else {
-            return generateExpressionCode(expression, context).toStatements { pythonExpression ->
-                listOf(
-                    PythonExpressionStatementNode(pythonExpression, source)
-                )
-            }
+        return when (node.type) {
+            ExpressionStatementNode.Type.EXIT,
+            ExpressionStatementNode.Type.TAILREC,
+            ExpressionStatementNode.Type.VALUE ->
+                returnValue(expression, source)
+
+            ExpressionStatementNode.Type.NO_VALUE ->
+                generateExpressionCode(expression, context).toStatements { pythonExpression ->
+                    listOf(
+                        PythonExpressionStatementNode(pythonExpression, source)
+                    )
+                }
+
+            ExpressionStatementNode.Type.RESUME ->
+                throw NotImplementedError()
         }
     }
 

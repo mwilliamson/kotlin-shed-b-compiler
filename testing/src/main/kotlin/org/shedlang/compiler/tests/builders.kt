@@ -20,7 +20,7 @@ fun ifStatement(
             trueBranch = trueBranch,
             elseBranch = elseBranch
         ),
-        type = ExpressionStatementNode.Type.NO_RETURN,
+        type = ExpressionStatementNode.Type.NO_VALUE,
         source = anySource()
     )
 }
@@ -86,7 +86,7 @@ fun expressionStatementNoReturn(
     source: Source = anySource()
 ) = ExpressionStatementNode(
     expression = expression,
-    type = ExpressionStatementNode.Type.NO_RETURN,
+    type = ExpressionStatementNode.Type.NO_VALUE,
     source = source
 )
 
@@ -95,7 +95,7 @@ fun expressionStatementReturn(
     source: Source = anySource()
 ) = ExpressionStatementNode(
     expression = expression,
-    type = ExpressionStatementNode.Type.RETURN,
+    type = ExpressionStatementNode.Type.VALUE,
     source = source
 )
 
@@ -104,7 +104,7 @@ fun expressionStatementTailRecReturn(
     source: Source = anySource()
 ) = ExpressionStatementNode(
     expression = expression,
-    type = ExpressionStatementNode.Type.TAILREC_RETURN,
+    type = ExpressionStatementNode.Type.TAILREC,
     source = source
 )
 
@@ -131,7 +131,7 @@ fun expressionStatement(
     source: Source = anySource()
 ) = ExpressionStatementNode(
     expression,
-    type = ExpressionStatementNode.Type.NO_RETURN,
+    type = ExpressionStatementNode.Type.NO_VALUE,
     source = source
 )
 
@@ -361,7 +361,7 @@ fun functionExpression(
     returnType = returnType,
     effects = effects,
     body = listOf(
-        ExpressionStatementNode(body, type = ExpressionStatementNode.Type.RETURN, source = body.source)
+        ExpressionStatementNode(body, type = ExpressionStatementNode.Type.VALUE, source = body.source)
     ),
     inferReturnType = inferReturnType
 )

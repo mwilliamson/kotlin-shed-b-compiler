@@ -49,7 +49,7 @@ class ParseHandleTests {
                     operationName = isIdentifier("throw"),
                     function = allOf(
                         has(FunctionExpressionNode::body, isBlock(
-                            isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_RETURN)),
+                            isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_VALUE)),
                             isExit(isIntLiteral(42))
                         ))
                     )

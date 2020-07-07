@@ -446,10 +446,17 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
         override fun visit(node: ExpressionStatementNode): List<JavascriptStatementNode> {
             val expression = generateCode(node.expression, context)
             val source = NodeSource(node)
-            return if (node.isReturn) {
-                listOf(JavascriptReturnNode(expression, source))
-            } else {
-                listOf(JavascriptExpressionStatementNode(expression, source))
+            return when (node.type) {
+                ExpressionStatementNode.Type.EXIT,
+                ExpressionStatementNode.Type.TAILREC,
+                ExpressionStatementNode.Type.VALUE ->
+                    listOf(JavascriptReturnNode(expression, source))
+
+                ExpressionStatementNode.Type.NO_VALUE ->
+                    listOf(JavascriptExpressionStatementNode(expression, source))
+
+                ExpressionStatementNode.Type.RESUME ->
+                    throw NotImplementedError()
             }
         }
 

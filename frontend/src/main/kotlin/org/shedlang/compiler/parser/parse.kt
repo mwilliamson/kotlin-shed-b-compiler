@@ -603,7 +603,7 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): Block {
     val statements = mutableListOf<FunctionStatementNode>()
     var lastStatement: FunctionStatementNode? = null
 
-    while (!(tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || (lastStatement != null && lastStatement.isReturn))) {
+    while (!(tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || (lastStatement != null && lastStatement.terminatesBlock))) {
         lastStatement = parseFunctionStatement(tokens)
         statements.add(lastStatement)
     }
@@ -691,7 +691,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
         tokens.skip()
         val expression = parseExpression(tokens)
         return ExpressionStatementNode(
-            type = ExpressionStatementNode.Type.TAILREC_RETURN,
+            type = ExpressionStatementNode.Type.TAILREC,
             expression = expression,
             source = source
         )
@@ -729,9 +729,9 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
                 branchesReturn(expression, branches)
             }
             val type = if (isReturn) {
-                ExpressionStatementNode.Type.RETURN
+                ExpressionStatementNode.Type.VALUE
             } else {
-                ExpressionStatementNode.Type.NO_RETURN
+                ExpressionStatementNode.Type.NO_VALUE
             }
             return ExpressionStatementNode(
                 expression,
@@ -743,11 +743,11 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
 }
 
 private fun branchesReturn(expression: Node, branches: Iterable<Block>): Boolean {
-    val isReturns = branches.map { body ->
-        body.statements.any(FunctionStatementNode::isReturn)
+    val isTerminateds = branches.map { body ->
+        body.isTerminated
     }.toSet()
-    return if (isReturns.size == 1) {
-        isReturns.single()
+    return if (isTerminateds.size == 1) {
+        isTerminateds.single()
     } else {
         // TODO: raise a more specific exception
         // TODO: should these checks be in the expression nodes themselves?
@@ -1278,7 +1278,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                 val expression = parseExpression(tokens)
                 val statement = ExpressionStatementNode(
                     expression = expression,
-                    type = ExpressionStatementNode.Type.RETURN,
+                    type = ExpressionStatementNode.Type.VALUE,
                     source = expression.source
                 )
                 val body = Block(
