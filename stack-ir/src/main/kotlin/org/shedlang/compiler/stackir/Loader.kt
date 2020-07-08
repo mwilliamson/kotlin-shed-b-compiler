@@ -567,7 +567,7 @@ class Loader(
         val tagValue = inspector.shapeTagValue(node)
 
         return persistentListOf(
-            DeclareShape(tagValue, shapeFields, shapeType = types.declaredType(node)),
+            DefineShape(tagValue, shapeFields, shapeType = types.declaredType(node)),
             LocalStore(node)
         )
     }

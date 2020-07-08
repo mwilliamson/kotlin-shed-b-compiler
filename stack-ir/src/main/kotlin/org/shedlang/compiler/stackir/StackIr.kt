@@ -63,7 +63,7 @@ class DefineFunction(
     }
 }
 
-class DeclareShape(
+class DefineShape(
     val tagValue: TagValue?,
     val fields: List<FieldInspector>,
     val shapeType: StaticValue

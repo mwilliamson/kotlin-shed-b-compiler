@@ -317,7 +317,7 @@ internal class Compiler(
                     .pushTemporary(temporary)
             }
 
-            is DeclareShape -> {
+            is DefineShape -> {
                 return compileDeclareShape(instruction, context)
             }
 
@@ -703,7 +703,7 @@ internal class Compiler(
         )
     }
 
-    private fun compileDeclareShape(instruction: DeclareShape, context: FunctionContext): FunctionContext {
+    private fun compileDeclareShape(instruction: DefineShape, context: FunctionContext): FunctionContext {
         val value = LlvmOperandLocal(generateName("value"))
         val shapePointer = LlvmOperandLocal(generateName("shapePointer"))
         val closurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))

@@ -532,7 +532,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             )).nextInstruction()
         }
 
-        is DeclareShape -> {
+        is DefineShape -> {
             if (fields.any { field -> field.value != null }) {
                 throw NotImplementedError()
             }
