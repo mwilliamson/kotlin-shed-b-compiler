@@ -244,7 +244,7 @@ private class Compiler(private val moduleSet: ModuleSet) {
 
     private fun generateAsmForInstruction(instruction: Instruction): CompilationResult<List<Line>> {
         return when (instruction) {
-            is DeclareFunction -> {
+            is DefineFunction -> {
                 val label = generateLabel()
                 // TODO: handle more locals
                 val localCount = 1

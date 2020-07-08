@@ -83,7 +83,7 @@ internal class ClosureCompiler(
         val descendants = instruction.descendantsAndSelf()
         val stores = descendants.filterIsInstance<LocalStore>()
         val storeIds = stores.map { store -> store.variableId }
-        val parameterIds = descendants.filterIsInstance<DeclareFunction>().flatMap { function ->
+        val parameterIds = descendants.filterIsInstance<DefineFunction>().flatMap { function ->
             val parameters = function.positionalParameters + function.namedParameters
             parameters.map { parameter -> parameter.variableId }
         }

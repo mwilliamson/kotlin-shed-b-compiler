@@ -265,7 +265,7 @@ internal class Compiler(
                 return compileUnicodeScalarComparison(LlvmIcmp.ConditionCode.ULT, context = context)
             }
 
-            is DeclareFunction -> {
+            is DefineFunction -> {
                 val functionName = generateName(instruction.name)
                 val temporary = LlvmOperandLocal(generateName("value"))
 

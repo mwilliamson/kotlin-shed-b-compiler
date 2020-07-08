@@ -44,8 +44,8 @@ internal class InterpreterTuple(val elements: List<InterpreterValue>): Interpret
 
 internal class InterpreterFunction(
     val bodyInstructions: PersistentList<Instruction>,
-    val positionalParameters: List<DeclareFunction.Parameter>,
-    val namedParameters: List<DeclareFunction.Parameter>,
+    val positionalParameters: List<DefineFunction.Parameter>,
+    val namedParameters: List<DefineFunction.Parameter>,
     val scopes: PersistentList<ScopeReference>
 ) : InterpreterValue()
 
@@ -523,7 +523,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
-        is DeclareFunction -> {
+        is DefineFunction -> {
             initialState.pushTemporary(InterpreterFunction(
                 bodyInstructions = bodyInstructions,
                 positionalParameters = positionalParameters,
@@ -542,7 +542,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                 Identifier("fields") to InterpreterShapeValue(
                     tagValue = null,
                     fields = fields.associate { field ->
-                        val getParameter = DeclareFunction.Parameter(Identifier("receiver"), freshNodeId())
+                        val getParameter = DefineFunction.Parameter(Identifier("receiver"), freshNodeId())
 
                         field.name to InterpreterShapeValue(
                             tagValue = null,

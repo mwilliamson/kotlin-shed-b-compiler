@@ -52,7 +52,7 @@ object UnicodeScalarGreaterThan: Instruction()
 
 object UnicodeScalarGreaterThanOrEqual: Instruction()
 
-class DeclareFunction(
+class DefineFunction(
     val name: String,
     val bodyInstructions: PersistentList<Instruction>,
     val positionalParameters: List<Parameter>,
@@ -107,12 +107,12 @@ class Label(val value: Int): Instruction()
 class LocalLoad(val variableId: Int, val name: Identifier): Instruction() {
     constructor(node: VariableBindingNode) : this(node.nodeId, node.name)
     // TODO: extract more general notion of local (equivalent to DeclareFunction.Parameter)?
-    constructor(parameter: DeclareFunction.Parameter) : this(parameter.variableId, parameter.name)
+    constructor(parameter: DefineFunction.Parameter) : this(parameter.variableId, parameter.name)
 }
 
 class LocalStore(val variableId: Int, val name: Identifier): Instruction() {
     constructor(node: VariableBindingNode) : this(node.nodeId, node.name)
-    constructor(parameter: DeclareFunction.Parameter) : this(parameter.variableId, parameter.name)
+    constructor(parameter: DefineFunction.Parameter) : this(parameter.variableId, parameter.name)
 }
 
 class ModuleInit(val moduleName: ModuleName): Instruction()
@@ -150,7 +150,7 @@ class TupleCreate(val length: Int): Instruction()
 
 fun Instruction.children(): List<Instruction> {
     return when (this) {
-        is DeclareFunction -> bodyInstructions
+        is DefineFunction -> bodyInstructions
         is EffectHandle -> instructions
         else -> listOf()
     }

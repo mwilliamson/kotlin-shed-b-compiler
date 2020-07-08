@@ -227,7 +227,7 @@ class Loader(
                         ModuleInit(optionsModuleName),
                         ModuleLoad(optionsModuleName)
                     )
-                    val parameter = DeclareFunction.Parameter(Identifier("value"), freshNodeId())
+                    val parameter = DefineFunction.Parameter(Identifier("value"), freshNodeId())
 
                     val failureInstructions = loadOptionsModuleInstructions
                         .add(FieldAccess(Identifier("none"), receiverType = optionsModuleType))
@@ -249,7 +249,7 @@ class Loader(
                         .addAll(failureInstructions)
 
                     return persistentListOf(
-                        DeclareFunction(
+                        DefineFunction(
                             name = "cast",
                             positionalParameters = listOf(parameter),
                             bodyInstructions = bodyInstructions,
@@ -287,26 +287,26 @@ class Loader(
             override fun visit(node: PartialCallNode): PersistentList<Instruction> {
                 val partialFunctionType = types.typeOfExpression(node) as FunctionType
 
-                val receiverVariable = DeclareFunction.Parameter(name = Identifier("receiver"), variableId = freshNodeId())
+                val receiverVariable = DefineFunction.Parameter(name = Identifier("receiver"), variableId = freshNodeId())
                 val receiverInstructions = loadExpression(node.receiver)
                     .add(LocalStore(receiverVariable))
 
                 val positionalArgumentVariables = (0 until node.positionalArguments.size).map { argumentIndex ->
-                    DeclareFunction.Parameter(name = Identifier("arg_$argumentIndex"), variableId = freshNodeId())
+                    DefineFunction.Parameter(name = Identifier("arg_$argumentIndex"), variableId = freshNodeId())
                 }
                 val positionalArgumentInstructions = node.positionalArguments.zip(positionalArgumentVariables) { argument, variable ->
                     loadExpression(argument).add(LocalStore(variable))
                 }.flatten()
 
                 val positionalParameterVariables = (0 until partialFunctionType.positionalParameters.size).map { parameterIndex ->
-                    DeclareFunction.Parameter(
+                    DefineFunction.Parameter(
                         name = Identifier("arg_${node.positionalArguments.size + parameterIndex}"),
                         variableId = freshNodeId()
                     )
                 }
 
                 val namedArgumentVariables = node.namedArguments.map { argument ->
-                    DeclareFunction.Parameter(name = argument.name, variableId = freshNodeId())
+                    DefineFunction.Parameter(name = argument.name, variableId = freshNodeId())
                 }
                 val namedArgumentInstructions = node.namedArguments.zip(namedArgumentVariables) { argument, variable ->
                     loadExpression(argument.expression).add(LocalStore(variable))
@@ -314,7 +314,7 @@ class Loader(
 
                 val namedParameterNames = partialFunctionType.namedParameters.keys.toList()
                 val namedParameterVariables = namedParameterNames.map { parameterName ->
-                    DeclareFunction.Parameter(name = parameterName, variableId = freshNodeId())
+                    DefineFunction.Parameter(name = parameterName, variableId = freshNodeId())
                 }
 
                 val callVariables = persistentListOf(receiverVariable)
@@ -324,7 +324,7 @@ class Loader(
                     .addAll(namedParameterVariables)
 
                 val createPartial = listOf(
-                    DeclareFunction(
+                    DefineFunction(
                         name = "partial",
                         positionalParameters = positionalParameterVariables,
                         namedParameters = namedParameterVariables,
@@ -548,16 +548,16 @@ class Loader(
         )
     }
 
-    private fun loadFunctionValue(node: FunctionNode): DeclareFunction {
+    private fun loadFunctionValue(node: FunctionNode): DefineFunction {
         val bodyInstructions = loadBlock(node.body).add(Return)
-        return DeclareFunction(
+        return DefineFunction(
             name = if (node is FunctionDefinitionNode) node.name.value else "anonymous",
             bodyInstructions = bodyInstructions,
             positionalParameters = node.parameters.map { parameter ->
-                DeclareFunction.Parameter(parameter)
+                DefineFunction.Parameter(parameter)
             },
             namedParameters = node.namedParameters.map { parameter ->
-                DeclareFunction.Parameter(parameter)
+                DefineFunction.Parameter(parameter)
             }
         )
     }
