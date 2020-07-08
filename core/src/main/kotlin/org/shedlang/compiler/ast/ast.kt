@@ -343,7 +343,7 @@ interface ModuleStatementNode: StatementNode {
         fun visit(node: TypeAliasNode): T
         fun visit(node: ShapeNode): T
         fun visit(node: UnionNode): T
-        fun visit(node: FunctionDeclarationNode): T
+        fun visit(node: FunctionDefinitionNode): T
         fun visit(node: ValNode): T
         fun visit(node: VarargsDeclarationNode): T
     }
@@ -523,7 +523,7 @@ data class FunctionExpressionNode(
     }
 }
 
-data class FunctionDeclarationNode(
+data class FunctionDefinitionNode(
     override val name: Identifier,
     override val staticParameters: List<StaticParameterNode>,
     override val parameters: List<ParameterNode>,
@@ -619,7 +619,7 @@ interface FunctionStatementNode : StatementNode {
         }
         fun visit(node: ExpressionStatementNode): T
         fun visit(node: ValNode): T
-        fun visit(node: FunctionDeclarationNode): T
+        fun visit(node: FunctionDefinitionNode): T
     }
 
     val terminatesBlock: Boolean

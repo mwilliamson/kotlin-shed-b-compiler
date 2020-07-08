@@ -25,7 +25,7 @@ sealed class Module {
         val references: ResolvedReferences
     ): Module() {
         fun hasMain() = node.body.any({ node ->
-            node is FunctionDeclarationNode && node.name.value == "main"
+            node is FunctionDefinitionNode && node.name.value == "main"
         })
     }
 

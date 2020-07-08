@@ -493,7 +493,7 @@ class Loader(
                 return loadVal(node)
             }
 
-            override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
+            override fun visit(node: FunctionDefinitionNode): PersistentList<Instruction> {
                 return loadFunctionDeclaration(node)
             }
         })
@@ -527,7 +527,7 @@ class Loader(
                 return unionInstructions.addAll(memberInstructions)
             }
 
-            override fun visit(node: FunctionDeclarationNode): PersistentList<Instruction> {
+            override fun visit(node: FunctionDefinitionNode): PersistentList<Instruction> {
                 return loadFunctionDeclaration(node)
             }
 
@@ -541,7 +541,7 @@ class Loader(
         })
     }
 
-    private fun loadFunctionDeclaration(node: FunctionDeclarationNode): PersistentList<Instruction> {
+    private fun loadFunctionDeclaration(node: FunctionDefinitionNode): PersistentList<Instruction> {
         return persistentListOf(
             loadFunctionValue(node),
             LocalStore(node)
@@ -551,7 +551,7 @@ class Loader(
     private fun loadFunctionValue(node: FunctionNode): DeclareFunction {
         val bodyInstructions = loadBlock(node.body).add(Return)
         return DeclareFunction(
-            name = if (node is FunctionDeclarationNode) node.name.value else "anonymous",
+            name = if (node is FunctionDefinitionNode) node.name.value else "anonymous",
             bodyInstructions = bodyInstructions,
             positionalParameters = node.parameters.map { parameter ->
                 DeclareFunction.Parameter(parameter)

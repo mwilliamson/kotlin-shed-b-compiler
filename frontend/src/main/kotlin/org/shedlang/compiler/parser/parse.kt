@@ -455,7 +455,7 @@ private fun parseVarargsDeclaration(tokens: TokenIterator<TokenType>): VarargsDe
     )
 }
 
-internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): FunctionDeclarationNode {
+internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): FunctionDefinitionNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_FUN)
@@ -466,7 +466,7 @@ internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): Functio
     if (signature.returnType == null) {
         throw MissingReturnTypeError("Function declaration must have return type", source = source)
     } else {
-        return FunctionDeclarationNode(
+        return FunctionDefinitionNode(
             name = name,
             staticParameters = signature.staticParameters,
             parameters = signature.parameters,

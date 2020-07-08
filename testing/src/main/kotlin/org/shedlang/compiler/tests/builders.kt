@@ -315,7 +315,7 @@ fun function(
     returnType: StaticExpressionNode = staticReference("Unit"),
     body: List<FunctionStatementNode> = listOf(),
     inferReturnType: Boolean = false
-) = FunctionDeclarationNode(
+) = FunctionDefinitionNode(
     name = Identifier(name),
     staticParameters = staticParameters,
     parameters = parameters,

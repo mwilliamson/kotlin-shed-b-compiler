@@ -370,7 +370,7 @@ class CodeGeneratorTests {
     }
 
     fun assertFunctionDeclarationGeneratesFunctionWithPythonisedName(
-        generateCode: (function: FunctionDeclarationNode) -> PythonStatementNode
+        generateCode: (function: FunctionDefinitionNode) -> PythonStatementNode
     ) {
         val shed = function(
             name = "oneTwoThree",

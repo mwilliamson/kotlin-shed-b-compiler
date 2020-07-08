@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
-import org.shedlang.compiler.ast.FunctionDeclarationNode
+import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.ast.FunctionNode
 import org.shedlang.compiler.frontend.tests.throwsException
@@ -20,7 +20,7 @@ class ParseFunctionTests {
         val source = "fun f() -> Unit { }"
         val function = parseString(::parseFunctionDeclaration, source)
         assertThat(function, allOf(
-            has(FunctionDeclarationNode::name, isIdentifier("f")),
+            has(FunctionDefinitionNode::name, isIdentifier("f")),
             has(FunctionNode::staticParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::returnType, present(isStaticReference("Unit")))
@@ -121,7 +121,7 @@ class ParseFunctionTests {
     fun canReadBody() {
         val source = "fun f() -> Int { 1; 2; }"
         val function = parseString(::parseFunctionDeclaration, source)
-        assertThat(function, has(FunctionDeclarationNode::body, isBlock(
+        assertThat(function, has(FunctionDefinitionNode::body, isBlock(
             isExpressionStatement(isIntLiteral(equalTo(1))),
             isExpressionStatement(isIntLiteral(equalTo(2)))
         )))
@@ -203,7 +203,7 @@ class ParseFunctionTests {
         val source = "fun f() -> Unit { }"
         val function = parseString(::parseModuleStatement, source)
         assertThat(function, cast(allOf(
-            has(FunctionDeclarationNode::name, isIdentifier("f"))
+            has(FunctionDefinitionNode::name, isIdentifier("f"))
         )))
     }
 
@@ -212,7 +212,7 @@ class ParseFunctionTests {
         val source = "fun f() -> Unit { }"
         val function = parseString(::parseFunctionStatement, source)
         assertThat(function, cast(allOf(
-            has(FunctionDeclarationNode::name, isIdentifier("f"))
+            has(FunctionDefinitionNode::name, isIdentifier("f"))
         )))
     }
 

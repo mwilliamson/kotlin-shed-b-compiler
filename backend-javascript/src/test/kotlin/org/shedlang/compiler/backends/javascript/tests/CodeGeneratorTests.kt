@@ -221,7 +221,7 @@ class CodeGeneratorTests {
 
     private fun assertFunctionDeclarationGeneratesFunctionDeclaration(
         snapshotter: Snapshotter,
-        generateCode: (node: FunctionDeclarationNode, context: CodeGenerationContext) -> JavascriptStatementNode
+        generateCode: (node: FunctionDefinitionNode, context: CodeGenerationContext) -> JavascriptStatementNode
     ) {
         val shed = function(
             name = "f",

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.FunctionDeclarationNode
+import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleStatementNode
 import org.shedlang.compiler.backends.tests.ExecutionResult
@@ -62,7 +62,7 @@ class StackInterpreterExampleTests {
             module.name == testProgram.mainModule
         }!! as Module.Shed
         return mainModule.node.body.find { statement ->
-            statement is FunctionDeclarationNode && statement.name == Identifier("main")
+            statement is FunctionDefinitionNode && statement.name == Identifier("main")
         }!!
     }
 }
