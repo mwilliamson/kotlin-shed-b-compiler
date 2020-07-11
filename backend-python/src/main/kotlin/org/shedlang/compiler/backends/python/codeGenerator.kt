@@ -179,36 +179,14 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
     val source = NodeSource(node)
 
     val className = context.name(node)
+    val effectId = node.nodeId.toBigInteger()
     return listOf(
         PythonClassNode(
             name = className,
-            body = node.operations.flatMap { operation ->
+            body = listOf(
+                assign("_effect_id", PythonIntegerLiteralNode(effectId, source = source), source = source)
+            ) + node.operations.flatMap { operation ->
                 val operationSource = NodeSource(operation)
-                val exceptionDefinition = PythonClassNode(
-                    name = operationNameToExceptionName(operation.name),
-                    // TODO: handle shed values named Exception
-                    baseClasses = listOf(PythonVariableReferenceNode("Exception", source = operationSource)),
-                    body = listOf(
-                        PythonFunctionNode(
-                            name = "__init__",
-                            parameters = listOf("self", "operation_args", "operation_kwargs"),
-                            body = listOf(
-                                assignSelf(
-                                    "operation_args",
-                                    PythonVariableReferenceNode("operation_args", source = operationSource),
-                                    source = operationSource
-                                ),
-                                assignSelf(
-                                    "operation_kwargs",
-                                    PythonVariableReferenceNode("operation_kwargs", source = operationSource),
-                                    source = operationSource
-                                )
-                            ),
-                            source = operationSource
-                        )
-                    ),
-                    source = operationSource
-                )
 
                 val operationDefinition = PythonFunctionNode(
                     decorators = listOf(PythonVariableReferenceNode("staticmethod", source = operationSource)),
@@ -216,16 +194,14 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
                     // TODO: proper support for *args, **kwargs? Or explicitly list all args?
                     parameters = listOf("*operation_args, **operation_kwargs"),
                     body = listOf(
-                        PythonRaiseNode(
+                        PythonReturnNode(
                             expression = PythonFunctionCallNode(
-                                function = PythonAttributeAccessNode(
-                                    receiver = PythonVariableReferenceNode(className, source = operationSource),
-                                    attributeName = operationNameToExceptionName(operation.name),
-                                    source = operationSource
-                                ),
+                                function = PythonVariableReferenceNode("_effect_handler_call", source = operationSource),
                                 arguments = listOf(
-                                    PythonVariableReferenceNode("operation_args", source = operationSource),
-                                    PythonVariableReferenceNode("operation_kwargs", source = operationSource)
+                                    PythonIntegerLiteralNode(effectId, source = operationSource),
+                                    PythonStringLiteralNode(pythoniseName(operation.name), source = operationSource),
+                                    PythonVariableReferenceNode("*operation_args", source = operationSource),
+                                    PythonVariableReferenceNode("**operation_kwargs", source = operationSource)
                                 ),
                                 keywordArguments = listOf(),
                                 source = operationSource
@@ -237,7 +213,6 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
                 )
 
                 listOf(
-                    exceptionDefinition,
                     operationDefinition
                 )
             },
@@ -250,7 +225,11 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
     val handleSource = NodeSource(node)
     val targetName = context.freshName()
 
+    // TODO: find a neater solution!
+    var hasReturned = false
+
     fun returnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
+        hasReturned = true
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
             listOf(assign(targetName, pythonExpression, source = source))
         }
@@ -258,57 +237,96 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
 
     val body = generateBlockCode(node.body, context, returnValue = ::returnValue)
 
-    val statement = PythonTryNode(
-        body = body,
-        exceptClauses = node.handlers.map { handler ->
-            val operationValueName = context.freshName()
-            PythonExceptNode(
-                exceptionType = PythonAttributeAccessNode(
-                    receiver = generateCode(node.effect, context),
-                    attributeName = operationNameToExceptionName(handler.operationName),
+    val exitValueName = context.freshName("exit_value")
+    val effectHandlerName = context.freshName("effect_handler")
+
+    val effectHandlerPush = GeneratedCode.flatten(node.handlers.map { handler ->
+        generateExpressionCode(handler.function, context)
+    }).toStatements { operationHandlers ->
+        listOf(
+            assign(
+                effectHandlerName,
+                PythonFunctionCallNode(
+                    function = PythonVariableReferenceNode("_effect_handler_push", source = handleSource),
+                    arguments = listOf(
+                        generateCode(node.effect, context),
+                        PythonFunctionCallNode(
+                            // TODO: handle shed variables called dict
+                            function = PythonVariableReferenceNode("dict", source = handleSource),
+                            arguments = listOf(),
+                            keywordArguments = node.handlers.mapIndexed { operationIndex, handler ->
+                                val handlerSource = NodeSource(handler)
+
+                                pythoniseName(handler.operationName) to PythonFunctionCallNode(
+                                    function = PythonVariableReferenceNode("_effect_handler_create_operation_handler", source = handlerSource),
+                                    arguments = listOf(
+                                        operationHandlers[operationIndex]
+                                    ),
+                                    keywordArguments = listOf(),
+                                    source = handlerSource
+                                )
+                            },
+                            source = handleSource
+                        )
+                    ),
+                    keywordArguments = listOf(),
                     source = handleSource
                 ),
-                target = operationValueName,
-                body = generateExpressionCode(handler.function, context).toStatements { pythonHandler ->
-                    val pythonExpression = PythonFunctionCallNode(
-                        function = pythonHandler,
-                        arguments = listOf(
-                            PythonUnaryOperationNode(
-                                operator = PythonUnaryOperator.STAR,
-                                operand = PythonAttributeAccessNode(
-                                    PythonVariableReferenceNode(operationValueName, source = handleSource),
-                                    attributeName = "operation_args",
-                                    source = handleSource
-                                ),
-                                source = handleSource
-                            ),
-                            PythonUnaryOperationNode(
-                                operator = PythonUnaryOperator.DOUBLE_STAR,
-                                operand = PythonAttributeAccessNode(
-                                    PythonVariableReferenceNode(operationValueName, source = handleSource),
-                                    attributeName = "operation_kwargs",
-                                    source = handleSource
-                                ),
-                                source = handleSource
-                            )
-                        ),
-                        keywordArguments = listOf(),
-                        source = handleSource
-                    )
-                    listOf(assign(targetName, pythonExpression, source = handleSource))
-                },
                 source = handleSource
             )
-        },
+        )
+    }
+
+    val tryStatement = PythonTryNode(
+        body = body + listOf(
+            PythonExpressionStatementNode(
+                PythonFunctionCallNode(
+                    function = PythonVariableReferenceNode("_effect_handler_discard", source = handleSource),
+                    arguments = listOf(),
+                    keywordArguments = listOf(),
+                    source = handleSource
+                ),
+                source = handleSource
+            )
+        ),
+        exceptClauses = listOf(
+            PythonExceptNode(
+                exceptionType = PythonAttributeAccessNode(
+                    receiver = PythonVariableReferenceNode(effectHandlerName, source = handleSource),
+                    attributeName = "Exit",
+                    source = handleSource
+                ),
+                target = exitValueName,
+                body = listOf(
+                    assign(
+                        targetName,
+                        PythonAttributeAccessNode(
+                            receiver = PythonVariableReferenceNode(exitValueName, source = handleSource),
+                            // TODO: extract string constant
+                            attributeName = "value",
+                            source = handleSource
+                        ),
+                        source = handleSource
+                    )
+                ),
+                source = handleSource
+            )
+        ),
         source = handleSource
     )
 
-    return GeneratedExpression.pure(PythonVariableReferenceNode(targetName, source = handleSource))
-        .copy(statements = listOf(statement))
-}
+    val statements = effectHandlerPush + listOf(tryStatement)
 
-private fun operationNameToExceptionName(operationName: Identifier) =
-    "Exception_" + pythoniseName(operationName)
+    val value = if (hasReturned) {
+        PythonVariableReferenceNode(targetName, source = handleSource)
+    } else {
+        PythonNoneLiteralNode(source = handleSource)
+    }
+
+    return GeneratedExpression.pure(value)
+        .copy(statements = statements)
+
+}
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
     val shapeFields = context.inspector.shapeFields(node)
@@ -621,7 +639,7 @@ private fun generateCode(
 ): List<PythonStatementNode> {
     fun expressionReturnValue(expression: ExpressionNode, source: Source): List<PythonStatementNode> {
         return when (node.type) {
-            ExpressionStatementNode.Type.EXIT,
+            ExpressionStatementNode.Type.RESUME,
             ExpressionStatementNode.Type.TAILREC,
             ExpressionStatementNode.Type.VALUE ->
                 returnValue(expression, source)
@@ -633,8 +651,20 @@ private fun generateCode(
                     )
                 }
 
-            ExpressionStatementNode.Type.RESUME ->
-                throw NotImplementedError()
+            ExpressionStatementNode.Type.EXIT ->
+                generateExpressionCode(expression, context).toStatements { pythonExpression ->
+                    listOf(
+                        PythonExpressionStatementNode(
+                            PythonFunctionCallNode(
+                                function = PythonVariableReferenceNode("_effect_handler_exit", source = source),
+                                arguments = listOf(pythonExpression),
+                                keywordArguments = listOf(),
+                                source = source
+                            ),
+                            source = source
+                        )
+                    )
+                }
         }
     }
 
@@ -1039,7 +1069,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             }
 
             val statement = node.body.statements.singleOrNull()
-            if (statement != null && statement is ExpressionStatementNode) {
+            if (statement != null && statement is ExpressionStatementNode && statement.type == ExpressionStatementNode.Type.VALUE) {
                 val result = generateExpressionCode(statement.expression, context)
                     .ifEmpty { expression -> PythonLambdaNode(
                         parameters = generateParameters(node, context),

@@ -1,6 +1,13 @@
+def anonymous_1():
+    _effect_handler_exit(42)
+
+
+effect_handler = _effect_handler_push(EarlyExit, dict(exit=_effect_handler_create_operation_handler(anonymous_1)))
+
 try:
     anonymous = f()
-except EarlyExit.Exception_exit as anonymous_1:
-    anonymous = (lambda : 42)(*anonymous_1.operation_args, **anonymous_1.operation_kwargs)
+    _effect_handler_discard()
+except effect_handler.Exit as exit_value:
+    anonymous = exit_value.value
 
 anonymous

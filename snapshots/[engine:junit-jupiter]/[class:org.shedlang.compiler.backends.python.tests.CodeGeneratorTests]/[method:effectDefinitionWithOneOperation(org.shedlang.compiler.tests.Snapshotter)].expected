@@ -1,10 +1,6 @@
 class EarlyExit(object):
-    class Exception_exit(Exception):
-        def __init__(self, operation_args, operation_kwargs):
-            self.operation_args = operation_args
-            self.operation_kwargs = operation_kwargs
-
+    _effect_id = 42
     @staticmethod
     def exit(*operation_args, **operation_kwargs):
-        raise EarlyExit.Exception_exit(operation_args, operation_kwargs)
+        return _effect_handler_call(42, "exit", *operation_args, **operation_kwargs)
 

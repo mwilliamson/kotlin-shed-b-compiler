@@ -368,11 +368,13 @@ fun functionExpression(
 
 fun effectDefinition(
     name: String,
-    operations: List<OperationDefinitionNode>
+    operations: List<OperationDefinitionNode>,
+    nodeId: Int = freshNodeId()
 ) = EffectDefinitionNode(
     name = Identifier(name),
     operations = operations,
-    source = anySource()
+    source = anySource(),
+    nodeId = nodeId
 )
 
 fun operationDefinition(

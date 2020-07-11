@@ -408,7 +408,7 @@ class CodeGeneratorTests {
     fun functionExpressionWithSingleExpressionStatementGeneratesLambda() {
         val shed = functionExpression(
             parameters = listOf(parameter("x"), parameter("y")),
-            body = listOf(expressionStatement(literalInt(42)))
+            body = listOf(expressionStatementReturn(literalInt(42)))
         )
 
         val node = generateCode(shed)
@@ -1347,7 +1347,9 @@ class CodeGeneratorTests {
             name = "EarlyExit",
             operations = listOf(
                 operationDefinition(name = "exit", type = functionTypeNode())
-            )
+            ),
+            // TODO: should really be getting the effect ID from the effect
+            nodeId = 42
         )
 
         val node = generateCodeForModuleStatement(shed)

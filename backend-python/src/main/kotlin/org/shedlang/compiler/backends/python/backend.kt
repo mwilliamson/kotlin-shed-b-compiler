@@ -94,6 +94,12 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
             ShapeField as _create_shape_field,
             partial as _partial,
             varargs as _varargs,
+
+            effect_handler_call as _effect_handler_call,
+            effect_handler_discard as _effect_handler_discard,
+            effect_handler_exit as _effect_handler_exit,
+            effect_handler_create_operation_handler as _effect_handler_create_operation_handler,
+            effect_handler_push as _effect_handler_push,
         )
     """.trimIndent()
 
