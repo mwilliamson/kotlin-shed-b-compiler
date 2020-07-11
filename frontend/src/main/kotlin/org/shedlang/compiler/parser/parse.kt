@@ -195,7 +195,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
     } else if (tokens.isNext(TokenType.KEYWORD_UNION)) {
         return parseUnion(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_FUN)) {
-        return parseFunctionDeclaration(tokens)
+        return parseFunctionDefinition(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_VAL)) {
         return parseVal(tokens)
     } else if (tokens.isNext(TokenType.KEYWORD_VARARGS)) {
@@ -455,7 +455,7 @@ private fun parseVarargsDeclaration(tokens: TokenIterator<TokenType>): VarargsDe
     )
 }
 
-internal fun parseFunctionDeclaration(tokens: TokenIterator<TokenType>): FunctionDefinitionNode {
+internal fun parseFunctionDefinition(tokens: TokenIterator<TokenType>): FunctionDefinitionNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_FUN)
@@ -661,7 +661,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
     if (token.tokenType == TokenType.KEYWORD_VAL) {
         return parseVal(tokens)
     } else if (token.tokenType == TokenType.KEYWORD_FUN && tokens.peek(1).tokenType == TokenType.IDENTIFIER) {
-        return parseFunctionDeclaration(tokens)
+        return parseFunctionDefinition(tokens)
     } else if (token.tokenType == TokenType.KEYWORD_TAILREC) {
         val source = tokens.location()
         tokens.skip()

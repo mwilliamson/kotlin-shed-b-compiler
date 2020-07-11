@@ -491,7 +491,7 @@ class Loader(
             }
 
             override fun visit(node: FunctionDefinitionNode): PersistentList<Instruction> {
-                return loadFunctionDeclaration(node)
+                return loadFunctionDefinition(node)
             }
         })
     }
@@ -525,7 +525,7 @@ class Loader(
             }
 
             override fun visit(node: FunctionDefinitionNode): PersistentList<Instruction> {
-                return loadFunctionDeclaration(node)
+                return loadFunctionDefinition(node)
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
@@ -538,7 +538,7 @@ class Loader(
         })
     }
 
-    private fun loadFunctionDeclaration(node: FunctionDefinitionNode): PersistentList<Instruction> {
+    private fun loadFunctionDefinition(node: FunctionDefinitionNode): PersistentList<Instruction> {
         return persistentListOf(
             loadFunctionValue(node),
             LocalStore(node)

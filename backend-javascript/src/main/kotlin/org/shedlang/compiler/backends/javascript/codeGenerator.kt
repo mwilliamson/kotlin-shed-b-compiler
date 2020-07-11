@@ -123,7 +123,7 @@ internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationCont
         override fun visit(node: TypeAliasNode): List<JavascriptStatementNode> = listOf()
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> = listOf(generateCodeForShape(node, context))
         override fun visit(node: UnionNode): List<JavascriptStatementNode> = generateCodeForUnion(node, context)
-        override fun visit(node: FunctionDefinitionNode): List<JavascriptStatementNode> = generateCodeForFunctionDeclaration(node, context)
+        override fun visit(node: FunctionDefinitionNode): List<JavascriptStatementNode> = generateCodeForFunctionDefinition(node, context)
         override fun visit(node: ValNode): List<JavascriptStatementNode> = listOf(generateCode(node, context))
         override fun visit(node: VarargsDeclarationNode) = listOf(generateCodeForVarargsDeclaration(node, context))
     })
@@ -293,7 +293,7 @@ private fun generateCodeForVarargsDeclaration(node: VarargsDeclarationNode, cont
     )
 }
 
-private fun generateCodeForFunctionDeclaration(node: FunctionDefinitionNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
+private fun generateCodeForFunctionDefinition(node: FunctionDefinitionNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     val functionType = context.inspector.functionType(node)
     val source = NodeSource(node)
     val valueName = generateName(node.name)
@@ -465,7 +465,7 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
         }
 
         override fun visit(node: FunctionDefinitionNode): List<JavascriptStatementNode> {
-            return generateCodeForFunctionDeclaration(node, context)
+            return generateCodeForFunctionDefinition(node, context)
         }
     })
 }

@@ -123,7 +123,7 @@ class ResolutionTests {
     }
 
     @Test
-    fun staticParametersInFunctionDeclarationAreAddedToScope() {
+    fun staticParametersInFunctionDefinitionAreAddedToScope() {
         val reference = staticReference("T")
         val typeParameter = typeParameter("T")
         val node = function(

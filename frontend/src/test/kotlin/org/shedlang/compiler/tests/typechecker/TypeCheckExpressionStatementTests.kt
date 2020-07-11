@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
-import org.shedlang.compiler.typechecker.typeCheckFunctionDeclaration
+import org.shedlang.compiler.typechecker.typeCheckFunctionDefinition
 import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
 import org.shedlang.compiler.types.*
 
@@ -59,7 +59,7 @@ class TypeCheckExpressionStatementTests {
                 boolDeclaration to StaticValueType(BoolType)
             )
         )
-        typeCheckFunctionDeclaration(functionDeclaration, context)
+        typeCheckFunctionDefinition(functionDeclaration, context)
         context.undefer()
     }
 

@@ -13,7 +13,7 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
         override fun visit(node: ShapeNode) = typeCheck(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
-        override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDeclaration(node, context)
+        override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDefinition(node, context)
         override fun visit(node: ValNode) = typeCheck(node, context)
         override fun visit(node: VarargsDeclarationNode) = typeCheckVarargsDeclaration(node, context)
     })
@@ -316,7 +316,7 @@ private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, con
     context.addVariableType(declaration, type)
 }
 
-internal fun typeCheckFunctionDeclaration(function: FunctionDefinitionNode, context: TypeContext) {
+internal fun typeCheckFunctionDefinition(function: FunctionDefinitionNode, context: TypeContext) {
     val type = typeCheckFunction(function, context)
     context.addFunctionType(function, type)
     context.addVariableType(function, type)
@@ -359,7 +359,7 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         }
 
         override fun visit(node: FunctionDefinitionNode): Type {
-            typeCheckFunctionDeclaration(node, context)
+            typeCheckFunctionDefinition(node, context)
             return UnitType
         }
     })

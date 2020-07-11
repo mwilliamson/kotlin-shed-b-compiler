@@ -28,7 +28,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         typeContext.undefer()
 
         assertThat(typeContext.typeOf(typeParameter), isMetaType(
@@ -65,7 +65,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         typeContext.undefer()
 
         assertThat(typeContext.typeOf(effectParameter), isEffectType(
@@ -95,7 +95,7 @@ class TypeCheckFunctionTests {
                 returnType = unit,
                 body = listOf(badStatement)
             )
-            typeCheckFunctionDeclaration(node, typeContext)
+            typeCheckFunctionDefinition(node, typeContext)
             typeContext.undefer()
         })
     }
@@ -108,7 +108,7 @@ class TypeCheckFunctionTests {
             returnType = intType,
             body = listOf(expressionStatementReturn(literalBool(true)))
         )
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
 
         assertThat(
             { typeContext.undefer() },
@@ -130,7 +130,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(intType to StaticValueType(IntType)),
             references = mapOf(parameterReference to parameter)
         )
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         typeContext.undefer()
 
         assertThat(
@@ -156,7 +156,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(intType to StaticValueType(IntType)),
             references = mapOf(parameterReference to parameter)
         )
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         typeContext.undefer()
 
         assertThat(
@@ -184,7 +184,7 @@ class TypeCheckFunctionTests {
             intType to StaticValueType(IntType),
             boolType to StaticValueType(BoolType)
         ))
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
             positionalParameters = equalTo(listOf(IntType, BoolType)),
             returnType = equalTo(IntType)
@@ -204,7 +204,7 @@ class TypeCheckFunctionTests {
             unitType to StaticValueType(UnitType),
             effect to StaticValueType(IoEffect)
         ))
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
             positionalParameters = anything,
             returnType = anything,
@@ -233,7 +233,7 @@ class TypeCheckFunctionTests {
             unitType to StaticValueType(UnitType),
             effect to StaticValueType(IoEffect)
         ))
-        typeCheckFunctionDeclaration(node, typeContext)
+        typeCheckFunctionDefinition(node, typeContext)
         // TODO: come up with a way of ensuring undefer() is eventually called
         typeContext.undefer()
     }
@@ -260,7 +260,7 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             {
-                typeCheckFunctionDeclaration(node, typeContext)
+                typeCheckFunctionDefinition(node, typeContext)
                 typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
@@ -290,7 +290,7 @@ class TypeCheckFunctionTests {
         )
         assertThat(
             {
-                typeCheckFunctionDeclaration(node, typeContext)
+                typeCheckFunctionDefinition(node, typeContext)
                 typeContext.undefer()
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
@@ -420,7 +420,7 @@ class TypeCheckFunctionTests {
     }
 
     @Test
-    fun canTypeCheckFunctionDeclarationAsModuleStatement() {
+    fun canTypeCheckFunctionDefinitionAsModuleStatement() {
         val unitReference = staticReference("Unit")
         val node = function(
             returnType = unitReference
@@ -438,7 +438,7 @@ class TypeCheckFunctionTests {
     }
 
     @Test
-    fun canTypeCheckFunctionDeclarationAsFunctionStatement() {
+    fun canTypeCheckFunctionDefinitionAsFunctionStatement() {
         val unitReference = staticReference("Unit")
         val node = function(
             returnType = unitReference

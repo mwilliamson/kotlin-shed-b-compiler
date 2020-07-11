@@ -209,7 +209,7 @@ internal fun isVarargsDeclaration(
     ))
 }
 
-internal fun isFunctionDeclaration(name: Matcher<Identifier>): Matcher<ModuleStatementNode> {
+internal fun isFunctionDefinition(name: Matcher<Identifier>): Matcher<ModuleStatementNode> {
     return cast(has(FunctionDefinitionNode::name, name))
 }
 

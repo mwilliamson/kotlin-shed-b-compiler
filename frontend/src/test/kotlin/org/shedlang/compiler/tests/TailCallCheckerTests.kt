@@ -59,12 +59,12 @@ class TailCallCheckerTests {
             body = listOf(expressionStatement)
         )
         val module = module(body = listOf(functionDeclaration))
-        val otherFunctionDeclaration = function(
+        val otherFunctionDefinition = function(
             name = "other"
         )
 
         val references = createReferences(
-            otherFunctionReference to otherFunctionDeclaration
+            otherFunctionReference to otherFunctionDefinition
         )
 
         assertThat(

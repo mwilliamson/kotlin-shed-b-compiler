@@ -18,7 +18,7 @@ class ParseFunctionTests {
     @Test
     fun canReadZeroArgumentFunctionSignature() {
         val source = "fun f() -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionDefinitionNode::name, isIdentifier("f")),
             has(FunctionNode::staticParameters, isSequence()),
@@ -30,7 +30,7 @@ class ParseFunctionTests {
     @Test
     fun canReadOneArgumentFunctionSignature() {
         val source = "fun f(x: Int) -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
             isParameter("x", "Int")
         )))
@@ -39,7 +39,7 @@ class ParseFunctionTests {
     @Test
     fun canReadManyArgumentFunctionSignature() {
         val source = "fun f(x: Int, y: String) -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
             isParameter("x", "Int"),
             isParameter("y", "String")
@@ -49,7 +49,7 @@ class ParseFunctionTests {
     @Test
     fun canReadNamedParametersWithNoPositionalArguments() {
         val source = "fun f(.x: Int) -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionNode::parameters, isSequence()),
             has(FunctionNode::namedParameters, isSequence(isParameter("x", "Int")))
@@ -59,7 +59,7 @@ class ParseFunctionTests {
     @Test
     fun canReadNamedParametersAfterPositionalArguments() {
         val source = "fun f(x: Int, .y: Int) -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionNode::parameters, isSequence(isParameter("x", "Int"))),
             has(FunctionNode::namedParameters, isSequence(isParameter("y", "Int")))
@@ -71,7 +71,7 @@ class ParseFunctionTests {
         val source = "fun f(.x: Int, y: Int) -> Unit { }"
 
         assertThat(
-            { parseString(::parseFunctionDeclaration, source) },
+            { parseString(::parseFunctionDefinition, source) },
             throwsException<PositionalParameterAfterNamedParameterError>()
         )
     }
@@ -79,7 +79,7 @@ class ParseFunctionTests {
     @Test
     fun parametersCanHaveTrailingComma() {
         val source = "fun f(x: Int, ) -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
             isParameter("x", "Int")
         )))
@@ -88,7 +88,7 @@ class ParseFunctionTests {
     @Test
     fun canReadTypeParameters() {
         val source = "fun f[T, U](t: T) -> U { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionNode::staticParameters, isSequence(
                 isTypeParameter(name = isIdentifier("T"), variance = isInvariant),
@@ -101,7 +101,7 @@ class ParseFunctionTests {
     fun typeParametersCannotHaveVariance() {
         val source = "fun f[+T]() -> T { }"
         assertThat(
-            { parseString(::parseFunctionDeclaration, source) },
+            { parseString(::parseFunctionDefinition, source) },
             throws<UnexpectedTokenException>()
         )
     }
@@ -109,7 +109,7 @@ class ParseFunctionTests {
     @Test
     fun canReadEffectParameters() {
         val source = "fun f[!E]() -> U { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionNode::staticParameters, isSequence(
                 isEffectParameterNode(name = isIdentifier("E"))
@@ -120,7 +120,7 @@ class ParseFunctionTests {
     @Test
     fun canReadBody() {
         val source = "fun f() -> Int { 1; 2; }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionDefinitionNode::body, isBlock(
             isExpressionStatement(isIntLiteral(equalTo(1))),
             isExpressionStatement(isIntLiteral(equalTo(2)))
@@ -130,24 +130,24 @@ class ParseFunctionTests {
     @Test
     fun canReadFunctionWithoutEffect() {
         val source = "fun f() -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::effect, absent()))
     }
 
     @Test
     fun canReadFunctionWithEffect() {
         val source = "fun f() !Io -> Unit { }"
-        val function = parseString(::parseFunctionDeclaration, source)
+        val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::effect, present(
             isStaticReference("Io")
         )))
     }
 
     @Test
-    fun errorIsRaisedWhenFunctionDeclarationDoesNotProvideReturnType() {
+    fun errorIsRaisedWhenFunctionDefinitionDoesNotProvideReturnType() {
         val source = "fun f() { }"
         assertThat(
-            { parseString(::parseFunctionDeclaration, source) },
+            { parseString(::parseFunctionDefinition, source) },
             throws(has(MissingReturnTypeError::message, equalTo("Function declaration must have return type")))
         )
     }
@@ -199,7 +199,7 @@ class ParseFunctionTests {
     }
 
     @Test
-    fun canReadFunctionDeclarationAsModuleStatement() {
+    fun canReadFunctionDefinitionAsModuleStatement() {
         val source = "fun f() -> Unit { }"
         val function = parseString(::parseModuleStatement, source)
         assertThat(function, cast(allOf(
@@ -208,7 +208,7 @@ class ParseFunctionTests {
     }
 
     @Test
-    fun canReadFunctionDeclarationAsFunctionStatement() {
+    fun canReadFunctionDefinitionAsFunctionStatement() {
         val source = "fun f() -> Unit { }"
         val function = parseString(::parseFunctionStatement, source)
         assertThat(function, cast(allOf(

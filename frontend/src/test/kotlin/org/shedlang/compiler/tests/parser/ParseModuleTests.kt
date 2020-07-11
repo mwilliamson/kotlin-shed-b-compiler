@@ -68,8 +68,8 @@ class ParseModuleTests {
 
         assertThat(node, allOf(
             has(ModuleNode::body, isSequence(
-                isFunctionDeclaration(name = isIdentifier("f")),
-                isFunctionDeclaration(name = isIdentifier("g"))
+                isFunctionDefinition(name = isIdentifier("f")),
+                isFunctionDefinition(name = isIdentifier("g"))
             ))
         ))
     }
