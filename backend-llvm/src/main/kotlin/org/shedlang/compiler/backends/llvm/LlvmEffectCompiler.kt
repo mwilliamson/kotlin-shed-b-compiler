@@ -194,8 +194,7 @@ internal class EffectCompiler(
     ): FunctionContext {
         val effectHandler = irBuilder.generateLocal("effectHandler")
 
-        val operations = effect.operations.entries.sortedBy { (operationName, _) -> operationName }
-        val operationTypes = operations.map { (_, operationType) -> operationType }
+        val operationTypes = effect.operations.map { (_, operationType) -> operationType }
 
         return context
             .addInstructions(effectHandlersPushDeclaration.call(

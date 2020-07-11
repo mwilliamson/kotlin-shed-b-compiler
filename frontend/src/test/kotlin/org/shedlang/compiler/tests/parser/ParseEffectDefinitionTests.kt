@@ -13,7 +13,7 @@ import org.shedlang.compiler.tests.isSequence
 
 class ParseEffectDefinitionTests {
     @Test
-    fun canParseEffectDefinitionWithOneEffect() {
+    fun canParseEffectDefinitionWithOneOperation() {
         val source = "effect Try { .throw: (String) -> Nothing }"
 
         val definition = parseString(::parseModuleStatement, source)
@@ -28,6 +28,20 @@ class ParseEffectDefinitionTests {
                         returnType = isStaticReference("Nothing")
                     ))
                 )
+            ))
+        )))
+    }
+
+    @Test
+    fun operationsAreOrderedByName() {
+        val source = "effect Eff { .b: () -> Unit, .a: () -> Unit }"
+
+        val definition = parseString(::parseModuleStatement, source)
+
+        assertThat(definition, cast(allOf(
+            has(EffectDefinitionNode::operations, isSequence(
+                has(OperationDefinitionNode::name, isIdentifier("a")),
+                has(OperationDefinitionNode::name, isIdentifier("b"))
             ))
         )))
     }

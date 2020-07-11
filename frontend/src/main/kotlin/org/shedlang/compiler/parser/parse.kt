@@ -251,7 +251,7 @@ private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefin
 
     return EffectDefinitionNode(
         name = name,
-        operations = operations,
+        operations = operations.sortedBy { operation -> operation.name },
         source = source
     )
 }
