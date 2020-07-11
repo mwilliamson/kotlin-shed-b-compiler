@@ -221,17 +221,21 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
     )
 }
 
-private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationContext): GeneratedExpression {
+private fun <T: Node> generateCodeForBranchingExpression(
+    node: T,
+    context: CodeGenerationContext,
+    generateStatements: (T, CodeGenerationContext, ReturnValue) -> List<PythonStatementNode>
+): GeneratedExpression {
     val targetName = context.freshName()
 
     fun returnValue(expression: PythonExpressionNode, source: Source): List<PythonStatementNode> {
         return listOf(assign(targetName, expression, source = source))
     }
 
-    val statements = generateCodeForHandleStatement(
+    val statements = generateStatements(
         node,
         context,
-        returnValue = ::returnValue
+        ::returnValue
     )
 
     val reference = PythonVariableReferenceNode(targetName, source = NodeSource(node))
@@ -243,7 +247,7 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
     )
 }
 
-private fun generateCodeForHandleStatement(node: HandleNode, context: CodeGenerationContext, returnValue: ReturnValue): List<PythonStatementNode> {
+private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationContext, returnValue: ReturnValue): List<PythonStatementNode> {
     val handleSource = NodeSource(node)
 
     val body = generateBlockCode(node.body, context, returnValue = returnValue)
@@ -668,7 +672,7 @@ private fun generateStatementCodeForExpression(
     } else if (expression is WhenNode) {
         return generateWhenCode(expression, context, returnValue = returnValue)
     } else if (expression is HandleNode) {
-        return generateCodeForHandleStatement(expression, context, returnValue = returnValue)
+        return generateCodeForHandle(expression, context, returnValue = returnValue)
     } else {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
             returnValue(pythonExpression, source)
@@ -1002,47 +1006,27 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         override fun visit(node: IfNode): GeneratedExpression {
-            val targetName = context.freshName()
-
-            val statements = generateIfCode(
+            return generateCodeForBranchingExpression(
                 node,
                 context,
-                returnValue = { expression, source ->
-                    listOf(assign(targetName, expression, source = source))
-                }
-            )
-
-            val reference = PythonVariableReferenceNode(targetName, source = NodeSource(node))
-
-            return GeneratedExpression(
-                reference,
-                statements = statements,
-                spilled = true
+                ::generateIfCode
             )
         }
 
         override fun visit(node: WhenNode): GeneratedExpression {
-            val targetName = context.freshName()
-
-            val statements = generateWhenCode(
+            return generateCodeForBranchingExpression(
                 node,
                 context,
-                returnValue = { expression, source ->
-                    listOf(assign(targetName, expression, source = source))
-                }
-            )
-
-            val reference = PythonVariableReferenceNode(targetName, source = NodeSource(node))
-
-            return GeneratedExpression(
-                reference,
-                statements = statements,
-                spilled = true
+                ::generateWhenCode
             )
         }
 
         override fun visit(node: HandleNode): GeneratedExpression {
-            return generateCodeForHandle(node, context)
+            return generateCodeForBranchingExpression(
+                node,
+                context,
+                ::generateCodeForHandle
+            )
         }
     })
 }
