@@ -1097,6 +1097,6 @@ fun expressionBranches(expression: ExpressionNode): Iterable<Block>? {
         override fun visit(node: FunctionExpressionNode): Iterable<Block>? = null
         override fun visit(node: IfNode): Iterable<Block>? = node.branchBodies
         override fun visit(node: WhenNode): Iterable<Block>? = node.branchBodies
-        override fun visit(node: HandleNode): Iterable<Block>? = null
+        override fun visit(node: HandleNode): Iterable<Block>? = listOf(node.body)
     })
 }
