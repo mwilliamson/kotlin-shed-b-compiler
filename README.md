@@ -243,8 +243,3 @@ If we add in private fields, we can hide the tag (the compiler still has enough 
 * Consider how to handle functions that have multiple non local return effects
   * Forbid?
   * Allow if different, non-overlapping types? How to distinguish them in type system and implementation?
-
-* Handle effect stacks properly
-  * Effect handlers need to run using the effect handlers of the outer scope,
-    but without stomping the effect handler stack in case of resumption.
-  * For early exit, effect handler stack must be unwound. 
