@@ -222,18 +222,31 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
 }
 
 private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationContext): GeneratedExpression {
-    val handleSource = NodeSource(node)
     val targetName = context.freshName()
 
-    // TODO: find a neater solution!
-    var hasReturned = false
-
     fun returnValue(expression: PythonExpressionNode, source: Source): List<PythonStatementNode> {
-        hasReturned = true
         return listOf(assign(targetName, expression, source = source))
     }
 
-    val body = generateBlockCode(node.body, context, returnValue = ::returnValue)
+    val statements = generateCodeForHandleStatement(
+        node,
+        context,
+        returnValue = ::returnValue
+    )
+
+    val reference = PythonVariableReferenceNode(targetName, source = NodeSource(node))
+
+    return GeneratedExpression(
+        reference,
+        statements = statements,
+        spilled = true
+    )
+}
+
+private fun generateCodeForHandleStatement(node: HandleNode, context: CodeGenerationContext, returnValue: ReturnValue): List<PythonStatementNode> {
+    val handleSource = NodeSource(node)
+
+    val body = generateBlockCode(node.body, context, returnValue = returnValue)
 
     val exitValueName = context.freshName("exit_value")
     val effectHandlerName = context.freshName("effect_handler")
@@ -295,17 +308,14 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
                     source = handleSource
                 ),
                 target = exitValueName,
-                body = listOf(
-                    assign(
-                        targetName,
-                        PythonAttributeAccessNode(
-                            receiver = PythonVariableReferenceNode(exitValueName, source = handleSource),
-                            // TODO: extract string constant
-                            attributeName = "value",
-                            source = handleSource
-                        ),
+                body = returnValue(
+                    PythonAttributeAccessNode(
+                        receiver = PythonVariableReferenceNode(exitValueName, source = handleSource),
+                        // TODO: extract string constant
+                        attributeName = "value",
                         source = handleSource
-                    )
+                    ),
+                    handleSource
                 ),
                 source = handleSource
             )
@@ -313,17 +323,7 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
         source = handleSource
     )
 
-    val statements = effectHandlerPush + listOf(tryStatement)
-
-    val value = if (hasReturned) {
-        PythonVariableReferenceNode(targetName, source = handleSource)
-    } else {
-        PythonNoneLiteralNode(source = handleSource)
-    }
-
-    return GeneratedExpression.pure(value)
-        .copy(statements = statements)
-
+    return effectHandlerPush + listOf(tryStatement)
 }
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
@@ -667,6 +667,8 @@ private fun generateStatementCodeForExpression(
         return generateIfCode(expression, context, returnValue = returnValue)
     } else if (expression is WhenNode) {
         return generateWhenCode(expression, context, returnValue = returnValue)
+    } else if (expression is HandleNode) {
+        return generateCodeForHandleStatement(expression, context, returnValue = returnValue)
     } else {
         return generateExpressionCode(expression, context).toStatements { pythonExpression ->
             returnValue(pythonExpression, source)
