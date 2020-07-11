@@ -9,7 +9,7 @@ It would also be useful to find a way to apply further restrictions,
 such as only allowing file IO within a particular directory,
 although the enforcement of this restriction would rely more on user-written code than the runtime (more on this later).
 
-.. code-block::
+.. code-block:: none
 
     import FileIo from Stdlib.FileIo;
     import Json from Stdlib.Json;
@@ -64,7 +64,7 @@ This suggests two possible approaches for restricting access to a particular dir
 
 Some pseudo-code for the latter approach:
 
-.. code-block::
+.. code-block:: none
 
     import FileIo from Stdlib.FileIo;
     import Json from Stdlib.Json;
