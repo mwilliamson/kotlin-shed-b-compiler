@@ -200,10 +200,10 @@ internal class EffectCompiler(
             .addInstructions(effectHandlersPushDeclaration.call(
                 target = effectHandler,
                 arguments = listOf(
-                        LlvmOperandInt(effect.definitionId),
-                        LlvmOperandInt(effect.operations.size),
-                        setjmpEnv
-                    )
+                    LlvmOperandInt(effect.definitionId),
+                    LlvmOperandInt(effect.operations.size),
+                    setjmpEnv
+                )
             ))
             .let {
                 operationHandlers.foldIndexed(it) { operationIndex, context, operationHandler ->
