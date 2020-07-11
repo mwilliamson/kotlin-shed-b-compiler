@@ -189,29 +189,6 @@ Syntax for assignments could be similar e.g. `*x = tmp`,
 although parsing is harder.
 Alternative would be to use `:=` i.e. `x := tmp`.
 
-## Alternative syntax for tags/shapes
-
-```
-shape OptionShape {
-    tag: Symbol;
-}
-
-shape Some[+T] <: OptionShape {
-    OptionShape.tag = @Some;
-    value: T;
-}
-
-shape None <: OptionShape {
-    OptionShape.tag = @None;
-}
-
-type Option[+T] = Some[T] | None;
-```
-
-More explicit, but more verbose.
-`is` checks become more work for the compiler (have to find the relevant field that acts as a discriminator).
-If we add in private fields, we can hide the tag (the compiler still has enough information to discriminate types).
-
 ## TODO
 
 * Use ranges for sources
