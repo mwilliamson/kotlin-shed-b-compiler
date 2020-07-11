@@ -1,10 +1,6 @@
 package org.shedlang.compiler.tests.types
 
-import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.cast
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
@@ -173,27 +169,5 @@ class TypeApplicationTests {
                 isTupleType(elementTypes = isSequence(isIntType))
             )
         }
-    }
-
-    @Test
-    fun applyingTypeToOpaqueEffectReplacesArguments() {
-        val typeParameter1 = invariantTypeParameter("T")
-        val typeParameter2 = invariantTypeParameter("U")
-        val shape = ParameterizedStaticValue(
-            parameters = listOf(typeParameter1, typeParameter2),
-            value = OpaqueEffect(
-                definitionId = 42,
-                name = Identifier("Eff"),
-                arguments = listOf(typeParameter1, typeParameter2)
-            )
-        )
-        assertThat(
-            applyStatic(shape, listOf(BoolType, IntType)),
-            cast(allOf(
-                has(OpaqueEffect::definitionId, equalTo(42)),
-                has(OpaqueEffect::name, isIdentifier("Eff")),
-                has(OpaqueEffect::arguments, isSequence(isBoolType, isIntType))
-            ))
-        )
     }
 }

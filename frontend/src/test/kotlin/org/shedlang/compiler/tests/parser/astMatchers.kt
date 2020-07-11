@@ -124,12 +124,10 @@ internal fun isValType(
 }
 
 internal fun isEffectDeclaration(
-    name: Matcher<Identifier>,
-    staticParameters: Matcher<List<StaticParameterNode>>
+    name: Matcher<Identifier>
 ): Matcher<TypesModuleStatementNode> {
     return cast(allOf(
-        has(EffectDeclarationNode::name, name),
-        has(EffectDeclarationNode::staticParameters, staticParameters)
+        has(EffectDeclarationNode::name, name)
     ))
 }
 

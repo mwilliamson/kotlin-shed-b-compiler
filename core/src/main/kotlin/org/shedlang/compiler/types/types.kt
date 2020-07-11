@@ -74,11 +74,10 @@ object IoEffect : Effect {
 
 data class OpaqueEffect(
     val definitionId: Int,
-    val name: Identifier,
-    val arguments: List<StaticValue>
+    val name: Identifier
 ): Effect {
     override val shortDescription: String
-        get() = "!${name.value}${staticArgumentsString(arguments)}"
+        get() = "!${name.value}"
 }
 
 data class UserDefinedEffect(
@@ -729,13 +728,6 @@ fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>):
         is EffectParameter ->
             // TODO: handle non-effect bindings
             return bindings.getOrElse(effect, { effect }) as Effect
-
-        is OpaqueEffect ->
-            return OpaqueEffect(
-                definitionId = effect.definitionId,
-                name = effect.name,
-                arguments = effect.arguments.map { argument -> replaceStaticValues(argument, bindings) }
-            )
 
         is EffectUnion ->
             return effectUnion(effect.members.map { member -> replaceEffects(member, bindings) })

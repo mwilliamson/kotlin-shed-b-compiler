@@ -172,11 +172,9 @@ fun variableBinder(
 ): VariableBindingNode = parameter(name = name)
 
 fun effectDeclaration(
-    name: String,
-    staticParameters: List<StaticParameterNode> = listOf()
+    name: String
 ) = EffectDeclarationNode(
     name = Identifier(name),
-    staticParameters = staticParameters,
     source = anySource()
 )
 
@@ -695,6 +693,5 @@ fun userDefinedEffect(
 
 fun opaqueEffect(name: String) = OpaqueEffect(
     definitionId = freshNodeId(),
-    name = Identifier(name),
-    arguments = listOf()
+    name = Identifier(name)
 )

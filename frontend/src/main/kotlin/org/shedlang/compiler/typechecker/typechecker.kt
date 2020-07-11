@@ -304,23 +304,10 @@ internal fun typeCheckTypesModuleStatement(statement: TypesModuleStatementNode, 
 }
 
 private fun typeCheckEffectDeclaration(effectDeclaration: EffectDeclarationNode, context: TypeContext) {
-    val effect = if (effectDeclaration.staticParameters.isEmpty()) {
-        OpaqueEffect(
-            definitionId = effectDeclaration.nodeId,
-            name = effectDeclaration.name,
-            arguments = listOf()
-        )
-    } else {
-        val parameters = typeCheckStaticParameters(effectDeclaration.staticParameters, context)
-        ParameterizedStaticValue(
-            parameters = parameters,
-            value = OpaqueEffect(
-                definitionId = effectDeclaration.nodeId,
-                name = effectDeclaration.name,
-                arguments = parameters
-            )
-        )
-    }
+    val effect = OpaqueEffect(
+        definitionId = effectDeclaration.nodeId,
+        name = effectDeclaration.name
+    )
     context.addVariableType(effectDeclaration, StaticValueType(effect))
 }
 
