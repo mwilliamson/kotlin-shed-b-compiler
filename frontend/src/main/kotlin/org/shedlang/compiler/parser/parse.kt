@@ -1339,7 +1339,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
     return HandleNode(
         effect = effect,
         body = body,
-        handlers = handlers,
+        handlers = handlers.sortedBy { handler -> handler.operationName },
         source = source
     )
 }

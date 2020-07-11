@@ -390,10 +390,7 @@ class Loader(
             override fun visit(node: HandleNode): PersistentList<Instruction> {
                 val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as UserDefinedEffect
 
-                val operationHandlers = node.handlers
-                    .sortedBy { handler -> handler.operationName }
-
-                val operationHandlerInstructions = operationHandlers
+                val operationHandlerInstructions = node.handlers
                     .map { handler -> loadFunctionValue(handler.function) }
 
                 val body = loadBlock(node.body)

@@ -63,7 +63,7 @@ internal fun isHandle(
 
 internal fun isHandler(
     operationName: Matcher<Identifier>,
-    function: Matcher<FunctionExpressionNode>
+    function: Matcher<FunctionExpressionNode> = anything
 ) = allOf(
     has(HandlerNode::operationName, operationName),
     has(HandlerNode::function, function)

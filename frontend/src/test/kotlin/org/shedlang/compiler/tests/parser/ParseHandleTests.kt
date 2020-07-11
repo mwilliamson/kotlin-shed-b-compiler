@@ -77,4 +77,22 @@ class ParseHandleTests {
             )
         ))
     }
+
+    @Test
+    fun operationHandlersAreOrderedByName() {
+        val source = "handle Eff { } on { .b = () { exit unit }, .a = () { exit unit } }"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isHandle(
+            handlers = isSequence(
+                isHandler(
+                    operationName = isIdentifier("a")
+                ),
+                isHandler(
+                    operationName = isIdentifier("b")
+                )
+            )
+        ))
+    }
 }
