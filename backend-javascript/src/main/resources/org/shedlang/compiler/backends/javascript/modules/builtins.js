@@ -45,6 +45,21 @@ function handle(func, handlers) {
     }
 }
 
+async function handleAsync(func, handlers) {
+    try {
+        return await func();
+    } catch (error) {
+        for ([operationName, handler] of handlers) {
+            if (error.operationName === operationName) {
+                return handler.async(error.args);
+            }
+        }
+        throw error;
+    }
+}
+
+handle.async = handleAsync;
+
 function varargs(cons, nil) {
     return (...args) => {
         let result = nil;

@@ -159,32 +159,47 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
     // TODO: sort out async effects
     val source = NodeSource(node)
 
-    return JavascriptFunctionCallNode(
-        function = JavascriptVariableReferenceNode(
-            "\$shed.handle",
-            source = source
-        ),
-        arguments = listOf(
-            JavascriptFunctionExpressionNode(
-                parameters = listOf(),
-                body = generateBlockCode(node.body, context),
-                source = source
-            ),
-            JavascriptArrayLiteralNode(
-                elements = node.handlers.map { handler ->
-                    JavascriptArrayLiteralNode(
-                        elements = listOf(
-                            JavascriptStringLiteralNode(generateName(handler.operationName), source = source),
-                            generateCode(handler.function, context)
-                        ),
-                        source = source
-                    )
-                },
-                source = source
-            )
-        ),
+    val handleReference = JavascriptVariableReferenceNode(
+        "\$shed.handle",
         source = source
     )
+
+    val arguments = listOf(
+        JavascriptFunctionExpressionNode(
+            parameters = listOf(),
+            body = generateBlockCode(node.body, context),
+            source = source
+        ),
+        JavascriptArrayLiteralNode(
+            elements = node.handlers.map { handler ->
+                JavascriptArrayLiteralNode(
+                    elements = listOf(
+                        JavascriptStringLiteralNode(generateName(handler.operationName), source = source),
+                        generateCode(handler.function, context)
+                    ),
+                    source = source
+                )
+            },
+            source = source
+        )
+    )
+
+    if (context.isAsync()) {
+        return await(
+            JavascriptFunctionCallNode(
+                function = JavascriptPropertyAccessNode(handleReference, "async", source = source),
+                arguments = arguments,
+                source = source
+            ),
+            source = source
+        )
+    } else {
+        return JavascriptFunctionCallNode(
+            function = handleReference,
+            arguments = arguments,
+            source = source
+        )
+    }
 }
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext) : JavascriptStatementNode {

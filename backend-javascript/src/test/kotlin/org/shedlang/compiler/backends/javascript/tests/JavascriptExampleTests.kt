@@ -16,8 +16,6 @@ class JavascriptExampleTests {
         "EffectHandlerExitOrResume.shed",
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
-        "NonLocalReturnInline.shed",
-        "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
         "NonLocalReturnNested.shed",
         "Resume.shed",
