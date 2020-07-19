@@ -49,6 +49,7 @@ async function handleAsync(func, handlers) {
     try {
         return await func();
     } catch (error) {
+        // TODO: check effect
         for ([operationName, handler] of handlers) {
             if (error.operationName === operationName) {
                 return handler.async(error.args);
