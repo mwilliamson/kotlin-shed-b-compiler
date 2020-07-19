@@ -431,9 +431,9 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             // TODO: test handling of missing field
             return when (staticValue) {
                 is ModuleType -> {
-                    val field = staticValue.fields[node.fieldName]
+                    val field = staticValue.fields[node.fieldName.identifier]
                     if (field == null) {
-                        throw NoSuchFieldError(node.fieldName, NodeSource(node))
+                        throw NoSuchFieldError(node.fieldName.identifier, NodeSource(node))
                     } else {
                         return field
                     }

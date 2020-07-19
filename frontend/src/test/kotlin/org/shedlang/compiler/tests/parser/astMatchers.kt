@@ -330,7 +330,7 @@ internal fun isStaticFieldAccess(
     fieldName: Matcher<Identifier>
 ): Matcher<StaticExpressionNode> = cast(allOf(
     has(StaticFieldAccessNode::receiver, receiver),
-    has(StaticFieldAccessNode::fieldName, fieldName)
+    has(StaticFieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName))
 ))
 
 internal fun isStaticApplication(

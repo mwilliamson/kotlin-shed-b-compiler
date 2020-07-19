@@ -1247,7 +1247,7 @@ internal fun generateCode(node: StaticExpressionNode, context: CodeGenerationCon
         override fun visit(node: StaticFieldAccessNode): PythonExpressionNode {
             return PythonAttributeAccessNode(
                 generateCode(node.receiver, context),
-                pythoniseName(node.fieldName),
+                pythoniseName(node.fieldName.identifier),
                 NodeSource(node)
             )
         }

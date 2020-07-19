@@ -1566,7 +1566,7 @@ private object StaticFieldAccessParser : StaticOperationParser {
 
     override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
         tokens.skip()
-        val fieldName = parseIdentifier(tokens)
+        val fieldName = parseFieldName(tokens)
         return StaticFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
     }
 

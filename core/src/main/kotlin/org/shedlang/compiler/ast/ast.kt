@@ -184,12 +184,12 @@ interface StaticExpressionNode : Node {
 
 data class StaticFieldAccessNode(
     val receiver: StaticExpressionNode,
-    val fieldName: Identifier,
+    val fieldName: FieldNameNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : StaticExpressionNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(receiver))
+        get() = listOf(NodeStructures.staticEval(receiver), NodeStructures.staticEval(fieldName))
 
     override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

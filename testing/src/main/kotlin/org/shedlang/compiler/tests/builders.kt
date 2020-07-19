@@ -531,7 +531,7 @@ fun staticFieldAccess(
     fieldName: String
 ) = StaticFieldAccessNode(
     receiver = receiver,
-    fieldName = Identifier(fieldName),
+    fieldName = fieldName(fieldName),
     source = anySource()
 )
 fun staticApplication(
