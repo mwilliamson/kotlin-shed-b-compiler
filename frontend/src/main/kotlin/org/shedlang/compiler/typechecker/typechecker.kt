@@ -427,19 +427,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
 
         override fun visit(node: StaticFieldAccessNode): Type {
             val staticValue = evalStatic(node.receiver, context)
-            // TODO: handle not a module
-            // TODO: test handling of missing field
-            return when (staticValue) {
-                is ModuleType -> {
-                    val field = staticValue.fields[node.fieldName.identifier]
-                    if (field == null) {
-                        throw NoSuchFieldError(node.fieldName.identifier, NodeSource(node))
-                    } else {
-                        return field
-                    }
-                }
-                else -> throw CompilerError("TODO", source = node.source)
-            }
+            return inferFieldAccessType(staticValue, node.fieldName)
         }
 
         override fun visit(node: StaticApplicationNode): Type {
