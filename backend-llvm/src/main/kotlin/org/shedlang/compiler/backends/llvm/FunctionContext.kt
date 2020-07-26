@@ -44,14 +44,6 @@ internal class FunctionContext(
                     .let { newInstruction.destinations.fold(it) { labelPredecessors, (_, label) ->
                         labelPredecessors.add(label, this)
                     } }
-            is LlvmLabel -> {
-                val previousInstruction = instructions.lastOrNull()
-                if (previousInstruction == null || isTerminator(previousInstruction)) {
-                    labelPredecessors
-                } else {
-                    labelPredecessors.add(newInstruction.name, this)
-                }
-            }
             else ->
                 labelPredecessors
         }
