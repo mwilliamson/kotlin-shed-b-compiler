@@ -33,7 +33,7 @@ private fun loadModule(module: Module.Shed, moduleSet: ModuleSet): PersistentLis
         types = module.types,
         moduleSet = moduleSet
     )
-    return loader.loadModule(module)
+    return removeUnreachableCode(loader.loadModule(module))
 }
 
 class Loader(

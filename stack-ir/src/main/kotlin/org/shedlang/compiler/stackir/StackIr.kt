@@ -156,6 +156,22 @@ fun Instruction.children(): List<Instruction> {
     }
 }
 
+fun Instruction.mapChildren(func: (List<Instruction>) -> PersistentList<Instruction>): Instruction {
+    return when (this) {
+        is DefineFunction -> DefineFunction(
+            name = name,
+            positionalParameters = positionalParameters,
+            namedParameters = namedParameters,
+            bodyInstructions = func(bodyInstructions)
+        )
+        is EffectHandle -> EffectHandle(
+            effect = effect,
+            instructions = func(instructions)
+        )
+        else -> this
+    }
+}
+
 fun Instruction.descendants(): List<Instruction> {
     val children = children()
     return children + children.flatMap { child -> child.descendants() }
