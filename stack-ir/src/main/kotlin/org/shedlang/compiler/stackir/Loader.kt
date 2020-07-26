@@ -475,14 +475,10 @@ class Loader(
                     ExpressionStatementNode.Type.EXIT ->
                         return expressionInstructions
                             .add(Exit)
-                            // TODO: remove this? necessary since functions must have a value to return
-                            .add(PushValue(IrUnit))
 
                     ExpressionStatementNode.Type.RESUME ->
                         return expressionInstructions
                             .add(Resume)
-                            // TODO: remove this? necessary since functions must have a value to return
-                            .add(PushValue(IrUnit))
                 }
             }
 
