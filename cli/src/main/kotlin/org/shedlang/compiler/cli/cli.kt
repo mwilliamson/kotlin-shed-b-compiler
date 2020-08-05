@@ -1,14 +1,18 @@
 package org.shedlang.compiler.cli
 
 import com.xenomachina.argparser.ArgParser
+import com.xenomachina.argparser.InvalidArgumentException
 import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
+import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.readPackageModule
+import org.shedlang.compiler.readStandaloneModule
 import org.shedlang.compiler.stackinterpreter.RealWorld
 import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
+import org.shedlang.compiler.standaloneModulePathToName
 import org.shedlang.compiler.typechecker.SourceError
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -28,26 +32,33 @@ object ShedCli {
 
         val tempDir = createTempDir()
         try {
-            val base = Paths.get(arguments.source)
+            val sourcePath = Paths.get(arguments.source)
             val backend = arguments.backend
+            val mainModuleNameArgument = arguments.mainModule
+
             if (backend == null) {
                 return onErrorPrintAndExit {
-                    val source = readPackageModule(base, arguments.mainModule)
-                    val image = loadModuleSet(source)
+                    val (mainModuleName, moduleSet) = read(
+                        sourcePath = sourcePath,
+                        mainModuleNameArgument = mainModuleNameArgument
+                    )
+
+                    val image = loadModuleSet(moduleSet)
+
                     executeMain(
-                        mainModule = arguments.mainModule,
+                        mainModule = mainModuleName,
                         image = image,
                         world = RealWorld
                     )
                 }
             } else {
-                compile(
-                    base = base,
-                    mainName = arguments.mainModule,
+                val mainModuleName = compile(
+                    sourcePath = sourcePath,
+                    mainModuleNameArgument = mainModuleNameArgument,
                     backend = backend,
                     target = tempDir.toPath()
                 )
-                return backend.run(tempDir.toPath(), arguments.mainModule)
+                return backend.run(tempDir.toPath(), mainModuleName)
             }
         } finally {
             tempDir.deleteRecursively()
@@ -76,8 +87,8 @@ object ShedcCli {
     private fun run(rawArguments: Array<String>) {
         val arguments = Arguments(ArgParser(rawArguments))
         compile(
-            base = Paths.get(arguments.source),
-            mainName = arguments.mainModule,
+            sourcePath = Paths.get(arguments.source),
+            mainModuleNameArgument = arguments.mainModule,
             backend = arguments.backend,
             target = Paths.get(arguments.outputPath)
         )
@@ -95,10 +106,29 @@ object ShedcCli {
     }
 }
 
-private fun compile(base: Path, mainName: ModuleName, backend: Backend, target: Path) {
-    onErrorPrintAndExit {
-        val result = readPackageModule(base, mainName)
-        backend.compile(result, mainModule = mainName, target = target)
+private fun read(sourcePath: Path, mainModuleNameArgument: ModuleName?): Pair<ModuleName, ModuleSet> {
+    return if (sourcePath.toFile().isDirectory) {
+        if (mainModuleNameArgument == null) {
+            throw InvalidArgumentException("module name is required when using source directory")
+        } else {
+            Pair(
+                mainModuleNameArgument,
+                readPackageModule(sourcePath, mainModuleNameArgument)
+            )
+        }
+    } else {
+        Pair(
+            standaloneModulePathToName(sourcePath),
+            readStandaloneModule(sourcePath)
+        )
+    }
+}
+
+private fun compile(sourcePath: Path, mainModuleNameArgument: ModuleName?, backend: Backend, target: Path): ModuleName {
+    return onErrorPrintAndExit {
+        val (mainModuleName, moduleSet) = read(sourcePath = sourcePath, mainModuleNameArgument = mainModuleNameArgument)
+        backend.compile(moduleSet, mainModule = mainModuleName, target = target)
+        mainModuleName
     }
 }
 

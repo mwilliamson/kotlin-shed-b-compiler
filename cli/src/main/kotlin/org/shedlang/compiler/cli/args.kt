@@ -2,7 +2,8 @@ package org.shedlang.compiler.cli
 
 import com.xenomachina.argparser.ArgParser
 import com.xenomachina.argparser.InvalidArgumentException
-import org.shedlang.compiler.ast.Identifier
+import com.xenomachina.argparser.default
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.parseModuleName
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.llvm.LlvmBackend
@@ -22,8 +23,8 @@ internal fun ArgParser.shedBackends(): ArgParser.Delegate<Backend> {
     return this.choices("--backend", argName = "BACKEND", help = "backend to generate code with", choices = backends)
 }
 
-internal fun ArgParser.shedMainModule(): ArgParser.Delegate<List<Identifier>> {
-    return positional("MAIN", help = "main module to run", transform = ::parseModuleName)
+internal fun ArgParser.shedMainModule(): ArgParser.Delegate<ModuleName?> {
+    return positional("MAIN", help = "main module to run", transform = ::parseModuleName).default(null)
 }
 
 
