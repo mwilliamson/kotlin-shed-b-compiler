@@ -23,13 +23,17 @@ stdlib-llvm/build/libshed.a:
 
 build-deps: build-bdwgc build-utf8proc
 
-build-bdwgc:
-	rm -rf stdlib-llvm/deps/gc-8.0.4
+build-bdwgc: stdlib-llvm/deps/gc-8.0.4
+
+stdlib-llvm/deps/gc-8.0.4:
+	#rm -rf stdlib-llvm/deps/gc-8.0.4
 	curl -L https://github.com/ivmai/bdwgc/releases/download/v8.0.4/gc-8.0.4.tar.gz | tar xzf - -C stdlib-llvm/deps
 	cd stdlib-llvm/deps/gc-8.0.4 && ./configure --enable-static --enable-threads=no && make
 
-build-utf8proc:
-	rm -rf stdlib-llvm/deps/utf8proc-2.4.0
+build-utf8proc: stdlib-llvm/deps/utf8proc-2.4.0
+
+stdlib-llvm/deps/utf8proc-2.4.0:
+	#rm -rf stdlib-llvm/deps/utf8proc-2.4.0
 	curl -L https://github.com/JuliaStrings/utf8proc/archive/v2.4.0.tar.gz | tar xzf - -C stdlib-llvm/deps
 	cd stdlib-llvm/deps/utf8proc-2.4.0 && make
 
