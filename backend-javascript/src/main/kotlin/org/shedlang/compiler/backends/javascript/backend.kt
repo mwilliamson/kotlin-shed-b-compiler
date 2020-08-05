@@ -61,7 +61,7 @@ val backend = object: Backend {
     }
 
     override fun run(path: Path, module: ModuleName): Int {
-        val process = ProcessBuilder("node", module.joinToString("/") + ".js")
+        val process = ProcessBuilder("node", module.map(Identifier::value).joinToString("/") + ".js")
             .inheritIO()
             .directory(path.toFile())
             .start()
