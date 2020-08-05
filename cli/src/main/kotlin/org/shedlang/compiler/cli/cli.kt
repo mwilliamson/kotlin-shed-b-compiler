@@ -30,8 +30,6 @@ object ShedCli {
     private fun run(rawArguments: Array<String>): Int {
         val arguments = Arguments(ArgParser(rawArguments))
 
-        val tempDir = createTempDir()
-        try {
             val sourcePath = Paths.get(arguments.source)
             val backend = arguments.backend
             val mainModuleNameArgument = arguments.mainModule
@@ -47,11 +45,13 @@ object ShedCli {
 
                     executeMain(
                         mainModule = mainModuleName,
-                        image = image,
-                        world = RealWorld
-                    )
-                }
-            } else {
+                    image = image,
+                    world = RealWorld
+                )
+            }
+        } else {
+            val tempDir = createTempDir()
+            try {
                 val mainModuleName = compile(
                     sourcePath = sourcePath,
                     mainModuleNameArgument = mainModuleNameArgument,
@@ -59,9 +59,9 @@ object ShedCli {
                     target = tempDir.toPath()
                 )
                 return backend.run(tempDir.toPath(), mainModuleName)
+            } finally {
+                tempDir.deleteRecursively()
             }
-        } finally {
-            tempDir.deleteRecursively()
         }
     }
 
