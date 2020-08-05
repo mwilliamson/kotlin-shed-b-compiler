@@ -13,10 +13,15 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-fun readStandaloneModule(directory: Path, moduleName: ModuleName): ModuleSet {
-    val reader = ModuleReader(sourceDirectories = listOf(directory))
+fun readStandaloneModule(path: Path): ModuleSet {
+    val moduleName = standaloneModulePathToName(path)
+    val reader = ModuleReader(sourceDirectories = listOf(path.parent))
     reader.load(moduleName)
     return ModuleSet(reader.modules)
+}
+
+fun standaloneModulePathToName(path: Path): ModuleName {
+    return listOf(Identifier(path.fileName.toString().removeSuffix(".shed")))
 }
 
 private const val sourceDirectoryName = "src"

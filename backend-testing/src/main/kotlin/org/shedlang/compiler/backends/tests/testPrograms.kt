@@ -20,7 +20,7 @@ data class TestProgram(
     fun load(): ModuleSet {
         return when (source) {
             is TestProgramSource.File -> {
-                readStandaloneModule(source.path.parent, source.mainModule)
+                readStandaloneModule(source.path)
             }
             is TestProgramSource.Directory -> {
                 installDependencies(source.path)
@@ -43,7 +43,7 @@ sealed class TestProgramSource {
         override val expectedResult: Matcher<ExecutionResult>?
     ): TestProgramSource() {
         override val mainModule: ModuleName
-            get() = listOf(Identifier(path.fileName.toString().removeSuffix(".shed")))
+            get() = standaloneModulePathToName(path)
     }
 
     class Directory(
