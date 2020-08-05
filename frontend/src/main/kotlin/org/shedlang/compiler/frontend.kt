@@ -55,7 +55,7 @@ private fun readModule(
         val resolvedReferences = resolveModuleReferences(moduleNode)
 
         val typeCheckResult = typeCheck(
-            name.map { part -> part.value },
+            name,
             moduleNode,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
@@ -75,7 +75,7 @@ private fun readModule(
 
         checkTailCalls(moduleNode, references = resolvedReferences)
         val typeCheckResult = typeCheck(
-            name.map { part -> part.value },
+            name,
             moduleNode,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,

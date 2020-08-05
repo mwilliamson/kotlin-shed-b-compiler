@@ -266,7 +266,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     val baseShapeId = freshTypeId()
 
-    val tag = Tag(context.moduleName!!.map(::Identifier), node.name)
+    val tag = Tag(context.moduleName!!, node.name)
 
     val memberTypes = node.members.map { member ->
         val tagValue = TagValue(tag, member.name)

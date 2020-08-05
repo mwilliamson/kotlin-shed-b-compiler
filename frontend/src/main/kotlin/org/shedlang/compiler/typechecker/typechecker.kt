@@ -6,7 +6,7 @@ import org.shedlang.compiler.types.*
 import java.util.*
 
 internal fun newTypeContext(
-    moduleName: List<String>?,
+    moduleName: ModuleName?,
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
@@ -28,7 +28,7 @@ internal fun newTypeContext(
 }
 
 internal class TypeContext(
-    val moduleName: List<String>?,
+    val moduleName: ModuleName?,
     val effect: Effect,
     val resumeValueType: Type?,
     private val variableTypes: MutableMap<Int, Type>,
@@ -186,7 +186,7 @@ data class TypeCheckResult(
 )
 
 internal fun typeCheck(
-    moduleName: List<String>?,
+    moduleName: ModuleName?,
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
@@ -202,7 +202,7 @@ internal fun typeCheck(
 }
 
 internal fun typeCheck(
-    moduleName: List<String>?,
+    moduleName: ModuleName?,
     module: TypesModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
@@ -218,7 +218,7 @@ internal fun typeCheck(
 }
 
 private fun typeCheckModule(
-    moduleName: List<String>?,
+    moduleName: ModuleName?,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
     getModule: (ImportPath) -> ModuleResult,

@@ -40,7 +40,7 @@ internal fun typeContext(
     )
 
     return TypeContext(
-        moduleName = moduleName,
+        moduleName = moduleName?.map(::Identifier),
         effect = effect,
         resumeValueType = resumeValueType,
         expressionTypes = expressionTypes,
