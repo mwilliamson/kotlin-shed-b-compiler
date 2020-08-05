@@ -51,14 +51,15 @@ object ShedCli {
             }
         } else {
             val tempDir = createTempDir()
+            val target = tempDir.resolve("target").toPath()
             try {
                 val mainModuleName = compile(
                     sourcePath = sourcePath,
                     mainModuleNameArgument = mainModuleNameArgument,
                     backend = backend,
-                    target = tempDir.toPath()
+                    target = target
                 )
-                return backend.run(tempDir.toPath(), mainModuleName)
+                return backend.run(target, mainModuleName)
             } finally {
                 tempDir.deleteRecursively()
             }

@@ -57,6 +57,12 @@ object LlvmBackend : Backend {
     }
 
     override fun run(path: Path, module: ModuleName): Int {
-        throw UnsupportedOperationException("not implemented")
+        val command = listOf(path.toAbsolutePath().toString())
+
+        val process = ProcessBuilder(command)
+            .inheritIO()
+            .start()
+
+        return process.waitFor()
     }
 }
