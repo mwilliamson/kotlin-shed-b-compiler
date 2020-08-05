@@ -5,7 +5,7 @@ import com.xenomachina.argparser.default
 import com.xenomachina.argparser.mainBody
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
-import org.shedlang.compiler.readPackage
+import org.shedlang.compiler.readPackageModule
 import org.shedlang.compiler.stackinterpreter.RealWorld
 import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
@@ -32,7 +32,7 @@ object ShedCli {
             val backend = arguments.backend
             if (backend == null) {
                 return onErrorPrintAndExit {
-                    val source = readPackage(base, arguments.mainModule)
+                    val source = readPackageModule(base, arguments.mainModule)
                     val image = loadModuleSet(source)
                     executeMain(
                         mainModule = arguments.mainModule,
@@ -97,7 +97,7 @@ object ShedcCli {
 
 private fun compile(base: Path, mainName: ModuleName, backend: Backend, target: Path) {
     onErrorPrintAndExit {
-        val result = readPackage(base, mainName)
+        val result = readPackageModule(base, mainName)
         backend.compile(result, mainModule = mainName, target = target)
     }
 }

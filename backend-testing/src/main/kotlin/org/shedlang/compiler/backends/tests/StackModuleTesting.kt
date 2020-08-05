@@ -4,7 +4,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.findRoot
-import org.shedlang.compiler.readPackage
+import org.shedlang.compiler.readPackageModule
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.Type
 
@@ -15,7 +15,7 @@ internal fun callFunction(
     arguments: List<IrValue>,
     type: Type
 ): StackExecutionResult {
-    val moduleSet = readPackage(
+    val moduleSet = readPackageModule(
         base = findRoot().resolve("stdlib"),
         name = moduleName
     )

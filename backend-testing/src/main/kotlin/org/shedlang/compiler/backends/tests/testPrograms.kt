@@ -20,11 +20,11 @@ data class TestProgram(
     fun load(): ModuleSet {
         return when (source) {
             is TestProgramSource.File -> {
-                readStandalone(source.path.parent, source.mainModule)
+                readStandaloneModule(source.path.parent, source.mainModule)
             }
             is TestProgramSource.Directory -> {
                 installDependencies(source.path)
-                readPackage(source.path, source.mainModule)
+                readPackageModule(source.path, source.mainModule)
             }
         }
     }

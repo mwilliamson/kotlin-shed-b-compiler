@@ -13,7 +13,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 
-fun readStandalone(directory: Path, moduleName: ModuleName): ModuleSet {
+fun readStandaloneModule(directory: Path, moduleName: ModuleName): ModuleSet {
     val reader = ModuleReader(sourceDirectories = listOf(directory))
     reader.load(moduleName)
     return ModuleSet(reader.modules)
@@ -21,7 +21,7 @@ fun readStandalone(directory: Path, moduleName: ModuleName): ModuleSet {
 
 private const val sourceDirectoryName = "src"
 
-fun readPackage(base: Path, name: ModuleName): ModuleSet {
+fun readPackageModule(base: Path, name: ModuleName): ModuleSet {
     val dependencyDirectories = base.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
     val dependencies = dependencyDirectories
         .map { file -> file.resolve(sourceDirectoryName) }
