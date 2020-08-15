@@ -13,7 +13,6 @@ import org.shedlang.compiler.typechecker.SourceError
 
 class JavascriptExampleTests {
     private val disabledTests = setOf<String>(
-        "Echo.shed",
         "EffectHandlerExitOrResume.shed",
         "nestedStringBuilderAndNonLocalReturns",
         "NonLocalReturnMultipleValues.shed",
@@ -34,7 +33,7 @@ class JavascriptExampleTests {
                     compile(testProgram.load(), mainModule = testProgram.mainModule, target = temporaryDirectory.file.toPath())
                     val mainJsModule = "./" + testProgram.mainModule.map(Identifier::value).joinToString("/") + ".js"
                     val result = run(
-                        listOf("node", mainJsModule),
+                        listOf("node", mainJsModule) + testProgram.args,
                         workingDirectory = temporaryDirectory.file
                     )
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
