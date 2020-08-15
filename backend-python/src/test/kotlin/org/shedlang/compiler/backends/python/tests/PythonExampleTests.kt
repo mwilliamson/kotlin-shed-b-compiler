@@ -26,7 +26,8 @@ class PythonExampleTests {
                 temporaryDirectory().use { temporaryDirectory ->
                     compile(testProgram.load(), mainModule = testProgram.mainModule, target = temporaryDirectory.file.toPath())
                     val result = run(
-                        listOf("python3", "-m", topLevelPythonPackageName + "." + testProgram.mainModule.map(Identifier::value).joinToString(".")),
+                        listOf("python3", "-m", topLevelPythonPackageName + "." + testProgram.mainModule.map(Identifier::value).joinToString(".")) +
+                            testProgram.args,
                         workingDirectory = temporaryDirectory.file
                     )
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)

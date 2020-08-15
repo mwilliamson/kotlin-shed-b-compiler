@@ -15,6 +15,7 @@ import java.nio.file.Path
 data class TestProgram(
     val name: String,
     private val source: TestProgramSource,
+    val args: List<String>,
     val expectedResult: Matcher<ExecutionResult>
 ) {
     fun load(): ModuleSet {
@@ -61,6 +62,14 @@ fun testPrograms(): List<TestProgram> {
         }
         val text = mainPath.toFile().readText()
 
+
+        val argsMatch = Regex("^// args:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)
+        val args = if (argsMatch == null) {
+            listOf()
+        } else {
+            argsMatch.groupValues[1].split(Regex("\\s+"))
+        }
+
         val exitCodeMatch = Regex("^// exitCode:\\s*(.*)\\s*$", setOf(RegexOption.MULTILINE)).find(text)
         val exitCode = if (exitCodeMatch == null) {
             0
@@ -81,6 +90,7 @@ fun testPrograms(): List<TestProgram> {
         return TestProgram(
             name = source.path.fileName.toString(),
             source = source,
+            args = args,
             expectedResult = source.expectedResult ?: equalTo(ExecutionResult(stdout = stdout, exitCode = exitCode))
         )
     })

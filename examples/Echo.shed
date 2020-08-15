@@ -1,0 +1,14 @@
+// args: Hello world
+// stdout:
+//   Hello world
+
+export main;
+
+import Process from Stdlib.Process;
+import UnicodeScalars from Stdlib.Strings.UnicodeScalars;
+
+fun main() ! Io -> Unit {
+    val args = Process.args!();
+    print!(UnicodeScalars.join(" ", args));
+    print!("\n");
+}
