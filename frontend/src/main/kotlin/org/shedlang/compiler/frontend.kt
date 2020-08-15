@@ -15,7 +15,7 @@ import java.nio.file.Paths
 
 fun readStandaloneModule(path: Path): ModuleSet {
     val moduleName = standaloneModulePathToName(path)
-    val reader = ModuleReader(sourceDirectories = listOf(path.parent))
+    val reader = ModuleReader(sourceDirectories = listOf(path.parent), implicitStdlib = true)
     reader.load(moduleName)
     return ModuleSet(reader.modules)
 }
@@ -34,7 +34,7 @@ fun readPackageModule(base: Path, name: ModuleName): ModuleSet {
         .map { file -> file.toPath() }
     val sourceDirectories = listOf(base.resolve(sourceDirectoryName)) + dependencies
 
-    val reader = ModuleReader(sourceDirectories = sourceDirectories)
+    val reader = ModuleReader(sourceDirectories = sourceDirectories, implicitStdlib = false)
     reader.load(name)
     return ModuleSet(reader.modules)
 }
@@ -158,7 +158,10 @@ internal sealed class ModuleResult(val name: ModuleName) {
     class FoundMany(name: ModuleName): ModuleResult(name)
 }
 
-private class ModuleReader(private val sourceDirectories: List<Path>) {
+private class ModuleReader(
+    private val sourceDirectories: List<Path>,
+    private val implicitStdlib: Boolean
+) {
     private val modulesByName = LazyMap<ModuleName, ModuleResult> { name ->
         readModuleInPackage(name = name)
     }
@@ -177,7 +180,10 @@ private class ModuleReader(private val sourceDirectories: List<Path>) {
         }
 
     private fun readModuleInPackage(name: ModuleName): ModuleResult {
-        val bases = listOf(findRoot().resolve("corelib").resolve(sourceDirectoryName)) + sourceDirectories
+        val bases = listOf(findRoot().resolve("corelib").resolve(sourceDirectoryName)) +
+            (if (implicitStdlib) listOf(findRoot().resolve("stdlib").resolve(sourceDirectoryName)) else listOf()) +
+            sourceDirectories
+
         val possiblePaths = bases.flatMap { base ->
             listOf(".shed", ".types.shed").map { extension ->
                 pathAppend(name.fold(base, { path, part -> path.resolve(part.value) }), extension)
