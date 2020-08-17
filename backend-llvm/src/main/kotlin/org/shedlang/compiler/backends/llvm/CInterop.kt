@@ -19,6 +19,9 @@ internal object CTypes {
     val jmpBufPointer by lazy {
         LlvmTypes.pointer(jmpBuf)
     }
+
+    val argc = int
+    val argv = LlvmTypes.pointer(LlvmTypes.pointer(CTypes.char))
 }
 
 internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {

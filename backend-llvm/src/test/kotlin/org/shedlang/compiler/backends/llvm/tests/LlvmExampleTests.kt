@@ -15,7 +15,6 @@ import org.shedlang.compiler.typechecker.SourceError
 class LlvmExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
-        "Echo.shed",
         "TailRec.shed"
     )
 
@@ -36,7 +35,7 @@ class LlvmExampleTests {
                     println(withLineNumbers(compilationResult.llvmIr))
                     outputPath.toFile().writeText(compilationResult.llvmIr)
 
-                    val result = executeLlvmIr(outputPath, linkerFiles = compilationResult.linkerFiles)
+                    val result = executeLlvmIr(outputPath, linkerFiles = compilationResult.linkerFiles, args = testProgram.args)
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {

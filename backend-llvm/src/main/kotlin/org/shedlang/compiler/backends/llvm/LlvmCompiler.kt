@@ -58,12 +58,37 @@ internal class Compiler(
 
         val mainClosureVariable = LlvmOperandLocal("mainClosure")
         val exitCodeVariable = LlvmOperandLocal("exitCode")
+
+        val argcGlobal = LlvmGlobalDefinition(
+            name = "shed__argc",
+            type = CTypes.argc,
+            value = LlvmOperandInt(0)
+        )
+        val argvGlobal = LlvmGlobalDefinition(
+            name = "shed__argv",
+            type = CTypes.argv,
+            value = LlvmNullPointer
+        )
+
         val main = LlvmFunctionDefinition(
             returnType = compiledValueType,
             name = "main",
-            parameters = listOf(),
+            parameters = listOf(
+                LlvmParameter(CTypes.argc, "argc"),
+                LlvmParameter(CTypes.argv, "argv")
+            ),
             body = listOf(
                 listOf(
+                    LlvmStore(
+                        type = CTypes.argc,
+                        value = LlvmOperandLocal("argc"),
+                        pointer = LlvmOperandGlobal(argcGlobal.name)
+                    ),
+                    LlvmStore(
+                        type = CTypes.argv,
+                        value = LlvmOperandLocal("argv"),
+                        pointer = LlvmOperandGlobal(argvGlobal.name)
+                    ),
                     callModuleInit(mainModule)
                 ),
                 objects.fieldAccess(
@@ -86,7 +111,11 @@ internal class Compiler(
         val module = LlvmModule(
             listOf(
                 defineMainModule,
-                listOf(main),
+                listOf(
+                    argcGlobal,
+                    argvGlobal,
+                    main
+                ),
                 libc.declarations(),
                 effects.declarations()
             ).flatten()

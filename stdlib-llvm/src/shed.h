@@ -6,6 +6,9 @@
 
 #include "../deps/gc/include/gc.h"
 
+extern int shed__argc;
+extern char** shed__argv;
+
 typedef uint64_t ShedUnicodeScalar;
 typedef int64_t ShedInt;
 typedef uint64_t ShedValue;
