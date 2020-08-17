@@ -65,4 +65,16 @@ object LlvmBackend : Backend {
 
         return process.waitFor()
     }
+
+    override fun generateBindings(target: Path) {
+        target.toFile().mkdirs()
+        target.resolve("Core.Options.h").toFile().writeText("""
+            #ifndef SHED__CORE_OPTIONS_H
+            #define SHED__CORE_OPTIONS_H
+            
+            extern ShedValue shed__module_value__Core_Options[5];
+            
+            #endif
+        """.trimIndent())
+    }
 }

@@ -111,6 +111,29 @@ object ShedcCli {
     }
 }
 
+object ShedBindingsCli {
+    @JvmStatic
+    fun main(rawArguments: Array<String>) {
+        return mainBody {
+            run(rawArguments)
+        }
+    }
+
+    private fun run(rawArguments: Array<String>) {
+        val arguments = Arguments(ArgParser(rawArguments))
+        arguments.backend.generateBindings(Paths.get(arguments.outputPath))
+    }
+
+    private class Arguments(parser: ArgParser) {
+        val outputPath by parser.storing("--output-path",   "-o", help = "path to output directory")
+        val backend by parser.shedBackends()
+
+        init {
+            parser.force()
+        }
+    }
+}
+
 private fun read(sourcePath: Path, mainModuleNameArgument: ModuleName?): Pair<ModuleName, ModuleSet> {
     return if (sourcePath.toFile().isDirectory) {
         if (mainModuleNameArgument == null) {

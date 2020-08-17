@@ -72,6 +72,10 @@ val backend = object: Backend {
             .start()
         return process.waitFor()
     }
+
+    override fun generateBindings(target: Path) {
+        throw UnsupportedOperationException("not implemented")
+    }
 }
 
 fun compile(frontendResult: ModuleSet, mainModule: ModuleName, target: Path) {
