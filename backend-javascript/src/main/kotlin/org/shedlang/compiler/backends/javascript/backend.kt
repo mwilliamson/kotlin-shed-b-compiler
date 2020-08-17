@@ -60,8 +60,9 @@ val backend = object: Backend {
         return destination.toFile().writer(StandardCharsets.UTF_8)
     }
 
-    override fun run(path: Path, module: ModuleName): Int {
-        val process = ProcessBuilder("node", module.map(Identifier::value).joinToString("/") + ".js")
+    override fun run(path: Path, module: ModuleName, args: List<String>): Int {
+        val modulePath = module.map(Identifier::value).joinToString("/") + ".js"
+        val process = ProcessBuilder(listOf("node", modulePath) + args)
             .inheritIO()
             .directory(path.toFile())
             .start()

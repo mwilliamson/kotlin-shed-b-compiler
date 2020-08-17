@@ -28,11 +28,15 @@ object ShedCli {
     }
 
     private fun run(rawArguments: Array<String>): Int {
-        val arguments = Arguments(ArgParser(rawArguments))
+        val shedArgumentIndex = rawArguments.indexOfFirst { argument -> !argument.startsWith("-") }
+        val shedArgumentCount = if (shedArgumentIndex == -1) rawArguments.size else shedArgumentIndex + 1
 
-        val sourcePath = Paths.get(arguments.source)
-        val backend = arguments.backend
-        val mainModuleNameArgument = arguments.mainModule
+        val shedArguments = Arguments(ArgParser(rawArguments.copyOfRange(0, shedArgumentCount)))
+        val programArguments = rawArguments.copyOfRange(shedArgumentCount, rawArguments.size).toList()
+
+        val sourcePath = Paths.get(shedArguments.source)
+        val backend = shedArguments.backend
+        val mainModuleNameArgument = shedArguments.mainModule
 
         if (backend == null) {
             return onErrorPrintAndExit {
@@ -46,7 +50,7 @@ object ShedCli {
                 executeMain(
                     mainModule = mainModuleName,
                     image = image,
-                    world = RealWorld(args = listOf())
+                    world = RealWorld(args = programArguments)
                 )
             }
         } else {
@@ -59,7 +63,7 @@ object ShedCli {
                     backend = backend,
                     target = target
                 )
-                return backend.run(target, mainModuleName)
+                return backend.run(target, mainModuleName, args = programArguments)
             } finally {
                 tempDir.deleteRecursively()
             }

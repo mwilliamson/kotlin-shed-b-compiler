@@ -63,8 +63,10 @@ val backend = object: Backend {
         return destination.toFile().writer(StandardCharsets.UTF_8)
     }
 
-    override fun run(path: Path, module: ModuleName): Int {
-        val process = ProcessBuilder("python3", "-m", topLevelPythonPackageName + "." + module.map(Identifier::value).joinToString("."))
+    override fun run(path: Path, module: ModuleName, args: List<String>): Int {
+        val pythonModuleName = topLevelPythonPackageName + "." + module.map(Identifier::value).joinToString(".")
+        val command = listOf("python3", "-m", pythonModuleName) + args
+        val process = ProcessBuilder(command)
             .inheritIO()
             .directory(path.toFile())
             .start()

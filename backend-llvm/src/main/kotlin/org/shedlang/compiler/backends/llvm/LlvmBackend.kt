@@ -56,8 +56,8 @@ object LlvmBackend : Backend {
         }
     }
 
-    override fun run(path: Path, module: ModuleName): Int {
-        val command = listOf(path.toAbsolutePath().toString())
+    override fun run(path: Path, module: ModuleName, args: List<String>): Int {
+        val command = listOf(path.toAbsolutePath().toString()) + args
 
         val process = ProcessBuilder(command)
             .inheritIO()
