@@ -1,9 +1,11 @@
 package org.shedlang.compiler.backends.llvm
 
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.findRoot
+import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -67,14 +69,21 @@ object LlvmBackend : Backend {
     }
 
     override fun generateBindings(target: Path) {
+        val moduleSet = readPackage(findRoot().resolve("stdlib"))
+        val optionsModuleType = moduleSet.moduleType(listOf(Identifier("Core"), Identifier("Options")))!!
+        val compiledModuleType = compiledType(optionsModuleType) as CompiledObjectType
+
         target.toFile().mkdirs()
-        target.resolve("Core.Options.h").toFile().writeText("""
-            #ifndef SHED__CORE_OPTIONS_H
-            #define SHED__CORE_OPTIONS_H
-            
-            extern ShedValue shed__module_value__Core_Options[5];
-            
-            #endif
-        """.trimIndent())
+
+        val header = CHeader(
+            includeGuardName = "SHED__CORE_OPTIONS_H",
+            statements = listOf(
+                CVariableDeclaration(
+                    name = "shed__module_value__Core_Options",
+                    type = compiledModuleType.cType()
+                )
+            )
+        )
+        target.resolve("Core.Options.h").toFile().writeText(header.serialise())
     }
 }

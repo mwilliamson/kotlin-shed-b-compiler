@@ -11,6 +11,7 @@ import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.util.regex.Pattern
 
 
 fun readStandaloneModule(path: Path): ModuleSet {
@@ -27,16 +28,40 @@ fun standaloneModulePathToName(path: Path): ModuleName {
 private const val sourceDirectoryName = "src"
 
 fun readPackageModule(base: Path, name: ModuleName): ModuleSet {
-    val dependencyDirectories = base.resolve(dependenciesDirectoryName).toFile().listFiles() ?: arrayOf<File>()
+    val reader = createModuleReader(base)
+    reader.load(name)
+    return ModuleSet(reader.modules)
+}
+
+fun readPackage(base: Path): ModuleSet {
+    val reader = createModuleReader(base)
+
+    val namePattern = Pattern.compile("^([^.]+)(\\.types)?\\.shed$")
+
+    val sourceDirectory = base.resolve(sourceDirectoryName)
+
+    for (file in sourceDirectory.toFile().walk()) {
+        val match = namePattern.matcher(file.name)
+        if (match.find()) {
+            val directoryNames = sourceDirectory.relativize(file.toPath().parent).map { part -> part.toString() }
+            val moduleName = (directoryNames + listOf(match.group(1))).map(::Identifier)
+            reader.load(moduleName)
+        }
+    }
+
+    return ModuleSet(reader.modules)
+}
+
+private fun createModuleReader(base: Path): ModuleReader {
+    val dependencyDirectories = base.resolve(dependenciesDirectoryName).toFile().listFiles()
+        ?: arrayOf<File>()
     val dependencies = dependencyDirectories
         .map { file -> file.resolve(sourceDirectoryName) }
         .filter { file -> file.exists() && file.isDirectory }
         .map { file -> file.toPath() }
     val sourceDirectories = listOf(base.resolve(sourceDirectoryName)) + dependencies
 
-    val reader = ModuleReader(sourceDirectories = sourceDirectories, implicitStdlib = false)
-    reader.load(name)
-    return ModuleSet(reader.modules)
+    return ModuleReader(sourceDirectories = sourceDirectories, implicitStdlib = false)
 }
 
 private fun readModule(
@@ -167,7 +192,16 @@ private class ModuleReader(
     }
 
     internal fun load(name: ModuleName) {
-        modulesByName.get(name) as ModuleResult.Found
+        val module = modulesByName.get(name)
+        when (module) {
+            is ModuleResult.Found -> {}
+
+            is ModuleResult.NotFound ->
+                throw Exception("module not found: " + formatModuleName(name))
+
+            is ModuleResult.FoundMany ->
+                throw Exception("module is ambiguous: " + formatModuleName(name))
+        }
     }
 
     internal val modules: Collection<Module>

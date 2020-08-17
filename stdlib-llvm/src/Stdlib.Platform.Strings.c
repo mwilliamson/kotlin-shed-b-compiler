@@ -9,7 +9,7 @@
 #include "./shed.h"
 #include "./stringbuilder.h"
 
-extern ShedValue shed__module_value__Core_Options[5];
+#include "../../c-bindings/Core.Options.h"
 
 static bool isContinuationByte(uint8_t byte) {
     return (byte & 0xc0) == 0x80;
@@ -82,11 +82,11 @@ ShedValue Shed_Stdlib_Platform_Strings_next(ShedEnvironment env, ShedStringSlice
         result[0] = scalar;
         result[1] = (ShedValue) newSlice;
 
-        struct ShedClosure* someClosure = (struct ShedClosure*) shed__module_value__Core_Options[4];
+        struct ShedClosure* someClosure = (struct ShedClosure*) shed__module_value__Core_Options.some;
         ShedValue (*someFunction)(ShedEnvironment, ShedValue) = (ShedValue (*)(ShedEnvironment, ShedValue)) someClosure->function;
         return someFunction(&someClosure->environment[0], (ShedValue)result);
     } else {
-        return shed__module_value__Core_Options[3];
+        return shed__module_value__Core_Options.none;
     }
 }
 

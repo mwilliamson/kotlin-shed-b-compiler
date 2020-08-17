@@ -151,6 +151,13 @@ internal class CompiledObjectType(
         )
     }
 
+    fun cType(): CType {
+        val members = sortedFieldNames.map { fieldName ->
+            CNamedType("ShedValue") to fieldName.value
+        }
+        return CStruct(members = members)
+    }
+
     private fun fieldIndex(fieldName: Identifier): Int {
         val fieldIndex = sortedFieldNames.indexOf(fieldName)
 
