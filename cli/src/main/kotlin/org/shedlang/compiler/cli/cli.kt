@@ -30,21 +30,21 @@ object ShedCli {
     private fun run(rawArguments: Array<String>): Int {
         val arguments = Arguments(ArgParser(rawArguments))
 
-            val sourcePath = Paths.get(arguments.source)
-            val backend = arguments.backend
-            val mainModuleNameArgument = arguments.mainModule
+        val sourcePath = Paths.get(arguments.source)
+        val backend = arguments.backend
+        val mainModuleNameArgument = arguments.mainModule
 
-            if (backend == null) {
-                return onErrorPrintAndExit {
-                    val (mainModuleName, moduleSet) = read(
-                        sourcePath = sourcePath,
-                        mainModuleNameArgument = mainModuleNameArgument
-                    )
+        if (backend == null) {
+            return onErrorPrintAndExit {
+                val (mainModuleName, moduleSet) = read(
+                    sourcePath = sourcePath,
+                    mainModuleNameArgument = mainModuleNameArgument
+                )
 
-                    val image = loadModuleSet(moduleSet)
+                val image = loadModuleSet(moduleSet)
 
-                    executeMain(
-                        mainModule = mainModuleName,
+                executeMain(
+                    mainModule = mainModuleName,
                     image = image,
                     world = RealWorld(args = listOf())
                 )
