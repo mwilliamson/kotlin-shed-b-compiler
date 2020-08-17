@@ -12,15 +12,19 @@ import org.shedlang.compiler.types.UserDefinedEffect
 import java.math.BigInteger
 
 interface World {
+    val args: List<String>
     fun writeToStdout(value: String)
 }
 
 object NullWorld: World {
+    override val args: List<String>
+        get() = listOf()
+
     override fun writeToStdout(value: String) {
     }
 }
 
-object RealWorld: World {
+class RealWorld(override val args: List<String>): World {
     override fun writeToStdout(value: String) {
         print(value)
     }
@@ -432,6 +436,10 @@ internal data class InterpreterState(
 
     fun print(string: String) {
         world.writeToStdout(string)
+    }
+
+    fun args(): List<String> {
+        return world.args
     }
 }
 

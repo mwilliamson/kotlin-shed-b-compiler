@@ -10,7 +10,7 @@ import org.shedlang.compiler.types.Type
 
 object StackInterpreterExecutionEnvironment : StackIrExecutionEnvironment {
     override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): StackExecutionResult {
-        val world = InMemoryWorld()
+        val world = InMemoryWorld(args = listOf())
         val interpreterValue = executeInstructions(
             instructions,
             image = loadModuleSet(moduleSet),

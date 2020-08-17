@@ -18,6 +18,7 @@ internal fun createNativeModule(
 private val nativeModules: PersistentMap<ModuleName, InterpreterModule> = persistentMapOf(
     intToStringModule,
     ioModule,
+    processModule,
     stringBuilderModule,
     stringsModule
 )

@@ -46,7 +46,7 @@ object ShedCli {
                     executeMain(
                         mainModule = mainModuleName,
                     image = image,
-                    world = RealWorld
+                    world = RealWorld(args = listOf())
                 )
             }
         } else {

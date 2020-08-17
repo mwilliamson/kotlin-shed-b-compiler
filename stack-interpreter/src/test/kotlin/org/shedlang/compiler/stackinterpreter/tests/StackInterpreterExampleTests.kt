@@ -20,7 +20,6 @@ import org.shedlang.compiler.typechecker.SourceError
 class StackInterpreterExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
-        "Echo.shed",
         "TailRec.shed"
     )
 
@@ -34,7 +33,7 @@ class StackInterpreterExampleTests {
                     val modules = testProgram.load()
                     val image = loadModuleSet(modules)
                     val mainFunction = findMainFunction(modules, testProgram)
-                    val world = InMemoryWorld()
+                    val world = InMemoryWorld(args = testProgram.args)
                     val exitCode = executeMain(
                         mainModule = testProgram.mainModule,
                         image = image,
@@ -68,7 +67,7 @@ class StackInterpreterExampleTests {
     }
 }
 
-class InMemoryWorld : World {
+class InMemoryWorld(override val args: List<String>) : World {
     private val stdoutBuilder: StringBuilder = StringBuilder()
 
     override fun writeToStdout(value: String) {
