@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.llvm
 
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.backends.Backend
@@ -72,11 +71,13 @@ object LlvmBackend : Backend {
     override fun generateBindings(target: Path) {
         val moduleSet = readPackage(findRoot().resolve("stdlib"))
 
-        generateModuleBindings(
-            target = target,
-            moduleSet = moduleSet,
-            moduleName = listOf(Identifier("Core"), Identifier("Options"))
-        )
+        for (module in moduleSet) {
+            generateModuleBindings(
+                target = target,
+                moduleSet = moduleSet,
+                moduleName = module.name
+            )
+        }
     }
 
     private fun generateModuleBindings(target: Path, moduleSet: ModuleSet, moduleName: ModuleName) {
