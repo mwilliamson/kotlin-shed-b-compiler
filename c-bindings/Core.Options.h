@@ -1,5 +1,5 @@
-#ifndef SHED__CORE_OPTIONS_H
-#define SHED__CORE_OPTIONS_H
+#ifndef SHED__Core_Options_H
+#define SHED__Core_Options_H
 extern struct {
     ShedValue None;
     ShedValue Option;

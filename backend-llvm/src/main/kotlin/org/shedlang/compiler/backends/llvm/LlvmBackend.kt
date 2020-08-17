@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.llvm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
@@ -70,20 +71,33 @@ object LlvmBackend : Backend {
 
     override fun generateBindings(target: Path) {
         val moduleSet = readPackage(findRoot().resolve("stdlib"))
-        val optionsModuleType = moduleSet.moduleType(listOf(Identifier("Core"), Identifier("Options")))!!
-        val compiledModuleType = compiledType(optionsModuleType) as CompiledObjectType
 
-        target.toFile().mkdirs()
+        generateModuleBindings(
+            target = target,
+            moduleSet = moduleSet,
+            moduleName = listOf(Identifier("Core"), Identifier("Options"))
+        )
+    }
 
+    private fun generateModuleBindings(target: Path, moduleSet: ModuleSet, moduleName: ModuleName) {
+        val headerFileName = formatModuleName(moduleName) + ".h"
+
+        val moduleType = moduleSet.moduleType(moduleName)!!
+        val compiledModuleType = compiledType(moduleType) as CompiledObjectType
+
+        val includeGuardName = "SHED__${formatModuleName(moduleName).replace(".", "_")}_H"
         val header = CHeader(
-            includeGuardName = "SHED__CORE_OPTIONS_H",
+            includeGuardName = includeGuardName,
             statements = listOf(
                 CVariableDeclaration(
-                    name = "shed__module_value__Core_Options",
+                    name = nameForModuleValue(moduleName),
                     type = compiledModuleType.cType()
                 )
             )
         )
-        target.resolve("Core.Options.h").toFile().writeText(header.serialise())
+
+        target.toFile().mkdirs()
+        target.resolve(headerFileName).toFile().writeText(header.serialise())
+
     }
 }

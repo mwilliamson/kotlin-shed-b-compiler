@@ -46,16 +46,16 @@ internal class ModuleValueCompiler(
         return LlvmOperandGlobal(nameForModuleValue(moduleName))
     }
 
-    private fun nameForModuleValue(moduleName: ModuleName): String {
-        return "shed__module_value__${serialiseModuleName(moduleName)}"
-    }
-
-    private fun serialiseModuleName(moduleName: ModuleName) =
-        moduleName.joinToString("_") { part -> part.value }
-
     private fun compiledModuleType(moduleName: ModuleName) =
         compiledType(objectType = moduleType(moduleName))
 
     private fun moduleType(moduleName: ModuleName) =
         moduleSet.moduleType(moduleName)!!
 }
+
+internal fun nameForModuleValue(moduleName: ModuleName): String {
+    return "shed__module_value__${serialiseModuleName(moduleName)}"
+}
+
+private fun serialiseModuleName(moduleName: ModuleName) =
+    moduleName.joinToString("_") { part -> part.value }
