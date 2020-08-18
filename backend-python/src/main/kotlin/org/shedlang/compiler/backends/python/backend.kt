@@ -74,7 +74,6 @@ val backend = object: Backend {
     }
 
     override fun generateBindings(target: Path) {
-        throw UnsupportedOperationException("not implemented")
     }
 }
 
