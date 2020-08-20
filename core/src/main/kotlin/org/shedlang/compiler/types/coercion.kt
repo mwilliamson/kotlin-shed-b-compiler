@@ -140,26 +140,33 @@ class TypeConstraintSolver(
         }
 
         if (from is ShapeType && to is ShapeType) {
-            return from.shapeId == to.shapeId && zip3(
+            val sameShapeId = from.shapeId == to.shapeId
+
+            val canCoerceStaticArguments = zip3(
                 from.staticParameters,
                 from.staticArguments,
-                to.staticArguments,
-                { parameter, fromArg, toArg ->
-                    parameter.accept(object : StaticParameter.Visitor<Boolean> {
-                        override fun visit(parameter: TypeParameter): Boolean {
-                            return fromArg is Type && toArg is Type && when (parameter.variance) {
-                                Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
-                                Variance.COVARIANT -> coerce(from = fromArg, to = toArg)
-                                Variance.CONTRAVARIANT -> coerce(from = toArg, to = fromArg)
-                            }
+                to.staticArguments
+            ) { parameter, fromArg, toArg ->
+                parameter.accept(object : StaticParameter.Visitor<Boolean> {
+                    override fun visit(parameter: TypeParameter): Boolean {
+                        return fromArg is Type && toArg is Type && when (parameter.variance) {
+                            Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
+                            Variance.COVARIANT -> coerce(from = fromArg, to = toArg)
+                            Variance.CONTRAVARIANT -> coerce(from = toArg, to = fromArg)
                         }
+                    }
 
-                        override fun visit(parameter: EffectParameter): Boolean {
-                            return fromArg is Effect && toArg is Effect && coerceEffect(from = fromArg, to = toArg)
-                        }
-                    })
-                }
-            ).all()
+                    override fun visit(parameter: EffectParameter): Boolean {
+                        return fromArg is Effect && toArg is Effect && coerceEffect(from = fromArg, to = toArg)
+                    }
+                })
+            }.all()
+
+            val canCoerceFields = to.fields.keys.all { toFieldName ->
+                from.fields.containsKey(toFieldName)
+            }
+
+            return sameShapeId && canCoerceStaticArguments && canCoerceFields
         }
 
         return false

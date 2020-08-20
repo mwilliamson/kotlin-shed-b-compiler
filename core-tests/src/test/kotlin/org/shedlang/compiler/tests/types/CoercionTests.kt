@@ -405,6 +405,48 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceShapeToShapeWithSubsetOfFields() {
+        val shapeId = freshTypeId()
+        val field1 = field(name = "Field1", type = IntType)
+        val field2 = field(name = "Field2", type = IntType)
+        val field3 = field(name = "Field3", type = IntType)
+
+        val superShapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field1, field2, field3)
+        )
+        val subShapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field1, field3)
+        )
+        val canCoerce = canCoerce(from = superShapeType, to = subShapeType)
+        assertThat(canCoerce, equalTo(true))
+    }
+
+    @Test
+    fun cannotCoerceShapeToShapeWithSupersetOfFields() {
+        val shapeId = freshTypeId()
+        val field1 = field(name = "Field1", type = IntType)
+        val field2 = field(name = "Field2", type = IntType)
+        val field3 = field(name = "Field3", type = IntType)
+
+        val superShapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field1, field2, field3)
+        )
+        val subShapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field1, field3)
+        )
+        val canCoerce = canCoerce(from = subShapeType, to = superShapeType)
+        assertThat(canCoerce, equalTo(false))
+    }
+
+    @Test
     fun canCoerceTypeParameterToSubtypeOfType() {
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
