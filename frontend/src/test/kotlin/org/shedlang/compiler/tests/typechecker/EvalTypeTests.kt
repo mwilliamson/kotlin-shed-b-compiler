@@ -61,37 +61,6 @@ class EvalTypeTests {
     }
 
     @Test
-    fun typeApplicationHasTypeOfApplyingType() {
-        val listReference = staticReference("Box")
-        val boolReference = staticReference("Bool")
-
-        val typeParameter = invariantTypeParameter("T")
-        val listType = parametrizedShapeType(
-            "Box",
-            parameters = listOf(typeParameter),
-            fields = listOf(
-                field("value", typeParameter)
-            )
-        )
-        val application = staticApplication(listReference, listOf(boolReference))
-
-        val type = evalType(
-            application,
-            typeContext(referenceTypes = mapOf(
-                listReference to StaticValueType(listType),
-                boolReference to StaticValueType(BoolType)
-            ))
-        )
-        assertThat(type, isShapeType(
-            name = isIdentifier("Box"),
-            staticArguments = isSequence(isBoolType),
-            fields = isSequence(
-                isField(name = isIdentifier("value"), type = isBoolType)
-            )
-        ))
-    }
-
-    @Test
     fun staticFieldAccessHasTypeOfField() {
         val moduleReference = staticReference("M")
         val moduleType = moduleType(fields = mapOf(

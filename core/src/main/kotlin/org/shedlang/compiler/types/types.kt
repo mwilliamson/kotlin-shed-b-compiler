@@ -344,6 +344,15 @@ data class ParameterizedStaticValue(
     }
 }
 
+object EmptyTypeFunction: StaticValue {
+    override val shortDescription: String
+        get() = "Empty"
+
+    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 data class ModuleType(
     val fields: Map<Identifier, Type>
 ): Type {
