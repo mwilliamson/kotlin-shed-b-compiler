@@ -495,9 +495,9 @@ fun lazyShapeType(
     staticArguments = staticArguments
 )
 
-data class LazyShapeType(
+class LazyShapeType(
     override val name: Identifier,
-    private val getFields: Lazy<Map<Identifier, Field>>,
+    getFields: Lazy<Map<Identifier, Field>>,
     override val shapeId: Int = freshTypeId(),
     override val tagValue: TagValue?,
     override val staticParameters: List<StaticParameter>,
