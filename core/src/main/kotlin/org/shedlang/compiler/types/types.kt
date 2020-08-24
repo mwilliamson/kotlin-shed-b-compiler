@@ -686,7 +686,9 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
 }
 
 fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
-    if (type is TypeParameter) {
+    if (bindings.isEmpty()) {
+        return type
+    } else if (type is TypeParameter) {
         // TODO: handle non-type bindings
         return bindings.getOrElse(type, { type }) as Type
     } else if (type is UnionType) {
