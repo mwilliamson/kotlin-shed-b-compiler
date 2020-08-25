@@ -395,7 +395,7 @@ data class ShapeNode(
     override val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): ShapeBaseNode, ModuleStatementNode {
+): ShapeBaseNode, FunctionStatementNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
         get() = listOf(
             // TODO: switch static evaluation to be lazily resolved?
@@ -403,6 +403,13 @@ data class ShapeNode(
                 (staticParameters + extends).map(NodeStructures::staticEval) + fields.map(NodeStructures::eval)
             ))
         )
+
+    override val terminatesBlock: Boolean
+        get() = false
+
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -619,6 +626,7 @@ interface FunctionStatementNode : StatementNode {
         fun visit(node: ExpressionStatementNode): T
         fun visit(node: ValNode): T
         fun visit(node: FunctionDefinitionNode): T
+        fun visit(node: ShapeNode): T
     }
 
     val terminatesBlock: Boolean

@@ -18,7 +18,7 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 
     val node = module.node
     val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
-    val body = node.body.flatMap { statement -> generateCode(statement, context)  }
+    val body = node.body.flatMap { statement -> generateCodeForModuleStatement(statement, context)  }
     val exports = node.exports.map { export -> generateExport(export, NodeSource(module.node)) }
 
     val castImports = generateCastImports(module, context)
@@ -117,7 +117,7 @@ private fun generateExport(export: ReferenceNode, source: Source): JavascriptExp
     )
 }
 
-internal fun generateCode(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
+internal fun generateCodeForModuleStatement(node: ModuleStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : ModuleStatementNode.Visitor<List<JavascriptStatementNode>> {
         override fun visit(node: EffectDefinitionNode): List<JavascriptStatementNode> = generateCodeForEffectDefinition(node)
         override fun visit(node: TypeAliasNode): List<JavascriptStatementNode> = listOf()
@@ -452,11 +452,11 @@ private fun generateBlockCode(block: Block?, context: CodeGenerationContext): Li
     return if (block == null) {
         listOf()
     } else {
-        block.statements.flatMap { statement -> generateCode(statement, context) }
+        block.statements.flatMap { statement -> generateCodeForFunctionStatement(statement, context) }
     }
 }
 
-internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
+internal fun generateCodeForFunctionStatement(node: FunctionStatementNode, context: CodeGenerationContext): List<JavascriptStatementNode> {
     return node.accept(object : FunctionStatementNode.Visitor<List<JavascriptStatementNode>> {
         override fun visit(node: ExpressionStatementNode): List<JavascriptStatementNode> {
             val expression = generateCode(node.expression, context)
@@ -481,6 +481,10 @@ internal fun generateCode(node: FunctionStatementNode, context: CodeGenerationCo
 
         override fun visit(node: FunctionDefinitionNode): List<JavascriptStatementNode> {
             return generateCodeForFunctionDefinition(node, context)
+        }
+
+        override fun visit(node: ShapeNode): List<JavascriptStatementNode> {
+            throw UnsupportedOperationException("not implemented")
         }
     })
 }

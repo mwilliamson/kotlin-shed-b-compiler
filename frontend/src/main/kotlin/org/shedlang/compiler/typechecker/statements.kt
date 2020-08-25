@@ -362,6 +362,10 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
             typeCheckFunctionDefinition(node, context)
             return UnitType
         }
+
+        override fun visit(node: ShapeNode): Type {
+            throw UnsupportedOperationException("not implemented")
+        }
     })
 }
 

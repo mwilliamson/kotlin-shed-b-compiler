@@ -116,7 +116,7 @@ class CodeGeneratorTests {
                 )
             )
         )
-        val node = generateCode(shed, context).single()
+        val node = org.shedlang.compiler.backends.javascript.generateCodeForModuleStatement(shed, context).single()
 
         assertThat(node, isJavascriptConst(
             target = isJavascriptVariableReference("X"),
@@ -147,7 +147,7 @@ class CodeGeneratorTests {
                 member2Node to tagValue(tag(listOf("Example"), "X"), "Member2TagValue")
             )
         )
-        val nodes = generateCode(shed, context)
+        val nodes = org.shedlang.compiler.backends.javascript.generateCodeForModuleStatement(shed, context)
 
         assertThat(nodes, isSequence(
             isJavascriptConst(
@@ -192,7 +192,7 @@ class CodeGeneratorTests {
         )
 
         val context = context()
-        val nodes = generateCode(shed, context)
+        val nodes = org.shedlang.compiler.backends.javascript.generateCodeForModuleStatement(shed, context)
 
         assertThat(nodes, isSequence(
             isJavascriptConst(
@@ -836,12 +836,12 @@ class CodeGeneratorTests {
     private fun generateCodeForModuleStatement(
         node: ModuleStatementNode,
         context: CodeGenerationContext = context()
-    ) = generateCode(node, context)
+    ) = org.shedlang.compiler.backends.javascript.generateCodeForModuleStatement(node, context)
 
     private fun generateCodeForFunctionStatement(
         node: FunctionStatementNode,
         context: CodeGenerationContext = context()
-    ) = generateCode(node, context)
+    ) = org.shedlang.compiler.backends.javascript.generateCodeForFunctionStatement(node, context)
 
     private fun generateCode(node: ExpressionNode) = generateCode(node, context())
 
