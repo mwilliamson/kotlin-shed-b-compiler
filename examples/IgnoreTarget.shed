@@ -1,0 +1,21 @@
+// stdout:
+//   Two
+//   y
+
+export main;
+
+shape Values {
+    x: String,
+    y: String,
+    z: String,
+}
+
+fun main() !Io -> Unit {
+    val _ = "This means nothing to me";
+
+    val #(_, two, _) = #("One\n", "Two\n", "Three\n");
+    print!(two);
+
+    val @(.x as _, .y as y, .z as _) = Values(.x = "x\n", .y = "y\n", .z = "z\n");
+    print!(y);
+}

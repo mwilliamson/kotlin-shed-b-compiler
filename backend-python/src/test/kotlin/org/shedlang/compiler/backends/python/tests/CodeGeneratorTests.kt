@@ -760,6 +760,20 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun valWithTargetIgnoreGeneratesAssignmentWithFreshName() {
+        val shed = valStatement(target = targetIgnore(), expression = literalInt(42))
+
+        val node = generateCodeForFunctionStatement(shed)
+
+        assertThat(node, isSequence(
+            isPythonAssignment(
+                target = isPythonVariableReference("ignore"),
+                expression = isPythonIntegerLiteral(42)
+            )
+        ))
+    }
+
+    @Test
     fun valWithTargetVariableGeneratesAssignmentWithPythonisedName() {
         val shed = valStatement(name = "oneTwoThree", expression = literalInt(42))
 

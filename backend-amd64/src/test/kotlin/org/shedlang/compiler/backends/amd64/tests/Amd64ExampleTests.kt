@@ -30,6 +30,7 @@ class Amd64ExampleTests {
         "EffectHandlerExitOrResume.shed",
         "FieldDestructuring.shed",
         "HelloWorld.shed",
+        "IgnoreTarget.shed",
         "localImports",
         "Matchers.shed",
         "moduleName",

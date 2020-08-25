@@ -625,7 +625,13 @@ internal fun generateTargetCode(
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
         is TargetNode.Ignore ->
-            throw NotImplementedError()
+            Pair(
+                PythonVariableReferenceNode(
+                    name = context.freshName("ignore"),
+                    source = source
+                ),
+                listOf()
+            )
 
         is TargetNode.Variable ->
             Pair(

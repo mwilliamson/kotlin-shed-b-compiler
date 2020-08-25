@@ -17,7 +17,7 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     )
 
     val node = module.node
-    val imports = node.imports.map({ importNode -> generateCode(module, importNode) })
+    val imports = node.imports.map { importNode -> generateCode(module, importNode, context) }
     val body = node.body.flatMap { statement -> generateCodeForModuleStatement(statement, context)  }
     val exports = node.exports.map { export -> generateExport(export, NodeSource(module.node)) }
 
@@ -32,7 +32,8 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: ModuleName,
-    var hasCast: Boolean = false
+    var hasCast: Boolean = false,
+    var freshNameIndex: Int = 1
 ) {
     private var isAsyncStack: MutableList<Boolean> = mutableListOf()
 
@@ -47,14 +48,18 @@ internal class CodeGenerationContext(
     fun isAsync(): Boolean {
         return isAsyncStack.lastOrNull() ?: false
     }
+
+    fun freshName(prefix: String): String {
+        return prefix + "_" + (freshNameIndex++)
+    }
 }
 
-private fun generateCode(module: Module.Shed, import: ImportNode): JavascriptStatementNode {
+private fun generateCode(module: Module.Shed, import: ImportNode, context: CodeGenerationContext): JavascriptStatementNode {
     val source = NodeSource(import)
     val expression = generateImportExpression(importPath = import.path, module = module, source = source)
 
     return JavascriptConstNode(
-        target = generateCodeForTarget(import.target),
+        target = generateCodeForTarget(import.target, context),
         expression = expression,
         source = source
     )
@@ -492,7 +497,7 @@ internal fun generateCodeForFunctionStatement(node: FunctionStatementNode, conte
 private fun generateCode(node: ValNode, context: CodeGenerationContext): JavascriptConstNode {
     val source = NodeSource(node)
     val target = node.target
-    val javascriptTarget = generateCodeForTarget(target)
+    val javascriptTarget = generateCodeForTarget(target, context)
     return JavascriptConstNode(
         target = javascriptTarget,
         expression = generateCode(node.expression, context),
@@ -501,12 +506,13 @@ private fun generateCode(node: ValNode, context: CodeGenerationContext): Javascr
 }
 
 private fun generateCodeForTarget(
-    shedTarget: TargetNode
+    shedTarget: TargetNode,
+    context: CodeGenerationContext
 ): JavascriptTargetNode {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
         is TargetNode.Ignore ->
-            throw NotImplementedError()
+            JavascriptVariableReferenceNode(context.freshName("ignore"), source = source)
 
         is TargetNode.Variable -> {
             JavascriptVariableReferenceNode(generateName(shedTarget.name), source = source)
@@ -514,14 +520,14 @@ private fun generateCodeForTarget(
 
         is TargetNode.Tuple -> JavascriptArrayDestructuringNode(
             elements = shedTarget.elements.map { targetElement ->
-                generateCodeForTarget(targetElement)
+                generateCodeForTarget(targetElement, context)
             },
             source = source
         )
 
         is TargetNode.Fields -> JavascriptObjectDestructuringNode(
             properties = shedTarget.fields.map { (fieldName, fieldTarget) ->
-                generateFieldName(fieldName) to generateCodeForTarget(fieldTarget)
+                generateFieldName(fieldName) to generateCodeForTarget(fieldTarget, context)
             },
             source = source
         )

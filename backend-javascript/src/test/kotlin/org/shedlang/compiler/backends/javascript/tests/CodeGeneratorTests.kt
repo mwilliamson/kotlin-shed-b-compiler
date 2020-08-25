@@ -364,6 +364,18 @@ class CodeGeneratorTests {
     }
 
     @Test
+    fun valWithTargetIgnoreGeneratesConstWithFreshName() {
+        val shed = valStatement(target = targetIgnore(), expression = literalBool(true))
+
+        val node = generateCodeForFunctionStatement(shed)
+
+        assertThat(node, isSequence(isJavascriptConst(
+            target = isJavascriptVariableReference("ignore_1"),
+            expression = isJavascriptBooleanLiteral(true)
+        )))
+    }
+
+    @Test
     fun valWithTargetVariableGeneratesConst() {
         val shed = valStatement(name = "x", expression = literalBool(true))
 
