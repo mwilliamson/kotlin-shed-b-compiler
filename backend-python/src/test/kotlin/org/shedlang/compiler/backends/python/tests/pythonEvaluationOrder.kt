@@ -38,6 +38,14 @@ private fun statementChildrenEvaluationOrder(statement: PythonStatementNode): Li
             throw UnsupportedOperationException("not implemented")
         }
 
+        override fun visit(node: PythonTryNode): List<PythonNode> {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(node: PythonRaiseNode): List<PythonNode> {
+            throw UnsupportedOperationException("not implemented")
+        }
+
         override fun visit(node: PythonIfStatementNode): List<PythonNode> {
             return node.conditionalBranches.flatMap { branch ->
                 listOf(branch.condition) + branch.body
