@@ -387,21 +387,18 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
             context.addVariableType(target, type)
 
         is TargetNode.Tuple -> {
-            // TODO: check is tuple type
-            val tupleType = type as TupleType
-
-            if (tupleType.elementTypes.size != target.elements.size) {
+            if (type !is TupleType || type.elementTypes.size != target.elements.size) {
                 // TODO: should the error be on the target or expression?
                 throw UnexpectedTypeError(
                     actual = TupleType(
                         elementTypes = target.elements.map { AnyType }
                     ),
-                    expected = tupleType,
+                    expected = type,
                     source = target.source
                 )
             }
 
-            for ((elementType, targetElement) in tupleType.elementTypes.zip(target.elements)) {
+            for ((elementType, targetElement) in type.elementTypes.zip(target.elements)) {
                 typeCheckTarget(targetElement, elementType, context)
             }
         }

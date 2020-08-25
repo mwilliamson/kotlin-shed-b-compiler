@@ -52,6 +52,22 @@ class TypeCheckTargetTests {
     }
 
     @Test
+    fun assigningNonTupleToTupleTargetThrowsError() {
+        val elementTarget1 = targetVariable("x")
+        val target = targetTuple(elements = listOf(elementTarget1))
+        val typeContext = typeContext()
+
+        assertThat(
+            { typeCheckTarget(target, IntType, typeContext) },
+            throwsUnexpectedType(
+                actual = isTupleType(elementTypes = isSequence(isAnyType)),
+                expected = cast(isIntType),
+                source = equalTo(target.source)
+            )
+        )
+    }
+
+    @Test
     fun whenTupleHasMoreElementsThanTargetThenErrorIsThrown() {
         val elementTarget1 = targetVariable("x")
         val target = targetTuple(elements = listOf(elementTarget1))
