@@ -11,7 +11,7 @@ internal fun typeCheckModuleStatement(statement: ModuleStatementNode, context: T
     return statement.accept(object : ModuleStatementNode.Visitor<Unit> {
         override fun visit(node: EffectDefinitionNode) = typeCheckEffectDefinition(node, context)
         override fun visit(node: TypeAliasNode) = typeCheckTypeAlias(node, context)
-        override fun visit(node: ShapeNode) = typeCheck(node, context)
+        override fun visit(node: ShapeNode) = typeCheckShapeDefinition(node, context)
         override fun visit(node: UnionNode) = typeCheck(node, context)
         override fun visit(node: FunctionDefinitionNode) = typeCheckFunctionDefinition(node, context)
         override fun visit(node: ValNode) = typeCheck(node, context)
@@ -50,7 +50,7 @@ private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {
     }
 }
 
-private fun typeCheck(node: ShapeNode, context: TypeContext) {
+private fun typeCheckShapeDefinition(node: ShapeNode, context: TypeContext) {
     generateShapeType(node, context)
 }
 
@@ -364,7 +364,8 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         }
 
         override fun visit(node: ShapeNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            typeCheckShapeDefinition(node, context)
+            return UnitType
         }
     })
 }
