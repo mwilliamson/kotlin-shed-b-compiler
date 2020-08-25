@@ -146,7 +146,7 @@ internal fun isShape(
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     extends: Matcher<List<StaticExpressionNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything
-): Matcher<ModuleStatementNode> {
+): Matcher<Node> {
     return cast(allOf(
         has(ShapeNode::name, name),
         has(ShapeNode::staticParameters, staticParameters),

@@ -6,11 +6,30 @@ import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.UnexpectedTokenException
+import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 
 class ParseShapeTests {
+    @Test
+    fun canParseShapeAsModuleStatement() {
+        val source = "shape X { }"
+        val node = parseString(::parseModuleStatement, source)
+        assertThat(node, isShape(
+            name = isIdentifier("X"),
+        ))
+    }
+
+    @Test
+    fun canParseShapeAsFunctionStatement() {
+        val source = "shape X { }"
+        val node = parseString(::parseFunctionStatement, source)
+        assertThat(node, isShape(
+            name = isIdentifier("X"),
+        ))
+    }
+
     @Test
     fun emptyShape() {
         val source = "shape X { }"
