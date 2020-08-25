@@ -77,9 +77,8 @@ fun positional[T, R](
 }
 
 fun findStringArg(stringArgs: StringArgs, name: String) -> Option[String] {
-    // TODO: add map that flattens options
     Lists.listToSequence(stringArgs)
-        |> Sequences.lazyMap~(
+        |> Sequences.lazyMapOption~(
             fun (stringArg: #(String, String)) -> Option[String] {
                 val #(argName, value) = stringArg;
                 if (name == argName) {
@@ -89,9 +88,5 @@ fun findStringArg(stringArgs: StringArgs, name: String) -> Option[String] {
                 }
             }
         )
-        |> Sequences.lazyFilter~(
-            fun (value: Option[String]) => value is Some,
-        )
         |> Sequences.head
-        |> Options.flatten
 }

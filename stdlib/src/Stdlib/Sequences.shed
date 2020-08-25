@@ -17,7 +17,8 @@ export
     head,
     lazyFilter,
     lazyFlatten,
-    lazyMap;
+    lazyMap,
+    lazyMapOption;
 
 shape Sequence[T, !E] {
     next: Fun () !E -> SequenceIterator[T, E],
@@ -224,4 +225,31 @@ fun lazyMap[T, R, !E](func: Fun (T) !E -> R, sequence: Sequence[T, E]) -> Sequen
             }
         }
     )
+}
+
+fun lazyMapOption[T, R, !E](func: Fun (T) !E -> Option[R], sequence: Sequence[T, E]) -> Sequence[R, E] {
+    Sequence(.next = lazyMapOptionNext~(func, sequence))
+}
+
+fun lazyMapOptionNext[T, R, !E](func: Fun (T) !E -> Option[R], sequence: Sequence[T, E]) !E -> SequenceIterator[R, E] {
+    val item = sequence.next!();
+    when (item) {
+        is SequenceEnd {
+            end
+        }
+        is SequenceItem {
+            val head = func!(item.head);
+            when (head) {
+                is Some {
+                    SequenceItem(
+                        .head = head.value,
+                        .tail = lazyMapOption(func, item.tail),
+                    )
+                }
+                is None {
+                    tailrec lazyMapOptionNext!(func, item.tail)
+                }
+            }
+        }
+    }
 }

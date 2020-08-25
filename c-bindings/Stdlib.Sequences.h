@@ -17,6 +17,7 @@ extern struct {
     ShedValue lazyFilter;
     ShedValue lazyFlatten;
     ShedValue lazyMap;
+    ShedValue lazyMapOption;
     ShedValue pure;
 } shed__module_value__Stdlib_Sequences;
 #endif
