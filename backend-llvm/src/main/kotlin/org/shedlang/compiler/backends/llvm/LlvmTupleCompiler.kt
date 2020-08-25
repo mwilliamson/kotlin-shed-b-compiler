@@ -11,7 +11,7 @@ internal class LlvmTupleCompiler(
 
         val malloc = libc.typedMalloc(
             target = tuple,
-            bytes = compiledValueTypeSize * elements.size,
+            bytes = compiledTupleType(elementCount = elements.size).byteSize,
             type = compiledTuplePointerType
         )
 
