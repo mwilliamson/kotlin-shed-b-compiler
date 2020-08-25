@@ -1,0 +1,97 @@
+export parser, parse, positional, string;
+
+import Lists from .Lists;
+import Options from .Options;
+import Sequences from .Sequences;
+
+shape Parser[T] {
+    argDefinitions: Lists.List[ArgDefinition],
+    parseStringArgs: Fun (StringArgs) -> T,
+}
+
+shape ArgDefinition {
+    name: String,
+    argType: ArgType,
+}
+
+shape ArgType {
+
+}
+
+val string = ArgType();
+
+type StringArgs = Lists.List[#(String, String)];
+
+fun parser[T](initialValue: T) -> Parser[T, T] {
+    Parser(
+        .argDefinitions = Lists.list(),
+        .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,
+    )
+}
+
+fun parse[T](parser: Parser[T], args: Lists.List[String]) -> T {
+    val stringArgs = toStringArgs(Lists.reverse(parser.argDefinitions), args);
+    parser.parseStringArgs(stringArgs)
+}
+
+fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
+    when (argDefinitions) {
+        is Lists.Cons {
+            val argDefinition = argDefinitions.head;
+            when (args) {
+                is Lists.Cons {
+                    Lists.cons(
+                        #(argDefinition.name, args.head),
+                        toStringArgs(argDefinitions.tail, args.tail),
+                    )
+                }
+                is Lists.Nil {
+                    Lists.list()
+                }
+            }
+        }
+        is Lists.Nil {
+            Lists.list()
+        }
+    }
+}
+
+fun positional[T, R](
+    name: String,
+    argType: ArgType,
+    add: Fun (Option[String], T) -> R,
+    parser: Parser[T],
+) -> Parser[R] {
+    val argDefinition = ArgDefinition(
+        .name = name,
+        .argType = argType,
+    );
+
+    Parser[R](
+        .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
+        .parseStringArgs = fun (stringArgs: StringArgs) {
+            val stringArg = findStringArg(stringArgs, name);
+            add(stringArg, parser.parseStringArgs(stringArgs))
+        },
+    )
+}
+
+fun findStringArg(stringArgs: StringArgs, name: String) -> Option[String] {
+    // TODO: add map that flattens options
+    Lists.listToSequence(stringArgs)
+        |> Sequences.lazyMap~(
+            fun (stringArg: #(String, String)) -> Option[String] {
+                val #(argName, value) = stringArg;
+                if (name == argName) {
+                    some(value)
+                } else {
+                    none
+                }
+            }
+        )
+        |> Sequences.lazyFilter~(
+            fun (value: Option[String]) => value is Some,
+        )
+        |> Sequences.head
+        |> Options.flatten
+}

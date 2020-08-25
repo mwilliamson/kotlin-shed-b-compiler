@@ -2,6 +2,7 @@ export
     List,
     Cons,
     cons,
+    Nil,
     nil,
     list,
 
@@ -13,7 +14,9 @@ export
     foldLeft,
     forEach,
     forEachInterspersed,
-    map;
+    listToSequence,
+    map,
+    reverse;
 
 import Sequences from .Sequences;
 

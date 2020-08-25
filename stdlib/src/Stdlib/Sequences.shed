@@ -14,6 +14,7 @@ export
     foldLeft,
     forEach,
     forEachInterspersed,
+    head,
     lazyFilter,
     lazyFlatten,
     lazyMap;
@@ -166,6 +167,18 @@ fun forEachInterspersed[T, !E](func: Fun (T) !E -> Unit, intersperse: Fun () !E 
                 },
                 item.tail,
             );
+        }
+    }
+}
+
+fun head[T, !E](sequence: Sequence[T, E]) !E -> Option[T] {
+    val item = sequence.next!();
+    when (item) {
+        is SequenceEnd {
+            none
+        }
+        is SequenceItem {
+            some(item.head)
         }
     }
 }

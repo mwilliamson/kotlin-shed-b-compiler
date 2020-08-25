@@ -1,4 +1,4 @@
-export default, flatMap, map;
+export default, flatMap, flatten, map;
 
 fun default[T](defaultValue: T, option: Option[T]) -> T {
     when (option) {
@@ -15,6 +15,17 @@ fun flatMap[T, R, !E](func: Fun (T) !E -> Option[R], option: Option[T]) !E -> Op
     when (option) {
         is Some[T] {
             func!(option.value)
+        }
+        is None {
+            none
+        }
+    }
+}
+
+fun flatten[T](option: Option[Option[T]]) -> Option[T] {
+    when (option) {
+        is Some {
+            option.value
         }
         is None {
             none

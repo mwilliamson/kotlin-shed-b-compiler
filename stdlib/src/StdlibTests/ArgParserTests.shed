@@ -1,0 +1,55 @@
+export testCases;
+
+import ArgParser from Stdlib.ArgParser;
+import @(.list as list) from Stdlib.Lists;
+import M from Stdlib.Matchers;
+import Options from Stdlib.Options;
+import Tests from Stdlib.Tests;
+
+fun optionToString(option: Option[String]) -> String {
+    when (option) {
+        is None {
+            "(none)"
+        }
+        is Some {
+            option.value
+        }
+    }
+}
+
+val testCases = Tests.suite(moduleName, list(
+    Tests.testCase("can parse single positional argument", fun () {
+        shape Args {
+            x: String,
+        }
+
+        val rawArguments = list("hello");
+        //~ val argParser = ArgParser.parser(empty[Args]())
+            //~ |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.add);
+
+        //~ val arguments = ArgParser.parse(argParser, rawArguments);
+
+        //~ Tests.assertThat(arguments, M.hasField(Args.fields.x, M.isString("hello")));
+
+
+        val argParser = ArgParser.parser("")
+            |> ArgParser.positional~("message", ArgParser.string, fun (arg: Option[String], acc: String) => Options.default(acc, arg));
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, M.isString("hello"))
+    }),
+
+    Tests.testCase("can parse multiple positional argument", fun () {
+        val rawArguments = list("hello", "world", "!");
+
+        val argParser = ArgParser.parser("")
+            |> ArgParser.positional~("one", ArgParser.string, fun (arg: Option[String], acc: String) => acc + "one: " + optionToString(arg))
+            |> ArgParser.positional~("two", ArgParser.string, fun (arg: Option[String], acc: String) => acc + ", two: " + optionToString(arg))
+            |> ArgParser.positional~("three", ArgParser.string, fun (arg: Option[String], acc: String) => acc + ", three: " + optionToString(arg));
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, M.isString("one: hello, two: world, three: !"))
+    }),
+));

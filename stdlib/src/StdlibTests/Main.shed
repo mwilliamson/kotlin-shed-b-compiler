@@ -3,6 +3,7 @@ export main;
 import Lists from Stdlib.Lists;
 import Tests from Stdlib.Tests;
 
+import ArgParserTests from .ArgParserTests;
 import JsonTests from .JsonTests;
 import MatchersTests from .MatchersTests;
 import OptionsTests from .OptionsTests;
@@ -13,6 +14,7 @@ import StringsTests from .StringsTests;
 fun main() !Io -> Int {
     Tests.runTests!(Lists.flatten(Lists.list(
         Lists.list(
+            ArgParserTests.testCases,
             JsonTests.testCases,
             OptionsTests.testCases,
             UnicodeScalarsTests.testCases,
