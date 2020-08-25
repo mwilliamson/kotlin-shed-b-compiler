@@ -13,6 +13,14 @@ import org.shedlang.compiler.types.TupleType
 
 class TypeCheckTargetTests {
     @Test
+    fun targetCanBeIgnored() {
+        val target = targetIgnore()
+        val typeContext = typeContext()
+
+        typeCheckTarget(target, IntType, typeContext)
+    }
+
+    @Test
     fun targetVariableTakesTypeOfExpression() {
         val target = targetVariable(name = "x")
         val typeContext = typeContext()

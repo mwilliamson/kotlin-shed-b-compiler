@@ -577,6 +577,9 @@ class Loader(
 
     private fun loadTarget(target: TargetNode): PersistentList<Instruction> {
         return when (target) {
+            is TargetNode.Ignore ->
+                persistentListOf(Discard)
+
             is TargetNode.Variable ->
                 persistentListOf(LocalStore(target))
 

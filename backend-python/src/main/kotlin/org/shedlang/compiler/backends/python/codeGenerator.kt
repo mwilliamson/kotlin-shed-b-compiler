@@ -624,6 +624,9 @@ internal fun generateTargetCode(
 ): Pair<PythonExpressionNode, List<PythonStatementNode>> {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
+        is TargetNode.Ignore ->
+            throw NotImplementedError()
+
         is TargetNode.Variable ->
             Pair(
                 PythonVariableReferenceNode(

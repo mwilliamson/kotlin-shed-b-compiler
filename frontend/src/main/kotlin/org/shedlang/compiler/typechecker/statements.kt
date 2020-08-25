@@ -381,6 +381,8 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
     context.addTargetType(target, type)
 
     when (target) {
+        is TargetNode.Ignore -> {}
+
         is TargetNode.Variable ->
             context.addVariableType(target, type)
 

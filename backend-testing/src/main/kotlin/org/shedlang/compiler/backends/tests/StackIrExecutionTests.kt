@@ -890,6 +890,20 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun canIgnoreTarget() {
+        val block = block(listOf(
+            valStatement(
+                target = targetIgnore(),
+                expression = literalInt()
+            )
+        ))
+
+        val value = evaluateBlock(block, type = UnitType)
+
+        assertThat(value, isUnit)
+    }
+
+    @Test
     fun emptyFunctionReturnsUnit() {
         val function = function(
             name = "main",
@@ -1556,7 +1570,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         return executeInstructions(instructions, type = type)
     }
 
-    private fun evaluateBlock(block: Block, type: Type, references: ResolvedReferences): IrValue {
+    private fun evaluateBlock(block: Block, type: Type, references: ResolvedReferences = ResolvedReferencesMap.EMPTY): IrValue {
         val instructions = loader(references = references).loadBlock(block)
         return executeInstructions(instructions, type = type)
     }

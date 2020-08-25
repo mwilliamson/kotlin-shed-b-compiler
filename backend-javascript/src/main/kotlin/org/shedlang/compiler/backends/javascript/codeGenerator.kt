@@ -505,15 +505,20 @@ private fun generateCodeForTarget(
 ): JavascriptTargetNode {
     val source = NodeSource(shedTarget)
     return when (shedTarget) {
+        is TargetNode.Ignore ->
+            throw NotImplementedError()
+
         is TargetNode.Variable -> {
             JavascriptVariableReferenceNode(generateName(shedTarget.name), source = source)
         }
+
         is TargetNode.Tuple -> JavascriptArrayDestructuringNode(
             elements = shedTarget.elements.map { targetElement ->
                 generateCodeForTarget(targetElement)
             },
             source = source
         )
+
         is TargetNode.Fields -> JavascriptObjectDestructuringNode(
             properties = shedTarget.fields.map { (fieldName, fieldTarget) ->
                 generateFieldName(fieldName) to generateCodeForTarget(fieldTarget)

@@ -152,6 +152,8 @@ fun valStatement(
     source = anySource()
 )
 
+fun targetIgnore() = TargetNode.Ignore(source = anySource())
+
 fun targetVariable(name: String = "<target name>") = TargetNode.Variable(
     Identifier(name),
     source = anySource()

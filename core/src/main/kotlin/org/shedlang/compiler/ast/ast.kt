@@ -787,6 +787,18 @@ data class ValNode(
 sealed class TargetNode: Node {
     abstract fun variableBinders(): List<VariableBindingNode>
 
+    data class Ignore(
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ): TargetNode() {
+        override val structure: List<NodeStructure>
+            get() = listOf()
+
+        override fun variableBinders(): List<VariableBindingNode> {
+            return listOf()
+        }
+    }
+
     data class Variable(
         override val name: Identifier,
         override val source: Source,
