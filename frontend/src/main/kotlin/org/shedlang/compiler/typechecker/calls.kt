@@ -43,6 +43,8 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
         }
     } else if (receiverType is CastType) {
         return inferCastCall(node, context)
+    } else if (receiverType is EmptyFunctionType) {
+        return inferEmptyCall(node, context)
     } else if (receiverType is VarargsType) {
         return inferVarargsCall(node, receiverType, context)
     }
@@ -314,6 +316,14 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
         }
         else -> throw NotImplementedError()
     }
+}
+
+private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
+    // TODO: check number of static arguments
+    // TODO: check type of static argument
+    // TODO: check non-static arguments
+    val staticArgument = evalStaticValue(node.staticArguments.single(), context) as ShapeType
+    return createEmptyShapeType(staticArgument)
 }
 
 private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeContext): Type {

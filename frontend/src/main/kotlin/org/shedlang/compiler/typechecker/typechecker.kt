@@ -457,16 +457,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             } else if (receiver is EmptyTypeFunction) {
                 // TODO: error checking
                 val argument = arguments.single() as ShapeType
-                return metaType(lazyShapeType(
-                    shapeId = argument.shapeId,
-                    name = argument.name,
-                    tagValue = argument.tagValue,
-                    getFields = lazy {
-                        listOf<Field>()
-                    },
-                    staticParameters = argument.staticParameters,
-                    staticArguments = argument.staticArguments
-                ))
+                return metaType(createEmptyShapeType(argument))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.source)

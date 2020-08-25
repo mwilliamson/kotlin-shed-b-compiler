@@ -25,6 +25,7 @@ val builtins = listOf(
     builtinVariable("ShapeField", StaticValueType(ShapeFieldTypeFunction)),
 
     builtinVariable("Empty", StaticValueType(EmptyTypeFunction)),
+    builtinVariable("empty", EmptyFunctionType),
 
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect),

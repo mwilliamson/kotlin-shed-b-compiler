@@ -779,6 +779,37 @@ class TypeCheckCallTests {
         )
     }
 
+    @Test
+    fun emptyCallReturnsEmptyShape() {
+        val boxTypeReference = staticReference("Box")
+        val emptyReference = staticReference("empty")
+
+        val boxType = shapeType(
+            "Box",
+            fields = listOf(
+                field("value", IntType)
+            )
+        )
+
+        val node = call(
+            receiver = emptyReference,
+            staticArguments = listOf(boxTypeReference),
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                boxTypeReference to StaticValueType(boxType),
+                emptyReference to EmptyFunctionType
+            )
+        )
+        val type = inferCallType(node, typeContext)
+
+        assertThat(type, isShapeType(
+            name = isIdentifier("Box"),
+            fields = isSequence()
+        ))
+    }
+
     @Nested
     inner class VarargsTests {
         private val headTypeParameter = invariantTypeParameter("Head")

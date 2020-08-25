@@ -353,6 +353,19 @@ object EmptyTypeFunction: StaticValue {
     }
 }
 
+fun createEmptyShapeType(argument: ShapeType): LazyShapeType {
+    return lazyShapeType(
+        shapeId = argument.shapeId,
+        name = argument.name,
+        tagValue = argument.tagValue,
+        getFields = lazy {
+            listOf<Field>()
+        },
+        staticParameters = argument.staticParameters,
+        staticArguments = argument.staticArguments
+    )
+}
+
 data class ModuleType(
     val fields: Map<Identifier, Type>
 ): Type {
@@ -615,6 +628,10 @@ fun effectParameter(name: String) = EffectParameter(Identifier(name))
 
 object CastType : BasicType {
     override val shortDescription = "Cast"
+}
+
+object EmptyFunctionType : BasicType {
+    override val shortDescription = "Empty"
 }
 
 private fun appliedTypeShortDescription(name: Identifier, parameters: List<StaticValue>): String {
