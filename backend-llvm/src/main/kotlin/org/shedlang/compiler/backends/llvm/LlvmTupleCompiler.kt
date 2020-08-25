@@ -11,8 +11,8 @@ internal class LlvmTupleCompiler(
 
         val malloc = libc.typedMalloc(
             target = tuple,
-            bytes = compiledTupleType.byteSize,
-            type = compiledTupleType
+            bytes = compiledValueTypeSize * elements.size,
+            type = compiledTuplePointerType
         )
 
         val storeElements = elements.flatMapIndexed { elementIndex, element ->
@@ -29,7 +29,7 @@ internal class LlvmTupleCompiler(
 
         val cast = LlvmPtrToInt(
             target = target,
-            sourceType = compiledTupleType,
+            sourceType = compiledTuplePointerType,
             value = tuple,
             targetType = compiledValueType
         )
@@ -51,7 +51,7 @@ internal class LlvmTupleCompiler(
                 target = tuple,
                 sourceType = compiledValueType,
                 value = receiver,
-                targetType = compiledTupleType
+                targetType = compiledTuplePointerType
             ),
             tupleElementPointer(elementPointer, tuple, elementIndex),
             LlvmLoad(
@@ -65,7 +65,7 @@ internal class LlvmTupleCompiler(
     private fun tupleElementPointer(target: LlvmOperandLocal, receiver: LlvmOperandLocal, elementIndex: Int): LlvmGetElementPtr {
         return LlvmGetElementPtr(
             target = target,
-            pointerType = compiledTupleType,
+            pointerType = compiledTuplePointerType,
             pointer = receiver,
             indices = listOf(
                 LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),

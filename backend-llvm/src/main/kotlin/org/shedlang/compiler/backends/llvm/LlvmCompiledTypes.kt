@@ -19,7 +19,7 @@ internal fun compiledStringValueType(size: Int) = LlvmTypes.structure(listOf(
 ))
 internal fun compiledStringType(size: Int) = LlvmTypes.pointer(compiledStringValueType(size))
 
-internal val compiledTupleType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
+internal val compiledTuplePointerType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
 internal val compiledClosureEnvironmentType = LlvmTypes.arrayType(0, compiledValueType)
 
