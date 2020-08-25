@@ -28,11 +28,14 @@ object ShedCli {
     }
 
     private fun run(rawArguments: Array<String>): Int {
-        val shedArgumentIndex = rawArguments.indexOfFirst { argument -> !argument.startsWith("-") }
-        val shedArgumentCount = if (shedArgumentIndex == -1) rawArguments.size else shedArgumentIndex + 1
+        val separatorIndex = rawArguments.indexOf("--")
+        val (shedRawArguments, programArguments) = if (separatorIndex == -1) {
+            Pair(rawArguments, listOf())
+        } else {
+            Pair(rawArguments.copyOfRange(0, separatorIndex), rawArguments.copyOfRange(separatorIndex + 1, rawArguments.size).toList())
+        }
 
-        val shedArguments = Arguments(ArgParser(rawArguments.copyOfRange(0, shedArgumentCount)))
-        val programArguments = rawArguments.copyOfRange(shedArgumentCount, rawArguments.size).toList()
+        val shedArguments = Arguments(ArgParser(shedRawArguments))
 
         val sourcePath = Paths.get(shedArguments.source)
         val backend = shedArguments.backend

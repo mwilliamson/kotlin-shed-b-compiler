@@ -24,7 +24,7 @@ internal fun ArgParser.shedBackends(): ArgParser.Delegate<Backend> {
 }
 
 internal fun ArgParser.shedMainModule(): ArgParser.Delegate<ModuleName?> {
-    return positional("MAIN", help = "main module to run", transform = ::parseModuleName).default(null)
+    return this.storing("-m", argName = "MAIN", help = "main module to run", transform = ::parseModuleName).default(null)
 }
 
 
