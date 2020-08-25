@@ -46,6 +46,7 @@ internal fun typeContext(
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = HashMap(finalTypes),
+        refinedVariableTypes = mutableMapOf(),
         functionTypes = mutableMapOf(),
         discriminators = mutableMapOf(),
         resolvedReferences = ResolvedReferencesMap(finalReferences),

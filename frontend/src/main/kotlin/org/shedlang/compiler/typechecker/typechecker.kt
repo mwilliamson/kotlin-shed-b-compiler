@@ -19,6 +19,7 @@ internal fun newTypeContext(
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = nodeTypes.toMutableMap(),
+        refinedVariableTypes = mutableMapOf(),
         functionTypes = mutableMapOf(),
         discriminators = mutableMapOf(),
         resolvedReferences = resolvedReferences,
@@ -32,6 +33,7 @@ internal class TypeContext(
     val effect: Effect,
     val resumeValueType: Type?,
     private val variableTypes: MutableMap<Int, Type>,
+    private val refinedVariableTypes: MutableMap<Int, Type>,
     private val functionTypes: MutableMap<Int, FunctionType>,
     private val discriminators: MutableMap<Int, Discriminator>,
     private val expressionTypes: MutableMap<Int, Type>,
@@ -49,16 +51,21 @@ internal class TypeContext(
     }
 
     fun typeOf(node: VariableBindingNode): Type {
+        val refinedType = refinedVariableTypes[node.nodeId]
+        if (refinedType != null) {
+            return refinedType
+        }
+
         val type = variableTypes[node.nodeId]
-        if (type == null) {
-            // TODO: test this
-            throw CompilerError(
-                "type of ${node.name.value} is unknown",
-                source = node.source
-            )
-        } else {
+        if (type != null) {
             return type
         }
+
+        // TODO: test this
+        throw CompilerError(
+            "type of ${node.name.value} is unknown",
+            source = node.source
+        )
     }
 
     fun typeOfTarget(target: TargetNode): Type {
@@ -75,16 +82,26 @@ internal class TypeContext(
     }
 
     fun addVariableTypes(types: Map<Int, Type>) {
-        variableTypes += types
+        for ((nodeId, type) in types) {
+            addVariableType(nodeId, type, source = NullSource)
+        }
     }
 
     fun addVariableType(node: VariableBindingNode, type: Type) {
-        variableTypes[node.nodeId] = type
+        addVariableType(node.nodeId, type, source = node.source)
     }
 
-    fun addVariableType(node: ReferenceNode, type: Type) {
+    private fun addVariableType(nodeId: Int, type: Type, source: Source) {
+        if (nodeId in variableTypes) {
+            throw CompilerError("variable already has type", source = source)
+        } else {
+            variableTypes[nodeId] = type
+        }
+    }
+
+    fun refineVariableType(node: ReferenceNode, type: Type) {
         val targetNode = resolvedReferences[node]
-        variableTypes[targetNode.nodeId] = type
+        refinedVariableTypes[targetNode.nodeId] = type
     }
 
     fun addFunctionType(node: FunctionNode, type: FunctionType) {
@@ -115,6 +132,7 @@ internal class TypeContext(
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = variableTypes,
+            refinedVariableTypes = refinedVariableTypes,
             functionTypes = functionTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
@@ -130,7 +148,8 @@ internal class TypeContext(
             resumeValueType = resumeValueType,
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
-            variableTypes = HashMap(variableTypes),
+            variableTypes = variableTypes,
+            refinedVariableTypes = HashMap(refinedVariableTypes),
             functionTypes = functionTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,

@@ -57,21 +57,24 @@ class TypeCheckUnionTests {
 
     @Test
     fun unionWithTypeParametersDeclaresTypeFunction() {
-        val typeParameterDeclaration1 = typeParameter("T1")
-        val typeParameterDeclaration2 = typeParameter("T2")
+        val unionTypeParameterDeclaration1 = typeParameter("T1")
+        val unionTypeParameterDeclaration2 = typeParameter("T2")
+        val memberTypeParameterDeclaration1 = typeParameter("T1")
+        val memberTypeParameterDeclaration2 = typeParameter("T2")
 
         val node = union(
             "Union",
-            staticParameters = listOf(typeParameterDeclaration1, typeParameterDeclaration2),
+            staticParameters = listOf(unionTypeParameterDeclaration1, unionTypeParameterDeclaration2),
             members = listOf(
-                unionMember(name = "Member1", staticParameters = listOf(typeParameterDeclaration1)),
-                unionMember(name = "Member2", staticParameters = listOf(typeParameterDeclaration2)),
+                unionMember(name = "Member1", staticParameters = listOf(memberTypeParameterDeclaration1)),
+                unionMember(name = "Member2", staticParameters = listOf(memberTypeParameterDeclaration2)),
                 unionMember(name = "Member3", staticParameters = listOf())
             )
         )
 
         val typeContext = typeContext(moduleName = listOf("Example"))
         typeCheckModuleStatement(node, typeContext)
+
         assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
             parameters = isSequence(
                 isTypeParameter(name = isIdentifier("T1"), variance = isInvariant),
