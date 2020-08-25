@@ -42,6 +42,29 @@ val testCases = Tests.suite(moduleName, list(
         }),
     )),
 
+    Tests.suite("flatten", list(
+        Tests.testCase("flatten(none) is none", fun () {
+            Tests.assertThat(
+                Options.flatten[Int](none),
+                Matchers.isNone(),
+            )
+        }),
+
+        Tests.testCase("flatten(some(none)) is none", fun () {
+            Tests.assertThat(
+                Options.flatten[Int](some(none)),
+                Matchers.isNone(),
+            )
+        }),
+
+        Tests.testCase("flatten(some(some(x))) is some(x)", fun () {
+            Tests.assertThat(
+                Options.flatten(some(some(42))),
+                Matchers.isSome(Matchers.isInt(42))
+            )
+        }),
+    )),
+
     Tests.suite("map", list(
         Tests.testCase("map(f, none) is none", fun () {
             Tests.assertThat(Options.map(addOne, none), Matchers.isNone())
