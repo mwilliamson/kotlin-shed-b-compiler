@@ -76,6 +76,7 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     symbol(TokenType.SYMBOL_TILDE, "~"),
     symbol(TokenType.SYMBOL_BANG, "!"),
     symbol(TokenType.SYMBOL_HASH, "#"),
+    symbol(TokenType.SYMBOL_UNDERSCORE, "_"),
 
     RegexTokeniser.rule(TokenType.IDENTIFIER, identifierPattern),
     RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
@@ -157,6 +158,7 @@ internal enum class TokenType {
     SYMBOL_BANG,
     SYMBOL_HASH,
     SYMBOL_AT,
+    SYMBOL_UNDERSCORE,
 
     INTEGER,
     STRING,

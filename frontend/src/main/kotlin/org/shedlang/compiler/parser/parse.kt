@@ -855,7 +855,9 @@ private fun parseVal(tokens: TokenIterator<TokenType>): ValNode {
 internal fun parseTarget(tokens: TokenIterator<TokenType>): TargetNode {
     val source = tokens.location()
 
-    if (tokens.trySkip(TokenType.SYMBOL_HASH)) {
+    if (tokens.trySkip(TokenType.SYMBOL_UNDERSCORE)) {
+        return TargetNode.Ignore(source = source)
+    } else if (tokens.trySkip(TokenType.SYMBOL_HASH)) {
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
         val elements = parseMany(
             parseElement = { tokens -> parseTarget(tokens) },

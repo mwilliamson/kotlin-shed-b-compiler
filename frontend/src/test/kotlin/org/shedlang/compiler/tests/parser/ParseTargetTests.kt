@@ -9,6 +9,13 @@ import org.shedlang.compiler.tests.isSequence
 
 class ParseTargetTests {
     @Test
+    fun underscoreIsParsedAsIgnore() {
+        val source = "_"
+        val node = parseString(::parseTarget, source)
+        assertThat(node, isTargetIgnore())
+    }
+
+    @Test
     fun valTargetCanBeVariableReference() {
         val source = "x"
         val node = parseString(::parseTarget, source)

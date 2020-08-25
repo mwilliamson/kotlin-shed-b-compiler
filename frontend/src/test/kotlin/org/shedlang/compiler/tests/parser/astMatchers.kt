@@ -99,6 +99,8 @@ inline internal fun isVal(
     ))
 }
 
+internal fun isTargetIgnore() = isA<TargetNode.Ignore>()
+
 internal fun isTargetVariable(name: String) = isTargetVariable(isIdentifier(name))
 
 internal fun isTargetVariable(
