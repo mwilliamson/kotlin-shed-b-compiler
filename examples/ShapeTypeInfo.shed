@@ -6,8 +6,6 @@
 
 export main;
 
-type Size = Int;
-
 shape Pair {
     first: Int,
     second: Int,
