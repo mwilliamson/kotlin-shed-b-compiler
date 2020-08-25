@@ -3,6 +3,7 @@
 extern struct {
     ShedValue Cons;
     ShedValue List;
+    ShedValue Nil;
     ShedValue all;
     ShedValue any;
     ShedValue cons;
@@ -11,8 +12,10 @@ extern struct {
     ShedValue forEach;
     ShedValue forEachInterspersed;
     ShedValue list;
+    ShedValue listToSequence;
     ShedValue map;
     ShedValue nil;
+    ShedValue reverse;
     ShedValue sequenceToList;
 } shed__module_value__Stdlib_Lists;
 #endif

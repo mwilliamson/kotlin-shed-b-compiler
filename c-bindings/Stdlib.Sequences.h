@@ -12,6 +12,7 @@ extern struct {
     ShedValue foldLeft;
     ShedValue forEach;
     ShedValue forEachInterspersed;
+    ShedValue head;
     ShedValue item;
     ShedValue lazyFilter;
     ShedValue lazyFlatten;

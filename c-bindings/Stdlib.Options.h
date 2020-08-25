@@ -3,6 +3,7 @@
 extern struct {
     ShedValue default;
     ShedValue flatMap;
+    ShedValue flatten;
     ShedValue map;
 } shed__module_value__Stdlib_Options;
 #endif
