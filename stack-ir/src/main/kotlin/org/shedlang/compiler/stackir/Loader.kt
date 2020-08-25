@@ -491,7 +491,7 @@ class Loader(
             }
 
             override fun visit(node: ShapeNode): PersistentList<Instruction> {
-                throw UnsupportedOperationException("not implemented")
+                return loadShape(node)
             }
         })
     }

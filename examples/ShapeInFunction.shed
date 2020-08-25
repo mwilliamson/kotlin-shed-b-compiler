@@ -1,0 +1,25 @@
+// stdout:
+//   first
+//   42
+//   second
+//   47
+
+export main;
+
+fun main() !Io -> Unit {
+    shape Pair {
+        first: Int,
+        second: Int,
+    }
+
+    val pair = Pair(.first = 42, .second = 47);
+    printField!(Pair.fields.first, pair);
+    printField!(Pair.fields.second, pair);
+}
+
+fun printField[T](field: ShapeField[T, Int], value: T) !Io -> Unit {
+    print!(field.name);
+    print!("\n");
+    print!(intToString(field.get(value)));
+    print!("\n");
+}

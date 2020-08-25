@@ -49,6 +49,7 @@ class Amd64ExampleTests {
         "RecursiveFibonacci.shed",
         "Resume.shed",
         "ResumeWithValue.shed",
+        "ShapeInFunction.shed",
         "ShapeTypeInfo.shed",
         "stdlib",
         "stringBuilder",

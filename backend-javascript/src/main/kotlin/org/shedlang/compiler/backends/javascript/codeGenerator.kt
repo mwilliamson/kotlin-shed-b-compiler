@@ -484,7 +484,7 @@ internal fun generateCodeForFunctionStatement(node: FunctionStatementNode, conte
         }
 
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> {
-            throw UnsupportedOperationException("not implemented")
+            return listOf(generateCodeForShape(node, context))
         }
     })
 }

@@ -544,7 +544,7 @@ internal fun generateCodeForFunctionStatement(
         }
 
         override fun visit(node: ShapeNode): List<PythonStatementNode> {
-            throw UnsupportedOperationException("not implemented")
+            return listOf(generateCodeForShape(node, context))
         }
     })
 }
