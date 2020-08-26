@@ -279,6 +279,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
             type
         } else if (type is ParameterizedStaticValue) {
             applyStatic(type, type.parameters.map { shapeParameter ->
+                // TODO: handle !!
                 staticParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
             }) as ShapeType
         } else {
