@@ -77,7 +77,7 @@ fun positional[T, R](
 }
 
 fun findStringArg(stringArgs: StringArgs, name: String) -> Option[String] {
-    stringArgs |> Lists.firstSome~(fun (stringArg: #(String, String)) -> Option[String] {
+    stringArgs |> Lists.firstSome~(fun (stringArg: #(String, String)) {
         val #(argName, value) = stringArg;
         if (name == argName) {
             some(value)

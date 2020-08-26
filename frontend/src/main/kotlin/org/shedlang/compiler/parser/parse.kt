@@ -1258,7 +1258,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             tokens.skip()
             val signature = parseFunctionSignature(tokens)
 
-            val (body, inferReturnType) = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
+            val body = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
                 val expression = parseExpression(tokens)
                 val statement = ExpressionStatementNode(
                     expression = expression,
@@ -1269,9 +1269,9 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                     statements = listOf(statement),
                     source = expression.source
                 )
-                Pair(body, true)
+                body
             } else {
-                Pair(parseFunctionStatements(tokens), false)
+                parseFunctionStatements(tokens)
             }
 
             return FunctionExpressionNode(
@@ -1281,7 +1281,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                 returnType = signature.returnType,
                 effect = signature.effect,
                 body = body,
-                inferReturnType = inferReturnType,
+                inferReturnType = true,
                 source = source
             )
         }
