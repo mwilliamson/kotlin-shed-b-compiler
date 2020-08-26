@@ -206,6 +206,37 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceFromFunctionWithTypeParameters() {
+        val typeParameter = invariantTypeParameter("T")
+        assertThat(
+            canCoerce(
+                from = functionType(
+                    staticParameters = listOf(typeParameter),
+                    positionalParameters = listOf(typeParameter)
+                ),
+                to = functionType(
+                    staticParameters = listOf(),
+                    positionalParameters = listOf(IntType)
+                )
+            ),
+            equalTo(true)
+        )
+        assertThat(
+            canCoerce(
+                from = functionType(
+                    staticParameters = listOf(),
+                    positionalParameters = listOf(IntType)
+                ),
+                to = functionType(
+                    staticParameters = listOf(typeParameter),
+                    positionalParameters = listOf(typeParameter)
+                )
+            ),
+            equalTo(false)
+        )
+    }
+
+    @Test
     fun tupleTypeCanBeCoercedToSameTupleType() {
         assertThat(
             canCoerce(

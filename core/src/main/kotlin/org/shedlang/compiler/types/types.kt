@@ -269,6 +269,8 @@ fun freshTypeId() = freshNodeId()
 interface StaticParameter: StaticValue {
     val name: Identifier
 
+    fun fresh(): StaticParameter
+
     fun <T> accept(visitor: Visitor<T>): T
 
     interface Visitor<T> {
@@ -298,7 +300,7 @@ data class TypeParameter(
         return visitor.visit(this)
     }
 
-    fun fresh(): TypeParameter {
+    override fun fresh(): TypeParameter {
         return TypeParameter(
             name = name,
             variance = variance
@@ -317,7 +319,7 @@ data class EffectParameter(
         return visitor.visit(this)
     }
 
-    fun fresh(): EffectParameter {
+    override fun fresh(): EffectParameter {
         return EffectParameter(
             name = name
         )

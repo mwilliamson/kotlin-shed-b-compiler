@@ -51,10 +51,11 @@ sealed class CoercionResult {
 }
 
 class TypeConstraintSolver(
-    private val parameters: Set<StaticParameter>
+    parameters: Set<StaticParameter>
 ) {
     val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf()
     val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
+    private val parameters: MutableSet<StaticParameter> = parameters.toMutableSet()
     private val closed: MutableSet<TypeParameter> = mutableSetOf()
 
     fun boundTypeFor(parameter: TypeParameter): Type? {
@@ -121,15 +122,28 @@ class TypeConstraintSolver(
         }
 
         if (from is FunctionType && to is FunctionType) {
-            return (
-                from.staticParameters.isEmpty() && to.staticParameters.isEmpty() &&
-                    from.positionalParameters.size == to.positionalParameters.size &&
-                    from.positionalParameters.zip(to.positionalParameters, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
-                    from.namedParameters.keys == to.namedParameters.keys &&
-                    from.namedParameters.all({ fromArg -> coerce(from = to.namedParameters[fromArg.key]!!, to = fromArg.value) }) &&
-                    coerceEffect(from = from.effect, to = to.effect) &&
-                    coerce(from = from.returns, to = to.returns)
+            if (from.staticParameters.isEmpty()) {
+                return (
+                    to.staticParameters.isEmpty() &&
+                        from.positionalParameters.size == to.positionalParameters.size &&
+                        from.positionalParameters.zip(to.positionalParameters, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
+                        from.namedParameters.keys == to.namedParameters.keys &&
+                        from.namedParameters.all({ fromArg -> coerce(from = to.namedParameters[fromArg.key]!!, to = fromArg.value) }) &&
+                        coerceEffect(from = from.effect, to = to.effect) &&
+                        coerce(from = from.returns, to = to.returns)
+                    )
+            } else {
+                val staticArguments = from.staticParameters.map { parameter -> parameter.fresh() }
+                parameters.addAll(staticArguments)
+                val unparameterizedFrom = replaceStaticValuesInType(
+                    from.copy(staticParameters = listOf()),
+                    from.staticParameters.zip(staticArguments).toMap()
                 )
+                return coerce(
+                    from = unparameterizedFrom,
+                    to = to
+                )
+            }
         }
 
         if (from is TupleType && to is TupleType) {
