@@ -195,17 +195,6 @@ class CoercionTests {
     }
 
     @Test
-    fun functionTypeWithTypeParametersNeverMatch() {
-        assertThat(
-            canCoerce(
-                from = functionType(staticParameters = listOf(invariantTypeParameter("T"))),
-                to = functionType(staticParameters = listOf(invariantTypeParameter("T")))
-            ),
-            equalTo(false)
-        )
-    }
-
-    @Test
     fun canCoerceFromFunctionWithTypeParameters() {
         val typeParameter = invariantTypeParameter("T")
         assertThat(
@@ -233,6 +222,24 @@ class CoercionTests {
                 )
             ),
             equalTo(false)
+        )
+    }
+
+    @Test
+    fun canCoerceToFunctionWithTypeParameters() {
+        val typeParameter = invariantTypeParameter("T")
+        assertThat(
+            canCoerce(
+                from = functionType(
+                    staticParameters = listOf(),
+                    positionalParameters = listOf(AnyType)
+                ),
+                to = functionType(
+                    staticParameters = listOf(typeParameter),
+                    positionalParameters = listOf(typeParameter)
+                )
+            ),
+            equalTo(true)
         )
     }
 

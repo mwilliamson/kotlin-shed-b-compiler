@@ -124,14 +124,13 @@ class TypeConstraintSolver(
         if (from is FunctionType && to is FunctionType) {
             if (from.staticParameters.isEmpty()) {
                 return (
-                    to.staticParameters.isEmpty() &&
-                        from.positionalParameters.size == to.positionalParameters.size &&
-                        from.positionalParameters.zip(to.positionalParameters, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
-                        from.namedParameters.keys == to.namedParameters.keys &&
-                        from.namedParameters.all({ fromArg -> coerce(from = to.namedParameters[fromArg.key]!!, to = fromArg.value) }) &&
-                        coerceEffect(from = from.effect, to = to.effect) &&
-                        coerce(from = from.returns, to = to.returns)
-                    )
+                    from.positionalParameters.size == to.positionalParameters.size &&
+                    from.positionalParameters.zip(to.positionalParameters, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
+                    from.namedParameters.keys == to.namedParameters.keys &&
+                    from.namedParameters.all({ fromArg -> coerce(from = to.namedParameters[fromArg.key]!!, to = fromArg.value) }) &&
+                    coerceEffect(from = from.effect, to = to.effect) &&
+                    coerce(from = from.returns, to = to.returns)
+                )
             } else {
                 val staticArguments = from.staticParameters.map { parameter -> parameter.fresh() }
                 parameters.addAll(staticArguments)
