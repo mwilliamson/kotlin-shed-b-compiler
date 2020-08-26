@@ -7,6 +7,7 @@ extern struct {
     ShedValue all;
     ShedValue any;
     ShedValue cons;
+    ShedValue firstSome;
     ShedValue flatten;
     ShedValue foldLeft;
     ShedValue forEach;

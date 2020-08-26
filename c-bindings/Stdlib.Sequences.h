@@ -9,6 +9,7 @@ extern struct {
     ShedValue any;
     ShedValue end;
     ShedValue findIndex;
+    ShedValue firstSome;
     ShedValue foldLeft;
     ShedValue forEach;
     ShedValue forEachInterspersed;
