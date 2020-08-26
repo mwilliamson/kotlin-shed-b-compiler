@@ -1117,14 +1117,26 @@ private object PipelineParser : OperationParser {
         val operatorSource = tokens.location()
         tokens.skip()
         val right = parseExpression(tokens, precedence = precedence + 1)
-        return CallNode(
-            receiver = right,
-            positionalArguments = listOf(left),
-            namedArguments = listOf(),
-            staticArguments = listOf(),
-            hasEffect = false,
-            source = operatorSource
-        )
+
+        if (right is PartialCallNode) {
+            return CallNode(
+                receiver = right.receiver,
+                positionalArguments = right.positionalArguments + listOf(left),
+                namedArguments = right.namedArguments,
+                staticArguments = right.staticArguments,
+                hasEffect = false,
+                source = operatorSource
+            )
+        } else {
+            return CallNode(
+                receiver = right,
+                positionalArguments = listOf(left),
+                namedArguments = listOf(),
+                staticArguments = listOf(),
+                hasEffect = false,
+                source = operatorSource
+            )
+        }
     }
 }
 
