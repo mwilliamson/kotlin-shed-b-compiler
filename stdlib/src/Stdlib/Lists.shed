@@ -10,6 +10,7 @@ export
 
     all,
     any,
+    firstSome,
     flatten,
     foldLeft,
     forEach,
@@ -65,6 +66,10 @@ fun all(elements: List[Bool]) -> Bool {
 
 fun any(elements: List[Bool]) -> Bool {
     Sequences.any(listToSequence(elements))
+}
+
+fun firstSome[T, R](func: Fun (T) -> Option[R], list: List[T]) -> Option[R] {
+    Sequences.firstSome(func, listToSequence(list))
 }
 
 fun flatten[T](lists: List[List[T]]) -> List[T] {

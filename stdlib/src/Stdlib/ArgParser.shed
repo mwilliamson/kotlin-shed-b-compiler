@@ -77,16 +77,12 @@ fun positional[T, R](
 }
 
 fun findStringArg(stringArgs: StringArgs, name: String) -> Option[String] {
-    Lists.listToSequence(stringArgs)
-        |> Sequences.lazyMapOption~(
-            fun (stringArg: #(String, String)) -> Option[String] {
-                val #(argName, value) = stringArg;
-                if (name == argName) {
-                    some(value)
-                } else {
-                    none
-                }
-            }
-        )
-        |> Sequences.head
+    stringArgs |> Lists.firstSome~(fun (stringArg: #(String, String)) -> Option[String] {
+        val #(argName, value) = stringArg;
+        if (name == argName) {
+            some(value)
+        } else {
+            none
+        }
+    })
 }

@@ -11,6 +11,7 @@ export
     all,
     any,
     findIndex,
+    firstSome,
     foldLeft,
     forEach,
     forEachInterspersed,
@@ -91,6 +92,10 @@ fun findIndexAcc[T, !E](predicate: Fun (T) -> Bool, sequence: Sequence[T, E], ac
             }
         }
     }
+}
+
+fun firstSome[T, R, !E](func: Fun (T) !E -> Option[R], sequence: Sequence[T, E]) !E -> Option[R] {
+    head!(lazyMapOption(func, sequence))
 }
 
 fun lazyFlatten[T, !E](sequences: Sequence[Sequence[T, E], E]) -> Sequence[T, E] {
