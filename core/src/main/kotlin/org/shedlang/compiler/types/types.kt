@@ -1,8 +1,7 @@
 package org.shedlang.compiler.types
 
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleName
-import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.ast.*
 
 
 interface StaticValue {
@@ -679,7 +678,18 @@ fun validateStaticValue(value: StaticValue): ValidateTypeResult {
     }
 }
 
-fun applyStatic(receiver: ParameterizedStaticValue, arguments: List<StaticValue>): StaticValue {
+fun applyStatic(
+    receiver: ParameterizedStaticValue,
+    arguments: List<StaticValue>,
+    source: Source = NullSource
+): StaticValue {
+    if (receiver.parameters.size != arguments.size) {
+        throw CompilerError(
+            "parameter count (${receiver.parameters.size}) != argument count (${arguments.size})",
+            source = source
+        )
+    }
+
     val bindings = receiver.parameters.zip(arguments).toMap()
     return replaceStaticValues(receiver.value, bindings = bindings)
 }

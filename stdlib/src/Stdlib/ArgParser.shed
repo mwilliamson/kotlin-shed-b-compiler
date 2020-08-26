@@ -22,7 +22,7 @@ val string = ArgType();
 
 type StringArgs = Lists.List[#(String, String)];
 
-fun parser[T](initialValue: T) -> Parser[T, T] {
+fun parser[T](initialValue: T) -> Parser[T] {
     Parser(
         .argDefinitions = Lists.list(),
         .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,

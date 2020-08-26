@@ -453,7 +453,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             val receiver = evalStaticValue(node.receiver, context)
             val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
             if (receiver is ParameterizedStaticValue) {
-                return StaticValueType(applyStatic(receiver, arguments))
+                return StaticValueType(applyStatic(receiver, arguments, source = node.source))
             } else if (receiver is EmptyTypeFunction) {
                 // TODO: error checking
                 val argument = arguments.single() as ShapeType
