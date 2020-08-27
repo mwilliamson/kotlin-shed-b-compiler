@@ -211,15 +211,16 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
 
 val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
+val shapeFieldTypeFunctionParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter)
 val shapeFieldTypeFunctionShapeId = freshTypeId()
 val ShapeFieldTypeFunction = ParameterizedStaticValue(
-    parameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
+    parameters = shapeFieldTypeFunctionParameters,
     value = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("ShapeField"),
         tagValue = null,
-        staticParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
-        staticArguments = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
+        staticParameters = shapeFieldTypeFunctionParameters,
+        staticArguments = shapeFieldTypeFunctionParameters,
         getFields = lazy {
             listOf(
                 Field(
