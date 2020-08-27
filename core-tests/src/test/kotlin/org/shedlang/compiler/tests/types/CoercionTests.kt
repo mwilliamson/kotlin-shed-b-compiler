@@ -601,14 +601,14 @@ class CoercionTests {
 
     @Test
     fun whenTypeParameterIsBoundThenBoundValueHasTypesReplaced() {
-        val shapeId = freshNodeId()
         val typeParameter1 = invariantTypeParameter("T1")
         val typeParameter2 = invariantTypeParameter("T2")
-        val sameShape = shapeType(shapeId = shapeId)
+
         val result = coerce(
             constraints = listOf(typeParameter2 to IntType, typeParameter1 to shapeType(fields = listOf(field(name = "x", type = typeParameter2)))),
             parameters = setOf(typeParameter1, typeParameter2)
         )
+
         assertThat(result, isSuccess(
             typeParameter2 to isIntType,
             typeParameter1 to isShapeType(
