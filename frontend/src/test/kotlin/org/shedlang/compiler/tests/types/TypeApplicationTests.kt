@@ -114,7 +114,7 @@ class TypeApplicationTests {
     }
 
     @Nested
-    class FunctionTypeTests {
+    inner class FunctionTypeTests {
         val typeParameter = invariantTypeParameter("T")
 
         @Test
@@ -155,7 +155,7 @@ class TypeApplicationTests {
     }
 
     @Nested
-    class TupleTypeTests {
+    inner class TupleTypeTests {
         val typeParameter = invariantTypeParameter("T")
 
         @Test
