@@ -397,16 +397,20 @@ object EmptyTypeFunction: StaticValue {
 }
 
 fun createEmptyShapeType(argument: ShapeType): LazyShapeType {
+    return createPartialShapeType(argument, populatedFieldNames = setOf())
+}
+
+fun createPartialShapeType(shapeType: ShapeType, populatedFieldNames: Set<Identifier>): LazyShapeType {
     return lazyShapeType(
-        shapeId = argument.shapeId,
-        name = argument.name,
-        tagValue = argument.tagValue,
+        shapeId = shapeType.shapeId,
+        name = shapeType.name,
+        tagValue = shapeType.tagValue,
         getAllFields = lazy {
-            argument.allFields.values.toList()
+            shapeType.allFields.values.toList()
         },
-        getPopulatedFieldNames = lazy { setOf() },
-        staticParameters = argument.staticParameters,
-        staticArguments = argument.staticArguments
+        getPopulatedFieldNames = lazy { populatedFieldNames },
+        staticParameters = shapeType.staticParameters,
+        staticArguments = shapeType.staticArguments
     )
 }
 
@@ -655,15 +659,15 @@ class LazyShapeType(
         get() = getPopulatedFieldNames()
 }
 
-fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): UpdatedType {
-    // TODO: if baseType is a shape type, return a new shape type
-
+fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): Type {
     if (baseType.shapeId == null) {
         throw CompilerError("cannot update non-shape type", source = NullSource)
     } else if (baseType.shapeId != field.shapeId) {
         throw CompilerError("base type and field are different shapes", source = NullSource)
     } else if (!shapeType.populatedFields.containsValue(field)) {
         throw CompilerError("field does not belong to shape", source = NullSource)
+    } else if (baseType is ShapeType) {
+        return createPartialShapeType(baseType, populatedFieldNames = baseType.populatedFieldNames + setOf(field.name))
     } else {
         return UpdatedType(baseType = baseType, shapeType = shapeType, field = field)
     }

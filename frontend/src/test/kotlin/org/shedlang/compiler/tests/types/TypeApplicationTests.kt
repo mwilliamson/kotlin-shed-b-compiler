@@ -1,6 +1,7 @@
 package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
@@ -233,6 +234,35 @@ class TypeApplicationTests {
             assertThat(
                 result,
                 isUpdatedType(field = isField(type = isIntType))
+            )
+        }
+
+        @Test
+        fun whenBaseTypeIsUpdatedToShapeTypeThenResultIsShapeType() {
+            val field1 = field(name = "field1", shapeId = shapeId, type = IntType)
+            val field2 = field(name = "field2", shapeId = shapeId, type = IntType)
+            val field3 = field(name = "field3", shapeId = shapeId, type = IntType)
+            val shapeType = shapeType("Shape", shapeId = shapeId, fields = listOf(field1, field2, field3))
+
+            val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+            val updatedType = updatedType(
+                baseType = typeParameter,
+                shapeType = shapeType,
+                field = field2
+            )
+
+            val newBaseType = createPartialShapeType(shapeType, populatedFieldNames = setOf(Identifier("field1")))
+            val result = replaceStaticValuesInType(updatedType, mapOf(typeParameter to newBaseType))
+
+            assertThat(
+                result,
+                isShapeType(
+                    shapeId = equalTo(shapeId),
+                    populatedFields = isSequence(
+                        isField(name = isIdentifier("field1")),
+                        isField(name = isIdentifier("field2")),
+                    )
+                )
             )
         }
     }
