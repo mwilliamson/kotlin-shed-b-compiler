@@ -690,10 +690,11 @@ class UpdatedType internal constructor(
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
+        val newShapeType = replaceStaticValuesInType(shapeType, bindings) as ShapeType
         return updatedType(
             baseType = replaceStaticValuesInType(baseType, bindings),
-            shapeType = replaceStaticValuesInType(shapeType, bindings) as ShapeType,
-            field = replaceStaticValuesInField(field, bindings)
+            shapeType = newShapeType,
+            field = newShapeType.allFields[field.name]!!,
         )
     }
 }
