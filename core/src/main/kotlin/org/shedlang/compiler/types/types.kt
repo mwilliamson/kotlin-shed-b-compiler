@@ -529,6 +529,23 @@ class LazyShapeType(
     override val fields: Map<Identifier, Field> by getFields
 }
 
+fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): UpdatedType {
+    return UpdatedType(baseType = baseType, shapeType = shapeType, field = field)
+}
+
+class UpdatedType internal constructor(
+    val baseType: Type,
+    val shapeType: ShapeType,
+    val field: Field
+): Type {
+    override val shortDescription: String
+        get() = "${baseType.shortDescription} + @(${shapeType.shortDescription}.fields.${this.field.name.value}: ${this.field.type.shortDescription})"
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 interface UnionType: Type {
     val name: Identifier
     val tag: Tag
