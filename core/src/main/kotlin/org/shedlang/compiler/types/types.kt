@@ -734,7 +734,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
             name = type.name,
             getFields = lazy({
                 type.fields.mapValues{ field -> field.value.mapType { type ->
-                    replaceStaticValuesInType(field.value.type, bindings)
+                    replaceStaticValuesInField(field.value, bindings)
                 } }
             }),
             tagValue = type.tagValue,
@@ -762,6 +762,9 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         throw NotImplementedError("Type replacement not implemented for: " + type)
     }
 }
+
+private fun replaceStaticValuesInField(field: Field, bindings: StaticBindings) =
+    replaceStaticValuesInType(field.type, bindings)
 
 fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
     when (effect) {
