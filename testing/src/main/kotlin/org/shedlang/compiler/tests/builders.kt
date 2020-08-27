@@ -605,7 +605,7 @@ fun shapeType(
     shapeId = shapeId,
     name = Identifier(name),
     tagValue = tagValue,
-    getAllFields = lazy { fields },
+    getFields = lazy { fields },
     staticParameters = typeParameters,
     staticArguments = typeArguments
 )

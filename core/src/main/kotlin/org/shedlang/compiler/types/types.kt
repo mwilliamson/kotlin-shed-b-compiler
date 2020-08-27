@@ -236,7 +236,7 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
         tagValue = null,
         staticParameters = listOf(),
         staticArguments = listOf(),
-        getAllFields = lazy {
+        getFields = lazy {
             fields
         },
     )
@@ -271,7 +271,7 @@ val ShapeFieldTypeFunction = ParameterizedStaticValue(
         tagValue = null,
         staticParameters = shapeFieldTypeFunctionParameters,
         staticArguments = shapeFieldTypeFunctionParameters,
-        getAllFields = lazy {
+        getFields = lazy {
             shapeFieldTypeFunctionFields
         },
     )
@@ -599,15 +599,15 @@ fun lazyCompleteShapeType(
     shapeId: Int,
     name: Identifier,
     tagValue: TagValue?,
-    getAllFields: Lazy<List<Field>>,
+    getFields: Lazy<List<Field>>,
     staticParameters: List<StaticParameter>,
     staticArguments: List<StaticValue>
 ) = lazyShapeType(
     shapeId = shapeId,
     name = name,
-    getAllFields = getAllFields,
+    getAllFields = getFields,
     getPopulatedFieldNames = lazy {
-        getAllFields.value.map { field -> field.name }.toSet()
+        getFields.value.map { field -> field.name }.toSet()
     },
     tagValue = tagValue,
     staticParameters = staticParameters,

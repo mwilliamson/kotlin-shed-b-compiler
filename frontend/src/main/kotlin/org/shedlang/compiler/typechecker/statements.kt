@@ -70,7 +70,7 @@ private fun generateShapeType(
         shapeId = shapeId,
         name = node.name,
         tagValue = tagValue,
-        getAllFields = fields,
+        getFields = fields,
         staticParameters = staticParameters,
         staticArguments = staticParameters
     )
