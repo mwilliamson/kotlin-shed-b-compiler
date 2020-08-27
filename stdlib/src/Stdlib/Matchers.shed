@@ -17,10 +17,12 @@ export
     isType,
     isTypeWith,
 
+    allOf,
     anything,
     isNone,
     isSome;
 
+import Lists from .Lists;
 import @(
     .Matcher as Matcher,
     .Result as Result,
@@ -41,6 +43,32 @@ import @(
     .isType as isType,
     .isTypeWith as isTypeWith,
 ) from .Matchers.Type;
+import Options from .Options;
+import UnicodeScalars from .Strings.UnicodeScalars;
+
+fun allOf[T](matchers: Lists.List[Matcher[T]]) -> Matcher[T] {
+    Matcher(
+        // TODO: better formatting (bullet list?)
+        .description = "all of: " + UnicodeScalars.join(
+            "; ",
+            Lists.map(fun (matcher: Matcher[T]) => matcher.description, matchers),
+        ),
+        .match = fun (x: T) => Lists.firstSome(
+            fun (matcher: Matcher[T]) {
+                val result = matcher.match(x);
+                when (result) {
+                    is Success {
+                        none
+                    }
+                    is Failure {
+                        some(result)
+                    }
+                }
+            },
+            matchers,
+        ) |> Options.default~(success),
+    )
+}
 
 fun anything() -> Matcher[Any] {
     Matcher(
