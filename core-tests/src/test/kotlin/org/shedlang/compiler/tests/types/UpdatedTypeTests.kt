@@ -33,6 +33,13 @@ class UpdatedTypeTests {
     }
 
     @Test
+    fun whenFieldDoesNotBelongToShapeThenErrorIsThrown() {
+        assertThat({
+            updatedType(baseType = invariantTypeParameter("T", shapeId = shapeId), shapeType = shapeType(shapeId = freshNodeId()), field = field)
+        }, throws<CompilerError>(has(CompilerError::message, equalTo("field does not belong to shape"))))
+    }
+
+    @Test
     fun shortDescriptionIncludesBaseTypeAndField() {
 
         val updatedType = updatedType(
