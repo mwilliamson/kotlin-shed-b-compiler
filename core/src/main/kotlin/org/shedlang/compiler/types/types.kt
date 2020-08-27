@@ -578,6 +578,7 @@ class UpdatedType internal constructor(
         get() = "${baseType.shortDescription} + @(${shapeType.shortDescription}.fields.${this.field.name.value}: ${this.field.type.shortDescription})"
 
     override fun fieldType(fieldName: Identifier): Type? {
+        // TODO: implement field type
         throw UnsupportedOperationException("not implemented")
     }
 }
