@@ -2,6 +2,7 @@ package org.shedlang.compiler.types
 
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.mapNullable
 
 
 interface StaticValue {
@@ -211,17 +212,30 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
 
 val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
+val shapeFieldTypeFunctionUpdateParameter = covariantTypeParameter("Update")
+val shapeFieldTypeFunctionParameters = listOf(
+    shapeFieldTypeFunctionTypeParameter,
+    shapeFieldTypeFunctionFieldParameter,
+    shapeFieldTypeFunctionUpdateParameter
+)
 val shapeFieldTypeFunctionShapeId = freshTypeId()
+
 val ShapeFieldTypeFunction = ParameterizedStaticValue(
-    parameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
+    parameters = shapeFieldTypeFunctionParameters,
     value = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("ShapeField"),
         tagValue = null,
-        staticParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
-        staticArguments = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter),
+        staticParameters = shapeFieldTypeFunctionParameters,
+        staticArguments = shapeFieldTypeFunctionParameters,
         getFields = lazy {
             listOf(
+                Field(
+                    shapeId = shapeFieldTypeFunctionShapeId,
+                    name = Identifier("update"),
+                    type = shapeFieldTypeFunctionUpdateParameter,
+                    isConstant = false
+                ),
                 Field(
                     shapeId = shapeFieldTypeFunctionShapeId,
                     name = Identifier("get"),
@@ -242,8 +256,36 @@ val ShapeFieldTypeFunction = ParameterizedStaticValue(
     )
 )
 
-private fun shapeFieldInfoType(type: Type, field: Field): Type {
-    return applyStatic(ShapeFieldTypeFunction, listOf(type, field.type)) as Type
+private fun shapeFieldInfoType(shapeType: ShapeType, field: Field): Type {
+    val updateType = updateFunctionType(shapeType, field)
+    return applyStatic(ShapeFieldTypeFunction, listOf(shapeType, field.type, updateType)) as Type
+}
+
+private fun updateFunctionType(shapeType: ShapeType, field: Field): FunctionType {
+    val typeParameter = TypeParameter(
+        name = Identifier("T"),
+        variance = Variance.INVARIANT,
+        shapeId = field.shapeId
+    )
+    return functionType(
+        staticParameters = listOf(typeParameter),
+        positionalParameters = listOf(field.type, typeParameter),
+        returns = updatedType(typeParameter, shapeType, field)
+    )
+}
+
+private fun updatedType(type: TypeParameter, shapeType: ShapeType, field: Field): Type {
+    // TODO: check type.shapeId == field.shapeId
+    return UpdatedType(type, shapeType, field)
+}
+
+class UpdatedType(val type: TypeParameter, val shapeType: ShapeType, val field: Field) : Type {
+    override val shortDescription: String
+        get() = "${type.shortDescription} + @(${shapeType.shortDescription}.fields.${this.field.name.value}: ${this.field.type.shortDescription})"
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        throw UnsupportedOperationException("not implemented ($shortDescription)")
+    }
 }
 
 fun metaTypeToType(type: Type): Type? {
@@ -282,6 +324,7 @@ interface StaticParameter: StaticValue {
 data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
+    val shapeId: Int?,
     val typeParameterId: Int = freshTypeId()
 ): StaticParameter, Type {
     override fun fieldType(fieldName: Identifier): Type? = null
@@ -293,7 +336,7 @@ data class TypeParameter(
                 Variance.COVARIANT -> "+"
                 Variance.CONTRAVARIANT  -> "-"
             }
-            return prefix + name.value
+            return prefix + name.value + "_" + typeParameterId
         }
 
     override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
@@ -303,7 +346,8 @@ data class TypeParameter(
     override fun fresh(): TypeParameter {
         return TypeParameter(
             name = name,
-            variance = variance
+            variance = variance,
+            shapeId = shapeId
         )
     }
 }
@@ -621,9 +665,23 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
     }
 }
 
-fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT)
-fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT)
-fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT)
+fun invariantTypeParameter(name: String) = TypeParameter(
+    Identifier(name),
+    variance = Variance.INVARIANT,
+    shapeId = null
+)
+
+fun covariantTypeParameter(name: String) = TypeParameter(
+    Identifier(name),
+    variance = Variance.COVARIANT,
+    shapeId = null
+)
+
+fun contravariantTypeParameter(name: String) = TypeParameter(
+    Identifier(name),
+    variance = Variance.CONTRAVARIANT,
+    shapeId = null
+)
 
 fun effectParameter(name: String) = EffectParameter(Identifier(name))
 
@@ -704,6 +762,7 @@ interface StaticBindings {
 class StaticBindingsMap(private val bindings: Map<StaticParameter, StaticValue>): StaticBindings {
     override fun get(type: StaticParameter): StaticValue? {
         return bindings[type]
+//        return bindings[type].mapNullable { replacement -> if (replacement == type) replacement else replaceStaticValues(replacement, this) }
     }
 
     override fun isEmpty(): Boolean {
@@ -746,15 +805,40 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         return LazyShapeType(
             name = type.name,
             getFields = lazy({
-                type.fields.mapValues{ field -> field.value.mapType { type ->
-                    replaceStaticValuesInType(field.value.type, bindings)
-                } }
+                type.fields.mapValues { field ->
+                    replaceStaticValuesInField(field.value, bindings)
+                }
             }),
             tagValue = type.tagValue,
             shapeId = type.shapeId,
             staticParameters = type.staticParameters,
             staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
         )
+    } else if (type is UpdatedType) {
+        // TODO: handle other cases
+        val baseType = replaceStaticValuesInType(type.type, bindings)
+        val field = replaceStaticValuesInField(type.field, bindings)
+
+        if (baseType is TypeParameter) {
+            return UpdatedType(
+                type = baseType,
+                shapeType = replaceStaticValuesInType(type.shapeType, bindings) as ShapeType,
+                field = field
+            )
+        } else if (baseType is ShapeType && baseType.shapeId == type.field.shapeId) {
+            return LazyShapeType(
+                name = baseType.name,
+                getFields = lazy {
+                    baseType.fields + mapOf(field.name to field)
+                },
+                shapeId = baseType.shapeId,
+                tagValue = baseType.tagValue,
+                staticParameters = baseType.staticParameters,
+                staticArguments = baseType.staticArguments
+            )
+        } else {
+            throw NotImplementedError()
+        }
     } else if (type is FunctionType) {
         return FunctionType(
             positionalParameters = type.positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
@@ -773,6 +857,12 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         return type
     } else {
         throw NotImplementedError("Type replacement not implemented for: " + type)
+    }
+}
+
+private fun replaceStaticValuesInField(field: Field, bindings: StaticBindings): Field {
+    return field.mapType { type ->
+        replaceStaticValuesInType(type, bindings)
     }
 }
 

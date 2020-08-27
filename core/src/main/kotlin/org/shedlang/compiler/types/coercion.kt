@@ -61,7 +61,8 @@ class TypeConstraintSolver(
     fun boundTypeFor(parameter: TypeParameter): Type? {
         val boundType = typeBindings[parameter]
         return if (boundType != null) {
-            boundType
+            val bindings = StaticBindingsMap(typeBindings + effectBindings)
+            replaceStaticValuesInType(replaceStaticValuesInType(boundType, bindings), bindings)
         } else if (parameter.variance == Variance.COVARIANT) {
             NothingType
         } else if (parameter.variance == Variance.CONTRAVARIANT) {
@@ -84,6 +85,7 @@ class TypeConstraintSolver(
             val boundType = typeBindings[to]
             if (boundType == null) {
                 typeBindings[to] = from
+                println("BIND ${to.shortDescription} to ${from.shortDescription}")
                 return true
             } else if (to in closed) {
                 return coerce(from = from, to = boundType)
@@ -96,6 +98,7 @@ class TypeConstraintSolver(
         if (from is TypeParameter && from in parameters) {
             val boundType = typeBindings[from]
             if (boundType == null) {
+                println("BIND ${from.shortDescription} to ${to.shortDescription}")
                 typeBindings[from] = to
                 closed.add(from)
                 return true

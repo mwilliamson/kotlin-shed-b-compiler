@@ -201,6 +201,8 @@ private fun checkArguments(
     )
 }
 
+var x = 1
+
 private fun checkArgumentTypes(
     staticParameters: List<StaticParameter>,
     staticArguments: List<StaticExpressionNode>,
@@ -208,6 +210,7 @@ private fun checkArgumentTypes(
     source: Source,
     context: TypeContext
 ): StaticBindings {
+    val y = x++
     if (staticArguments.isEmpty()) {
         val typeParameters = staticParameters.filterIsInstance<TypeParameter>()
         val effectParameters = staticParameters.filterIsInstance<EffectParameter>()
@@ -215,16 +218,20 @@ private fun checkArgumentTypes(
         val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
         val inferredEffectArguments = effectParameters.map(EffectParameter::fresh)
 
+        println("$y: ===========")
         val constraints = TypeConstraintSolver(
             // TODO: need to regenerate effect parameters in the same way as type positionalParameters
             parameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
+        var argIndex = 0
         for (argument in arguments) {
+            argIndex++
             val parameterType = replaceStaticValuesInType(
                 argument.second,
                 StaticBindingsMap((typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap())
             )
             val actualType = inferType(argument.first, context, hint = parameterType)
+            println("$y: arg $argIndex: from=${actualType.shortDescription}, to=${parameterType.shortDescription}")
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
                     expected = parameterType,
@@ -250,6 +257,12 @@ private fun checkArgumentTypes(
             .associate { (parameter, inferredArgument) ->
                 parameter to constraints.boundEffectFor(inferredArgument)
             }
+
+        println("$y: BINDINGS")
+        for ((typeParameter, replacement) in typeMap) {
+            println("$y: ${typeParameter.shortDescription} to ${replacement.shortDescription}")
+        }
+
         // TODO: handle unbound effects
         return StaticBindingsMap(typeMap + effectMap)
     } else {

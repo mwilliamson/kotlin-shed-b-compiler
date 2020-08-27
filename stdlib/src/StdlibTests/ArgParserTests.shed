@@ -20,24 +20,26 @@ fun optionToString(option: Option[String]) -> String {
 val testCases = Tests.suite(moduleName, list(
     Tests.testCase("can parse single positional argument", fun () {
         shape Args {
-            x: String,
+            x: Option[String],
         }
 
         val rawArguments = list("hello");
-        //~ val argParser = ArgParser.parser(empty[Args]())
-            //~ |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.add);
-
-        //~ val arguments = ArgParser.parse(argParser, rawArguments);
-
-        //~ Tests.assertThat(arguments, M.hasField(Args.fields.x, M.isString("hello")));
-
-
-        val argParser = ArgParser.parser("")
-            |> ArgParser.positional~("message", ArgParser.string, fun (arg: Option[String], acc: String) => Options.default(acc, arg));
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.update);
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, M.isString("hello"))
+        arguments.x;
+
+        Tests.assertThat(arguments, M.hasField(Args.fields.x, M.isSome(M.isString("hello"))))
+
+
+        //~ val argParser = ArgParser.parser("")
+            //~ |> ArgParser.positional~("message", ArgParser.string, fun (arg: Option[String], acc: String) => Options.default(acc, arg));
+
+        //~ val arguments = ArgParser.parse(argParser, rawArguments);
+
+        //~ Tests.assertThat(arguments, M.isString("hello"))
     }),
 
     Tests.testCase("can parse multiple positional argument", fun () {
