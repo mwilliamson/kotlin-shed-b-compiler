@@ -21,8 +21,15 @@ class UpdatedTypeTests {
     @Test
     fun whenBaseTypeIsNotShapeThenErrorIsThrown() {
         assertThat({
-            updatedType(baseType = invariantTypeParameter("T"), shapeType = shapeType(), field = field)
+            updatedType(baseType = invariantTypeParameter("T"), shapeType = shapeType, field = field)
         }, throws<CompilerError>(has(CompilerError::message, equalTo("cannot update non-shape type"))))
+    }
+
+    @Test
+    fun whenBaseTypeIsOtherShapeThenErrorIsThrown() {
+        assertThat({
+            updatedType(baseType = invariantTypeParameter("T", shapeId = freshNodeId()), shapeType = shapeType, field = field)
+        }, throws<CompilerError>(has(CompilerError::message, equalTo("base type and field are different shapes"))))
     }
 
     @Test
