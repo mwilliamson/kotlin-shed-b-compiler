@@ -1119,6 +1119,8 @@ private object PipelineParser : OperationParser {
         val right = parseExpression(tokens, precedence = precedence + 1)
 
         if (right is PartialCallNode) {
+            // TODO: this is wrong! Reordering of the arguments will change behaviour
+            // in the presence of effects
             return CallNode(
                 receiver = right.receiver,
                 positionalArguments = right.positionalArguments + listOf(left),
