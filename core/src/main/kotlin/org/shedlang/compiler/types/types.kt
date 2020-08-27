@@ -555,7 +555,11 @@ class LazyShapeType(
 }
 
 fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): UpdatedType {
-    return UpdatedType(baseType = baseType, shapeType = shapeType, field = field)
+    if (baseType.shapeId == null) {
+        throw CompilerError("cannot update non-shape type", source = NullSource)
+    } else {
+        return UpdatedType(baseType = baseType, shapeType = shapeType, field = field)
+    }
 }
 
 class UpdatedType internal constructor(
