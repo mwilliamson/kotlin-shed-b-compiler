@@ -114,6 +114,7 @@ object StaticValueTypeGroup: TypeGroup {
 }
 
 interface Type: StaticValue, TypeGroup {
+    val shapeId: Int?
     fun fieldType(fieldName: Identifier): Type?
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
@@ -122,6 +123,9 @@ interface Type: StaticValue, TypeGroup {
 }
 
 interface BasicType : Type {
+    override val shapeId: Int?
+        get() = null
+
     override fun fieldType(fieldName: Identifier): Type? {
         return null
     }
@@ -147,12 +151,18 @@ object StringSliceType : BasicType {
 }
 
 object AnyType : Type {
+    override val shapeId: Int?
+        get() = null
+
     override fun fieldType(fieldName: Identifier): Type? = null
 
     override val shortDescription = "Any"
 }
 
 object NothingType : Type {
+    override val shapeId: Int?
+        get() = null
+
     override fun fieldType(fieldName: Identifier): Type? = null
 
     override val shortDescription = "Nothing"
@@ -170,6 +180,9 @@ data class StaticValueType(val value: StaticValue): Type {
             null
         }
     }
+
+    override val shapeId: Int?
+        get() = null
 
     override val shortDescription: String
         get() = "StaticValue[${value.shortDescription}]"
@@ -283,7 +296,7 @@ interface StaticParameter: StaticValue {
 data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
-    val shapeId: Int?,
+    override val shapeId: Int?,
     val typeParameterId: Int = freshTypeId()
 ): StaticParameter, Type {
     override fun fieldType(fieldName: Identifier): Type? = null
@@ -373,6 +386,9 @@ fun createEmptyShapeType(argument: ShapeType): LazyShapeType {
 data class ModuleType(
     val fields: Map<Identifier, Type>
 ): Type {
+    override val shapeId: Int?
+        get() = null
+
     override fun fieldType(fieldName: Identifier): Type? {
         return fields[fieldName]
     }
@@ -389,6 +405,9 @@ data class FunctionType(
     val returns: Type,
     val effect: Effect
 ): Type {
+    override val shapeId: Int?
+        get() = null
+
     override fun fieldType(fieldName: Identifier): Type? = null
 
     override val shortDescription: String
@@ -427,6 +446,9 @@ private fun staticArgumentsString(values: List<StaticValue>): String {
 }
 
 data class TupleType(val elementTypes: List<Type>): Type {
+    override val shapeId: Int?
+        get() = null
+
     override val shortDescription: String
         get() = "#(${elementTypes.map(Type::shortDescription).joinToString(", ")})"
 
@@ -439,6 +461,9 @@ data class TupleType(val elementTypes: List<Type>): Type {
 interface TypeAlias: Type {
     val name: Identifier
     val aliasedType: Type
+
+    override val shapeId: Int?
+        get() = aliasedType.shapeId
 
     override fun fieldType(fieldName: Identifier): Type? {
         return aliasedType.fieldType(fieldName)
@@ -469,7 +494,7 @@ data class TagValue(val tag: Tag, val value: Identifier)
 
 interface ShapeType: Type {
     val name: Identifier
-    val shapeId: Int
+    override val shapeId: Int
     val tagValue: TagValue?
     val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
@@ -538,6 +563,9 @@ class UpdatedType internal constructor(
     val shapeType: ShapeType,
     val field: Field
 ): Type {
+    override val shapeId: Int
+        get() = shapeType.shapeId
+
     override val shortDescription: String
         get() = "${baseType.shortDescription} + @(${shapeType.shortDescription}.fields.${this.field.name.value}: ${this.field.type.shortDescription})"
 
@@ -551,6 +579,9 @@ interface UnionType: Type {
     val tag: Tag
     val members: List<Type>
     val staticArguments: List<StaticValue>
+
+    override val shapeId: Int?
+        get() = null
 
     override fun fieldType(fieldName: Identifier): Type? = null
 }
@@ -635,6 +666,9 @@ fun positionalFunctionType(parameters: List<Type>, returns: Type)
 data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Type): Type {
     override val shortDescription: String
         get() = "varargs $name(${cons.shortDescription}, ${nil.shortDescription})"
+
+    override val shapeId: Int?
+        get() = null
 
     override fun fieldType(fieldName: Identifier): Type? {
         return null
