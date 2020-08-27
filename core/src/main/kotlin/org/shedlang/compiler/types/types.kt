@@ -766,7 +766,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
 private fun replaceStaticValuesInField(field: Field, bindings: StaticBindings) =
     replaceStaticValuesInType(field.type, bindings)
 
-fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
+fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
     when (effect) {
         is EffectParameter ->
             // TODO: handle non-effect bindings
