@@ -244,7 +244,12 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
 
 val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
-val shapeFieldTypeFunctionParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter)
+val shapeFieldTypeFunctionUpdateParameter = covariantTypeParameter("Update")
+val shapeFieldTypeFunctionParameters = listOf(
+    shapeFieldTypeFunctionTypeParameter,
+    shapeFieldTypeFunctionFieldParameter,
+    shapeFieldTypeFunctionUpdateParameter
+)
 val shapeFieldTypeFunctionShapeId = freshTypeId()
 val shapeFieldTypeFunctionFields = listOf(
     Field(
@@ -261,7 +266,13 @@ val shapeFieldTypeFunctionFields = listOf(
         name = Identifier("name"),
         type = StringType,
         isConstant = false
-    )
+    ),
+    Field(
+        shapeId = shapeFieldTypeFunctionShapeId,
+        name = Identifier("update"),
+        type = shapeFieldTypeFunctionUpdateParameter,
+        isConstant = false
+    ),
 )
 val ShapeFieldTypeFunction = ParameterizedStaticValue(
     parameters = shapeFieldTypeFunctionParameters,
@@ -277,8 +288,24 @@ val ShapeFieldTypeFunction = ParameterizedStaticValue(
     )
 )
 
-private fun shapeFieldInfoType(type: Type, field: Field): Type {
-    return applyStatic(ShapeFieldTypeFunction, listOf(type, field.type)) as Type
+private fun shapeFieldInfoType(shapeType: ShapeType, field: Field): Type {
+    return applyStatic(
+        ShapeFieldTypeFunction,
+        listOf(shapeType, field.type, shapeFieldInfoUpdateType(shapeType = shapeType, field = field))
+    ) as Type
+}
+
+private fun shapeFieldInfoUpdateType(shapeType: ShapeType, field: Field): Type {
+    val typeParameter = TypeParameter(
+        name = Identifier("T"),
+        variance = Variance.INVARIANT,
+        shapeId = field.shapeId
+    )
+    return functionType(
+        staticParameters = listOf(typeParameter),
+        positionalParameters = listOf(field.type, typeParameter),
+        returns = updatedType(baseType = typeParameter, shapeType = shapeType, field = field)
+    )
 }
 
 fun metaTypeToType(type: Type): Type? {
