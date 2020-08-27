@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
@@ -167,6 +168,71 @@ class TypeApplicationTests {
             assertThat(
                 replaceStaticValuesInType(tupleType, mapOf(typeParameter to IntType)),
                 isTupleType(elementTypes = isSequence(isIntType))
+            )
+        }
+    }
+
+    @Nested
+    inner class UpdatedTypeTests {
+        private val shapeId = freshNodeId()
+        private val field = field(name = "x", shapeId = shapeId, type = IntType)
+        private val shapeType = shapeType("Shape", shapeId = shapeId, fields = listOf(field))
+
+        @Test
+        fun baseTypeIsUpdated() {
+            val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+            val newTypeParameter = invariantTypeParameter("T", shapeId = shapeId)
+            val updatedType = updatedType(
+                baseType = typeParameter,
+                shapeType = shapeType,
+                field = field
+            )
+
+            val result = replaceStaticValuesInType(updatedType, mapOf(typeParameter to newTypeParameter))
+
+            assertThat(
+                result,
+                isUpdatedType(baseType = isType(newTypeParameter))
+            )
+        }
+
+        @Test
+        fun shapeTypeIsUpdated() {
+            val typeParameter = invariantTypeParameter("T")
+            val field = field(name = "x", shapeId = shapeId, type = typeParameter)
+            val updatedType = updatedType(
+                baseType = invariantTypeParameter("Base", shapeId = shapeId),
+                shapeType = shapeType("Shape", shapeId = shapeId, fields = listOf(field)),
+                field = field
+            )
+
+            val result = replaceStaticValuesInType(updatedType, mapOf(typeParameter to IntType))
+
+            assertThat(
+                result,
+                isUpdatedType(shapeType = isShapeType(
+                    fields = isSequence(
+                        isField(type = isIntType))
+                    )
+                )
+            )
+        }
+
+        @Test
+        fun fieldIsUpdated() {
+            val typeParameter = invariantTypeParameter("T")
+            val field = field(name = "x", shapeId = shapeId, type = typeParameter)
+            val updatedType = updatedType(
+                baseType = invariantTypeParameter("Base", shapeId = shapeId),
+                shapeType = shapeType("Shape", shapeId = shapeId, fields = listOf(field)),
+                field = field
+            )
+
+            val result = replaceStaticValuesInType(updatedType, mapOf(typeParameter to IntType))
+            
+            assertThat(
+                result,
+                isUpdatedType(field = isField(type = isIntType))
             )
         }
     }

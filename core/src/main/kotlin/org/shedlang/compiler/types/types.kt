@@ -555,15 +555,13 @@ interface ShapeType: Type {
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return LazyShapeType(
             name = name,
-            getFields = lazy({
-                fields.mapValues{ field -> field.value.mapType { type ->
-                    replaceStaticValuesInField(field.value, bindings)
-                } }
-            }),
+            getFields = lazy {
+                fields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
+            },
             tagValue = tagValue,
             shapeId = shapeId,
             staticParameters = staticParameters,
-            staticArguments = staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
+            staticArguments = staticArguments.map { argument -> replaceStaticValues(argument, bindings) }
         )
     }
 }
@@ -646,7 +644,11 @@ class UpdatedType internal constructor(
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
-        throw UnsupportedOperationException("not implemented")
+        return updatedType(
+            baseType = replaceStaticValuesInType(baseType, bindings),
+            shapeType = replaceStaticValuesInType(shapeType, bindings) as ShapeType,
+            field = replaceStaticValuesInField(field, bindings)
+        )
     }
 }
 
@@ -882,7 +884,10 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
 }
 
 private fun replaceStaticValuesInField(field: Field, bindings: StaticBindings) =
-    replaceStaticValuesInType(field.type, bindings)
+    field.mapType { type ->
+        replaceStaticValuesInType(type, bindings)
+    }
+
 
 fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
     when (effect) {

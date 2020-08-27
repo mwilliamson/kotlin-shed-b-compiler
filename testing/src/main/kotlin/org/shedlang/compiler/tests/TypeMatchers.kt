@@ -63,6 +63,18 @@ fun isField(
     has(Field::shapeId, shapeId)
 )
 
+fun isUpdatedType(
+    baseType: Matcher<Type> = anything,
+    shapeType: Matcher<ShapeType> = anything,
+    field: Matcher<Field> = anything
+): Matcher<Type> {
+    return cast(allOf(
+        has(UpdatedType::baseType, baseType),
+        has(UpdatedType::shapeType, shapeType),
+        has(UpdatedType::field, field)
+    ))
+}
+
 fun isUnionType(
     name: Matcher<Identifier> = anything,
     tag: Matcher<Tag> = anything,
