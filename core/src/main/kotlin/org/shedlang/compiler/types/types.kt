@@ -282,6 +282,7 @@ interface StaticParameter: StaticValue {
 data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
+    val shapeId: Int?,
     val typeParameterId: Int = freshTypeId()
 ): StaticParameter, Type {
     override fun fieldType(fieldName: Identifier): Type? = null
@@ -303,7 +304,8 @@ data class TypeParameter(
     override fun fresh(): TypeParameter {
         return TypeParameter(
             name = name,
-            variance = variance
+            variance = variance,
+            shapeId = shapeId
         )
     }
 }
@@ -621,9 +623,23 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
     }
 }
 
-fun invariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.INVARIANT)
-fun covariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.COVARIANT)
-fun contravariantTypeParameter(name: String) = TypeParameter(Identifier(name), variance = Variance.CONTRAVARIANT)
+fun invariantTypeParameter(name: String, shapeId: Int? = null) = TypeParameter(
+    Identifier(name),
+    variance = Variance.INVARIANT,
+    shapeId = shapeId
+)
+
+fun covariantTypeParameter(name: String) = TypeParameter(
+    Identifier(name),
+    variance = Variance.COVARIANT,
+    shapeId = null
+)
+
+fun contravariantTypeParameter(name: String) = TypeParameter(
+    Identifier(name),
+    variance = Variance.CONTRAVARIANT,
+    shapeId = null
+)
 
 fun effectParameter(name: String) = EffectParameter(Identifier(name))
 

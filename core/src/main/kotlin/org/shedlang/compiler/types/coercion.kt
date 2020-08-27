@@ -80,7 +80,7 @@ class TypeConstraintSolver(
             return true
         }
 
-        if (to is TypeParameter && to in parameters) {
+        if (to is TypeParameter && to in parameters && (to.shapeId == null || shapeId(from) == to.shapeId)) {
             val boundType = typeBindings[to]
             if (boundType == null) {
                 typeBindings[to] = from
@@ -93,7 +93,7 @@ class TypeConstraintSolver(
             }
         }
 
-        if (from is TypeParameter && from in parameters) {
+        if (from is TypeParameter && from in parameters && from.shapeId == null) {
             val boundType = typeBindings[from]
             if (boundType == null) {
                 typeBindings[from] = to
@@ -183,6 +183,15 @@ class TypeConstraintSolver(
         }
 
         return false
+    }
+
+    private fun shapeId(type: Type): Int? {
+        val rawTo = rawValue(type)
+        if (rawTo is ShapeType) {
+            return rawTo.shapeId
+        } else {
+            return null
+        }
     }
 
     fun coerceEffect(from: Effect, to: Effect): Boolean {

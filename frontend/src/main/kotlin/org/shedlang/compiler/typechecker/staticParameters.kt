@@ -40,7 +40,8 @@ private fun typeCheckTypeParameter(
 ): TypeParameter {
     val typeParameter = TypeParameter(
         name = parameter.name,
-        variance = parameter.variance
+        variance = parameter.variance,
+        shapeId = null
     )
     context.addVariableType(parameter, StaticValueType(typeParameter))
     return typeParameter

@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
@@ -526,6 +527,76 @@ class CoercionTests {
             parameters = setOf(typeParameter)
         )
         assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(cast(sameInstance(member1)), cast(sameInstance(member2))))))
+    }
+
+    @Test
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCannotBeCoercedToNonShape() {
+        val shapeId = freshNodeId()
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+        val result = coerce(
+            constraints = listOf(typeParameter to IntType),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCannotBeCoercedToOtherShape() {
+        val shapeId = freshNodeId()
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+        val otherShape = shapeType(shapeId = freshNodeId())
+        val result = coerce(
+            constraints = listOf(typeParameter to otherShape),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCannotBeCoercedToSameShape() {
+        val shapeId = freshNodeId()
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+        val sameShape = shapeType(shapeId = shapeId)
+        val result = coerce(
+            constraints = listOf(typeParameter to sameShape),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCannotBeCoercedFromNonShape() {
+        val shapeId = freshNodeId()
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+        val result = coerce(
+            constraints = listOf(IntType to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCannotBeCoercedFromOtherShape() {
+        val shapeId = freshNodeId()
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+        val otherShape = shapeType(shapeId = freshNodeId())
+        val result = coerce(
+            constraints = listOf(otherShape to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCanBeCoercedFromSameShape() {
+        val shapeId = freshNodeId()
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+        val sameShape = shapeType(shapeId = shapeId)
+        val result = coerce(
+            constraints = listOf(sameShape to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+        assertThat(result, isSuccess(typeParameter to sameInstance(sameShape)))
     }
 
     @Test
