@@ -513,8 +513,8 @@ interface TypeAlias: Type {
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
-        // TODO: wrong?
-        return this
+        // TODO: test this
+        return aliasedType.replaceStaticValues(bindings)
     }
 }
 
