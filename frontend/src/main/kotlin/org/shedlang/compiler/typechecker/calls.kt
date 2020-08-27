@@ -219,6 +219,28 @@ private fun checkArgumentTypes(
             // TODO: need to regenerate effect parameters in the same way as type positionalParameters
             parameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
+
+        fun generateBindings(): Map<StaticParameter, StaticValue> {
+            val typeMap = typeParameters.zip(inferredTypeArguments)
+                .associate { (parameter, inferredArgument) ->
+                    val boundType = constraints.boundTypeFor(inferredArgument)
+                    if (boundType == null) {
+                        throw CouldNotInferTypeParameterError(
+                            parameter = parameter,
+                            source = source
+                        )
+                    } else {
+                        parameter to boundType
+                    }
+                }
+            val effectMap = effectParameters.zip(inferredEffectArguments)
+                .associate { (parameter, inferredArgument) ->
+                    parameter to constraints.boundEffectFor(inferredArgument)
+                }
+            // TODO: handle unbound effects
+            return typeMap + effectMap
+        }
+
         for (argument in arguments) {
             val parameterType = replaceStaticValuesInType(
                 argument.second,
@@ -227,31 +249,15 @@ private fun checkArgumentTypes(
             val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
-                    expected = parameterType,
+                    // TODO: test this!
+                    expected = replaceStaticValuesInType(argument.second, generateBindings()),
                     actual = actualType,
                     source = argument.first.source
                 )
             }
         }
 
-        val typeMap = typeParameters.zip(inferredTypeArguments)
-            .associate { (parameter, inferredArgument) ->
-                val boundType = constraints.boundTypeFor(inferredArgument)
-                if (boundType == null) {
-                    throw CouldNotInferTypeParameterError(
-                        parameter = parameter,
-                        source = source
-                    )
-                } else {
-                    parameter to boundType
-                }
-            }
-        val effectMap = effectParameters.zip(inferredEffectArguments)
-            .associate { (parameter, inferredArgument) ->
-                parameter to constraints.boundEffectFor(inferredArgument)
-            }
-        // TODO: handle unbound effects
-        return typeMap + effectMap
+        return generateBindings()
     } else {
         if (staticArguments.size != staticParameters.size) {
             throw WrongNumberOfStaticArgumentsError(
