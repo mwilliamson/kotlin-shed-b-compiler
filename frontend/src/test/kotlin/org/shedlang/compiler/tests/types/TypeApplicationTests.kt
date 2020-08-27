@@ -124,7 +124,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
+                replaceStaticValuesInType(functionType, StaticBindingsMap(mapOf(typeParameter to IntType))),
                 isFunctionType(positionalParameters = isSequence(isIntType))
             )
         }
@@ -136,7 +136,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
+                replaceStaticValuesInType(functionType, StaticBindingsMap(mapOf(typeParameter to IntType))),
                 isFunctionType(namedParameters = isMap(Identifier("x") to isIntType))
             )
         }
@@ -148,7 +148,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
+                replaceStaticValuesInType(functionType, StaticBindingsMap(mapOf(typeParameter to IntType))),
                 isFunctionType(returnType= isIntType)
             )
         }
@@ -165,7 +165,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(tupleType, mapOf(typeParameter to IntType)),
+                replaceStaticValuesInType(tupleType, StaticBindingsMap(mapOf(typeParameter to IntType))),
                 isTupleType(elementTypes = isSequence(isIntType))
             )
         }

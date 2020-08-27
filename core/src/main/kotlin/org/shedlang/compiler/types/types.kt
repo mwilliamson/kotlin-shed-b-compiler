@@ -692,11 +692,24 @@ fun applyStatic(
         )
     }
 
-    val bindings = receiver.parameters.zip(arguments).toMap()
+    val bindings = StaticBindingsMap(receiver.parameters.zip(arguments).toMap())
     return replaceStaticValues(receiver.value, bindings = bindings)
 }
 
-typealias StaticBindings = Map<StaticParameter, StaticValue>
+interface StaticBindings {
+    fun get(type: StaticParameter): StaticValue?
+    fun isEmpty(): Boolean
+}
+
+class StaticBindingsMap(private val bindings: Map<StaticParameter, StaticValue>): StaticBindings {
+    override fun get(type: StaticParameter): StaticValue? {
+        return bindings[type]
+    }
+
+    override fun isEmpty(): Boolean {
+        return bindings.isEmpty()
+    }
+}
 
 private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): StaticValue {
     return value.acceptStaticValueVisitor(object : StaticValue.Visitor<StaticValue> {
@@ -719,7 +732,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
         return type
     } else if (type is TypeParameter) {
         // TODO: handle non-type bindings
-        return bindings.getOrElse(type, { type }) as Type
+        return (bindings.get(type) ?: type) as Type
     } else if (type is UnionType) {
         return LazyUnionType(
             type.tag,
@@ -763,11 +776,12 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
     }
 }
 
-fun replaceEffects(effect: Effect, bindings: Map<StaticParameter, StaticValue>): Effect {
+fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
     when (effect) {
-        is EffectParameter ->
+        is EffectParameter -> {
             // TODO: handle non-effect bindings
-            return bindings.getOrElse(effect, { effect }) as Effect
+            return (bindings.get(effect) ?: effect) as Effect
+        }
 
         is EffectUnion ->
             return effectUnion(effect.members.map { member -> replaceEffects(member, bindings) })

@@ -136,7 +136,7 @@ class TypeConstraintSolver(
                 parameters.addAll(staticArguments)
                 val unparameterizedFrom = replaceStaticValuesInType(
                     from.copy(staticParameters = listOf()),
-                    from.staticParameters.zip(staticArguments).toMap()
+                    StaticBindingsMap(from.staticParameters.zip(staticArguments).toMap())
                 )
                 return coerce(
                     from = unparameterizedFrom,

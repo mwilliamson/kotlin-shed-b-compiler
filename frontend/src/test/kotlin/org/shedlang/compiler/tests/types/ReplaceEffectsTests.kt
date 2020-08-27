@@ -22,7 +22,7 @@ class ReplaceEffectsTests {
             effectParameterA to boundEffectA,
             effectParameterB to boundEffectB
         )
-        val newEffect = replaceEffects(effectParameterA, bindings)
+        val newEffect = replaceEffects(effectParameterA, StaticBindingsMap(bindings))
 
         assertThat(newEffect, cast(sameInstance(boundEffectA)))
     }
@@ -36,7 +36,7 @@ class ReplaceEffectsTests {
         val bindings = mapOf<StaticParameter, StaticValue>(
             effectParameterB to boundEffectB
         )
-        val newEffect = replaceEffects(effectParameterA, bindings)
+        val newEffect = replaceEffects(effectParameterA, StaticBindingsMap(bindings))
 
         assertThat(newEffect, cast(sameInstance(effectParameterA)))
     }
@@ -52,7 +52,7 @@ class ReplaceEffectsTests {
             effectParameterA to boundEffectA,
             effectParameterB to boundEffectB
         )
-        val newEffect = replaceEffects(effectUnion(effectParameterA, effectParameterB), bindings)
+        val newEffect = replaceEffects(effectUnion(effectParameterA, effectParameterB), StaticBindingsMap(bindings))
 
         assertThat(newEffect, isEffectUnion(members = isSequence(
             cast(sameInstance(boundEffectA)),
@@ -70,7 +70,7 @@ class ReplaceEffectsTests {
             effectParameterA to boundEffectA,
             effectParameterB to boundEffectA
         )
-        val newEffect = replaceEffects(effectUnion(effectParameterA, effectParameterB), bindings)
+        val newEffect = replaceEffects(effectUnion(effectParameterA, effectParameterB), StaticBindingsMap(bindings))
 
         assertThat(newEffect, cast(sameInstance(boundEffectA)))
     }

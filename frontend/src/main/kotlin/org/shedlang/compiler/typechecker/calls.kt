@@ -109,7 +109,7 @@ private fun inferConstructorCallType(
         return shapeType
     } else {
         return applyStatic(typeFunction, typeFunction.parameters.map({ parameter ->
-            typeParameterBindings[parameter]!!
+            typeParameterBindings.get(parameter)!!
         })) as Type
     }
 }
@@ -128,7 +128,7 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
         )
 
         for (staticParameter in receiverType.staticParameters) {
-            if (staticParameter !in bindings) {
+            if (bindings.get(staticParameter) == null) {
                 // TODO: handle this more appropriately
                 throw Exception("unbound type parameter")
             }
@@ -222,7 +222,7 @@ private fun checkArgumentTypes(
         for (argument in arguments) {
             val parameterType = replaceStaticValuesInType(
                 argument.second,
-                (typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap()
+                StaticBindingsMap((typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap())
             )
             val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
@@ -251,7 +251,7 @@ private fun checkArgumentTypes(
                 parameter to constraints.boundEffectFor(inferredArgument)
             }
         // TODO: handle unbound effects
-        return typeMap + effectMap
+        return StaticBindingsMap(typeMap + effectMap)
     } else {
         if (staticArguments.size != staticParameters.size) {
             throw WrongNumberOfStaticArgumentsError(
@@ -276,7 +276,7 @@ private fun checkArgumentTypes(
             })
         }
 
-        val bindings = typeMap + effectMap
+        val bindings = StaticBindingsMap(typeMap + effectMap)
 
         checkArgumentTypes(
             staticParameters = listOf(),
@@ -337,7 +337,7 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
         val constraints = TypeConstraintSolver(
             parameters = inferredTypeArguments.toSet()
         )
-        fun partialTypeMap(): StaticBindings = typeParameters.zip(inferredTypeArguments).toMap()
+        fun partialTypeMap(): StaticBindings = StaticBindingsMap(typeParameters.zip(inferredTypeArguments).toMap())
 
         if (!constraints.coerce(from = currentType, to = replaceStaticValuesInType(tailParameterType, partialTypeMap()))) {
             throw CompilerError("failed to type-check varargs call", source = argument.source)
@@ -361,6 +361,6 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
                 }
             }
 
-        replaceStaticValuesInType(type.cons.returns, typeMap())
+        replaceStaticValuesInType(type.cons.returns, StaticBindingsMap(typeMap()))
     }
 }
