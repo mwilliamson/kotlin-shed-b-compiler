@@ -61,8 +61,7 @@ class TypeConstraintSolver(
     fun boundTypeFor(parameter: TypeParameter): Type? {
         val boundType = typeBindings[parameter]
         return if (boundType != null) {
-            val bindings = StaticBindingsMap(typeBindings + effectBindings)
-            replaceStaticValuesInType(replaceStaticValuesInType(boundType, bindings), bindings)
+            boundType
         } else if (parameter.variance == Variance.COVARIANT) {
             NothingType
         } else if (parameter.variance == Variance.CONTRAVARIANT) {
@@ -84,8 +83,7 @@ class TypeConstraintSolver(
         if (to is TypeParameter && to in parameters) {
             val boundType = typeBindings[to]
             if (boundType == null) {
-                typeBindings[to] = from
-                println("BIND ${to.shortDescription} to ${from.shortDescription}")
+                bindType(to, from)
                 return true
             } else if (to in closed) {
                 return coerce(from = from, to = boundType)
@@ -98,8 +96,7 @@ class TypeConstraintSolver(
         if (from is TypeParameter && from in parameters) {
             val boundType = typeBindings[from]
             if (boundType == null) {
-                println("BIND ${from.shortDescription} to ${to.shortDescription}")
-                typeBindings[from] = to
+                bindType(from, to)
                 closed.add(from)
                 return true
             } else {
@@ -186,6 +183,15 @@ class TypeConstraintSolver(
         }
 
         return false
+    }
+
+    private fun bindType(from: TypeParameter, to: Type) {
+        val copy = typeBindings.toMap()
+        println("BIND ${from.shortDescription} to ${to.shortDescription}")
+        typeBindings[from] = replaceStaticValuesInType(to, StaticBindingsMap(typeBindings + effectBindings))
+        for ((existingFrom, existingTo) in copy) {
+            typeBindings[existingFrom] = replaceStaticValuesInType(existingTo, StaticBindingsMap(mapOf(from to to)))
+        }
     }
 
     fun coerceEffect(from: Effect, to: Effect): Boolean {
