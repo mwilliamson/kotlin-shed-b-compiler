@@ -544,6 +544,7 @@ interface ShapeType: Type {
     val name: Identifier
     override val shapeId: Int
     val tagValue: TagValue?
+    // TODO: always store full set of fields, and store set of visible fields separately
     val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
