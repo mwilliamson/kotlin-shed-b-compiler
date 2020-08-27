@@ -116,6 +116,7 @@ object StaticValueTypeGroup: TypeGroup {
 interface Type: StaticValue, TypeGroup {
     val shapeId: Int?
     fun fieldType(fieldName: Identifier): Type?
+    fun replaceStaticValues(bindings: StaticBindings): Type
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)
@@ -128,6 +129,10 @@ interface BasicType : Type {
 
     override fun fieldType(fieldName: Identifier): Type? {
         return null
+    }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return this
     }
 }
 
@@ -156,6 +161,10 @@ object AnyType : Type {
 
     override fun fieldType(fieldName: Identifier): Type? = null
 
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return this
+    }
+
     override val shortDescription = "Any"
 }
 
@@ -164,6 +173,10 @@ object NothingType : Type {
         get() = null
 
     override fun fieldType(fieldName: Identifier): Type? = null
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return this
+    }
 
     override val shortDescription = "Nothing"
 }
@@ -195,6 +208,10 @@ data class StaticValueType(val value: StaticValue): Type {
         } else {
             return null
         }
+    }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        throw UnsupportedOperationException("not implemented")
     }
 }
 
@@ -312,6 +329,10 @@ data class TypeParameter(
             return prefix + name.value
         }
 
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return bindings.getOrElse(this, { this }) as Type
+    }
+
     override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
         return visitor.visit(this)
     }
@@ -394,6 +415,10 @@ data class ModuleType(
         return fields[fieldName]
     }
 
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        throw UnsupportedOperationException("not implemented")
+    }
+
     override val shortDescription: String
     // TODO: should include name of module
         get() = "ModuleType(TODO)"
@@ -410,6 +435,16 @@ data class FunctionType(
         get() = null
 
     override fun fieldType(fieldName: Identifier): Type? = null
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return FunctionType(
+            positionalParameters = positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
+            namedParameters = namedParameters.mapValues({ parameter -> replaceStaticValuesInType(parameter.value, bindings) }),
+            effect = replaceEffects(effect, bindings),
+            returns = replaceStaticValuesInType(returns, bindings),
+            staticParameters = staticParameters
+        )
+    }
 
     override val shortDescription: String
         get() {
@@ -457,6 +492,13 @@ data class TupleType(val elementTypes: List<Type>): Type {
         return null
     }
 
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return TupleType(
+            elementTypes = elementTypes.map { elementType ->
+                replaceStaticValuesInType(elementType, bindings)
+            }
+        )
+    }
 }
 
 interface TypeAlias: Type {
@@ -468,6 +510,11 @@ interface TypeAlias: Type {
 
     override fun fieldType(fieldName: Identifier): Type? {
         return aliasedType.fieldType(fieldName)
+    }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        // TODO: wrong?
+        return this
     }
 }
 
@@ -503,6 +550,21 @@ interface ShapeType: Type {
 
     override fun fieldType(fieldName: Identifier): Type? {
         return fields[fieldName]?.type
+    }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return LazyShapeType(
+            name = name,
+            getFields = lazy({
+                fields.mapValues{ field -> field.value.mapType { type ->
+                    replaceStaticValuesInField(field.value, bindings)
+                } }
+            }),
+            tagValue = tagValue,
+            shapeId = shapeId,
+            staticParameters = staticParameters,
+            staticArguments = staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
+        )
     }
 }
 
@@ -582,6 +644,10 @@ class UpdatedType internal constructor(
         // TODO: implement field type
         throw UnsupportedOperationException("not implemented")
     }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        throw UnsupportedOperationException("not implemented")
+    }
 }
 
 interface UnionType: Type {
@@ -589,6 +655,17 @@ interface UnionType: Type {
     val tag: Tag
     val members: List<Type>
     val staticArguments: List<StaticValue>
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return LazyUnionType(
+            tag,
+            name,
+            lazy {
+                members.map { memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType }
+            },
+            staticArguments = staticArguments.map { argument -> replaceStaticValues(argument, bindings) }
+        )
+    }
 
     override val shapeId: Int?
         get() = null
@@ -682,6 +759,10 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
 
     override fun fieldType(fieldName: Identifier): Type? {
         return null
+    }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        throw UnsupportedOperationException("not implemented")
     }
 }
 
@@ -795,49 +876,8 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
 fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
     if (bindings.isEmpty()) {
         return type
-    } else if (type is TypeParameter) {
-        // TODO: handle non-type bindings
-        return bindings.getOrElse(type, { type }) as Type
-    } else if (type is UnionType) {
-        return LazyUnionType(
-            type.tag,
-            type.name,
-            lazy({
-                type.members.map({ memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType })
-            }),
-            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
-        )
-    } else if (type is ShapeType) {
-        return LazyShapeType(
-            name = type.name,
-            getFields = lazy({
-                type.fields.mapValues{ field -> field.value.mapType { type ->
-                    replaceStaticValuesInField(field.value, bindings)
-                } }
-            }),
-            tagValue = type.tagValue,
-            shapeId = type.shapeId,
-            staticParameters = type.staticParameters,
-            staticArguments = type.staticArguments.map({ argument -> replaceStaticValues(argument, bindings) })
-        )
-    } else if (type is FunctionType) {
-        return FunctionType(
-            positionalParameters = type.positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
-            namedParameters = type.namedParameters.mapValues({ parameter -> replaceStaticValuesInType(parameter.value, bindings) }),
-            effect = replaceEffects(type.effect, bindings),
-            returns = replaceStaticValuesInType(type.returns, bindings),
-            staticParameters = type.staticParameters
-        )
-    } else if (type is TupleType) {
-        return TupleType(
-            elementTypes = type.elementTypes.map { elementType ->
-                replaceStaticValuesInType(elementType, bindings)
-            }
-        )
-    } else if (type is UnitType || type is BoolType || type is IntType || type is StringType || type is StringSliceType || type is UnicodeScalarType || type is AnyType || type is NothingType || type is TypeAlias) {
-        return type
     } else {
-        throw NotImplementedError("Type replacement not implemented for: " + type)
+        return type.replaceStaticValues(bindings)
     }
 }
 
