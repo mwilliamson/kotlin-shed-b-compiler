@@ -303,6 +303,7 @@ data class TypeParameter(
 
     override val shortDescription: String
         get() {
+            // TODO: include shape
             val prefix = when (variance) {
                 Variance.INVARIANT -> ""
                 Variance.COVARIANT -> "+"
