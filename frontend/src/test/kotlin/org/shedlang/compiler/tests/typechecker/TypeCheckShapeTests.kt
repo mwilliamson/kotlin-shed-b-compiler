@@ -22,7 +22,7 @@ class TypeCheckShapeTests {
             boolType to StaticValueType(BoolType)
         ))
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+        assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
             name = isIdentifier("X"),
             fields = isSequence(
                 isField(name = isIdentifier("a"), type = isIntType, isConstant = equalTo(false)),
@@ -61,7 +61,7 @@ class TypeCheckShapeTests {
 
         val typeContext = typeContext()
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+        assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
             name = isIdentifier("X"),
             fields = isSequence(
                 isField(name = isIdentifier("a"), type = isBoolType, isConstant = equalTo(true))
@@ -125,7 +125,7 @@ class TypeCheckShapeTests {
             extendsShape2Reference to StaticValueType(shape2)
         ))
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isShapeType(
+        assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
             fields = isSequence(
                 isField(name = isIdentifier("a"), type = isIntType),
                 isField(shapeId = equalTo(shape1Id), name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
@@ -266,9 +266,9 @@ class TypeCheckShapeTests {
         typeContext.undefer()
 
         val metaType = typeContext.typeOf(node)
-        assertThat(metaType, isMetaType(isShapeType()))
+        assertThat(metaType, isMetaType(isCompleteShapeType()))
         val type = metaTypeToType(metaType)
-        return (type as ShapeType).fields.values.single()
+        return (type as ShapeType).allFields.values.single()
     }
 
     @Test
@@ -322,9 +322,9 @@ class TypeCheckShapeTests {
         typeCheckModuleStatement(node, typeContext)
         typeContext.undefer()
         val metaType = typeContext.typeOf(node)
-        assertThat(metaType, isMetaType(isShapeType()))
+        assertThat(metaType, isMetaType(isCompleteShapeType()))
         val type = metaTypeToType(metaType)!!
-        assertThat(type, isShapeType(fields = isSequence(
+        assertThat(type, isCompleteShapeType(fields = isSequence(
             isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
         )))
     }
@@ -413,7 +413,7 @@ class TypeCheckShapeTests {
         typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
-            value = isShapeType(
+            value = isCompleteShapeType(
                 name = isIdentifier("X"),
                 fields = isSequence(
                     isField(name = isIdentifier("a"), type = isTypeParameter(name = isIdentifier("T"), variance = isInvariant))

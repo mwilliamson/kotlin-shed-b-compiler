@@ -601,11 +601,11 @@ fun shapeType(
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf(),
     shapeId: Int = freshTypeId()
-) = lazyShapeType(
+) = lazyCompleteShapeType(
     shapeId = shapeId,
     name = Identifier(name),
     tagValue = tagValue,
-    getFields = lazy { fields },
+    getAllFields = lazy { fields },
     staticParameters = typeParameters,
     staticArguments = typeArguments
 )

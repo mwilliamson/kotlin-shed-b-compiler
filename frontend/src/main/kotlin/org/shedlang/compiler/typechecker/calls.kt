@@ -98,7 +98,7 @@ private fun inferConstructorCallType(
         call = node,
         staticParameters = typeFunction?.parameters ?: listOf(),
         positionalParameters = listOf(),
-        namedParameters = shapeType.fields
+        namedParameters = shapeType.populatedFields
             .filter { field -> !field.value.isConstant }
             .mapValues { field -> field.value.type },
         context = context,

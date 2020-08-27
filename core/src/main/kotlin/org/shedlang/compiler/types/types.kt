@@ -182,15 +182,17 @@ object NothingType : Type {
 }
 
 data class StaticValueType(val value: StaticValue): Type {
-    private val fieldsType: Type?
+    private val fieldsType: Lazy<Type?>
 
     init {
         // TODO: better handling of generics
         val rawType = rawValue(value)
-        fieldsType = if (rawType is ShapeType) {
-            shapeFieldsInfoType(rawType)
-        } else {
-            null
+        fieldsType = lazy {
+            if (rawType is ShapeType) {
+                shapeFieldsInfoType(rawType)
+            } else {
+                null
+            }
         }
     }
 
@@ -204,7 +206,7 @@ data class StaticValueType(val value: StaticValue): Type {
         if (value is UserDefinedEffect) {
             return value.operations[fieldName]
         } else if (fieldName == Identifier("fields")) {
-            return fieldsType
+            return fieldsType.value
         } else {
             return null
         }
@@ -220,22 +222,23 @@ fun metaType(type: Type) = StaticValueType(type)
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {
     val shapeId = freshTypeId()
-    return lazyShapeType(
+    val fields = type.populatedFields.values.map { field ->
+        Field(
+            shapeId = shapeId,
+            name = field.name,
+            type = shapeFieldInfoType(type, field),
+            isConstant = false
+        )
+    }
+    return lazyCompleteShapeType(
         shapeId = shapeId,
         name = Identifier("Fields"),
         tagValue = null,
         staticParameters = listOf(),
         staticArguments = listOf(),
-        getFields = lazy {
-            type.fields.values.map { field ->
-                Field(
-                    shapeId = shapeId,
-                    name = field.name,
-                    type = shapeFieldInfoType(type, field),
-                    isConstant = false
-                )
-            }
-        }
+        getAllFields = lazy {
+            fields
+        },
     )
 }
 
@@ -243,33 +246,34 @@ val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
 val shapeFieldTypeFunctionParameters = listOf(shapeFieldTypeFunctionTypeParameter, shapeFieldTypeFunctionFieldParameter)
 val shapeFieldTypeFunctionShapeId = freshTypeId()
+val shapeFieldTypeFunctionFields = listOf(
+    Field(
+        shapeId = shapeFieldTypeFunctionShapeId,
+        name = Identifier("get"),
+        type = functionType(
+            positionalParameters = listOf(shapeFieldTypeFunctionTypeParameter),
+            returns = shapeFieldTypeFunctionFieldParameter
+        ),
+        isConstant = false
+    ),
+    Field(
+        shapeId = shapeFieldTypeFunctionShapeId,
+        name = Identifier("name"),
+        type = StringType,
+        isConstant = false
+    )
+)
 val ShapeFieldTypeFunction = ParameterizedStaticValue(
     parameters = shapeFieldTypeFunctionParameters,
-    value = lazyShapeType(
+    value = lazyCompleteShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("ShapeField"),
         tagValue = null,
         staticParameters = shapeFieldTypeFunctionParameters,
         staticArguments = shapeFieldTypeFunctionParameters,
-        getFields = lazy {
-            listOf(
-                Field(
-                    shapeId = shapeFieldTypeFunctionShapeId,
-                    name = Identifier("get"),
-                    type = functionType(
-                        positionalParameters = listOf(shapeFieldTypeFunctionTypeParameter),
-                        returns = shapeFieldTypeFunctionFieldParameter
-                    ),
-                    isConstant = false
-                ),
-                Field(
-                    shapeId = shapeFieldTypeFunctionShapeId,
-                    name = Identifier("name"),
-                    type = StringType,
-                    isConstant = false
-                )
-            )
-        }
+        getAllFields = lazy {
+            shapeFieldTypeFunctionFields
+        },
     )
 )
 
@@ -397,9 +401,10 @@ fun createEmptyShapeType(argument: ShapeType): LazyShapeType {
         shapeId = argument.shapeId,
         name = argument.name,
         tagValue = argument.tagValue,
-        getFields = lazy {
-            listOf<Field>()
+        getAllFields = lazy {
+            argument.allFields.values.toList()
         },
+        getPopulatedFieldNames = lazy { setOf() },
         staticParameters = argument.staticParameters,
         staticArguments = argument.staticArguments
     )
@@ -544,21 +549,30 @@ interface ShapeType: Type {
     val name: Identifier
     override val shapeId: Int
     val tagValue: TagValue?
-    // TODO: always store full set of fields, and store set of visible fields separately
-    val fields: Map<Identifier, Field>
+    val allFields: Map<Identifier, Field>
+    val populatedFieldNames: Set<Identifier>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
 
+    val populatedFields: Map<Identifier, Field>
+        get() = allFields.filterKeys { fieldName -> populatedFieldNames.contains(fieldName) }
+
     override fun fieldType(fieldName: Identifier): Type? {
-        return fields[fieldName]?.type
+        // TODO: test this
+        if (fieldName in populatedFieldNames) {
+            return allFields[fieldName]?.type
+        } else {
+            return null
+        }
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return LazyShapeType(
             name = name,
-            getFields = lazy {
-                fields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
+            getAllFields = lazy {
+                allFields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
             },
+            getPopulatedFieldNames = { populatedFieldNames },
             tagValue = tagValue,
             shapeId = shapeId,
             staticParameters = staticParameters,
@@ -581,19 +595,40 @@ data class Field(
     )
 }
 
+fun lazyCompleteShapeType(
+    shapeId: Int,
+    name: Identifier,
+    tagValue: TagValue?,
+    getAllFields: Lazy<List<Field>>,
+    staticParameters: List<StaticParameter>,
+    staticArguments: List<StaticValue>
+) = lazyShapeType(
+    shapeId = shapeId,
+    name = name,
+    getAllFields = getAllFields,
+    getPopulatedFieldNames = lazy {
+        getAllFields.value.map { field -> field.name }.toSet()
+    },
+    tagValue = tagValue,
+    staticParameters = staticParameters,
+    staticArguments = staticArguments
+)
+
 fun lazyShapeType(
     shapeId: Int,
     name: Identifier,
     tagValue: TagValue?,
-    getFields: Lazy<List<Field>>,
+    getAllFields: Lazy<List<Field>>,
+    getPopulatedFieldNames: Lazy<Set<Identifier>>,
     staticParameters: List<StaticParameter>,
     staticArguments: List<StaticValue>
 ) = LazyShapeType(
     shapeId = shapeId,
     name = name,
-    getFields = lazy {
-        getFields.value.associateBy { field -> field.name }
+    getAllFields = lazy {
+        getAllFields.value.associateBy { field -> field.name }
     },
+    getPopulatedFieldNames = { getPopulatedFieldNames.value },
     tagValue = tagValue,
     staticParameters = staticParameters,
     staticArguments = staticArguments
@@ -601,7 +636,8 @@ fun lazyShapeType(
 
 class LazyShapeType(
     override val name: Identifier,
-    getFields: Lazy<Map<Identifier, Field>>,
+    getAllFields: Lazy<Map<Identifier, Field>>,
+    private val getPopulatedFieldNames: () -> Set<Identifier>,
     override val shapeId: Int = freshTypeId(),
     override val tagValue: TagValue?,
     override val staticParameters: List<StaticParameter>,
@@ -613,7 +649,10 @@ class LazyShapeType(
         } else {
             appliedTypeShortDescription(name, staticArguments)
         }
-    override val fields: Map<Identifier, Field> by getFields
+
+    override val allFields: Map<Identifier, Field> by getAllFields
+    override val populatedFieldNames: Set<Identifier>
+        get() = getPopulatedFieldNames()
 }
 
 fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): UpdatedType {
@@ -623,7 +662,7 @@ fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): UpdatedType
         throw CompilerError("cannot update non-shape type", source = NullSource)
     } else if (baseType.shapeId != field.shapeId) {
         throw CompilerError("base type and field are different shapes", source = NullSource)
-    } else if (!shapeType.fields.containsValue(field)) {
+    } else if (!shapeType.populatedFields.containsValue(field)) {
         throw CompilerError("field does not belong to shape", source = NullSource)
     } else {
         return UpdatedType(baseType = baseType, shapeType = shapeType, field = field)
@@ -827,7 +866,7 @@ fun validateStaticValue(value: StaticValue): ValidateTypeResult {
             }))
         }
     } else if (value is ShapeType) {
-        return ValidateTypeResult(value.fields.mapNotNull({ field ->
+        return ValidateTypeResult(value.allFields.mapNotNull({ field ->
             val fieldType = field.value.type
             if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
                 "field type cannot be contravariant"

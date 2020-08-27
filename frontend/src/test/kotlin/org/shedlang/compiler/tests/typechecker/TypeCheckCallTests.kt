@@ -300,7 +300,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
         val type = inferCallType(node, typeContext)
 
-        assertThat(type, isShapeType(
+        assertThat(type, isCompleteShapeType(
             name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
             fields = isSequence(isField(name = isIdentifier("value"), type = isBoolType))
@@ -330,7 +330,7 @@ class TypeCheckCallTests {
         ))
         val type = inferCallType(node, typeContext)
 
-        assertThat(type, isShapeType(
+        assertThat(type, isCompleteShapeType(
             name = isIdentifier("Sink"),
             staticArguments = isSequence(isIntType)
         ))
@@ -371,7 +371,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
-        assertThat(type, isShapeType(
+        assertThat(type, isCompleteShapeType(
             staticArguments = isSequence(isNothingType)
         ))
     }
@@ -391,7 +391,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
-        assertThat(type, isShapeType(
+        assertThat(type, isCompleteShapeType(
             staticArguments = isSequence(isAnyType)
         ))
     }
@@ -806,7 +806,8 @@ class TypeCheckCallTests {
 
         assertThat(type, isShapeType(
             name = isIdentifier("Box"),
-            fields = isSequence()
+            allFields = isSequence(isField(name = isIdentifier("value"))),
+            populatedFields = isSequence()
         ))
     }
 

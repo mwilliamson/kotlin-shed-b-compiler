@@ -30,7 +30,7 @@ class TypeCheckStaticCallTests {
             ))
         )
 
-        assertThat(type, isShapeType(
+        assertThat(type, isCompleteShapeType(
             name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
             fields = isSequence(
@@ -62,7 +62,8 @@ class TypeCheckStaticCallTests {
 
         assertThat(type, isShapeType(
             name = isIdentifier("Box"),
-            fields = isSequence()
+            allFields = isSequence(isField(name = isIdentifier("value"))),
+            populatedFields = isSequence()
         ))
     }
 }

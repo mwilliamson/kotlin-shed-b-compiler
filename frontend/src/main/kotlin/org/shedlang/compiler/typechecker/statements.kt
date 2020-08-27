@@ -66,11 +66,11 @@ private fun generateShapeType(
     // TODO: test laziness
     val fields = generateFields(node, context, shapeId)
 
-    val shapeType = lazyShapeType(
+    val shapeType = lazyCompleteShapeType(
         shapeId = shapeId,
         name = node.name,
         tagValue = tagValue,
-        getFields = fields,
+        getAllFields = fields,
         staticParameters = staticParameters,
         staticArguments = staticParameters
     )
@@ -84,7 +84,7 @@ private fun generateShapeType(
         for (field in node.fields) {
             val fieldValue = field.value
             if (fieldValue != null) {
-                verifyType(fieldValue, context, expected = shapeType.fields[field.name]!!.type)
+                verifyType(fieldValue, context, expected = shapeType.fieldType(field.name)!!)
             }
         }
         checkStaticValue(type, source = node.source)
@@ -107,7 +107,7 @@ private fun generateFields(
         val parentFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
-                superType.fields.values.map { field ->
+                superType.populatedFields.values.map { field ->
                     FieldDefinition(field, superType.name, extendNode.source)
                 }
             } else {
@@ -301,7 +301,8 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     context.addVariableType(node, StaticValueType(type))
     context.defer({
-        memberTypes.forEach { memberType -> memberType.fields }
+        // TODO: checkStaticValue for member instead?
+        memberTypes.forEach { memberType -> memberType.allFields }
         checkStaticValue(type, source = node.source)
     })
 }

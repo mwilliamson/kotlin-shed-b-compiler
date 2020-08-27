@@ -52,7 +52,7 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
 
     override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
         val shapeType = shapeType(node)
-        return shapeType.fields.values.map { field ->
+        return shapeType.allFields.values.map { field ->
             val fieldNode = node.fields
                 .find { fieldNode -> fieldNode.name == field.name }
             val fieldSource = NodeSource(fieldNode ?: node)
