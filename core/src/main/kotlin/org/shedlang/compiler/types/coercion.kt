@@ -83,7 +83,7 @@ class TypeConstraintSolver(
         if (to is TypeParameter && to in parameters && (to.shapeId == null || from.shapeId == to.shapeId)) {
             val boundType = typeBindings[to]
             if (boundType == null) {
-                typeBindings[to] = from
+                bindType(to, from)
                 return true
             } else if (to in closed) {
                 return coerce(from = from, to = boundType)
@@ -96,7 +96,7 @@ class TypeConstraintSolver(
         if (from is TypeParameter && from in parameters && from.shapeId == null) {
             val boundType = typeBindings[from]
             if (boundType == null) {
-                typeBindings[from] = to
+                bindType(from, to)
                 closed.add(from)
                 return true
             } else {
@@ -183,6 +183,10 @@ class TypeConstraintSolver(
         }
 
         return false
+    }
+
+    private fun bindType(from: TypeParameter, to: Type) {
+        typeBindings[from] = replaceStaticValuesInType(to, typeBindings + effectBindings)
     }
 
     fun coerceEffect(from: Effect, to: Effect): Boolean {
