@@ -4,7 +4,6 @@ import kotlinx.collections.immutable.*
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.AnyType
 import org.shedlang.compiler.types.TagValue
@@ -532,12 +531,8 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         }
 
         is DefineFunction -> {
-            initialState.pushTemporary(InterpreterFunction(
-                bodyInstructions = bodyInstructions,
-                positionalParameters = positionalParameters,
-                namedParameters = namedParameters,
-                scopes = initialState.currentScopes()
-            )).nextInstruction()
+            val function = toInterpreterFunction(this, scopes = initialState.currentScopes())
+            initialState.pushTemporary(function).nextInstruction()
         }
 
         is DefineShape -> {
@@ -550,20 +545,15 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                 Identifier("fields") to InterpreterShapeValue(
                     tagValue = null,
                     fields = fields.associate { field ->
-                        val getParameter = DefineFunction.Parameter(Identifier("receiver"), freshNodeId())
-
                         field.name to InterpreterShapeValue(
                             tagValue = null,
                             fields = mapOf(
                                 Identifier("name") to InterpreterString(field.name.value),
-                                Identifier("get") to InterpreterFunction(
-                                    bodyInstructions = persistentListOf(
-                                        LocalLoad(getParameter),
-                                        FieldAccess(field.name, receiverType = AnyType),
-                                        Return
+                                Identifier("get") to toInterpreterFunction(
+                                    defineShapeFieldGet(
+                                        shapeType = AnyType,
+                                        fieldName = field.name
                                     ),
-                                    positionalParameters = listOf(getParameter),
-                                    namedParameters = listOf(),
                                     scopes = persistentListOf()
                                 )
                             )
@@ -784,6 +774,15 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             state2.pushTemporary(InterpreterTuple(elements)).nextInstruction()
         }
     }
+}
+
+private fun toInterpreterFunction(instruction: DefineFunction, scopes: PersistentList<ScopeReference>): InterpreterFunction {
+    return InterpreterFunction(
+        bodyInstructions = instruction.bodyInstructions,
+        positionalParameters = instruction.positionalParameters,
+        namedParameters = instruction.namedParameters,
+        scopes = scopes
+    )
 }
 
 private fun runBinaryBoolOperation(

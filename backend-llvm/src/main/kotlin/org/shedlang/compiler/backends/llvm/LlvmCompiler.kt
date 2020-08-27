@@ -4,13 +4,9 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleName
-import org.shedlang.compiler.ast.NullSource
-import org.shedlang.compiler.ast.formatModuleName
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.StaticValue
-import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.*
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -825,46 +821,17 @@ internal class Compiler(
         val fieldsObjectType = shapeMetaType.fieldType(Identifier("fields"))!!
 
         val (context3, fieldOperands) = fieldNames.fold(Pair(context, persistentListOf<LlvmOperand>())) { (context2, fieldOperands), fieldName ->
+
+            val defineFunctionInstruction = defineShapeFieldGet(shapeType = rawValue(shapeType) as Type, fieldName = fieldName)
+
+            val context3 = compileInstruction(defineFunctionInstruction, context2)
+            val (context4, get) = context3.popTemporary()
+
             val shapeFieldPointer = LlvmOperandLocal(generateName("shapeFieldPointer"))
             val shapeFieldNameDefinition = strings.defineString(generateName("shapeFieldName"), fieldName.value)
-            val get = LlvmOperandLocal(generateName("get"))
-            val getResult = LlvmOperandLocal(generateName("getResult"))
-            val objectPointer = LlvmOperandLocal("obj")
-            val getFunctionDefinition = LlvmFunctionDefinition(
-                name = generateName("get"),
-                returnType = compiledValueType,
-                parameters = listOf(
-                    LlvmParameter(compiledClosureEnvironmentPointerType, "environment"),
-                    LlvmParameter(type = compiledValueType, name = "param")
-                ),
-                body = persistentListOf<LlvmInstruction>()
-                    .add(LlvmIntToPtr(
-                        target = objectPointer,
-                        sourceType = compiledValueType,
-                        value = LlvmOperandLocal("param"),
-                        targetType = compiledType(objectType = shapeType).llvmPointerType()
-                    ))
-                    .addAll(objects.fieldAccess(
-                        target = getResult,
-                        receiver = objectPointer,
-                        fieldName = fieldName,
-                        receiverType = shapeType
-                    ))
-                    .add(LlvmReturn(type = compiledValueType, value = getResult))
-            )
 
-            val context3 = context2
+            val context5 = context4
                 .addTopLevelEntities(shapeFieldNameDefinition)
-                .addTopLevelEntities(getFunctionDefinition)
-                .let {
-                    closures.createClosure(
-                        target = get,
-                        functionName = getFunctionDefinition.name,
-                        parameterTypes = listOf(compiledValueType),
-                        freeVariables = listOf(),
-                        context = it
-                    )
-                }
                 .addInstructions(objects.createObject(
                     target = shapeFieldPointer,
                     objectType = fieldsObjectType.fieldType(fieldName)!!,
@@ -874,7 +841,7 @@ internal class Compiler(
                     )
                 ))
 
-            Pair(context3, fieldOperands.add(shapeFieldPointer))
+            Pair(context5, fieldOperands.add(shapeFieldPointer))
         }
         return context3
             .addInstructions(objects.createObject(
