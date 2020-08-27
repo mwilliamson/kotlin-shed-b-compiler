@@ -620,6 +620,26 @@ class CoercionTests {
     }
 
     @Test
+    fun whenTypeParameterIsBoundThenExistingBoundValueHaveTypesReplaced() {
+        val typeParameter1 = invariantTypeParameter("T1")
+        val typeParameter2 = invariantTypeParameter("T2")
+
+        val result = coerce(
+            constraints = listOf(typeParameter1 to shapeType(fields = listOf(field(name = "x", type = typeParameter2))), typeParameter2 to IntType),
+            parameters = setOf(typeParameter1, typeParameter2)
+        )
+
+        assertThat(result, isSuccess(
+            typeParameter1 to isShapeType(
+                populatedFields = isSequence(
+                    isField(type = isIntType)
+                )
+            ),
+            typeParameter2 to isIntType,
+        ))
+    }
+
+    @Test
     fun effectIsSubEffectOfItself() {
         assertThat(
             isSubEffect(subEffect = IoEffect, superEffect = IoEffect),

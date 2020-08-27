@@ -186,7 +186,12 @@ class TypeConstraintSolver(
     }
 
     private fun bindType(from: TypeParameter, to: Type) {
+        val existingTypeBindings = typeBindings.toMap()
+
         typeBindings[from] = replaceStaticValuesInType(to, typeBindings + effectBindings)
+        for ((existingFrom, existingTo) in existingTypeBindings) {
+            typeBindings[existingFrom] = replaceStaticValuesInType(existingTo, mapOf(from to to))
+        }
     }
 
     fun coerceEffect(from: Effect, to: Effect): Boolean {
