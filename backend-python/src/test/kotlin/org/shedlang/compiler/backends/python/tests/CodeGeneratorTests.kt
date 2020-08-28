@@ -7,10 +7,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.extension.ExtendWith
-import org.shedlang.compiler.EMPTY_TYPES
-import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ResolvedReferences
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.backends.FieldValue

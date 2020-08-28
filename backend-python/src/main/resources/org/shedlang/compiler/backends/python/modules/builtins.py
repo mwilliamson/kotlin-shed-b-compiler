@@ -1,11 +1,12 @@
 from functools import partial
 
 class ShapeField(object):
-    __slots__ = ("get", "name")
+    __slots__ = ("get", "name", "update")
 
-    def __init__(self, get, name):
+    def __init__(self, get, name, update):
         self.get = get
         self.name = name
+        self.update = update
 
 
 def varargs(cons, nil):
@@ -94,3 +95,13 @@ def effect_handler_create_operation_handler(handler):
         return value
 
     return handle
+
+
+# TODO: this is missing the tag value for empty shapes
+def empty():
+    return _Empty()
+
+
+class _Empty(object):
+    def __getattr__(self, key):
+        return None

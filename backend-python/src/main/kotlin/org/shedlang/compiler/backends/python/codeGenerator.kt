@@ -2,14 +2,14 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.CodeInspector
-import org.shedlang.compiler.backends.FieldValue
-import org.shedlang.compiler.backends.ModuleCodeInspector
-import org.shedlang.compiler.backends.isConstant
+import org.shedlang.compiler.backends.*
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.rawValue
 
 // TODO: check that builtins aren't renamed
 // TODO: check imports aren't renamed
@@ -359,50 +359,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         )
     }
 
-    val fieldsClass = PythonClassNode(
-        // TODO: handle constant field also named fields
-        name = "fields",
-        body = shapeFields.map { field ->
-            val fieldNode = node.fields
-                .find { fieldNode -> fieldNode.name == field.name }
-            val fieldSource = NodeSource(fieldNode ?: node)
-
-            PythonAssignmentNode(
-                target = PythonVariableReferenceNode(
-                    name = pythoniseName(field.name),
-                    source = fieldSource
-                ),
-                expression = PythonFunctionCallNode(
-                    function = PythonVariableReferenceNode(
-                        name = "_create_shape_field",
-                        source = fieldSource
-                    ),
-                    arguments = listOf(),
-                    keywordArguments = listOf(
-                        "get" to PythonLambdaNode(
-                            parameters = listOf("value"),
-                            body = PythonAttributeAccessNode(
-                                receiver = PythonVariableReferenceNode(
-                                    "value",
-                                    source = fieldSource
-                                ),
-                                attributeName = pythoniseName(field.name),
-                                source = fieldSource
-                            ),
-                            source = fieldSource
-                        ),
-                        "name" to PythonStringLiteralNode(
-                            value = field.name.value,
-                            source = fieldSource
-                        )
-                    ),
-                    source = fieldSource
-                ),
-                source = fieldSource
-            )
-        },
-        source = shapeSource
-    )
+    val fieldsClass = generateFieldsClass(node, shapeSource, context)
 
     val tagValue = context.inspector.shapeTagValue(node)
     val tagValueAssignment = if (tagValue == null) {
@@ -442,6 +399,96 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
         name = context.name(node),
         body = body,
         source = shapeSource
+    )
+}
+
+private fun generateFieldsClass(node: ShapeBaseNode, shapeSource: NodeSource, context: CodeGenerationContext): PythonClassNode {
+    val shapeFields = context.inspector.shapeFields(node)
+
+    return PythonClassNode(
+        // TODO: handle constant field also named fields
+        name = "fields",
+        body = shapeFields.map { field ->
+            val fieldNode = node.fields
+                .find { fieldNode -> fieldNode.name == field.name }
+            val fieldSource = NodeSource(fieldNode ?: node)
+
+            PythonAssignmentNode(
+                target = PythonVariableReferenceNode(
+                    name = pythoniseName(field.name),
+                    source = fieldSource
+                ),
+                expression = generateFieldObject(node = node, field = field, fieldSource = fieldSource, context = context),
+                source = fieldSource
+            )
+        },
+        source = shapeSource
+    )
+}
+
+private fun generateFieldObject(node: ShapeBaseNode, field: FieldInspector, fieldSource: NodeSource, context: CodeGenerationContext): PythonFunctionCallNode {
+    val get = PythonLambdaNode(
+        parameters = listOf("value"),
+        body = PythonAttributeAccessNode(
+            receiver = PythonVariableReferenceNode(
+                "value",
+                source = fieldSource
+            ),
+            attributeName = pythoniseName(field.name),
+            source = fieldSource
+        ),
+        source = fieldSource
+    )
+
+    val name = PythonStringLiteralNode(
+        value = field.name.value,
+        source = fieldSource
+    )
+
+    val update = generateUpdateFunction(node, updatedField = field, fieldSource = fieldSource, context = context)
+
+    return PythonFunctionCallNode(
+        function = PythonVariableReferenceNode(
+            name = "_create_shape_field",
+            source = fieldSource
+        ),
+        arguments = listOf(),
+        keywordArguments = listOf(
+            "get" to get,
+            "name" to name,
+            "update" to update,
+        ),
+        source = fieldSource
+    )
+}
+
+private fun generateUpdateFunction(node: ShapeBaseNode, updatedField: FieldInspector, fieldSource: NodeSource, context: CodeGenerationContext): PythonLambdaNode {
+    return PythonLambdaNode(
+        parameters = listOf("new_field_value", "existing_object"),
+        body = PythonFunctionCallNode(
+            function = PythonVariableReferenceNode(context.name(node), source = fieldSource),
+            arguments = listOf(),
+            keywordArguments = context.inspector.shapeFields(node).map { field ->
+                val fieldValue = if (field.name == updatedField.name) {
+                    PythonVariableReferenceNode(
+                        "new_field_value",
+                        source = fieldSource
+                    )
+                } else {
+                    PythonAttributeAccessNode(
+                        receiver = PythonVariableReferenceNode(
+                            "existing_object",
+                            source = fieldSource
+                        ),
+                        attributeName = pythoniseName(field.name),
+                        source = fieldSource
+                    )
+                }
+                pythoniseName(field.name) to fieldValue
+            },
+            source = fieldSource,
+        ),
+        source = fieldSource
     )
 }
 
