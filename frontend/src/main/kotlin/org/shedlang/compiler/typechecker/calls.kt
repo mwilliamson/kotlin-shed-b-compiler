@@ -6,27 +6,48 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
-    val receiverType = inferType(node.receiver, context)
-    val type = tryInferCallType(node, receiverType, context)
-    if (type == null) {
-        val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
-        throw UnexpectedTypeError(
-            expected = FunctionType(
-                staticParameters = listOf(),
-                positionalParameters = argumentTypes,
-                namedParameters = mapOf(),
-                returns = AnyType,
-                effect = EmptyEffect
-            ),
-            actual = receiverType,
-            source = node.receiver.source
-        )
-    } else {
-        return type
+    fun infer(node: CallNode, context: TypeContext): Pair<Type, StaticBindings> {
+        val receiver = node.receiver
+        // TODO: this magic with bindingsHint when the receiver is a partial call needs testing
+        val receiverType = if (receiver is PartialCallNode && node.staticArguments.isEmpty() && receiver.staticArguments.isEmpty()) {
+            val (type, bindings) = infer(CallNode(
+                receiver = receiver.receiver,
+                positionalArguments = receiver.positionalArguments + node.positionalArguments,
+                namedArguments = receiver.namedArguments + node.namedArguments,
+                staticArguments = listOf(),
+                hasEffect = node.hasEffect,
+                source = receiver.source,
+            ), context)
+            val receiverType = inferPartialCallType(receiver, context, bindingsHint = bindings)
+            context.addExpressionType(receiver, receiverType)
+            receiverType
+        } else {
+            inferType(receiver, context)
+        }
+        val result = tryInferCallType(node, receiverType, context)
+        if (result == null) {
+            val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
+            throw UnexpectedTypeError(
+                expected = FunctionType(
+                    staticParameters = listOf(),
+                    positionalParameters = argumentTypes,
+                    namedParameters = mapOf(),
+                    returns = AnyType,
+                    effect = EmptyEffect
+                ),
+                actual = receiverType,
+                source = receiver.source
+            )
+        } else {
+            return result
+        }
     }
+
+    val result = infer(node, context)
+    return result.first
 }
 
-internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Type? {
+internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Pair<Type, StaticBindings>? {
     if (receiverType is FunctionType) {
         return inferFunctionCallType(node, receiverType, context)
     }
@@ -42,11 +63,11 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
             }
         }
     } else if (receiverType is CastType) {
-        return inferCastCall(node, context)
+        return Pair(inferCastCall(node, context), mapOf())
     } else if (receiverType is EmptyFunctionType) {
-        return inferEmptyCall(node, context)
+        return Pair(inferEmptyCall(node, context), mapOf())
     } else if (receiverType is VarargsType) {
-        return inferVarargsCall(node, receiverType, context)
+        return Pair(inferVarargsCall(node, receiverType, context), mapOf())
     }
 
     return null
@@ -56,7 +77,7 @@ private fun inferFunctionCallType(
     node: CallNode,
     receiverType: FunctionType,
     context: TypeContext
-): Type {
+): Pair<Type, StaticBindings> {
     val bindings = checkArguments(
         call = node,
         staticParameters = receiverType.staticParameters,
@@ -81,7 +102,8 @@ private fun inferFunctionCallType(
     }
 
     // TODO: handle unconstrained types
-    return replaceStaticValuesInType(receiverType.returns, bindings)
+    val returnType = replaceStaticValuesInType(receiverType.returns, bindings)
+    return Pair(returnType, bindings)
 }
 
 private fun inferConstructorCallType(
@@ -89,7 +111,7 @@ private fun inferConstructorCallType(
     typeFunction: ParameterizedStaticValue?,
     shapeType: ShapeType,
     context: TypeContext
-): Type {
+): Pair<Type, StaticBindings> {
     if (node.positionalArguments.any()) {
         throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
     }
@@ -106,15 +128,16 @@ private fun inferConstructorCallType(
     )
 
     if (typeFunction == null) {
-        return shapeType
+        return Pair(shapeType, mapOf())
     } else {
-        return applyStatic(typeFunction, typeFunction.parameters.map({ parameter ->
+        val type = applyStatic(typeFunction, typeFunction.parameters.map({ parameter ->
             typeParameterBindings[parameter]!!
         })) as Type
+        return Pair(type, typeParameterBindings)
     }
 }
 
-internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): Type {
+internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext, bindingsHint: StaticBindings? = null): Type {
     val receiverType = inferType(node.receiver, context)
 
     if (receiverType is FunctionType) {
@@ -124,6 +147,7 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext): 
             positionalParameters = receiverType.positionalParameters,
             namedParameters = receiverType.namedParameters,
             context = context,
+            bindingsHint = bindingsHint,
             allowMissing = true
         )
 
@@ -158,6 +182,7 @@ private fun checkArguments(
     positionalParameters: List<Type>,
     namedParameters: Map<Identifier, Type>,
     context: TypeContext,
+    bindingsHint: StaticBindings? = null,
     allowMissing: Boolean
 ): StaticBindings {
     val positionalArguments = call.positionalArguments.zip(positionalParameters)
@@ -194,21 +219,23 @@ private fun checkArguments(
     val arguments = positionalArguments + namedArguments
     return checkArgumentTypes(
         staticParameters = staticParameters,
-        staticArguments = call.staticArguments,
+        staticArgumentNodes = call.staticArguments,
         arguments = arguments,
         source = call.source,
+        bindingsHint = bindingsHint,
         context = context
     )
 }
 
 private fun checkArgumentTypes(
     staticParameters: List<StaticParameter>,
-    staticArguments: List<StaticExpressionNode>,
+    staticArgumentNodes: List<StaticExpressionNode>,
     arguments: List<Pair<ExpressionNode, Type>>,
     source: Source,
+    bindingsHint: StaticBindings?,
     context: TypeContext
 ): StaticBindings {
-    if (staticArguments.isEmpty()) {
+    if (staticArgumentNodes.isEmpty() && bindingsHint == null) {
         val typeParameters = staticParameters.filterIsInstance<TypeParameter>()
         val effectParameters = staticParameters.filterIsInstance<EffectParameter>()
 
@@ -258,38 +285,43 @@ private fun checkArgumentTypes(
 
         return generateBindings()
     } else {
-        if (staticArguments.size != staticParameters.size) {
-            throw WrongNumberOfStaticArgumentsError(
-                expected = staticParameters.size,
-                actual = staticArguments.size,
-                source = source
-            )
+        val bindings = if (bindingsHint == null) {
+            if (staticArgumentNodes.size != staticParameters.size) {
+                throw WrongNumberOfStaticArgumentsError(
+                    expected = staticParameters.size,
+                    actual = staticArgumentNodes.size,
+                    source = source
+                )
+            }
+
+            val typeMap = mutableMapOf<TypeParameter, Type>()
+            val effectMap = mutableMapOf<EffectParameter, Effect>()
+
+            for ((staticParameter, staticArgument) in staticParameters.zip(staticArgumentNodes)) {
+                staticParameter.accept(object : StaticParameter.Visitor<Unit> {
+                    override fun visit(parameter: TypeParameter) {
+                        typeMap[parameter] = evalType(staticArgument, context)
+                    }
+
+                    override fun visit(parameter: EffectParameter) {
+                        effectMap[parameter] = evalEffect(staticArgument, context)
+                    }
+                })
+            }
+
+            typeMap + effectMap
+        } else {
+            bindingsHint
         }
-
-        val typeMap = mutableMapOf<TypeParameter, Type>()
-        val effectMap = mutableMapOf<EffectParameter, Effect>()
-
-        for ((staticParameter, staticArgument) in staticParameters.zip(staticArguments)) {
-            staticParameter.accept(object: StaticParameter.Visitor<Unit> {
-                override fun visit(parameter: TypeParameter) {
-                    typeMap[parameter] = evalType(staticArgument, context)
-                }
-
-                override fun visit(parameter: EffectParameter) {
-                    effectMap[parameter] = evalEffect(staticArgument, context)
-                }
-            })
-        }
-
-        val bindings = typeMap + effectMap
 
         checkArgumentTypes(
             staticParameters = listOf(),
-            staticArguments = listOf(),
+            staticArgumentNodes = listOf(),
             arguments = arguments.map({ (expression, type) ->
                 expression to replaceStaticValuesInType(type, bindings)
             }),
             source = source,
+            bindingsHint = null,
             context = context
         )
 

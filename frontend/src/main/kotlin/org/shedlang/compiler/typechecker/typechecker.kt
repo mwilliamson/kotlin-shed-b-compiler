@@ -116,6 +116,10 @@ internal class TypeContext(
         expressionTypes[node.nodeId] = type
     }
 
+    fun expressionType(node: ExpressionNode): Type? {
+        return expressionTypes[node.nodeId]
+    }
+
     fun addStaticExpressionType(node: StaticExpressionNode, type: Type) {
         expressionTypes[node.nodeId] = type
     }

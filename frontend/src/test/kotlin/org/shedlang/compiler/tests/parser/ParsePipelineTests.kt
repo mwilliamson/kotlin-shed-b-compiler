@@ -36,17 +36,4 @@ class ParsePipelineTests {
             )
         ))
     }
-
-    @Test
-    fun whenRightHandSideOfPipelineIsPartialCallThenResultIsNormalCall() {
-        val source = "x |> f~(y)"
-        val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            receiver = isVariableReference("f"),
-            positionalArguments = isSequence(
-                isVariableReference("y"),
-                isVariableReference("x"),
-            ),
-        ))
-    }
 }
