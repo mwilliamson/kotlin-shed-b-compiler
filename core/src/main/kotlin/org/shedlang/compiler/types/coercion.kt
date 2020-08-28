@@ -192,6 +192,16 @@ class TypeConstraintSolver(
             return coerce(from = from.baseType, to = baseTo)
         }
 
+        if (
+            to is UpdatedType &&
+            from is ShapeType &&
+            from.shapeId == to.shapeId &&
+            from.populatedFieldNames.contains(to.field.name)
+        ) {
+            val baseFrom = createPartialShapeType(from, populatedFieldNames = from.populatedFieldNames - setOf(to.field.name))
+            return coerce(from = baseFrom, to = to.baseType)
+        }
+
         return false
     }
 

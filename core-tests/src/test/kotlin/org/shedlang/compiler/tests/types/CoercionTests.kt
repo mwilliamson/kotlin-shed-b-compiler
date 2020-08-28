@@ -504,11 +504,53 @@ class CoercionTests {
             shapeType = shapeType,
             field = field1,
         )
+
+        val result = coerce(
+            parameters = setOf(typeParameter),
+            from = shapeType,
+            to = updatedType,
+        )
+
+        assertThat(
+            result,
+            isSuccess(
+                typeParameter to isShapeType(
+                    shapeId = equalTo(shapeId),
+                    populatedFields = isSequence(
+                        isField(name = isIdentifier("field2")),
+                        isField(name = isIdentifier("field3")),
+                    )
+                ),
+            ),
+        )
+    }
+
+    @Test
+    fun canCoerceUpdatedTypeWithFieldFromShapeToShape() {
+        val shapeId = freshTypeId()
+        val field1 = field(name = "field1", shapeId = shapeId, type = IntType)
+        val field2 = field(name = "field2", shapeId = shapeId, type = IntType)
+        val field3 = field(name = "field3", shapeId = shapeId, type = IntType)
+        val shapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field1, field2, field3)
+        )
+
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+
+        val updatedType = updatedType(
+            baseType = typeParameter,
+            shapeType = shapeType,
+            field = field1,
+        )
+
         val result = coerce(
             parameters = setOf(typeParameter),
             from = updatedType,
             to = shapeType,
         )
+
         assertThat(
             result,
             isSuccess(
