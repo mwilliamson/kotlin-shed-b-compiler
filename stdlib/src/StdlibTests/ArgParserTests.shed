@@ -20,36 +20,38 @@ fun optionToString(option: Option[String]) -> String {
 val testCases = Tests.suite(moduleName, list(
     Tests.testCase("can parse single positional argument", fun () {
         shape Args {
-            x: String,
+            x: Option[String],
         }
 
         val rawArguments = list("hello");
-        //~ val argParser = ArgParser.parser(empty[Args]())
-            //~ |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.add);
-
-        //~ val arguments = ArgParser.parse(argParser, rawArguments);
-
-        //~ Tests.assertThat(arguments, M.hasField(Args.fields.x, M.isString("hello")));
-
-
-        val argParser = ArgParser.parser("")
-            |> ArgParser.positional~("message", ArgParser.string, fun (arg: Option[String], acc: String) => Options.default(acc, arg));
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.update);
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, M.isString("hello"))
+        Tests.assertThat(arguments, M.hasField(Args.fields.x, M.isSome(M.isString("hello"))))
     }),
 
     Tests.testCase("can parse multiple positional argument", fun () {
+        shape Args {
+            one: Option[String],
+            two: Option[String],
+            three: Option[String],
+        }
+
         val rawArguments = list("hello", "world", "!");
 
-        val argParser = ArgParser.parser("")
-            |> ArgParser.positional~("one", ArgParser.string, fun (arg: Option[String], acc: String) => acc + "one: " + optionToString(arg))
-            |> ArgParser.positional~("two", ArgParser.string, fun (arg: Option[String], acc: String) => acc + ", two: " + optionToString(arg))
-            |> ArgParser.positional~("three", ArgParser.string, fun (arg: Option[String], acc: String) => acc + ", three: " + optionToString(arg));
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("one", ArgParser.string, Args.fields.one.update)
+            |> ArgParser.positional~("two", ArgParser.string, Args.fields.two.update)
+            |> ArgParser.positional~("three", ArgParser.string, Args.fields.three.update);
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, M.isString("one: hello, two: world, three: !"))
+        Tests.assertThat(arguments, M.allOf(list(
+            M.hasField(Args.fields.one, M.isSome(M.isString("hello"))),
+            M.hasField(Args.fields.two, M.isSome(M.isString("world"))),
+            M.hasField(Args.fields.three, M.isSome(M.isString("!"))),
+        )))
     }),
 ));
