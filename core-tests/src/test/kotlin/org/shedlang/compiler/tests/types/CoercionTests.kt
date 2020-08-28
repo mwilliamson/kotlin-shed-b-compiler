@@ -556,7 +556,34 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceUpdatedTypeWithFieldFromShapeToShape() {
+    fun cannotCoerceFromPartialShapeWithFieldUnpopulatedToUpdatedType() {
+        val shapeId = freshTypeId()
+        val field = field(name = "field", shapeId = shapeId, type = IntType)
+        val shapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field)
+        )
+
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+
+        val updatedType = updatedType(
+            baseType = typeParameter,
+            shapeType = shapeType,
+            field = field,
+        )
+
+        val result = coerce(
+            parameters = setOf(typeParameter),
+            from = createEmptyShapeType(shapeType),
+            to = updatedType,
+        )
+
+        assertThat(result, isFailure)
+    }
+
+    @Test
+    fun canCoerceFromUpdatedTypeToPartialShapeWithFieldUnpopulated() {
         val shapeId = freshTypeId()
         val field1 = field(name = "field1", shapeId = shapeId, type = IntType)
         val field2 = field(name = "field2", shapeId = shapeId, type = IntType)
@@ -564,7 +591,7 @@ class CoercionTests {
         val shapeType = shapeType(
             shapeId = shapeId,
             name = "Box",
-            fields = listOf(field1, field2, field3)
+            fields = listOf(field1, field2, field3),
         )
 
         val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
@@ -578,21 +605,17 @@ class CoercionTests {
         val result = coerce(
             parameters = setOf(typeParameter),
             from = updatedType,
-            to = shapeType,
+            to = createPartialShapeType(shapeType, populatedFieldNames = setOf(field2.name)),
         )
 
-        assertThat(
-            result,
-            isSuccess(
-                typeParameter to isShapeType(
-                    shapeId = equalTo(shapeId),
-                    populatedFields = isSequence(
-                        isField(name = isIdentifier("field2")),
-                        isField(name = isIdentifier("field3")),
-                    )
-                ),
+        assertThat(result, isSuccess(
+            typeParameter to isShapeType(
+                shapeId = equalTo(shapeId),
+                populatedFields = isSequence(
+                    isField(name = isIdentifier("field2")),
+                )
             ),
-        )
+        ))
     }
 
     @Test
