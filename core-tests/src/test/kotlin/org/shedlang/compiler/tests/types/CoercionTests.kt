@@ -486,7 +486,7 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceShapeToUpdatedTypeWithFieldFromShape() {
+    fun canCoerceBetweenShapeAndUpdatedTypeWithFieldFromShape() {
         val shapeId = freshTypeId()
         val field1 = field(name = "field1", shapeId = shapeId, type = IntType)
         val field2 = field(name = "field2", shapeId = shapeId, type = IntType)
@@ -505,15 +505,11 @@ class CoercionTests {
             field = field1,
         )
 
-        val result = coerce(
+        assertSymmetricCoercion(
             parameters = setOf(typeParameter),
             from = shapeType,
             to = updatedType,
-        )
-
-        assertThat(
-            result,
-            isSuccess(
+            matcher = isSuccess(
                 typeParameter to isShapeType(
                     shapeId = equalTo(shapeId),
                     populatedFields = isSequence(
@@ -522,6 +518,40 @@ class CoercionTests {
                     )
                 ),
             ),
+        )
+    }
+
+    @Test
+    fun cannotCoerceBetweenShapeAndUpdatedTypeWithFieldFromOtherShape() {
+        val shapeId = freshTypeId()
+        val field = field(name = "field", shapeId = shapeId, type = IntType)
+        val shapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field)
+        )
+
+        val otherShapeId = freshTypeId()
+        val otherField = field(name = "field", shapeId = otherShapeId, type = IntType)
+        val otherShapeType = shapeType(
+            shapeId = otherShapeId,
+            name = "Box",
+            fields = listOf(otherField)
+        )
+
+        val typeParameter = invariantTypeParameter("T", shapeId = otherShapeId)
+
+        val updatedType = updatedType(
+            baseType = typeParameter,
+            shapeType = otherShapeType,
+            field = otherField,
+        )
+
+        assertSymmetricCoercion(
+            parameters = setOf(typeParameter),
+            from = shapeType,
+            to = updatedType,
+            matcher = isFailure,
         )
     }
 
@@ -859,6 +889,24 @@ class CoercionTests {
             solver.coerceEffect(from = effectParameter, to = readEffect),
             equalTo(false)
         )
+    }
+
+    private fun assertSymmetricCoercion(parameters: Set<StaticParameter>, from: Type, to: Type, matcher: Matcher<CoercionResult>) {
+        val result1 = coerce(
+            parameters = parameters,
+            from = from,
+            to = to,
+        )
+
+        assertThat(result1, matcher)
+
+        val result2 = coerce(
+            parameters = parameters,
+            from = to,
+            to = from,
+        )
+
+        assertThat(result2, matcher)
     }
 
     private fun isSuccess(vararg bindings: Pair<TypeParameter, Matcher<Type>>): Matcher<CoercionResult> {
