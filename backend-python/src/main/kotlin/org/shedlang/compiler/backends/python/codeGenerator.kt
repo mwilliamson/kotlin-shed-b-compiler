@@ -8,6 +8,7 @@ import org.shedlang.compiler.backends.*
 import org.shedlang.compiler.backends.python.ast.*
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
+import org.shedlang.compiler.types.EmptyFunctionType
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.rawValue
 
@@ -978,6 +979,16 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                             source = source
                         ),
                         source = source
+                    )
+                } else if (context.inspector.typeOfExpression(node.receiver) == EmptyFunctionType) {
+                    val shapeType = context.inspector.typeOfExpression(node) as ShapeType
+                    PythonFunctionCallNode(
+                        function = generateCode(node.staticArguments.single(), context),
+                        arguments = listOf(),
+                        keywordArguments = shapeType.allFields.values.map { field ->
+                            pythoniseName(field.name) to PythonNoneLiteralNode(source = source)
+                        },
+                        source = source,
                     )
                 } else {
                     val partialArguments = if (isPartial) {

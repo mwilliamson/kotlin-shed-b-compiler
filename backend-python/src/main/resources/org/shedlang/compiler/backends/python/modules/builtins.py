@@ -95,13 +95,3 @@ def effect_handler_create_operation_handler(handler):
         return value
 
     return handle
-
-
-# TODO: this is missing the tag value for empty shapes
-def empty():
-    return _Empty()
-
-
-class _Empty(object):
-    def __getattr__(self, key):
-        return None

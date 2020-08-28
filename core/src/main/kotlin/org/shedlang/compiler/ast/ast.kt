@@ -1002,7 +1002,7 @@ data class IsNode(
     }
 }
 
-interface CallBaseNode: Node {
+interface CallBaseNode: ExpressionNode {
     val receiver: ExpressionNode
     val staticArguments: List<StaticExpressionNode>
     val positionalArguments: List<ExpressionNode>

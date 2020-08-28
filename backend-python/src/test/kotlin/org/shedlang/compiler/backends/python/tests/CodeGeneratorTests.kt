@@ -103,7 +103,7 @@ class CodeGeneratorTests {
             path = ImportPath.relative(listOf("x", "y"))
         )))
 
-        val node = generateCode(shed, context(isPackage = true))
+        val node = generateCode(shed, context(isPackage = true, ))
 
         assertThat(node, isPythonModule(
             body = isSequence(
@@ -229,7 +229,7 @@ class CodeGeneratorTests {
                     fieldInspector(name = "a", value = null),
                     fieldInspector(name = "b", value = FieldValue.Expression(literalInt(0)))
                 )
-            )
+            ),
         )
         val node = generateModuleStatementCode(shed, context).single()
 
@@ -275,7 +275,7 @@ class CodeGeneratorTests {
                         value = FieldValue.Expression(fieldValue)
                     )
                 )
-            )
+            ),
         )
         val node = generateModuleStatementCode(shed, context).single()
 
@@ -304,7 +304,7 @@ class CodeGeneratorTests {
             shapeTagValues = mapOf(
                 member1Node to tagValue(tag(listOf("Example"), "X"), "Member1TagValue"),
                 member2Node to tagValue(tag(listOf("Example"), "X"), "Member2TagValue")
-            )
+            ),
         )
         val nodes = generateModuleStatementCode(shed, context)
 
@@ -337,7 +337,7 @@ class CodeGeneratorTests {
             references = mapOf(
                 consReference to consDeclaration,
                 nilReference to nilDeclaration
-            )
+            ),
         )
         val nodes = generateModuleStatementCode(shed, context)
 
@@ -555,12 +555,12 @@ class CodeGeneratorTests {
         )
 
         val context = context(
+            discriminatorsForWhenBranches = mapOf(
+                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
+            ),
             references = mapOf(
                 variableReference to variableDeclaration
             ),
-            discriminatorsForWhenBranches = mapOf(
-                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
-            )
         )
         val generatedExpression = generateExpressionCode(shed, context)
         val reference = generatedExpression.value as PythonVariableReferenceNode
@@ -616,12 +616,12 @@ class CodeGeneratorTests {
         )
 
         val generatedExpression = generateExpressionCode(shed, context(
+            discriminatorsForWhenBranches = mapOf(
+                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
+            ),
             references = mapOf(
                 variableReference to variableDeclaration
             ),
-            discriminatorsForWhenBranches = mapOf(
-                Pair(shed, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
-            )
         ))
         val reference = generatedExpression.value as PythonVariableReferenceNode
 
@@ -676,13 +676,13 @@ class CodeGeneratorTests {
         val generatedCode = generateModuleStatementCode(
             shed,
             context(
+                discriminatorsForWhenBranches = mapOf(
+                    Pair(whenExpression, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
+                ),
                 references = mapOf(
                     variableReference to variableDeclaration,
                     typeReference to typeDeclaration
                 ),
-                discriminatorsForWhenBranches = mapOf(
-                    Pair(whenExpression, whenBranch) to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
-                )
             )
         )
 
@@ -736,7 +736,7 @@ class CodeGeneratorTests {
             )
         )
 
-        val generatedCode = generateExpressionCode(shed, context(references = references))
+        val generatedCode = generateExpressionCode(shed, context(references = references, ))
 
         assertThat((generatedCode.statements.single() as PythonFunctionNode).body, isSequence(
             isPythonIfStatement(
@@ -930,7 +930,7 @@ class CodeGeneratorTests {
         val declaration = parameter("x")
         val shed = variableReference("x")
 
-        val node = generateExpressionCode(shed, context(references = mapOf(shed to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(shed to declaration), ))
 
         assertThat(node, isGeneratedExpression(isPythonVariableReference("x")))
     }
@@ -1020,6 +1020,11 @@ class CodeGeneratorTests {
             listOf(expressionStatementReturn(call(laterFunctionReference)))
         )
 
+        val expressionTypes: Map<ExpressionNode, Type> = mapOf(
+            earlierFunctionReference to functionType(),
+            laterFunctionReference to functionType(),
+            receiverReference to functionType(),
+        )
         val references: Map<ReferenceNode, VariableBindingNode> = mapOf(
             earlierFunctionReference to earlierFunctionDeclaration,
             laterFunctionReference to laterFunctionDeclaration,
@@ -1034,7 +1039,8 @@ class CodeGeneratorTests {
                         left = earlierExpression,
                         right = laterExpression
                     )
-                    generateExpressionCode(shed, context = context(references = references))
+                    val context = context(expressionTypes = expressionTypes, references = references)
+                    generateExpressionCode(shed, context = context)
                 }
             ),
             SpillingOrderTestCase(
@@ -1044,7 +1050,8 @@ class CodeGeneratorTests {
                         receiver = receiverReference,
                         positionalArguments = listOf(earlierExpression, laterExpression)
                     )
-                    generateExpressionCode(shed, context = context(references = references))
+                    val context = context(expressionTypes = expressionTypes, references = references)
+                    generateExpressionCode(shed, context = context)
                 }
             ),
             SpillingOrderTestCase(
@@ -1057,7 +1064,8 @@ class CodeGeneratorTests {
                             callNamedArgument("y", laterExpression)
                         )
                     )
-                    generateExpressionCode(shed, context = context(references = references))
+                    val context = context(expressionTypes = expressionTypes, references = references)
+                    generateExpressionCode(shed, context = context)
                 }
             ),
             SpillingOrderTestCase(
@@ -1067,7 +1075,11 @@ class CodeGeneratorTests {
                         receiver = earlierExpression,
                         positionalArguments = listOf(laterExpression)
                     )
-                    generateExpressionCode(shed, context = context(references = references))
+                    val context = context(
+                        expressionTypes = expressionTypes + mapOf(earlierExpression to functionType()),
+                        references = references
+                    )
+                    generateExpressionCode(shed, context = context)
                 }
             ),
             SpillingOrderTestCase(
@@ -1078,7 +1090,8 @@ class CodeGeneratorTests {
                         positionalArguments = listOf(earlierExpression),
                         namedArguments = listOf(callNamedArgument("x", laterExpression))
                     )
-                    generateExpressionCode(shed, context = context(references = references))
+                    val context = context(expressionTypes = expressionTypes, references = references)
+                    generateExpressionCode(shed, context = context)
                 }
             ),
             SpillingOrderTestCase(
@@ -1087,7 +1100,8 @@ class CodeGeneratorTests {
                     val shed = tupleNode(
                         elements = listOf(earlierExpression, laterExpression)
                     )
-                    generateExpressionCode(shed, context = context(references = references))
+                    val context = context(expressionTypes = expressionTypes, references = references)
+                    generateExpressionCode(shed, context = context)
                 }
             )
         )
@@ -1115,12 +1129,12 @@ class CodeGeneratorTests {
         val shed = isOperation(variableReference, shapeReference)
 
         val context = context(
+            discriminatorsForIsExpressions = mapOf(
+                shed to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
+            ),
             references = mapOf(
                 variableReference to variableDeclaration
             ),
-            discriminatorsForIsExpressions = mapOf(
-                shed to discriminator(tagValue(tag(listOf("M"), "A"), "tag"))
-            )
         )
         val node = generateExpressionCode(shed, context)
 
@@ -1140,7 +1154,11 @@ class CodeGeneratorTests {
             namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
-        val node = generateExpressionCode(shed, context(references = mapOf(function to declaration)))
+        val context = context(
+            references = mapOf(function to declaration),
+            expressionTypes = mapOf(function to functionType())
+        )
+        val node = generateExpressionCode(shed, context)
 
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("f"),
@@ -1291,7 +1309,11 @@ class CodeGeneratorTests {
             namedArguments = listOf(callNamedArgument("x", literalBool(true)))
         )
 
-        val node = generateExpressionCode(shed, context(references = mapOf(function to declaration)))
+        val context = context(
+            expressionTypes = mapOf(function to functionType()),
+            references = mapOf(function to declaration),
+        )
+        val node = generateExpressionCode(shed, context)
 
         assertThat(node, isGeneratedExpression(isPythonFunctionCall(
             isPythonVariableReference("_partial"),
@@ -1306,7 +1328,7 @@ class CodeGeneratorTests {
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "y")
 
-        val node = generateExpressionCode(shed, context(references = mapOf(receiver to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(receiver to declaration), ))
 
         assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -1320,7 +1342,7 @@ class CodeGeneratorTests {
         val receiver = variableReference("x")
         val shed = fieldAccess(receiver, "someValue")
 
-        val node = generateExpressionCode(shed, context(references = mapOf(receiver to declaration)))
+        val node = generateExpressionCode(shed, context(references = mapOf(receiver to declaration), ))
 
         assertThat(node, isGeneratedExpression(isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -1334,7 +1356,7 @@ class CodeGeneratorTests {
         val receiver = staticReference("x")
         val shed = staticFieldAccess(receiver, "y")
 
-        val node = generateCode(shed, context(references = mapOf(receiver to declaration)))
+        val node = generateCode(shed, context(references = mapOf(receiver to declaration), ))
 
         assertThat(node, isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -1348,7 +1370,7 @@ class CodeGeneratorTests {
         val receiver = staticReference("x")
         val shed = staticFieldAccess(receiver, "someValue")
 
-        val node = generateCode(shed, context(references = mapOf(receiver to declaration)))
+        val node = generateCode(shed, context(references = mapOf(receiver to declaration), ))
 
         assertThat(node, isPythonAttributeAccess(
             receiver = isPythonVariableReference("x"),
@@ -1388,17 +1410,13 @@ class CodeGeneratorTests {
                 handler("exit", handlerDefinition)
             )
         )
-        val effect = userDefinedEffect(Identifier("Exit"), { effect ->
-            mapOf(
-                Identifier("exit") to functionType()
-            )
-        })
 
         val context = context(
+            expressionTypes = mapOf(functionReference to functionType()),
             references = mapOf(
                 effectReference to declaration("EarlyExit"),
                 functionReference to function()
-            )
+            ),
         )
         val node = generateExpressionCode(shed, context)
 
@@ -1437,13 +1455,15 @@ class CodeGeneratorTests {
         moduleName: List<String> = listOf(),
         discriminatorsForIsExpressions: Map<IsNode, Discriminator> = mapOf(),
         discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
+        expressionTypes: Map<ExpressionNode, Type> = mapOf(),
         references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
         shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
-        shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf()
+        shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf(),
     ) = CodeGenerationContext(
         inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = discriminatorsForIsExpressions,
             discriminatorsForWhenBranches = discriminatorsForWhenBranches,
+            expressionTypes = expressionTypes,
             references = references,
             shapeFields = shapeFields,
             shapeTagValues = shapeTagValues
