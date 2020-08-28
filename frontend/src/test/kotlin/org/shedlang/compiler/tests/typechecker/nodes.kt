@@ -82,7 +82,7 @@ fun throwsUnexpectedType(expected: Matcher<TypeGroup>, actual: Type): Matcher<()
 
 fun throwsUnexpectedType(
     expected: Matcher<TypeGroup>,
-    actual: Matcher<Type>,
+    actual: Matcher<Type> = anything,
     source: Matcher<Source> = anything
 ): Matcher<() -> Unit> {
     return throws(allOf(

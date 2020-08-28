@@ -203,6 +203,27 @@ class TypeCheckCallTests {
     }
 
     @Test
+    fun whenArgumentIsWrongTypeThenExpectedTypeHasTypesReplaced() {
+        val functionReference = variableReference("f")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(literalInt(), literalBool())
+        )
+
+        val typeParameter = invariantTypeParameter(name = "T")
+        val functionType = functionType(
+            staticParameters = listOf(typeParameter),
+            positionalParameters = listOf(typeParameter, TupleType(listOf(typeParameter))),
+            returns = typeParameter
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
+        assertThat(
+            { inferCallType(node, typeContext) },
+            throwsUnexpectedType(expected = cast(isTupleType(isSequence(isIntType))))
+        )
+    }
+
+    @Test
     fun whenFunctionExpressionIsNotFunctionTypeThenCallDoesNotTypeCheck() {
         val functionReference = variableReference("f")
         val node = call(

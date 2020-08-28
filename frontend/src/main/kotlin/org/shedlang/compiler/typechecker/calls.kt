@@ -249,7 +249,6 @@ private fun checkArgumentTypes(
             val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
-                    // TODO: test this!
                     expected = replaceStaticValuesInType(argument.second, generateBindings()),
                     actual = actualType,
                     source = argument.first.source
