@@ -10,14 +10,17 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
         val receiver = node.receiver
         // TODO: this magic with bindingsHint when the receiver is a partial call needs testing
         val receiverType = if (receiver is PartialCallNode && node.staticArguments.isEmpty() && receiver.staticArguments.isEmpty()) {
-            val (type, bindings) = infer(CallNode(
-                receiver = receiver.receiver,
-                positionalArguments = receiver.positionalArguments + node.positionalArguments,
-                namedArguments = receiver.namedArguments + node.namedArguments,
-                staticArguments = listOf(),
-                hasEffect = node.hasEffect,
-                source = receiver.source,
-            ), context)
+            val (type, bindings) = infer(
+                CallNode(
+                    receiver = receiver.receiver,
+                    positionalArguments = receiver.positionalArguments + node.positionalArguments,
+                    namedArguments = receiver.namedArguments + node.namedArguments,
+                    staticArguments = listOf(),
+                    hasEffect = node.hasEffect,
+                    source = receiver.source,
+                ),
+                context.copy(),
+            )
             val receiverType = inferPartialCallType(receiver, context, bindingsHint = bindings)
             context.addExpressionType(receiver, receiverType)
             receiverType

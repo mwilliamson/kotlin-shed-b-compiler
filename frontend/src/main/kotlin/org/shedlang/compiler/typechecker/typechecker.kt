@@ -182,6 +182,23 @@ internal class TypeContext(
             variableTypes = variableTypes
         )
     }
+
+    fun copy(): TypeContext {
+        return TypeContext(
+            moduleName = moduleName,
+            effect = effect,
+            resumeValueType = resumeValueType,
+            variableTypes = variableTypes.toMutableMap(),
+            refinedVariableTypes = refinedVariableTypes.toMutableMap(),
+            functionTypes = functionTypes.toMutableMap(),
+            discriminators = discriminators.toMutableMap(),
+            expressionTypes = expressionTypes.toMutableMap(),
+            targetTypes = targetTypes.toMutableMap(),
+            resolvedReferences = resolvedReferences,
+            getModule = getModule,
+            deferred = LinkedList(deferred),
+        )
+    }
 }
 
 interface NodeTypes {

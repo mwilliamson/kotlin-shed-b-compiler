@@ -17,11 +17,6 @@ internal fun verifyType(expression: ExpressionNode, context: TypeContext, expect
 }
 
 internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: Type? = null) : Type {
-    val existingType = context.expressionType(expression)
-    if (existingType != null) {
-        return existingType
-    }
-
     val type = expression.accept(object : ExpressionNode.Visitor<Type> {
         override fun visit(node: UnitLiteralNode) = UnitType
         override fun visit(node: BooleanLiteralNode) = BoolType
