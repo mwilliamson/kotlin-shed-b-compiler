@@ -75,7 +75,12 @@ class TypesMap(
     }
 
     override fun typeOfExpression(node: ExpressionNode): Type {
-        return expressionTypes[node.nodeId]!!
+        val expressionType = expressionTypes[node.nodeId]
+        if (expressionType == null) {
+            throw CompilerError("missing type for expression", source = node.source)
+        } else {
+            return expressionType
+        }
     }
 
     override fun typeOfTarget(target: TargetNode): Type {
