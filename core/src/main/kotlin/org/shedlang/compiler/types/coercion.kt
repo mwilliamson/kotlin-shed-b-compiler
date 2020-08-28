@@ -93,7 +93,7 @@ class TypeConstraintSolver(
             }
         }
 
-        if (from is TypeParameter && from in parameters && from.shapeId == null) {
+        if (from is TypeParameter && from in parameters && (from.shapeId == null || from.shapeId == to.shapeId)) {
             val boundType = typeBindings[from]
             if (boundType == null) {
                 bindType(from, to)
@@ -180,6 +180,16 @@ class TypeConstraintSolver(
             }
 
             return sameShapeId && canCoerceStaticArguments && canCoerceFields
+        }
+
+        if (
+            from is UpdatedType &&
+            to is ShapeType &&
+            from.shapeId == to.shapeId &&
+            to.populatedFieldNames.contains(from.field.name)
+        ) {
+            val baseTo = createPartialShapeType(to, populatedFieldNames = to.populatedFieldNames - setOf(from.field.name))
+            return coerce(from = from.baseType, to = baseTo)
         }
 
         return false

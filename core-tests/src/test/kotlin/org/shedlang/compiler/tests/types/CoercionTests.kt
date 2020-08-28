@@ -486,6 +486,44 @@ class CoercionTests {
     }
 
     @Test
+    fun canCoerceShapeToUpdatedTypeWithFieldFromShape() {
+        val shapeId = freshTypeId()
+        val field1 = field(name = "field1", shapeId = shapeId, type = IntType)
+        val field2 = field(name = "field2", shapeId = shapeId, type = IntType)
+        val field3 = field(name = "field3", shapeId = shapeId, type = IntType)
+        val shapeType = shapeType(
+            shapeId = shapeId,
+            name = "Box",
+            fields = listOf(field1, field2, field3)
+        )
+
+        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
+
+        val updatedType = updatedType(
+            baseType = typeParameter,
+            shapeType = shapeType,
+            field = field1,
+        )
+        val result = coerce(
+            parameters = setOf(typeParameter),
+            from = updatedType,
+            to = shapeType,
+        )
+        assertThat(
+            result,
+            isSuccess(
+                typeParameter to isShapeType(
+                    shapeId = equalTo(shapeId),
+                    populatedFields = isSequence(
+                        isField(name = isIdentifier("field2")),
+                        isField(name = isIdentifier("field3")),
+                    )
+                ),
+            ),
+        )
+    }
+
+    @Test
     fun canCoerceTypeParameterToSubtypeOfType() {
         val typeParameter = invariantTypeParameter("T")
         val result = coerce(
@@ -553,7 +591,7 @@ class CoercionTests {
     }
 
     @Test
-    fun whenTypeParameterHasShapeConstraintThenTypeParameterCannotBeCoercedToSameShape() {
+    fun whenTypeParameterHasShapeConstraintThenTypeParameterCanBeCoercedToSameShape() {
         val shapeId = freshNodeId()
         val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
         val sameShape = shapeType(shapeId = shapeId)
@@ -561,7 +599,7 @@ class CoercionTests {
             constraints = listOf(typeParameter to sameShape),
             parameters = setOf(typeParameter)
         )
-        assertThat(result, isFailure)
+        assertThat(result, isSuccess(typeParameter to sameInstance(sameShape)))
     }
 
     @Test
