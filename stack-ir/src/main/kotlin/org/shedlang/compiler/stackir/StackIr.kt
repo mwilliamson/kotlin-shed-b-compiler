@@ -84,6 +84,8 @@ object Exit: Instruction()
 
 class FieldAccess(val fieldName: Identifier, val receiverType: Type): Instruction()
 
+class FieldUpdate(val fieldName: Identifier, val receiverType: Type): Instruction()
+
 object IntAdd: Instruction()
 
 object IntEquals: Instruction()
@@ -125,6 +127,8 @@ class ModuleStore(
     val moduleName: ModuleName,
     val exports: List<Pair<Identifier, Int>>
 ): Instruction()
+
+class ObjectCreate(val objectType: Type): Instruction()
 
 class PushValue(val value: IrValue): Instruction()
 

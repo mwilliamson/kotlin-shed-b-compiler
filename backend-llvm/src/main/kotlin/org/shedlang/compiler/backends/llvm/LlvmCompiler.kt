@@ -387,11 +387,10 @@ internal class Compiler(
 
                 return context2
                     .addInstructions(
-                        LlvmIntToPtr(
+                        objects.castToObjectPointer(
                             target = instance,
-                            sourceType = compiledValueType,
                             value = operand,
-                            targetType = compiledType(objectType = instruction.receiverType).llvmPointerType()
+                            objectType = instruction.receiverType,
                         )
                     )
                     .addInstructions(
@@ -403,6 +402,22 @@ internal class Compiler(
                         )
                     )
                     .pushTemporary(field)
+            }
+
+            is FieldUpdate -> {
+                val (context2, fieldValue) = context.popTemporary()
+                val (context3, receiver) = context2.popTemporary()
+                val result = generateLocal("result")
+
+                return context3
+                    .addInstructions(objects.updateObject(
+                        objectType = instruction.receiverType,
+                        existingObjectOperand = receiver,
+                        updatedFieldName = instruction.fieldName,
+                        updatedFieldValue = fieldValue,
+                        target = result,
+                    ))
+                    .pushTemporary(result)
             }
 
             is IntAdd -> {
@@ -528,6 +543,17 @@ internal class Compiler(
                         exportName to context.localLoad(exportVariableId)
                     }
                 ))
+            }
+
+            is ObjectCreate -> {
+                val target = irBuilder.generateLocal("target")
+                return context
+                    .addInstructions(objects.createObject(
+                        objectType = instruction.objectType,
+                        fields = listOf(),
+                        target = target,
+                    ))
+                    .pushTemporary(target)
             }
 
             is PushValue -> {
@@ -822,26 +848,30 @@ internal class Compiler(
 
         val (context3, fieldOperands) = fieldNames.fold(Pair(context, persistentListOf<LlvmOperand>())) { (context2, fieldOperands), fieldName ->
 
-            val defineFunctionInstruction = defineShapeFieldGet(shapeType = rawValue(shapeType) as Type, fieldName = fieldName)
-
-            val context3 = compileInstruction(defineFunctionInstruction, context2)
+            val defineGetInstruction = defineShapeFieldGet(shapeType = rawValue(shapeType) as Type, fieldName = fieldName)
+            val context3 = compileInstruction(defineGetInstruction, context2)
             val (context4, get) = context3.popTemporary()
+
+            val defineUpdateInstruction = defineShapeFieldUpdate(shapeType = rawValue(shapeType) as Type, fieldName = fieldName)
+            val context5 = compileInstruction(defineUpdateInstruction, context4)
+            val (context6, update) = context5.popTemporary()
 
             val shapeFieldPointer = LlvmOperandLocal(generateName("shapeFieldPointer"))
             val shapeFieldNameDefinition = strings.defineString(generateName("shapeFieldName"), fieldName.value)
 
-            val context5 = context4
+            val context7 = context6
                 .addTopLevelEntities(shapeFieldNameDefinition)
                 .addInstructions(objects.createObject(
                     target = shapeFieldPointer,
                     objectType = fieldsObjectType.fieldType(fieldName)!!,
                     fields = listOf(
                         Identifier("get") to get,
-                        Identifier("name") to strings.operandRaw(shapeFieldNameDefinition)
+                        Identifier("name") to strings.operandRaw(shapeFieldNameDefinition),
+                        Identifier("update") to update,
                     )
                 ))
 
-            Pair(context5, fieldOperands.add(shapeFieldPointer))
+            Pair(context7, fieldOperands.add(shapeFieldPointer))
         }
         return context3
             .addInstructions(objects.createObject(

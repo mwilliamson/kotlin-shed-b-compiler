@@ -6,6 +6,7 @@ import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.AnyType
+import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.UserDefinedEffect
 import java.math.BigInteger
@@ -86,6 +87,13 @@ internal class InterpreterShapeValue(
 ): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
         return fields.getValue(fieldName)
+    }
+
+    fun fieldUpdate(fieldName: Identifier, value: InterpreterValue): InterpreterValue {
+        return InterpreterShapeValue(
+            tagValue = tagValue,
+            fields = fields + mapOf(fieldName to value)
+        )
     }
 }
 
@@ -555,7 +563,14 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                                         fieldName = field.name
                                     ),
                                     scopes = persistentListOf()
-                                )
+                                ),
+                                Identifier("update") to toInterpreterFunction(
+                                    defineShapeFieldUpdate(
+                                        shapeType = AnyType,
+                                        fieldName = field.name
+                                    ),
+                                    scopes = persistentListOf()
+                                ),
                             )
                         )
                     }
@@ -609,6 +624,14 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             val (state2, receiver) = initialState.popTemporary()
             val module = receiver as InterpreterHasFields
             state2.pushTemporary(module.field(fieldName)).nextInstruction()
+        }
+
+        is FieldUpdate -> {
+            val (state2, fieldValue) = initialState.popTemporary()
+            val (state3, receiver) = state2.popTemporary()
+            val shapeValue = receiver as InterpreterShapeValue
+            val newShapeValue = shapeValue.fieldUpdate(fieldName, fieldValue)
+            state3.pushTemporary(newShapeValue).nextInstruction()
         }
 
         is IntAdd -> {
@@ -711,6 +734,13 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
             val value = InterpreterModule(fields = fields)
             return initialState.storeModule(moduleName, value).nextInstruction()
+        }
+
+        is ObjectCreate -> {
+            initialState.pushTemporary(InterpreterShapeValue(
+                tagValue = (objectType as ShapeType).tagValue,
+                fields = mapOf(),
+            )).nextInstruction()
         }
 
         is PushValue -> {

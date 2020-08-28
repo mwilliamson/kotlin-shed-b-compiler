@@ -1,8 +1,7 @@
 package org.shedlang.compiler.backends.llvm
 
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.types.StaticValue
-import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.*
 
 internal class LlvmObjectCompiler(
     private val irBuilder: LlvmIrBuilder,
@@ -85,6 +84,75 @@ internal class LlvmObjectCompiler(
         }
 
         return storeTagValue + storeFields
+    }
+
+
+    internal fun updateObject(
+        objectType: StaticValue,
+        existingObjectOperand: LlvmOperand,
+        updatedFieldName: Identifier,
+        updatedFieldValue: LlvmOperand,
+        target: LlvmOperandLocal
+    ): List<LlvmInstruction> {
+        val existingObject = irBuilder.generateLocal("existing")
+        val instance = irBuilder.generateLocal("instance")
+        val compiledObjectType = compiledType(objectType = objectType)
+        val shapeType = objectType as ShapeType
+        val newPopulatedFieldNames = shapeType.populatedFieldNames + setOf(updatedFieldName)
+
+        val malloc = libc.typedMalloc(
+            target = instance,
+            bytes = compiledObjectType.byteSize(),
+            type = compiledObjectType.llvmPointerType()
+        )
+        val (fieldTargets, getFieldInstructions) = newPopulatedFieldNames.map { fieldName ->
+            if (fieldName == updatedFieldName) {
+                updatedFieldValue to listOf()
+            } else {
+                val fieldTarget = irBuilder.generateLocal(fieldName)
+                fieldTarget to fieldAccess(
+                    target = fieldTarget,
+                    receiver = existingObject,
+                    receiverType = objectType,
+                    fieldName = fieldName,
+                )
+            }
+        }.unzip()
+
+        return listOf(
+            malloc,
+
+            listOf(castToObjectPointer(
+                target = existingObject,
+                value = existingObjectOperand,
+                objectType = objectType,
+            )),
+            getFieldInstructions.flatten(),
+
+            storeObject(
+                fields = newPopulatedFieldNames.zip(fieldTargets),
+                objectType = objectType,
+                objectPointer = instance
+            ),
+
+            listOf(
+                LlvmPtrToInt(
+                    target = target,
+                    sourceType = compiledObjectType.llvmPointerType(),
+                    value = instance,
+                    targetType = compiledValueType
+                )
+            )
+        ).flatten()
+    }
+
+    internal fun castToObjectPointer(target: LlvmOperandLocal, objectType: StaticValue, value: LlvmOperand): LlvmIntToPtr {
+        return LlvmIntToPtr(
+            target = target,
+            sourceType = compiledValueType,
+            value = value,
+            targetType = compiledType(objectType = objectType).llvmPointerType()
+        )
     }
 
     internal fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: StaticValue, target: LlvmVariable): List<LlvmInstruction> {
