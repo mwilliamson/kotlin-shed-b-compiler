@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.PositionalArgumentAfterNamedArgumentError
 import org.shedlang.compiler.parser.UnexpectedTokenException
 import org.shedlang.compiler.parser.parseExpression
@@ -143,5 +144,14 @@ class ParseCallTests {
                 isStaticReference("B"),
             )
         ))
+    }
+
+    @Test
+    fun whenCallHasBangThenCallIsNotTreatedAsStaticCall() {
+        val source = "x![A, B]"
+
+        assertThat({
+            parseString(::parseExpression, source)
+        }, throwsException<ParseError>())
     }
 }
