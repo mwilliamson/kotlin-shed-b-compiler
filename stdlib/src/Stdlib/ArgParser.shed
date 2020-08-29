@@ -6,7 +6,7 @@ import Sequences from .Sequences;
 
 shape Parser[T] {
     argDefinitions: Lists.List[ArgDefinition],
-    parseStringArgs: Fun (StringArgs) -> ParseResult[T],
+    parseStringArgs: Fun (StringArgs) !ParseEffect -> T,
 }
 
 shape ArgDefinition {
@@ -14,7 +14,7 @@ shape ArgDefinition {
 }
 
 shape ArgType[T] {
-    parse: Fun (.name: String, .argument: Option[String]) -> ParseResult[T],
+    parse: Fun (.name: String, .argument: Option[String]) !ParseEffect -> T,
 }
 
 union ParseResult[+T] =
@@ -25,14 +25,18 @@ union ParseResult[+T] =
         message: String,
     };
 
+effect ParseEffect {
+    .fail: (String) -> Nothing,
+}
+
 val string = ArgType(
-    .parse = fun (.name: String, .argument: Option[String]) -> ParseResult[String] {
+    .parse = fun (.name: String, .argument: Option[String]) !ParseEffect -> String {
         when (argument) {
             is Some {
-                Success(.value = argument.value)
+                argument.value
             }
             is None {
-                Failure(.message = "required positional argument is missing: " + name)
+                ParseEffect.fail!("required positional argument is missing: " + name)
             }
         }
     },
@@ -40,21 +44,14 @@ val string = ArgType(
 
 fun optional[T](argType: ArgType[T]) -> ArgType[Option[T]] {
     ArgType(
-        .parse = fun(.name: String, .argument: Option[String]) -> ParseResult[Option[T]] {
+        .parse = fun(.name: String, .argument: Option[String]) !ParseEffect -> Option[T] {
             when (argument) {
                 is Some {
-                    val result = argType.parse(.name = name, .argument = argument);
-                    when (result) {
-                        is Success {
-                            Success(.value = some(result.value))
-                        }
-                        is Failure {
-                            result
-                        }
-                    }
+                    val result = argType.parse!(.name = name, .argument = argument);
+                    some(result)
                 }
                 is None {
-                    Success(.value = none)
+                    none
                 }
             }
         }
@@ -66,13 +63,20 @@ type StringArgs = Lists.List[#(String, String)];
 fun parser[T](initialValue: T) -> Parser[T] {
     Parser(
         .argDefinitions = Lists.list(),
-        .parseStringArgs = fun (stringArgs: StringArgs) => Success(.value = initialValue),
+        .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,
     )
 }
 
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     val stringArgs = toStringArgs(Lists.reverse(parser.argDefinitions), args);
-    parser.parseStringArgs(stringArgs)
+    handle ParseEffect {
+        val result = parser.parseStringArgs!(stringArgs);
+        Success(.value = result)
+    } on {
+        .fail = (message: String) {
+            exit Failure(.message = message)
+        }
+    }
 }
 
 fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
@@ -109,25 +113,11 @@ fun positional[A, T, R](
 
     Parser[R](
         .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
-        .parseStringArgs = fun (stringArgs: StringArgs) {
-            val result = parser.parseStringArgs(stringArgs);
-            when (result) {
-                is Failure {
-                    result
-                }
-                is Success {
-                    val stringArg = findStringArg(stringArgs, name);
-                    val result2 = argType.parse(.name = name, .argument = stringArg);
-                    when (result2) {
-                        is Failure {
-                            result2
-                        }
-                        is Success {
-                            Success(.value = add(result2.value, result.value))
-                        }
-                    }
-                }
-            }
+        .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
+            val otherArgs = parser.parseStringArgs!(stringArgs);
+            val stringArg = findStringArg(stringArgs, name);
+            val value = argType.parse!(.name = name, .argument = stringArg);
+            add(value, otherArgs)
         },
     )
 }
