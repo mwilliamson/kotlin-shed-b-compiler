@@ -914,4 +914,43 @@ class TypeCheckCallTests {
             )))
         }
     }
+
+    @Test
+    fun whenReceiverIsPartialCallThenImplicitTypeArgumentsAreFoundByConsideringCombinedCall() {
+        val tag = tag(moduleName = listOf("ModuleName"), name = "Tag")
+        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
+        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
+
+        val typeParameter = invariantTypeParameter("T")
+        val functionType = functionType(
+            staticParameters = listOf(typeParameter),
+            positionalParameters = listOf(typeParameter, typeParameter),
+            returns = typeParameter,
+        )
+
+        val functionReference = variableReference("f")
+        val member1Reference = variableReference("member1")
+        val member2Reference = variableReference("member2")
+
+        val node = call(
+            receiver = partialCall(
+                receiver = functionReference,
+                staticArguments = listOf(),
+                positionalArguments = listOf(member1Reference),
+            ),
+            staticArguments = listOf(),
+            positionalArguments = listOf(member2Reference),
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                functionReference to functionType,
+                member1Reference to member1,
+                member2Reference to member2,
+            )
+        )
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isUnionType(members = isSequence(isType(member1), isType(member2))))
+    }
 }

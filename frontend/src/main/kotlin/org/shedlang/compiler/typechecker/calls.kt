@@ -8,7 +8,6 @@ import org.shedlang.compiler.types.*
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
     fun infer(node: CallNode, context: TypeContext): Pair<Type, StaticBindings> {
         val receiver = node.receiver
-        // TODO: this magic with bindingsHint when the receiver is a partial call needs testing
         val receiverType = if (receiver is PartialCallNode && node.staticArguments.isEmpty() && receiver.staticArguments.isEmpty()) {
             val (type, bindings) = infer(
                 CallNode(
