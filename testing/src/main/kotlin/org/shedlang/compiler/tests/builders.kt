@@ -272,6 +272,15 @@ fun callNamedArgument(
     source = anySource()
 )
 
+fun staticCall(
+    receiver: ExpressionNode,
+    arguments: List<StaticExpressionNode> = listOf(),
+) = StaticCallNode(
+    receiver = receiver,
+    arguments = arguments,
+    source = anySource()
+)
+
 fun fieldAccess(
     receiver: ExpressionNode,
     fieldName: String

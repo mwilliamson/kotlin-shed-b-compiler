@@ -403,3 +403,10 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
         replaceStaticValuesInType(type.cons.returns, typeMap())
     }
 }
+
+internal fun inferStaticCallType(call: StaticCallNode, context: TypeContext): Type {
+    val receiverType = inferType(call.receiver, context)
+    val arguments = call.arguments.map { argument -> evalStaticValue(argument, context) }
+    // TODO: handle error cases
+    return StaticValueType(applyStatic((receiverType as StaticValueType).value as ParameterizedStaticValue, arguments))
+}

@@ -53,7 +53,7 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
         }
 
         override fun visit(node: StaticCallNode): Type {
-            throw UnsupportedOperationException("not implemented")
+            return inferStaticCallType(node, context)
         }
 
         override fun visit(node: FieldAccessNode): Type {
