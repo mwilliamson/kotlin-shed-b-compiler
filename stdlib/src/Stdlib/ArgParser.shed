@@ -1,4 +1,4 @@
-export parser, parse, positional, string;
+export ParseResult, Success, Failure, parser, parse, positional, optional, string;
 
 import Lists from .Lists;
 import Options from .Options;
@@ -6,30 +6,71 @@ import Sequences from .Sequences;
 
 shape Parser[T] {
     argDefinitions: Lists.List[ArgDefinition],
-    parseStringArgs: Fun (StringArgs) -> T,
+    parseStringArgs: Fun (StringArgs) -> ParseResult[T],
 }
 
 shape ArgDefinition {
     name: String,
-    argType: ArgType,
 }
 
-shape ArgType {
-
+shape ArgType[T] {
+    parse: Fun (.name: String, .argument: Option[String]) -> ParseResult[T],
 }
 
-val string = ArgType();
+union ParseResult[+T] =
+    | Success[T] {
+        value: T,
+    }
+    | Failure {
+        message: String,
+    };
+
+val string = ArgType(
+    .parse = fun (.name: String, .argument: Option[String]) -> ParseResult[String] {
+        when (argument) {
+            is Some {
+                Success(.value = argument.value)
+            }
+            is None {
+                Failure(.message = "required positional argument is missing: " + name)
+            }
+        }
+    },
+);
+
+fun optional[T](argType: ArgType[T]) -> ArgType[Option[T]] {
+    ArgType(
+        .parse = fun(.name: String, .argument: Option[String]) -> ParseResult[Option[T]] {
+            when (argument) {
+                is Some {
+                    val result = argType.parse(.name = name, .argument = argument);
+                    when (result) {
+                        is Success {
+                            Success(.value = some(result.value))
+                        }
+                        is Failure {
+                            result
+                        }
+                    }
+                }
+                is None {
+                    Success(.value = none)
+                }
+            }
+        }
+    )
+}
 
 type StringArgs = Lists.List[#(String, String)];
 
 fun parser[T](initialValue: T) -> Parser[T] {
     Parser(
         .argDefinitions = Lists.list(),
-        .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,
+        .parseStringArgs = fun (stringArgs: StringArgs) => Success(.value = initialValue),
     )
 }
 
-fun parse[T](parser: Parser[T], args: Lists.List[String]) -> T {
+fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     val stringArgs = toStringArgs(Lists.reverse(parser.argDefinitions), args);
     parser.parseStringArgs(stringArgs)
 }
@@ -56,22 +97,37 @@ fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[Str
     }
 }
 
-fun positional[T, R](
+fun positional[A, T, R](
     name: String,
-    argType: ArgType,
-    add: Fun (Option[String], T) -> R,
+    argType: ArgType[A],
+    add: Fun (A, T) -> R,
     parser: Parser[T],
 ) -> Parser[R] {
     val argDefinition = ArgDefinition(
         .name = name,
-        .argType = argType,
     );
 
     Parser[R](
         .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
         .parseStringArgs = fun (stringArgs: StringArgs) {
-            val stringArg = findStringArg(stringArgs, name);
-            add(stringArg, parser.parseStringArgs(stringArgs))
+            val result = parser.parseStringArgs(stringArgs);
+            when (result) {
+                is Failure {
+                    result
+                }
+                is Success {
+                    val stringArg = findStringArg(stringArgs, name);
+                    val result2 = argType.parse(.name = name, .argument = stringArg);
+                    when (result2) {
+                        is Failure {
+                            result2
+                        }
+                        is Success {
+                            Success(.value = add(result2.value, result.value))
+                        }
+                    }
+                }
+            }
         },
     )
 }

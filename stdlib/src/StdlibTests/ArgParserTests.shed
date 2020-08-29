@@ -6,21 +6,38 @@ import M from Stdlib.Matchers;
 import Options from Stdlib.Options;
 import Tests from Stdlib.Tests;
 
-fun optionToString(option: Option[String]) -> String {
-    when (option) {
-        is None {
-            "(none)"
-        }
-        is Some {
-            option.value
-        }
-    }
+fun isFailure(.message: M.Matcher[String]) -> M.Matcher[ArgParser.ParseResult[Any]] {
+    M.isTypeWith(
+        .description = "failure",
+        .describeValue = fun (value: ArgParser.ParseResult[Any]) {
+            when (value) {
+                is ArgParser.Failure { "failure" }
+                is ArgParser.Success { "success" }
+            }
+        },
+        .cast = cast(ArgParser.ParseResult[Any], ArgParser.Failure),
+        .with = M.hasField(ArgParser.Failure.fields.message, message),
+    )
+}
+
+fun isSuccess[T](valueMatcher: M.Matcher[T]) -> M.Matcher[ArgParser.ParseResult[T]] {
+    M.isTypeWith(
+        .description = "success",
+        .describeValue = fun (value: ArgParser.ParseResult[T]) {
+            when (value) {
+                is ArgParser.Failure { "failure" }
+                is ArgParser.Success { "success" }
+            }
+        },
+        .cast = cast(ArgParser.ParseResult[T], ArgParser.Success[T]),
+        .with = M.hasField(ArgParser.Success[T].fields.value, valueMatcher),
+    )
 }
 
 val testCases = Tests.suite(moduleName, list(
-    Tests.testCase("can parse single positional argument", fun () {
+    Tests.testCase("can parse single required positional argument", fun () {
         shape Args {
-            x: Option[String],
+            x: String,
         }
 
         val rawArguments = list("hello");
@@ -29,14 +46,16 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, M.hasField(Args.fields.x, M.isSome(M.isString("hello"))))
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isString("hello")),
+        ))
     }),
 
-    Tests.testCase("can parse multiple positional argument", fun () {
+    Tests.testCase("can parse multiple required positional argument", fun () {
         shape Args {
-            one: Option[String],
-            two: Option[String],
-            three: Option[String],
+            one: String,
+            two: String,
+            three: String,
         }
 
         val rawArguments = list("hello", "world", "!");
@@ -48,10 +67,63 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, M.allOf(list(
-            M.hasField(Args.fields.one, M.isSome(M.isString("hello"))),
-            M.hasField(Args.fields.two, M.isSome(M.isString("world"))),
-            M.hasField(Args.fields.three, M.isSome(M.isString("!"))),
-        )))
+        Tests.assertThat(arguments, isSuccess(M.allOf(list(
+            M.hasField(Args.fields.one, M.isString("hello")),
+            M.hasField(Args.fields.two, M.isString("world")),
+            M.hasField(Args.fields.three, M.isString("!")),
+        ))))
+    }),
+
+    Tests.testCase("when required positional argument is missing then result is failure", fun () {
+        shape Args {
+            one: String,
+            two: String,
+            three: String,
+        }
+
+        val rawArguments = list("hello");
+
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("one", ArgParser.string, Args.fields.one.update)
+            |> ArgParser.positional~("two", ArgParser.string, Args.fields.two.update)
+            |> ArgParser.positional~("three", ArgParser.string, Args.fields.three.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isFailure(
+            .message = M.isString("required positional argument is missing: two"),
+        ))
+    }),
+
+    Tests.testCase("when argument is present then optional positional argument is some", fun () {
+        shape Args {
+            x: Option[String],
+        }
+
+        val rawArguments = list("hello");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("message", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isSome(M.isString("hello"))),
+        ))
+    }),
+
+    Tests.testCase("when argument is not present then optional positional argument is none", fun () {
+        shape Args {
+            x: Option[String],
+        }
+
+        val rawArguments = list();
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("message", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isNone()),
+        ))
     }),
 ));

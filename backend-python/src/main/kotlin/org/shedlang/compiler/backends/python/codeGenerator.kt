@@ -76,14 +76,10 @@ internal class CodeGenerationContext(
 
     private fun name(nodeId: Int, name: Identifier): String {
         if (!nodeNames.containsKey(nodeId)) {
-            val pythonName = generateName(name)
+            val pythonName = pythoniseName(name)
             nodeNames[nodeId] = pythonName
         }
         return nodeNames[nodeId]!!
-    }
-
-    private fun generateName(originalName: Identifier): String {
-        return generateName(pythoniseName(originalName))
     }
 
     private fun generateName(originalName: String): String {
