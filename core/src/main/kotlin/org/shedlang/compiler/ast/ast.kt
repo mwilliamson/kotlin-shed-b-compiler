@@ -855,6 +855,7 @@ interface ExpressionNode : Node {
         fun visit(node: IsNode): T
         fun visit(node: CallNode): T
         fun visit(node: PartialCallNode): T
+        fun visit(node: StaticCallNode): T
         fun visit(node: FieldAccessNode): T
         fun visit(node: FunctionExpressionNode): T
         fun visit(node: IfNode): T
@@ -1067,7 +1068,7 @@ data class StaticCallNode(
             arguments.map(NodeStructures::staticEval)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
-        throw UnsupportedOperationException("not implemented")
+        return visitor.visit(this)
     }
 }
 
@@ -1127,6 +1128,7 @@ fun expressionBranches(expression: ExpressionNode): Iterable<Block>? {
         override fun visit(node: IsNode): Iterable<Block>? = null
         override fun visit(node: CallNode): Iterable<Block>? = null
         override fun visit(node: PartialCallNode): Iterable<Block>? = null
+        override fun visit(node: StaticCallNode): Iterable<Block>? = null
         override fun visit(node: FieldAccessNode): Iterable<Block>? = null
         override fun visit(node: FunctionExpressionNode): Iterable<Block>? = null
         override fun visit(node: IfNode): Iterable<Block>? = node.branchBodies

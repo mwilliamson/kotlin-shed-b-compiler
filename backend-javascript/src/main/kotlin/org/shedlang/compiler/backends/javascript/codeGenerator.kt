@@ -689,6 +689,10 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             )
         }
 
+        override fun visit(node: StaticCallNode): JavascriptExpressionNode {
+            return generateCode(node.receiver, context)
+        }
+
         override fun visit(node: FieldAccessNode): JavascriptExpressionNode {
             return JavascriptPropertyAccessNode(
                 generateCode(node.receiver, context),

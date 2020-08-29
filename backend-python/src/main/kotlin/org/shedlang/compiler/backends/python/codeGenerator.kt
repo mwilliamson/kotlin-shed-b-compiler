@@ -929,6 +929,10 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
             return generatedCallCode(node, isPartial = true)
         }
 
+        override fun visit(node: StaticCallNode): GeneratedExpression {
+            return generateExpressionCode(node.receiver, context)
+        }
+
         private fun generatedCallCode(node: CallBaseNode, isPartial: Boolean): GeneratedExpression {
             val source = NodeSource(node)
 

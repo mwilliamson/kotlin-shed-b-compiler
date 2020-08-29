@@ -350,6 +350,10 @@ class Loader(
                     .addAll(createPartial)
             }
 
+            override fun visit(node: StaticCallNode): PersistentList<Instruction> {
+                return loadExpression(node.receiver)
+            }
+
             override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
                 val receiverInstructions = loadExpression(node.receiver)
                 val fieldAccess = FieldAccess(
