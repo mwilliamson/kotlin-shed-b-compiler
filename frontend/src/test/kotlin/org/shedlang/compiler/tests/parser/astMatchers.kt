@@ -306,6 +306,16 @@ internal fun isCallNamedArgument(
     has(CallNamedArgumentNode::expression, expression)
 )
 
+internal fun isStaticCall(
+    receiver: Matcher<ExpressionNode> = anything,
+    arguments: Matcher<List<StaticExpressionNode>> = anything,
+) : Matcher<ExpressionNode> {
+    return cast(allOf(
+        has(StaticCallNode::receiver, receiver),
+        has(StaticCallNode::arguments, arguments),
+    ))
+}
+
 internal fun isFieldAccess(
     receiver: Matcher<ExpressionNode>,
     fieldName: Matcher<Identifier>,

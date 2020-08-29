@@ -1015,15 +1015,24 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
             listOf()
         }
 
-        val (positionalArguments, namedArguments) = parseCallArguments(tokens)
-        return CallNode(
-            receiver = left,
-            staticArguments = typeArguments,
-            positionalArguments = positionalArguments,
-            namedArguments = namedArguments,
-            hasEffect = hasEffect,
-            source = left.source
-        )
+        if (!hasEffect && !tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
+            return StaticCallNode(
+                receiver = left,
+                arguments = typeArguments,
+                // TODO: change source?
+                source = left.source
+            )
+        } else {
+            val (positionalArguments, namedArguments) = parseCallArguments(tokens)
+            return CallNode(
+                receiver = left,
+                staticArguments = typeArguments,
+                positionalArguments = positionalArguments,
+                namedArguments = namedArguments,
+                hasEffect = hasEffect,
+                source = left.source
+            )
+        }
     }
 
     override val precedence: Int

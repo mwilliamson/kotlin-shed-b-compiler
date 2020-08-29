@@ -129,4 +129,19 @@ class ParseCallTests {
             )
         ))
     }
+
+    @Test
+    fun canParseStaticCall() {
+        val source = "x[A, B]"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isStaticCall(
+            receiver = isVariableReference("x"),
+            arguments = isSequence(
+                isStaticReference("A"),
+                isStaticReference("B"),
+            )
+        ))
+    }
 }

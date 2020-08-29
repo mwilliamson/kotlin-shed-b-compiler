@@ -1056,6 +1056,21 @@ data class CallNamedArgumentNode(
         get() = listOf(NodeStructures.eval(expression))
 }
 
+data class StaticCallNode(
+    val receiver: ExpressionNode,
+    val arguments: List<StaticExpressionNode>,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : ExpressionNode {
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.eval(receiver)) +
+            arguments.map(NodeStructures::staticEval)
+
+    override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
+        throw UnsupportedOperationException("not implemented")
+    }
+}
+
 data class FieldAccessNode(
     val receiver: ExpressionNode,
     val fieldName: FieldNameNode,
