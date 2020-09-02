@@ -45,15 +45,14 @@ class UnhandledEffectError(val effect: Effect, source: Source)
     : TypeCheckError("Unhandled effect: ${effect.shortDescription}", source)
 class ReceiverHasNoEffectsError(source: Source)
     : TypeCheckError("Receiver has no effects", source)
-// TODO: specialise name and arguments to binary operations
-class InvalidOperationError(val operator: BinaryOperator, val operands: List<Type>, source: Source)
+class InvalidBinaryOperationError(val operator: BinaryOperator, val left: Type, val right: Type, source: Source)
     : TypeCheckError(
-    "Operation ${operator} is not valid for operands ${operands.map({operand -> operand.shortDescription}).joinToString(", ")}",
+    "Binary operation ${operator} is not valid for operands ${left.shortDescription}, ${right.shortDescription}",
     source
 )
 class InvalidUnaryOperationError(val operator: UnaryOperator, val actualOperandType: Type, source: Source)
     : TypeCheckError(
-    "Operation ${operator} is not valid for operand ${actualOperandType.shortDescription}",
+    "Unary operation ${operator} is not valid for operand ${actualOperandType.shortDescription}",
     source
 )
 class FieldDeclarationShapeIdConflictError(val name: Identifier, source: Source)

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.InvalidOperationError
+import org.shedlang.compiler.typechecker.InvalidBinaryOperationError
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.types.IntType
 
@@ -25,8 +25,9 @@ class TypeCheckBinaryOperationTests {
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
-                has(InvalidOperationError::operator, equalTo(BinaryOperator.ADD)),
-                has(InvalidOperationError::operands, isSequence(isBoolType, isIntType))
+                has(InvalidBinaryOperationError::operator, equalTo(BinaryOperator.ADD)),
+                has(InvalidBinaryOperationError::left, isBoolType),
+                has(InvalidBinaryOperationError::right, isIntType),
             ))
         )
     }
@@ -37,8 +38,9 @@ class TypeCheckBinaryOperationTests {
         assertThat(
             { inferType(node, emptyTypeContext()) },
             throws(allOf(
-                has(InvalidOperationError::operator, equalTo(BinaryOperator.ADD)),
-                has(InvalidOperationError::operands, isSequence(isIntType, isBoolType))
+                has(InvalidBinaryOperationError::operator, equalTo(BinaryOperator.ADD)),
+                has(InvalidBinaryOperationError::left, isIntType),
+                has(InvalidBinaryOperationError::right, isBoolType),
             ))
         )
     }

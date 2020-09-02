@@ -122,9 +122,10 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
         BinaryOperationType(BinaryOperator.AND, BoolType, BoolType) -> BoolType
         BinaryOperationType(BinaryOperator.OR, BoolType, BoolType) -> BoolType
 
-        else -> throw InvalidOperationError(
+        else -> throw InvalidBinaryOperationError(
             operator = node.operator,
-            operands = listOf(leftType, rightType),
+            left = leftType,
+            right = rightType,
             source = node.source
         )
     }
