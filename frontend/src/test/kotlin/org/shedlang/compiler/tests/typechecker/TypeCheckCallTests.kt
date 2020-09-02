@@ -203,7 +203,7 @@ class TypeCheckCallTests {
     }
 
     @Test
-    fun whenArgumentIsWrongTypeThenExpectedTypeHasTypesReplaced() {
+    fun givenAllTypeParametersAreBoundWhenArgumentIsWrongTypeThenExpectedTypeHasTypesReplaced() {
         val functionReference = variableReference("f")
         val node = call(
             receiver = functionReference,
@@ -220,6 +220,31 @@ class TypeCheckCallTests {
         assertThat(
             { inferCallType(node, typeContext) },
             throwsUnexpectedType(expected = cast(isTupleType(isSequence(isIntType))))
+        )
+    }
+
+    @Test
+    fun givenSomeTypeParametersAreNotBoundWhenArgumentIsWrongTypeThenExpectedTypeHasBoundTypesReplaced() {
+        val functionReference = variableReference("f")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(literalInt(), literalBool())
+        )
+
+        val typeParameter1 = invariantTypeParameter(name = "T1")
+        val typeParameter2 = invariantTypeParameter(name = "T2")
+        val functionType = functionType(
+            staticParameters = listOf(typeParameter1, typeParameter2),
+            positionalParameters = listOf(typeParameter1, TupleType(listOf(typeParameter1, typeParameter2))),
+            returns = typeParameter1
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(functionReference to functionType))
+        assertThat(
+            { inferCallType(node, typeContext) },
+            throwsUnexpectedType(expected = cast(isTupleType(isSequence(
+                isIntType,
+                isTypeParameter(name = isIdentifier("T2")),
+            ))))
         )
     }
 

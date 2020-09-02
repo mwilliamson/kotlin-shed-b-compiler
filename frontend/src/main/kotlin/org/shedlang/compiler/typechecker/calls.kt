@@ -249,17 +249,19 @@ private fun checkArgumentTypes(
             parameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
 
-        fun generateBindings(): Map<StaticParameter, StaticValue> {
+        fun generateBindings(allowIncomplete: Boolean): Map<StaticParameter, StaticValue> {
             val typeMap = typeParameters.zip(inferredTypeArguments)
                 .associate { (parameter, inferredArgument) ->
                     val boundType = constraints.boundTypeFor(inferredArgument)
-                    if (boundType == null) {
+                    if (boundType != null) {
+                        parameter to boundType
+                    } else if (allowIncomplete) {
+                        parameter to parameter
+                    } else {
                         throw CouldNotInferTypeParameterError(
                             parameter = parameter,
                             source = source
                         )
-                    } else {
-                        parameter to boundType
                     }
                 }
             val effectMap = effectParameters.zip(inferredEffectArguments)
@@ -278,14 +280,14 @@ private fun checkArgumentTypes(
             val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
-                    expected = replaceStaticValuesInType(argument.second, generateBindings()),
+                    expected = replaceStaticValuesInType(argument.second, generateBindings(allowIncomplete = true)),
                     actual = actualType,
                     source = argument.first.source
                 )
             }
         }
 
-        return generateBindings()
+        return generateBindings(allowIncomplete = false)
     } else {
         val bindings = if (bindingsHint == null) {
             if (staticArgumentNodes.size != staticParameters.size) {
