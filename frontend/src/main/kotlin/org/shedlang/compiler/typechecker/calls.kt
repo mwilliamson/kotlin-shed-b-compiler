@@ -246,7 +246,7 @@ private fun checkArgumentTypes(
 
         val constraints = TypeConstraintSolver(
             // TODO: need to regenerate effect parameters in the same way as type positionalParameters
-            parameters = (inferredTypeArguments + inferredEffectArguments).toSet()
+            originalParameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
 
         fun generateBindings(allowIncomplete: Boolean): Map<StaticParameter, StaticValue> {
@@ -376,7 +376,7 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
 
     return node.positionalArguments.foldRight(type.nil) { argument, currentType ->
         val constraints = TypeConstraintSolver(
-            parameters = inferredTypeArguments.toSet()
+            originalParameters = inferredTypeArguments.toSet()
         )
         fun partialTypeMap(): StaticBindings = typeParameters.zip(inferredTypeArguments).toMap()
 

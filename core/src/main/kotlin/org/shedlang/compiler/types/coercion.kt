@@ -4,7 +4,7 @@ import org.shedlang.compiler.all
 import org.shedlang.compiler.zip3
 
 fun isSubEffect(subEffect: Effect, superEffect: Effect): Boolean {
-    val solver = TypeConstraintSolver(parameters = setOf())
+    val solver = TypeConstraintSolver(originalParameters = setOf())
     return solver.coerceEffect(from = subEffect, to = superEffect)
 }
 
@@ -36,32 +36,47 @@ fun coerce(
     constraints: List<Pair<Type, Type>>,
     parameters: Set<StaticParameter> = setOf()
 ): CoercionResult {
-    val solver = TypeConstraintSolver(parameters = parameters)
+    val solver = TypeConstraintSolver(originalParameters = parameters)
     for ((from, to) in constraints) {
         if (!solver.coerce(from = from, to = to)) {
             return CoercionResult.Failure
         }
     }
-    return CoercionResult.Success(solver.typeBindings)
+    return CoercionResult.Success(solver.bindings())
 }
 
 sealed class CoercionResult {
-    class Success(val bindings: Map<TypeParameter, Type>): CoercionResult()
+    class Success(val bindings: StaticBindings): CoercionResult()
     object Failure: CoercionResult()
 }
 
 class TypeConstraintSolver(
-    parameters: Set<StaticParameter>
+    originalParameters: Set<StaticParameter>
 ) {
-    val typeBindings: MutableMap<TypeParameter, Type> = mutableMapOf()
-    val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
-    private val parameters: MutableSet<StaticParameter> = parameters.toMutableSet()
-    private val closed: MutableSet<TypeParameter> = mutableSetOf()
+    private sealed class TypeBound(val type: Type) {
+        class Lower(type: Type): TypeBound(type = type)
+        class Upper(type: Type): TypeBound(type = type)
+
+        fun mapType(func: (Type) -> Type): TypeBound {
+            return when (this) {
+                is Lower -> Lower(func(type))
+                is Upper -> Upper(func(type))
+            }
+        }
+    }
+
+    fun bindings(): StaticBindings {
+        return typeBindings.mapValues { (_, binding) -> binding.type } + effectBindings
+    }
+
+    private val typeBindings: MutableMap<TypeParameter, TypeBound> = mutableMapOf()
+    private val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
+    private val parameters: MutableSet<StaticParameter> = originalParameters.toMutableSet()
 
     fun boundTypeFor(parameter: TypeParameter): Type? {
         val boundType = typeBindings[parameter]
         return if (boundType != null) {
-            boundType
+            boundType.type
         } else if (parameter.variance == Variance.COVARIANT) {
             NothingType
         } else if (parameter.variance == Variance.CONTRAVARIANT) {
@@ -82,25 +97,31 @@ class TypeConstraintSolver(
 
         if (to is TypeParameter && to in parameters && (to.shapeId == null || from.shapeId == to.shapeId)) {
             val boundType = typeBindings[to]
-            if (boundType == null) {
-                bindType(to, from)
-                return true
-            } else if (to in closed) {
-                return coerce(from = from, to = boundType)
-            } else {
-                typeBindings[to] = union(boundType, from)
-                return true
+            when (boundType) {
+                null -> {
+                    bindType(to, TypeBound.Lower(from))
+                    return true
+                }
+                is TypeBound.Upper -> {
+                    return coerce(from = from, to = boundType.type)
+                }
+                is TypeBound.Lower -> {
+                    // TODO: handle union failure
+                    typeBindings[to] = TypeBound.Lower(union(boundType.type, from))
+                    // TODO: work out using bindType doesn't work
+//                    bindType(to, TypeBound.Lower(union(boundType.type, from)))
+                    return true
+                }
             }
         }
 
         if (from is TypeParameter && from in parameters && (from.shapeId == null || from.shapeId == to.shapeId)) {
             val boundType = typeBindings[from]
             if (boundType == null) {
-                bindType(from, to)
-                closed.add(from)
+                bindType(from, TypeBound.Upper(to))
                 return true
             } else {
-                return coerce(from = boundType, to = to)
+                return coerce(from = boundType.type, to = to)
             }
         }
 
@@ -204,12 +225,12 @@ class TypeConstraintSolver(
         return false
     }
 
-    private fun bindType(from: TypeParameter, to: Type) {
+    private fun bindType(from: TypeParameter, to: TypeBound) {
         val existingTypeBindings = typeBindings.toMap()
 
-        typeBindings[from] = replaceStaticValuesInType(to, typeBindings + effectBindings)
+        typeBindings[from] = to.mapType { toType -> replaceStaticValuesInType(toType, bindings()) }
         for ((existingFrom, existingTo) in existingTypeBindings) {
-            typeBindings[existingFrom] = replaceStaticValuesInType(existingTo, mapOf(from to to))
+            typeBindings[existingFrom] = existingTo.mapType { existingToType -> replaceStaticValuesInType(existingToType, mapOf(from to to.type)) }
         }
     }
 

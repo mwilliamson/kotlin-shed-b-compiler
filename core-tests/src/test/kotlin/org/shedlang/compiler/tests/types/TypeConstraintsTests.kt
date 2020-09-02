@@ -250,25 +250,25 @@ class TypeConstraintsTests {
     @Test
     fun coercingEffectToEffectParameterBindsParameter() {
         val parameter = effectParameter("E")
-        val constraints = TypeConstraintSolver(parameters = setOf(parameter))
+        val constraints = TypeConstraintSolver(originalParameters = setOf(parameter))
         assertThat(constraints.coerceEffect(from = IoEffect, to = parameter), equalTo(true))
-        assertThat(constraints.effectBindings, isMap(parameter to cast(equalTo(IoEffect))))
+        assertThat(constraints.bindings(), isMap(parameter to cast(equalTo(IoEffect))))
     }
 
     @Test
     fun coercingSameEffectToEffectParameterBindsParameter() {
         val parameter = effectParameter("E")
-        val constraints = TypeConstraintSolver(parameters = setOf(parameter))
+        val constraints = TypeConstraintSolver(originalParameters = setOf(parameter))
         assertThat(constraints.coerceEffect(from = IoEffect, to = parameter), equalTo(true))
         assertThat(constraints.coerceEffect(from = IoEffect, to = parameter), equalTo(true))
-        assertThat(constraints.effectBindings, isMap(parameter to cast(equalTo(IoEffect))))
+        assertThat(constraints.bindings(), isMap(parameter to cast(equalTo(IoEffect))))
     }
 
     private fun isSuccess(
-        vararg bindings: Pair<TypeParameter, Type>
+        vararg bindings: Pair<StaticParameter, Type>
     ): Matcher<CoercionResult> = cast(has(
         CoercionResult.Success::bindings,
-        isMap(*bindings.map({ binding -> binding.first to isEquivalentType(binding.second) }).toTypedArray())
+        isMap(*bindings.map({ binding -> binding.first to cast(isEquivalentType(binding.second)) }).toTypedArray())
     ))
     private val isFailure = isA<CoercionResult.Failure>()
 }

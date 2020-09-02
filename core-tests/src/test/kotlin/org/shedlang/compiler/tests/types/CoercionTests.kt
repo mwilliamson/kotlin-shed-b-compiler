@@ -833,29 +833,29 @@ class CoercionTests {
     @Test
     fun whenEffectParameterIsNotInParameterSetThenCoercingEffectToEffectParameterFails() {
         val effectParameter = effectParameter("E")
-        val solver = TypeConstraintSolver(parameters = setOf())
+        val solver = TypeConstraintSolver(originalParameters = setOf())
         assertThat(
             solver.coerceEffect(from = IoEffect, to = effectParameter),
             equalTo(false)
         )
-        assertThat(solver.effectBindings[effectParameter], absent())
+        assertThat(solver.bindings()[effectParameter], absent())
     }
 
     @Test
     fun whenEffectParameterIsInParameterSetThenCoercingEffectToEffectParameterBindsEffectParameter() {
         val effectParameter = effectParameter("E")
-        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        val solver = TypeConstraintSolver(originalParameters = setOf(effectParameter))
         assertThat(
             solver.coerceEffect(from = IoEffect, to = effectParameter),
             equalTo(true)
         )
-        assertThat(solver.effectBindings[effectParameter], present(cast(equalTo(IoEffect))))
+        assertThat(solver.bindings()[effectParameter], present(cast(equalTo(IoEffect))))
     }
 
     @Test
     fun givenEffectParameterIsBoundWhenCoercingEffectToEffectParameterThenEffectParameterIsTreatedAsBoundEffect() {
         val effectParameter = effectParameter("E")
-        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        val solver = TypeConstraintSolver(originalParameters = setOf(effectParameter))
         solver.coerceEffect(from = IoEffect, to = effectParameter)
 
         assertThat(
@@ -875,29 +875,29 @@ class CoercionTests {
     @Test
     fun whenEffectParameterIsNotInParameterSetThenCoercingEffectParameterToEffectFails() {
         val effectParameter = effectParameter("E")
-        val solver = TypeConstraintSolver(parameters = setOf())
+        val solver = TypeConstraintSolver(originalParameters = setOf())
         assertThat(
             solver.coerceEffect(from = effectParameter, to = IoEffect),
             equalTo(false)
         )
-        assertThat(solver.effectBindings[effectParameter], absent())
+        assertThat(solver.bindings()[effectParameter], absent())
     }
 
     @Test
     fun whenEffectParameterIsInParameterSetThenCoercingEffectParameterToEffectBindsEffectParameter() {
         val effectParameter = effectParameter("E")
-        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        val solver = TypeConstraintSolver(originalParameters = setOf(effectParameter))
         assertThat(
             solver.coerceEffect(from = effectParameter, to = IoEffect),
             equalTo(true)
         )
-        assertThat(solver.effectBindings[effectParameter], present(cast(equalTo(IoEffect))))
+        assertThat(solver.bindings()[effectParameter], present(cast(equalTo(IoEffect))))
     }
 
     @Test
     fun givenEffectParameterIsBoundWhenCoercingEffectParameterToEffectThenEffectParameterIsTreatedAsBoundEffect() {
         val effectParameter = effectParameter("E")
-        val solver = TypeConstraintSolver(parameters = setOf(effectParameter))
+        val solver = TypeConstraintSolver(originalParameters = setOf(effectParameter))
         solver.coerceEffect(from = effectParameter, to = IoEffect)
 
         assertThat(
@@ -932,7 +932,7 @@ class CoercionTests {
         assertThat(result2, matcher)
     }
 
-    private fun isSuccess(vararg bindings: Pair<TypeParameter, Matcher<Type>>): Matcher<CoercionResult> {
+    private fun isSuccess(vararg bindings: Pair<StaticParameter, Matcher<StaticValue>>): Matcher<CoercionResult> {
         return cast(has(CoercionResult.Success::bindings, isMap(*bindings)))
     }
 
