@@ -7,11 +7,11 @@
 export main;
 
 effect Effect1 {
-    .leave: () -> Nothing,
+    .leave: () -> Bottom,
 }
 
 effect Effect2 {
-    .leave: () -> Nothing,
+    .leave: () -> Bottom,
 }
 
 fun main() !Io -> Unit {

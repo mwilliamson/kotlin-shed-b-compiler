@@ -4,7 +4,7 @@
 export main;
 
 effect NonLocalReturn {
-    .nonLocalReturn: (Int) -> Nothing,
+    .nonLocalReturn: (Int) -> Bottom,
 }
 
 fun main() !Io -> Unit {

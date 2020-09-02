@@ -198,14 +198,14 @@ class TypeConstraintsTests {
             coerce(
                 listOf(
                     firstTypeParameter to functionType(returns = StringType),
-                    secondTypeParameter to functionType(returns = AnyType),
+                    secondTypeParameter to functionType(returns = TopType),
                     functionType(returns = firstTypeParameter) to functionType(returns = secondTypeParameter)
                 ),
                 parameters = setOf(firstTypeParameter, secondTypeParameter)
             ),
             isSuccess(
                 firstTypeParameter to functionType(returns = StringType),
-                secondTypeParameter to functionType(returns = AnyType)
+                secondTypeParameter to functionType(returns = TopType)
             )
         )
     }

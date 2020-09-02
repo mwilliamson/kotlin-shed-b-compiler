@@ -34,7 +34,7 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
                     staticParameters = listOf(),
                     positionalParameters = argumentTypes,
                     namedParameters = mapOf(),
-                    returns = AnyType,
+                    returns = TopType,
                     effect = EmptyEffect
                 ),
                 actual = receiverType,

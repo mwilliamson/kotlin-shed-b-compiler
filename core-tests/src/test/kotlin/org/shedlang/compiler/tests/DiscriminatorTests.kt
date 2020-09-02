@@ -16,7 +16,7 @@ class DiscriminatorTests {
             tagValue = tagValue(tag, "Member1")
         )
 
-        val discriminator = findDiscriminator(sourceType = AnyType, targetType = member1)
+        val discriminator = findDiscriminator(sourceType = TopType, targetType = member1)
 
         assertThat(discriminator, absent())
     }
@@ -110,7 +110,7 @@ class DiscriminatorTests {
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
         val union = unionType("Union", tag = tag, members = listOf(applyStatic(member1, listOf(IntType)) as Type, member2))
 
-        val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(AnyType)))
+        val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(TopType)))
 
         assertThat(discriminator, present(isDiscriminator(
             tagValue = equalTo(tagValue(tag, "Member1")),
@@ -133,7 +133,7 @@ class DiscriminatorTests {
             )
         )
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(applyStatic(member1, listOf(AnyType)) as Type, member2))
+        val union = unionType("Union", tag = tag, members = listOf(applyStatic(member1, listOf(TopType)) as Type, member2))
 
         val discriminator = findDiscriminator(sourceType = union, targetType = applyStatic(member1, listOf(IntType)))
 

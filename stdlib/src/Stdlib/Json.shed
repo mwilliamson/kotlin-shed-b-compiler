@@ -218,7 +218,7 @@ fun success[T](remainder: TokenIterator, value: T) -> ParseResult[T] {
     ParseSuccess(.remainder = remainder, .value = value)
 }
 
-fun failure(tokens: TokenIterator) -> ParseResult[Nothing] {
+fun failure(tokens: TokenIterator) -> ParseResult[Bottom] {
     ParseFailure(.remainder = tokens)
 }
 

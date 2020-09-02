@@ -60,7 +60,7 @@ class TypeCheckTargetTests {
         assertThat(
             { typeCheckTarget(target, IntType, typeContext) },
             throwsUnexpectedType(
-                actual = isTupleType(elementTypes = isSequence(isAnyType)),
+                actual = isTupleType(elementTypes = isSequence(isTopType)),
                 expected = cast(isIntType),
                 source = equalTo(target.source)
             )
@@ -76,7 +76,7 @@ class TypeCheckTargetTests {
         assertThat(
             { typeCheckTarget(target, TupleType(listOf(IntType, BoolType)), typeContext) },
             throwsUnexpectedType(
-                actual = isTupleType(elementTypes = isSequence(isAnyType)),
+                actual = isTupleType(elementTypes = isSequence(isTopType)),
                 expected = cast(isTupleType(elementTypes = isSequence(isIntType, isBoolType))),
                 source = equalTo(target.source)
             )
@@ -96,7 +96,7 @@ class TypeCheckTargetTests {
         assertThat(
             { typeCheckTarget(target, TupleType(listOf(IntType)), typeContext) },
             throwsUnexpectedType(
-                actual = isTupleType(elementTypes = isSequence(isAnyType, isAnyType)),
+                actual = isTupleType(elementTypes = isSequence(isTopType, isTopType)),
                 expected = cast(isTupleType(elementTypes = isSequence(isIntType))),
                 source = equalTo(target.source)
             )

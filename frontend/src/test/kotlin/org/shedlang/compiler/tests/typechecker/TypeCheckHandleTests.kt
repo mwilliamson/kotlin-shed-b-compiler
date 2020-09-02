@@ -23,7 +23,7 @@ class TypeCheckHandleTests {
                 mapOf(
                     Identifier("throw") to functionType(
                         effect = effect,
-                        returns = NothingType
+                        returns = BottomType
                     ),
                     Identifier("get") to functionType(
                         effect = effect,
@@ -163,7 +163,7 @@ class TypeCheckHandleTests {
             has(UnexpectedTypeError::expected, cast(isFunctionType(
                 positionalParameters = isSequence(isStringType),
                 effect = equalTo(EmptyEffect),
-                returnType = isAnyType
+                returnType = isTopType
             )))
         )))
     }

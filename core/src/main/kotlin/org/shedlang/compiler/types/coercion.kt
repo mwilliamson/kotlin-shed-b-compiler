@@ -63,9 +63,9 @@ class TypeConstraintSolver(
         return if (boundType != null) {
             boundType
         } else if (parameter.variance == Variance.COVARIANT) {
-            NothingType
+            BottomType
         } else if (parameter.variance == Variance.CONTRAVARIANT) {
-            AnyType
+            TopType
         } else {
             null
         }
@@ -76,7 +76,7 @@ class TypeConstraintSolver(
     }
 
     fun coerce(from: Type, to: Type): Boolean {
-        if (from == to || to == AnyType || from == NothingType) {
+        if (from == to || to == TopType || from == BottomType) {
             return true
         }
 

@@ -29,24 +29,24 @@ class CoercionTests {
     }
 
     @Test
-    fun canCoerceAllTypesToAnyType() {
-        assertThat(canCoerce(from = UnitType, to = AnyType), equalTo(true))
+    fun canCoerceAllTypesToTopType() {
+        assertThat(canCoerce(from = UnitType, to = TopType), equalTo(true))
         val shapeType = shapeType("Box", listOf(field("value", IntType)))
-        assertThat(canCoerce(from = shapeType, to = AnyType), equalTo(true))
+        assertThat(canCoerce(from = shapeType, to = TopType), equalTo(true))
     }
 
     @Test
-    fun canCoerceNoTypesToNothingType() {
-        assertThat(canCoerce(from = UnitType, to = NothingType), equalTo(false))
+    fun canCoerceNoTypesToBottomType() {
+        assertThat(canCoerce(from = UnitType, to = BottomType), equalTo(false))
         val shapeType = shapeType("Box", listOf(field("value", IntType)))
-        assertThat(canCoerce(from = shapeType, to = NothingType), equalTo(false))
+        assertThat(canCoerce(from = shapeType, to = BottomType), equalTo(false))
     }
 
     @Test
-    fun canCoerceNothingTypeToAnyType() {
-        assertThat(canCoerce(from = NothingType, to = UnitType), equalTo(true))
+    fun canCoerceBottomTypeToAnyType() {
+        assertThat(canCoerce(from = BottomType, to = UnitType), equalTo(true))
         val shapeType = shapeType("Box", listOf(field("value", IntType)))
-        assertThat(canCoerce(from = NothingType, to = shapeType), equalTo(true))
+        assertThat(canCoerce(from = BottomType, to = shapeType), equalTo(true))
     }
 
     @Test
@@ -69,7 +69,7 @@ class CoercionTests {
     fun functionTypesAreContravariantInPositionalArgumentType() {
         assertThat(
             canCoerce(
-                from = functionType(positionalParameters = listOf(AnyType)),
+                from = functionType(positionalParameters = listOf(TopType)),
                 to = functionType(positionalParameters = listOf(IntType))
             ),
             equalTo(true)
@@ -77,7 +77,7 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(positionalParameters = listOf(IntType)),
-                to = functionType(positionalParameters = listOf(AnyType))
+                to = functionType(positionalParameters = listOf(TopType))
             ),
             equalTo(false)
         )
@@ -105,7 +105,7 @@ class CoercionTests {
     fun functionTypesAreContravariantInNamedArgumentType() {
         assertThat(
             canCoerce(
-                from = functionType(namedParameters = mapOf(Identifier("x") to AnyType)),
+                from = functionType(namedParameters = mapOf(Identifier("x") to TopType)),
                 to = functionType(namedParameters = mapOf(Identifier("x") to IntType))
             ),
             equalTo(true)
@@ -113,7 +113,7 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(namedParameters = mapOf(Identifier("x") to IntType)),
-                to = functionType(namedParameters = mapOf(Identifier("x") to AnyType))
+                to = functionType(namedParameters = mapOf(Identifier("x") to TopType))
             ),
             equalTo(false)
         )
@@ -149,13 +149,13 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(returns = IntType),
-                to = functionType(returns = AnyType)
+                to = functionType(returns = TopType)
             ),
             equalTo(true)
         )
         assertThat(
             canCoerce(
-                from = functionType(returns = AnyType),
+                from = functionType(returns = TopType),
                 to = functionType(returns = IntType)
             ),
             equalTo(false)
@@ -233,7 +233,7 @@ class CoercionTests {
             canCoerce(
                 from = functionType(
                     staticParameters = listOf(),
-                    positionalParameters = listOf(AnyType)
+                    positionalParameters = listOf(TopType)
                 ),
                 to = functionType(
                     staticParameters = listOf(typeParameter),
@@ -260,7 +260,7 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = TupleType(listOf(IntType)),
-                to = TupleType(listOf(AnyType))
+                to = TupleType(listOf(TopType))
             ),
             equalTo(true)
         )
@@ -270,7 +270,7 @@ class CoercionTests {
     fun tupleTypeElementsAreNotContravariant() {
         assertThat(
             canCoerce(
-                from = TupleType(listOf(AnyType)),
+                from = TupleType(listOf(TopType)),
                 to = TupleType(listOf(IntType))
             ),
             equalTo(false)
@@ -391,7 +391,7 @@ class CoercionTests {
         )
         val canCoerce = canCoerce(
             from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(AnyType)) as Type
+            to = applyStatic(shapeType, listOf(TopType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -407,7 +407,7 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(AnyType)) as Type,
+            from = applyStatic(shapeType, listOf(TopType)) as Type,
             to = applyStatic(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
@@ -422,7 +422,7 @@ class CoercionTests {
             fields = listOf()
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(AnyType)) as Type,
+            from = applyStatic(shapeType, listOf(TopType)) as Type,
             to = applyStatic(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
@@ -438,7 +438,7 @@ class CoercionTests {
         )
         val canCoerce = canCoerce(
             from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(AnyType)) as Type
+            to = applyStatic(shapeType, listOf(TopType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }

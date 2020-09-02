@@ -232,7 +232,7 @@ class TypeCheckCallTests {
         )
         assertThat(
             { inferCallType(node, typeContext(referenceTypes = mapOf(functionReference to IntType))) },
-            throwsUnexpectedType(expected = positionalFunctionType(listOf(IntType, BoolType), AnyType), actual = IntType)
+            throwsUnexpectedType(expected = positionalFunctionType(listOf(IntType, BoolType), TopType), actual = IntType)
         )
     }
 
@@ -378,7 +378,7 @@ class TypeCheckCallTests {
     }
 
     @Test
-    fun whenCovariantTypeParameterIsNotConstrainedThenTypeParameterIsNothing() {
+    fun whenCovariantTypeParameterIsNotConstrainedThenTypeParameterIsBottom() {
         val shapeReference = variableReference("Thing")
 
         val typeParameter = covariantTypeParameter("T")
@@ -393,7 +393,7 @@ class TypeCheckCallTests {
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isCompleteShapeType(
-            staticArguments = isSequence(isNothingType)
+            staticArguments = isSequence(isBottomType)
         ))
     }
 
@@ -413,7 +413,7 @@ class TypeCheckCallTests {
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isCompleteShapeType(
-            staticArguments = isSequence(isAnyType)
+            staticArguments = isSequence(isTopType)
         ))
     }
 

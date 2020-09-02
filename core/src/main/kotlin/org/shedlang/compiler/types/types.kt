@@ -155,7 +155,7 @@ object StringSliceType : BasicType {
     override val shortDescription = "StringSlice"
 }
 
-object AnyType : Type {
+object TopType : Type {
     override val shapeId: Int?
         get() = null
 
@@ -165,10 +165,10 @@ object AnyType : Type {
         return this
     }
 
-    override val shortDescription = "Any"
+    override val shortDescription = "Top"
 }
 
-object NothingType : Type {
+object BottomType : Type {
     override val shapeId: Int?
         get() = null
 
@@ -178,7 +178,7 @@ object NothingType : Type {
         return this
     }
 
-    override val shortDescription = "Nothing"
+    override val shortDescription = "Bottom"
 }
 
 data class StaticValueType(val value: StaticValue): Type {
@@ -882,7 +882,7 @@ data class ValidateTypeResult(val errors: List<String>) {
 }
 
 fun validateStaticValue(value: StaticValue): ValidateTypeResult {
-    if (value is BasicType || value == AnyType || value == NothingType || value is TypeParameter) {
+    if (value is BasicType || value == TopType || value == BottomType || value is TypeParameter) {
         return ValidateTypeResult.success
     } else if (value is FunctionType) {
         if (value.returns is TypeParameter && value.returns.variance == Variance.CONTRAVARIANT) {

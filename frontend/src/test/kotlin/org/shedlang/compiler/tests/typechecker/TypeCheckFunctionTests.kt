@@ -360,18 +360,18 @@ class TypeCheckFunctionTests {
 
     @Test
     fun explicitReturnTypeIsUsedAsReturnTypeInsteadOfExpressionBodyType() {
-        val anyReference = staticReference("Any")
+        val topReference = staticReference("Top")
         val node = functionExpression(
             parameters = listOf(),
-            returnType = anyReference,
+            returnType = topReference,
             body = literalBool()
         )
         val typeContext = typeContext(
-            referenceTypes = mapOf(anyReference to StaticValueType(AnyType))
+            referenceTypes = mapOf(topReference to StaticValueType(TopType))
         )
         assertThat(
             inferType(node, typeContext),
-            isFunctionType(returnType = isAnyType)
+            isFunctionType(returnType = isTopType)
         )
     }
 

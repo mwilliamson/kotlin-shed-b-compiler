@@ -672,7 +672,7 @@ fun moduleType(fields: Map<String, Type> = mapOf()) = ModuleType(
     fields = fields.mapKeys { (name, type) -> Identifier(name) }
 )
 
-fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator {
+fun discriminator(tagValue: TagValue, targetType: Type = TopType): Discriminator {
     return Discriminator(
         tagValue = tagValue,
         targetType = targetType

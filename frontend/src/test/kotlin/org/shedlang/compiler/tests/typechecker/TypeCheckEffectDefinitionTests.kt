@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheckModuleStatement
-import org.shedlang.compiler.types.NothingType
+import org.shedlang.compiler.types.BottomType
 import org.shedlang.compiler.types.StringType
 import org.shedlang.compiler.types.metaType
 
@@ -13,7 +13,7 @@ class TypeCheckEffectDefinitionTests {
     @Test
     fun effectDefinitionCreatesUserDefinedEffect() {
         val stringReference = staticReference("String")
-        val nothingReference = staticReference("Nothing")
+        val bottomReference = staticReference("Bottom")
         val effectDefinition = effectDefinition(
             name = "Try",
             operations = listOf(
@@ -21,7 +21,7 @@ class TypeCheckEffectDefinitionTests {
                     name = "throw",
                     type = functionTypeNode(
                         positionalParameters = listOf(stringReference),
-                        returnType = nothingReference
+                        returnType = bottomReference
                     )
                 )
             )
@@ -30,7 +30,7 @@ class TypeCheckEffectDefinitionTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 stringReference to metaType(StringType),
-                nothingReference to metaType(NothingType)
+                bottomReference to metaType(BottomType)
             )
         )
         typeCheckModuleStatement(effectDefinition, typeContext)
@@ -41,7 +41,7 @@ class TypeCheckEffectDefinitionTests {
                 Identifier("throw") to isFunctionType(
                     positionalParameters = isSequence(isStringType),
                     effect = isUserDefinedEffect(name = isIdentifier("Try")),
-                    returnType = isNothingType
+                    returnType = isBottomType
                 )
             )
         )))

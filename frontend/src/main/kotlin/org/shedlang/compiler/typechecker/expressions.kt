@@ -308,7 +308,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         context.addExpressionType(handler.function, handlerType)
 
         verifyType(
-            expected = operationType.copy(effect = context.effect, returns = AnyType),
+            expected = operationType.copy(effect = context.effect, returns = TopType),
             actual = handlerType,
             source = handler.source
         )

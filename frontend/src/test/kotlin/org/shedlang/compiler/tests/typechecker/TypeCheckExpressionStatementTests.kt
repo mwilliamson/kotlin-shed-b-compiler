@@ -71,10 +71,10 @@ class TypeCheckExpressionStatementTests {
     }
 
     @Test
-    fun resumeHasNothingType() {
+    fun resumeHasBottomType() {
         val node = resume(literalBool())
         val type = typeCheckFunctionStatement(node, typeContext(resumeValueType = BoolType))
-        assertThat(type, isNothingType)
+        assertThat(type, isBottomType)
     }
 
     @Test

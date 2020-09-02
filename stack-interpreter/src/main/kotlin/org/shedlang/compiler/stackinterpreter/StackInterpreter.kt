@@ -5,7 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.AnyType
+import org.shedlang.compiler.types.TopType
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.UserDefinedEffect
@@ -559,14 +559,14 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                                 Identifier("name") to InterpreterString(field.name.value),
                                 Identifier("get") to toInterpreterFunction(
                                     defineShapeFieldGet(
-                                        shapeType = AnyType,
+                                        shapeType = TopType,
                                         fieldName = field.name
                                     ),
                                     scopes = persistentListOf()
                                 ),
                                 Identifier("update") to toInterpreterFunction(
                                     defineShapeFieldUpdate(
-                                        shapeType = AnyType,
+                                        shapeType = TopType,
                                         fieldName = field.name
                                     ),
                                     scopes = persistentListOf()
@@ -914,7 +914,7 @@ fun executeMain(mainModule: ModuleName, image: Image, world: World): Int {
         persistentListOf(
             ModuleInit(mainModule),
             ModuleLoad(mainModule),
-            FieldAccess(Identifier("main"), receiverType = AnyType),
+            FieldAccess(Identifier("main"), receiverType = TopType),
             Call(positionalArgumentCount = 0, namedArgumentNames = listOf())
         ),
         image = image,

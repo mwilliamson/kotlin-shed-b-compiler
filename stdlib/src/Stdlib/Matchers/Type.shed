@@ -32,7 +32,7 @@ fun has[T, U](
 }
 
 fun hasField[T, U](
-    field: ShapeField[T, U, Any],
+    field: ShapeField[T, U, Top],
     valueMatcher: Matcher[U],
 ) -> Matcher[T] {
     has(field.name, field.get, valueMatcher)

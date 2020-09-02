@@ -70,17 +70,17 @@ fun allOf[T](matchers: Lists.List[Matcher[T]]) -> Matcher[T] {
     )
 }
 
-fun anything() -> Matcher[Any] {
+fun anything() -> Matcher[Top] {
     Matcher(
         .description = "anything",
-        .match = fun (x: Any) => success,
+        .match = fun (x: Top) => success,
     )
 }
 
-fun isNone() -> Matcher[Option[Any]] {
+fun isNone() -> Matcher[Option[Top]] {
     Matcher(
         .description = "none",
-        .match = fun (actual: Option[Any]) -> Result {
+        .match = fun (actual: Option[Top]) -> Result {
             if (actual is None) {
                 success
             } else {

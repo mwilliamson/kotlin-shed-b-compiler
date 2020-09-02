@@ -15,7 +15,7 @@ union Builder[+T] =
     }
     | Nil;
 
-fun builder() -> Builder[Nothing] {
+fun builder() -> Builder[Bottom] {
     Nil()
 }
 

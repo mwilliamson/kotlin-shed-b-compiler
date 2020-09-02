@@ -14,8 +14,8 @@ object Builtins {
 }
 
 val builtins = listOf(
-    builtinType("Any", AnyType),
-    builtinType("Nothing", NothingType),
+    builtinType("Top", TopType),
+    builtinType("Bottom", BottomType),
     builtinType("Unit", UnitType),
     builtinType("Int", IntType),
     builtinType("String", StringType),

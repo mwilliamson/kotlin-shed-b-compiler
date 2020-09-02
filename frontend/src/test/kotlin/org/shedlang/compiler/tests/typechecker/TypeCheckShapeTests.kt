@@ -153,7 +153,7 @@ class TypeCheckShapeTests {
     @Test
     fun whenFieldTypesAreNarrowedThenFinalFieldHasNarrowedType() {
         val shapeId = freshTypeId()
-        val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
+        val firstField = field(name = "a", type = TopType, shapeId = shapeId)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId)
 
         assertThat(
@@ -200,14 +200,14 @@ class TypeCheckShapeTests {
     @Test
     fun constantFieldsArePreferredAsBottomFields() {
         val shapeId = freshTypeId()
-        val firstField = field(name = "a", type = AnyType, shapeId = shapeId, isConstant = true)
+        val firstField = field(name = "a", type = TopType, shapeId = shapeId, isConstant = true)
         val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
 
         assertThat(
             { mergeFields(firstField, secondField) },
             throws(allOf(
                 has(FieldDeclarationMergeTypeConflictError::name, isIdentifier("a")),
-                has(FieldDeclarationMergeTypeConflictError::types, isSequence(isAnyType, isStringType))
+                has(FieldDeclarationMergeTypeConflictError::types, isSequence(isTopType, isStringType))
             ))
         )
     }
@@ -276,7 +276,7 @@ class TypeCheckShapeTests {
         val shapeId = freshTypeId()
         val stringTypeReference = staticReference("String")
 
-        val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
+        val firstField = field(name = "a", type = TopType, shapeId = shapeId)
 
         val extendsShapeReference = staticReference("Extends")
         val shape = shapeType(fields = listOf(firstField))
@@ -306,7 +306,7 @@ class TypeCheckShapeTests {
         val base = shapeType(shapeId = shapeId)
         val stringTypeReference = staticReference("String")
 
-        val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
+        val firstField = field(name = "a", type = TopType, shapeId = shapeId)
 
         val extendsShapeReference = staticReference("Extends")
         val shape = shapeType(fields = listOf(firstField))
@@ -334,7 +334,7 @@ class TypeCheckShapeTests {
         val shapeId = freshTypeId()
         val baseReference = staticReference("Base")
         val base = shapeType(shapeId = shapeId)
-        val anyTypeReference = staticReference("Any")
+        val topTypeReference = staticReference("Top")
 
         val firstField = field(name = "a", type = StringType, shapeId = shapeId)
 
@@ -342,11 +342,11 @@ class TypeCheckShapeTests {
         val shape = shapeType(name = "Extends", fields = listOf(firstField))
         val node = shape(
             extends = listOf(extendsShapeReference),
-            fields = listOf(shapeField(shape = baseReference, name = "a", type = anyTypeReference))
+            fields = listOf(shapeField(shape = baseReference, name = "a", type = topTypeReference))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             extendsShapeReference to StaticValueType(shape),
-            anyTypeReference to StaticValueType(AnyType),
+            topTypeReference to StaticValueType(TopType),
             baseReference to StaticValueType(base)
         ))
         assertThat(
@@ -356,7 +356,7 @@ class TypeCheckShapeTests {
             },
             throws(allOf(
                 has(FieldDeclarationOverrideTypeConflictError::name, isIdentifier("a")),
-                has(FieldDeclarationOverrideTypeConflictError::overrideType, isAnyType),
+                has(FieldDeclarationOverrideTypeConflictError::overrideType, isTopType),
                 has(FieldDeclarationOverrideTypeConflictError::parentShape, isIdentifier("Extends")),
                 has(FieldDeclarationOverrideTypeConflictError::parentType, isStringType)
             ))

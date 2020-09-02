@@ -6,16 +6,16 @@ import M from Stdlib.Matchers;
 import Options from Stdlib.Options;
 import Tests from Stdlib.Tests;
 
-fun isFailure(.message: M.Matcher[String]) -> M.Matcher[ArgParser.ParseResult[Any]] {
+fun isFailure(.message: M.Matcher[String]) -> M.Matcher[ArgParser.ParseResult[Top]] {
     M.isTypeWith(
         .description = "failure",
-        .describeValue = fun (value: ArgParser.ParseResult[Any]) {
+        .describeValue = fun (value: ArgParser.ParseResult[Top]) {
             when (value) {
                 is ArgParser.Failure { "failure" }
                 is ArgParser.Success { "success" }
             }
         },
-        .cast = cast(ArgParser.ParseResult[Any], ArgParser.Failure),
+        .cast = cast(ArgParser.ParseResult[Top], ArgParser.Failure),
         .with = M.hasField(ArgParser.Failure.fields.message, message),
     )
 }

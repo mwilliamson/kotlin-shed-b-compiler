@@ -14,7 +14,7 @@ import org.shedlang.compiler.tests.isSequence
 class ParseEffectDefinitionTests {
     @Test
     fun canParseEffectDefinitionWithOneOperation() {
-        val source = "effect Try { .throw: (String) -> Nothing }"
+        val source = "effect Try { .throw: (String) -> Bottom }"
 
         val definition = parseString(::parseModuleStatement, source)
 
@@ -25,7 +25,7 @@ class ParseEffectDefinitionTests {
                     has(OperationDefinitionNode::name, isIdentifier("throw")),
                     has(OperationDefinitionNode::type, isFunctionType(
                         positionalParameters = isSequence(isStaticReference("String")),
-                        returnType = isStaticReference("Nothing")
+                        returnType = isStaticReference("Bottom")
                     ))
                 )
             ))

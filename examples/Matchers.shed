@@ -20,10 +20,10 @@ fun assertThat[T](value: T, matcher: Matcher[T]) -> Result {
     }
 }
 
-fun anything() -> Matcher[Any] {
+fun anything() -> Matcher[Top] {
     Matcher(
         .description = "anything",
-        .match = fun (x: Any) => success,
+        .match = fun (x: Top) => success,
     )
 }
 

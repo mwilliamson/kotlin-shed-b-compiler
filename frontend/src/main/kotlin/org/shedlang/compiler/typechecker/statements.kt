@@ -342,7 +342,7 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
                         actual = type,
                         source = node.source
                     )
-                    NothingType
+                    BottomType
                 }
 
                 ExpressionStatementNode.Type.EXIT,
@@ -393,7 +393,7 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
                 // TODO: should the error be on the target or expression?
                 throw UnexpectedTypeError(
                     actual = TupleType(
-                        elementTypes = target.elements.map { AnyType }
+                        elementTypes = target.elements.map { TopType }
                     ),
                     expected = type,
                     source = target.source

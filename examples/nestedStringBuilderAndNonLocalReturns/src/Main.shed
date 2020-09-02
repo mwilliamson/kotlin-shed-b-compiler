@@ -9,7 +9,7 @@ export main;
 import StringBuilder from Stdlib.Platform.StringBuilder;
 
 effect NonLocalReturn {
-    .nonLocalReturn: (String) -> Nothing,
+    .nonLocalReturn: (String) -> Bottom,
 }
 
 fun main() !Io -> Unit {

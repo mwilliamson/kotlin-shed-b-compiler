@@ -26,7 +26,7 @@ union ParseResult[+T] =
     };
 
 effect ParseEffect {
-    .fail: (String) -> Nothing,
+    .fail: (String) -> Bottom,
 }
 
 val string = ArgType(

@@ -6,7 +6,7 @@
 export main;
 
 effect NonLocalReturn {
-    .nonLocalReturn: (String, String, .a: String, .b: String) -> Nothing,
+    .nonLocalReturn: (String, String, .a: String, .b: String) -> Bottom,
 }
 
 fun main() !Io -> Unit {

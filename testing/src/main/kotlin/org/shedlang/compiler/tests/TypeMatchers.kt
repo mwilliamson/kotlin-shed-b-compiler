@@ -116,8 +116,8 @@ fun isTagValue(tag: Matcher<Tag>, value: String) = cast(allOf(
     has(TagValue::value, isIdentifier(value))
 ))
 
-val isAnyType: Matcher<StaticValue> = cast(equalTo(AnyType))
-val isNothingType: Matcher<StaticValue> = cast(equalTo(NothingType))
+val isTopType: Matcher<StaticValue> = cast(equalTo(TopType))
+val isBottomType: Matcher<StaticValue> = cast(equalTo(BottomType))
 val isUnitType: Matcher<StaticValue> = cast(equalTo(UnitType))
 val isIntType: Matcher<StaticValue> = cast(equalTo(IntType))
 val isBoolType: Matcher<StaticValue> = cast(equalTo(BoolType))
