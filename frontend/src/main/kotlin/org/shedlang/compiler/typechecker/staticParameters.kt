@@ -27,7 +27,7 @@ private fun typeCheckStaticParameter(
         }
 
         override fun visit(node: EffectParameterNode): StaticParameter {
-            val parameter = EffectParameter(name = node.name)
+            val parameter = EffectParameter(name = node.name, source = node.source)
             context.addVariableType(node, StaticValueType(parameter))
             return parameter
         }
@@ -41,7 +41,8 @@ private fun typeCheckTypeParameter(
     val typeParameter = TypeParameter(
         name = parameter.name,
         variance = parameter.variance,
-        shapeId = null
+        shapeId = null,
+        source = parameter.source,
     )
     context.addVariableType(parameter, StaticValueType(typeParameter))
     return typeParameter

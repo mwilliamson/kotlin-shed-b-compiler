@@ -299,7 +299,8 @@ private fun shapeFieldInfoUpdateType(shapeType: ShapeType, field: Field): Type {
     val typeParameter = TypeParameter(
         name = Identifier("T"),
         variance = Variance.INVARIANT,
-        shapeId = field.shapeId
+        shapeId = field.shapeId,
+        source = BuiltinSource,
     )
     return functionType(
         staticParameters = listOf(typeParameter),
@@ -330,6 +331,7 @@ fun freshTypeId() = freshNodeId()
 
 interface StaticParameter: StaticValue {
     val name: Identifier
+    val source: Source
 
     fun fresh(): StaticParameter
 
@@ -345,7 +347,8 @@ data class TypeParameter(
     override val name: Identifier,
     val variance: Variance,
     override val shapeId: Int?,
-    val typeParameterId: Int = freshTypeId()
+    val typeParameterId: Int = freshTypeId(),
+    override val source: Source,
 ): StaticParameter, Type {
     override fun fieldType(fieldName: Identifier): Type? = null
 
@@ -372,14 +375,16 @@ data class TypeParameter(
         return TypeParameter(
             name = name,
             variance = variance,
-            shapeId = shapeId
+            shapeId = shapeId,
+            source = source,
         )
     }
 }
 
 data class EffectParameter(
     override val name: Identifier,
-    val staticParameterId: Int = freshEffectParameterId()
+    val staticParameterId: Int = freshEffectParameterId(),
+    override val source: Source,
 ): StaticParameter, Effect {
     override val shortDescription: String
         get() = name.value
@@ -390,7 +395,8 @@ data class EffectParameter(
 
     override fun fresh(): EffectParameter {
         return EffectParameter(
-            name = name
+            name = name,
+            source = source,
         )
     }
 }
@@ -842,25 +848,28 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
     }
 }
 
-fun invariantTypeParameter(name: String, shapeId: Int? = null) = TypeParameter(
+fun invariantTypeParameter(name: String, shapeId: Int? = null, source: Source = NullSource) = TypeParameter(
     Identifier(name),
     variance = Variance.INVARIANT,
-    shapeId = shapeId
+    shapeId = shapeId,
+    source = source,
 )
 
-fun covariantTypeParameter(name: String) = TypeParameter(
+fun covariantTypeParameter(name: String, source: Source = NullSource) = TypeParameter(
     Identifier(name),
     variance = Variance.COVARIANT,
-    shapeId = null
+    shapeId = null,
+    source = source,
 )
 
-fun contravariantTypeParameter(name: String) = TypeParameter(
+fun contravariantTypeParameter(name: String, source: Source = NullSource) = TypeParameter(
     Identifier(name),
     variance = Variance.CONTRAVARIANT,
-    shapeId = null
+    shapeId = null,
+    source = source,
 )
 
-fun effectParameter(name: String) = EffectParameter(Identifier(name))
+fun effectParameter(name: String, source: Source = NullSource) = EffectParameter(Identifier(name), source = source)
 
 object CastType : BasicType {
     override val shortDescription = "Cast"
