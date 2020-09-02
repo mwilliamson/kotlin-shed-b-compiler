@@ -659,7 +659,10 @@ class CoercionTests {
             constraints = listOf(member1 to typeParameter, member2 to typeParameter),
             parameters = setOf(typeParameter)
         )
-        assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(cast(sameInstance(member1)), cast(sameInstance(member2))))))
+        assertThat(result, isSuccess(typeParameter to isUnionType(members = isSequence(
+            isEquivalentType(member1),
+            isEquivalentType(member2),
+        ))))
     }
 
     @Test

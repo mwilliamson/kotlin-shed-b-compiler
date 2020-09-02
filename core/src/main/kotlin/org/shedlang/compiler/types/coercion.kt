@@ -107,9 +107,7 @@ class TypeConstraintSolver(
                 }
                 is TypeBound.Lower -> {
                     // TODO: handle union failure
-                    typeBindings[to] = TypeBound.Lower(union(boundType.type, from))
-                    // TODO: work out using bindType doesn't work
-//                    bindType(to, TypeBound.Lower(union(boundType.type, from)))
+                    bindType(to, TypeBound.Lower(union(boundType.type, from)))
                     return true
                 }
             }
@@ -228,9 +226,13 @@ class TypeConstraintSolver(
     private fun bindType(from: TypeParameter, to: TypeBound) {
         val existingTypeBindings = typeBindings.toMap()
 
-        typeBindings[from] = to.mapType { toType -> replaceStaticValuesInType(toType, bindings()) }
+        val newTo = to.mapType { toType -> replaceStaticValuesInType(toType, bindings()) }
+        typeBindings[from] = newTo
         for ((existingFrom, existingTo) in existingTypeBindings) {
-            typeBindings[existingFrom] = existingTo.mapType { existingToType -> replaceStaticValuesInType(existingToType, mapOf(from to to.type)) }
+            if (existingFrom != from) {
+                // Test newTo instead of to here
+                typeBindings[existingFrom] = existingTo.mapType { existingToType -> replaceStaticValuesInType(existingToType, mapOf(from to newTo.type)) }
+            }
         }
     }
 

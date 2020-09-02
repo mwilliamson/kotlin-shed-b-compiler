@@ -175,7 +175,7 @@ class TypeCheckCallTests {
         )
         val type = inferCallType(node, typeContext)
 
-        assertThat(type, isUnionType(members = isSequence(isType(member1), isType(member2))))
+        assertThat(type, isUnionType(members = isSequence(isEquivalentType(member1), isEquivalentType(member2))))
     }
 
     @Test
@@ -976,6 +976,6 @@ class TypeCheckCallTests {
         )
         val type = inferType(node, typeContext)
 
-        assertThat(type, isUnionType(members = isSequence(isType(member1), isType(member2))))
+        assertThat(type, isUnionType(members = isSequence(isEquivalentType(member1), isEquivalentType(member2))))
     }
 }
