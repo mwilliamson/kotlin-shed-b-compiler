@@ -242,37 +242,53 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
 
                         val jsFieldName = generateName(field.name)
                         JavascriptObjectLiteralNode(
-                            properties = mapOf(
-                                "get" to JavascriptFunctionExpressionNode(
-                                    parameters = listOf("value"),
-                                    body = listOf(
-                                        JavascriptReturnNode(
-                                            expression = JavascriptPropertyAccessNode(
-                                                receiver = JavascriptVariableReferenceNode(
-                                                    name = "value",
-                                                    source = fieldSource
+                            elements = listOf(
+                                JavascriptPropertyNode(
+                                    "get",
+                                    JavascriptFunctionExpressionNode(
+                                        parameters = listOf("value"),
+                                        body = listOf(
+                                            JavascriptReturnNode(
+                                                expression = JavascriptPropertyAccessNode(
+                                                    receiver = JavascriptVariableReferenceNode(
+                                                        name = "value",
+                                                        source = fieldSource
+                                                    ),
+                                                    propertyName = jsFieldName,
+                                                    source = fieldSource,
                                                 ),
-                                                propertyName = jsFieldName,
-                                                source = fieldSource
-                                            ),
-                                            source = fieldSource
-                                        )
+                                                source = fieldSource,
+                                            )
+                                        ),
+                                        source = fieldSource,
                                     ),
-                                    source = fieldSource
+                                    source = fieldSource,
                                 ),
-                                "isConstant" to JavascriptBooleanLiteralNode(
-                                    field.isConstant,
-                                    source = fieldSource
+                                JavascriptPropertyNode(
+                                    "isConstant",
+                                    JavascriptBooleanLiteralNode(
+                                        field.isConstant,
+                                        source = fieldSource,
+                                    ),
+                                    source = fieldSource,
                                 ),
-                                "jsName" to JavascriptStringLiteralNode(
-                                    jsFieldName,
-                                    source = fieldSource
+                                JavascriptPropertyNode(
+                                    "jsName",
+                                    JavascriptStringLiteralNode(
+                                        jsFieldName,
+                                        source = fieldSource
+                                    ),
+                                    source = fieldSource,
                                 ),
-                                "name" to JavascriptStringLiteralNode(
-                                    field.name.value,
-                                    source = fieldSource
+                                JavascriptPropertyNode(
+                                    "name",
+                                    JavascriptStringLiteralNode(
+                                        field.name.value,
+                                        source = fieldSource
+                                    ),
+                                    source = fieldSource,
                                 ),
-                                "value" to value
+                                JavascriptPropertyNode("value", value, source = fieldSource),
                             ),
                             source = source
                         )
@@ -371,8 +387,14 @@ private fun generateCodeForFunction(name: String, node: FunctionNode, functionTy
         }
 
         Synchrony.ASYNC -> JavascriptObjectLiteralNode(
-            properties = mapOf("async" to generateFunctionExpression(node, context, isAsync = true)),
-            source = source
+            elements = listOf(
+                JavascriptPropertyNode(
+                    "async",
+                    generateFunctionExpression(node, context, isAsync = true),
+                    source = source,
+                ),
+            ),
+            source = source,
         )
 
         Synchrony.SYNC -> {
@@ -630,26 +652,24 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
                 listOf()
             } else {
                 listOf(JavascriptObjectLiteralNode(
-                    properties = functionType.namedParameters
+                    elements = functionType.namedParameters
                         .keys
                         .sorted()
-                        .associateBy(
-                            { parameter -> generateName(parameter) },
-                            { parameter ->
-                                if (node.namedArguments.any { argument -> argument.name == parameter }) {
-                                    JavascriptVariableReferenceNode(generateName(parameter), source = NodeSource(node))
-                                } else {
-                                    JavascriptPropertyAccessNode(
-                                        receiver = JavascriptVariableReferenceNode(
-                                            "\$named",
-                                            source = NodeSource(node)
-                                        ),
-                                        propertyName = generateName(parameter),
+                        .map { parameter ->
+                            val value = if (node.namedArguments.any { argument -> argument.name == parameter }) {
+                                JavascriptVariableReferenceNode(generateName(parameter), source = NodeSource(node))
+                            } else {
+                                JavascriptPropertyAccessNode(
+                                    receiver = JavascriptVariableReferenceNode(
+                                        "\$named",
                                         source = NodeSource(node)
-                                    )
-                                }
+                                    ),
+                                    propertyName = generateName(parameter),
+                                    source = NodeSource(node)
+                                )
                             }
-                        ),
+                            JavascriptPropertyNode(generateName(parameter), value, source = NodeSource(node))
+                        },
                     source = NodeSource(node)
                 ))
             }
@@ -797,8 +817,12 @@ private fun generateCodeForCall(node: CallNode, context: CodeGenerationContext):
         listOf()
     } else {
         listOf(JavascriptObjectLiteralNode(
-            node.namedArguments.associate { argument ->
-                generateName(argument.name) to generateCode(argument.expression, context)
+            node.namedArguments.map { argument ->
+                JavascriptPropertyNode(
+                    generateName(argument.name),
+                    generateCode(argument.expression, context),
+                    source = NodeSource(node),
+                )
             },
             source = NodeSource(node)
         ))

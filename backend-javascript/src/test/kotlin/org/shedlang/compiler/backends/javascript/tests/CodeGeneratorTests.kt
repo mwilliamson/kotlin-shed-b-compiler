@@ -606,7 +606,11 @@ class CodeGeneratorTests {
 
         assertThat(node, isJavascriptFunctionCall(
             isJavascriptVariableReference("f"),
-            isSequence(isJavascriptObject(isMap("a" to isJavascriptBooleanLiteral(true))))
+            isSequence(
+                isJavascriptObject(isSequence(
+                    isJavascriptProperty(name = equalTo("a"), expression = isJavascriptBooleanLiteral(true)),
+                ))
+            )
         ))
     }
 
@@ -630,7 +634,9 @@ class CodeGeneratorTests {
             isJavascriptVariableReference("f"),
             isSequence(
                 isJavascriptIntegerLiteral(1),
-                isJavascriptObject(isMap("a" to isJavascriptBooleanLiteral(true)))
+                isJavascriptObject(isSequence(
+                    isJavascriptProperty(name = equalTo("a"), expression = isJavascriptBooleanLiteral(true)),
+                ))
             )
         ))
     }
@@ -723,8 +729,8 @@ class CodeGeneratorTests {
                                     isJavascriptFunctionCall(
                                         function = isJavascriptVariableReference("\$func"),
                                         arguments = isSequence(
-                                            isJavascriptObject(isMap(
-                                                "x" to isJavascriptVariableReference("x")
+                                            isJavascriptObject(isSequence(
+                                                isJavascriptProperty(name = equalTo("x"), expression = isJavascriptVariableReference("x")),
                                             ))
                                         )
                                     )
@@ -764,12 +770,12 @@ class CodeGeneratorTests {
                                     isJavascriptFunctionCall(
                                         function = isJavascriptVariableReference("\$func"),
                                         arguments = isSequence(
-                                            isJavascriptObject(isMap(
-                                                "x" to isJavascriptVariableReference("x"),
-                                                "y" to isJavascriptPropertyAccess(
+                                            isJavascriptObject(isSequence(
+                                                isJavascriptProperty(name = equalTo("x"), expression = isJavascriptVariableReference("x")),
+                                                isJavascriptProperty(name = equalTo("y"), expression = isJavascriptPropertyAccess(
                                                     receiver = isJavascriptVariableReference("\$named"),
                                                     propertyName = equalTo("y")
-                                                )
+                                                )),
                                             ))
                                         )
                                     )
@@ -1007,10 +1013,18 @@ class CodeGeneratorTests {
     )
 
     private fun isJavascriptObject(
-        properties: Matcher<Map<String, JavascriptExpressionNode>>
+        elements: Matcher<List<JavascriptObjectLiteralElementNode>>
     ): Matcher<JavascriptExpressionNode> = cast(
-        has(JavascriptObjectLiteralNode::properties, properties)
+        has(JavascriptObjectLiteralNode::elements, elements)
     )
+
+    private fun isJavascriptProperty(
+        name: Matcher<String>,
+        expression: Matcher<JavascriptExpressionNode>,
+    ): Matcher<JavascriptObjectLiteralElementNode> = cast(allOf(
+        has(JavascriptPropertyNode::name, name),
+        has(JavascriptPropertyNode::expression, expression),
+    ))
 
     private fun isJavascriptAssignment(
         target: Matcher<JavascriptExpressionNode>,

@@ -135,10 +135,19 @@ fun jsArray(elements: List<JavascriptExpressionNode>) = JavascriptArrayLiteralNo
 )
 
 fun jsObject(
-    properties: Map<String, JavascriptExpressionNode>
+    elements: List<JavascriptObjectLiteralElementNode>,
 ) = JavascriptObjectLiteralNode(
-    properties = properties,
+    elements = elements,
     source = anySource()
+)
+
+fun jsProperty(
+    name: String,
+    expression: JavascriptExpressionNode,
+) = JavascriptPropertyNode(
+    name = name,
+    expression = expression,
+    source = anySource(),
 )
 
 fun jsFunction(

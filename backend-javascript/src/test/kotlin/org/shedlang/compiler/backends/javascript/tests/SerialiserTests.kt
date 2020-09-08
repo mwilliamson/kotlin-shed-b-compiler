@@ -513,14 +513,14 @@ class SerialiserTests {
 
     @Test
     fun emptyObjectLiteralSerialisation() {
-        val node = jsObject(mapOf())
+        val node = jsObject(listOf())
         val output = serialise(node)
         assertThat(output, equalTo("{}"))
     }
 
     @Test
     fun singlePropertyObjectLiteralSerialisation() {
-        val node = jsObject(mapOf("x" to jsLiteralBool(true)))
+        val node = jsObject(listOf(jsProperty("x", jsLiteralBool(true))))
         val output = indentedSerialise(node)
         assertThat(output, equalTo(listOf(
             "{",
@@ -531,7 +531,7 @@ class SerialiserTests {
 
     @Test
     fun multiplePropertyObjectLiteralSerialisation() {
-        val node = jsObject(mapOf("x" to jsLiteralBool(true), "y" to jsLiteralBool(false)))
+        val node = jsObject(listOf(jsProperty("x", jsLiteralBool(true)), jsProperty("y", jsLiteralBool(false))))
         val output = indentedSerialise(node)
         assertThat(output, equalTo(listOf(
             "{",

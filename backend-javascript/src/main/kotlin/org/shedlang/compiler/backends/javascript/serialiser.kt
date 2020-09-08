@@ -147,11 +147,10 @@ internal fun serialise(node: JavascriptExpressionNode, indentation: Int) : Strin
 
         override fun visit(node: JavascriptObjectLiteralNode): String {
             return serialiseObject(
-                node.properties.entries.map { property ->
-                    val value = serialise(property.value, indentation = indentation + 1)
-                    property.key to value
+                node.elements.map { element ->
+                    serialiseElement(element, indentation = indentation + 1)
                 },
-                indentation = indentation
+                indentation = indentation,
             )
         }
 
@@ -181,7 +180,7 @@ internal fun serialiseTarget(node: JavascriptTargetNode, indentation: Int): Stri
             return serialiseObject(
                 node.properties.map { property ->
                     val value = serialiseTarget(property.second, indentation = indentation + 1)
-                    property.first to value
+                    "${property.first}: ${value}"
                 },
                 indentation = indentation
             )
@@ -193,23 +192,30 @@ private fun serialiseArray(elements: List<String>): String {
     return "[" + elements.joinToString(", ") + "]"
 }
 
-private fun serialiseObject(properties: List<Pair<String, String>>, indentation: Int): String {
-    if (properties.isEmpty()) {
+private fun serialiseObject(elements: List<String>, indentation: Int): String {
+    if (elements.isEmpty()) {
         return "{}"
     } else {
         val open = "{\n"
-        val propertiesString = properties.mapIndexed(fun(index, property): String {
-            val propertyName = property.first
-            val propertyValue = property.second
-            val comma = if (index == properties.size - 1) "" else ","
+        val propertiesString = elements.mapIndexed(fun(index, element): String {
+            val comma = if (index == elements.size - 1) "" else ","
             return line(
-                "${propertyName}: ${propertyValue}${comma}",
+                "${element}${comma}",
                 indentation = indentation + 1
             )
         }).joinToString("")
         val close = indent("}", indentation = indentation)
         return open + propertiesString + close
     }
+}
+
+private fun serialiseElement(element: JavascriptObjectLiteralElementNode, indentation: Int): String {
+    return element.accept(object : JavascriptObjectLiteralElementNode.Visitor<String> {
+        override fun visit(node: JavascriptPropertyNode): String {
+            val value = serialise(node.expression, indentation = indentation)
+            return "${node.name}: $value"
+        }
+    })
 }
 
 private fun serialiseVariableReference(node: JavascriptVariableReferenceNode): String {

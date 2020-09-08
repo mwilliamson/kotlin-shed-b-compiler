@@ -256,10 +256,28 @@ data class JavascriptArrayLiteralNode(
 }
 
 data class JavascriptObjectLiteralNode(
-    val properties: Map<String, JavascriptExpressionNode>,
+    val elements: List<JavascriptObjectLiteralElementNode>,
     override val source: Source
 ): JavascriptExpressionNode {
     override fun <T> accept(visitor: JavascriptExpressionNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+interface JavascriptObjectLiteralElementNode: JavascriptNode {
+    interface Visitor<T> {
+        fun visit(node: JavascriptPropertyNode): T
+    }
+
+    fun <T> accept(visitor: Visitor<T>): T
+}
+
+data class JavascriptPropertyNode(
+    val name: String,
+    val expression: JavascriptExpressionNode,
+    override val source: Source,
+): JavascriptObjectLiteralElementNode {
+    override fun <T> accept(visitor: JavascriptObjectLiteralElementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
