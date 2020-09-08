@@ -46,7 +46,7 @@ internal fun serialise(node: JavascriptStatementNode, indentation: Int): String 
         }
 
         override fun visit(node: JavascriptExpressionStatementNode): String {
-            return simpleStatement(serialise(node.expression, indentation = 1))
+            return simpleStatement(serialise(node.expression, indentation = indentation))
         }
 
         override fun visit(node: JavascriptFunctionDeclarationNode): String {
