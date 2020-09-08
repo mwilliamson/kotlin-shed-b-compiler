@@ -74,6 +74,7 @@ function varargs(cons, nil) {
 module.exports = {
     declareShape: declareShape,
     defineEffect: defineEffect,
+    empty: () => {},
     handle: handle,
 
     varargs: varargs,

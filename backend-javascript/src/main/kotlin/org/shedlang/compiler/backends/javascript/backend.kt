@@ -145,8 +145,8 @@ private fun builtinModule(): JavascriptModule {
 }
 
 val builtinNames = listOf(
-    "intToString"
-);
+    "empty"
+)
 
 
 fun withLineNumbers(source: String): String {
