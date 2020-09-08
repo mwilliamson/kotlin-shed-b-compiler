@@ -3,10 +3,7 @@ package org.shedlang.compiler.backends.javascript
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.CodeInspector
-import org.shedlang.compiler.backends.FieldValue
-import org.shedlang.compiler.backends.ModuleCodeInspector
-import org.shedlang.compiler.backends.isConstant
+import org.shedlang.compiler.backends.*
 import org.shedlang.compiler.backends.javascript.ast.*
 import org.shedlang.compiler.types.*
 
@@ -229,69 +226,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
                 tagValueArgument,
                 JavascriptArrayLiteralNode(
                     context.inspector.shapeFields(node).map { field ->
-                        val fieldSource = field.source
-                        val fieldValue = field.value
-                        val value = when (fieldValue) {
-                            null ->
-                                // TODO: use undefined
-                                JavascriptNullLiteralNode(source = fieldSource)
-
-                            is FieldValue.Expression ->
-                                generateCode(fieldValue.expression, context)
-                        }
-
-                        val jsFieldName = generateName(field.name)
-                        JavascriptObjectLiteralNode(
-                            elements = listOf(
-                                JavascriptPropertyNode(
-                                    "get",
-                                    JavascriptFunctionExpressionNode(
-                                        parameters = listOf("value"),
-                                        body = listOf(
-                                            JavascriptReturnNode(
-                                                expression = JavascriptPropertyAccessNode(
-                                                    receiver = JavascriptVariableReferenceNode(
-                                                        name = "value",
-                                                        source = fieldSource
-                                                    ),
-                                                    propertyName = jsFieldName,
-                                                    source = fieldSource,
-                                                ),
-                                                source = fieldSource,
-                                            )
-                                        ),
-                                        source = fieldSource,
-                                    ),
-                                    source = fieldSource,
-                                ),
-                                JavascriptPropertyNode(
-                                    "isConstant",
-                                    JavascriptBooleanLiteralNode(
-                                        field.isConstant,
-                                        source = fieldSource,
-                                    ),
-                                    source = fieldSource,
-                                ),
-                                JavascriptPropertyNode(
-                                    "jsName",
-                                    JavascriptStringLiteralNode(
-                                        jsFieldName,
-                                        source = fieldSource
-                                    ),
-                                    source = fieldSource,
-                                ),
-                                JavascriptPropertyNode(
-                                    "name",
-                                    JavascriptStringLiteralNode(
-                                        field.name.value,
-                                        source = fieldSource
-                                    ),
-                                    source = fieldSource,
-                                ),
-                                JavascriptPropertyNode("value", value, source = fieldSource),
-                            ),
-                            source = source
-                        )
+                        generateCodeForField(field, context, source)
                     },
                     source = source
                 )
@@ -299,6 +234,113 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
             source = source
         ),
         source = source
+    )
+}
+
+private fun generateCodeForField(field: FieldInspector, context: CodeGenerationContext, source: NodeSource): JavascriptObjectLiteralNode {
+    val fieldSource = field.source
+    val fieldValue = field.value
+    val value = when (fieldValue) {
+        null ->
+            // TODO: use undefined
+            JavascriptNullLiteralNode(source = fieldSource)
+
+        is FieldValue.Expression ->
+            generateCode(fieldValue.expression, context)
+    }
+
+    val jsFieldName = generateName(field.name)
+    return JavascriptObjectLiteralNode(
+        elements = listOf(
+            JavascriptPropertyNode(
+                "get",
+                generateFieldGetFunction(jsFieldName, fieldSource),
+                source = fieldSource,
+            ),
+            JavascriptPropertyNode(
+                "isConstant",
+                JavascriptBooleanLiteralNode(
+                    field.isConstant,
+                    source = fieldSource,
+                ),
+                source = fieldSource,
+            ),
+            JavascriptPropertyNode(
+                "jsName",
+                JavascriptStringLiteralNode(
+                    jsFieldName,
+                    source = fieldSource
+                ),
+                source = fieldSource,
+            ),
+            JavascriptPropertyNode(
+                "name",
+                JavascriptStringLiteralNode(
+                    field.name.value,
+                    source = fieldSource
+                ),
+                source = fieldSource,
+            ),
+            JavascriptPropertyNode(
+                "update",
+                generateFieldUpdateFunction(jsFieldName, fieldSource),
+                source = fieldSource,
+            ),
+            JavascriptPropertyNode("value", value, source = fieldSource),
+        ),
+        source = source
+    )
+}
+
+private fun generateFieldGetFunction(jsFieldName: String, fieldSource: Source): JavascriptExpressionNode {
+    return JavascriptFunctionExpressionNode(
+        parameters = listOf("value"),
+        body = listOf(
+            JavascriptReturnNode(
+                expression = JavascriptPropertyAccessNode(
+                    receiver = JavascriptVariableReferenceNode(
+                        name = "value",
+                        source = fieldSource
+                    ),
+                    propertyName = jsFieldName,
+                    source = fieldSource
+                ),
+                source = fieldSource
+            )
+        ),
+        source = fieldSource
+    )
+}
+
+private fun generateFieldUpdateFunction(jsFieldName: String, fieldSource: Source): JavascriptExpressionNode {
+    return JavascriptFunctionExpressionNode(
+        parameters = listOf("newFieldValue", "existingObject"),
+        body = listOf(
+            JavascriptReturnNode(
+                expression = JavascriptObjectLiteralNode(
+                    elements = listOf(
+                        JavascriptSpreadPropertiesNode(
+                            expression = JavascriptVariableReferenceNode(
+                                "existingObject",
+                                source = fieldSource,
+                            ),
+                            source = fieldSource,
+                        ),
+                        JavascriptPropertyNode(
+                            name = jsFieldName,
+                            expression = JavascriptVariableReferenceNode(
+                                "newFieldValue",
+                                source = fieldSource,
+                            ),
+                            source = fieldSource,
+                        ),
+                    ),
+                    source = fieldSource,
+                ),
+                source = fieldSource,
+            )
+        ),
+        source = fieldSource,
     )
 }
 
