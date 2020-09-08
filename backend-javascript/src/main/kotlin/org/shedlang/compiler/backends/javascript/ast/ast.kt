@@ -267,6 +267,7 @@ data class JavascriptObjectLiteralNode(
 interface JavascriptObjectLiteralElementNode: JavascriptNode {
     interface Visitor<T> {
         fun visit(node: JavascriptPropertyNode): T
+        fun visit(node: JavascriptSpreadPropertiesNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
@@ -274,6 +275,15 @@ interface JavascriptObjectLiteralElementNode: JavascriptNode {
 
 data class JavascriptPropertyNode(
     val name: String,
+    val expression: JavascriptExpressionNode,
+    override val source: Source,
+): JavascriptObjectLiteralElementNode {
+    override fun <T> accept(visitor: JavascriptObjectLiteralElementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class JavascriptSpreadPropertiesNode(
     val expression: JavascriptExpressionNode,
     override val source: Source,
 ): JavascriptObjectLiteralElementNode {

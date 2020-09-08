@@ -542,6 +542,19 @@ class SerialiserTests {
     }
 
     @Test
+    fun spreadPropertiesObjectLiteralSerialisation() {
+        val node = jsObject(listOf(jsSpreadProperties(jsVariableReference("x"))))
+
+        val output = indentedSerialise(node)
+
+        assertThat(output, equalTo(listOf(
+            "{",
+            "        ...x",
+            "    }"
+        ).joinToString("\n")))
+    }
+
+    @Test
     fun emptyArrayDestructuringSerialisation() {
         val node = jsArrayDestructuring(listOf())
         val output = serialiseTarget(node, indentation = 0)

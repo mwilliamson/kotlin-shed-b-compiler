@@ -215,6 +215,10 @@ private fun serialiseElement(element: JavascriptObjectLiteralElementNode, indent
             val value = serialise(node.expression, indentation = indentation)
             return "${node.name}: $value"
         }
+
+        override fun visit(node: JavascriptSpreadPropertiesNode): String {
+            return "..." + serialise(node.expression, indentation = indentation)
+        }
     })
 }
 

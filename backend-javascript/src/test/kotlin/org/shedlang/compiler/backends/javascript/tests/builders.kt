@@ -150,6 +150,11 @@ fun jsProperty(
     source = anySource(),
 )
 
+fun jsSpreadProperties(expression: JavascriptExpressionNode) = JavascriptSpreadPropertiesNode(
+    expression = expression,
+    source = anySource(),
+)
+
 fun jsFunction(
     name: String,
     isAsync: Boolean = false,
