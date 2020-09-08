@@ -670,39 +670,21 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed, context(
             expressionTypes = mapOf(
-                reference to functionType(positionalParameters = listOf(IntType, BoolType, IntType, IntType))
+                shed to functionType(positionalParameters = listOf(IntType, IntType))
             )
         ))
 
         assertThat(node, isJavascriptFunctionCall(
-            function = isJavascriptFunctionExpression(
-                parameters = isSequence(equalTo("\$func"), equalTo("\$arg0"), equalTo("\$arg1")),
-                body = isSequence(
-                    isJavascriptReturn(
-                        isJavascriptFunctionExpression(
-                            parameters = isSequence(equalTo("\$arg2"), equalTo("\$arg3")),
-                            body = isSequence(
-                                isJavascriptReturn(
-                                    isJavascriptFunctionCall(
-                                        function = isJavascriptVariableReference("\$func"),
-                                        arguments = isSequence(
-                                            isJavascriptVariableReference("\$arg0"),
-                                            isJavascriptVariableReference("\$arg1"),
-                                            isJavascriptVariableReference("\$arg2"),
-                                            isJavascriptVariableReference("\$arg3")
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
+            function = isJavascriptVariableReference("\$shed.partial"),
             arguments = isSequence(
                 isJavascriptVariableReference("f"),
-                isJavascriptIntegerLiteral(42),
-                isJavascriptBooleanLiteral(false)
-            )
+                isJavascriptArray(isSequence(
+                    isJavascriptIntegerLiteral(42),
+                    isJavascriptBooleanLiteral(false),
+                )),
+                isJavascriptObject(isSequence()),
+                isJavascriptBooleanLiteral(false),
+            ),
         ))
     }
 
@@ -713,37 +695,20 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed, context(
             expressionTypes = mapOf(
-                reference to functionType(namedParameters = mapOf(Identifier("x") to IntType))
+                shed to functionType()
             )
         ))
 
         assertThat(node, isJavascriptFunctionCall(
-            function = isJavascriptFunctionExpression(
-                parameters = isSequence(equalTo("\$func"), equalTo("x")),
-                body = isSequence(
-                    isJavascriptReturn(
-                        isJavascriptFunctionExpression(
-                            parameters = isSequence(),
-                            body = isSequence(
-                                isJavascriptReturn(
-                                    isJavascriptFunctionCall(
-                                        function = isJavascriptVariableReference("\$func"),
-                                        arguments = isSequence(
-                                            isJavascriptObject(isSequence(
-                                                isJavascriptProperty(name = equalTo("x"), expression = isJavascriptVariableReference("x")),
-                                            ))
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
+            function = isJavascriptVariableReference("\$shed.partial"),
             arguments = isSequence(
                 isJavascriptVariableReference("f"),
-                isJavascriptIntegerLiteral(42)
-            )
+                isJavascriptArray(isSequence()),
+                isJavascriptObject(isSequence(
+                    isJavascriptProperty(equalTo("x"), isJavascriptIntegerLiteral(42)),
+                )),
+                isJavascriptBooleanLiteral(false),
+            ),
         ))
     }
 
@@ -754,41 +719,20 @@ class CodeGeneratorTests {
 
         val node = generateCode(shed, context(
             expressionTypes = mapOf(
-                reference to functionType(namedParameters = mapOf(Identifier("x") to IntType, Identifier("y") to IntType))
+                shed to functionType(namedParameters = mapOf(Identifier("y") to IntType))
             )
         ))
 
         assertThat(node, isJavascriptFunctionCall(
-            function = isJavascriptFunctionExpression(
-                parameters = isSequence(equalTo("\$func"), equalTo("x")),
-                body = isSequence(
-                    isJavascriptReturn(
-                        isJavascriptFunctionExpression(
-                            parameters = isSequence(equalTo("\$named")),
-                            body = isSequence(
-                                isJavascriptReturn(
-                                    isJavascriptFunctionCall(
-                                        function = isJavascriptVariableReference("\$func"),
-                                        arguments = isSequence(
-                                            isJavascriptObject(isSequence(
-                                                isJavascriptProperty(name = equalTo("x"), expression = isJavascriptVariableReference("x")),
-                                                isJavascriptProperty(name = equalTo("y"), expression = isJavascriptPropertyAccess(
-                                                    receiver = isJavascriptVariableReference("\$named"),
-                                                    propertyName = equalTo("y")
-                                                )),
-                                            ))
-                                        )
-                                    )
-                                )
-                            )
-                        )
-                    )
-                )
-            ),
+            function = isJavascriptVariableReference("\$shed.partial"),
             arguments = isSequence(
                 isJavascriptVariableReference("f"),
-                isJavascriptIntegerLiteral(42)
-            )
+                isJavascriptArray(isSequence()),
+                isJavascriptObject(isSequence(
+                    isJavascriptProperty(equalTo("x"), isJavascriptIntegerLiteral(42)),
+                )),
+                isJavascriptBooleanLiteral(true),
+            ),
         ))
     }
 

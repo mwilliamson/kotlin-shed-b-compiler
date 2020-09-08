@@ -61,6 +61,34 @@ async function handleAsync(func, handlers) {
 
 handle.async = handleAsync;
 
+function partial(receiver, positionalArguments, namedArguments, moreNamedArguments) {
+    if (moreNamedArguments) {
+        const func = (...args) => {
+            args[args.length - 1] = Object.assign({}, args[args.length - 1], namedArguments);
+
+            return receiver(...positionalArguments, ...args);
+        };
+
+        func.async = (...args) => {
+            args[args.length - 1] = Object.assign({}, args[args.length - 1], namedArguments);
+
+            return receiver.async(...positionalArguments, ...args);
+        };
+
+        return func;
+    } else {
+        const func = (...args) => {
+            return receiver(...positionalArguments, ...args, namedArguments);
+        };
+
+        func.async = (...args) => {
+            return receiver.async(...positionalArguments, ...args, namedArguments);
+        };
+
+        return func;
+    }
+}
+
 function varargs(cons, nil) {
     return (...args) => {
         let result = nil;
@@ -76,6 +104,6 @@ module.exports = {
     defineEffect: defineEffect,
     empty: () => {},
     handle: handle,
-
+    partial: partial,
     varargs: varargs,
 };

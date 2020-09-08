@@ -663,91 +663,36 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
         }
 
         override fun visit(node: PartialCallNode): JavascriptExpressionNode {
+            val expressionType = context.inspector.typeOfExpression(node) as FunctionType
+
             val receiver = generateCode(node.receiver, context)
             val positionalArguments = node.positionalArguments.map { argument ->
                 generateCode(argument, context)
             }
             val namedArguments = node.namedArguments
                 .sortedBy { argument -> argument.name }
-                .map { argument -> argument.name to generateCode(argument.expression, context) }
+                .map { argument ->
+                    JavascriptPropertyNode(
+                        name = generateName(argument.name),
+                        expression = generateCode(argument.expression, context),
+                        source = NodeSource(node),
+                    )
+                }
 
-            val functionType = context.inspector.typeOfExpression(node.receiver) as FunctionType
-
-            val partialArguments = listOf(receiver) +
-                positionalArguments +
-                namedArguments.map { argument -> argument.second }
-
-            val partialParameters = listOf("\$func") +
-                positionalArguments.indices.map { index -> "\$arg" + index } +
-                namedArguments.map { argument -> generateName(argument.first) }
-
-            val remainingPositionalParameters = (positionalArguments.size..functionType.positionalParameters.size - 1)
-                .map { index -> "\$arg" + index }
-            val remainingNamedParameters = functionType.namedParameters.keys - node.namedArguments.map { argument -> argument.name }
-            val remainingParameters = remainingPositionalParameters + if (remainingNamedParameters.isEmpty()) {
-                listOf()
-            } else {
-                listOf("\$named")
-            }
-
-            val finalNamedArgument = if (functionType.namedParameters.isEmpty()) {
-                listOf()
-            } else {
-                listOf(JavascriptObjectLiteralNode(
-                    elements = functionType.namedParameters
-                        .keys
-                        .sorted()
-                        .map { parameter ->
-                            val value = if (node.namedArguments.any { argument -> argument.name == parameter }) {
-                                JavascriptVariableReferenceNode(generateName(parameter), source = NodeSource(node))
-                            } else {
-                                JavascriptPropertyAccessNode(
-                                    receiver = JavascriptVariableReferenceNode(
-                                        "\$named",
-                                        source = NodeSource(node)
-                                    ),
-                                    propertyName = generateName(parameter),
-                                    source = NodeSource(node)
-                                )
-                            }
-                            JavascriptPropertyNode(generateName(parameter), value, source = NodeSource(node))
-                        },
-                    source = NodeSource(node)
-                ))
-            }
-            val fullArguments = functionType.positionalParameters.indices.map { index ->
-                JavascriptVariableReferenceNode("\$arg" + index, source = NodeSource(node))
-            } + finalNamedArgument
+            val source = NodeSource(node)
 
             return JavascriptFunctionCallNode(
-                function = JavascriptFunctionExpressionNode(
-                    parameters = partialParameters,
-                    body = listOf(
-                        JavascriptReturnNode(
-                            expression = JavascriptFunctionExpressionNode(
-                                parameters = remainingParameters,
-                                body = listOf(
-                                    JavascriptReturnNode(
-                                        expression = JavascriptFunctionCallNode(
-                                            function = JavascriptVariableReferenceNode(
-                                                name = "\$func",
-                                                source = NodeSource(node)
-                                            ),
-                                            arguments = fullArguments,
-                                            source = NodeSource(node)
-                                        ),
-                                        source = NodeSource(node)
-                                    )
-                                ),
-                                source = NodeSource(node)
-                            ),
-                            source = NodeSource(node)
-                        )
-                    ),
-                    source = NodeSource(node)
+                function = JavascriptVariableReferenceNode(
+                    "\$shed.partial",
+                    source = source
                 ),
-                arguments = partialArguments,
-                source = NodeSource(node)
+                arguments = listOf(
+                    receiver,
+                    JavascriptArrayLiteralNode(elements = positionalArguments, source = source),
+                    JavascriptObjectLiteralNode(elements = namedArguments, source = source),
+                    JavascriptBooleanLiteralNode(expressionType.namedParameters.isNotEmpty(), source = source),
+                ),
+                source = source,
             )
         }
 
