@@ -15,11 +15,9 @@ class JavascriptExampleTests {
     private val disabledTests = setOf<String>(
         "EffectHandlerExitOrResume.shed",
         "nestedStringBuilderAndNonLocalReturns",
-        "NonLocalReturnMultipleValues.shed",
         "NonLocalReturnNested.shed",
         "Resume.shed",
         "ResumeWithValue.shed",
-        "stringBuilder",
         "TailRec.shed"
     )
 

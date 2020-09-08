@@ -38,7 +38,7 @@ function handle(func, handlers) {
     } catch (error) {
         for ([operationName, handler] of handlers) {
             if (error.operationName === operationName) {
-                return handler(error.args);
+                return handler(...error.args);
             }
         }
         throw error;
@@ -52,7 +52,7 @@ async function handleAsync(func, handlers) {
         // TODO: check effect
         for ([operationName, handler] of handlers) {
             if (error.operationName === operationName) {
-                return handler.async(error.args);
+                return handler.async(...error.args);
             }
         }
         throw error;
