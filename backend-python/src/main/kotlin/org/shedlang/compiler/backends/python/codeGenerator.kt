@@ -291,6 +291,7 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
 
     val tryStatement = PythonTryNode(
         body = body + listOf(
+            // TODO: what if last statement body returns?
             PythonExpressionStatementNode(
                 PythonFunctionCallNode(
                     function = PythonVariableReferenceNode("_effect_handler_discard", source = handleSource),
