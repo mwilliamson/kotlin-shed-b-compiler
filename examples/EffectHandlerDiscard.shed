@@ -1,0 +1,34 @@
+// stdout:
+//   inner body
+//   outer handler
+export main;
+
+effect Effect {
+    .leave: () -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    // We create two nested handlers for the same effect.
+    // We wrap the inner handler in a function to ensure that when the inner
+    // handler returns from its body, it is correctly discarded from the effect
+    // handler stack.
+
+    handle Effect {
+        print!(fun () !Io {
+            handle Effect {
+               "inner body\n"
+            } on {
+                .leave = () {
+                    print!("!");
+                    exit "inner handler\n"
+                },
+            }
+        }!());
+        Effect.leave!()
+    } on {
+        .leave = () {
+            print!("outer handler\n");
+            exit unit
+        },
+    }
+}
