@@ -246,8 +246,28 @@ private fun <T: Node> generateCodeForBranchingExpression(
 
 private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationContext, returnValue: ReturnValue): List<PythonStatementNode> {
     val handleSource = NodeSource(node)
+    val resultVariableName = context.freshName("result")
 
-    val body = generateBlockCode(node.body, context, returnValue = returnValue)
+    val body = listOf(
+        assign(resultVariableName, PythonNoneLiteralNode(source = handleSource), source = handleSource)
+    ) + generateBlockCode(node.body, context, returnValue = { pythonExpressionNode, source ->
+        listOf(
+            assign(resultVariableName, pythonExpressionNode, source = source)
+        )
+    }) + listOf(
+        PythonExpressionStatementNode(
+            PythonFunctionCallNode(
+                function = PythonVariableReferenceNode("_effect_handler_discard", source = handleSource),
+                arguments = listOf(),
+                keywordArguments = listOf(),
+                source = handleSource
+            ),
+            source = handleSource
+        )
+    ) + returnValue(
+            PythonVariableReferenceNode(resultVariableName, source = handleSource),
+            handleSource,
+        )
 
     val exitValueName = context.freshName("exit_value")
     val effectHandlerName = context.freshName("effect_handler")
@@ -290,18 +310,7 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
     }
 
     val tryStatement = PythonTryNode(
-        body = body + listOf(
-            // TODO: what if last statement body returns?
-            PythonExpressionStatementNode(
-                PythonFunctionCallNode(
-                    function = PythonVariableReferenceNode("_effect_handler_discard", source = handleSource),
-                    arguments = listOf(),
-                    keywordArguments = listOf(),
-                    source = handleSource
-                ),
-                source = handleSource
-            )
-        ),
+        body = body,
         exceptClauses = listOf(
             PythonExceptNode(
                 exceptionType = PythonAttributeAccessNode(

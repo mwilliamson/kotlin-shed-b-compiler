@@ -13,6 +13,7 @@ import org.shedlang.compiler.typechecker.SourceError
 
 class JavascriptExampleTests {
     private val disabledTests = setOf<String>(
+        "EffectHandlerDiscard.shed",
         "EffectHandlerExitOrResume.shed",
         "nestedStringBuilderAndNonLocalReturns",
         "NonLocalReturnNested.shed",

@@ -5,8 +5,10 @@ def anonymous_1():
 effect_handler = _effect_handler_push(EarlyExit, dict(exit=_effect_handler_create_operation_handler(anonymous_1)))
 
 try:
-    anonymous = f()
+    result = None
+    result = f()
     _effect_handler_discard()
+    anonymous = result
 except effect_handler.Exit as exit_value:
     anonymous = exit_value.value
 
