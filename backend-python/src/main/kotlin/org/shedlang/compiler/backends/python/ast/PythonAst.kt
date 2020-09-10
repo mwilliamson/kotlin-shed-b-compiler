@@ -103,6 +103,7 @@ data class PythonRaiseNode(
 data class PythonTryNode(
     val body: List<PythonStatementNode>,
     val exceptClauses: List<PythonExceptNode>,
+    val elseClause: List<PythonStatementNode>,
     override val source: Source
 ) : PythonStatementNode {
     override fun <T> accept(visitor: PythonStatementNode.Visitor<T>): T {

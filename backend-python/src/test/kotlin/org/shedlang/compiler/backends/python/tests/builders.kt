@@ -41,10 +41,12 @@ fun pythonRaise(expression: PythonExpressionNode)
 
 fun pythonTry(
     body: List<PythonStatementNode>,
-    exceptClauses: List<PythonExceptNode>
+    exceptClauses: List<PythonExceptNode> = listOf(),
+    elseClause: List<PythonStatementNode> = listOf(),
 ) = PythonTryNode(
     body = body,
     exceptClauses = exceptClauses,
+    elseClause = elseClause,
     source = anySource()
 )
 

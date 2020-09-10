@@ -61,9 +61,16 @@ internal fun serialise(node: PythonStatementNode, indentation: Int = 0): String 
         }
 
         override fun visit(node: PythonTryNode): String {
+            val elseClause = if (node.elseClause.isEmpty()) {
+                ""
+            } else {
+                line("else:") + serialiseBlock(node, node.elseClause, indentation = indentation)
+            }
+
             return line("try:") +
                 serialiseBlock(node, node.body, indentation) +
-                node.exceptClauses.map(::serialiseExcept).joinToString("")
+                node.exceptClauses.map(::serialiseExcept).joinToString("") +
+                elseClause
         }
 
         private fun serialiseExcept(node: PythonExceptNode): String {

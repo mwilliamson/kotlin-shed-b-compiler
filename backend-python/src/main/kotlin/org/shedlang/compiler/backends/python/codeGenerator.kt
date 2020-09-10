@@ -322,6 +322,7 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
                 source = handleSource
             )
         ),
+        elseClause = listOf(),
         source = handleSource
     )
 

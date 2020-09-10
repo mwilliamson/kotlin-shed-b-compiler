@@ -231,6 +231,29 @@ class SerialiserTests {
     }
 
     @Test
+    fun tryWithElseClauseIsSerialised() {
+        assertThat(
+            indentedSerialise(
+                pythonTry(
+                    body = listOf(
+                        pythonRaise(pythonLiteralInt(1))
+                    ),
+                    elseClause = listOf(
+                        pythonReturn(pythonLiteralInt(2)),
+                    )
+                )
+            ),
+            equalTo(listOf(
+                "    try:",
+                "        raise 1",
+                "    else:",
+                "        return 2",
+                ""
+            ).joinToString("\n"))
+        )
+    }
+
+    @Test
     fun serialisingIfStatementWithSingleConditionalBranchAndElseBranch() {
         assertThat(
             indentedSerialise(
