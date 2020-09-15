@@ -71,6 +71,8 @@ class TypeConstraintSolver(
 
     private val typeBindings: MutableMap<TypeParameter, TypeBound> = mutableMapOf()
     private val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
+    // TODO: outside callers (such as inferPartialCallType indirectly) have no
+    // way of checking for unbound parameters that aren't in originalParameters
     private val parameters: MutableSet<StaticParameter> = originalParameters.toMutableSet()
 
     fun boundTypeFor(parameter: TypeParameter): Type? {
