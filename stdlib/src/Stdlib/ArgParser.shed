@@ -115,16 +115,16 @@ fun positional[A, T, R](
         .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
-            val stringArg = findStringArg(stringArgs, name);
+            val stringArg = lookup(stringArgs, name);
             val value = argType.parse!(.name = name, .argument = stringArg);
             add(value, otherArgs)
         },
     )
 }
 
-fun findStringArg(stringArgs: StringArgs, name: String) -> Option[String] {
-    stringArgs |> Lists.firstSome~(fun (stringArg: #(String, String)) {
-        val #(argName, value) = stringArg;
+fun lookup[T](values: Lists.List[#(String, T)], name: String) -> Option[T] {
+    values |> Lists.firstSome~(fun (pair: #(String, T)) {
+        val #(argName, value) = pair;
         if (name == argName) {
             some(value)
         } else {
