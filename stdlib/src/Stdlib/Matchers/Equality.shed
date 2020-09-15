@@ -27,7 +27,12 @@ fun isInt(value: Int) -> Matcher[Int] {
 fun isString(value: String) -> Matcher[String] {
     describingMatcher(
         value,
-        fun (string: String) => string,
+        fun (string: String) => stringLiteral(string),
         fun (actual: String) => actual == value,
     )
+}
+
+fun stringLiteral(value: String) -> String {
+    // TODO: escaping
+    "\"" + value + "\""
 }

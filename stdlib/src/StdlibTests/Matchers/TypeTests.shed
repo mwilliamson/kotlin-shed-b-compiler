@@ -26,7 +26,7 @@ val hasSuite = Tests.suite("has", list(
 
         when (result) {
             is M.Failure {
-                Tests.assert(result.message == "value was 47")
+                Tests.assertStringEquals(result.message, "value:\n  was 47")
             }
             is M.Success {
                 Tests.fail("expected failure but was success")
@@ -35,7 +35,7 @@ val hasSuite = Tests.suite("has", list(
     }),
 
     Tests.testCase("description has feature name and description", fun () {
-        Tests.assert(hasMatcher.description == "value is 42")
+        Tests.assertStringEquals(hasMatcher.description, "value:\n  is 42")
     }),
 ));
 
@@ -53,7 +53,7 @@ val hasFieldSuite = Tests.suite("hasField", list(
 
         when (result) {
             is M.Failure {
-                Tests.assert(result.message == "value was 47")
+                Tests.assertStringEquals(result.message, ".value:\n  was 47")
             }
             is M.Success {
                 Tests.fail("expected failure but was success")
@@ -62,7 +62,7 @@ val hasFieldSuite = Tests.suite("hasField", list(
     }),
 
     Tests.testCase("description has field name and description", fun () {
-        Tests.assert(hasFieldMatcher.description == "value is 42")
+        Tests.assertStringEquals(hasFieldMatcher.description, ".value:\n  is 42")
     }),
 ));
 
@@ -148,7 +148,7 @@ val isTypeWithSuite = Tests.suite("isTypeWith", list(
 
         when (result) {
             is M.Failure {
-                Tests.assert(result.message == "value was 47")
+                Tests.assertStringEquals(result.message, "Y:\n  value was 47")
             }
             is M.Success {
                 Tests.fail("expected failure but was success")
@@ -157,7 +157,7 @@ val isTypeWithSuite = Tests.suite("isTypeWith", list(
     }),
 
     Tests.testCase("description has type and with description", fun () {
-        Tests.assert(isTypeWithMatcher.description == "Y: value of 42")
+        Tests.assertStringEquals(isTypeWithMatcher.description, "Y:\n  value of 42")
     }),
 ));
 

@@ -1,7 +1,8 @@
-export assert, assertThat, fail, Test, TestCase, TestSuite, suite, testCase, runTests;
+export assert, assertStringEquals, assertThat, fail, Test, TestCase, TestSuite, suite, testCase, runTests;
 
 import Lists from .Lists;
 import Matchers from .Matchers;
+import UnicodeScalars from .Strings.UnicodeScalars;
 
 shape AssertionError {
     message: String,
@@ -19,11 +20,19 @@ fun assert(value: Bool) -> AssertionResult {
     }
 }
 
+fun assertStringEquals(left: String, right: String) -> AssertionResult {
+    if (left == right) {
+        AssertionResult(.error = none)
+    } else {
+        fail("left:" + indent("\n" + left) + "\nright:" + indent("\n" + right))
+    }
+}
+
 fun assertThat[T](value: T, matcher: Matchers.Matcher[T]) -> AssertionResult {
     val result = matcher.match(value);
     when (result) {
         is Matchers.Failure {
-            val message = "expected " + matcher.description + "\nbut " + result.message;
+            val message = "expected:" + indent("\n" + matcher.description) + "\nbut:" + indent("\n" + result.message);
             val error = AssertionError(.message = message);
             AssertionResult(.error = some(error))
         }
@@ -182,4 +191,9 @@ fun runTest(test: Test, .parent: Option[String]) !Io -> TestResult {
             TestSuiteResult(.name = name, .results = results)
         }
     }
+}
+
+// TODO: remove indent duplication
+fun indent(value: String) -> String {
+    UnicodeScalars.replace("\n", "\n  ", value)
 }

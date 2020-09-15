@@ -92,13 +92,27 @@ fun isNone() -> Matcher[Option[Any]] {
 
 fun isSome[T](matcher: Matcher[T]) -> Matcher[Option[T]] {
     Matcher(
-        .description = "option with value " + matcher.description,
+        .description = "some with value:" + indent("\n" + matcher.description),
         .match = fun (actual: Option[T]) -> Result {
+            // TODO: use when
             if (actual is Some[T]) {
-                matcher.match(actual.value)
+                val matchResult = matcher.match(actual.value);
+                when (matchResult) {
+                    is Success {
+                        matchResult
+                    }
+                    is Failure {
+                        failure("some with value:" + indent("\n" + matchResult.message))
+                    }
+                }
             } else {
                 failure("was none")
             }
         }
     )
+}
+
+// TODO: remove indent duplication
+fun indent(value: String) -> String {
+    UnicodeScalars.replace("\n", "\n  ", value)
 }

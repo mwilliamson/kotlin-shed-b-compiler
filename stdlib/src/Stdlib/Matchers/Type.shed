@@ -8,6 +8,7 @@ import @(
     .Failure as Failure,
     .failure as failure,
 ) from .Core;
+import UnicodeScalars from Stdlib.Strings.UnicodeScalars;
 
 fun has[T, U](
     featureName: String,
@@ -15,7 +16,7 @@ fun has[T, U](
     featureMatcher: Matcher[U],
 ) -> Matcher[T] {
     Matcher[T](
-        .description = featureName + " " + featureMatcher.description,
+        .description = featureName + ":" + indent("\n" + featureMatcher.description),
         .match = fun (actual: T) -> Result {
             val feature = get(actual);
             val result = featureMatcher.match(feature);
@@ -24,7 +25,7 @@ fun has[T, U](
                     success
                 }
                 is Failure {
-                    failure(featureName + " " + result.message)
+                    failure(featureName + ":" + indent("\n" + result.message))
                 }
             }
         },
@@ -35,7 +36,7 @@ fun hasField[T, U](
     field: ShapeField[T, U, Any],
     valueMatcher: Matcher[U],
 ) -> Matcher[T] {
-    has(field.name, field.get, valueMatcher)
+    has("." + field.name, field.get, valueMatcher)
 }
 
 fun isType[T, U](
@@ -66,12 +67,20 @@ fun isTypeWith[T, U](
     .with: Matcher[U],
 ) -> Matcher[T] {
     Matcher[T](
-        .description = description + ": " + with.description,
+        .description = description + ":" + indent("\n" + with.description),
         .match = fun (actual: T) -> Result {
-            val result = cast(actual);
-            when (result) {
+            val castResult = cast(actual);
+            when (castResult) {
                 is Some {
-                    with.match(result.value)
+                    val matchResult = with.match(castResult.value);
+                    when (matchResult) {
+                        is Success {
+                            matchResult
+                        }
+                        is Failure {
+                            failure(description + ":" + indent("\n" + matchResult.message))
+                        }
+                    }
                 }
                 is None {
                     failure("was " + describeValue(actual))
@@ -79,4 +88,9 @@ fun isTypeWith[T, U](
             }
         },
     )
+}
+
+// TODO: remove indent duplication
+fun indent(value: String) -> String {
+    UnicodeScalars.replace("\n", "\n  ", value)
 }

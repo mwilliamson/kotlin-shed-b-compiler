@@ -48,7 +48,7 @@ val allOfTestCases = Tests.suite(moduleName, list(
 
             when (result) {
                 is M.Failure {
-                    Tests.assert(result.message == "two was 1")
+                    Tests.assertStringEquals(result.message, ".two:\n  was 1")
                 }
                 is M.Success {
                     Tests.fail("expected failure but was success")

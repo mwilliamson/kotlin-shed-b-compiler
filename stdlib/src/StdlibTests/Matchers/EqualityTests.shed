@@ -100,7 +100,7 @@ val testCases = Tests.suite(moduleName, list(
 
             when (result) {
                 is M.Failure {
-                    Tests.assert(result.message == "was <actual>")
+                    Tests.assertStringEquals(result.message, "was \"<actual>\"")
                 }
                 is M.Success {
                     Tests.fail("expected failure but was success")
@@ -111,7 +111,7 @@ val testCases = Tests.suite(moduleName, list(
         Tests.testCase("description is string", fun () {
             val matcher = M.isString("<string>");
 
-            Tests.assert(matcher.description == "is <string>")
+            Tests.assertStringEquals(matcher.description, "is \"<string>\"")
         }),
     )),
 ));
