@@ -169,7 +169,7 @@ class TypeConstraintSolver(
         if (from is TupleType && to is TupleType) {
             return from.elementTypes.size == to.elementTypes.size &&
                 from.elementTypes.zip(to.elementTypes).all { (fromElement, toElement) ->
-                    canCoerce(from = fromElement, to = toElement)
+                    coerce(from = fromElement, to = toElement)
                 }
         }
 
