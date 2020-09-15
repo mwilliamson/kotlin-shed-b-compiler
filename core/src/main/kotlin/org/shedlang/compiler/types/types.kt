@@ -594,6 +594,22 @@ interface ShapeType: Type {
     val populatedFields: Map<Identifier, Field>
         get() = allFields.filterKeys { fieldName -> populatedFieldNames.contains(fieldName) }
 
+    override val shortDescription: String
+        get() {
+            val base = if (staticArguments.isEmpty()) {
+                name.value
+            } else {
+                appliedTypeShortDescription(name, staticArguments)
+            }
+
+            if (populatedFieldNames == allFields.keys) {
+                return base
+            } else {
+                val populatedFieldNamesString = populatedFieldNames.joinToString("") { fieldName -> ", ." + fieldName.value }
+                return "Partial[$base$populatedFieldNamesString]"
+            }
+        }
+
     override fun fieldType(fieldName: Identifier): Type? {
         // TODO: test this
         if (fieldName in populatedFieldNames) {
@@ -680,13 +696,6 @@ class LazyShapeType(
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>
 ): ShapeType {
-    override val shortDescription: String
-        get() = if (staticArguments.isEmpty()) {
-            name.value
-        } else {
-            appliedTypeShortDescription(name, staticArguments)
-        }
-
     override val allFields: Map<Identifier, Field> by getAllFields
     override val populatedFieldNames: Set<Identifier>
         get() = getPopulatedFieldNames()
