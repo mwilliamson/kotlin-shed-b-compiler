@@ -1,8 +1,9 @@
-export ParseResult, Success, Failure, parser, parse, positional, optional, string;
+export ParseResult, Success, Failure, parser, parse, positional, option, optional, string;
 
 import Lists from .Lists;
 import Options from .Options;
 import Sequences from .Sequences;
+import UnicodeScalars from .Strings.UnicodeScalars;
 
 shape Parser[T] {
     argDefinitions: Lists.List[ArgDefinition],
@@ -11,6 +12,7 @@ shape Parser[T] {
 
 shape ArgDefinition {
     name: String,
+    isOption: Bool,
 }
 
 shape ArgType[T] {
@@ -68,7 +70,7 @@ fun parser[T](initialValue: T) -> Parser[T] {
 }
 
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
-    val stringArgs = toStringArgs(Lists.reverse(parser.argDefinitions), args);
+    val stringArgs = readStringArgs(Lists.reverse(parser.argDefinitions), args);
     handle ParseEffect {
         val result = parser.parseStringArgs!(stringArgs);
         Success(.value = result)
@@ -79,7 +81,14 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     }
 }
 
-fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
+fun readStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
+    val #(optionValues, remainingArgs1) = readOptions(argDefinitions, args);
+    val positionalValues = readPositionalArgs(argDefinitions, remainingArgs1);
+    // TODO: check for remaining args
+    Lists.flatten(Lists.list(optionValues, positionalValues))
+}
+
+fun readPositionalArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
     when (argDefinitions) {
         is Lists.Cons {
             val argDefinition = argDefinitions.head;
@@ -87,7 +96,7 @@ fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[Str
                 is Lists.Cons {
                     Lists.cons(
                         #(argDefinition.name, args.head),
-                        toStringArgs(argDefinitions.tail, args.tail),
+                        readPositionalArgs(argDefinitions.tail, args.tail),
                     )
                 }
                 is Lists.Nil {
@@ -101,6 +110,43 @@ fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[Str
     }
 }
 
+fun readOptions(
+    argDefinitions: Lists.List[ArgDefinition],
+    args: Lists.List[String],
+) -> #(StringArgs, Lists.List[String]) {
+    // TODO: make this vaguely pleasant
+
+    when (args) {
+        is Lists.Cons {
+            if (UnicodeScalars.startsWith("--", args.head)) {
+                val tail = args.tail;
+                when (tail) {
+                    is Lists.Cons {
+                        val #(optionValues, remainingArgs) = readOptions(
+                            argDefinitions,
+                            tail.tail,
+                        );
+                        #(Lists.cons(#(args.head, tail.head), optionValues), remainingArgs)
+                    }
+                    is Lists.Nil {
+                        // TODO: raise error (or otherwise handle -- test case!)
+                        #(Lists.list(), Lists.list())
+                    }
+                }
+            } else {
+                val #(optionValues, remainingArgs) = readOptions(
+                    argDefinitions,
+                    args.tail,
+                );
+                #(optionValues, Lists.cons(args.head, remainingArgs))
+            }
+        }
+        is Lists.Nil {
+            #(Lists.list(), Lists.list())
+        }
+    }
+}
+
 fun positional[A, T, R](
     name: String,
     argType: ArgType[A],
@@ -109,6 +155,29 @@ fun positional[A, T, R](
 ) -> Parser[R] {
     val argDefinition = ArgDefinition(
         .name = name,
+        .isOption = false,
+    );
+
+    Parser[R](
+        .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
+        .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
+            val otherArgs = parser.parseStringArgs!(stringArgs);
+            val stringArg = lookup(stringArgs, name);
+            val value = argType.parse!(.name = name, .argument = stringArg);
+            add(value, otherArgs)
+        },
+    )
+}
+
+fun option[A, T, R](
+    name: String,
+    argType: ArgType[A],
+    add: Fun (A, T) -> R,
+    parser: Parser[T],
+) -> Parser[R] {
+    val argDefinition = ArgDefinition(
+        .name = name,
+        .isOption = true,
     );
 
     Parser[R](

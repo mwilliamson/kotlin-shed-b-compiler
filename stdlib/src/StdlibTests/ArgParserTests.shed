@@ -126,4 +126,20 @@ val testCases = Tests.suite(moduleName, list(
             M.hasField(Args.fields.x, M.isNone()),
         ))
     }),
+
+    Tests.testCase("when optional long option is present then value is some", fun () {
+        shape Args {
+            x: Option[String],
+        }
+
+        val rawArguments = list("--long-option", "value");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isSome(M.isString("value"))),
+        ))
+    }),
 ));
