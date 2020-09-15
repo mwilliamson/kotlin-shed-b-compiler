@@ -70,7 +70,7 @@ fun parser[T](initialValue: T) -> Parser[T] {
 }
 
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
-    val stringArgs = readStringArgs(Lists.reverse(parser.argDefinitions), args);
+    val stringArgs = toStringArgs(Lists.reverse(parser.argDefinitions), args);
     handle ParseEffect {
         val result = parser.parseStringArgs!(stringArgs);
         Success(.value = result)
@@ -81,68 +81,42 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     }
 }
 
-fun readStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
-    val #(optionValues, remainingArgs1) = readOptions(argDefinitions, args);
-    val positionalValues = readPositionalArgs(argDefinitions, remainingArgs1);
-    // TODO: check for remaining args
-    Lists.flatten(Lists.list(optionValues, positionalValues))
-}
-
-fun readPositionalArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
-    when (argDefinitions) {
-        is Lists.Cons {
-            val argDefinition = argDefinitions.head;
-            when (args) {
-                is Lists.Cons {
-                    Lists.cons(
-                        #(argDefinition.name, args.head),
-                        readPositionalArgs(argDefinitions.tail, args.tail),
-                    )
-                }
-                is Lists.Nil {
-                    Lists.list()
-                }
-            }
-        }
-        is Lists.Nil {
-            Lists.list()
-        }
-    }
-}
-
-fun readOptions(
-    argDefinitions: Lists.List[ArgDefinition],
-    args: Lists.List[String],
-) -> #(StringArgs, Lists.List[String]) {
+fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
     // TODO: make this vaguely pleasant
-
     when (args) {
         is Lists.Cons {
             if (UnicodeScalars.startsWith("--", args.head)) {
                 val tail = args.tail;
                 when (tail) {
                     is Lists.Cons {
-                        val #(optionValues, remainingArgs) = readOptions(
-                            argDefinitions,
-                            tail.tail,
-                        );
-                        #(Lists.cons(#(args.head, tail.head), optionValues), remainingArgs)
+                        Lists.cons(
+                            #(args.head, tail.head),
+                            toStringArgs(argDefinitions, tail.tail),
+                        )
                     }
                     is Lists.Nil {
                         // TODO: raise error (or otherwise handle -- test case!)
-                        #(Lists.list(), Lists.list())
+                        Lists.list()
                     }
                 }
             } else {
-                val #(optionValues, remainingArgs) = readOptions(
-                    argDefinitions,
-                    args.tail,
-                );
-                #(optionValues, Lists.cons(args.head, remainingArgs))
+                when (argDefinitions) {
+                    is Lists.Cons {
+                        val argDefinition = argDefinitions.head;
+                        Lists.cons(
+                            #(argDefinition.name, args.head),
+                            // TODO: taking the tail isn't safe in the presence of options!
+                            toStringArgs(argDefinitions.tail, args.tail),
+                        )
+                    }
+                    is Lists.Nil {
+                        Lists.list()
+                    }
+                }
             }
         }
         is Lists.Nil {
-            #(Lists.list(), Lists.list())
+            Lists.list()
         }
     }
 }
