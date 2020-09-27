@@ -1,5 +1,6 @@
 export ParseResult, Success, Failure, parser, parse, positional, option, optional, string;
 
+import ListBuilder from .ListBuilder;
 import Lists from .Lists;
 import Options from .Options;
 import Sequences from .Sequences;
@@ -11,8 +12,8 @@ shape Parser[T] {
 }
 
 shape ArgDefinitions {
-    positional: Lists.List[ArgDefinition],
-    options: Lists.List[#(String, ArgDefinition)],
+    positional: ListBuilder.Builder[ArgDefinition],
+    options: ListBuilder.Builder[#(String, ArgDefinition)],
 }
 
 shape ArgDefinition {
@@ -70,8 +71,8 @@ type StringArgs = Lists.List[#(String, String)];
 fun parser[T](initialValue: T) -> Parser[T] {
     Parser(
         .argDefinitions = ArgDefinitions(
-            .positional = Lists.list(),
-            .options = Lists.list(),
+            .positional = ListBuilder.builder(),
+            .options = ListBuilder.builder(),
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,
     )
@@ -80,8 +81,8 @@ fun parser[T](initialValue: T) -> Parser[T] {
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     handle ParseEffect {
         val stringArgs = toStringArgs!(
-            .positional = Lists.reverse(parser.argDefinitions.positional),
-            .options = Lists.reverse(parser.argDefinitions.options),
+            .positional = ListBuilder.toList(parser.argDefinitions.positional),
+            .options = ListBuilder.toList(parser.argDefinitions.options),
             .args = args,
         );
         val result = parser.parseStringArgs!(stringArgs);
@@ -167,7 +168,7 @@ fun positional[A, T, R](
 
     Parser[R](
         .argDefinitions = ArgDefinitions.fields.positional.update(
-            Lists.cons(argDefinition, parser.argDefinitions.positional),
+            ListBuilder.append(parser.argDefinitions.positional, argDefinition),
             parser.argDefinitions,
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
@@ -192,7 +193,7 @@ fun option[A, T, R](
 
     Parser[R](
         .argDefinitions = ArgDefinitions.fields.options.update(
-            Lists.cons(#(name, argDefinition), parser.argDefinitions.options),
+            ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
             parser.argDefinitions,
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
