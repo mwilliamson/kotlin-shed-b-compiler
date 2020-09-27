@@ -43,7 +43,7 @@ val string = ArgType(
                 argument.value
             }
             is None {
-                ParseEffect.fail!("required positional argument is missing: " + name)
+                ParseEffect.fail!("required argument is missing: " + name)
             }
         }
     },

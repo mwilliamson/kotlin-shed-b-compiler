@@ -91,7 +91,7 @@ val testCases = Tests.suite(moduleName, list(
         val arguments = ArgParser.parse(argParser, rawArguments);
 
         Tests.assertThat(arguments, isFailure(
-            .message = M.isString("required positional argument is missing: two"),
+            .message = M.isString("required argument is missing: two"),
         ))
     }),
 
@@ -172,6 +172,22 @@ val testCases = Tests.suite(moduleName, list(
 
         Tests.assertThat(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isNone()),
+        ))
+    }),
+
+    Tests.testCase("when required long option is missing then result is failure", fun () {
+        shape Args {
+            x: String,
+        }
+
+        val rawArguments = list();
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isFailure(
+            .message = M.isString("required argument is missing: --long-option"),
         ))
     }),
 ));
