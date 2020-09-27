@@ -12,7 +12,7 @@ shape Parser[T] {
 
 shape ArgDefinitions {
     positional: Lists.List[ArgDefinition],
-    options: Lists.List[ArgDefinition],
+    options: Lists.List[#(String, ArgDefinition)],
 }
 
 shape ArgDefinition {
@@ -95,28 +95,38 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
 
 fun toStringArgs(
     .positional: Lists.List[ArgDefinition],
-    .options: Lists.List[ArgDefinition],
+    .options: Lists.List[#(String, ArgDefinition)],
     .args: Lists.List[String],
 ) !ParseEffect -> StringArgs {
     // TODO: make this vaguely pleasant
     when (args) {
         is Lists.Cons {
             if (UnicodeScalars.startsWith("--", args.head)) {
-                val tail = args.tail;
-                when (tail) {
-                    is Lists.Cons {
-                        Lists.cons(
-                            #(args.head, tail.head),
-                            toStringArgs!(
-                                .positional = positional,
-                                .options = options,
-                                .args = tail.tail,
-                            ),
-                        )
+                val optionName = args.head;
+                val argDefinitionLookupResult = lookup(options, optionName);
+                when (argDefinitionLookupResult) {
+                    is Some {
+                        val argDefinition = argDefinitionLookupResult.value;
+                        val tail = args.tail;
+                        when (tail) {
+                            is Lists.Cons {
+                                Lists.cons(
+                                    #(argDefinition.name, tail.head),
+                                    toStringArgs!(
+                                        .positional = positional,
+                                        .options = options,
+                                        .args = tail.tail,
+                                    ),
+                                )
+                            }
+                            is Lists.Nil {
+                                // TODO: raise error (or otherwise handle -- test case!)
+                                Lists.list()
+                            }
+                        }
                     }
-                    is Lists.Nil {
-                        // TODO: raise error (or otherwise handle -- test case!)
-                        Lists.list()
+                    is None {
+                        ParseEffect.fail!("unknown option: " + optionName)
                     }
                 }
             } else {
@@ -182,8 +192,8 @@ fun option[A, T, R](
     );
 
     Parser[R](
-        .argDefinitions = ArgDefinitions.fields.positional.update(
-            Lists.cons(argDefinition, parser.argDefinitions.options),
+        .argDefinitions = ArgDefinitions.fields.options.update(
+            Lists.cons(#(name, argDefinition), parser.argDefinitions.options),
             parser.argDefinitions,
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
@@ -195,6 +205,7 @@ fun option[A, T, R](
     )
 }
 
+// TODO: how to generalise over keys?
 fun lookup[T](values: Lists.List[#(String, T)], name: String) -> Option[T] {
     values |> Lists.firstSome~(fun (pair: #(String, T)) {
         val #(argName, value) = pair;

@@ -190,4 +190,20 @@ val testCases = Tests.suite(moduleName, list(
             .message = M.isString("required argument is missing: --long-option"),
         ))
     }),
+
+    Tests.testCase("when unrecognised long option is present then result is failure", fun () {
+        shape Args {
+            x: String,
+        }
+
+        val rawArguments = list("--unknown-option", "value", "--long-option", "value");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isFailure(
+            .message = M.isString("unknown option: --unknown-option"),
+        ))
+    }),
 ));
