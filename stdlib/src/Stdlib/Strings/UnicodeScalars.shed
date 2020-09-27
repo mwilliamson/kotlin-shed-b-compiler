@@ -9,6 +9,7 @@ export
     replace,
     substring,
 
+    eq,
     dropLeft,
     isEmpty,
     join,
@@ -31,6 +32,10 @@ val unicodeScalarToString = Strings.unicodeScalarToString;
 val count = Strings.unicodeScalarCount;
 val replace = Strings.replace;
 val substring = Strings.substring;
+
+fun eq(left: String, right: String) -> Bool {
+    left == right
+}
 
 fun stringToSequence(value: String) -> Sequences.Sequence[UnicodeScalar, Pure] {
     stringSliceToSequence(Strings.slice(value))

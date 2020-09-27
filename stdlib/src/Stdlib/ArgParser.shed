@@ -1,6 +1,7 @@
 export ParseResult, Success, Failure, parser, parse, positional, option, optional, string;
 
 import ListBuilder from .ListBuilder;
+import ListLookup from .ListLookup;
 import Lists from .Lists;
 import Options from .Options;
 import Sequences from .Sequences;
@@ -66,7 +67,7 @@ fun optional[T](argType: ArgType[T]) -> ArgType[Option[T]] {
     )
 }
 
-type StringArgs = Lists.List[#(String, String)];
+type StringArgs = ListLookup.ListLookup[String, String];
 
 fun parser[T](initialValue: T) -> Parser[T] {
     Parser(
@@ -82,10 +83,10 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     handle ParseEffect {
         val stringArgs = toStringArgs!(
             .positional = ListBuilder.toList(parser.argDefinitions.positional),
-            .options = ListBuilder.toList(parser.argDefinitions.options),
+            .options = ListLookup.create(UnicodeScalars.eq, ListBuilder.toList(parser.argDefinitions.options)),
             .args = args,
         );
-        val result = parser.parseStringArgs!(stringArgs);
+        val result = parser.parseStringArgs!(ListLookup.create(UnicodeScalars.eq, stringArgs));
         Success(.value = result)
     } on {
         .fail = (message: String) {
@@ -96,15 +97,15 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
 
 fun toStringArgs(
     .positional: Lists.List[ArgDefinition],
-    .options: Lists.List[#(String, ArgDefinition)],
+    .options: ListLookup.ListLookup[String, ArgDefinition],
     .args: Lists.List[String],
-) !ParseEffect -> StringArgs {
+) !ParseEffect -> Lists.List[#(String, String)] {
     // TODO: make this vaguely pleasant
     when (args) {
         is Lists.Cons {
             if (UnicodeScalars.startsWith("--", args.head)) {
                 val optionName = args.head;
-                val argDefinitionLookupResult = lookup(options, optionName);
+                val argDefinitionLookupResult = ListLookup.lookup(options, optionName);
                 when (argDefinitionLookupResult) {
                     is Some {
                         val argDefinition = argDefinitionLookupResult.value;
@@ -172,7 +173,7 @@ fun positional[A, T, R](
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
-            val stringArg = lookup(stringArgs, name);
+            val stringArg = ListLookup.lookup(stringArgs, name);
             val value = argType.parse!(.name = name, .argument = stringArg);
             add(value, otherArgs)
         },
@@ -197,21 +198,9 @@ fun option[A, T, R](
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
-            val stringArg = lookup(stringArgs, name);
+            val stringArg = ListLookup.lookup(stringArgs, name);
             val value = argType.parse!(.name = name, .argument = stringArg);
             add(value, otherArgs)
         },
     )
-}
-
-// TODO: how to generalise over keys?
-fun lookup[T](values: Lists.List[#(String, T)], name: String) -> Option[T] {
-    values |> Lists.firstSome~(fun (pair: #(String, T)) {
-        val #(argName, value) = pair;
-        if (name == argName) {
-            some(value)
-        } else {
-            none
-        }
-    })
 }

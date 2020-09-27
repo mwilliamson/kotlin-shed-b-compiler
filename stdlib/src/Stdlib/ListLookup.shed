@@ -1,0 +1,23 @@
+export ListLookup, create, lookup;
+
+import Lists from .Lists;
+
+shape ListLookup[K, V] {
+    eq: Fun (K, K) -> Bool,
+    pairs: Lists.List[#(K, V)],
+}
+
+fun create[K, V](eq: Fun (K, K) -> Bool, pairs: Lists.List[#(K, V)]) -> ListLookup[K, V] {
+    ListLookup(.eq = eq, .pairs = pairs)
+}
+
+fun lookup[K, V](lookup: ListLookup[K, V], key: K) -> Option[V] {
+    lookup.pairs |> Lists.firstSome~(fun (pair: #(K, V)) {
+        val #(currentKey, currentValue) = pair;
+        if (lookup.eq(currentKey, key)) {
+            some(currentValue)
+        } else {
+            none
+        }
+    })
+}
