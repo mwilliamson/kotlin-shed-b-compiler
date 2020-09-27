@@ -247,7 +247,8 @@ fun call(
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
     hasEffect = hasEffect,
-    source = anySource()
+    source = anySource(),
+    operatorSource = anySource(),
 )
 
 fun partialCall(
@@ -260,7 +261,8 @@ fun partialCall(
     staticArguments = staticArguments,
     positionalArguments = positionalArguments,
     namedArguments = namedArguments,
-    source = anySource()
+    source = anySource(),
+    operatorSource = anySource(),
 )
 
 fun callNamedArgument(
@@ -278,7 +280,8 @@ fun staticCall(
 ) = StaticCallNode(
     receiver = receiver,
     arguments = arguments,
-    source = anySource()
+    source = anySource(),
+    operatorSource = anySource(),
 )
 
 fun fieldAccess(

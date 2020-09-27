@@ -1008,6 +1008,7 @@ interface CallBaseNode: ExpressionNode {
     val staticArguments: List<StaticExpressionNode>
     val positionalArguments: List<ExpressionNode>
     val namedArguments: List<CallNamedArgumentNode>
+    val operatorSource: Source
 }
 
 data class CallNode(
@@ -1017,6 +1018,7 @@ data class CallNode(
     override val namedArguments: List<CallNamedArgumentNode>,
     val hasEffect: Boolean,
     override val source: Source,
+    override val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
 ) : CallBaseNode, ExpressionNode {
     override val structure: List<NodeStructure>
@@ -1035,6 +1037,7 @@ data class PartialCallNode(
     override val positionalArguments: List<ExpressionNode>,
     override val namedArguments: List<CallNamedArgumentNode>,
     override val source: Source,
+    override val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
 ) : CallBaseNode, ExpressionNode {
     override val structure: List<NodeStructure>
@@ -1061,6 +1064,7 @@ data class StaticCallNode(
     val receiver: ExpressionNode,
     val arguments: List<StaticExpressionNode>,
     override val source: Source,
+    val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val structure: List<NodeStructure>

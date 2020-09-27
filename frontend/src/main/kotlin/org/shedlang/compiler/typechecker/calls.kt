@@ -17,6 +17,7 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
                     staticArguments = listOf(),
                     hasEffect = node.hasEffect,
                     source = receiver.source,
+                    operatorSource = receiver.operatorSource,
                 ),
                 context.copy(),
             )
@@ -92,15 +93,15 @@ private fun inferFunctionCallType(
     val effect = replaceEffects(receiverType.effect, bindings)
 
     if (effect != EmptyEffect && !node.hasEffect) {
-        throw CallWithEffectMissingEffectFlag(source = node.source)
+        throw CallWithEffectMissingEffectFlag(source = node.operatorSource)
     }
 
     if (effect == EmptyEffect && node.hasEffect) {
-        throw ReceiverHasNoEffectsError(source = node.source)
+        throw ReceiverHasNoEffectsError(source = node.operatorSource)
     }
 
     if (!isSubEffect(subEffect = effect, superEffect = context.effect)) {
-        throw UnhandledEffectError(effect, source = node.source)
+        throw UnhandledEffectError(effect, source = node.operatorSource)
     }
 
     // TODO: handle unconstrained types
@@ -192,7 +193,7 @@ private fun checkArguments(
         throw WrongNumberOfArgumentsError(
             expected = positionalParameters.size,
             actual = call.positionalArguments.size,
-            source = call.source
+            source = call.operatorSource
         )
     }
 
@@ -214,7 +215,7 @@ private fun checkArguments(
     if (!allowMissing) {
         val missingNamedArguments = namedParameters.keys - call.namedArguments.map({ argument -> argument.name })
         for (missingNamedArgument in missingNamedArguments) {
-            throw MissingArgumentError(missingNamedArgument, source = call.source)
+            throw MissingArgumentError(missingNamedArgument, source = call.operatorSource)
         }
     }
 
@@ -223,7 +224,7 @@ private fun checkArguments(
         staticParameters = staticParameters,
         staticArgumentNodes = call.staticArguments,
         arguments = arguments,
-        source = call.source,
+        source = call.operatorSource,
         bindingsHint = bindingsHint,
         context = context
     )

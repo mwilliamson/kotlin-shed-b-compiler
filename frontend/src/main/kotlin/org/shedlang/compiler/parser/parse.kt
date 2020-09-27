@@ -999,7 +999,7 @@ private class InfixOperationParser(
 
 private class CallParser(override val operatorToken: TokenType) : OperationParser {
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
-        val source = tokens.location()
+        val operatorSource = tokens.location()
 
         val hasEffect = tokens.trySkip(TokenType.SYMBOL_BANG)
 
@@ -1021,8 +1021,8 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
             return StaticCallNode(
                 receiver = left,
                 arguments = typeArguments,
-                // TODO: change source?
-                source = source
+                source = left.source,
+                operatorSource = operatorSource,
             )
         } else {
             val (positionalArguments, namedArguments) = parseCallArguments(tokens)
@@ -1032,7 +1032,8 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
                 positionalArguments = positionalArguments,
                 namedArguments = namedArguments,
                 hasEffect = hasEffect,
-                source = source
+                source = left.source,
+                operatorSource = operatorSource,
             )
         }
     }
@@ -1054,7 +1055,8 @@ private object PartialCallParser : OperationParser {
             staticArguments = listOf(),
             positionalArguments = positionalArguments,
             namedArguments = namedArguments,
-            source = operatorSource
+            source = left.source,
+            operatorSource = operatorSource,
         )
     }
 
@@ -1135,7 +1137,8 @@ private object PipelineParser : OperationParser {
             namedArguments = listOf(),
             staticArguments = listOf(),
             hasEffect = false,
-            source = operatorSource
+            source = left.source,
+            operatorSource = operatorSource,
         )
     }
 }
