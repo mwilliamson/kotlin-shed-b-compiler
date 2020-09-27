@@ -246,7 +246,7 @@ class TypeCheckFunctionTests {
         val node = function(
             returnType = unitType,
             body = listOf(
-                expressionStatement(call(functionReference))
+                expressionStatement(call(functionReference, hasEffect = true))
             )
         )
         val typeContext = typeContext(
@@ -275,7 +275,7 @@ class TypeCheckFunctionTests {
         val node = function(
             returnType = unitType,
             body = listOf(
-                expressionStatement(call(functionReference))
+                expressionStatement(call(functionReference, hasEffect = true))
             )
         )
         val typeContext = typeContext(
@@ -304,7 +304,7 @@ class TypeCheckFunctionTests {
 
         val node = functionExpression(
             returnType = unitType,
-            body = call(functionReference)
+            body = call(functionReference, hasEffect = true)
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(
