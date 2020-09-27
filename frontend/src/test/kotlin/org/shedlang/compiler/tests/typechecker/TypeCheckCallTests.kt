@@ -636,7 +636,7 @@ class TypeCheckCallTests {
         )
         assertThat(
             { inferCallType(node, typeContext) },
-            throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
+            throwsException<CallWithEffectMissingEffectFlag>()
         )
     }
 

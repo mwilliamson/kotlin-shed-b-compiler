@@ -92,7 +92,7 @@ private fun inferFunctionCallType(
     val effect = replaceEffects(receiverType.effect, bindings)
 
     if (effect != EmptyEffect && !node.hasEffect) {
-        throw UnhandledEffectError(effect, source = node.source)
+        throw CallWithEffectMissingEffectFlag(source = node.source)
     }
 
     if (effect == EmptyEffect && node.hasEffect) {
