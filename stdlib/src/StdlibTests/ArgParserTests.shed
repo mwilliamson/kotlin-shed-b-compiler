@@ -127,6 +127,22 @@ val testCases = Tests.suite(moduleName, list(
         ))
     }),
 
+    Tests.testCase("extra positional argument causes error", fun () {
+        shape Args {
+            x: String,
+        }
+
+        val rawArguments = list("hello", "world");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isFailure(
+            .message = M.isString("extra positional argument: world"),
+        ))
+    }),
+
     Tests.testCase("when optional long option is present then value is some", fun () {
         shape Args {
             x: Option[String],

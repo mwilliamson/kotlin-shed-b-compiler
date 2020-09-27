@@ -78,12 +78,12 @@ fun parser[T](initialValue: T) -> Parser[T] {
 }
 
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
-    val stringArgs = toStringArgs(
-        .positional = Lists.reverse(parser.argDefinitions.positional),
-        .options = Lists.reverse(parser.argDefinitions.options),
-        .args = args,
-    );
     handle ParseEffect {
+        val stringArgs = toStringArgs!(
+            .positional = Lists.reverse(parser.argDefinitions.positional),
+            .options = Lists.reverse(parser.argDefinitions.options),
+            .args = args,
+        );
         val result = parser.parseStringArgs!(stringArgs);
         Success(.value = result)
     } on {
@@ -97,7 +97,7 @@ fun toStringArgs(
     .positional: Lists.List[ArgDefinition],
     .options: Lists.List[ArgDefinition],
     .args: Lists.List[String],
-) -> StringArgs {
+) !ParseEffect -> StringArgs {
     // TODO: make this vaguely pleasant
     when (args) {
         is Lists.Cons {
@@ -107,7 +107,7 @@ fun toStringArgs(
                     is Lists.Cons {
                         Lists.cons(
                             #(args.head, tail.head),
-                            toStringArgs(
+                            toStringArgs!(
                                 .positional = positional,
                                 .options = options,
                                 .args = tail.tail,
@@ -126,7 +126,7 @@ fun toStringArgs(
                         Lists.cons(
                             #(argDefinition.name, args.head),
                             // TODO: taking the tail isn't safe in the presence of options!
-                            toStringArgs(
+                            toStringArgs!(
                                 .positional = positional.tail,
                                 .options = options,
                                 .args = args.tail,
@@ -134,7 +134,7 @@ fun toStringArgs(
                         )
                     }
                     is Lists.Nil {
-                        Lists.list()
+                        ParseEffect.fail!("extra positional argument: " + args.head)
                     }
                 }
             }
