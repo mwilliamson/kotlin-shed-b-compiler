@@ -120,8 +120,7 @@ fun toStringArgs(
                                 )
                             }
                             is Lists.Nil {
-                                // TODO: raise error (or otherwise handle -- test case!)
-                                Lists.list()
+                                ParseEffect.fail!("option is missing value: " + optionName)
                             }
                         }
                     }
