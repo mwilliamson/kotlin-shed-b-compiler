@@ -6,8 +6,13 @@ import Sequences from .Sequences;
 import UnicodeScalars from .Strings.UnicodeScalars;
 
 shape Parser[T] {
-    argDefinitions: Lists.List[ArgDefinition],
+    argDefinitions: ArgDefinitions,
     parseStringArgs: Fun (StringArgs) !ParseEffect -> T,
+}
+
+shape ArgDefinitions {
+    positional: Lists.List[ArgDefinition],
+    options: Lists.List[ArgDefinition],
 }
 
 shape ArgDefinition {
@@ -64,13 +69,20 @@ type StringArgs = Lists.List[#(String, String)];
 
 fun parser[T](initialValue: T) -> Parser[T] {
     Parser(
-        .argDefinitions = Lists.list(),
+        .argDefinitions = ArgDefinitions(
+            .positional = Lists.list(),
+            .options = Lists.list(),
+        ),
         .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,
     )
 }
 
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
-    val stringArgs = toStringArgs(Lists.reverse(parser.argDefinitions), args);
+    val stringArgs = toStringArgs(
+        .positional = Lists.reverse(parser.argDefinitions.positional),
+        .options = Lists.reverse(parser.argDefinitions.options),
+        .args = args,
+    );
     handle ParseEffect {
         val result = parser.parseStringArgs!(stringArgs);
         Success(.value = result)
@@ -81,7 +93,11 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
     }
 }
 
-fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[String]) -> StringArgs {
+fun toStringArgs(
+    .positional: Lists.List[ArgDefinition],
+    .options: Lists.List[ArgDefinition],
+    .args: Lists.List[String],
+) -> StringArgs {
     // TODO: make this vaguely pleasant
     when (args) {
         is Lists.Cons {
@@ -91,7 +107,11 @@ fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[Str
                     is Lists.Cons {
                         Lists.cons(
                             #(args.head, tail.head),
-                            toStringArgs(argDefinitions, tail.tail),
+                            toStringArgs(
+                                .positional = positional,
+                                .options = options,
+                                .args = tail.tail,
+                            ),
                         )
                     }
                     is Lists.Nil {
@@ -100,13 +120,17 @@ fun toStringArgs(argDefinitions: Lists.List[ArgDefinition], args: Lists.List[Str
                     }
                 }
             } else {
-                when (argDefinitions) {
+                when (positional) {
                     is Lists.Cons {
-                        val argDefinition = argDefinitions.head;
+                        val argDefinition = positional.head;
                         Lists.cons(
                             #(argDefinition.name, args.head),
                             // TODO: taking the tail isn't safe in the presence of options!
-                            toStringArgs(argDefinitions.tail, args.tail),
+                            toStringArgs(
+                                .positional = positional.tail,
+                                .options = options,
+                                .args = args.tail,
+                            ),
                         )
                     }
                     is Lists.Nil {
@@ -133,7 +157,10 @@ fun positional[A, T, R](
     );
 
     Parser[R](
-        .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
+        .argDefinitions = ArgDefinitions.fields.positional.update(
+            Lists.cons(argDefinition, parser.argDefinitions.positional),
+            parser.argDefinitions,
+        ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
             val stringArg = lookup(stringArgs, name);
@@ -155,7 +182,10 @@ fun option[A, T, R](
     );
 
     Parser[R](
-        .argDefinitions = Lists.cons(argDefinition, parser.argDefinitions),
+        .argDefinitions = ArgDefinitions.fields.positional.update(
+            Lists.cons(argDefinition, parser.argDefinitions.options),
+            parser.argDefinitions,
+        ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
             val stringArg = lookup(stringArgs, name);
