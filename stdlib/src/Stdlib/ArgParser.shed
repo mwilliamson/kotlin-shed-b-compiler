@@ -135,7 +135,6 @@ fun toStringArgs(
                         val argDefinition = positional.head;
                         Lists.cons(
                             #(argDefinition.name, args.head),
-                            // TODO: taking the tail isn't safe in the presence of options!
                             toStringArgs!(
                                 .positional = positional.tail,
                                 .options = options,
