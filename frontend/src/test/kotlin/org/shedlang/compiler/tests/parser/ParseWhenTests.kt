@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.parser.InconsistentBranchTerminationError
 import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 
 class ParseWhenTests {
@@ -42,6 +43,53 @@ class ParseWhenTests {
                 )
             ),
             elseBranch = absent()
+        ))
+    }
+
+
+    @Test
+    fun whenBranchConditionHasNoOpeningParensThenTargetIsEmpty() {
+        val source = """
+            when (x) {
+                is Some {
+                }
+            }
+        """
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isWhen(
+            branches = isSequence(
+                isWhenBranch(
+                    type = isStaticReference("Some"),
+                ),
+            ),
+        ))
+    }
+
+
+    @Test
+    fun whenBranchConditionHasOpeningParensThenTargetFieldsAreParsed() {
+        val source = """
+            when (x) {
+                is Cons(.head as value, .tail as rest)  {
+                }
+            }
+        """
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isWhen(
+            branches = isSequence(
+                isWhenBranch(
+                    target = isTargetFields(
+                        fields = isSequence(
+                            isPair(isFieldName("head"), isTargetVariable("value")),
+                            isPair(isFieldName("tail"), isTargetVariable("rest")),
+                        ),
+                    ),
+                ),
+            ),
         ))
     }
 

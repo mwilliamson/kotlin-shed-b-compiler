@@ -699,6 +699,7 @@ data class WhenNode(
 
 data class WhenBranchNode(
     val type: StaticExpressionNode,
+    val target: TargetNode.Fields,
     val body: Block,
     override val source: Source,
     override val nodeId: Int = freshNodeId()

@@ -34,9 +34,9 @@ internal fun isConditionalBranch(
 ))
 
 internal fun isWhen(
-    expression: Matcher<ExpressionNode>,
-    branches: Matcher<List<WhenBranchNode>>,
-    elseBranch: Matcher<Block?>
+    expression: Matcher<ExpressionNode> = anything,
+    branches: Matcher<List<WhenBranchNode>> = anything,
+    elseBranch: Matcher<Block?> = anything,
 ): Matcher<ExpressionNode> = cast(allOf(
     has(WhenNode::expression, expression),
     has(WhenNode::conditionalBranches, branches),
@@ -44,10 +44,12 @@ internal fun isWhen(
 ))
 
 internal fun isWhenBranch(
-    type: Matcher<StaticExpressionNode>,
-    body: Matcher<Block>
+    type: Matcher<StaticExpressionNode> = anything,
+    target: Matcher<TargetNode.Fields> = anything,
+    body: Matcher<Block> = anything,
 ): Matcher<WhenBranchNode> = allOf(
     has(WhenBranchNode::type, type),
+    has(WhenBranchNode::target, target),
     has(WhenBranchNode::body, body)
 )
 

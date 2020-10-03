@@ -77,6 +77,7 @@ fun whenBranch(
     body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,
+    target = targetFields(),
     body = Block(body, source = anySource()),
     source = anySource()
 )
@@ -164,7 +165,7 @@ fun targetTuple(elements: List<TargetNode>) = TargetNode.Tuple(
     source = anySource()
 )
 
-fun targetFields(fields: List<Pair<FieldNameNode, TargetNode>>) = TargetNode.Fields(
+fun targetFields(fields: List<Pair<FieldNameNode, TargetNode>> = listOf()) = TargetNode.Fields(
     fields,
     source = anySource()
 )

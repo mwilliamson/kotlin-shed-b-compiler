@@ -828,9 +828,23 @@ private fun parseWhenBranch(tokens: TokenIterator<TokenType>): WhenBranchNode {
 
     tokens.skip(TokenType.KEYWORD_IS)
     val type = parseStaticExpression(tokens)
+
+    val targetSource = tokens.location()
+    val targetFields = if (tokens.trySkip(TokenType.SYMBOL_OPEN_PAREN)) {
+        val fields = parseTargetFields(tokens)
+        tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+        fields
+    } else {
+        listOf()
+    }
+
     val body = parseFunctionStatements(tokens)
     return WhenBranchNode(
         type = type,
+        target = TargetNode.Fields(
+            fields = targetFields,
+            source = targetSource
+        ),
         body = body,
         source = source
     )
@@ -875,20 +889,7 @@ internal fun parseTarget(tokens: TokenIterator<TokenType>): TargetNode {
         )
     } else if (tokens.trySkip(TokenType.SYMBOL_AT)) {
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
-        val fields = parseMany(
-            parseElement = { tokens ->
-                tokens.skip(TokenType.SYMBOL_DOT)
-                val fieldName = parseFieldName(tokens)
-                tokens.skip(TokenType.KEYWORD_AS)
-                val target = parseTarget(tokens)
-                fieldName to target
-            },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-            allowTrailingSeparator = true,
-            allowZero = false,
-            tokens = tokens
-        )
+        val fields = parseTargetFields(tokens)
         tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
         return TargetNode.Fields(
@@ -903,6 +904,24 @@ internal fun parseTarget(tokens: TokenIterator<TokenType>): TargetNode {
             source = source
         )
     }
+}
+
+private fun parseTargetFields(tokens: TokenIterator<TokenType>): List<Pair<FieldNameNode, TargetNode>> {
+    val fields = parseMany(
+        parseElement = { tokens ->
+            tokens.skip(TokenType.SYMBOL_DOT)
+            val fieldName = parseFieldName(tokens)
+            tokens.skip(TokenType.KEYWORD_AS)
+            val target = parseTarget(tokens)
+            fieldName to target
+        },
+        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+        allowTrailingSeparator = true,
+        allowZero = false,
+        tokens = tokens
+    )
+    return fields
 }
 
 internal fun parseExpression(tokens: TokenIterator<TokenType>) : ExpressionNode {
