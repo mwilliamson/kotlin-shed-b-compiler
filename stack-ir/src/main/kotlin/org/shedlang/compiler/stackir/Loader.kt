@@ -374,8 +374,8 @@ class Loader(
 
                 return generateBranches(
                     conditionInstructions = conditionInstructions,
-                    conditionalBodies = node.conditionalBranches.map { branch -> branch.body },
-                    elseBranch = node.elseBranch
+                    conditionalBodies = node.conditionalBranches.map { branch -> loadBlock(branch.body) },
+                    elseBranch = loadBlock(node.elseBranch),
                 )
             }
 
@@ -388,11 +388,13 @@ class Loader(
                     persistentListOf<Instruction>(Duplicate).addAll(typeConditionInstructions(discriminator))
                 }
 
+                val elseBranch = node.elseBranch
                 return expressionInstructions.addAll(generateBranches(
                     conditionInstructions = conditionInstructions,
-                    conditionalBodies = node.conditionalBranches.map { branch -> branch.body },
-                    elseBranch = node.elseBranch,
-                    beforeBranch = listOf(Discard)
+                    conditionalBodies = node.conditionalBranches.map { branch ->
+                        loadBlock(branch.body).add(0, Discard)
+                    },
+                    elseBranch = if (elseBranch == null) null else loadBlock(elseBranch).add(0, Discard),
                 ))
             }
 
@@ -415,14 +417,12 @@ class Loader(
 
             private fun generateBranches(
                 conditionInstructions: List<PersistentList<Instruction>>,
-                conditionalBodies: List<Block>,
-                elseBranch: Block?,
-                beforeBranch: List<Instruction> = listOf()
+                conditionalBodies: List<PersistentList<Instruction>>,
+                elseBranch: PersistentList<Instruction>?,
             ): PersistentList<Instruction> {
                 val instructions = mutableListOf<Instruction>()
 
                 val branchBodies = conditionalBodies + elseBranch.nullableToList()
-                val bodyInstructions = branchBodies.map { body -> beforeBranch + loadBlock(body) }
                 val conditionLabels = branchBodies.map { createLabel() }
                 val endLabel = createLabel()
                 instructions.add(Jump(conditionLabels[0].value))
@@ -434,13 +434,13 @@ class Loader(
                         instructions.addAll(conditionInstructions[branchIndex])
                         instructions.add(JumpIfFalse(nextConditionLabel.value))
                     }
-                    instructions.addAll(bodyInstructions[branchIndex])
+                    instructions.addAll(conditionalBodies[branchIndex])
                     instructions.add(Jump(endLabel.value))
                 }
 
                 if (elseBranch != null) {
                     instructions.add(conditionLabels.last())
-                    instructions.addAll(bodyInstructions.last())
+                    instructions.addAll(elseBranch)
                     instructions.add(Jump(endLabel.value))
                 }
                 instructions.add(endLabel)
