@@ -502,17 +502,17 @@ class Loader(
             override fun visit(node: ShapeNode): PersistentList<Instruction> {
                 return loadShape(node)
             }
+
+            override fun visit(node: EffectDefinitionNode): PersistentList<Instruction> {
+                return loadEffectDefinition(node)
+            }
         })
     }
 
     fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
         return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: EffectDefinitionNode): PersistentList<Instruction> {
-                val effect = (types.variableType(node) as StaticValueType).value as UserDefinedEffect
-                return persistentListOf(
-                    EffectDefine(effect),
-                    LocalStore(node)
-                )
+                return loadEffectDefinition(node)
             }
 
             override fun visit(node: TypeAliasNode): PersistentList<Instruction> {
@@ -545,6 +545,14 @@ class Loader(
                 return loadVarargsDeclaration(node)
             }
         })
+    }
+
+    private fun loadEffectDefinition(node: EffectDefinitionNode): PersistentList<Instruction> {
+        val effect = (types.variableType(node) as StaticValueType).value as UserDefinedEffect
+        return persistentListOf(
+            EffectDefine(effect),
+            LocalStore(node)
+        )
     }
 
     private fun loadFunctionDefinition(node: FunctionDefinitionNode): PersistentList<Instruction> {

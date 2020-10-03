@@ -7,6 +7,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.EffectDefinitionNode
 import org.shedlang.compiler.ast.OperationDefinitionNode
+import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
@@ -43,6 +44,28 @@ class ParseEffectDefinitionTests {
                 has(OperationDefinitionNode::name, isIdentifier("a")),
                 has(OperationDefinitionNode::name, isIdentifier("b"))
             ))
+        )))
+    }
+
+    @Test
+    fun canParseEffectDefinitionAsModuleStatement() {
+        val source = "effect Try { .throw: (String) -> Nothing }"
+
+        val definition = parseString(::parseModuleStatement, source)
+
+        assertThat(definition, cast(allOf(
+            has(EffectDefinitionNode::name, isIdentifier("Try")),
+        )))
+    }
+
+    @Test
+    fun canParseEffectDefinitionAsFunctionStatement() {
+        val source = "effect Try { .throw: (String) -> Nothing }"
+
+        val definition = parseString(::parseFunctionStatement, source)
+
+        assertThat(definition, cast(allOf(
+            has(EffectDefinitionNode::name, isIdentifier("Try")),
         )))
     }
 }

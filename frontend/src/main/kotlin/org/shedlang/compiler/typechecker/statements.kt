@@ -369,6 +369,11 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
             typeCheckShapeDefinition(node, context)
             return UnitType
         }
+
+        override fun visit(node: EffectDefinitionNode): Type {
+            typeCheckEffectDefinition(node, context)
+            return UnitType
+        }
     })
 }
 

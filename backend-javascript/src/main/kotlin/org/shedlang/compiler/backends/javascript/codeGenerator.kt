@@ -555,6 +555,10 @@ internal fun generateCodeForFunctionStatement(node: FunctionStatementNode, conte
         override fun visit(node: ShapeNode): List<JavascriptStatementNode> {
             return listOf(generateCodeForShape(node, context))
         }
+
+        override fun visit(node: EffectDefinitionNode): List<JavascriptStatementNode> {
+            return generateCodeForEffectDefinition(node)
+        }
     })
 }
 

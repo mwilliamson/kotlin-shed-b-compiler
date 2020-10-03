@@ -662,6 +662,8 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
         return parseFunctionDefinition(tokens)
     } else if (token.tokenType == TokenType.KEYWORD_SHAPE) {
         return parseShape(tokens)
+    } else if (token.tokenType == TokenType.KEYWORD_EFFECT) {
+        return parseEffectDefinition(tokens)
     } else if (token.tokenType == TokenType.KEYWORD_TAILREC) {
         val source = tokens.location()
         tokens.skip()

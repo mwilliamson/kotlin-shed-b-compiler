@@ -355,11 +355,18 @@ data class EffectDefinitionNode(
     val operations: List<OperationDefinitionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): VariableBindingNode, ModuleStatementNode {
+): VariableBindingNode, FunctionStatementNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
         get() = operations.map { operation -> NodeStructures.eval(operation) } + NodeStructures.initialise(this)
 
+    override val terminatesBlock: Boolean
+        get() = false
+
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -627,6 +634,7 @@ interface FunctionStatementNode : StatementNode {
         fun visit(node: ValNode): T
         fun visit(node: FunctionDefinitionNode): T
         fun visit(node: ShapeNode): T
+        fun visit(node: EffectDefinitionNode): T
     }
 
     val terminatesBlock: Boolean

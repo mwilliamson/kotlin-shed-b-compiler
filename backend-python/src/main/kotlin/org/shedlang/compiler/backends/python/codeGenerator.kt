@@ -601,6 +601,10 @@ internal fun generateCodeForFunctionStatement(
         override fun visit(node: ShapeNode): List<PythonStatementNode> {
             return listOf(generateCodeForShape(node, context))
         }
+
+        override fun visit(node: EffectDefinitionNode): List<PythonStatementNode> {
+            return generateCodeForEffectDefinition(node, context)
+        }
     })
 }
 
