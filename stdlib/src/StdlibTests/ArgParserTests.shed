@@ -175,6 +175,22 @@ val testCases = Tests.suite(moduleName, list(
         ))
     }),
 
+    Tests.testCase("when required long option is present then value is stored", fun () {
+        shape Args {
+            x: String,
+        }
+
+        val rawArguments = list("--long-option", "hello");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isString("hello")),
+        ))
+    }),
+
     Tests.testCase("when required long option is missing then result is failure", fun () {
         shape Args {
             x: String,
