@@ -254,4 +254,36 @@ val testCases = Tests.suite(moduleName, list(
             .message = M.isString("option is missing value: --long-option"),
         ))
     }),
+
+    Tests.testCase("when flag is missing then value is false", fun () {
+        shape Args {
+            x: Bool,
+        }
+
+        val rawArguments = list();
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.flag~("--flag", Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isBool(false)),
+        ))
+    }),
+
+    Tests.testCase("when flag is present then value is true", fun () {
+        shape Args {
+            x: Bool,
+        }
+
+        val rawArguments = list("--flag");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.flag~("--flag", Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isBool(true)),
+        ))
+    }),
 ));

@@ -1,4 +1,4 @@
-export ParseResult, Success, Failure, parser, parse, positional, option, optional, string;
+export ParseResult, Success, Failure, parser, parse, positional, option, flag, optional, string;
 
 import ListBuilder from .ListBuilder;
 import ListLookup from .ListLookup;
@@ -15,6 +15,7 @@ shape Parser[T] {
 shape ArgDefinitions {
     positional: ListBuilder.Builder[ArgDefinition],
     options: ListBuilder.Builder[#(String, ArgDefinition)],
+    flags: ListBuilder.Builder[#(String, ArgDefinition)],
 }
 
 shape ArgDefinition {
@@ -74,6 +75,7 @@ fun parser[T](initialValue: T) -> Parser[T] {
         .argDefinitions = ArgDefinitions(
             .positional = ListBuilder.builder(),
             .options = ListBuilder.builder(),
+            .flags = ListBuilder.builder(),
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) => initialValue,
     )
@@ -84,6 +86,7 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
         val stringArgs = toStringArgs!(
             .positional = ListBuilder.toList(parser.argDefinitions.positional),
             .options = ListLookup.create(UnicodeScalars.eq, ListBuilder.toList(parser.argDefinitions.options)),
+            .flags = ListLookup.create(UnicodeScalars.eq, ListBuilder.toList(parser.argDefinitions.flags)),
             .args = args,
         );
         val result = parser.parseStringArgs!(ListLookup.create(UnicodeScalars.eq, stringArgs));
@@ -98,6 +101,7 @@ fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
 fun toStringArgs(
     .positional: Lists.List[ArgDefinition],
     .options: ListLookup.ListLookup[String, ArgDefinition],
+    .flags: ListLookup.ListLookup[String, ArgDefinition],
     .args: Lists.List[String],
 ) !ParseEffect -> Lists.List[#(String, String)] {
     // TODO: make this vaguely pleasant
@@ -105,10 +109,10 @@ fun toStringArgs(
         is Lists.Cons {
             if (UnicodeScalars.startsWith("--", args.head)) {
                 val optionName = args.head;
-                val argDefinitionLookupResult = ListLookup.lookup(options, optionName);
-                when (argDefinitionLookupResult) {
+                val optionLookupResult = ListLookup.lookup(options, optionName);
+                when (optionLookupResult) {
                     is Some {
-                        val argDefinition = argDefinitionLookupResult.value;
+                        val argDefinition = optionLookupResult.value;
                         val tail = args.tail;
                         when (tail) {
                             is Lists.Cons {
@@ -117,6 +121,7 @@ fun toStringArgs(
                                     toStringArgs!(
                                         .positional = positional,
                                         .options = options,
+                                        .flags = flags,
                                         .args = tail.tail,
                                     ),
                                 )
@@ -127,7 +132,24 @@ fun toStringArgs(
                         }
                     }
                     is None {
-                        ParseEffect.fail!("unknown option: " + optionName)
+                        val flagLookupResult = ListLookup.lookup(flags, optionName);
+                        when (flagLookupResult) {
+                            is Some {
+                                val argDefinition = flagLookupResult.value;
+                                Lists.cons(
+                                    #(argDefinition.name, ""),
+                                    toStringArgs!(
+                                        .positional = positional,
+                                        .options = options,
+                                        .flags = flags,
+                                        .args = args.tail,
+                                    ),
+                                )
+                            }
+                            is None {
+                                ParseEffect.fail!("unknown option: " + optionName)
+                            }
+                        }
                     }
                 }
             } else {
@@ -139,6 +161,7 @@ fun toStringArgs(
                             toStringArgs!(
                                 .positional = positional.tail,
                                 .options = options,
+                                .flags = flags,
                                 .args = args.tail,
                             ),
                         )
@@ -200,6 +223,30 @@ fun option[A, T, R](
             val otherArgs = parser.parseStringArgs!(stringArgs);
             val stringArg = ListLookup.lookup(stringArgs, name);
             val value = argType.parse!(.name = name, .argument = stringArg);
+            add(value, otherArgs)
+        },
+    )
+}
+
+fun flag[T, R](
+    name: String,
+    add: Fun (Bool, T) -> R,
+    parser: Parser[T],
+) -> Parser[R] {
+    val argDefinition = ArgDefinition(
+        .name = name,
+        .isOption = true,
+    );
+
+    Parser[R](
+        .argDefinitions = ArgDefinitions.fields.flags.update(
+            ListBuilder.append(parser.argDefinitions.flags, #(name, argDefinition)),
+            parser.argDefinitions,
+        ),
+        .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
+            val otherArgs = parser.parseStringArgs!(stringArgs);
+            val stringArg = ListLookup.lookup(stringArgs, name);
+            val value = stringArg is Some;
             add(value, otherArgs)
         },
     )
