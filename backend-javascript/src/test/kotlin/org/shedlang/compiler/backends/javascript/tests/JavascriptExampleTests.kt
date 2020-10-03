@@ -20,7 +20,8 @@ class JavascriptExampleTests {
         "NonLocalReturnNested.shed",
         "Resume.shed",
         "ResumeWithValue.shed",
-        "TailRec.shed"
+        "TailRec.shed",
+        "stdlib",
     )
 
     @TestFactory
