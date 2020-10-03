@@ -707,7 +707,10 @@ data class WhenBranchNode(
     override val structure: List<NodeStructure>
         get() = listOf(
             NodeStructures.staticEval(type),
-            NodeStructures.subEnv(listOf(NodeStructures.eval(body)))
+            NodeStructures.subEnv(listOf(
+                NodeStructures.eval(target),
+                NodeStructures.eval(body),
+            ))
         )
 }
 
