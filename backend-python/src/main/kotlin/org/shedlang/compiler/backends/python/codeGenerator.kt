@@ -1163,20 +1163,38 @@ private fun generateWhenCode(
         }
 
         val branches = node.conditionalBranches.map { branch ->
-            PythonConditionalBranchNode(
-                condition = generateTypeCondition(
-                    expression = PythonVariableReferenceNode(
+            val condition = generateTypeCondition(
+                expression = PythonVariableReferenceNode(
+                    name = expressionName,
+                    source = NodeSource(branch)
+                ),
+                discriminator = context.inspector.discriminatorForWhenBranch(node, branch),
+                source = NodeSource(branch)
+            )
+
+            val target = if (branch.target.fields.isEmpty()) {
+                listOf()
+            } else {
+                generateTargetAssignment(
+                    shedTarget = branch.target,
+                    pythonExpression = PythonVariableReferenceNode(
                         name = expressionName,
                         source = NodeSource(branch)
                     ),
-                    discriminator = context.inspector.discriminatorForWhenBranch(node, branch),
-                    source = NodeSource(branch)
-                ),
-                body = generateBlockCode(
-                    branch.body,
-                    context,
-                    returnValue = returnValue
-                ),
+                    source = NodeSource(branch),
+                    context = context,
+                )
+            }
+
+            val body = generateBlockCode(
+                branch.body,
+                context,
+                returnValue = returnValue
+            )
+
+            PythonConditionalBranchNode(
+                condition = condition,
+                body = target + body,
                 source = NodeSource(branch)
             )
         }

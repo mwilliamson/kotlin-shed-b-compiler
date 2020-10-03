@@ -392,7 +392,7 @@ class Loader(
                 return expressionInstructions.addAll(generateBranches(
                     conditionInstructions = conditionInstructions,
                     conditionalBodies = node.conditionalBranches.map { branch ->
-                        loadBlock(branch.body).add(0, Discard)
+                        loadTarget(branch.target).addAll(loadBlock(branch.body))
                     },
                     elseBranch = if (elseBranch == null) null else loadBlock(elseBranch).add(0, Discard),
                 ))

@@ -1,0 +1,15 @@
+// stdout:
+//   Hello, world!
+
+export main;
+
+fun main() !Io -> Unit {
+    val option = some("Hello, world!\n");
+    when (option) {
+        is Some(.value as message) {
+            print!(message);
+        }
+        is None {
+        }
+    }
+}

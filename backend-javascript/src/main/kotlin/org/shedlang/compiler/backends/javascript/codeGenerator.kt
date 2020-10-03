@@ -749,20 +749,35 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
 
             context.enterFunction(isAsync = context.isAsync())
             val branches = node.conditionalBranches.map { branch ->
-                val expression = NodeSource(branch)
+                val branchSource = NodeSource(branch)
                 val discriminator = context.inspector.discriminatorForWhenBranch(node, branch)
                 val condition = generateTypeCondition(
                     JavascriptVariableReferenceNode(
                         name = temporaryName,
-                        source = expression
+                        source = branchSource
                     ),
                     discriminator,
-                    NodeSource(branch)
+                    branchSource
                 )
+                val target = if (branch.target.fields.isEmpty()) {
+                    listOf()
+                } else {
+                    listOf(
+                        JavascriptConstNode(
+                            target = generateCodeForTarget(branch.target, context),
+                            expression = JavascriptVariableReferenceNode(
+                                name = temporaryName,
+                                source = branchSource
+                            ),
+                            source = branchSource,
+                        )
+                    )
+                }
+                val body = target + generateBlockCode(branch.body, context)
                 JavascriptConditionalBranchNode(
                     condition = condition,
-                    body = generateBlockCode(branch.body, context),
-                    source = NodeSource(branch)
+                    body = body,
+                    source = branchSource
                 )
             }
 
