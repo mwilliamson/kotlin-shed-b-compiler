@@ -227,12 +227,17 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         )
 
         context.addDiscriminator(branch, discriminator)
+
         val branchContext = context.enterScope()
+
         val expression = node.expression
         if (expression is ReferenceNode) {
             // TODO: test discriminator.targetType is used instead of conditionType
             branchContext.refineVariableType(expression, discriminator.targetType)
         }
+
+        typeCheckTarget(branch.target, discriminator.targetType, branchContext)
+
         val type = typeCheckBlock(branch.body, branchContext)
         Pair(type, discriminator.targetType)
     }

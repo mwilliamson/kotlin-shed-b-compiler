@@ -7,6 +7,7 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.metaType
 
 class TypeCheckWhenTests {
     private val inputTag = tag(listOf("Example"), "Union")
@@ -126,6 +127,43 @@ class TypeCheckWhenTests {
         val type = inferType(expression, typeContext)
 
         assertThat(type, isUnionType(members = isSequence(isType(outputMember1), isType(outputMember2))))
+    }
+
+    @Test
+    fun targetIsTypeChecked() {
+        val variableReference = variableReference("x")
+        val elementTarget = targetVariable("target")
+        val memberTypeReference = staticReference("Some")
+
+        val tag = tag(listOf("Example"), "Union")
+        val memberType = shapeType(
+            name = "Member1",
+            tagValue = tagValue(tag, "Member1"),
+            fields = listOf(
+                field("value", type = IntType),
+            ),
+        )
+        val unionType = unionType("Union", tag = tag, members = listOf(memberType))
+
+        val expression = whenExpression(
+            expression = variableReference,
+            conditionalBranches = listOf(
+                whenBranch(
+                    type = memberTypeReference,
+                    target = targetFields(listOf(fieldName("value") to elementTarget)),
+                    body = listOf()
+                ),
+            )
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                variableReference to unionType,
+                memberTypeReference to metaType(memberType),
+            )
+        )
+        inferType(expression, typeContext)
+
+        assertThat(typeContext.typeOf(elementTarget), isIntType)
     }
 
     @Test

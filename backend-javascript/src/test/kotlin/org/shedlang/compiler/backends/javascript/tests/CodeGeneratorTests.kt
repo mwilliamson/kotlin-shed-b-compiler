@@ -315,8 +315,8 @@ class CodeGeneratorTests {
     @Test
     fun whenExpressionGeneratesImmediatelyEvaluatedIfStatement() {
         val whenBranch = whenBranch(
-            staticReference("T"),
-            listOf(
+            type = staticReference("T"),
+            body = listOf(
                 expressionStatementReturn(literalInt(42))
             )
         )

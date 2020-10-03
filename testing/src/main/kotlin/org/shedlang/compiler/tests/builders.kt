@@ -74,10 +74,11 @@ fun whenExpression(
 
 fun whenBranch(
     type: StaticExpressionNode = staticReference("__default__"),
+    target: TargetNode.Fields = targetFields(),
     body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
     type = type,
-    target = targetFields(),
+    target = target,
     body = Block(body, source = anySource()),
     source = anySource()
 )

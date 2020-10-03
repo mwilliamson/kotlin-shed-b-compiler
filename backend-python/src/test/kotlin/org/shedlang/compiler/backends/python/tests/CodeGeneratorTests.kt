@@ -539,8 +539,8 @@ class CodeGeneratorTests {
         val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
         val whenBranch = whenBranch(
-            staticReference("T"),
-            listOf(
+            type = staticReference("T"),
+            body = listOf(
                 expressionStatementReturn(literalInt(42))
             )
         )
@@ -603,8 +603,8 @@ class CodeGeneratorTests {
         val variableDeclaration = variableBinder("x")
         val variableReference = variableReference("x")
         val whenBranch = whenBranch(
-            staticReference("T"),
-            listOf(
+            type = staticReference("T"),
+            body = listOf(
                 expressionStatementReturn(literalInt(42))
             )
         )
@@ -653,8 +653,8 @@ class CodeGeneratorTests {
         val typeDeclaration = typeParameter("T")
         val typeReference = staticReference("T")
         val whenBranch = whenBranch(
-            typeReference,
-            listOf(
+            type = typeReference,
+            body = listOf(
                 expressionStatementReturn(literalInt(42))
             )
         )
