@@ -372,8 +372,6 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
 }
 
 private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType {
-    val type = inferType(node.expression, context)
-
     // TODO: check that we can resume in this context
     val handle = context.handle
     if (handle == null) {
@@ -381,9 +379,9 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
     }
 
     verifyType(
+        expression = node.expression,
+        context = context,
         expected = handle.resumeValueType,
-        actual = type,
-        source = node.source
     )
 
     val newState = node.newState
@@ -392,11 +390,10 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
     } else if (newState == null && handle.stateType != null) {
         throw ResumeMissingNewStateError(source = node.source)
     } else if (newState != null && handle.stateType != null) {
-        val newStateType = inferType(newState, context, hint = handle.stateType)
         verifyType(
+            expression = newState,
+            context = context,
             expected = handle.stateType,
-            actual = newStateType,
-            source = newState.source,
         )
     }
 
