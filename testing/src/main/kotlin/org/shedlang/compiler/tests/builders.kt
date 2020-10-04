@@ -302,10 +302,12 @@ fun fieldName(
 
 fun handle(
     effect: StaticExpressionNode = staticReference("Eff"),
+    initialState: ExpressionNode? = null,
     body: Block,
     handlers: List<HandlerNode>
 ) = HandleNode(
     effect = effect,
+    initialState = initialState,
     body = body,
     handlers = handlers,
     source = anySource()

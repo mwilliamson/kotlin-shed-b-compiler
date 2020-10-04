@@ -55,10 +55,12 @@ internal fun isWhenBranch(
 
 internal fun isHandle(
     effect: Matcher<StaticExpressionNode> = anything,
+    initialState: Matcher<ExpressionNode?> = anything,
     body: Matcher<Block> = anything,
-    handlers: Matcher<List<HandlerNode>>
+    handlers: Matcher<List<HandlerNode>> = anything,
 ): Matcher<ExpressionNode> = cast(allOf(
     has(HandleNode::effect, effect),
+    has(HandleNode::initialState, initialState),
     has(HandleNode::body, body),
     has(HandleNode::handlers, handlers)
 ))

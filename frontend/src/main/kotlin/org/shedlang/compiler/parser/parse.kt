@@ -1338,7 +1338,18 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
     tokens.skip()
 
     val effect = parseStaticExpression(tokens)
+
+    val initialState = if (tokens.trySkip(TokenType.KEYWORD_WITH_STATE)) {
+        tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
+        val expression = parseExpression(tokens)
+        tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
+        expression
+    } else {
+        null
+    }
+
     val body = parseFunctionStatements(tokens)
+
     tokens.skip(TokenType.KEYWORD_ON)
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val handlers = parseMany(
@@ -1377,6 +1388,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
     return HandleNode(
         effect = effect,
         body = body,
+        initialState = initialState,
         handlers = handlers.sortedBy { handler -> handler.operationName },
         source = source
     )

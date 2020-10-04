@@ -1,5 +1,6 @@
 package org.shedlang.compiler.ast
 
+import org.shedlang.compiler.mapNullable
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Effect
 import org.shedlang.compiler.types.StaticValueType
@@ -724,6 +725,7 @@ data class WhenBranchNode(
 
 data class HandleNode(
     val effect: StaticExpressionNode,
+    val initialState: ExpressionNode?,
     val body: Block,
     val handlers: List<HandlerNode>,
     override val source: Source,
@@ -731,6 +733,7 @@ data class HandleNode(
 ): ExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.staticEval(effect)) +
+            initialState.mapNullable(NodeStructures::eval).nullableToList() +
             handlers.map { handler -> NodeStructures.eval(handler) } +
             listOf(NodeStructures.subEnv(listOf(NodeStructures.eval(body))))
 

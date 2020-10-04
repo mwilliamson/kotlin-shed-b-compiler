@@ -42,6 +42,7 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     keyword(TokenType.KEYWORD_VAL, "val"),
     keyword(TokenType.KEYWORD_VARARGS, "varargs"),
     keyword(TokenType.KEYWORD_WHEN, "when"),
+    keyword(TokenType.KEYWORD_WITH_STATE, "withstate"),
 
     RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
 
@@ -124,6 +125,7 @@ internal enum class TokenType {
     KEYWORD_VAL,
     KEYWORD_VARARGS,
     KEYWORD_WHEN,
+    KEYWORD_WITH_STATE,
 
     IDENTIFIER,
 

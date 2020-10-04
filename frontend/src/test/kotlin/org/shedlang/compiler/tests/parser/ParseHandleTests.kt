@@ -1,9 +1,7 @@
 package org.shedlang.compiler.tests.parser
 
-import com.natpryce.hamkrest.allOf
+import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
@@ -57,6 +55,7 @@ class ParseHandleTests {
             )
         ))
     }
+
     @Test
     fun canParseHandleWithOneHandlerThatResumes() {
         val source = "handle Try { f() } on { .throw = (value: String) { resume 42 } }"
@@ -93,6 +92,28 @@ class ParseHandleTests {
                     operationName = isIdentifier("b")
                 )
             )
+        ))
+    }
+
+    @Test
+    fun canParseHandlerWithoutState() {
+        val source = "handle Try { } on { .throw = () { exit unit } }"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isHandle(
+            initialState = absent(),
+        ))
+    }
+
+    @Test
+    fun canParseHandlerWithState() {
+        val source = "handle Try withstate(42) { } on { .throw = () { exit unit } }"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isHandle(
+            initialState = present(isIntLiteral(42)),
         ))
     }
 }
