@@ -12,7 +12,7 @@ internal fun typeCheck(expression: ExpressionNode, context: TypeContext): Unit {
 }
 
 internal fun verifyType(expression: ExpressionNode, context: TypeContext, expected: Type) {
-    val type = inferType(expression, context)
+    val type = inferType(expression, context, hint = expected)
     verifyType(expected = expected, actual = type, source = expression.source)
 }
 
