@@ -121,10 +121,11 @@ fun exit(
 
 fun resume(
     expression: ExpressionNode = expression(),
+    newState: ExpressionNode? = null,
     source: Source = anySource()
-) = ExpressionStatementNode(
+) = ResumeNode(
     expression = expression,
-    type = ExpressionStatementNode.Type.RESUME,
+    newState = newState,
     source = source
 )
 

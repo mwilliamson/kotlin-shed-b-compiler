@@ -685,10 +685,18 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
     } else if (token.tokenType == TokenType.KEYWORD_RESUME) {
         val source = tokens.location()
         tokens.skip()
+
         val expression = parseExpression(tokens)
-        return ExpressionStatementNode(
-            type = ExpressionStatementNode.Type.RESUME,
+
+        val newState = if (tokens.trySkip(TokenType.KEYWORD_WITH_STATE)) {
+            parseExpression(tokens)
+        } else {
+            null
+        }
+
+        return ResumeNode(
             expression = expression,
+            newState = newState,
             source = source
         )
     } else {

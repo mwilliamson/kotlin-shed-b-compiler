@@ -538,10 +538,11 @@ internal fun generateCodeForFunctionStatement(node: FunctionStatementNode, conte
 
                 ExpressionStatementNode.Type.NO_VALUE ->
                     listOf(JavascriptExpressionStatementNode(expression, source))
-
-                ExpressionStatementNode.Type.RESUME ->
-                    throw NotImplementedError()
             }
+        }
+
+        override fun visit(node: ResumeNode): List<JavascriptStatementNode> {
+            throw NotImplementedError()
         }
 
         override fun visit(node: ValNode): List<JavascriptStatementNode> {

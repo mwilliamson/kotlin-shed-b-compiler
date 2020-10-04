@@ -590,6 +590,15 @@ internal fun generateCodeForFunctionStatement(
             return generateCode(node, context, returnValue = returnValue)
         }
 
+        override fun visit(node: ResumeNode): List<PythonStatementNode> {
+            return generateStatementCodeForExpression(
+                node.expression,
+                context,
+                returnValue = returnValue,
+                source = NodeSource(node)
+            )
+        }
+
         override fun visit(node: ValNode): List<PythonStatementNode> {
             return generateCode(node, context)
         }
@@ -615,7 +624,6 @@ private fun generateCode(
 ): List<PythonStatementNode> {
     fun expressionReturnValue(expression: PythonExpressionNode, source: Source): List<PythonStatementNode> {
         return when (node.type) {
-            ExpressionStatementNode.Type.RESUME,
             ExpressionStatementNode.Type.TAILREC,
             ExpressionStatementNode.Type.VALUE ->
                 returnValue(expression, source)

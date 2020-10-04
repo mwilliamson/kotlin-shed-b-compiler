@@ -8,6 +8,7 @@ import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.literalInt
 
 class ParseHandleTests {
     @Test
@@ -114,6 +115,28 @@ class ParseHandleTests {
 
         assertThat(node, isHandle(
             initialState = present(isIntLiteral(42)),
+        ))
+    }
+
+    @Test
+    fun canParseResumeWithState() {
+        val source = "handle Try withstate(42) { } on { .x = (state: Int) { resume unit withstate 43 } }"
+
+        val node = parseString(::parseExpression, source)
+
+        assertThat(node, isHandle(
+            handlers = isSequence(
+                isHandler(
+                    function = allOf(
+                        has(FunctionExpressionNode::body, isBlock(
+                            isResume(
+                                expression = isUnitLiteral(),
+                                newState = present(isIntLiteral(43)),
+                            )
+                        ))
+                    )
+                ),
+            ),
         ))
     }
 }

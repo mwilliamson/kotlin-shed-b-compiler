@@ -632,6 +632,7 @@ interface FunctionStatementNode : StatementNode {
             throw UnsupportedOperationException("not implemented")
         }
         fun visit(node: ExpressionStatementNode): T
+        fun visit(node: ResumeNode): T
         fun visit(node: ValNode): T
         fun visit(node: FunctionDefinitionNode): T
         fun visit(node: ShapeNode): T
@@ -765,11 +766,27 @@ data class ExpressionStatementNode(
         TAILREC,
 
         EXIT,
-        RESUME
     }
 
     override val terminatesBlock: Boolean
         get() = type != Type.NO_VALUE
+
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.eval(expression))
+
+    override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+data class ResumeNode(
+    val expression: ExpressionNode,
+    val newState: ExpressionNode?,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+): FunctionStatementNode {
+    override val terminatesBlock: Boolean
+        get() = true
 
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(expression))

@@ -66,7 +66,7 @@ internal fun isHandle(
 ))
 
 internal fun isHandler(
-    operationName: Matcher<Identifier>,
+    operationName: Matcher<Identifier> = anything,
     function: Matcher<FunctionExpressionNode> = anything
 ) = allOf(
     has(HandlerNode::operationName, operationName),
@@ -89,8 +89,14 @@ internal fun isExit(expression: Matcher<ExpressionNode>): Matcher<FunctionStatem
     return isExpressionStatement(expression = expression, type = equalTo(ExpressionStatementNode.Type.EXIT))
 }
 
-internal fun isResume(expression: Matcher<ExpressionNode>): Matcher<FunctionStatementNode> {
-    return isExpressionStatement(expression = expression, type = equalTo(ExpressionStatementNode.Type.RESUME))
+internal fun isResume(
+    expression: Matcher<ExpressionNode> = anything,
+    newState: Matcher<ExpressionNode?> = anything,
+): Matcher<FunctionStatementNode> {
+    return cast(allOf(
+        has(ResumeNode::expression, expression),
+        has(ResumeNode::newState, newState),
+    ))
 }
 
 inline internal fun isVal(

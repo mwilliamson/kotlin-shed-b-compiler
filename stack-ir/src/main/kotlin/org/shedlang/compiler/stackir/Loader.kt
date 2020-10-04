@@ -484,11 +484,12 @@ class Loader(
                     ExpressionStatementNode.Type.EXIT ->
                         return expressionInstructions
                             .add(Exit)
-
-                    ExpressionStatementNode.Type.RESUME ->
-                        return expressionInstructions
-                            .add(Resume)
                 }
+            }
+
+            override fun visit(node: ResumeNode): PersistentList<Instruction> {
+                val expressionInstructions = loadExpression(node.expression)
+                return expressionInstructions.add(Resume)
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
