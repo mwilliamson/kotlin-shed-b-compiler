@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.HandleTypes
 import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.typeCheckFunctionDefinition
 import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
@@ -73,7 +74,10 @@ class TypeCheckExpressionStatementTests {
     @Test
     fun resumeHasNothingType() {
         val node = resume(literalBool())
-        val type = typeCheckFunctionStatement(node, typeContext(resumeValueType = BoolType))
+
+        val context = typeContext(handle = HandleTypes(resumeValueType = BoolType, stateType = null))
+        val type = typeCheckFunctionStatement(node, context)
+
         assertThat(type, isNothingType)
     }
 
@@ -81,8 +85,9 @@ class TypeCheckExpressionStatementTests {
     fun whenResumeValueIsWrongTypeThenErrorIsThrown() {
         val node = resume(literalBool())
 
+        val context = typeContext(handle = HandleTypes(resumeValueType = IntType, stateType = null))
         assertThat(
-            { typeCheckFunctionStatement(node, typeContext(resumeValueType = IntType)) },
+            { typeCheckFunctionStatement(node, context) },
             throws(allOf(
                 has(UnexpectedTypeError::expected, cast(isIntType)),
                 has(UnexpectedTypeError::actual, isBoolType)

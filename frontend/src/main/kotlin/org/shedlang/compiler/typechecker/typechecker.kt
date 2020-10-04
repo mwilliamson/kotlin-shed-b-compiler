@@ -15,7 +15,7 @@ internal fun newTypeContext(
     return TypeContext(
         moduleName = moduleName,
         effect = EmptyEffect,
-        resumeValueType = null,
+        handle = null,
         expressionTypes = expressionTypes,
         targetTypes = mutableMapOf(),
         variableTypes = nodeTypes.toMutableMap(),
@@ -28,10 +28,12 @@ internal fun newTypeContext(
     )
 }
 
+internal class HandleTypes(val resumeValueType: Type, val stateType: Type?)
+
 internal class TypeContext(
     val moduleName: ModuleName?,
     val effect: Effect,
-    val resumeValueType: Type?,
+    val handle: HandleTypes?,
     private val variableTypes: MutableMap<Int, Type>,
     private val refinedVariableTypes: MutableMap<Int, Type>,
     private val functionTypes: MutableMap<Int, FunctionType>,
@@ -128,11 +130,11 @@ internal class TypeContext(
         targetTypes[target.nodeId] = type
     }
 
-    fun enterFunction(function: FunctionNode, effect: Effect, resumeValueType: Type?): TypeContext {
+    fun enterFunction(function: FunctionNode, effect: Effect, handle: HandleTypes?): TypeContext {
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
-            resumeValueType = resumeValueType,
+            handle = handle,
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = variableTypes,
@@ -149,7 +151,7 @@ internal class TypeContext(
         return TypeContext(
             moduleName = moduleName,
             effect = effectUnion(effect, extraEffect),
-            resumeValueType = resumeValueType,
+            handle = handle,
             expressionTypes = expressionTypes,
             targetTypes = targetTypes,
             variableTypes = variableTypes,
@@ -187,7 +189,7 @@ internal class TypeContext(
         return TypeContext(
             moduleName = moduleName,
             effect = effect,
-            resumeValueType = resumeValueType,
+            handle = handle,
             variableTypes = variableTypes.toMutableMap(),
             refinedVariableTypes = refinedVariableTypes.toMutableMap(),
             functionTypes = functionTypes.toMutableMap(),
@@ -360,7 +362,7 @@ internal fun typeCheckFunction(
     function: FunctionNode,
     context: TypeContext,
     hint: Type? = null,
-    resumeValueType: Type? = null,
+    handle: HandleTypes? = null,
     implicitEffect: Effect = EmptyEffect
 ): FunctionType {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
@@ -390,7 +392,7 @@ internal fun typeCheckFunction(
     val actualReturnType = lazy {
         val bodyContext = context.enterFunction(
             function,
-            resumeValueType = resumeValueType,
+            handle = handle,
             effect = effect
         )
         typeCheckBlock(body, bodyContext)

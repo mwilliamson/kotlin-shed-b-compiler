@@ -308,7 +308,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         val handlerType = typeCheckFunction(
             handler.function,
             context,
-            resumeValueType = operationType.returns,
+            handle = HandleTypes(resumeValueType = operationType.returns, stateType = null),
             implicitEffect = context.effect
         )
         context.addExpressionType(handler.function, handlerType)

@@ -346,15 +346,7 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         }
 
         override fun visit(node: ResumeNode): Type {
-            val type = inferType(node.expression, context)
-
-            verifyType(
-                // TODO: check that we can resume in this context
-                expected = context.resumeValueType!!,
-                actual = type,
-                source = node.source
-            )
-            return NothingType
+            return typeCheckResume(node, context)
         }
 
         override fun visit(node: ValNode): Type {
@@ -377,6 +369,25 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
             return UnitType
         }
     })
+}
+
+private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType {
+    val type = inferType(node.expression, context)
+
+    // TODO: check that we can resume in this context
+    val handle = context.handle!!
+
+    verifyType(
+        expected = handle.resumeValueType,
+        actual = type,
+        source = node.source
+    )
+
+    if (node.newState != null && handle.stateType == null) {
+        throw CannotResumeWithStateInStatelessHandle(source = node.source)
+    }
+
+    return NothingType
 }
 
 private fun typeCheck(node: ValNode, context: TypeContext) {

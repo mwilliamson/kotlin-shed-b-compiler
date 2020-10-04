@@ -447,7 +447,7 @@ class TypeCheckFunctionTests {
             referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         )
 
-        val functionContext = typeContext.enterFunction(function(), resumeValueType = null, effect = EmptyEffect)
+        val functionContext = typeContext.enterFunction(function(), handle = null, effect = EmptyEffect)
         typeCheckFunctionStatement(node, functionContext)
         typeContext.undefer()
         assertThat(

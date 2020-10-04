@@ -2,9 +2,11 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
@@ -316,4 +318,47 @@ class TypeCheckHandleTests {
         )))
     }
 
+    @Nested
+    inner class WithStateTests {
+        private val effect = userDefinedEffect(
+            name = Identifier("Get"),
+            getOperations = { effect ->
+                mapOf(
+                    Identifier("get") to functionType(
+                        positionalParameters = listOf(StringType),
+                        effect = effect,
+                        returns = IntType
+                    )
+                )
+            }
+        )
+        private val effectReference = staticReference("Get")
+
+        @Test
+        fun whenHandleHasNoStateThenResumeWithNewStateThrowsError() {
+            val stringReference = staticReference("String")
+
+            val expression = handle(
+                effect = effectReference,
+                body = block(listOf()),
+                handlers = listOf(
+                    handler("get", functionExpression(
+                        parameters = listOf(parameter(type = stringReference)),
+                        body = listOf(
+                            resume(expression = literalInt(), newState = literalUnit())
+                        ),
+                        inferReturnType = true
+                    ))
+                )
+            )
+
+            val context = typeContext(
+                referenceTypes = mapOf(
+                    stringReference to metaType(StringType),
+                    effectReference to effectType(effect)
+                )
+            )
+            assertThat({ inferType(expression, context) }, throwsException<CannotResumeWithStateInStatelessHandle>())
+        }
+    }
 }
