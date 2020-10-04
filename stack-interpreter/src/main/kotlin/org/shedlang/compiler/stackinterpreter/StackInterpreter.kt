@@ -180,8 +180,17 @@ internal fun createScopeReference(): ScopeReference {
 
 internal typealias Bindings = PersistentMap<ScopeReference, PersistentMap<Int, InterpreterValue>>
 
+private var nextHandleStateId = 1
+
+data class HandleStateReference(private val handleStateId: Int)
+
+internal fun createHandleStateReference(): HandleStateReference {
+    return HandleStateReference(nextHandleStateId++)
+}
+
 internal data class EffectHandler(
-    val operationHandlers: Map<Identifier, InterpreterValue>
+    val operationHandlers: Map<Identifier, InterpreterValue>,
+    val stateReference: HandleStateReference?,
 )
 
 internal data class CallFrame(
@@ -267,6 +276,8 @@ internal data class InterpreterState(
     private val image: Image,
     private val callStack: Stack<CallFrame>,
     private val modules: PersistentMap<ModuleName, InterpreterModule>,
+    // TODO: GC
+    private val effectHandleStates: PersistentMap<HandleStateReference, InterpreterValue>,
     private val nativeContext: PersistentMap<ModuleName, Any>,
     private val world: World,
     private val labelToInstructionIndex: MutableMap<Int, Int>
@@ -322,10 +333,18 @@ internal data class InterpreterState(
             if (effectHandler == null) {
                 newCallStack = newCallStack.discard()
             } else {
+                val stateReference = effectHandler.stateReference
+                val stateArguments = if (stateReference == null) {
+                    listOf()
+                } else {
+                    val state = effectHandleStates[stateReference]!!
+                    listOf(state)
+                }
+
                 return call(
                     copy(callStack = newCallStack.discard()),
                     receiver = effectHandler.operationHandlers.getValue(operationName),
-                    positionalArguments = positionalArguments,
+                    positionalArguments = stateArguments + positionalArguments,
                     namedArguments = namedArguments,
                     resume = callStack
                 )
@@ -333,9 +352,10 @@ internal data class InterpreterState(
         }
     }
 
-    fun resume(value: InterpreterValue): InterpreterState {
+    fun resume(value: InterpreterValue, newState: InterpreterValue? = null): InterpreterState {
         return copy(
-            callStack = currentCallFrame().resume!!
+            callStack = currentCallFrame().resume!!,
+
         ).pushTemporary(value)
     }
 
@@ -392,6 +412,10 @@ internal data class InterpreterState(
 
     fun isModuleInitialised(moduleName: ModuleName): Boolean {
         return modules.containsKey(moduleName)
+    }
+
+    fun addHandleState(handleStateReference: HandleStateReference, initialHandleState: InterpreterValue): InterpreterState {
+        return copy(effectHandleStates = effectHandleStates.put(handleStateReference, initialHandleState))
     }
 
     fun enterModuleScope(instructions: List<Instruction>): InterpreterState {
@@ -464,6 +488,7 @@ internal fun initialState(
         callStack = stackOf(),
         nativeContext = persistentMapOf(),
         modules = loadNativeModules(),
+        effectHandleStates = persistentMapOf(),
         world = world,
         labelToInstructionIndex = mutableMapOf()
     ).enterModuleScope(instructions)
@@ -606,13 +631,27 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
         is EffectHandle -> {
             val (state2, handlerValues) = initialState.popTemporaries(effect.operations.size)
+            val (state3, handleStateReference) = if (hasState) {
+                val handleStateReference = createHandleStateReference()
+                val (state3, value) = state2.popTemporary()
+                Pair(
+                    state3.addHandleState(handleStateReference, value),
+                    handleStateReference,
+                )
+            } else {
+                Pair(state2, null)
+            }
+
+
             val operationHandlers = effect.operations.keys.sorted().zip(handlerValues).toMap()
-            val effectHandler = EffectHandler(operationHandlers = operationHandlers)
-            state2.nextInstruction().enter(
-                instructions = instructions + listOf(Return),
-                parentScopes = state2.currentScopes(),
-                effectHandlers = mapOf(effect.definitionId to effectHandler)
-            )
+            val effectHandler = EffectHandler(operationHandlers = operationHandlers, stateReference = handleStateReference)
+            state3
+                .nextInstruction()
+                .enter(
+                    instructions = instructions + listOf(Return),
+                    parentScopes = state3.currentScopes(),
+                    effectHandlers = mapOf(effect.definitionId to effectHandler),
+                )
         }
 
         is Exit -> {
@@ -750,6 +789,12 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         is Resume -> {
             val (state2, value) = initialState.popTemporary()
             state2.resume(value)
+        }
+
+        is ResumeWithState -> {
+            val (state2, newState) = initialState.popTemporary()
+            val (state3, value) = state2.popTemporary()
+            state3.resume(value, newState)
         }
 
         is Return -> {

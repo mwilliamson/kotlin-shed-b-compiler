@@ -567,6 +567,10 @@ internal class Compiler(
                 return context2.addInstructions(effects.resume(returnVariable))
             }
 
+            is ResumeWithState -> {
+                throw NotImplementedError()
+            }
+
             is Return -> {
                 val (context2, returnVariable) = context.popTemporary()
 

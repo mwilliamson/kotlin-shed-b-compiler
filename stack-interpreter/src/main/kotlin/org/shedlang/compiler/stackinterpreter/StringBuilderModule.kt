@@ -25,7 +25,8 @@ internal val stringBuilderModule = createNativeModule(
                         stringBuilder.append(value.value)
                         state.copy(callStack = resume).pushTemporary(InterpreterUnit)
                     }
-                )
+                ),
+                stateReference = null,
             )
             state.enter(
                 instructions = listOf(

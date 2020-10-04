@@ -401,16 +401,25 @@ class Loader(
             override fun visit(node: HandleNode): PersistentList<Instruction> {
                 val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as UserDefinedEffect
 
+                val initialState = node.initialState
+                val stateInstructions = if (initialState == null) {
+                    persistentListOf<Instruction>()
+                } else {
+                    loadExpression(initialState)
+                }
+
                 val operationHandlerInstructions = node.handlers
                     .map { handler -> loadFunctionValue(handler.function) }
 
                 val body = loadBlock(node.body)
                 val effectHandleInstruction = EffectHandle(
                     effect = effect,
-                    instructions = body
+                    instructions = body,
+                    hasState = initialState != null,
                 )
 
                 return persistentListOf<Instruction>()
+                    .addAll(stateInstructions)
                     .addAll(operationHandlerInstructions)
                     .add(effectHandleInstruction)
             }
@@ -489,7 +498,17 @@ class Loader(
 
             override fun visit(node: ResumeNode): PersistentList<Instruction> {
                 val expressionInstructions = loadExpression(node.expression)
-                return expressionInstructions.add(Resume)
+
+                val newState = node.newState
+                if (newState == null) {
+                    return expressionInstructions.add(Resume)
+                } else {
+                    val newStateInstructions = loadExpression(newState)
+
+                    return expressionInstructions
+                        .addAll(newStateInstructions)
+                        .add(ResumeWithState)
+                }
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {

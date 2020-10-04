@@ -77,7 +77,8 @@ class EffectDefine(val effect: UserDefinedEffect): Instruction()
 
 class EffectHandle(
     val effect: UserDefinedEffect,
-    val instructions: List<Instruction>
+    val instructions: List<Instruction>,
+    val hasState: Boolean,
 ): Instruction()
 
 object Exit: Instruction()
@@ -134,6 +135,8 @@ class PushValue(val value: IrValue): Instruction()
 
 object Resume: Instruction()
 
+object ResumeWithState: Instruction()
+
 object Return: Instruction()
 
 object StringAdd: Instruction()
@@ -170,7 +173,8 @@ fun Instruction.mapChildren(func: (List<Instruction>) -> PersistentList<Instruct
         )
         is EffectHandle -> EffectHandle(
             effect = effect,
-            instructions = func(instructions)
+            instructions = func(instructions),
+            hasState = hasState,
         )
         else -> this
     }
