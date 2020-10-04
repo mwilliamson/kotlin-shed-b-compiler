@@ -3,11 +3,9 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.frontend.tests.throwsException
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.HandleTypes
-import org.shedlang.compiler.typechecker.UnexpectedTypeError
-import org.shedlang.compiler.typechecker.typeCheckFunctionDefinition
-import org.shedlang.compiler.typechecker.typeCheckFunctionStatement
+import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*
 
 class TypeCheckExpressionStatementTests {
@@ -92,6 +90,17 @@ class TypeCheckExpressionStatementTests {
                 has(UnexpectedTypeError::expected, cast(isIntType)),
                 has(UnexpectedTypeError::actual, isBoolType)
             ))
+        )
+    }
+
+    @Test
+    fun resumeOutsideOfHandlerThrowsError() {
+        val node = resume()
+
+        val context = typeContext(handle = null)
+        assertThat(
+            { typeCheckFunctionStatement(node, context) },
+            throwsException<CannotResumeOutsideOfHandler>(),
         )
     }
 }

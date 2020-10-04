@@ -375,7 +375,10 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
     val type = inferType(node.expression, context)
 
     // TODO: check that we can resume in this context
-    val handle = context.handle!!
+    val handle = context.handle
+    if (handle == null) {
+        throw CannotResumeOutsideOfHandler(source = node.source)
+    }
 
     verifyType(
         expected = handle.resumeValueType,

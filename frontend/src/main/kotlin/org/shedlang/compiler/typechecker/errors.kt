@@ -113,6 +113,10 @@ class ResumeMissingNewStateError(source: Source): TypeCheckError(
     "resume is missing new state in stateful handle",
     source = source,
 )
+class CannotResumeOutsideOfHandler(source: Source): TypeCheckError(
+    "cannot resume outside of handler",
+    source = source,
+)
 class ModuleNotFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("Module not found: " + name.map(Identifier::value).joinToString("."), source = source)
 class MultipleModulesWithSameNameFoundError(val name: ModuleName, source: Source)
