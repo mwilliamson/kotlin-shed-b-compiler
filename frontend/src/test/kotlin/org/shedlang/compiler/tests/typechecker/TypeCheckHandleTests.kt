@@ -333,6 +333,8 @@ class TypeCheckHandleTests {
             }
         )
         private val effectReference = staticReference("Get")
+        private val boolReference = staticReference("Bool")
+        private val stringReference = staticReference("String")
 
         @Test
         fun whenHandleHasNoStateThenResumeWithNewStateThrowsError() {
@@ -340,6 +342,7 @@ class TypeCheckHandleTests {
 
             val expression = handle(
                 effect = effectReference,
+                initialState = null,
                 body = block(listOf()),
                 handlers = listOf(
                     handler("get", functionExpression(
@@ -363,15 +366,13 @@ class TypeCheckHandleTests {
 
         @Test
         fun whenHandleHasStateThenResumeWithoutNewStateThrowsError() {
-            val stringReference = staticReference("String")
-
             val expression = handle(
                 effect = effectReference,
-                initialState = literalInt(),
+                initialState = literalBool(),
                 body = block(listOf()),
                 handlers = listOf(
                     handler("get", functionExpression(
-                        parameters = listOf(parameter(type = stringReference)),
+                        parameters = listOf(parameter(type = boolReference), parameter(type = stringReference)),
                         body = listOf(
                             resume(expression = literalInt(), newState = null)
                         ),
@@ -382,11 +383,42 @@ class TypeCheckHandleTests {
 
             val context = typeContext(
                 referenceTypes = mapOf(
+                    boolReference to metaType(BoolType),
                     stringReference to metaType(StringType),
                     effectReference to effectType(effect)
                 )
             )
             assertThat({ inferType(expression, context) }, throwsException<ResumeMissingNewStateError>())
+        }
+
+        @Test
+        fun whenHandleHasStateThenResumeWithWrongNewStateTypeThrowsError() {
+            val expression = handle(
+                effect = effectReference,
+                initialState = literalBool(),
+                body = block(listOf()),
+                handlers = listOf(
+                    handler("get", functionExpression(
+                        parameters = listOf(parameter(type = boolReference), parameter(type = stringReference)),
+                        body = listOf(
+                            resume(expression = literalInt(), newState = literalInt())
+                        ),
+                        inferReturnType = true
+                    ))
+                )
+            )
+
+            val context = typeContext(
+                referenceTypes = mapOf(
+                    boolReference to metaType(BoolType),
+                    stringReference to metaType(StringType),
+                    effectReference to effectType(effect)
+                )
+            )
+            assertThat({ inferType(expression, context) }, throwsException(allOf(
+                has(UnexpectedTypeError::expected, cast(isBoolType)),
+                has(UnexpectedTypeError::actual, isIntType),
+            )))
         }
     }
 }

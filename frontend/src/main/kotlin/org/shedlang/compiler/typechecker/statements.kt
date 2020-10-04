@@ -383,10 +383,18 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
         source = node.source
     )
 
-    if (node.newState != null && handle.stateType == null) {
+    val newState = node.newState
+    if (newState != null && handle.stateType == null) {
         throw CannotResumeWithStateInStatelessHandleError(source = node.source)
-    } else if (node.newState == null && handle.stateType != null) {
+    } else if (newState == null && handle.stateType != null) {
         throw ResumeMissingNewStateError(source = node.source)
+    } else if (newState != null && handle.stateType != null) {
+        val newStateType = inferType(newState, context, hint = handle.stateType)
+        verifyType(
+            expected = handle.stateType,
+            actual = newStateType,
+            source = newState.source,
+        )
     }
 
     return NothingType
