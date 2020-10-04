@@ -420,5 +420,34 @@ class TypeCheckHandleTests {
                 has(UnexpectedTypeError::actual, isIntType),
             )))
         }
+
+        @Test
+        fun handlerForStatefulHandleTakesStateAsFirstArgument() {
+            val expression = handle(
+                effect = effectReference,
+                initialState = literalBool(),
+                body = block(listOf()),
+                handlers = listOf(
+                    handler("get", functionExpression(
+                        parameters = listOf(parameter(type = boolReference), parameter(type = stringReference)),
+                        body = listOf(
+                            resume(expression = literalInt(), newState = literalBool())
+                        ),
+                        inferReturnType = true
+                    ))
+                )
+            )
+
+            val context = typeContext(
+                referenceTypes = mapOf(
+                    boolReference to metaType(BoolType),
+                    stringReference to metaType(StringType),
+                    effectReference to effectType(effect)
+                )
+            )
+            val type = inferType(expression, context)
+
+            assertThat(type, isUnitType)
+        }
     }
 }

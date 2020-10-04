@@ -320,8 +320,18 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         )
         context.addExpressionType(handler.function, handlerType)
 
+        val operationPositionalParameters = if (stateType == null) {
+            operationType.positionalParameters
+        } else {
+            listOf(stateType) + operationType.positionalParameters
+        }
+
         verifyType(
-            expected = operationType.copy(effect = context.effect, returns = AnyType),
+            expected = operationType.copy(
+                positionalParameters = operationPositionalParameters,
+                effect = context.effect,
+                returns = AnyType,
+            ),
             actual = handlerType,
             source = handler.source
         )
