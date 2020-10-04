@@ -1,0 +1,26 @@
+// stdout:
+//   0
+//   42
+
+export main;
+
+fun main() !Io -> Unit {
+    effect Eff {
+        .get: () -> Int,
+        .set: (Int) -> Unit,
+    }
+
+    handle Eff withstate(0) {
+        print!(intToString(Eff.get!()) + "\n");
+        Eff.set!(42);
+        print!(intToString(Eff.get!()) + "\n");
+    } on {
+        .get = (state: Int) {
+            resume state withstate state
+        },
+
+        .set = (state: Int, newState: Int) {
+            resume unit withstate newState
+        }
+    }
+}

@@ -199,6 +199,7 @@ internal data class CallFrame(
     private val temporaryStack: Stack<InterpreterValue>,
     private val effectHandlers: Map<Int, EffectHandler>,
     internal val resume: Stack<CallFrame>? = null,
+    internal val handleStateReference: HandleStateReference? = null,
     internal val scopes: PersistentList<ScopeReference>
 ) {
     fun currentInstruction(): Instruction? {
@@ -346,16 +347,25 @@ internal data class InterpreterState(
                     receiver = effectHandler.operationHandlers.getValue(operationName),
                     positionalArguments = stateArguments + positionalArguments,
                     namedArguments = namedArguments,
-                    resume = callStack
+                    resume = callStack,
+                    handleStateReference = effectHandler.stateReference,
                 )
             }
         }
     }
 
     fun resume(value: InterpreterValue, newState: InterpreterValue? = null): InterpreterState {
-        return copy(
-            callStack = currentCallFrame().resume!!,
+        val currentCallFrame = currentCallFrame()
 
+        val newEffectHandleStates = if (newState == null) {
+            effectHandleStates
+        } else {
+            effectHandleStates.put(currentCallFrame.handleStateReference!!, newState)
+        }
+
+        return copy(
+            callStack = currentCallFrame.resume!!,
+            effectHandleStates = newEffectHandleStates,
         ).pushTemporary(value)
     }
 
@@ -426,7 +436,8 @@ internal data class InterpreterState(
         instructions: List<Instruction>,
         parentScopes: PersistentList<ScopeReference>,
         effectHandlers: Map<Int, EffectHandler> = mapOf(),
-        resume: Stack<CallFrame>? = null
+        resume: Stack<CallFrame>? = null,
+        handleStateReference: HandleStateReference? = null,
     ): InterpreterState {
         val newScope = createScopeReference()
         val frame = CallFrame(
@@ -435,7 +446,8 @@ internal data class InterpreterState(
             scopes = parentScopes.add(newScope),
             temporaryStack = stackOf(),
             effectHandlers = effectHandlers,
-            resume = resume
+            resume = resume,
+            handleStateReference = handleStateReference,
         )
         return copy(
             bindings = bindings.put(newScope, persistentMapOf()),
@@ -905,7 +917,8 @@ internal fun call(
     receiver: InterpreterValue,
     positionalArguments: List<InterpreterValue>,
     namedArguments: Map<Identifier, InterpreterValue>,
-    resume: Stack<CallFrame>? = null
+    resume: Stack<CallFrame>? = null,
+    handleStateReference: HandleStateReference? = null,
 ): InterpreterState {
     return when (receiver) {
         is InterpreterFunction -> {
@@ -913,7 +926,8 @@ internal fun call(
                 state.enter(
                     instructions = receiver.bodyInstructions,
                     parentScopes = receiver.scopes,
-                    resume = resume
+                    resume = resume,
+                    handleStateReference = handleStateReference,
                 ),
                 { state, (parameter, argument) ->
                     state.storeLocal(parameter.variableId, argument)
