@@ -789,7 +789,7 @@ data class ResumeNode(
         get() = true
 
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.eval(expression))
+        get() = listOf(NodeStructures.eval(expression)) + newState.mapNullable(NodeStructures::eval).nullableToList()
 
     override fun <T> accept(visitor: FunctionStatementNode.Visitor<T>): T {
         return visitor.visit(this)
