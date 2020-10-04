@@ -105,9 +105,13 @@ class UnknownOperationError(val effect: Effect, val operationName: Identifier, s
     "effect ${effect.shortDescription} has no operation ${operationName.value}",
     source = source
 )
-class CannotResumeWithStateInStatelessHandle(source: Source): TypeCheckError(
+class CannotResumeWithStateInStatelessHandleError(source: Source): TypeCheckError(
     "cannot resume with state in stateless handle",
     source = source
+)
+class ResumeMissingNewStateError(source: Source): TypeCheckError(
+    "resume is missing new state in stateful handle",
+    source = source,
 )
 class ModuleNotFoundError(val name: ModuleName, source: Source)
     : TypeCheckError("Module not found: " + name.map(Identifier::value).joinToString("."), source = source)

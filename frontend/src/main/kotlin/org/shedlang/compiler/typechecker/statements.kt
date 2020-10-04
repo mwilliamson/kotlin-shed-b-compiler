@@ -384,7 +384,9 @@ private fun typeCheckResume(node: ResumeNode, context: TypeContext): NothingType
     )
 
     if (node.newState != null && handle.stateType == null) {
-        throw CannotResumeWithStateInStatelessHandle(source = node.source)
+        throw CannotResumeWithStateInStatelessHandleError(source = node.source)
+    } else if (node.newState == null && handle.stateType != null) {
+        throw ResumeMissingNewStateError(source = node.source)
     }
 
     return NothingType

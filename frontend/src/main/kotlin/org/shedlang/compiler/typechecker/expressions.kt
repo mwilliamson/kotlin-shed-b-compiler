@@ -293,6 +293,13 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         throw ExpectedUserDefinedEffectError(source = node.effect.source)
     }
 
+    val initialState = node.initialState
+    val stateType = if (initialState == null) {
+        null
+    } else {
+        inferType(initialState, context)
+    }
+
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
     val handlerReturnTypes = node.handlers.map { handler ->
@@ -308,7 +315,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         val handlerType = typeCheckFunction(
             handler.function,
             context,
-            handle = HandleTypes(resumeValueType = operationType.returns, stateType = null),
+            handle = HandleTypes(resumeValueType = operationType.returns, stateType = stateType),
             implicitEffect = context.effect
         )
         context.addExpressionType(handler.function, handlerType)

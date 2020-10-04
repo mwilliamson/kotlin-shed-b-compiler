@@ -358,7 +358,35 @@ class TypeCheckHandleTests {
                     effectReference to effectType(effect)
                 )
             )
-            assertThat({ inferType(expression, context) }, throwsException<CannotResumeWithStateInStatelessHandle>())
+            assertThat({ inferType(expression, context) }, throwsException<CannotResumeWithStateInStatelessHandleError>())
+        }
+
+        @Test
+        fun whenHandleHasStateThenResumeWithoutNewStateThrowsError() {
+            val stringReference = staticReference("String")
+
+            val expression = handle(
+                effect = effectReference,
+                initialState = literalInt(),
+                body = block(listOf()),
+                handlers = listOf(
+                    handler("get", functionExpression(
+                        parameters = listOf(parameter(type = stringReference)),
+                        body = listOf(
+                            resume(expression = literalInt(), newState = null)
+                        ),
+                        inferReturnType = true
+                    ))
+                )
+            )
+
+            val context = typeContext(
+                referenceTypes = mapOf(
+                    stringReference to metaType(StringType),
+                    effectReference to effectType(effect)
+                )
+            )
+            assertThat({ inferType(expression, context) }, throwsException<ResumeMissingNewStateError>())
         }
     }
 }
