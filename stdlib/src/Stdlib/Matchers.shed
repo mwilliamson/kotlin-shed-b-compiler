@@ -94,19 +94,21 @@ fun isSome[T](matcher: Matcher[T]) -> Matcher[Option[T]] {
     Matcher(
         .description = "some with value:" + indent("\n" + matcher.description),
         .match = fun (actual: Option[T]) -> Result {
-            // TODO: use when
-            if (actual is Some[T]) {
-                val matchResult = matcher.match(actual.value);
-                when (matchResult) {
-                    is Success {
-                        matchResult
-                    }
-                    is Failure {
-                        failure("some with value:" + indent("\n" + matchResult.message))
+            when (actual) {
+                is Some {
+                    val matchResult = matcher.match(actual.value);
+                    when (matchResult) {
+                        is Success {
+                            matchResult
+                        }
+                        is Failure {
+                            failure("some with value:" + indent("\n" + matchResult.message))
+                        }
                     }
                 }
-            } else {
-                failure("was none")
+                is None {
+                    failure("was none")
+                }
             }
         }
     )
