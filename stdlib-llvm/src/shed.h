@@ -64,11 +64,16 @@ struct EffectHandler {
     EffectId effect_id;
     struct EffectHandler* next;
     jmp_buf* exit_env;
+    ShedValue child_state;
     struct OperationHandler operation_handlers[];
 };
 
 void shed_effect_handlers_discard();
-struct EffectHandler* shed_effect_handlers_push(EffectId effect_id, OperationIndex operation_count, jmp_buf* env);
+struct EffectHandler* shed_effect_handlers_push(
+    EffectId effect_id,
+    OperationIndex operation_count,
+    jmp_buf* env
+);
 void shed_effect_handlers_set_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index,

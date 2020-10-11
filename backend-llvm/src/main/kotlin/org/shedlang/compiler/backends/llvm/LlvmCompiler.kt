@@ -363,14 +363,20 @@ internal class Compiler(
 
             is EffectHandle -> {
                 val (context2, operationHandlers) = context.popTemporaries(instruction.effect.operations.size)
+                val (context3, initialState) = if (instruction.hasState) {
+                    context2.popTemporary()
+                } else {
+                    Pair(context2, null)
+                }
 
-                val (context3, result) = effects.handle(
+                val (context4, result) = effects.handle(
                     effect = instruction.effect,
                     compileBody = { context -> compileInstructions(instruction.instructions, context) },
                     operationHandlers = operationHandlers,
-                    context = context2
+                    initialState = initialState,
+                    context = context3
                 )
-                return context3.pushTemporary(result)
+                return context4.pushTemporary(result)
             }
 
             is Exit -> {
@@ -568,7 +574,10 @@ internal class Compiler(
             }
 
             is ResumeWithState -> {
-                throw NotImplementedError()
+                val (context2, newStateVariable) = context.popTemporary()
+                val (context3, returnVariable) = context2.popTemporary()
+
+                return context3.addInstructions(effects.resumeWithState(returnVariable, newStateVariable))
             }
 
             is Return -> {

@@ -25,6 +25,14 @@ ShedValue shed_operation_handler_exit(ShedValue exit_value) {
     longjmp(*effect_handler_stack->exit_env, 1);
 }
 
+void shed_effect_handlers_set_state(ShedValue state) {
+    effect_handler_stack->child_state = state;
+}
+
+ShedValue shed_effect_handlers_get_state(void) {
+    return effect_handler_stack->child_state;
+}
+
 struct EffectHandler* shed_effect_handlers_push(
     EffectId effect_id,
     OperationIndex operation_count,
@@ -36,6 +44,7 @@ struct EffectHandler* shed_effect_handlers_push(
     effect_handler->effect_id = effect_id;
     effect_handler->next = effect_handler_stack;
     effect_handler->exit_env = 0;
+    effect_handler->child_state = shed_unit;
     effect_handler_stack = effect_handler;
     return effect_handler;
 }
