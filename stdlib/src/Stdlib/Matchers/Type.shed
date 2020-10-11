@@ -8,7 +8,7 @@ import @(
     .Failure as Failure,
     .failure as failure,
 ) from .Core;
-import UnicodeScalars from Stdlib.Strings.UnicodeScalars;
+import @(.indent as indent) from .Formatting;
 
 fun has[T, U](
     featureName: String,
@@ -90,7 +90,3 @@ fun isTypeWith[T, U](
     )
 }
 
-// TODO: remove indent duplication
-fun indent(value: String) -> String {
-    UnicodeScalars.replace("\n", "\n  ", value)
-}

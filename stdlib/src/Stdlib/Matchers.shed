@@ -37,6 +37,7 @@ import @(
     .isInt as isInt,
     .isString as isString,
 ) from .Matchers.Equality;
+import @(.indent as indent) from .Matchers.Formatting;
 import @(
     .has as has,
     .hasField as hasField,
@@ -114,7 +115,3 @@ fun isSome[T](matcher: Matcher[T]) -> Matcher[Option[T]] {
     )
 }
 
-// TODO: remove indent duplication
-fun indent(value: String) -> String {
-    UnicodeScalars.replace("\n", "\n  ", value)
-}

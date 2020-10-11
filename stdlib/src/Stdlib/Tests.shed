@@ -2,7 +2,7 @@ export assert, assertStringEquals, assertThat, fail, Test, TestCase, TestSuite, 
 
 import Lists from .Lists;
 import Matchers from .Matchers;
-import UnicodeScalars from .Strings.UnicodeScalars;
+import @(.indent as indent) from .Matchers.Formatting;
 
 shape AssertionError {
     message: String,
@@ -193,7 +193,3 @@ fun runTest(test: Test, .parent: Option[String]) !Io -> TestResult {
     }
 }
 
-// TODO: remove indent duplication
-fun indent(value: String) -> String {
-    UnicodeScalars.replace("\n", "\n  ", value)
-}

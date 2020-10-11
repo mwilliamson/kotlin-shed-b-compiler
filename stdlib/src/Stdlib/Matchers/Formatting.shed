@@ -1,0 +1,7 @@
+export indent;
+
+import UnicodeScalars from Stdlib.Strings.UnicodeScalars;
+
+fun indent(value: String) -> String {
+    UnicodeScalars.replace("\n", "\n  ", value)
+}
