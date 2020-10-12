@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.python
 
 import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.*
 import org.shedlang.compiler.backends.python.ast.*
@@ -10,7 +9,6 @@ import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.Discriminator
 import org.shedlang.compiler.types.EmptyFunctionType
 import org.shedlang.compiler.types.ShapeType
-import org.shedlang.compiler.types.rawValue
 
 // TODO: check that builtins aren't renamed
 // TODO: check imports aren't renamed
@@ -198,7 +196,7 @@ private fun generateCodeForEffectDefinition(node: EffectDefinitionNode, context:
                                     PythonIntegerLiteralNode(effectId, source = operationSource),
                                     PythonStringLiteralNode(pythoniseName(operation.name), source = operationSource),
                                     PythonVariableReferenceNode("*operation_args", source = operationSource),
-                                    PythonVariableReferenceNode("**operation_kwargs", source = operationSource)
+                                    PythonVariableReferenceNode("**operation_kwargs", source = operationSource),
                                 ),
                                 keywordArguments = listOf(),
                                 source = operationSource
@@ -274,39 +272,51 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
 
     val effectHandlerPush = GeneratedCode.flatten(node.handlers.map { handler ->
         generateExpressionCode(handler.function, context)
-    }).toStatements { operationHandlers ->
-        listOf(
-            assign(
-                effectHandlerName,
-                PythonFunctionCallNode(
-                    function = PythonVariableReferenceNode("_effect_handler_push", source = handleSource),
-                    arguments = listOf(
-                        generateCode(node.effect, context),
-                        PythonFunctionCallNode(
-                            // TODO: handle shed variables called dict
-                            function = PythonVariableReferenceNode("dict", source = handleSource),
-                            arguments = listOf(),
-                            keywordArguments = node.handlers.mapIndexed { operationIndex, handler ->
-                                val handlerSource = NodeSource(handler)
+    }).flatMap { operationHandlers ->
+        val initialState = node.initialState
+        if (initialState == null) {
+            GeneratedCode.pure(listOf())
+        } else {
+            generateExpressionCode(initialState, context).pureMap { initialState ->
+                listOf(
+                    setState(initialState, source = handleSource)
+                )
+            }
+        }.pureMap { Pair(operationHandlers, it) }
 
-                                pythoniseName(handler.operationName) to PythonFunctionCallNode(
-                                    function = PythonVariableReferenceNode("_effect_handler_create_operation_handler", source = handlerSource),
-                                    arguments = listOf(
-                                        operationHandlers[operationIndex]
-                                    ),
-                                    keywordArguments = listOf(),
-                                    source = handlerSource
-                                )
-                            },
-                            source = handleSource
-                        )
-                    ),
-                    keywordArguments = listOf(),
-                    source = handleSource
+    }.toStatements { (operationHandlers, setState) ->
+        val pushEffectHandler = assign(
+            effectHandlerName,
+            PythonFunctionCallNode(
+                function = PythonVariableReferenceNode("_effect_handler_push", source = handleSource),
+                arguments = listOf(
+                    generateCode(node.effect, context),
+                    PythonFunctionCallNode(
+                        // TODO: handle shed variables called dict
+                        function = PythonVariableReferenceNode("dict", source = handleSource),
+                        arguments = listOf(),
+                        keywordArguments = node.handlers.mapIndexed { operationIndex, handler ->
+                            val handlerSource = NodeSource(handler)
+
+                            pythoniseName(handler.operationName) to PythonFunctionCallNode(
+                                function = PythonVariableReferenceNode("_effect_handler_create_operation_handler", source = handlerSource),
+                                arguments = listOf(
+                                    operationHandlers[operationIndex]
+                                ),
+                                keywordArguments = listOf(),
+                                source = handlerSource
+                            )
+                        },
+                        source = handleSource
+                    )
                 ),
+                keywordArguments = listOf(),
                 source = handleSource
-            )
+            ),
+            source = handleSource
         )
+
+        setState + listOf(pushEffectHandler)
     }
 
     val tryStatement = PythonTryNode(
@@ -336,6 +346,18 @@ private fun generateCodeForHandle(node: HandleNode, context: CodeGenerationConte
     )
 
     return effectHandlerPush + listOf(tryStatement)
+}
+
+private fun setState(state: PythonExpressionNode, source: NodeSource): PythonExpressionStatementNode {
+    return PythonExpressionStatementNode(
+        PythonFunctionCallNode(
+            function = PythonVariableReferenceNode("_effect_handler_set_state", source = source),
+            arguments = listOf(state),
+            keywordArguments = listOf(),
+            source = source,
+        ),
+        source = source,
+    )
 }
 
 private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationContext): PythonClassNode {
@@ -591,12 +613,44 @@ internal fun generateCodeForFunctionStatement(
         }
 
         override fun visit(node: ResumeNode): List<PythonStatementNode> {
-            return generateStatementCodeForExpression(
-                node.expression,
-                context,
-                returnValue = returnValue,
-                source = NodeSource(node)
-            )
+            val newState = node.newState
+
+            if (newState == null) {
+                return generateStatementCodeForExpression(
+                    node.expression,
+                    context,
+                    returnValue = returnValue,
+                    source = NodeSource(node)
+                )
+            } else {
+                val valueVariableName = context.freshName("value")
+                val newStateVariableName = context.freshName("new_state")
+                val valueStatements = generateStatementCodeForExpression(
+                    node.expression,
+                    context,
+                    returnValue = { returnValue, returnSource ->
+                        listOf(assign(valueVariableName, returnValue, source = returnSource))
+                    },
+                    source = NodeSource(node)
+                )
+                val newStateStatements = generateStatementCodeForExpression(
+                    newState,
+                    context,
+                    returnValue = { returnValue, returnSource ->
+                        listOf(assign(newStateVariableName, returnValue, source = returnSource))
+                    },
+                    source = NodeSource(node),
+                )
+                val setStateStatement = setState(
+                    PythonVariableReferenceNode(newStateVariableName, source = NodeSource(node)),
+                    source = NodeSource(node),
+                )
+                val returnStatement = PythonReturnNode(
+                    expression = PythonVariableReferenceNode(valueVariableName, source = NodeSource(node)),
+                    source = NodeSource(node),
+                )
+                return valueStatements + newStateStatements + listOf(setStateStatement, returnStatement)
+            }
         }
 
         override fun visit(node: ValNode): List<PythonStatementNode> {

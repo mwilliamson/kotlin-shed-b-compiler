@@ -20,16 +20,20 @@ def varargs(cons, nil):
 
 
 class _EffectHandler(object):
-    __slots__ = ("effect", "operation_handlers", "next", "Exit")
+    __slots__ = ("effect", "operation_handlers", "next", "Exit", "child_state")
 
-    def __init__(self, effect, operation_handlers, next, Exit):
+    def __init__(self, effect, operation_handlers, next, Exit, child_state):
         self.effect = effect
         self.operation_handlers = operation_handlers
         self.next = next
         self.Exit = Exit
+        self.child_state = child_state
 
     def exit(self, value):
         raise self.Exit(value)
+
+
+_undefined = object()
 
 
 _effect_handler_stack = _EffectHandler(
@@ -37,7 +41,12 @@ _effect_handler_stack = _EffectHandler(
     operation_handlers=None,
     next=None,
     Exit=None,
+    child_state=_undefined,
 )
+
+
+def effect_handler_set_state(state):
+    _effect_handler_stack.child_state = state
 
 
 def effect_handler_push(effect, operation_handlers):
@@ -54,6 +63,7 @@ def effect_handler_push(effect, operation_handlers):
         operation_handlers=operation_handlers,
         next=_effect_handler_stack,
         Exit=None,
+        child_state=_undefined,
     )
 
     _effect_handler_stack = effect_handler
@@ -87,6 +97,9 @@ def effect_handler_create_operation_handler(handler):
 
         old_effect_handler_stack = _effect_handler_stack
         _effect_handler_stack = effect_handler
+
+        if effect_handler.child_state is not _undefined:
+            args = (effect_handler.child_state, ) + args
 
         value = handler(*args, **kwargs)
 

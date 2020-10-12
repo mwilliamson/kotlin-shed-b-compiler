@@ -14,7 +14,6 @@ import org.shedlang.compiler.typechecker.SourceError
 
 class PythonExampleTests {
     private val disabledTests = setOf<String>(
-        "HandleWithState.shed",
         "TailRec.shed",
     )
 

@@ -105,6 +105,7 @@ private fun compileModule(module: Module.Shed, moduleSet: ModuleSet): PythonModu
             effect_handler_exit as _effect_handler_exit,
             effect_handler_create_operation_handler as _effect_handler_create_operation_handler,
             effect_handler_push as _effect_handler_push,
+            effect_handler_set_state as _effect_handler_set_state,
         )
     """.trimIndent()
 
