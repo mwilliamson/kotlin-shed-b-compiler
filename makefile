@@ -8,7 +8,7 @@ package: build-stdlib-llvm
 stdlib-tests: package run-stdlib-tests
 
 run-stdlib-tests:
-	./shed stdlib -m StdlibTests.Main --backend=javascript
+#	./shed stdlib -m StdlibTests.Main --backend=javascript
 	./shed stdlib -m StdlibTests.Main --backend=llvm
 	./shed stdlib -m StdlibTests.Main --backend=python
 	./shed stdlib -m StdlibTests.Main
