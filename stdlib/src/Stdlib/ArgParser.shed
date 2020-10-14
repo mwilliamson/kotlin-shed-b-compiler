@@ -102,6 +102,7 @@ fun toStringArgs(
     .args: Lists.List[String],
 ) !ParseEffect -> Lists.List[#(String, String)] {
     effect E {
+        .fail: (String) -> Nothing,
         .nextStringOrExit: () -> String,
         .nextStringOrFail: (String) -> String,
         .lookupOption: (String) -> ArgDefinition,
@@ -126,18 +127,40 @@ fun toStringArgs(
             val arg = E.nextStringOrExit!();
 
             if (UnicodeScalars.startsWith("--", arg)) {
-                val option = E.lookupOption!(arg);
-                if (option.isFlag) {
-                    E.storeOption!(option, "");
-                } else {
-                    val argValue = E.nextStringOrFail!("option is missing value: " + option.name);
-                    E.storeOption!(option, argValue);
+                // TODO: better string splitting
+                val index = UnicodeScalars.stringToSequence(arg)
+                    |> Sequences.findIndex~(fun (scalar: UnicodeScalar) => scalar == '=');
+
+                when (index) {
+                    is Some(.value as index) {
+                        val optionName = UnicodeScalars.left(index, arg);
+                        val option = E.lookupOption!(optionName);
+                        if (option.isFlag) {
+                            E.fail!("flag does not take value: " + optionName);
+                        } else {
+                            val argValue = UnicodeScalars.dropLeft(index + 1, arg);
+                            E.storeOption!(option, argValue);
+                        }
+                    }
+                    is None {
+                        val option = E.lookupOption!(arg);
+                        if (option.isFlag) {
+                            E.storeOption!(option, "");
+                        } else {
+                            val argValue = E.nextStringOrFail!("option is missing value: " + option.name);
+                            E.storeOption!(option, argValue);
+                        }
+                    }
                 }
             } else {
                 E.storePositional!(arg);
             }
         })
     } on {
+        .fail = (state: State, message: String) {
+            ParseEffect.fail!(message)
+        },
+
         .nextStringOrExit = (state: State) {
             val args = state.args;
             when (args) {

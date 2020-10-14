@@ -143,12 +143,28 @@ val testCases = Tests.suite(moduleName, list(
         ))
     }),
 
-    Tests.testCase("when optional long option is present then value is some", fun () {
+    Tests.testCase("when optional long option is present as separate element then value is some", fun () {
         shape Args {
             x: Option[String],
         }
 
         val rawArguments = list("--long-option", "value");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isSuccess(
+            M.hasField(Args.fields.x, M.isSome(M.isString("value"))),
+        ))
+    }),
+
+    Tests.testCase("when optional long option is present using equals then value is some", fun() {
+        shape Args {
+            x: Option[String],
+        }
+
+        val rawArguments = list("--long-option=value");
         val argParser = ArgParser.parser(empty[Args]())
             |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
 
@@ -284,6 +300,22 @@ val testCases = Tests.suite(moduleName, list(
 
         Tests.assertThat(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isBool(true)),
+        ))
+    }),
+
+    Tests.testCase("when flag has value using equals then result is failure", fun () {
+        shape Args {
+            x: Bool,
+        }
+
+        val rawArguments = list("--flag=1");
+        val argParser = ArgParser.parser(empty[Args]())
+            |> ArgParser.flag~("--flag", Args.fields.x.update);
+
+        val arguments = ArgParser.parse(argParser, rawArguments);
+
+        Tests.assertThat(arguments, isFailure(
+            .message = M.isString("flag does not take value: --flag"),
         ))
     }),
 ));

@@ -16,7 +16,8 @@ export
     left,
     leftWhile,
     padLeft,
-    startsWith;
+    startsWith,
+    stringToSequence;
 
 import Lists from Stdlib.Lists;
 import @(.List as List) from Stdlib.Lists;
