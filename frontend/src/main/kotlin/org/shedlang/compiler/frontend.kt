@@ -15,8 +15,9 @@ import java.util.regex.Pattern
 
 
 fun readStandaloneModule(path: Path): ModuleSet {
+    val absolutePath = path.toAbsolutePath()
     val moduleName = standaloneModulePathToName(path)
-    val reader = ModuleReader(sourceDirectories = listOf(path.parent), implicitStdlib = true)
+    val reader = ModuleReader(sourceDirectories = listOf(absolutePath.parent), implicitStdlib = true)
     reader.load(moduleName)
     return ModuleSet(reader.modules)
 }
