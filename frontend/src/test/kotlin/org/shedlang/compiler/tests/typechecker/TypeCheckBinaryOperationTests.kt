@@ -59,18 +59,22 @@ class TypeCheckBinaryOperationTests {
         assertThat(type, isIntType)
     }
 
-    @Test
-    fun integerEqualityOperationReturnsBoolean() {
-        val node = binaryOperation(BinaryOperator.EQUALS, literalInt(1), literalInt(2))
-        val type = inferType(node, emptyTypeContext())
-        assertThat(type, isBoolType)
-    }
+    @TestFactory
+    fun intComparisonOperationReturnsBoolean(): List<DynamicTest> {
+        return listOf(
+            BinaryOperator.EQUALS,
+            BinaryOperator.NOT_EQUAL,
+            BinaryOperator.LESS_THAN,
+            BinaryOperator.LESS_THAN_OR_EQUAL,
+            BinaryOperator.GREATER_THAN,
+            BinaryOperator.GREATER_THAN_OR_EQUAL
+        ).map { operator -> DynamicTest.dynamicTest("Int $operator operation returns Bool") {
+            val node = binaryOperation(operator, literalInt(), literalInt())
 
-    @Test
-    fun integerInequalityOperationReturnsBoolean() {
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, literalInt(1), literalInt(2))
-        val type = inferType(node, emptyTypeContext())
-        assertThat(type, isBoolType)
+            val type = inferType(node, emptyTypeContext())
+
+            assertThat(type, cast(isBoolType))
+        } }
     }
 
     @Test

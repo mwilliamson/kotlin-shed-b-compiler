@@ -102,6 +102,10 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
     return when (BinaryOperationType(node.operator, unalias(leftType), unalias(rightType))) {
         BinaryOperationType(BinaryOperator.EQUALS, IntType, IntType) -> BoolType
         BinaryOperationType(BinaryOperator.NOT_EQUAL, IntType, IntType) -> BoolType
+        BinaryOperationType(BinaryOperator.LESS_THAN, IntType, IntType) -> BoolType
+        BinaryOperationType(BinaryOperator.LESS_THAN_OR_EQUAL, IntType, IntType) -> BoolType
+        BinaryOperationType(BinaryOperator.GREATER_THAN, IntType, IntType) -> BoolType
+        BinaryOperationType(BinaryOperator.GREATER_THAN_OR_EQUAL, IntType, IntType) -> BoolType
         BinaryOperationType(BinaryOperator.ADD, IntType, IntType) -> IntType
         BinaryOperationType(BinaryOperator.SUBTRACT, IntType, IntType) -> IntType
         BinaryOperationType(BinaryOperator.MULTIPLY, IntType, IntType) -> IntType
