@@ -91,6 +91,14 @@ object IntAdd: Instruction()
 
 object IntEquals: Instruction()
 
+object IntGreaterThan: Instruction()
+
+object IntGreaterThanOrEqual: Instruction()
+
+object IntLessThan: Instruction()
+
+object IntLessThanOrEqual: Instruction()
+
 object IntMinus: Instruction()
 
 object IntMultiply: Instruction()

@@ -434,6 +434,22 @@ internal class Compiler(
                 return compileIntComparison(LlvmIcmp.ConditionCode.EQ, context = context)
             }
 
+            is IntLessThan -> {
+                return compileIntComparison(LlvmIcmp.ConditionCode.SLT, context = context)
+            }
+
+            is IntLessThanOrEqual -> {
+                return compileIntComparison(LlvmIcmp.ConditionCode.SLE, context = context)
+            }
+
+            is IntGreaterThan -> {
+                return compileIntComparison(LlvmIcmp.ConditionCode.SGT, context = context)
+            }
+
+            is IntGreaterThanOrEqual -> {
+                return compileIntComparison(LlvmIcmp.ConditionCode.SGE, context = context)
+            }
+
             is IntMinus -> {
                 val result = LlvmOperandLocal(generateName("result"))
 

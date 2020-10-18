@@ -167,18 +167,22 @@ class Loader(
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.GREATER_THAN -> when (types.typeOfExpression(node.left)) {
+                        IntType -> IntGreaterThan
                         UnicodeScalarType -> UnicodeScalarGreaterThan
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.GREATER_THAN_OR_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        IntType -> IntGreaterThanOrEqual
                         UnicodeScalarType -> UnicodeScalarGreaterThanOrEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.LESS_THAN -> when (types.typeOfExpression(node.left)) {
+                        IntType -> IntLessThan
                         UnicodeScalarType -> UnicodeScalarLessThan
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }
                     BinaryOperator.LESS_THAN_OR_EQUAL -> when (types.typeOfExpression(node.left)) {
+                        IntType -> IntLessThanOrEqual
                         UnicodeScalarType -> UnicodeScalarLessThanOrEqual
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
                     }

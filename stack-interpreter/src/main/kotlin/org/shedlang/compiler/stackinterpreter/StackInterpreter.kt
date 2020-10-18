@@ -697,6 +697,30 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
+        is IntGreaterThan -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterBool(left > right)
+            }
+        }
+
+        is IntGreaterThanOrEqual -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterBool(left >= right)
+            }
+        }
+
+        is IntLessThan -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterBool(left < right)
+            }
+        }
+
+        is IntLessThanOrEqual -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                InterpreterBool(left <= right)
+            }
+        }
+
         is IntMinus -> {
             val (state2, operand) = initialState.popTemporary()
             val result = InterpreterInt(-(operand as InterpreterInt).value)
