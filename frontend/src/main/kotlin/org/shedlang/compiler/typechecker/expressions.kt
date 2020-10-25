@@ -308,7 +308,8 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
 
     val bodyContext = context.enterScope(extraEffect = effect)
     val bodyType = typeCheckBlock(node.body, bodyContext)
-    val handlerReturnTypes = node.handlers.map { handler ->
+
+    val handleType = node.handlers.fold(bodyType) { acc, handler ->
         val operationType = effect.operations[handler.operationName]
         if (operationType == null) {
             throw UnknownOperationError(effect = effect, operationName = handler.operationName, source = node.source)
@@ -342,7 +343,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
             source = handler.source
         )
 
-        handlerType.returns
+        union(acc, handlerType.returns, source = handler.function.body.valueSource())
     }
 
     val handlerNames = node.handlers.map { handler -> handler.operationName }
@@ -351,5 +352,5 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         throw MissingHandlerError(missingHandlerNames.first(), source = node.source)
     }
 
-    return unionAll(listOf(bodyType) + handlerReturnTypes)
+    return handleType
 }
