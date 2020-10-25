@@ -191,7 +191,7 @@ internal fun inferFieldAccessType(receiverType: Type, fieldName: FieldNameNode):
 }
 
 private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
-    val conditionalBranchTypes = node.conditionalBranches.map { branch ->
+    val conditionalBranchesType = node.conditionalBranches.fold(NothingType as Type) { accType, branch ->
         verifyType(branch.condition, context, expected = BoolType)
 
         val trueContext = context.enterScope()
@@ -211,12 +211,12 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
             }
         }
 
-        typeCheckBlock(branch.body, trueContext)
+        union(accType, typeCheckBlock(branch.body, trueContext), source = branch.body.valueSource())
     }
-    val elseBranchType = typeCheckBlock(node.elseBranch, context)
-    val branchTypes = conditionalBranchTypes + listOf(elseBranchType)
 
-    return branchTypes.reduce(::union)
+    val elseBranchType = typeCheckBlock(node.elseBranch, context)
+
+    return union(conditionalBranchesType, elseBranchType, source = node.elseBranch.valueSource())
 }
 
 private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type {

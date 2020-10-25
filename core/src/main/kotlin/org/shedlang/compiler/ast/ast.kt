@@ -516,6 +516,15 @@ data class Block(
             val last = statements.lastOrNull()
             return last != null && last.terminatesBlock
         }
+
+    fun valueSource(): Source {
+        val last = statements.lastOrNull()
+        return if (last == null) {
+            source
+        } else {
+            last.source
+        }
+    }
 }
 
 data class FunctionExpressionNode(
