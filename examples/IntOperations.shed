@@ -1,0 +1,48 @@
+// stdout:
+//   1 == 1 true
+//   1 == 2 false
+//   1 != 1 false
+//   1 != 2 true
+//   1 < 2 true
+//   2 < 2 false
+//   3 < 2 false
+//   1 <= 2 true
+//   2 <= 2 true
+//   3 <= 2 false
+//   1 > 2 false
+//   2 > 2 false
+//   3 > 2 true
+//   1 >= 2 false
+//   2 >= 2 true
+//   3 >= 2 true
+
+export main;
+
+fun main() !Io -> Unit {
+    printBool!("1 == 1", 1 == 1);
+    printBool!("1 == 2", 1 == 2);
+
+    printBool!("1 != 1", 1 != 1);
+    printBool!("1 != 2", 1 != 2);
+
+    printBool!("1 < 2", 1 < 2);
+    printBool!("2 < 2", 2 < 2);
+    printBool!("3 < 2", 3 < 2);
+
+    printBool!("1 <= 2", 1 <= 2);
+    printBool!("2 <= 2", 2 <= 2);
+    printBool!("3 <= 2", 3 <= 2);
+    
+    printBool!("1 > 2", 1 > 2);
+    printBool!("2 > 2", 2 > 2);
+    printBool!("3 > 2", 3 > 2);
+
+    printBool!("1 >= 2", 1 >= 2);
+    printBool!("2 >= 2", 2 >= 2);
+    printBool!("3 >= 2", 3 >= 2);
+}
+
+fun printBool(message: String, bool: Bool) !Io -> Unit {
+    print!(message);
+    print!(if (bool) { " true\n" } else { " false\n" });
+}
