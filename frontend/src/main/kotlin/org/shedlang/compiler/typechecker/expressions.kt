@@ -243,11 +243,13 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         typeCheckTarget(branch.target, discriminator.targetType, branchContext)
 
         val type = typeCheckBlock(branch.body, branchContext)
-        Pair(type, discriminator.targetType)
+        Triple(discriminator.targetType, type, branch.body.valueSource())
     }
 
-    var branchTypes = branchResults.map { result -> result.first }
-    val caseTypes = branchResults.map { result -> result.second }
+    val caseTypes = branchResults.map { result -> result.first }
+    var type = branchResults.fold(NothingType as Type) { acc, (_, branchType, branchSource) ->
+        union(acc, branchType, source = branchSource)
+    }
 
     val unhandledMembers = expressionType.members.filter { member ->
         caseTypes.all { caseType -> !isEquivalentType(caseType, member) }
@@ -265,11 +267,11 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         }
 
         val branchContext = context.enterScope()
-        val type = typeCheckBlock(elseBranch, branchContext)
-        branchTypes += listOf(type)
+        val elseType = typeCheckBlock(elseBranch, branchContext)
+        type = union(type, elseType, source = elseBranch.valueSource())
     }
 
-    return branchTypes.reduce(::union)
+    return type
 }
 
 private fun checkTypeConditionOperand(expression: ExpressionNode, context: TypeContext): UnionType {
