@@ -143,6 +143,8 @@ class TypeConstraintSolver(
         }
 
         if (to is UnionType) {
+            // TODO: coerce mutates state, but we probably want to ignore changes
+            // from failed attempts to coerce to a member
             return to.members.any({ member -> coerce(from = from, to = member) })
         }
 
