@@ -7,7 +7,7 @@ import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.ast.FunctionNode
-import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isInvariant

@@ -15,7 +15,7 @@ import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackinterpreter.World
 import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
-import org.shedlang.compiler.typechecker.SourceError
+import org.shedlang.compiler.SourceError
 
 class StackInterpreterExampleTests {
     private val disabledTests = setOf<String>(

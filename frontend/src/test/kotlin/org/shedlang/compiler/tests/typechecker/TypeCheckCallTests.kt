@@ -8,7 +8,7 @@ import org.shedlang.compiler.Module
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.*

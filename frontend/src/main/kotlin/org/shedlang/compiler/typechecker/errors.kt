@@ -1,18 +1,13 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.TypeCheckError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
-/**
- * This indicates a bug in the compiler or its calling code
- */
 class UnknownTypeError(val name: Identifier, source: Source)
     : CompilerError("type of ${name.value} is unknown", source = source)
 
-open class SourceError(message: String?, val source: Source): Exception(message)
-
-open class TypeCheckError(message: String?, source: Source) : SourceError(message, source)
 internal class BadStatementError(source: Source)
     : TypeCheckError("Bad statement", source)
 class UnresolvedReferenceError(val name: Identifier, source: Source)

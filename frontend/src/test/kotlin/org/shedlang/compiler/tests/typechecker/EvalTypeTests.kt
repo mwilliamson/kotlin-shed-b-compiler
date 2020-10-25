@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
-import org.shedlang.compiler.typechecker.TypeCheckError
+import org.shedlang.compiler.TypeCheckError
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.types.*

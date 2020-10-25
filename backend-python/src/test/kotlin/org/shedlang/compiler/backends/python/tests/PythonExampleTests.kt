@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.python.topLevelPythonPackageName
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.typechecker.SourceError
+import org.shedlang.compiler.SourceError
 
 class PythonExampleTests {
     private val disabledTests = setOf<String>(

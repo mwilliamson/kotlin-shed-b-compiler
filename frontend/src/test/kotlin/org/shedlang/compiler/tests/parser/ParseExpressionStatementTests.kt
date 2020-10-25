@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
-import org.shedlang.compiler.frontend.tests.throwsException
+import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.parser.InconsistentBranchTerminationError
 import org.shedlang.compiler.parser.parseFunctionStatement
 

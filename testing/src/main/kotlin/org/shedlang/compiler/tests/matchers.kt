@@ -50,6 +50,27 @@ fun <T1, T2> isPair(first: Matcher<T1> = anything, second: Matcher<T2>): Matcher
     )
 }
 
+inline fun <reified T : Throwable> throwsException(exceptionCriteria: Matcher<T>? = null): Matcher<() -> Any> {
+    val exceptionName = T::class.qualifiedName
+
+    return object : Matcher<() -> Any> {
+        override fun invoke(actual: () -> Any): MatchResult =
+            try {
+                actual()
+                MatchResult.Mismatch("did not throw")
+            } catch (e: Throwable) {
+                if (e is T) {
+                    exceptionCriteria?.invoke(e) ?: MatchResult.Match
+                } else {
+                    throw e
+                }
+            }
+
+        override val description: String get() = "throws ${exceptionName}${exceptionCriteria?.let { " that ${describe(it)}" } ?: ""}"
+        override val negatedDescription: String get() = "does not throw ${exceptionName}${exceptionCriteria?.let { " that ${describe(it)}" } ?: ""}"
+    }
+}
+
 private fun indent(value: String): String {
     val indentation = "  "
     val indexWidth = 2

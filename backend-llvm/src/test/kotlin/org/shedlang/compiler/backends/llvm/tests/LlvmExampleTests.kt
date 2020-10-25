@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.llvm.withLineNumbers
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackir.loadModuleSet
-import org.shedlang.compiler.typechecker.SourceError
+import org.shedlang.compiler.SourceError
 
 class LlvmExampleTests {
     private val disabledTests = setOf<String>(

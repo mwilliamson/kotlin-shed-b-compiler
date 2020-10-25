@@ -9,7 +9,7 @@ import org.shedlang.compiler.backends.javascript.compile
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.typechecker.SourceError
+import org.shedlang.compiler.SourceError
 
 class JavascriptExampleTests {
     private val disabledTests = setOf<String>(

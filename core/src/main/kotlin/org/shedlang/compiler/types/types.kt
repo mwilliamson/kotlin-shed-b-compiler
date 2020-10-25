@@ -1,5 +1,6 @@
 package org.shedlang.compiler.types
 
+import org.shedlang.compiler.CannotUnionTypesError
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.*
 
@@ -779,7 +780,8 @@ data class AnonymousUnionType(
         }
 }
 
-fun union(left: Type, right: Type): Type {
+// TODO: Remove default for source
+fun union(left: Type, right: Type, source: Source = NullSource): Type {
     if (canCoerce(from = right, to = left)) {
         return left
     } else if (canCoerce(from = left, to = right)) {
@@ -794,10 +796,28 @@ fun union(left: Type, right: Type): Type {
 
         val leftMembers = findMembers(left)
         val rightMembers = findMembers(right)
-        // TODO: test this, handle failure
-        val members = (leftMembers + rightMembers).distinct().map { member -> member as ShapeType }
-        // TODO: test this, handle failure
-        val tag = members.map { member -> member.tagValue!!.tag }.distinct().single()
+        val members = (leftMembers + rightMembers).distinct().map { member ->
+            if (member is ShapeType) {
+                member
+            } else {
+                throw CannotUnionTypesError(left, right, source = source)
+            }
+        }
+
+        val tags = members.map { member ->
+            val tagValue = member.tagValue
+            if (tagValue == null) {
+                throw CannotUnionTypesError(left, right, source = source)
+            } else {
+                tagValue.tag
+            }
+        }.distinct()
+
+        val tag = if (tags.size == 1) {
+            tags.single()
+        } else {
+            throw CannotUnionTypesError(left, right, source = source)
+        }
 
         return AnonymousUnionType(
             tag = tag,

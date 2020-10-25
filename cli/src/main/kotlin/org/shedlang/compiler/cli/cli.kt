@@ -13,7 +13,7 @@ import org.shedlang.compiler.stackinterpreter.RealWorld
 import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
 import org.shedlang.compiler.standaloneModulePathToName
-import org.shedlang.compiler.typechecker.SourceError
+import org.shedlang.compiler.SourceError
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
