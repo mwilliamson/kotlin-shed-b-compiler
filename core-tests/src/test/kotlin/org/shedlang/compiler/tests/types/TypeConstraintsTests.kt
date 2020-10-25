@@ -120,6 +120,21 @@ class TypeConstraintsTests {
     }
 
     @Test
+    fun coercingMultipleTypesThatCannotBeUnionedToTypeParameterFails() {
+        val typeParameter = invariantTypeParameter("T")
+
+        val result = coerce(
+            listOf(IntType to typeParameter, BoolType to typeParameter),
+            parameters = setOf(typeParameter)
+        )
+
+        assertThat(
+            result,
+            isFailure
+        )
+    }
+
+    @Test
     fun coercingTypeParameterToTypeBindsTypeParameterToType() {
         val typeParameter = invariantTypeParameter("T")
         assertThat(

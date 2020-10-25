@@ -1,5 +1,6 @@
 package org.shedlang.compiler.types
 
+import org.shedlang.compiler.CannotUnionTypesError
 import org.shedlang.compiler.all
 import org.shedlang.compiler.zip3
 
@@ -108,8 +109,11 @@ class TypeConstraintSolver(
                     return coerce(from = from, to = boundType.type)
                 }
                 is TypeBound.Lower -> {
-                    // TODO: handle union failure
-                    bindType(to, TypeBound.Lower(union(boundType.type, from)))
+                    try {
+                        bindType(to, TypeBound.Lower(union(boundType.type, from)))
+                    } catch (error: CannotUnionTypesError) {
+                        return false
+                    }
                     return true
                 }
             }
