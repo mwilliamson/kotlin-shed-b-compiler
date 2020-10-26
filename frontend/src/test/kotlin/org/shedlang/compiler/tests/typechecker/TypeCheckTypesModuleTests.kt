@@ -21,7 +21,7 @@ class TypeCheckTypesModuleTests {
 
         assertThat(
             {
-                typeCheck(node, typeContext)
+                typeCheck(moduleName(), node, typeContext)
             },
             throwsUnexpectedType(expected = MetaTypeGroup, actual = IntType)
         )
@@ -36,7 +36,7 @@ class TypeCheckTypesModuleTests {
             )
         )
 
-        val result = typeCheck(node, typeContext(
+        val result = typeCheck(moduleName(), node, typeContext(
             referenceTypes = mapOf(intReference to StaticValueType(IntType))
         ))
         assertThat(result.fields, isMap(

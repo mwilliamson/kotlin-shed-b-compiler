@@ -228,7 +228,7 @@ data class TypeCheckResult(
 )
 
 internal fun typeCheck(
-    moduleName: ModuleName?,
+    moduleName: ModuleName,
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
@@ -239,12 +239,12 @@ internal fun typeCheck(
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule,
-        typeCheck = { context -> typeCheck(module, context)}
+        typeCheck = { context -> typeCheck(moduleName, module, context)}
     )
 }
 
 internal fun typeCheck(
-    moduleName: ModuleName?,
+    moduleName: ModuleName,
     module: TypesModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
@@ -255,7 +255,7 @@ internal fun typeCheck(
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
         getModule = getModule,
-        typeCheck = { context -> typeCheck(module, context)}
+        typeCheck = { context -> typeCheck(moduleName, module, context)}
     )
 }
 
@@ -281,7 +281,7 @@ private fun typeCheckModule(
     )
 }
 
-internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
+internal fun typeCheck(moduleName: ModuleName, module: ModuleNode, context: TypeContext): ModuleType {
     for (import in module.imports) {
         typeCheck(import, context)
     }
@@ -302,10 +302,10 @@ internal fun typeCheck(module: ModuleNode, context: TypeContext): ModuleType {
     val exports = module.exports.associate { export ->
         export.name to context.typeOf(context.resolveReference(export))
     }
-    return ModuleType(fields = exports)
+    return ModuleType(name = moduleName, fields = exports)
 }
 
-internal fun typeCheck(module: TypesModuleNode, context: TypeContext): ModuleType {
+internal fun typeCheck(moduleName: ModuleName, module: TypesModuleNode, context: TypeContext): ModuleType {
     for (import in module.imports) {
         typeCheck(import, context)
     }
@@ -314,10 +314,11 @@ internal fun typeCheck(module: TypesModuleNode, context: TypeContext): ModuleTyp
         typeCheckTypesModuleStatement(statement, context)
     }
 
-    return ModuleType(fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
+    val fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
         { statement -> statement.name },
         { statement -> context.typeOf(statement) }
-    ))
+    )
+    return ModuleType(name = moduleName, fields = fields)
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {

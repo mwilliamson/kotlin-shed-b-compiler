@@ -1114,7 +1114,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val references = ResolvedReferencesMap(mapOf(
             functionReference.nodeId to function
         ))
-        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val moduleType = moduleType(fields = mapOf(function.name.value to functionType))
         val module = stubbedModule(
             name = moduleName,
             node = module(
@@ -1173,7 +1173,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             firstReference.nodeId to firstParameter,
             secondReference.nodeId to secondParameter
         ))
-        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val moduleType = moduleType(fields = mapOf(function.name.value to functionType))
         val module = stubbedModule(
             name = moduleName,
             node = module(
@@ -1219,7 +1219,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             functionReference.nodeId to function,
             valueReference.nodeId to valueTarget
         ))
-        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val moduleType = moduleType(fields = mapOf(function.name.value to functionType))
         val module = stubbedModule(
             name = moduleName,
             node = module(
@@ -1263,7 +1263,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             functionReference.nodeId to function,
             valueReference.nodeId to valueTarget
         ))
-        val moduleType = ModuleType(fields = mapOf(function.name to functionType))
+        val moduleType = moduleType(fields = mapOf(function.name.value to functionType))
         val module = stubbedModule(
             name = moduleName,
             node = module(
@@ -1483,7 +1483,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val exportingModuleName = listOf(Identifier("Exporting"))
         val exportNode = export("x")
         val valTarget = targetVariable("x")
-        val exportingModuleType = ModuleType(fields = mapOf(Identifier("x") to IntType))
+        val exportingModuleType = moduleType(fields = mapOf("x" to IntType))
         val exportingModule = stubbedModule(
             name = exportingModuleName,
             node = module(
@@ -1506,7 +1506,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             ImportPath.absolute(exportingModuleName.map(Identifier::value))
         )
         val reexportNode = export("x")
-        val importingModuleType = ModuleType(fields = mapOf(Identifier("x") to IntType))
+        val importingModuleType = moduleType(fields = mapOf("x" to IntType))
         val importingModule = stubbedModule(
             name = importingModuleName,
             node = module(
@@ -1541,7 +1541,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val references = ResolvedReferencesMap(mapOf(
             moduleNameReference.nodeId to Builtins.moduleName
         ))
-        val moduleType = ModuleType(fields = mapOf(Identifier("moduleName") to StringType))
+        val moduleType = moduleType(fields = mapOf("moduleName" to StringType))
         val module = stubbedModule(
             name = moduleName,
             node = module(

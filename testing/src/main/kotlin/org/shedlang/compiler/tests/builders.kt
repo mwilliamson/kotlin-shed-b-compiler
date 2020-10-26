@@ -679,8 +679,13 @@ fun varargsType() = VarargsType(
 )
 
 fun moduleType(fields: Map<String, Type> = mapOf()) = ModuleType(
+    name = moduleName(),
     fields = fields.mapKeys { (name, type) -> Identifier(name) }
 )
+
+fun moduleName(
+    parts: List<String> = listOf("Test", "Module"),
+) = parts.map(::Identifier)
 
 fun discriminator(tagValue: TagValue, targetType: Type = AnyType): Discriminator {
     return Discriminator(

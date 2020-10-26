@@ -82,7 +82,7 @@ class CodeGeneratorTests {
     private fun stubbedModule(node: ModuleNode): Module.Shed {
         return Module.Shed(
             name = listOf(Identifier("Module")),
-            type = ModuleType(mapOf()),
+            type = moduleType(),
             types = EMPTY_TYPES,
             references = ResolvedReferencesMap(mapOf()),
             node = node

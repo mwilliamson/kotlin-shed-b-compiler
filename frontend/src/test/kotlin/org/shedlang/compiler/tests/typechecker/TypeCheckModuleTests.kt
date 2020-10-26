@@ -20,7 +20,7 @@ class TypeCheckModuleTests {
             ))
 
             val typeContext = typeContext(referenceTypes = mapOf(unit to StaticValueType(UnitType)))
-            typeCheck(node, typeContext)
+            typeCheck(moduleName(), node, typeContext)
         })
     }
 
@@ -40,7 +40,7 @@ class TypeCheckModuleTests {
             declarationG
         ))
 
-        typeCheck(node, typeContext(
+        typeCheck(moduleName(), node, typeContext(
             referenceTypes = mapOf(unit to StaticValueType(UnitType)),
             references = mapOf(
                 referenceF to declarationF,
@@ -63,7 +63,7 @@ class TypeCheckModuleTests {
             shape
         ))
 
-        typeCheck(node, typeContext(
+        typeCheck(moduleName(), node, typeContext(
             references = mapOf(
                 shapeReference to shape
             ),
@@ -81,7 +81,7 @@ class TypeCheckModuleTests {
             secondShape
         ))
 
-        typeCheck(node, typeContext(
+        typeCheck(moduleName(), node, typeContext(
             references = mapOf(
                 firstShapeReference to firstShape
             )
@@ -108,7 +108,7 @@ class TypeCheckModuleTests {
             )
         )
 
-        val result = typeCheck(node, typeContext(
+        val result = typeCheck(moduleName(), node, typeContext(
             references = mapOf(export to exportedFunction),
             referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
         ))

@@ -1427,7 +1427,7 @@ class CodeGeneratorTests {
         return generateCode(
             module = Module.Shed(
                 name = listOf(),
-                type = ModuleType(mapOf()),
+                type = moduleType(),
                 types = EMPTY_TYPES,
                 references = references,
                 node = node

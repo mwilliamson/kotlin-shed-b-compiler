@@ -454,6 +454,7 @@ fun createPartialShapeType(shapeType: ShapeType, populatedFieldNames: Set<Identi
 }
 
 data class ModuleType(
+    val name: ModuleName,
     val fields: Map<Identifier, Type>
 ): Type {
     override val shapeId: Int?
@@ -469,7 +470,7 @@ data class ModuleType(
 
     override val shortDescription: String
     // TODO: should include name of module
-        get() = "ModuleType(TODO)"
+        get() = "module ${formatModuleName(name)}"
 }
 
 data class FunctionType(
