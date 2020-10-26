@@ -1606,6 +1606,7 @@ private object StaticCallParser : StaticOperationParser {
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
     override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+        val operatorSource = tokens.location()
         tokens.skip()
         val arguments = parseMany(
             parseElement = { tokens -> parseStaticExpression(tokens) },
@@ -1616,7 +1617,12 @@ private object StaticCallParser : StaticOperationParser {
             tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        return StaticApplicationNode(receiver = left, arguments = arguments, source = left.source)
+        return StaticApplicationNode(
+            receiver = left,
+            arguments = arguments,
+            source = left.source,
+            operatorSource = operatorSource,
+        )
     }
 
     override val precedence: Int

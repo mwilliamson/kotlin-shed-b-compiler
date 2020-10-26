@@ -201,6 +201,7 @@ data class StaticApplicationNode(
     val receiver: StaticExpressionNode,
     val arguments: List<StaticExpressionNode>,
     override val source: Source,
+    val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
 ) : StaticExpressionNode {
     override val structure: List<NodeStructure>

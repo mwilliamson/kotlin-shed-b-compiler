@@ -477,14 +477,13 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             if (receiver is ParameterizedStaticValue) {
                 val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
                 // TODO: check parameters and arguments match (size)
-                return StaticValueType(applyStatic(receiver, arguments, source = node.source))
+                return StaticValueType(applyStatic(receiver, arguments, source = node.operatorSource))
             } else if (receiver is EmptyTypeFunction) {
                 if (node.arguments.size != 1) {
                     throw WrongNumberOfStaticArgumentsError(
                         expected = 1,
                         actual = node.arguments.size,
-                        // TODO: should be operator source
-                        source = node.source,
+                        source = node.operatorSource,
                     )
                 } else {
                     val argument = evalType(node.arguments.single(), context)
@@ -500,7 +499,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 }
             } else {
                 // TODO: throw a more appropriate exception
-                throw CompilerError("TODO", source = node.source)
+                throw CompilerError("TODO", source = node.operatorSource)
             }
         }
 

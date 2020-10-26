@@ -560,7 +560,8 @@ fun staticApplication(
 ) = StaticApplicationNode(
     receiver = receiver,
     arguments = arguments,
-    source = anySource()
+    source = anySource(),
+    operatorSource = anySource(),
 )
 fun functionTypeNode(
     staticParameters: List<StaticParameterNode> = listOf(),
