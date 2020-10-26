@@ -1,9 +1,12 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.TypeCheckError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
+
+class PackageConfigError(message: String, source: Source): SourceError(message = message, source = source)
 
 class UnknownTypeError(val name: Identifier, source: Source)
     : CompilerError("type of ${name.value} is unknown", source = source)

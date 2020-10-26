@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.frontend.checkTailCalls
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parseTypesModule
+import org.shedlang.compiler.typechecker.PackageConfigError
 import org.shedlang.compiler.typechecker.resolve
 import org.shedlang.compiler.typechecker.typeCheck
 import java.io.File
@@ -275,6 +276,7 @@ private fun readPackageConfig(path: Path): PackageConfig {
     val configPath = path.resolve("shed.toml")
     if (configPath.toFile().exists()) {
         return TomlPackageConfig(
+            path = configPath,
             config = Toml().read(configPath.toFile())
         )
     } else {
@@ -297,10 +299,10 @@ private object EmptyPackageConfig : PackageConfig{
     }
 }
 
-private class TomlPackageConfig(private val config: Toml) : PackageConfig {
+private class TomlPackageConfig(private val path: Path, private val config: Toml) : PackageConfig {
     override fun name(): String {
-        // TODO: throw a better error
-        return config.getString("package.name").orElseThrow(Exception("Package is missing name"))
+        return config.getString("package.name")
+            .orElseThrow(PackageConfigError("Package is missing name", source = FileSource(filename = path.toString())))
     }
 
     override fun dependencies(): List<Dependency> {

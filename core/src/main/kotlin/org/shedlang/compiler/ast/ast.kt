@@ -129,6 +129,12 @@ object BuiltinSource : Source {
     }
 }
 
+data class FileSource(val filename: String): Source {
+    override fun describe(): String {
+        return filename
+    }
+}
+
 data class StringSource(
     val filename: String,
     val contents: String,
