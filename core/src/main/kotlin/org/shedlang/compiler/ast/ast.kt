@@ -664,7 +664,7 @@ data class BadStatementNode(
     override val nodeId: Int = freshNodeId()
 ) : FunctionStatementNode {
     override val structure: List<NodeStructure>
-        get() = TODO("not implemented")
+        get() = listOf()
 
     override val terminatesBlock: Boolean
         get() = false
