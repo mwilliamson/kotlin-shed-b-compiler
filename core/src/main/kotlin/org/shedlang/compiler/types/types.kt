@@ -469,7 +469,6 @@ data class ModuleType(
     }
 
     override val shortDescription: String
-    // TODO: should include name of module
         get() = "module ${formatModuleName(name)}"
 }
 
