@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.UnexpectedTypeError
 import org.shedlang.compiler.typechecker.WrongNumberOfStaticArgumentsError
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.types.*
@@ -88,6 +89,28 @@ class TypeCheckStaticStaticCallTests {
         assertThat(type, throwsException(allOf(
             has(WrongNumberOfStaticArgumentsError::actual, equalTo(0)),
             has(WrongNumberOfStaticArgumentsError::expected, equalTo(1)),
+        )))
+    }
+
+    @Test
+    fun whenEmptyArgumentIsNotShapeTypeThenErrorIsThrown() {
+        val emptyReference = staticReference("Empty")
+        val intReference = staticReference("Int")
+        val application = staticApplication(emptyReference, listOf(intReference))
+
+        val type = {
+            evalType(
+                application,
+                typeContext(referenceTypes = mapOf(
+                    emptyReference to StaticValueType(EmptyTypeFunction),
+                    intReference to metaType(IntType),
+                ))
+            )
+        }
+
+        assertThat(type, throwsException(allOf(
+            has(UnexpectedTypeError::actual, isIntType),
+            has(UnexpectedTypeError::expected, equalTo(ShapeTypeGroup)),
         )))
     }
 }

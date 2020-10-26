@@ -104,6 +104,11 @@ object UnionTypeGroup: TypeGroup {
         get() = "union"
 }
 
+object ShapeTypeGroup: TypeGroup {
+    override val shortDescription: String
+        get() = "shape"
+}
+
 object MetaTypeGroup: TypeGroup {
     override val shortDescription: String
         get() = "meta-type"

@@ -474,22 +474,30 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
 
         override fun visit(node: StaticApplicationNode): Type {
             val receiver = evalStaticValue(node.receiver, context)
-            val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
             if (receiver is ParameterizedStaticValue) {
+                val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
                 // TODO: check parameters and arguments match (size)
                 return StaticValueType(applyStatic(receiver, arguments, source = node.source))
             } else if (receiver is EmptyTypeFunction) {
-                if (arguments.size != 1) {
+                if (node.arguments.size != 1) {
                     throw WrongNumberOfStaticArgumentsError(
                         expected = 1,
-                        actual = arguments.size,
+                        actual = node.arguments.size,
                         // TODO: should be operator source
                         source = node.source,
                     )
+                } else {
+                    val argument = evalType(node.arguments.single(), context)
+                    if (argument !is ShapeType) {
+                        throw UnexpectedTypeError(
+                            expected = ShapeTypeGroup,
+                            actual = argument,
+                            source = node.arguments[0].source,
+                        )
+                    } else {
+                        return metaType(createEmptyShapeType(argument))
+                    }
                 }
-                // TODO: error checking
-                val argument = arguments.single() as ShapeType
-                return metaType(createEmptyShapeType(argument))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.source)
