@@ -359,11 +359,31 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
 }
 
 private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
-    // TODO: check number of static arguments
-    // TODO: check type of static argument
+    // TODO: test that static arguments are tested
     // TODO: check non-static arguments
-    val staticArgument = evalStaticValue(node.staticArguments.single(), context) as ShapeType
+    val staticArgument = evalEmptyStaticArguments(node.staticArguments, context, source = node.operatorSource)
     return createEmptyShapeType(staticArgument)
+}
+
+internal fun evalEmptyStaticArguments(arguments: List<StaticExpressionNode>, context: TypeContext, source: Source): ShapeType {
+    if (arguments.size != 1) {
+        throw WrongNumberOfStaticArgumentsError(
+            expected = 1,
+            actual = arguments.size,
+            source = source,
+        )
+    } else {
+        val argument = evalType(arguments.single(), context)
+        if (argument !is ShapeType) {
+            throw UnexpectedTypeError(
+                expected = ShapeTypeGroup,
+                actual = argument,
+                source = arguments[0].source,
+            )
+        } else {
+            return argument
+        }
+    }
 }
 
 private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeContext): Type {

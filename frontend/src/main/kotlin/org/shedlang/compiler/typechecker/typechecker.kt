@@ -484,24 +484,8 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 // TODO: check parameters and arguments match (size)
                 return StaticValueType(applyStatic(receiver, arguments, source = node.operatorSource))
             } else if (receiver is EmptyTypeFunction) {
-                if (node.arguments.size != 1) {
-                    throw WrongNumberOfStaticArgumentsError(
-                        expected = 1,
-                        actual = node.arguments.size,
-                        source = node.operatorSource,
-                    )
-                } else {
-                    val argument = evalType(node.arguments.single(), context)
-                    if (argument !is ShapeType) {
-                        throw UnexpectedTypeError(
-                            expected = ShapeTypeGroup,
-                            actual = argument,
-                            source = node.arguments[0].source,
-                        )
-                    } else {
-                        return metaType(createEmptyShapeType(argument))
-                    }
-                }
+                val argument = evalEmptyStaticArguments(node.arguments, context, source = node.operatorSource)
+                return metaType(createEmptyShapeType(argument))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.operatorSource)
