@@ -346,18 +346,16 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
     )!!
     context.addDiscriminator(node, discriminator)
 
-    // TODO: failed module lookup
-    val optionsModuleResult = context.module(ImportPath.absolute(listOf("Core", "Options")))
-    when (optionsModuleResult) {
-        is ModuleResult.Found -> {
-            val someType = (optionsModuleResult.module.type.fieldType(Identifier("Option")) as StaticValueType).value as ParameterizedStaticValue
-            return functionType(
-                positionalParameters = listOf(fromType),
-                returns = applyStatic(someType, listOf(toType)) as Type
-            )
-        }
-        else -> throw NotImplementedError()
-    }
+    val optionsModule = findModule(
+        ImportPath.absolute(listOf("Core", "Options")),
+        context,
+        source = node.operatorSource,
+    )
+    val someType = (optionsModule.fieldType(Identifier("Option")) as StaticValueType).value as ParameterizedStaticValue
+    return functionType(
+        positionalParameters = listOf(fromType),
+        returns = applyStatic(someType, listOf(toType)) as Type
+    )
 }
 
 private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {

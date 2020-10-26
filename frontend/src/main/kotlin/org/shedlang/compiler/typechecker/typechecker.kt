@@ -322,16 +322,20 @@ internal fun typeCheck(moduleName: ModuleName, module: TypesModuleNode, context:
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {
-    val result = context.module(import.path)
-    val type = when (result) {
+    val type = findModule(import.path, context, source = import.source)
+    typeCheckTarget(import.target, type, context)
+}
+
+internal fun findModule(importPath: ImportPath, context: TypeContext, source: Source): ModuleType {
+    val result = context.module(importPath)
+    return when (result) {
         is ModuleResult.Found ->
             result.module.type
         is ModuleResult.NotFound ->
-            throw ModuleNotFoundError(name = result.name, source = import.source)
+            throw ModuleNotFoundError(name = result.name, source = source)
         is ModuleResult.FoundMany ->
-            throw MultipleModulesWithSameNameFoundError(name = result.name, source = import.source)
+            throw MultipleModulesWithSameNameFoundError(name = result.name, source = source)
     }
-    typeCheckTarget(import.target, type, context)
 }
 
 internal fun typeCheckTypesModuleStatement(statement: TypesModuleStatementNode, context: TypeContext) {
