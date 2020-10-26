@@ -101,7 +101,6 @@ class TypesMap(
     }
 
     override fun functionType(node: FunctionNode): FunctionType {
-        // TODO: better error
         return functionTypes[node.nodeId] ?: throw CompilerError("type of function is unknown: ${node}", source = node.source)
     }
 
