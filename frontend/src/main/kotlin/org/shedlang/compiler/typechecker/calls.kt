@@ -362,6 +362,15 @@ private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
     // TODO: test that static arguments are tested
     // TODO: check non-static arguments
     val staticArgument = evalEmptyStaticArguments(node.staticArguments, context, source = node.operatorSource)
+
+    if (node.positionalArguments.isNotEmpty()) {
+        throw WrongNumberOfArgumentsError(
+            expected = 0,
+            actual = node.positionalArguments.size,
+            source = node.positionalArguments[0].source,
+        )
+    }
+
     return createEmptyShapeType(staticArgument)
 }
 
