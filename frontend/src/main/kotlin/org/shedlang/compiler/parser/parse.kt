@@ -813,6 +813,8 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
         allowZero = true
     )
 
+    val elseSource = tokens.location()
+
     val elseBranch = if (tokens.trySkip(TokenType.KEYWORD_ELSE)) {
         parseFunctionStatements(tokens)
     } else {
@@ -825,7 +827,8 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
         expression = expression,
         conditionalBranches = branches,
         elseBranch = elseBranch,
-        source = source
+        source = source,
+        elseSource = elseSource,
     )
 
     verifyConsistentBranchTermination(node)

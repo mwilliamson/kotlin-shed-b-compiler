@@ -262,8 +262,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
         }
     } else {
         if (unhandledMembers.isEmpty()) {
-            // TODO: source should be else symbol
-            throw WhenElseIsNotReachableError(source = node.source)
+            throw WhenElseIsNotReachableError(source = node.elseSource)
         }
 
         val branchContext = context.enterScope()

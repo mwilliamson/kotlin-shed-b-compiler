@@ -702,6 +702,7 @@ data class WhenNode(
     val conditionalBranches: List<WhenBranchNode>,
     val elseBranch: Block?,
     override val source: Source,
+    val elseSource: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val structure: List<NodeStructure>

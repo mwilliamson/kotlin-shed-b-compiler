@@ -69,7 +69,8 @@ fun whenExpression(
     expression = expression,
     conditionalBranches = conditionalBranches,
     elseBranch = if (elseBranch == null) null else Block(elseBranch, source = anySource()),
-    source = anySource()
+    source = anySource(),
+    elseSource = anySource(),
 )
 
 fun whenBranch(
