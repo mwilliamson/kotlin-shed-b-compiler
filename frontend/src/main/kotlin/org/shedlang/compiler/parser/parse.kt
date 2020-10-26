@@ -1566,7 +1566,11 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
             namedParameters.add(parameter)
         } else {
             val parameter = parseStaticExpression(tokens)
-            positionalParameters.add(parameter)
+            if (namedParameters.isEmpty()) {
+                positionalParameters.add(parameter)
+            } else {
+                throw PositionalParameterAfterNamedParameterError(source = parameter.source)
+            }
         }
 
         if (tokens.trySkip(TokenType.SYMBOL_CLOSE_PAREN)) {

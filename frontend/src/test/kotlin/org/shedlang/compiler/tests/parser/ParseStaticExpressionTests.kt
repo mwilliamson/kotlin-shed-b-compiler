@@ -3,9 +3,11 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.parser.PositionalParameterAfterNamedParameterError
 import org.shedlang.compiler.parser.parseStaticExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.tests.throwsException
 
 class ParseStaticExpressionTests {
     @Test
@@ -79,7 +81,14 @@ class ParseStaticExpressionTests {
         ))
     }
 
-    // TODO: test named parameter cannot be followed by positional
+    @Test
+    fun functionTypeCannotHavePositionalParameterAfterNamedParameter() {
+        val source = "Fun (.a: A, B) -> C"
+
+        val node = { parseString(::parseStaticExpression, source) }
+
+        assertThat(node, throwsException< PositionalParameterAfterNamedParameterError>())
+    }
 
     @Test
     fun functionTypeCanHaveEffects() {
