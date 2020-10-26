@@ -479,6 +479,14 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 // TODO: check parameters and arguments match (size)
                 return StaticValueType(applyStatic(receiver, arguments, source = node.source))
             } else if (receiver is EmptyTypeFunction) {
+                if (arguments.size != 1) {
+                    throw WrongNumberOfStaticArgumentsError(
+                        expected = 1,
+                        actual = arguments.size,
+                        // TODO: should be operator source
+                        source = node.source,
+                    )
+                }
                 // TODO: error checking
                 val argument = arguments.single() as ShapeType
                 return metaType(createEmptyShapeType(argument))

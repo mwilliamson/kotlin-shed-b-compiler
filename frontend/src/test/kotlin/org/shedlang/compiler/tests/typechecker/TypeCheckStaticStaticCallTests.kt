@@ -1,8 +1,12 @@
 package org.shedlang.compiler.tests.typechecker
 
+import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
+import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
+import org.shedlang.compiler.typechecker.WrongNumberOfStaticArgumentsError
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.types.*
 
@@ -65,5 +69,25 @@ class TypeCheckStaticStaticCallTests {
             allFields = isSequence(isField(name = isIdentifier("value"))),
             populatedFields = isSequence()
         ))
+    }
+
+    @Test
+    fun whenStaticCallToEmptyDoesNotHaveOneArgumentThenErrorIsThrown() {
+        val emptyReference = staticReference("Empty")
+        val application = staticApplication(emptyReference, listOf())
+
+        val type = {
+            evalType(
+                application,
+                typeContext(referenceTypes = mapOf(
+                    emptyReference to StaticValueType(EmptyTypeFunction)
+                ))
+            )
+        }
+
+        assertThat(type, throwsException(allOf(
+            has(WrongNumberOfStaticArgumentsError::actual, equalTo(0)),
+            has(WrongNumberOfStaticArgumentsError::expected, equalTo(1)),
+        )))
     }
 }
