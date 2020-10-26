@@ -889,6 +889,37 @@ class TypeCheckCallTests {
         )))
     }
 
+    @Test
+    fun whenEmptyCallHasNamedArgumentsThenErrorIsThrown() {
+        val boxTypeReference = staticReference("Box")
+        val emptyReference = staticReference("empty")
+
+        val boxType = shapeType(
+            "Box",
+            fields = listOf(
+                field("value", IntType)
+            )
+        )
+
+        val node = call(
+            receiver = emptyReference,
+            staticArguments = listOf(boxTypeReference),
+            namedArguments = listOf(callNamedArgument("x", literalInt())),
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                boxTypeReference to StaticValueType(boxType),
+                emptyReference to EmptyFunctionType
+            )
+        )
+        val type = { inferCallType(node, typeContext) }
+
+        assertThat(type, throwsException(
+            has(ExtraArgumentError::argumentName, isIdentifier("x")),
+        ))
+    }
+
     @Nested
     inner class VarargsTests {
         private val headTypeParameter = invariantTypeParameter("Head")

@@ -359,8 +359,7 @@ private fun inferCastCall(node: CallNode, context: TypeContext): Type {
 }
 
 private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
-    // TODO: test that static arguments are tested
-    // TODO: check non-static arguments
+    // TODO: test that static arguments are checked
     val staticArgument = evalEmptyStaticArguments(node.staticArguments, context, source = node.operatorSource)
 
     if (node.positionalArguments.isNotEmpty()) {
@@ -369,9 +368,14 @@ private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
             actual = node.positionalArguments.size,
             source = node.positionalArguments[0].source,
         )
+    } else if (node.namedArguments.isNotEmpty()) {
+        throw ExtraArgumentError(
+            argumentName = node.namedArguments[0].name,
+            source = node.namedArguments[0].source,
+        )
+    } else {
+        return createEmptyShapeType(staticArgument)
     }
-
-    return createEmptyShapeType(staticArgument)
 }
 
 internal fun evalEmptyStaticArguments(arguments: List<StaticExpressionNode>, context: TypeContext, source: Source): ShapeType {
