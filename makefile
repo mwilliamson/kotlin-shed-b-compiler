@@ -18,7 +18,7 @@ test: stdlib-tests
 
 build-stdlib-llvm: build-deps stdlib-llvm/build/libshed.a
 
-stdlib-llvm/build/libshed.a:
+stdlib-llvm/build/libshed.a: stdlib-llvm/sizeof_jmp_buf.txt
 	mkdir -p stdlib-llvm/build
 	cd stdlib-llvm/build && cmake .. && make
 

@@ -1,0 +1,41 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                java-version: ["11"]
+                llvm-version: ["7.0.1"]
+                node-version: ["12"]
+                python-version: ["3.6"]
+
+        steps:
+
+        - uses: actions/checkout@v2
+
+        - name: Use Java ${{ matrix.java-version }}
+          uses: actions/setup-java@v1
+          with:
+              java-version: ${{ matrix.java-version }}
+
+        - name: Use Node.js ${{ matrix.node-version }}
+          uses: actions/setup-node@v1
+          with:
+              node-version: ${{ matrix.node-version }}
+              
+        - name: Use Python ${{ matrix.python-version }}
+          uses: actions/setup-python@v2
+          with:
+              python-version: ${{ matrix.python-version }}
+
+        - name: Use LLVM ${{ matrix.llvm-version }}
+          uses: KyleMayes/install-llvm-action@v1
+          with:
+              version: ${{ matrix.llvm-version }}
+              directory: ${{ runner.temp }}/llvm
+
+        - run: make test
