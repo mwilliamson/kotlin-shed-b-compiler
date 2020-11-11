@@ -13,6 +13,7 @@ interface StaticValue {
         fun visit(effect: Effect): T
         fun visit(value: ParameterizedStaticValue): T
         fun visit(type: Type): T
+        fun visit(type: EmptyTypeFunction): T
     }
 }
 
@@ -432,7 +433,7 @@ data class ParameterizedStaticValue(
         get() = "TypeFunction(TODO)"
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
-        throw UnsupportedOperationException("not implemented")
+        return visitor.visit(this)
     }
 }
 
@@ -441,7 +442,7 @@ object EmptyTypeFunction: StaticValue {
         get() = "Empty"
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
-        throw UnsupportedOperationException("not implemented")
+        return visitor.visit(this)
     }
 }
 
@@ -967,37 +968,91 @@ data class ValidateTypeResult(val errors: List<String>) {
 }
 
 fun validateStaticValue(value: StaticValue): ValidateTypeResult {
-    if (value is BasicType || value == AnyType || value == NothingType || value is TypeParameter) {
-        return ValidateTypeResult.success
-    } else if (value is FunctionType) {
-        if (value.returns is TypeParameter && value.returns.variance == Variance.CONTRAVARIANT) {
-            return ValidateTypeResult(listOf("return type cannot be contravariant"))
-        } else {
-            val parameterTypes = value.positionalParameters + value.namedParameters.values
-            return ValidateTypeResult(parameterTypes.mapNotNull({ parameterType ->
-                if (parameterType is TypeParameter && parameterType.variance == Variance.COVARIANT) {
-                    "parameter type cannot be covariant"
+    return value.acceptStaticValueVisitor(object : StaticValue.Visitor<ValidateTypeResult> {
+        override fun visit(effect: Effect): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
+
+        override fun visit(value: ParameterizedStaticValue): ValidateTypeResult {
+            return validateStaticValue(value.value)
+        }
+
+        override fun visit(type: Type): ValidateTypeResult {
+            return validateType(type)
+        }
+
+        override fun visit(type: EmptyTypeFunction): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
+
+    })
+}
+
+fun validateType(type: Type): ValidateTypeResult {
+    return type.accept(object : Type.Visitor<ValidateTypeResult> {
+        override fun visit(type: BasicType): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
+
+        override fun visit(type: FunctionType): ValidateTypeResult {
+            if (type.returns is TypeParameter && type.returns.variance == Variance.CONTRAVARIANT) {
+                return ValidateTypeResult(listOf("return type cannot be contravariant"))
+            } else {
+                val parameterTypes = type.positionalParameters + type.namedParameters.values
+                return ValidateTypeResult(parameterTypes.mapNotNull { parameterType ->
+                    if (parameterType is TypeParameter && parameterType.variance == Variance.COVARIANT) {
+                        "parameter type cannot be covariant"
+                    } else {
+                        null
+                    }
+                })
+            }
+        }
+
+        override fun visit(type: ModuleType): ValidateTypeResult {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(type: ShapeType): ValidateTypeResult {
+            return ValidateTypeResult(type.allFields.mapNotNull { field ->
+                val fieldType = field.value.type
+                if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
+                    "field type cannot be contravariant"
                 } else {
                     null
                 }
-            }))
+            })
         }
-    } else if (value is ShapeType) {
-        return ValidateTypeResult(value.allFields.mapNotNull({ field ->
-            val fieldType = field.value.type
-            if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
-                "field type cannot be contravariant"
-            } else {
-                null
-            }
-        }))
-    } else if (value is UnionType) {
-        return ValidateTypeResult.success
-    } else if (value is ParameterizedStaticValue) {
-        return validateStaticValue(value.value)
-    } else {
-        throw NotImplementedError("not implemented for static value: ${value.shortDescription}")
-    }
+
+        override fun visit(type: StaticValueType): ValidateTypeResult {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(type: TupleType): ValidateTypeResult {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(type: TypeAlias): ValidateTypeResult {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(type: TypeParameter): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
+
+        override fun visit(type: UnionType): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
+
+        override fun visit(type: UpdatedType): ValidateTypeResult {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+        override fun visit(type: VarargsType): ValidateTypeResult {
+            throw UnsupportedOperationException("not implemented")
+        }
+
+    })
 }
 
 fun applyStatic(
@@ -1030,6 +1085,10 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
 
         override fun visit(type: Type): StaticValue {
             return replaceStaticValuesInType(type, bindings)
+        }
+
+        override fun visit(type: EmptyTypeFunction): StaticValue {
+            return type
         }
     })
 }
