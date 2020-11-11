@@ -127,6 +127,22 @@ interface Type: StaticValue, TypeGroup {
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)
     }
+
+    fun <T> accept(visitor: Visitor<T>): T
+
+    interface Visitor<T> {
+        fun visit(type: BasicType): T
+        fun visit(type: FunctionType): T
+        fun visit(type: ModuleType): T
+        fun visit(type: ShapeType): T
+        fun visit(type: StaticValueType): T
+        fun visit(type: TupleType): T
+        fun visit(type: TypeAlias): T
+        fun visit(type: TypeParameter): T
+        fun visit(type: UnionType): T
+        fun visit(type: UpdatedType): T
+        fun visit(type: VarargsType): T
+    }
 }
 
 interface BasicType : Type {
@@ -139,6 +155,10 @@ interface BasicType : Type {
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return this
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
     }
 }
 
@@ -161,29 +181,11 @@ object StringSliceType : BasicType {
     override val shortDescription = "StringSlice"
 }
 
-object AnyType : Type {
-    override val shapeId: Int?
-        get() = null
-
-    override fun fieldType(fieldName: Identifier): Type? = null
-
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
-        return this
-    }
-
+object AnyType : BasicType {
     override val shortDescription = "Any"
 }
 
-object NothingType : Type {
-    override val shapeId: Int?
-        get() = null
-
-    override fun fieldType(fieldName: Identifier): Type? = null
-
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
-        return this
-    }
-
+object NothingType : BasicType {
     override val shortDescription = "Nothing"
 }
 
@@ -220,6 +222,10 @@ data class StaticValueType(val value: StaticValue): Type {
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         throw UnsupportedOperationException("not implemented")
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
     }
 }
 
@@ -385,6 +391,10 @@ data class TypeParameter(
             source = source,
         )
     }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class EffectParameter(
@@ -470,6 +480,10 @@ data class ModuleType(
 
     override val shortDescription: String
         get() = "module ${formatModuleName(name)}"
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 data class FunctionType(
@@ -515,6 +529,10 @@ data class FunctionType(
 
             return "${typeParameters}(${parameters})${effect} -> ${returns.shortDescription}"
         }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 private fun staticArgumentsString(values: List<StaticValue>): String {
@@ -547,6 +565,10 @@ data class TupleType(val elementTypes: List<Type>): Type {
             }
         )
     }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 interface TypeAlias: Type {
@@ -563,6 +585,10 @@ interface TypeAlias: Type {
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         // TODO: test this
         return aliasedType.replaceStaticValues(bindings)
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
     }
 }
 
@@ -637,6 +663,10 @@ interface ShapeType: Type {
             staticParameters = staticParameters,
             staticArguments = staticArguments.map { argument -> replaceStaticValues(argument, bindings) }
         )
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
     }
 }
 
@@ -745,6 +775,10 @@ class UpdatedType internal constructor(
             field = newShapeType.allFields[field.name]!!,
         )
     }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 interface UnionType: Type {
@@ -768,6 +802,10 @@ interface UnionType: Type {
         get() = null
 
     override fun fieldType(fieldName: Identifier): Type? = null
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 
@@ -879,6 +917,10 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         throw UnsupportedOperationException("not implemented")
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        return visitor.visit(this)
     }
 }
 
