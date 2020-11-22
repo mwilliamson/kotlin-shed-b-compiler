@@ -255,7 +255,7 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
     )
 }
 
-val shapeFieldTypeFunctionTypeParameter = covariantTypeParameter("Type")
+val shapeFieldTypeFunctionTypeParameter = contravariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
 val shapeFieldTypeFunctionUpdateParameter = covariantTypeParameter("Update")
 val shapeFieldTypeFunctionParameters = listOf(
