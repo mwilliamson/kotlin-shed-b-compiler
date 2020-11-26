@@ -180,6 +180,12 @@ internal data class LlvmPtrToInt(
     }
 }
 
+internal enum class LlvmTailMarker(val ir: String) {
+    TAIL("tail"),
+    MUST_TAIL("musttail"),
+    NO_TAIL("notail"),
+}
+
 internal data class LlvmCall(
     val target: LlvmVariable?,
     val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
@@ -187,13 +193,15 @@ internal data class LlvmCall(
     val functionPointer: LlvmOperand,
     val arguments: List<LlvmTypedOperand>,
     val attributes: List<LlvmFunctionAttribute> = listOf(),
+    val tailMarker: LlvmTailMarker? = null,
 ): LlvmInstruction {
     override fun serialise(): String {
-        val prefix = if (target == null) { "" } else { "${target.serialise()} = " }
+        val targetString = if (target == null) { "" } else { "${target.serialise()} = " }
+        val tailString = if (tailMarker == null) { "" } else { tailMarker.ir + " " }
         val argumentsString = arguments.joinToString(", ") { argument -> argument.serialise() }
         val attributesString = attributes.joinToString("") { attribute -> attribute.ir + " "}
 
-        return "${prefix}call $callingConvention ${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)$attributesString"
+        return "${targetString}${tailString}call $callingConvention ${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)$attributesString"
     }
 }
 
