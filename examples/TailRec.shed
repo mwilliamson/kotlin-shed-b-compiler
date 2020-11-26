@@ -1,5 +1,7 @@
 // stdout:
-//   10001
+//   10000001
+
+export main;
 
 fun slowAdd(a: Int, b: Int) -> Int {
     if (b == 0) {
@@ -10,5 +12,5 @@ fun slowAdd(a: Int, b: Int) -> Int {
 }
 
 fun main() !Io -> Unit {
-    print!(intToString(slowAdd(1, 10000)) + "\n");
+    print!(intToString(slowAdd(1, 10000000)) + "\n");
 }

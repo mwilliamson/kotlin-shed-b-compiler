@@ -95,7 +95,8 @@ internal class ClosureCompiler(
     internal fun callClosure(
         target: LlvmOperandLocal,
         closurePointer: LlvmOperand,
-        arguments: List<LlvmOperand>
+        arguments: List<LlvmOperand>,
+        tail: Boolean = false,
     ): List<LlvmInstruction> {
         val typedClosurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))
         val functionPointerPointer = LlvmOperandLocal(irBuilder.generateName("functionPointerPointer"))
@@ -132,7 +133,8 @@ internal class ClosureCompiler(
                 returnType = compiledValueType,
                 functionPointer = functionPointer,
                 arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, environmentPointer)) +
-                    arguments.map { argument -> LlvmTypedOperand(compiledValueType, argument) }
+                    arguments.map { argument -> LlvmTypedOperand(compiledValueType, argument) },
+                tailMarker = if (tail) { LlvmTailMarker.MUST_TAIL } else { null }
             )
         )
     }

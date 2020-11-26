@@ -260,7 +260,8 @@ internal class Compiler(
                 val callInstructions = closures.callClosure(
                     target = result,
                     closurePointer = receiver,
-                    arguments = positionalArguments + namedArguments
+                    arguments = positionalArguments + namedArguments,
+                    tail = instruction.tail,
                 )
 
                 return context4.addInstructions(callInstructions).pushTemporary(result)

@@ -15,7 +15,6 @@ import org.shedlang.compiler.SourceError
 class LlvmExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
-        "TailRec.shed",
     )
 
     @TestFactory

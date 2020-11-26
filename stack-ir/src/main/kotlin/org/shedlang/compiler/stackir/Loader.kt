@@ -487,9 +487,17 @@ class Loader(
             override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
                 val expressionInstructions = loadExpression(node.expression)
                 when (node.type) {
-                    ExpressionStatementNode.Type.VALUE,
-                    ExpressionStatementNode.Type.TAILREC ->
+                    ExpressionStatementNode.Type.VALUE->
                         return expressionInstructions
+
+                    ExpressionStatementNode.Type.TAILREC -> {
+                        // TODO: ensure that this is always valid (probably in the front-end rather than here)
+                        val call = expressionInstructions.last() as Call
+                        return expressionInstructions
+                            .removeAt(expressionInstructions.lastIndex)
+                            .add(call.copy(tail = true))
+                            .add(Return)
+                    }
 
                     ExpressionStatementNode.Type.NO_VALUE ->
                         return expressionInstructions.add(Discard)

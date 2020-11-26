@@ -35,9 +35,10 @@ object BoolNotEqual: Instruction()
 
 object BoolNot: Instruction()
 
-class Call(
+data class Call(
     val positionalArgumentCount: Int,
-    val namedArgumentNames: List<Identifier>
+    val namedArgumentNames: List<Identifier>,
+    val tail: Boolean = false,
 ): Instruction()
 
 object UnicodeScalarEquals: Instruction()
