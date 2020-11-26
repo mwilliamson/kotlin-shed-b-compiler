@@ -337,7 +337,7 @@ internal class EffectCompiler(
         parameters = listOf(
             LlvmParameter(compiledValueType, "exit_value")
         ),
-        noReturn = true
+        attributes = listOf(LlvmFunctionAttribute.NO_RETURN),
     )
 
     private fun callOperationHandler(

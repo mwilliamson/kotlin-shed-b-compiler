@@ -165,7 +165,8 @@ internal class LibcCallCompiler(private val irBuilder: LlvmIrBuilder) {
         returnType = setjmpReturnType,
         parameters = listOf(
             LlvmParameter(CTypes.jmpBufPointer, "env")
-        )
+        ),
+        attributes = listOf(LlvmFunctionAttribute.RETURNS_TWICE)
     )
 
     internal fun setjmp(target: LlvmOperandLocal, env: LlvmOperand): LlvmCall {

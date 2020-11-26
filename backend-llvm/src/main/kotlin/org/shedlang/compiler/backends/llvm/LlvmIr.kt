@@ -186,16 +186,13 @@ internal data class LlvmCall(
     val returnType: LlvmType,
     val functionPointer: LlvmOperand,
     val arguments: List<LlvmTypedOperand>,
-    val noReturn: Boolean = false
+    val attributes: List<LlvmFunctionAttribute> = listOf(),
 ): LlvmInstruction {
     override fun serialise(): String {
         val prefix = if (target == null) { "" } else { "${target.serialise()} = " }
         val argumentsString = arguments.joinToString(", ") { argument -> argument.serialise() }
-        val attributesString = if (noReturn) {
-            " noreturn"
-        } else {
-            ""
-        }
+        val attributesString = attributes.joinToString("") { attribute -> attribute.ir + " "}
+
         return "${prefix}call $callingConvention ${returnType.serialise()} ${functionPointer.serialise()}($argumentsString)$attributesString"
     }
 }
@@ -439,13 +436,18 @@ internal data class LlvmFunctionDefinition(
     }
 }
 
+enum class LlvmFunctionAttribute(val ir: String) {
+    NO_RETURN("noreturn"),
+    RETURNS_TWICE("returns_twice"),
+}
+
 internal data class LlvmFunctionDeclaration(
     val name: String,
     val returnType: LlvmType,
     val parameters: List<LlvmParameter>,
     val callingConvention: LlvmCallingConvention = LlvmCallingConvention.ccc,
     val hasVarargs: Boolean = false,
-    val noReturn: Boolean = false
+    val attributes: List<LlvmFunctionAttribute> = listOf(),
 ): LlvmTopLevelEntity {
     internal fun call(
         target: LlvmVariable?,
@@ -460,7 +462,7 @@ internal data class LlvmFunctionDeclaration(
             arguments = parameters.zip(arguments) { parameter, argument ->
                 LlvmTypedOperand(parameter.type, argument)
             } + varargs.orEmpty(),
-            noReturn = noReturn
+            attributes = attributes,
         )
     }
 
@@ -477,12 +479,7 @@ internal data class LlvmFunctionDeclaration(
             parameter.serialise()
         } + if (hasVarargs) listOf("...") else listOf()
         val parametersString = parameterStrings.joinToString(", ")
-
-        val attributesString = if (noReturn) {
-            " noreturn"
-        } else {
-            ""
-        }
+        val attributesString = attributes.joinToString("") { attribute -> attribute.ir + " "}
 
         return "declare $callingConvention ${returnType.serialise()} @$name($parametersString)$attributesString\n"
     }
