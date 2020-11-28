@@ -49,7 +49,7 @@ class TypeCheckWhenTests {
         )
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                memberReference to StaticValueType(memberType),
+                memberReference to metaType(memberType),
                 valueReference to unionType
             )
         )
@@ -86,8 +86,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to StaticValueType(inputMember1),
-                inputMember2TypeReference to StaticValueType(inputMember2),
+                inputMember1TypeReference to metaType(inputMember1),
+                inputMember2TypeReference to metaType(inputMember2),
                 outputMember1Reference to outputMember1,
                 outputMember2Reference to outputMember2
             )
@@ -118,8 +118,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to StaticValueType(inputMember1),
-                inputMember2TypeReference to StaticValueType(inputMember2),
+                inputMember1TypeReference to metaType(inputMember1),
+                inputMember2TypeReference to metaType(inputMember2),
                 outputMember1Reference to outputMember1,
                 outputMember2Reference to outputMember2
             )
@@ -190,8 +190,8 @@ class TypeCheckWhenTests {
                 refinedVariableReference to declaration
             ),
             referenceTypes = mapOf(
-                inputMember1TypeReference to StaticValueType(inputMember1),
-                inputMember2TypeReference to StaticValueType(inputMember2)
+                inputMember1TypeReference to metaType(inputMember1),
+                inputMember2TypeReference to metaType(inputMember2)
             ),
             types = mapOf(declaration to inputUnion)
         )
@@ -216,7 +216,7 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to StaticValueType(inputMember1)
+                inputMember1TypeReference to metaType(inputMember1)
             )
         )
 
@@ -250,8 +250,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to StaticValueType(inputMember1),
-                inputMember2TypeReference to StaticValueType(inputMember2)
+                inputMember1TypeReference to metaType(inputMember1),
+                inputMember2TypeReference to metaType(inputMember2)
             )
         )
 
@@ -283,8 +283,8 @@ class TypeCheckWhenTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 variableReference to inputUnion,
-                inputMember1TypeReference to StaticValueType(inputMember1),
-                inputMember2TypeReference to StaticValueType(inputMember2)
+                inputMember1TypeReference to metaType(inputMember1),
+                inputMember2TypeReference to metaType(inputMember2)
             )
         )
         inferType(expression, typeContext)

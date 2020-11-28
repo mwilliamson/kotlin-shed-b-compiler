@@ -4,9 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.inferType
-import org.shedlang.compiler.types.BoolType
-import org.shedlang.compiler.types.StaticValueType
-import org.shedlang.compiler.types.invariantTypeParameter
+import org.shedlang.compiler.types.*
 
 class TypeCheckStaticCallTests {
     @Test
@@ -28,7 +26,7 @@ class TypeCheckStaticCallTests {
             node,
             typeContext(referenceTypes = mapOf(
                 boxReference to StaticValueType(boxType),
-                boolReference to StaticValueType(BoolType)
+                boolReference to BoolMetaType
             ))
         )
 

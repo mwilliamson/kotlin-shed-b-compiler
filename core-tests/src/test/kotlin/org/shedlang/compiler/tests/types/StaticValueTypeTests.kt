@@ -10,29 +10,26 @@ import org.shedlang.compiler.tests.field
 import org.shedlang.compiler.tests.isEquivalentType
 import org.shedlang.compiler.tests.isStringType
 import org.shedlang.compiler.tests.shapeType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
-import org.shedlang.compiler.types.StringType
-import org.shedlang.compiler.types.functionType
+import org.shedlang.compiler.types.*
 
 class StaticValueTypeTests {
     @Test
     fun shortDescriptionContainsType() {
-        val type = StaticValueType(IntType)
+        val type = metaType(IntType)
 
         assertThat(type.shortDescription, equalTo("StaticValue[Int]"))
     }
 
     @Test
     fun nonShapeTypesHaveNoFieldsField() {
-        val type = StaticValueType(IntType)
+        val type = metaType(IntType)
 
         assertThat(type.fieldType(Identifier("fields")), absent())
     }
 
     @Test
     fun canReadNameOfFieldsFromShapeTypeInfo() {
-        val type = StaticValueType(shapeType(fields = listOf(
+        val type = metaType(shapeType(fields = listOf(
             field("first", type = IntType),
             field("second", type = StringType)
         )))
@@ -52,7 +49,7 @@ class StaticValueTypeTests {
             field("first", type = IntType),
             field("second", type = StringType)
         ))
-        val metaType = StaticValueType(shapeType)
+        val metaType = metaType(shapeType)
 
         val fieldsField = metaType.fieldType(Identifier("fields"))
         val firstField = fieldsField!!.fieldType(Identifier("first"))

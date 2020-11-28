@@ -8,6 +8,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.UnitMetaType
 import org.shedlang.compiler.types.UnitType
 
 class TypeCheckModuleTests {
@@ -19,7 +20,7 @@ class TypeCheckModuleTests {
                 function(returnType = unit, body = listOf(badStatement))
             ))
 
-            val typeContext = typeContext(referenceTypes = mapOf(unit to StaticValueType(UnitType)))
+            val typeContext = typeContext(referenceTypes = mapOf(unit to UnitMetaType))
             typeCheck(moduleName(), node, typeContext)
         })
     }
@@ -41,7 +42,7 @@ class TypeCheckModuleTests {
         ))
 
         typeCheck(moduleName(), node, typeContext(
-            referenceTypes = mapOf(unit to StaticValueType(UnitType)),
+            referenceTypes = mapOf(unit to UnitMetaType),
             references = mapOf(
                 referenceF to declarationF,
                 referenceG to declarationG
@@ -67,7 +68,7 @@ class TypeCheckModuleTests {
             references = mapOf(
                 shapeReference to shape
             ),
-            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
+            referenceTypes = mapOf(unitReference to UnitMetaType)
         ))
     }
 
@@ -110,7 +111,7 @@ class TypeCheckModuleTests {
 
         val result = typeCheck(moduleName(), node, typeContext(
             references = mapOf(export to exportedFunction),
-            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
+            referenceTypes = mapOf(unitReference to UnitMetaType)
         ))
         assertThat(result.fields, isMap(
             Identifier("f") to isFunctionType(returnType = equalTo(UnitType))

@@ -9,6 +9,7 @@ import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.metaType
 
 class TypeCheckIsOperationTests {
     @Test
@@ -17,7 +18,7 @@ class TypeCheckIsOperationTests {
         val memberReference = staticReference("Member")
 
         val expression = isOperation(expression = literalInt(1), type = memberReference)
-        val typeContext = typeContext(referenceTypes = mapOf(memberReference to StaticValueType(memberType)))
+        val typeContext = typeContext(referenceTypes = mapOf(memberReference to metaType(memberType)))
         assertThat(
             { typeCheck(expression, typeContext) },
             throwsUnexpectedType(expected = isUnionTypeGroup, actual = IntType)
@@ -34,7 +35,7 @@ class TypeCheckIsOperationTests {
         val expression = isOperation(expression = valueReference, type = memberReference)
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                memberReference to StaticValueType(memberType),
+                memberReference to metaType(memberType),
                 valueReference to unionType
             )
         )
@@ -58,7 +59,7 @@ class TypeCheckIsOperationTests {
         val expression = isOperation(expression = valueReference, type = memberReference)
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                memberReference to StaticValueType(memberType),
+                memberReference to metaType(memberType),
                 valueReference to unionType
             )
         )
@@ -78,7 +79,7 @@ class TypeCheckIsOperationTests {
         val expression = isOperation(expression = valueReference, type = memberReference)
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                memberReference to StaticValueType(memberType),
+                memberReference to metaType(memberType),
                 valueReference to unionType
             )
         )

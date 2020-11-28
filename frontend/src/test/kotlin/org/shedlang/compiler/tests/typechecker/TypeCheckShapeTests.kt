@@ -19,8 +19,8 @@ class TypeCheckShapeTests {
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            intType to StaticValueType(IntType),
-            boolType to StaticValueType(BoolType)
+            intType to IntMetaType,
+            boolType to BoolMetaType
         ))
         typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
@@ -40,7 +40,7 @@ class TypeCheckShapeTests {
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            intType to StaticValueType(IntType)
+            intType to IntMetaType
         ))
         assertThat(
             {
@@ -79,7 +79,7 @@ class TypeCheckShapeTests {
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            intType to StaticValueType(IntType)
+            intType to IntMetaType
         ))
 
         assertThat(
@@ -121,9 +121,9 @@ class TypeCheckShapeTests {
         )
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            intType to StaticValueType(IntType),
-            extendsShape1Reference to StaticValueType(shape1),
-            extendsShape2Reference to StaticValueType(shape2)
+            intType to IntMetaType,
+            extendsShape1Reference to metaType(shape1),
+            extendsShape2Reference to metaType(shape2)
         ))
         typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
@@ -260,8 +260,8 @@ class TypeCheckShapeTests {
         )
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShape1Reference to StaticValueType(shape1),
-            extendsShape2Reference to StaticValueType(shape2)
+            extendsShape1Reference to metaType(shape1),
+            extendsShape2Reference to metaType(shape2)
         ))
         typeCheckModuleStatement(node, typeContext)
         typeContext.undefer()
@@ -286,8 +286,8 @@ class TypeCheckShapeTests {
             fields = listOf(shapeField(shape = null, name = "a", type = stringTypeReference))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShapeReference to StaticValueType(shape),
-            stringTypeReference to StaticValueType(StringType)
+            extendsShapeReference to metaType(shape),
+            stringTypeReference to StringMetaType
         ))
         assertThat(
             {
@@ -316,9 +316,9 @@ class TypeCheckShapeTests {
             fields = listOf(shapeField(shape = baseReference, name = "a", type = stringTypeReference))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShapeReference to StaticValueType(shape),
-            stringTypeReference to StaticValueType(StringType),
-            baseReference to StaticValueType(base)
+            extendsShapeReference to metaType(shape),
+            stringTypeReference to StringMetaType,
+            baseReference to metaType(base)
         ))
         typeCheckModuleStatement(node, typeContext)
         typeContext.undefer()
@@ -346,9 +346,9 @@ class TypeCheckShapeTests {
             fields = listOf(shapeField(shape = baseReference, name = "a", type = anyTypeReference))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShapeReference to StaticValueType(shape),
-            anyTypeReference to StaticValueType(AnyType),
-            baseReference to StaticValueType(base)
+            extendsShapeReference to metaType(shape),
+            anyTypeReference to AnyMetaType,
+            baseReference to metaType(base)
         ))
         assertThat(
             {
@@ -380,9 +380,9 @@ class TypeCheckShapeTests {
             fields = listOf(shapeField(shape = baseReference, name = "a", type = stringTypeReference))
         )
         val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShapeReference to StaticValueType(shape),
-            stringTypeReference to StaticValueType(StringType),
-            baseReference to StaticValueType(base)
+            extendsShapeReference to metaType(shape),
+            stringTypeReference to StringMetaType,
+            baseReference to metaType(base)
         ))
         assertThat(
             {
@@ -456,7 +456,7 @@ class TypeCheckShapeTests {
 
         val typeContext = typeContext(
             references = mapOf(typeParameterReference to typeParameterDeclaration),
-            referenceTypes = mapOf(unitReference to StaticValueType(UnitType))
+            referenceTypes = mapOf(unitReference to UnitMetaType)
         )
         // TODO: use more specific exception
         assertThat(

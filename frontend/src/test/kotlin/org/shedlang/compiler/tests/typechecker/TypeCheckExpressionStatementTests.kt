@@ -55,7 +55,7 @@ class TypeCheckExpressionStatementTests {
                 boolReference to boolDeclaration
             ),
             types = mapOf(
-                boolDeclaration to StaticValueType(BoolType)
+                boolDeclaration to BoolMetaType
             )
         )
         typeCheckFunctionDefinition(functionDeclaration, context)

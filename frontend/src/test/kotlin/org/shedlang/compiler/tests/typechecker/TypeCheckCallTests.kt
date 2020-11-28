@@ -68,8 +68,8 @@ class TypeCheckCallTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType,
-            intReference to StaticValueType(IntType),
-            unitReference to StaticValueType(UnitType)
+            intReference to IntMetaType,
+            unitReference to UnitMetaType
         ))
         val type = inferCallType(node, typeContext)
 
@@ -94,7 +94,7 @@ class TypeCheckCallTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType,
-            unitReference to StaticValueType(UnitType)
+            unitReference to UnitMetaType
         ))
 
         assertThat(
@@ -321,7 +321,7 @@ class TypeCheckCallTests {
         val node = call(receiver = shapeReference)
 
         val shapeType = shapeType(name = "X")
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
         val type = inferCallType(node, typeContext)
 
         assertThat(type, cast(equalTo(shapeType)))
@@ -472,7 +472,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X")
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -486,7 +486,7 @@ class TypeCheckCallTests {
         val node = call(receiver = shapeReference)
 
         val shapeType = shapeType(name = "X", fields = listOf(field("a", BoolType)))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -503,7 +503,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X", fields = listOf(field("a", BoolType)))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -520,7 +520,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X")
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -539,7 +539,7 @@ class TypeCheckCallTests {
         val shapeType = shapeType(name = "X", fields = listOf(
             field("a", IntType, isConstant = true)
         ))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -559,7 +559,7 @@ class TypeCheckCallTests {
         )
 
         val shapeType = shapeType(name = "X", fields = listOf(field("a", IntType)))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -680,7 +680,7 @@ class TypeCheckCallTests {
         val typeContext = typeContext(
             referenceTypes = mapOf(
                 functionReference to functionType,
-                effectReference to StaticValueType(IoEffect)
+                effectReference to effectType(IoEffect)
             ),
             effect = EmptyEffect
         )
@@ -721,7 +721,7 @@ class TypeCheckCallTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                effectReference to StaticValueType(IoEffect)
+                effectReference to effectType(IoEffect)
             ),
             effect = EmptyEffect
         )
@@ -761,7 +761,7 @@ class TypeCheckCallTests {
                     effect = IoEffect,
                     returns = UnitType
                 ),
-                effectReference to StaticValueType(IoEffect)
+                effectReference to effectType(IoEffect)
             ),
             effect = EmptyEffect
         )
@@ -806,8 +806,8 @@ class TypeCheckCallTests {
             ),
             referenceTypes = mapOf(
                 castReference to CastType,
-                memberReference to StaticValueType(member1),
-                unionReference to StaticValueType(union)
+                memberReference to metaType(member1),
+                unionReference to metaType(union)
             )
         )
         val type = inferCallType(node, typeContext)
@@ -844,7 +844,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                boxTypeReference to StaticValueType(boxType),
+                boxTypeReference to metaType(boxType),
                 emptyReference to EmptyFunctionType
             )
         )
@@ -877,7 +877,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                boxTypeReference to StaticValueType(boxType),
+                boxTypeReference to metaType(boxType),
                 emptyReference to EmptyFunctionType
             )
         )
@@ -909,7 +909,7 @@ class TypeCheckCallTests {
 
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                boxTypeReference to StaticValueType(boxType),
+                boxTypeReference to metaType(boxType),
                 emptyReference to EmptyFunctionType
             )
         )

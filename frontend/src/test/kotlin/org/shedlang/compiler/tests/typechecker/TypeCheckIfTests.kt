@@ -10,6 +10,7 @@ import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.metaType
 
 class TypeCheckIfTests {
     @Test
@@ -85,7 +86,7 @@ class TypeCheckIfTests {
                 )
             ),
             referenceTypes = mapOf(
-                member1Reference to StaticValueType(member1)
+                member1Reference to metaType(member1)
             ),
             references = mapOf(
                 variableReference to declaration,

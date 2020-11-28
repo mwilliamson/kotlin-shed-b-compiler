@@ -466,10 +466,10 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val shapeType = shapeType(tagValue = tagValue)
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to StaticValueType(shapeType)
+                shapeReference.nodeId to metaType(shapeType)
             ),
             variableTypes = mapOf(
-                shapeDeclaration.nodeId to StaticValueType(shapeType)
+                shapeDeclaration.nodeId to metaType(shapeType)
             )
         )
 
@@ -515,10 +515,10 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val shapeType = shapeType(tagValue = tagValue)
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to StaticValueType(shapeType)
+                shapeReference.nodeId to metaType(shapeType)
             ),
             variableTypes = mapOf(
-                shapeDeclaration.nodeId to StaticValueType(shapeType)
+                shapeDeclaration.nodeId to metaType(shapeType)
             )
         )
 
@@ -571,10 +571,10 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val types = createTypes(
             expressionTypes = mapOf(
                 receiverReference.nodeId to shapeType,
-                shapeReference.nodeId to StaticValueType(shapeType)
+                shapeReference.nodeId to metaType(shapeType)
             ),
             variableTypes = mapOf(
-                shapeDeclaration.nodeId to StaticValueType(shapeType)
+                shapeDeclaration.nodeId to metaType(shapeType)
             )
         )
 
@@ -633,10 +633,10 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val types = createTypes(
             expressionTypes = mapOf(
                 receiverReference.nodeId to shapeType,
-                shapeReference.nodeId to StaticValueType(shapeType)
+                shapeReference.nodeId to metaType(shapeType)
             ),
             variableTypes = mapOf(
-                shapeDeclaration.nodeId to StaticValueType(shapeType)
+                shapeDeclaration.nodeId to metaType(shapeType)
             )
         )
 
@@ -696,14 +696,14 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
         val types = createTypes(
             expressionTypes = mapOf(
-                shapeReference.nodeId to StaticValueType(shapeType),
+                shapeReference.nodeId to metaType(shapeType),
                 firstReference.nodeId to IntType
             ),
             targetTypes = mapOf(
                 fieldsTarget.nodeId to shapeType
             ),
             variableTypes = mapOf(
-                shapeDeclaration.nodeId to StaticValueType(shapeType)
+                shapeDeclaration.nodeId to metaType(shapeType)
             )
         )
 
@@ -823,13 +823,13 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         ))
         val types = createTypes(
             expressionTypes = mapOf(
-                shape2Reference.nodeId to StaticValueType(shapeType())
+                shape2Reference.nodeId to metaType(shapeType())
             ),
             variableTypes = mapOf(
-                shape1.nodeId to StaticValueType(shapeType(name = "Shape1", tagValue = tagValue(tag, "value1"))),
-                shape2.nodeId to StaticValueType(shapeType(name = "Shape2", tagValue = tagValue(tag, "value2"))),
-                shape3.nodeId to StaticValueType(shapeType(name = "Shape3", tagValue = tagValue(tag, "value3"))),
-                shape4.nodeId to StaticValueType(shapeType(name = "Shape4", tagValue = tagValue(tag, "value4")))
+                shape1.nodeId to metaType(shapeType(name = "Shape1", tagValue = tagValue(tag, "value1"))),
+                shape2.nodeId to metaType(shapeType(name = "Shape2", tagValue = tagValue(tag, "value2"))),
+                shape3.nodeId to metaType(shapeType(name = "Shape3", tagValue = tagValue(tag, "value3"))),
+                shape4.nodeId to metaType(shapeType(name = "Shape4", tagValue = tagValue(tag, "value4")))
             )
         )
         val loader = loader(inspector = inspector, references = references, types = types)

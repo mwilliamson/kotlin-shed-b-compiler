@@ -31,7 +31,7 @@ class TypeCheckStaticStaticCallTests {
             application,
             typeContext(referenceTypes = mapOf(
                 listReference to StaticValueType(listType),
-                boolReference to StaticValueType(BoolType)
+                boolReference to BoolMetaType
             ))
         )
 
@@ -60,7 +60,7 @@ class TypeCheckStaticStaticCallTests {
         val type = evalType(
             application,
             typeContext(referenceTypes = mapOf(
-                boxReference to StaticValueType(boxType),
+                boxReference to metaType(boxType),
                 emptyReference to StaticValueType(EmptyTypeFunction)
             ))
         )

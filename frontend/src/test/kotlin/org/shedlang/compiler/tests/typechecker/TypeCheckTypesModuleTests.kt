@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.IntMetaType
 import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.MetaTypeGroup
@@ -37,7 +38,7 @@ class TypeCheckTypesModuleTests {
         )
 
         val result = typeCheck(moduleName(), node, typeContext(
-            referenceTypes = mapOf(intReference to StaticValueType(IntType))
+            referenceTypes = mapOf(intReference to IntMetaType)
         ))
         assertThat(result.fields, isMap(
             Identifier("value") to isIntType

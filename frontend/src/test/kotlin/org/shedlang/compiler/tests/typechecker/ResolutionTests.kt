@@ -9,9 +9,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
-import org.shedlang.compiler.types.UnitType
+import org.shedlang.compiler.types.*
 
 class ResolutionTests {
     private val declaration = variableBinder("declaration")
@@ -188,7 +186,7 @@ class ResolutionTests {
             )
         )
 
-        val unitDeclaration = builtinVariable("Unit", StaticValueType(UnitType))
+        val unitDeclaration = builtinVariable("Unit", UnitMetaType)
         val references = resolve(module(
             body = listOf(outerFunctionNode)
         ), globals = mapOf(Identifier("Unit") to unitDeclaration))
@@ -519,7 +517,7 @@ class ResolutionTests {
     @Test
     fun typeAliasExpressionIsResolved() {
         val typeAliasExpression = staticReference("Int")
-        val intType = BuiltinVariable(Identifier("Int"), StaticValueType(IntType))
+        val intType = BuiltinVariable(Identifier("Int"), IntMetaType)
         val typeAliasReference = staticReference("X")
         val typeAlias = typeAliasDeclaration(name = "X", expression = typeAliasExpression)
 

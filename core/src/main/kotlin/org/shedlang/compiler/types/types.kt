@@ -166,29 +166,50 @@ interface BasicType : Type {
 object UnitType: BasicType {
     override val shortDescription = "Unit"
 }
+
+val UnitMetaType = metaType(UnitType)
+
 object BoolType : BasicType {
     override val shortDescription = "Bool"
 }
+
+val BoolMetaType = metaType(BoolType)
+
 object IntType : BasicType{
     override val shortDescription = "Int"
 }
+
+val IntMetaType = metaType(IntType)
+
 object UnicodeScalarType : BasicType {
     override val shortDescription = "UnicodeScalar"
 }
+
+val UnicodeScalarMetaType = metaType(UnicodeScalarType)
+
 object StringType : BasicType {
     override val shortDescription = "String"
 }
+
+val StringMetaType = metaType(StringType)
+
 object StringSliceType : BasicType {
     override val shortDescription = "StringSlice"
 }
+
+val StringSliceMetaType = metaType(StringSliceType)
 
 object AnyType : BasicType {
     override val shortDescription = "Any"
 }
 
+val AnyMetaType = metaType(AnyType)
+
 object NothingType : BasicType {
     override val shortDescription = "Nothing"
 }
+
+val NothingMetaType = metaType(NothingType)
 
 data class StaticValueType(val value: StaticValue): Type {
     private val fieldsType: Lazy<Type?>

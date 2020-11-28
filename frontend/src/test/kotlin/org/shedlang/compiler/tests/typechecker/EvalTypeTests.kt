@@ -55,7 +55,7 @@ class EvalTypeTests {
 
         val type = evalType(
             reference,
-            typeContext(referenceTypes = mapOf(reference to StaticValueType(IntType)))
+            typeContext(referenceTypes = mapOf(reference to IntMetaType))
         )
         assertThat(type, isIntType)
     }
@@ -64,7 +64,7 @@ class EvalTypeTests {
     fun staticFieldAccessHasTypeOfField() {
         val moduleReference = staticReference("M")
         val moduleType = moduleType(fields = mapOf(
-            "T" to StaticValueType(IntType)
+            "T" to IntMetaType
         ))
 
         val application = staticFieldAccess(moduleReference, "T")
@@ -97,9 +97,9 @@ class EvalTypeTests {
             node,
             typeContext(
                 referenceTypes = mapOf(
-                    boolReference to StaticValueType(BoolType),
-                    intReference to StaticValueType(IntType),
-                    effectReference to StaticValueType(IoEffect)
+                    boolReference to BoolMetaType,
+                    intReference to IntMetaType,
+                    effectReference to effectType(IoEffect)
                 ),
                 references = mapOf(typeParameterReference to typeParameter)
             )
@@ -119,7 +119,7 @@ class EvalTypeTests {
 
         val node = functionTypeNode(returnType = typeParameterReference)
         val typeContext = typeContext(referenceTypes = mapOf(
-            typeParameterReference to StaticValueType(typeParameter)
+            typeParameterReference to metaType(typeParameter)
         ))
 
         assertThat(
@@ -153,8 +153,8 @@ class EvalTypeTests {
             node,
             typeContext(
                 referenceTypes = mapOf(
-                    boolReference to StaticValueType(BoolType),
-                    intReference to StaticValueType(IntType)
+                    boolReference to BoolMetaType,
+                    intReference to IntMetaType
                 )
             )
         )

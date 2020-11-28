@@ -83,8 +83,8 @@ class TypeCheckExpressionTests {
 
         val typeContext = typeContext(
             referenceTypes = mapOf(
-                intReference to StaticValueType(IntType),
-                unitReference to StaticValueType(UnitType)
+                intReference to IntMetaType,
+                unitReference to UnitMetaType
             )
         )
         val type = inferType(node, typeContext)
