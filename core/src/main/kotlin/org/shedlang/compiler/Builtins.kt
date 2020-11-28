@@ -25,6 +25,7 @@ val builtins = listOf(
     builtinVariable("ShapeField", StaticValueType(ShapeFieldTypeFunction)),
 
     builtinVariable("Castable", StaticValueType(CastableTypeFunction)),
+    builtinVariable("Type", StaticValueType(MetaTypeTypeFunction)),
 
     builtinVariable("Empty", StaticValueType(EmptyTypeFunction)),
     builtinVariable("empty", EmptyFunctionType),

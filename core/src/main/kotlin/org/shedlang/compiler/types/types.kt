@@ -15,6 +15,7 @@ interface StaticValue {
         fun visit(type: Type): T
         fun visit(value: CastableTypeFunction): T
         fun visit(type: EmptyTypeFunction): T
+        fun visit(value: MetaTypeTypeFunction): T
     }
 }
 
@@ -479,6 +480,15 @@ object EmptyTypeFunction: StaticValue {
 
 fun createEmptyShapeType(argument: ShapeType): LazyShapeType {
     return createPartialShapeType(argument, populatedFieldNames = setOf())
+}
+
+object MetaTypeTypeFunction: StaticValue {
+    override val shortDescription: String
+        get() = "Type"
+
+    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+        return visitor.visit(this)
+    }
 }
 
 fun createPartialShapeType(shapeType: ShapeType, populatedFieldNames: Set<Identifier>): LazyShapeType {
@@ -1019,6 +1029,10 @@ fun validateStaticValue(value: StaticValue): ValidateTypeResult {
         override fun visit(type: EmptyTypeFunction): ValidateTypeResult {
             return ValidateTypeResult.success
         }
+
+        override fun visit(value: MetaTypeTypeFunction): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
     })
 }
 
@@ -1127,6 +1141,10 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
 
         override fun visit(type: EmptyTypeFunction): StaticValue {
             return type
+        }
+
+        override fun visit(value: MetaTypeTypeFunction): StaticValue {
+            return value
         }
     })
 }
