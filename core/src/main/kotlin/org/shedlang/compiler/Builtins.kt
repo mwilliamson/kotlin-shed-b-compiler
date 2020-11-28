@@ -24,6 +24,8 @@ val builtins = listOf(
     builtinType("Bool", BoolType),
     builtinVariable("ShapeField", StaticValueType(ShapeFieldTypeFunction)),
 
+    builtinVariable("Castable", StaticValueType(CastableTypeFunction)),
+
     builtinVariable("Empty", StaticValueType(EmptyTypeFunction)),
     builtinVariable("empty", EmptyFunctionType),
 

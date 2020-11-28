@@ -13,6 +13,7 @@ interface StaticValue {
         fun visit(effect: Effect): T
         fun visit(value: ParameterizedStaticValue): T
         fun visit(type: Type): T
+        fun visit(value: CastableTypeFunction): T
         fun visit(type: EmptyTypeFunction): T
     }
 }
@@ -452,6 +453,15 @@ data class ParameterizedStaticValue(
     override val shortDescription: String
     // TODO: should be something like (T, U) => Shape[T, U]
         get() = "TypeFunction(TODO)"
+
+    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+        return visitor.visit(this)
+    }
+}
+
+object CastableTypeFunction: StaticValue {
+    override val shortDescription: String
+        get() = "Castable"
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)
@@ -1002,10 +1012,13 @@ fun validateStaticValue(value: StaticValue): ValidateTypeResult {
             return validateType(type)
         }
 
-        override fun visit(type: EmptyTypeFunction): ValidateTypeResult {
+        override fun visit(value: CastableTypeFunction): ValidateTypeResult {
             return ValidateTypeResult.success
         }
 
+        override fun visit(type: EmptyTypeFunction): ValidateTypeResult {
+            return ValidateTypeResult.success
+        }
     })
 }
 
@@ -1106,6 +1119,10 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
 
         override fun visit(type: Type): StaticValue {
             return replaceStaticValuesInType(type, bindings)
+        }
+
+        override fun visit(value: CastableTypeFunction): StaticValue {
+            return value
         }
 
         override fun visit(type: EmptyTypeFunction): StaticValue {
