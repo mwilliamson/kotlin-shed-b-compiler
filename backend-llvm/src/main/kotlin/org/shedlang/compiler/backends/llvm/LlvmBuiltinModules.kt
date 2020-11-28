@@ -14,6 +14,7 @@ internal class BuiltinModuleCompiler(
     private val strings: StringCompiler
 ) {
     private val builtinModules = mapOf<ModuleName, (FunctionContext) -> FunctionContext>(
+        listOf(Identifier("Core"), Identifier("Cast")) to ::compileCoreCast,
         listOf(Identifier("Core"), Identifier("Io")) to ::compileCoreIo,
         listOf(Identifier("Core"), Identifier("IntToString")) to ::compileCoreIntToString,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")) to ::compileStdlibPlatformProcess,
@@ -27,6 +28,16 @@ internal class BuiltinModuleCompiler(
 
     internal fun compileBuiltinModule(moduleName: ModuleName, context: FunctionContext): FunctionContext {
         return builtinModules.getValue(moduleName)(context)
+    }
+
+    private fun compileCoreCast(context: FunctionContext): FunctionContext {
+        return compileCModule(
+            moduleName = listOf(Identifier("Core"), Identifier("Cast")),
+            functionNames = listOf(
+                "cast"
+            ),
+            context = context
+        )
     }
 
     private fun compileCoreIo(context: FunctionContext): FunctionContext {

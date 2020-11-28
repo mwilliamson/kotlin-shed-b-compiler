@@ -14,14 +14,14 @@ fun main() !Io -> Unit {
 }
 
 fun f(value: U) !Io -> Unit {
-    val a = cast(U, A)(value);
+    val a = cast(A, value);
     if (a is Some) {
         print!("is A\n");
     } else {
         print!("is not A\n");
     }
 
-    val b = cast(U, B)(value);
+    val b = cast(B, value);
     if (b is Some) {
         print!("is B\n");
     } else {

@@ -326,6 +326,8 @@ internal data class LlvmIndex(val type: LlvmType, val value: LlvmOperand) {
         fun i32(value: Int): LlvmIndex {
             return LlvmIndex(LlvmTypes.i32, LlvmOperandInt(value))
         }
+
+        val zero = i32(0)
     }
 }
 

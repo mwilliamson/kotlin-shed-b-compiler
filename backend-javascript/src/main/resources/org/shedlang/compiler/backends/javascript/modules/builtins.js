@@ -3,6 +3,7 @@ function declareShape(name, tagValue, fields) {
         return {...fieldValues, ...constantFieldValues, $tagValue: tagValue};
     }
 
+    shape.$typeTagValue = tagValue;
     shape.fields = {};
 
     const constantFieldValues = {};

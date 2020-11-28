@@ -15,7 +15,7 @@ fun isFailure(.message: M.Matcher[String]) -> M.Matcher[ArgParser.ParseResult[An
                 is ArgParser.Success { "success" }
             }
         },
-        .cast = cast(ArgParser.ParseResult[Any], ArgParser.Failure),
+        .cast = cast~(ArgParser.Failure),
         .with = M.hasField(ArgParser.Failure.fields.message, message),
     )
 }
@@ -29,7 +29,7 @@ fun isSuccess[T](valueMatcher: M.Matcher[T]) -> M.Matcher[ArgParser.ParseResult[
                 is ArgParser.Success { "success" }
             }
         },
-        .cast = cast(ArgParser.ParseResult[T], ArgParser.Success[T]),
+        .cast = cast~(ArgParser.Success[T]),
         .with = M.hasField(ArgParser.Success[T].fields.value, valueMatcher),
     )
 }

@@ -119,12 +119,21 @@ internal class CompiledShapeType(
     override fun llvmType(): LlvmTypeStructure {
         return LlvmTypes.structure(listOf(
             compiledClosureType(parameterTypes = parameterTypes),
+            compiledTagValueType,
             compiledObjectType.llvmType()
         ))
     }
 
+    fun closureIndices(): List<LlvmIndex> {
+        return listOf(LlvmIndex.i32(0))
+    }
+
+    fun typeTagValueIndices(): List<LlvmIndex> {
+        return listOf(LlvmIndex.i32(1))
+    }
+
     override fun getElementPtrIndices(fieldName: Identifier): List<LlvmIndex> {
-        return listOf(LlvmIndex.i32(1)) + compiledObjectType.getElementPtrIndices(fieldName)
+        return listOf(LlvmIndex.i32(2)) + compiledObjectType.getElementPtrIndices(fieldName)
     }
 
     override val tagValue: TagValue?

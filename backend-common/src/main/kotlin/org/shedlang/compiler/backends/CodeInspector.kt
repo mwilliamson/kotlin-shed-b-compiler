@@ -8,7 +8,6 @@ interface CodeInspector {
     fun discriminatorForCast(node: CallBaseNode): Discriminator
     fun discriminatorForIsExpression(node: IsNode): Discriminator
     fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator
-    fun isCast(node: CallBaseNode): Boolean
     fun resolve(node: ReferenceNode): VariableBindingNode
     fun shapeFields(node: ShapeBaseNode): List<FieldInspector>
     fun shapeTagValue(node: ShapeBaseNode): TagValue?
@@ -40,10 +39,6 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
 
     override fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator {
         return module.types.discriminatorForWhenBranch(branch)
-    }
-
-    override fun isCast(node: CallBaseNode): Boolean {
-        return org.shedlang.compiler.isCast(node, references = module.references)
     }
 
     override fun resolve(node: ReferenceNode): VariableBindingNode {
@@ -110,10 +105,6 @@ class SimpleCodeInspector(
 
     override fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator {
         return discriminatorsForWhenBranches[Pair(node, branch)] ?: error("missing discriminator for when: $node, $branch")
-    }
-
-    override fun isCast(node: CallBaseNode): Boolean {
-        return false
     }
 
     override fun resolve(node: ReferenceNode): VariableBindingNode {

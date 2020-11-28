@@ -819,7 +819,8 @@ internal class Compiler(
 
         // TODO: avoid recreating meta-type
         val shapeMetaType = StaticValueType(instruction.shapeType)
-        val compiledShapeType = compiledType(shapeMetaType)
+        val compiledShapeType = compiledType(shapeMetaType) as CompiledShapeType
+        val tagValue = compiledType(instruction.shapeType).tagValue
 
         return context
             .addTopLevelEntities(listOf(constructorDefinition))
@@ -828,10 +829,7 @@ internal class Compiler(
                 target = closurePointer,
                 pointerType = compiledShapeType.llvmPointerType(),
                 pointer = shapePointer,
-                indices = listOf(
-                    LlvmIndex.i64(0),
-                    LlvmIndex.i32(0)
-                )
+                indices = listOf(LlvmIndex.zero) + compiledShapeType.closureIndices()
             ))
             .let {
                 closures.storeClosure(
@@ -841,6 +839,26 @@ internal class Compiler(
                     freeVariables = listOf(),
                     context = it
                 )
+            }
+            .let {
+                if (tagValue == null) {
+                    it
+                } else {
+                    val tagValuePointer = irBuilder.generateLocal("tag_value_ptr")
+                    it.addInstructions(
+                        LlvmGetElementPtr(
+                            target = tagValuePointer,
+                            pointerType = compiledShapeType.llvmPointerType(),
+                            pointer = shapePointer,
+                            indices = listOf(LlvmIndex.zero) + compiledShapeType.typeTagValueIndices()
+                        ),
+                        LlvmStore(
+                            type = compiledTagValueType,
+                            value = LlvmOperandInt(objects.tagValueToInt(tagValue)),
+                            pointer = tagValuePointer,
+                        )
+                    )
+                }
             }
             .let {
                 createFieldsObject(

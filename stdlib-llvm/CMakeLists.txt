@@ -7,6 +7,7 @@ add_library(
     shed STATIC
     src/shed.h src/shed.c
     src/stringbuilder.h src/stringbuilder.c
+    src/Core.Cast.c
     src/Stdlib.Platform.Process.c
     src/Stdlib.Platform.StringBuilder.c
     src/Stdlib.Platform.Strings.c

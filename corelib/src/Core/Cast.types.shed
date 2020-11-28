@@ -1,0 +1,3 @@
+import Options from Core.Options;
+
+val cast: Fun [T](Type[T], Castable[T]) -> Options.Option[T];

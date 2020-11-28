@@ -42,6 +42,21 @@ struct ShedClosure {
     ShedValue environment[];
 };
 
+typedef uint64_t ShedTagValue;
+
+struct ShedCastable {
+    ShedTagValue tagValue;
+};
+
+typedef struct ShedCastable* ShedCastable;
+
+struct ShedMetaType {
+    void* constructor;
+    ShedTagValue typeTagValue;
+};
+
+typedef struct ShedMetaType* ShedMetaType;
+
 typedef uint32_t EffectId;
 typedef size_t OperationIndex;
 

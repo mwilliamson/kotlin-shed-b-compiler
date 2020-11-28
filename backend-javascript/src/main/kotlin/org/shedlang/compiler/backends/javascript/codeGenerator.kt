@@ -18,10 +18,8 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
     val body = node.body.flatMap { statement -> generateCodeForModuleStatement(statement, context)  }
     val exports = node.exports.map { export -> generateExport(export, NodeSource(module.node)) }
 
-    val castImports = generateCastImports(module, context)
-
     return JavascriptModuleNode(
-        imports + castImports + body + exports,
+        imports + body + exports,
         source = NodeSource(node)
     )
 }
@@ -29,7 +27,6 @@ internal fun generateCode(module: Module.Shed): JavascriptModuleNode {
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: ModuleName,
-    var hasCast: Boolean = false,
     var freshNameIndex: Int = 1
 ) {
     private var isAsyncStack: MutableList<Boolean> = mutableListOf()
@@ -60,32 +57,6 @@ private fun generateCode(module: Module.Shed, import: ImportNode, context: CodeG
         expression = expression,
         source = source
     )
-}
-
-private fun generateCastImports(module: Module.Shed, context: CodeGenerationContext): List<JavascriptStatementNode> {
-    val source = NodeSource(module.node)
-    return if (context.hasCast) {
-        val listOf = listOf(
-            JavascriptConstNode(
-                target = JavascriptObjectDestructuringNode(
-                    properties = listOf(
-                        "none" to JavascriptVariableReferenceNode("\$none", source = source),
-                        "some" to JavascriptVariableReferenceNode("\$some", source = source)
-                    ),
-                    source = source
-                ),
-                expression = generateImportExpression(
-                    importPath = ImportPath.absolute(listOf("Core", "Options")),
-                    module = module,
-                    source = source
-                ),
-                source = source
-            )
-        )
-        listOf
-    } else {
-        listOf()
-    }
 }
 
 private fun generateImportExpression(importPath: ImportPath, module: Module.Shed, source: NodeSource): JavascriptFunctionCallNode {
@@ -836,31 +807,27 @@ private fun generateCodeForCall(node: CallNode, context: CodeGenerationContext):
     }
     val arguments = positionalArguments + namedArguments
 
-    if (context.inspector.isCast(node)) {
-        return generateCodeForCast(node, context)
-    } else {
-        val receiverValue = generateCode(node.receiver, context)
-        val isAsyncCall = isAsyncCall(node, context)
-        val receiver = if (isAsyncCall) {
-            JavascriptPropertyAccessNode(
-                receiver = receiverValue,
-                propertyName = "async",
-                source = NodeSource(node)
-            )
-        } else {
-            receiverValue
-        }
-
-        val jsCall = JavascriptFunctionCallNode(
-            function = receiver,
-            arguments = arguments,
+    val receiverValue = generateCode(node.receiver, context)
+    val isAsyncCall = isAsyncCall(node, context)
+    val receiver = if (isAsyncCall) {
+        JavascriptPropertyAccessNode(
+            receiver = receiverValue,
+            propertyName = "async",
             source = NodeSource(node)
         )
-        if (isAsyncCall) {
-            return await(operand = jsCall, source = NodeSource(node))
-        } else {
-            return jsCall
-        }
+    } else {
+        receiverValue
+    }
+
+    val jsCall = JavascriptFunctionCallNode(
+        function = receiver,
+        arguments = arguments,
+        source = NodeSource(node)
+    )
+    if (isAsyncCall) {
+        return await(operand = jsCall, source = NodeSource(node))
+    } else {
+        return jsCall
     }
 }
 
@@ -908,45 +875,6 @@ private fun functionSynchrony(type: Type): Synchrony {
     } else {
         return Synchrony.SYNC
     }
-}
-
-private fun generateCodeForCast(node: CallNode, context: CodeGenerationContext): JavascriptFunctionExpressionNode {
-    context.hasCast = true
-    val parameterName = "value"
-    val parameterReference = JavascriptVariableReferenceNode(
-        name = parameterName,
-        source = NodeSource(node)
-    )
-    val typeCondition = generateTypeCondition(
-        expression = parameterReference,
-        discriminator = context.inspector.discriminatorForCast(node),
-        source = NodeSource(node)
-    )
-    return JavascriptFunctionExpressionNode(
-        parameters = listOf(parameterName),
-        body = listOf(
-            JavascriptReturnNode(
-                expression = JavascriptConditionalOperationNode(
-                    condition = typeCondition,
-                    trueExpression = JavascriptFunctionCallNode(
-                        function = JavascriptVariableReferenceNode(
-                            name = "\$some",
-                            source = NodeSource(node)
-                        ),
-                        arguments = listOf(parameterReference),
-                        source = NodeSource(node)
-                    ),
-                    falseExpression = JavascriptVariableReferenceNode(
-                        name = "\$none",
-                        source = NodeSource(node)
-                    ),
-                    source = NodeSource(node)
-                ),
-                source = NodeSource(node)
-            )
-        ),
-        source = NodeSource(node)
-    )
 }
 
 private fun await(

@@ -245,7 +245,7 @@ data class StaticValueType(val value: StaticValue): Type {
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
-        throw UnsupportedOperationException("not implemented")
+        return StaticValueType(replaceStaticValues(value, bindings))
     }
 
     override fun <T> accept(visitor: Type.Visitor<T>): T {
@@ -466,6 +466,26 @@ object CastableTypeFunction: StaticValue {
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)
+    }
+}
+
+class CastableType(val type: Type): Type {
+    override val shapeId: Int?
+        get() = null
+
+    override val shortDescription: String
+        get() = "Castable[${type.shortDescription}]"
+
+    override fun fieldType(fieldName: Identifier): Type? {
+        return null
+    }
+
+    override fun replaceStaticValues(bindings: StaticBindings): Type {
+        return CastableType(replaceStaticValuesInType(type, bindings))
+    }
+
+    override fun <T> accept(visitor: Type.Visitor<T>): T {
+        throw UnsupportedOperationException("not implemented")
     }
 }
 

@@ -224,43 +224,7 @@ class Loader(
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
-                if (inspector.isCast(node)) {
-                    val optionsModuleName = listOf(Identifier("Core"), Identifier("Options"))
-                    val optionsModuleType = moduleSet.moduleType(optionsModuleName)!!
-                    val loadOptionsModuleInstructions = persistentListOf(
-                        ModuleInit(optionsModuleName),
-                        ModuleLoad(optionsModuleName)
-                    )
-                    val parameter = DefineFunction.Parameter(Identifier("value"), freshNodeId())
-
-                    val failureInstructions = loadOptionsModuleInstructions
-                        .add(FieldAccess(Identifier("none"), receiverType = optionsModuleType))
-                        .add(Return)
-                    val successInstructions = loadOptionsModuleInstructions
-                        .add(FieldAccess(Identifier("some"), receiverType = optionsModuleType))
-                        .add(LocalLoad(parameter))
-                        .add(Call(positionalArgumentCount = 1, namedArgumentNames = listOf()))
-                        .add(Return)
-
-                    val discriminator = inspector.discriminatorForCast(node)
-                    val failureLabel = createLabel()
-                    val bodyInstructions = persistentListOf<Instruction>()
-                        .add(LocalLoad(parameter))
-                        .addAll(typeConditionInstructions(discriminator))
-                        .add(JumpIfFalse(failureLabel.value))
-                        .addAll(successInstructions)
-                        .add(failureLabel)
-                        .addAll(failureInstructions)
-
-                    return persistentListOf(
-                        DefineFunction(
-                            name = "cast",
-                            positionalParameters = listOf(parameter),
-                            bodyInstructions = bodyInstructions,
-                            namedParameters = listOf()
-                        )
-                    )
-                } else if (types.typeOfExpression(node.receiver) is EmptyFunctionType) {
+                if (types.typeOfExpression(node.receiver) is EmptyFunctionType) {
                     val shapeType = metaTypeToType(types.typeOfStaticExpression(node.staticArguments.single())) as ShapeType
                     return persistentListOf(
                         ObjectCreate(objectType = shapeType)

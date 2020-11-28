@@ -74,7 +74,7 @@ val isTypeMatcher = M.isType[X, Y](
             is Z { "Z" }
         }
     },
-    .cast = cast(X, Y),
+    .cast = cast~(Y),
 );
 
 val isTypeSuite = Tests.suite("isType", list(
@@ -110,7 +110,7 @@ val isTypeWithMatcher = M.isTypeWith[X, Y](
             is Z { "Z" }
         }
     },
-    .cast = cast(X, Y),
+    .cast = cast~(Y),
     .with = M.Matcher(
         .description = "value of 42",
         .match = fun (value: Y) {

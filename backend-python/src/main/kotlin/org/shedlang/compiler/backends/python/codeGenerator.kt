@@ -22,7 +22,6 @@ internal fun generateCode(
         inspector = ModuleCodeInspector(module),
         moduleName = module.name,
         isPackage = isPackage,
-        hasCast = HasCast(false)
     )
     return generateCode(module.node, context)
 }
@@ -33,15 +32,12 @@ internal fun isPackage(moduleSet: ModuleSet, moduleName: ModuleName): Boolean {
     }
 }
 
-internal data class HasCast(var value: Boolean)
-
 internal class CodeGenerationContext(
     val inspector: CodeInspector,
     val moduleName: ModuleName,
     val isPackage: Boolean,
     private val nodeNames: MutableMap<Int, String> = mutableMapOf(),
     private val namesInScope: MutableSet<String> = mutableSetOf(),
-    val hasCast: HasCast
 ) {
     fun enterScope(): CodeGenerationContext {
         return CodeGenerationContext(
@@ -50,7 +46,6 @@ internal class CodeGenerationContext(
             isPackage = isPackage,
             nodeNames = nodeNames,
             namesInScope = namesInScope.toMutableSet(),
-            hasCast = hasCast
         )
     }
 
@@ -100,9 +95,8 @@ internal class CodeGenerationContext(
 internal fun generateCode(node: ModuleNode, context: CodeGenerationContext): PythonModuleNode {
     val imports = node.imports.flatMap{ import -> generateImportCode(import, context) }
     val body = node.body.flatMap{ child -> generateModuleStatementCode(child, context) }
-    val castImports = generateCastImports(node, context)
     return PythonModuleNode(
-        imports + castImports + body,
+        imports + body,
         source = NodeSource(node)
     )
 }
@@ -141,20 +135,6 @@ private fun generateImportCode(node: ImportNode, context: CodeGenerationContext)
             source = NodeSource(target),
             context = context
         )
-    }
-}
-
-private fun generateCastImports(node: ModuleNode, context: CodeGenerationContext): List<PythonStatementNode> {
-    return if (context.hasCast.value) {
-        listOf(
-            PythonImportFromNode(
-                module = listOf(topLevelPythonPackageName, "Core", "Options").joinToString("."),
-                names = listOf("none" to "_none", "some" to "_some"),
-                source = NodeSource(node)
-            )
-        )
-    } else {
-        listOf()
     }
 }
 
@@ -1034,30 +1014,7 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
                 positionalArgumentsCode,
                 namedArgumentsCode
             ) { receiver, positionalArguments, namedArguments ->
-                if (context.inspector.isCast(node)) {
-                    context.hasCast.value = true
-
-                    val parameterName = "value"
-                    PythonLambdaNode(
-                        parameters = listOf(parameterName),
-                        body = PythonConditionalOperationNode(
-                            condition = generateTypeCondition(
-                                expression = PythonVariableReferenceNode(parameterName, source = source),
-                                discriminator = context.inspector.discriminatorForCast(node),
-                                source = source
-                            ),
-                            trueExpression = PythonFunctionCallNode(
-                                function = PythonVariableReferenceNode("_some", source = source),
-                                arguments = listOf(PythonVariableReferenceNode(parameterName, source = source)),
-                                keywordArguments = listOf(),
-                                source = source
-                            ),
-                            falseExpression = PythonVariableReferenceNode("_none", source = source),
-                            source = source
-                        ),
-                        source = source
-                    )
-                } else if (context.inspector.typeOfExpression(node.receiver) == EmptyFunctionType) {
+                if (context.inspector.typeOfExpression(node.receiver) == EmptyFunctionType) {
                     val shapeType = context.inspector.typeOfExpression(node) as ShapeType
                     PythonFunctionCallNode(
                         function = generateCode(node.staticArguments.single(), context),

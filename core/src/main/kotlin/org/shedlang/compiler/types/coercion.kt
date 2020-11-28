@@ -137,6 +137,15 @@ class TypeConstraintSolver(
             return coerce(from = from, to = to.aliasedType)
         }
 
+        // TODO: test this, implement properly
+        if (to is CastableType) {
+            val discriminator = findDiscriminator(
+                sourceType = replaceStaticValuesInType(from, bindings()),
+                targetType = replaceStaticValuesInType(to.type, bindings()),
+            )
+            return discriminator != null
+        }
+
         // TODO: deal with type parameters
         if (from is UnionType) {
             return from.members.all({ member -> coerce(from = member, to = to) })
@@ -226,6 +235,11 @@ class TypeConstraintSolver(
         ) {
             val baseFrom = createPartialShapeType(from, populatedFieldNames = from.populatedFieldNames - setOf(to.field.name))
             return coerce(from = baseFrom, to = to.baseType)
+        }
+
+        // TODO: test this, implement properly
+        if (from is StaticValueType && from.value is Type && to is StaticValueType && to.value is Type) {
+            return isEquivalentType(from.value, to.value)
         }
 
         return false

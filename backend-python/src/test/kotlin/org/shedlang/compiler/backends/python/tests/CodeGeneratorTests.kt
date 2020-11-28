@@ -1470,7 +1470,6 @@ class CodeGeneratorTests {
         ),
         isPackage = isPackage,
         moduleName = moduleName.map(::Identifier),
-        hasCast = HasCast(false)
     )
 
     private fun isPythonModule(body: Matcher<List<PythonStatementNode>>)
