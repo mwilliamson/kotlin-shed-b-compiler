@@ -371,6 +371,12 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
 
     val fieldsClass = generateFieldsClass(node, shapeSource, context)
 
+    val nameAssignment = assign(
+        "name",
+        PythonStringLiteralNode(node.name.value, source = shapeSource),
+        source = shapeSource,
+    )
+
     val tagValue = context.inspector.shapeTagValue(node)
     val tagValueAssignment = if (tagValue == null) {
         listOf()
@@ -403,7 +409,7 @@ private fun generateCodeForShape(node: ShapeBaseNode, context: CodeGenerationCon
                 source = shapeSource
             )
         }
-    } + init + listOf(fieldsClass) + tagValueAssignment
+    } + init + listOf(fieldsClass, nameAssignment) + tagValueAssignment
     return PythonClassNode(
         // TODO: test renaming
         name = context.name(node),

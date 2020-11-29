@@ -239,6 +239,9 @@ data class StaticValueType(val value: StaticValue): Type {
             return value.operations[fieldName]
         } else if (fieldName == Identifier("fields")) {
             return fieldsType.value
+        } else if (fieldName == Identifier("name") && rawValue(value) is Type) {
+            // TODO: Restrict to shape types?
+            return StringType
         } else {
             return null
         }

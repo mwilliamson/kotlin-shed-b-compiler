@@ -95,3 +95,6 @@ Alternative would be to use `:=` i.e. `x := tmp`.
 * Consider how to handle functions that have multiple non local return effects
   * Forbid?
   * Allow if different, non-overlapping types? How to distinguish them in type system and implementation?
+
+* Decide whether to allow Type[_] for non-shape types e.g. unions.
+  At the moment, allowed in the type system, but not implemented in the backends.

@@ -252,7 +252,11 @@ class CodeGeneratorTests {
                 ),
                 isPythonClass(
                     name = equalTo("fields")
-                )
+                ),
+                isPythonAssignment(
+                    target = isPythonVariableReference("name"),
+                    expression = isPythonStringLiteral("OneTwoThree")
+                ),
             )
         ))
     }
@@ -285,7 +289,10 @@ class CodeGeneratorTests {
                 isPythonAssignment("b", isPythonIntegerLiteral(0)),
                 isPythonClass(
                     name = equalTo("fields")
-                )
+                ),
+                isPythonAssignment(
+                    target = isPythonVariableReference("name"),
+                ),
             )
         ))
     }
@@ -312,11 +319,11 @@ class CodeGeneratorTests {
             isPythonAssignment("X", isPythonNone()),
             isPythonClass(
                 name = equalTo("Member1"),
-                body = isSequence(anything, isPythonAssignment("_tag_value", isPythonStringLiteral("Member1TagValue")))
+                body = anyElement(isPythonAssignment("_tag_value", isPythonStringLiteral("Member1TagValue")))
             ),
             isPythonClass(
                 name = equalTo("Member2"),
-                body = isSequence(anything, isPythonAssignment("_tag_value", isPythonStringLiteral("Member2TagValue")))
+                body = anyElement(isPythonAssignment("_tag_value", isPythonStringLiteral("Member2TagValue")))
             )
         ))
     }

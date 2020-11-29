@@ -5,10 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
 import org.shedlang.compiler.backends.FieldInspector
-import org.shedlang.compiler.types.StaticValue
-import org.shedlang.compiler.types.TagValue
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.UserDefinedEffect
+import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
 sealed class IrValue
@@ -67,8 +64,11 @@ class DefineFunction(
 class DefineShape(
     val tagValue: TagValue?,
     val fields: List<FieldInspector>,
-    val shapeType: StaticValue
-): Instruction()
+    val shapeType: StaticValue,
+): Instruction() {
+    val rawShapeType: ShapeType
+        get() = rawValue(shapeType) as ShapeType
+}
 
 object Discard: Instruction()
 

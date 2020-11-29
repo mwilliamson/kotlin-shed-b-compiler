@@ -1,0 +1,24 @@
+// stdout:
+//   Shape
+//   Member1
+//   Member2
+
+export main;
+
+shape Shape {
+}
+
+union Union =
+    | Member1
+    | Member2;
+
+fun main() !Io -> Unit {
+    // TODO: do we allow Union to be passed in?
+    printTypeName!(Shape);
+    printTypeName!(Member1);
+    printTypeName!(Member2);
+}
+
+fun printTypeName[T](typ: Type[T]) !Io -> Unit {
+    print!(typ.name + "\n");
+}

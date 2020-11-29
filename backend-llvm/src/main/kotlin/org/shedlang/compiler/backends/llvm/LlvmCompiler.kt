@@ -820,6 +820,10 @@ internal class Compiler(
         // TODO: avoid recreating meta-type
         val shapeMetaType = StaticValueType(instruction.shapeType)
         val compiledShapeType = compiledType(shapeMetaType) as CompiledShapeType
+        val nameDefinition = strings.defineString(
+            irBuilder.generateName(instruction.rawShapeType.name),
+            instruction.rawShapeType.name.value,
+        )
         val tagValue = compiledType(instruction.shapeType).tagValue
 
         return context
@@ -869,9 +873,11 @@ internal class Compiler(
                     context = it
                 )
             }
+            .addTopLevelEntities(nameDefinition)
             .addInstructions(objects.storeObject(
                 fields = listOf(
-                    Identifier("fields") to fieldsObjectPointer
+                    Identifier("fields") to fieldsObjectPointer,
+                    Identifier("name") to strings.operandRaw(nameDefinition),
                 ),
                 objectType = shapeMetaType,
                 objectPointer = shapePointer

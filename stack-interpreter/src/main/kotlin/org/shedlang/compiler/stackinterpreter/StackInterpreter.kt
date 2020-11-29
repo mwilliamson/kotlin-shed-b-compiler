@@ -5,10 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.AnyType
-import org.shedlang.compiler.types.ShapeType
-import org.shedlang.compiler.types.TagValue
-import org.shedlang.compiler.types.UserDefinedEffect
+import org.shedlang.compiler.types.*
 import java.math.BigInteger
 
 interface World {
@@ -611,7 +608,8 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
                             )
                         )
                     }
-                )
+                ),
+                Identifier("name") to InterpreterString(rawShapeType.name.value),
             )
 
             val value = InterpreterShape(

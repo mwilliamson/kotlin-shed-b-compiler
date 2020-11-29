@@ -62,7 +62,19 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
             parameterTypes = shapeType.allFields.map { compiledValueType },
             compiledObjectType = CompiledObjectType(
                 fieldTypes = listOf(
-                    Identifier("fields") to objectType.fieldType(Identifier("fields"))!!
+                    Identifier("fields") to objectType.fieldType(Identifier("fields"))!!,
+                    Identifier("name") to StringType,
+                ),
+                tagValue = null
+            )
+        )
+    } else if (objectType is StaticValueType && rawValue(objectType.value) is Type) {
+        return CompiledShapeType(
+            parameterTypes = listOf(),
+            compiledObjectType = CompiledObjectType(
+                fieldTypes = listOf(
+                    Identifier("fields") to NothingType,
+                    Identifier("name") to StringType,
                 ),
                 tagValue = null
             )

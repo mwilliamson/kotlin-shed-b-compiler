@@ -5,6 +5,7 @@ function declareShape(name, tagValue, fields) {
 
     shape.$typeTagValue = tagValue;
     shape.fields = {};
+    Object.defineProperty(shape, "name", {value: name});
 
     const constantFieldValues = {};
     fields.forEach(field => {
