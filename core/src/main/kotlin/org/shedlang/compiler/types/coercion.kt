@@ -238,7 +238,6 @@ class TypeConstraintSolver(
             return coerce(from = baseFrom, to = to.baseType)
         }
 
-        // TODO: test this, implement properly
         if (from is StaticValueType && from.value is Type && to is StaticValueType && to.value is Type) {
             return isEquivalentType(from.value, to.value)
         }

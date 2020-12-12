@@ -941,6 +941,34 @@ class CoercionTests {
         assertThat(canCoerce, equalTo(false))
     }
 
+    @Test
+    fun metaTypesCanBeCoercedToSameMetaType() {
+        val canCoerce = canCoerce(from = IntMetaType, to = IntMetaType)
+
+        assertThat(canCoerce, equalTo(true))
+    }
+
+    @Test
+    fun metaTypesCannotBeCoercedToUnrelatedMetaType() {
+        val canCoerce = canCoerce(from = IntMetaType, to = BoolMetaType)
+
+        assertThat(canCoerce, equalTo(false))
+    }
+
+    @Test
+    fun metaTypesCannotBeCoercedToMetaTypeOfSubType() {
+        val canCoerce = canCoerce(from = IntMetaType, to = NothingMetaType)
+
+        assertThat(canCoerce, equalTo(false))
+    }
+
+    @Test
+    fun metaTypesCannotBeCoercedToMetaTypeOfSuperType() {
+        val canCoerce = canCoerce(from = IntMetaType, to = AnyMetaType)
+
+        assertThat(canCoerce, equalTo(false))
+    }
+
     private fun assertSymmetricCoercion(parameters: Set<StaticParameter>, from: Type, to: Type, matcher: Matcher<CoercionResult>) {
         val result1 = coerce(
             parameters = parameters,
