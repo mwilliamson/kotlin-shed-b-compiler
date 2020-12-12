@@ -1014,10 +1014,6 @@ fun contravariantTypeParameter(name: String, source: Source = NullSource) = Type
 
 fun effectParameter(name: String, source: Source = NullSource) = EffectParameter(Identifier(name), source = source)
 
-object CastType : BasicType {
-    override val shortDescription = "Cast"
-}
-
 object EmptyFunctionType : BasicType {
     override val shortDescription = "Empty"
 }

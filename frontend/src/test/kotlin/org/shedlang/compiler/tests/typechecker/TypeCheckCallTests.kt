@@ -772,60 +772,6 @@ class TypeCheckCallTests {
     }
 
     @Test
-    fun castTypeIsFunctionFromUnionToOptionalMember() {
-        val tag = tag(listOf("Example"), "Union")
-        val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
-        val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val union = unionType("Union", tag = tag, members = listOf(member1, member2))
-
-        val optionType = parametrizedShapeType(
-            name = "Option",
-            parameters = listOf(covariantTypeParameter("T"))
-        )
-        val optionsModule = ModuleResult.Found(Module.Native(
-            name = listOf(Identifier("Core"), Identifier("Options")),
-            type = moduleType(fields = mapOf(
-                "Option" to StaticValueType(optionType)
-            ))
-        ))
-
-        val castReference = variableReference("cast")
-        val unionReference = variableReference("Union")
-        val memberReference = variableReference("Member1")
-        val node = call(
-            receiver = castReference,
-            positionalArguments = listOf(
-                unionReference,
-                memberReference
-            )
-        )
-
-        val typeContext = typeContext(
-            modules = mapOf(
-                ImportPath.absolute(listOf("Core", "Options")) to optionsModule
-            ),
-            referenceTypes = mapOf(
-                castReference to CastType,
-                memberReference to metaType(member1),
-                unionReference to metaType(union)
-            )
-        )
-        val type = inferCallType(node, typeContext)
-
-        assertThat(type, isEquivalentType(functionType(
-            positionalParameters = listOf(union),
-            returns = applyStatic(optionType, listOf(member1)) as Type
-        )))
-
-        assertThat(
-            typeContext.toTypes().discriminatorForCast(node),
-            isDiscriminator(
-                tagValue = equalTo(tagValue(tag, "Member1"))
-            )
-        )
-    }
-
-    @Test
     fun emptyCallReturnsEmptyShape() {
         val boxTypeReference = staticReference("Box")
         val emptyReference = staticReference("empty")

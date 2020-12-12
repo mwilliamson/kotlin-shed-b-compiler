@@ -65,8 +65,6 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
                 return inferConstructorCallType(node, receiverInnerType, typeFunctionInnerType, context)
             }
         }
-    } else if (receiverType is CastType) {
-        return Pair(inferCastCall(node, context), mapOf())
     } else if (receiverType is EmptyFunctionType) {
         return Pair(inferEmptyCall(node, context), mapOf())
     } else if (receiverType is VarargsType) {
@@ -332,30 +330,6 @@ private fun checkArgumentTypes(
 
         return bindings
     }
-}
-
-private fun inferCastCall(node: CallNode, context: TypeContext): Type {
-    // TODO: check other arguments
-    val fromType = metaTypeToType(inferType(node.positionalArguments[0], context))!!
-    val toType = metaTypeToType(inferType(node.positionalArguments[1], context))!!
-    // TODO: check discriminator exists
-
-    val discriminator = findDiscriminator(
-        sourceType = fromType,
-        targetType = toType
-    )!!
-    context.addDiscriminator(node, discriminator)
-
-    val optionsModule = findModule(
-        ImportPath.absolute(listOf("Core", "Options")),
-        context,
-        source = node.operatorSource,
-    )
-    val someType = (optionsModule.fieldType(Identifier("Option")) as StaticValueType).value as ParameterizedStaticValue
-    return functionType(
-        positionalParameters = listOf(fromType),
-        returns = applyStatic(someType, listOf(toType)) as Type
-    )
 }
 
 private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
