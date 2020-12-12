@@ -917,6 +917,30 @@ class CoercionTests {
         )
     }
 
+    @Test
+    fun whenDiscriminatorCanBeFoundThenTypeIsSubTypeOfCastable() {
+        val tag = tag(listOf("Example"), "Union")
+        val memberType = shapeType(name = "Member", tagValue = tagValue(tag, "B"))
+        val unionType = unionType(name = "Union", tag = tag, members = listOf(memberType))
+
+        val canCoerce = canCoerce(from = unionType, to = castableType(memberType))
+
+        assertThat(canCoerce, equalTo(true))
+    }
+
+    @Test
+    fun whenDiscriminatorCannotBeFoundThenTypeIsNotSubTypeOfCastable() {
+        val unionTag = tag(listOf("Example"), "Union")
+        val memberType = shapeType(name = "Member", tagValue = tagValue(unionTag, "B"))
+        val unionType = unionType(name = "Union", tag = unionTag, members = listOf(memberType))
+        val otherUnionTag = tag(listOf("Example"), "OtherUnion")
+        val otherMemberType = shapeType(name = "Member", tagValue = tagValue(otherUnionTag, "B"))
+
+        val canCoerce = canCoerce(from = unionType, to = castableType(otherMemberType))
+
+        assertThat(canCoerce, equalTo(false))
+    }
+
     private fun assertSymmetricCoercion(parameters: Set<StaticParameter>, from: Type, to: Type, matcher: Matcher<CoercionResult>) {
         val result1 = coerce(
             parameters = parameters,

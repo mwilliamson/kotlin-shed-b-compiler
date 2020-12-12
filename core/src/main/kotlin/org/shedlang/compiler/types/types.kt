@@ -492,6 +492,8 @@ class CastableType(val type: Type): Type {
     }
 }
 
+fun castableType(type: Type) = CastableType(type)
+
 object EmptyTypeFunction: StaticValue {
     override val shortDescription: String
         get() = "Empty"

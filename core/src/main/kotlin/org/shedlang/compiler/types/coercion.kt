@@ -137,8 +137,8 @@ class TypeConstraintSolver(
             return coerce(from = from, to = to.aliasedType)
         }
 
-        // TODO: test this, implement properly
         if (to is CastableType) {
+            // TODO: Test replacement of static values
             val discriminator = findDiscriminator(
                 sourceType = replaceStaticValuesInType(from, bindings()),
                 targetType = replaceStaticValuesInType(to.type, bindings()),
