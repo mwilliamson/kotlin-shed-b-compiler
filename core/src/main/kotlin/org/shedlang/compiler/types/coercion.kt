@@ -139,9 +139,10 @@ class TypeConstraintSolver(
 
         if (to is CastableType) {
             // TODO: Test replacement of static values
+            val bindings = bindings()
             val discriminator = findDiscriminator(
-                sourceType = replaceStaticValuesInType(from, bindings()),
-                targetType = replaceStaticValuesInType(to.type, bindings()),
+                sourceType = replaceStaticValuesInType(from, bindings),
+                targetType = replaceStaticValuesInType(to.type, bindings),
             )
             return discriminator != null
         }
