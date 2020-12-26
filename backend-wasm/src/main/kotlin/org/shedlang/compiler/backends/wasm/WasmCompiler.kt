@@ -7,6 +7,7 @@ import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.stackir.*
 import java.lang.UnsupportedOperationException
 
+// TODO: Int implementation should be big integers, not i32
 internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
     class CompilationResult(val wat: String)
 
@@ -68,6 +69,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     is IrBool -> {
                         val intValue = if (value.value) 1 else 0
                         return context.addInstruction(Wat.i32Const(intValue))
+                    }
+                    is IrInt -> {
+                        return context.addInstruction(Wat.i32Const(value.value.intValueExact()))
                     }
                     is IrUnit -> {
                         return context.addInstruction(Wat.i32Const(0))

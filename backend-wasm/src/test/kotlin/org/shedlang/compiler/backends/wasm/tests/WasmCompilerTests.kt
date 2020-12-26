@@ -15,11 +15,13 @@ import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.BoolType
+import org.shedlang.compiler.types.IntType
 import org.shedlang.compiler.types.Type
 import org.shedlang.compiler.types.UnitType
 import java.lang.Exception
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
+import java.math.BigInteger
 import java.nio.file.Path
 
 
@@ -73,6 +75,9 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                     "1" -> IrBool(true)
                     else -> throw Exception("unexpected stdout: $stdout")
                 }
+
+            IntType ->
+                IrInt(stdout.toBigInteger())
 
             UnitType ->
                 when (stdout) {
