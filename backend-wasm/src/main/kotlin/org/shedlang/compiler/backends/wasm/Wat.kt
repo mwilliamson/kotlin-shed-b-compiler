@@ -105,6 +105,7 @@ internal object Wat {
 
         val i32Add = S.list(S.symbol("i32.add"))
         val i32Eq = S.list(S.symbol("i32.eq"))
+        val i32Mul = S.list(S.symbol("i32.mul"))
         val i32Ne = S.list(S.symbol("i32.ne"))
         val i32Sub = S.list(S.symbol("i32.sub"))
 
