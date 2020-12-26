@@ -14,7 +14,7 @@ class WatTests {
             S.list(
                 S.symbol("module"),
                 S.formatBreak,
-                S.list(S.symbol("memory"), S.int(1)),
+                S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(1)),
             )
         ))
     }
