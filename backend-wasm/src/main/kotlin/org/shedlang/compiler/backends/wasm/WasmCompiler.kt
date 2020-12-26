@@ -52,6 +52,16 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     private fun compileInstruction(instruction: Instruction, context: WasmFunctionContext): WasmFunctionContext {
         when (instruction) {
+            is BoolNot -> {
+                val (context2, local) = context.addLocal()
+
+                return context2
+                    .addInstruction(Wat.I.localSet(local))
+                    .addInstruction(Wat.i32Const(1))
+                    .addInstruction(Wat.I.localGet(local))
+                    .addInstruction(Wat.I.i32Sub)
+            }
+
             is PushValue -> {
                 val value = instruction.value
                 when (value) {
@@ -74,14 +84,31 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     }
 }
 
-internal class WasmFunctionContext(internal val instructions: PersistentList<SExpression>) {
+private const val initialLocalIndex = 1
+
+internal data class WasmFunctionContext(
+    internal val instructions: PersistentList<SExpression>,
+    private val nextLocalIndex: Int,
+) {
     companion object {
-        val INITIAL = WasmFunctionContext(instructions = persistentListOf())
+        val INITIAL = WasmFunctionContext(instructions = persistentListOf(), nextLocalIndex = initialLocalIndex)
     }
 
+    internal val locals: List<String>
+        get() = (initialLocalIndex until nextLocalIndex).map { localIndex -> localIdentifier(localIndex) }
+
     fun addInstruction(instruction: SExpression): WasmFunctionContext {
-        return WasmFunctionContext(
+        return copy(
             instructions = instructions.add(instruction),
         )
+    }
+
+    fun addLocal(): Pair<WasmFunctionContext, String> {
+        val newContext = copy(nextLocalIndex = nextLocalIndex + 1)
+        return Pair(newContext, localIdentifier(nextLocalIndex))
+    }
+
+    private fun localIdentifier(localIndex: Int): String {
+        return "local_$localIndex"
     }
 }

@@ -60,7 +60,13 @@ internal object Wat {
         )
     }
 
-    fun func(identifier: String, exportName: String? = null, result: SExpression? = null, body: List<SExpression>): SExpression {
+    fun func(
+        identifier: String,
+        exportName: String? = null,
+        locals: List<SExpression> = listOf(),
+        result: SExpression? = null,
+        body: List<SExpression>,
+    ): SExpression {
         val exportExpressions = if (exportName == null) {
             listOf()
         } else {
@@ -79,9 +85,12 @@ internal object Wat {
             *exportExpressions.toTypedArray(),
             *resultExpressions.toTypedArray(),
             S.formatBreak,
+            *locals.toTypedArray(),
             *body.toTypedArray(),
         )
     }
+
+    fun local(identifier: String, type: SExpression) = S.list(S.symbol("local"), S.identifier(identifier), type)
 
     fun start(identifier: String): SExpression {
         return S.list(S.symbol("start"), S.identifier(identifier))
@@ -93,6 +102,11 @@ internal object Wat {
         fun i32Store(offset: SExpression, value: SExpression): SExpression {
             return S.list(S.symbol("i32.store"), offset, value)
         }
+
+        val i32Sub = S.list(S.symbol("i32.sub"))
+
+        fun localGet(identifier: String) = S.list(S.symbol("local.get"), S.identifier(identifier))
+        fun localSet(identifier: String) = S.list(S.symbol("local.set"), S.identifier(identifier))
 
         fun call(identifier: String, args: List<SExpression>): SExpression {
             return S.list(S.symbol("call"), S.identifier(identifier), *args.toTypedArray())

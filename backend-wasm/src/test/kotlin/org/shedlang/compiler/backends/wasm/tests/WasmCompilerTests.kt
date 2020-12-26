@@ -34,6 +34,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                     "test",
                     exportName = "test",
                     result = Wat.i32,
+                    locals = wasmInstructions.locals.map { local -> Wat.local(local, Wat.i32) },
                     body = wasmInstructions.instructions,
                 )
             ),

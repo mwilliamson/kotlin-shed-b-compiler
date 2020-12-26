@@ -154,6 +154,27 @@ class WatTests {
             ),
         ))
     }
+
+    @Test
+    fun funcHasOptionalLocals() {
+        val func = Wat.func(
+            identifier = "main",
+            locals = listOf(Wat.local("local_1", Wat.i32)),
+            body = listOf(
+                Wat.I.drop,
+            ),
+        )
+
+        assertThat(func, equalTo(
+            S.list(
+                S.symbol("func"),
+                S.identifier("main"),
+                S.formatBreak,
+                S.list(S.symbol("local"), S.identifier("local_1"), Wat.i32),
+                Wat.I.drop,
+            ),
+        ))
+    }
 }
 
 class SExpressionTests {
