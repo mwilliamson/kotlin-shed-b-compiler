@@ -990,7 +990,7 @@ internal class Compiler(
                 listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value)
 
             is IrInt ->
-                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.longValueExact())
+                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.toLong())
 
             is IrString -> {
                 val globalName = generateName("string")
