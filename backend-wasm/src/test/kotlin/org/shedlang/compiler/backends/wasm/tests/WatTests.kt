@@ -77,6 +77,22 @@ class WatTests {
             ),
         ))
     }
+
+    @Test
+    fun data() {
+        val data = Wat.data(
+            offset = Wat.i32Const(8),
+            value = S.string("Hello, world!\n"),
+        )
+
+        assertThat(data, equalTo(
+            S.list(
+                S.symbol("data"),
+                Wat.i32Const(8),
+                S.string("Hello, world!\n"),
+            ),
+        ))
+    }
 }
 
 class SExpressionTests {

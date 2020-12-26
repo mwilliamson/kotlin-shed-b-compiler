@@ -6,6 +6,13 @@ import java.lang.UnsupportedOperationException
 internal object Wat {
     val i32 = S.symbol("i32")
 
+    fun i32Const(value: Int): SList {
+        return S.list(
+            S.symbol("i32.const"),
+            S.int(value),
+        )
+    }
+
     fun module(imports: List<SExpression> = listOf()): SExpression {
         return S.list(
             S.symbol("module"),
@@ -26,6 +33,14 @@ internal object Wat {
                 S.list(S.symbol("param"), *params.toTypedArray()),
                 S.list(S.symbol("result"), result),
             ),
+        )
+    }
+
+    fun data(offset: SExpression, value: SExpression): SExpression {
+        return S.list(
+            S.symbol("data"),
+            offset,
+            value,
         )
     }
 }
