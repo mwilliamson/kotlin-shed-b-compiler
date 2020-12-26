@@ -44,10 +44,16 @@ internal object Wat {
         )
     }
 
-    fun func(identifier: String, body: List<SExpression>): SExpression {
+    fun func(identifier: String, exportName: String? = null, body: List<SExpression>): SExpression {
+        val export = if (exportName == null) {
+            listOf()
+        } else {
+            listOf(S.list(S.symbol("export"), S.string(exportName)))
+        }
         return S.list(
             S.symbol("func"),
             S.identifier(identifier),
+            *export.toTypedArray(),
             S.formatBreak,
             *body.toTypedArray(),
         )

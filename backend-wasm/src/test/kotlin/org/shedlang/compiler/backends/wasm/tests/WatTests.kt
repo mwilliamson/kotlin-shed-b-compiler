@@ -112,6 +112,27 @@ class WatTests {
             ),
         ))
     }
+
+    @Test
+    fun funcHasOptionalExport() {
+        val func = Wat.func(
+            identifier = "main",
+            exportName = "_start",
+            body = listOf(
+                Wat.I.drop,
+            ),
+        )
+
+        assertThat(func, equalTo(
+            S.list(
+                S.symbol("func"),
+                S.identifier("main"),
+                S.list(S.symbol("export"), S.string("_start")),
+                S.formatBreak,
+                Wat.I.drop,
+            ),
+        ))
+    }
 }
 
 class SExpressionTests {
