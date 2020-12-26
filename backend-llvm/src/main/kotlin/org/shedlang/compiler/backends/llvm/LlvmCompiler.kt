@@ -10,6 +10,7 @@ import org.shedlang.compiler.types.*
 import java.nio.file.Path
 import java.nio.file.Paths
 
+// TODO: Int implementation should be big integers, not i64
 internal class Compiler(
     private val image: Image,
     private val moduleSet: ModuleSet,
@@ -989,7 +990,7 @@ internal class Compiler(
                 listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value)
 
             is IrInt ->
-                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.toLong())
+                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.longValueExact())
 
             is IrString -> {
                 val globalName = generateName("string")
