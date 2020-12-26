@@ -266,54 +266,22 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
     @Test
     fun whenOperandsAreEqualThenIntegerEqualityEvaluatesToTrue() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalInt(1))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, type = BoolType, types = types)
-
-        assertThat(value, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.EQUALS, 1, 1, isBool(true))
     }
 
     @Test
     fun whenOperandsAreNotEqualThenIntegerEqualityEvaluatesToFalse() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.EQUALS, left, literalInt(2))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, type = BoolType, types = types)
-
-        assertThat(value, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.EQUALS, 1, 2, isBool(false))
     }
 
     @Test
     fun whenOperandsAreEqualThenIntegerInequalityEvaluatesToFalse() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalInt(1))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, type = BoolType, types = types)
-
-        assertThat(value, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.NOT_EQUAL, 1, 1, isBool(false))
     }
 
     @Test
     fun whenOperandsAreNotEqualThenIntegerInequalityEvaluatesToTrue() {
-        val left = literalInt(1)
-        val node = binaryOperation(BinaryOperator.NOT_EQUAL, left, literalInt(2))
-        val types = createTypes(
-            expressionTypes = mapOf(left.nodeId to IntType)
-        )
-
-        val value = evaluateExpression(node, type = BoolType, types = types)
-
-        assertThat(value, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.NOT_EQUAL, 1, 2, isBool(true))
     }
 
     @Test
