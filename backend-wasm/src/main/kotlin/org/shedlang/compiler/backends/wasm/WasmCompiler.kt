@@ -71,6 +71,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     .addInstruction(Wat.I.i32Sub)
             }
 
+            is Discard -> {
+                return context.addInstruction(Wat.I.drop)
+            }
+
             is IntEquals -> {
                 return context.addInstruction(Wat.I.i32Eq)
             }
