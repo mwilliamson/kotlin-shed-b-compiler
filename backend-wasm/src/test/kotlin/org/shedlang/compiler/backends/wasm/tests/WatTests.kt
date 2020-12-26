@@ -18,6 +18,65 @@ class WatTests {
             )
         ))
     }
+
+    @Test
+    fun importsAppearBeforeMemoryDeclarations() {
+        val module = Wat.module(
+            imports = listOf(
+                Wat.importFunc(
+                    moduleName = "wasi_snapshot_preview1",
+                    exportName = "fd_write",
+                    identifier = "write",
+                    params = listOf(),
+                    result = Wat.i32,
+                )
+            ),
+        )
+
+        assertThat(module, equalTo(
+            S.list(
+                S.symbol("module"),
+                S.formatBreak,
+                S.list(
+                    S.symbol("import"),
+                    S.string("wasi_snapshot_preview1"),
+                    S.string("fd_write"),
+                    S.list(
+                        S.symbol("func"),
+                        S.identifier("write"),
+                        S.list(S.symbol("param")),
+                        S.list(S.symbol("result"), Wat.i32),
+                    ),
+                ),
+                S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(1)),
+            )
+        ))
+    }
+
+    @Test
+    fun importFunc() {
+        val import = Wat.importFunc(
+            moduleName = "wasi_snapshot_preview1",
+            exportName = "fd_write",
+            identifier = "write",
+            params = listOf(Wat.i32, Wat.i32),
+            result = Wat.i32,
+        )
+
+        assertThat(import, equalTo(
+            S.list(
+                S.symbol("import"),
+                S.string("wasi_snapshot_preview1"),
+                S.string("fd_write"),
+                S.list(
+                    S.symbol("func"),
+                    S.identifier("write"),
+                    S.list(S.symbol("param"), Wat.i32, Wat.i32),
+                    S.list(S.symbol("result"), Wat.i32),
+                ),
+            ),
+        ))
+    }
 }
 
 class SExpressionTests {
@@ -46,6 +105,15 @@ class SExpressionTests {
         val string = expression.serialise()
 
         assertThat(string, equalTo("module"))
+    }
+
+    @Test
+    fun identifierIsPrefixedWithDollarSign() {
+        val expression = S.identifier("fd_write")
+
+        val string = expression.serialise()
+
+        assertThat(string, equalTo("\$fd_write"))
     }
 
     @Test

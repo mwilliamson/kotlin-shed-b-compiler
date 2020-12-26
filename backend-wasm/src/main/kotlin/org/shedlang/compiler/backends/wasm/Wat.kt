@@ -4,11 +4,28 @@ import java.lang.StringBuilder
 import java.lang.UnsupportedOperationException
 
 internal object Wat {
-    fun module(): SExpression {
+    val i32 = S.symbol("i32")
+
+    fun module(imports: List<SExpression> = listOf()): SExpression {
         return S.list(
             S.symbol("module"),
             S.formatBreak,
+            *imports.toTypedArray(),
             S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(1)),
+        )
+    }
+
+    fun importFunc(moduleName: String, exportName: String, identifier: String, params: List<SExpression>, result: SExpression): SExpression {
+        return S.list(
+            S.symbol("import"),
+            S.string(moduleName),
+            S.string(exportName),
+            S.list(
+                S.symbol("func"),
+                S.identifier(identifier),
+                S.list(S.symbol("param"), *params.toTypedArray()),
+                S.list(S.symbol("result"), result),
+            ),
         )
     }
 }
@@ -18,6 +35,8 @@ internal object S {
     fun int(value: Int) = SInt(value)
     fun string(value: String) = SString(value)
     fun symbol(value: String) = SSymbol(value)
+    fun identifier(value: String) = SIdentifier(value)
+    fun list(elements: List<SExpression>) = SList(elements)
     fun list(vararg elements: SExpression) = SList(elements.toList())
 }
 
@@ -48,6 +67,13 @@ internal data class SSymbol(val value: String): SExpression {
     override fun serialise(): String {
         // TODO: handle escaping
         return value
+    }
+}
+
+internal data class SIdentifier(val value: String): SExpression {
+    override fun serialise(): String {
+        // TODO: handle escaping
+        return "\$" + value
     }
 }
 
