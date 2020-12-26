@@ -43,6 +43,19 @@ internal object Wat {
             value,
         )
     }
+
+    fun func(identifier: String, body: List<SExpression>): SExpression {
+        return S.list(
+            S.symbol("func"),
+            S.identifier(identifier),
+            S.formatBreak,
+            *body.toTypedArray(),
+        )
+    }
+
+    object I {
+        val drop = S.symbol("drop")
+    }
 }
 
 internal object S {

@@ -93,6 +93,25 @@ class WatTests {
             ),
         ))
     }
+
+    @Test
+    fun funcIncludesNameAndBody() {
+        val func = Wat.func(
+            identifier = "main",
+            body = listOf(
+                Wat.I.drop,
+            ),
+        )
+
+        assertThat(func, equalTo(
+            S.list(
+                S.symbol("func"),
+                S.identifier("main"),
+                S.formatBreak,
+                Wat.I.drop,
+            ),
+        ))
+    }
 }
 
 class SExpressionTests {
