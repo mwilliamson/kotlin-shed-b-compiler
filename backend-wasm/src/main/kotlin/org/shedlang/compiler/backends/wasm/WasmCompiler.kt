@@ -83,6 +83,22 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32Eq)
             }
 
+            is IntGreaterThan -> {
+                return context.addInstruction(Wat.I.i32GtS)
+            }
+
+            is IntGreaterThanOrEqual -> {
+                return context.addInstruction(Wat.I.i32GeS)
+            }
+
+            is IntLessThan -> {
+                return context.addInstruction(Wat.I.i32LtS)
+            }
+
+            is IntLessThanOrEqual -> {
+                return context.addInstruction(Wat.I.i32LeS)
+            }
+
             is IntMinus -> {
                 val (context2, local) = context.addLocal()
 

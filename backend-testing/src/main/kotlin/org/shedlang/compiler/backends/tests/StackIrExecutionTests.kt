@@ -292,6 +292,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertIntBinaryOperation(BinaryOperator.LESS_THAN, -3, -2, isBool(true))
         assertIntBinaryOperation(BinaryOperator.LESS_THAN, -2, -2, isBool(false))
         assertIntBinaryOperation(BinaryOperator.LESS_THAN, -1, -2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, -2, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, 2, -2, isBool(false))
+
     }
 
     @Test
@@ -302,6 +305,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -3, -2, isBool(true))
         assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -2, -2, isBool(true))
         assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -1, -2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -2, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 2, -2, isBool(false))
     }
 
     @Test
@@ -312,6 +317,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -3, -2, isBool(false))
         assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -2, -2, isBool(false))
         assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -1, -2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -2, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, 2, -2, isBool(true))
     }
 
     @Test
@@ -322,6 +329,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -3, -2, isBool(false))
         assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -2, -2, isBool(true))
         assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -1, -2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -2, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 2, -2, isBool(true))
     }
 
     private fun assertIntBinaryOperation(operator: BinaryOperator, left: Int, right: Int, expected: Matcher<IrValue>) {
