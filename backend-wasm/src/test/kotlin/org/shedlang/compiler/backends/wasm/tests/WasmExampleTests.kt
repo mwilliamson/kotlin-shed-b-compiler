@@ -148,11 +148,17 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
             body = listOf(
                 Wat.data(offset = messageOffset, value = message),
                 Wat.func(
-                    identifier = "main",
-                    exportName = "_start",
+                    identifier = "start",
                     body = listOf(
                         Wat.I.i32Store(Wat.i32Const(0), Wat.i32Const(messageOffset)),
                         Wat.I.i32Store(Wat.i32Const(4), Wat.i32Const(message.length)),
+                    ),
+                ),
+                Wat.start("start"),
+                Wat.func(
+                    identifier = "main",
+                    exportName = "_start",
+                    body = listOf(
                         Wasi.callFdWrite(
                             identifier = "fd_write",
                             fileDescriptor = Wasi.stdout,
@@ -162,7 +168,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                         ),
                         Wat.I.drop,
                     ),
-                )
+                ),
             ),
         ).serialise()
         return CompilationResult(wat = wat)

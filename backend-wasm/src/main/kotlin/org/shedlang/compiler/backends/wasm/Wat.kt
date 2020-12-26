@@ -64,6 +64,10 @@ internal object Wat {
         )
     }
 
+    fun start(identifier: String): SExpression {
+        return S.list(S.symbol("start"), S.identifier(identifier))
+    }
+
     object I {
         val drop = S.symbol("drop")
 
