@@ -81,8 +81,8 @@ class WatTests {
     @Test
     fun data() {
         val data = Wat.data(
-            offset = Wat.i32Const(8),
-            value = S.string("Hello, world!\n"),
+            offset = 8,
+            value = "Hello, world!\n",
         )
 
         assertThat(data, equalTo(
@@ -152,6 +152,15 @@ class SExpressionTests {
         val string = expression.serialise()
 
         assertThat(string, equalTo("\"Hello, world!\""))
+    }
+
+    @Test
+    fun specialCharactersInStringAreEscaped() {
+        val expression = S.string("Hello, world!\n")
+
+        val string = expression.serialise()
+
+        assertThat(string, equalTo("\"Hello, world!\\n\""))
     }
 
     @Test

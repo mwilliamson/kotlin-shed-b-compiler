@@ -13,12 +13,13 @@ internal object Wat {
         )
     }
 
-    fun module(imports: List<SExpression> = listOf()): SExpression {
+    fun module(imports: List<SExpression> = listOf(), body: List<SExpression> = listOf()): SExpression {
         return S.list(
             S.symbol("module"),
             S.formatBreak,
             *imports.toTypedArray(),
             S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(1)),
+            *body.toTypedArray(),
         )
     }
 
@@ -34,6 +35,10 @@ internal object Wat {
                 S.list(S.symbol("result"), result),
             ),
         )
+    }
+
+    fun data(offset: Int, value: String): SExpression {
+        return data(offset = Wat.i32Const(offset), value = S.string(value))
     }
 
     fun data(offset: SExpression, value: SExpression): SExpression {
@@ -61,6 +66,14 @@ internal object Wat {
 
     object I {
         val drop = S.symbol("drop")
+
+        fun i32Store(offset: SExpression, value: SExpression): SExpression {
+            return S.list(S.symbol("i32.store"), offset, value)
+        }
+
+        fun call(identifier: String, args: List<SExpression>): SExpression {
+            return S.list(S.symbol("call"), S.identifier(identifier), *args.toTypedArray())
+        }
     }
 }
 
@@ -93,7 +106,7 @@ internal data class SInt(val value: Int): SExpression {
 internal data class SString(val value: String): SExpression {
     override fun serialise(): String {
         // TODO: handle escaping
-        return "\"${value}\""
+        return "\"${value.replace("\n", "\\n")}\""
     }
 }
 

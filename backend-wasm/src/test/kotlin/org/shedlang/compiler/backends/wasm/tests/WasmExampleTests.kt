@@ -11,6 +11,8 @@ import org.shedlang.compiler.backends.tests.ExecutionResult
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
+import org.shedlang.compiler.backends.wasm.Wasi
+import org.shedlang.compiler.backends.wasm.Wat
 import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.stackir.Image
 import org.shedlang.compiler.stackir.loadModuleSet
@@ -108,7 +110,7 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
     class CompilationResult(val wat: String)
 
     fun compile(mainModule: ModuleName): CompilationResult {
-        val wat = """
+        """
             (module
                 ;; Import the required fd_write WASI function which will write the given io vectors to stdout
                 ;; The function signature for fd_write is:
@@ -137,6 +139,32 @@ internal class Compiler(private val image: Image, private val moduleSet: ModuleS
                 )
             )
         """.trimIndent()
+        val messageOffset = 8
+        val message = "Hello, world!\n"
+        val wat = Wat.module(
+            imports = listOf(
+                Wasi.importFdWrite("fd_write"),
+            ),
+            body = listOf(
+                Wat.data(offset = messageOffset, value = message),
+                Wat.func(
+                    identifier = "main",
+                    exportName = "_start",
+                    body = listOf(
+                        Wat.I.i32Store(Wat.i32Const(0), Wat.i32Const(messageOffset)),
+                        Wat.I.i32Store(Wat.i32Const(4), Wat.i32Const(message.length)),
+                        Wasi.callFdWrite(
+                            identifier = "fd_write",
+                            fileDescriptor = Wasi.stdout,
+                            iovs = Wat.i32Const(0),
+                            iovsLen = Wat.i32Const(1),
+                            nwritten = Wat.i32Const(8 + message.length),
+                        ),
+                        Wat.I.drop,
+                    ),
+                )
+            ),
+        ).serialise()
         return CompilationResult(wat = wat)
     }
 }
