@@ -131,6 +131,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32GtU)
             }
 
+            is UnicodeScalarGreaterThanOrEqual -> {
+                return context.addInstruction(Wat.I.i32GeU)
+            }
+
             is UnicodeScalarEquals -> {
                 return context.addInstruction(Wat.I.i32Eq)
             }
