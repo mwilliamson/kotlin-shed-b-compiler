@@ -104,7 +104,7 @@ class WasmExampleTests {
     }
 }
 
-class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
+internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
     class CompilationResult(val wat: String)
 
     fun compile(mainModule: ModuleName): CompilationResult {
