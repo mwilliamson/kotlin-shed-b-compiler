@@ -73,6 +73,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     is IrInt -> {
                         return context.addInstruction(Wat.i32Const(value.value.intValueExact()))
                     }
+                    is IrUnicodeScalar -> {
+                        return context.addInstruction(Wat.i32Const(value.value))
+                    }
                     is IrUnit -> {
                         return context.addInstruction(Wat.i32Const(0))
                     }
