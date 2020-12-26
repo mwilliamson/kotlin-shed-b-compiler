@@ -4,10 +4,7 @@ import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
-import org.shedlang.compiler.stackir.Image
-import org.shedlang.compiler.stackir.Instruction
-import org.shedlang.compiler.stackir.IrBool
-import org.shedlang.compiler.stackir.PushValue
+import org.shedlang.compiler.stackir.*
 import java.lang.UnsupportedOperationException
 
 internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
@@ -61,6 +58,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     is IrBool -> {
                         val intValue = if (value.value) 1 else 0
                         return context.addInstruction(Wat.i32Const(intValue))
+                    }
+                    is IrUnit -> {
+                        return context.addInstruction(Wat.i32Const(0))
                     }
                     else -> {
                         throw UnsupportedOperationException("unhandled IR value: $value")

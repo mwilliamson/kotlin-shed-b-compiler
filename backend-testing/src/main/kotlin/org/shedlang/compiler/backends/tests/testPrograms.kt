@@ -114,6 +114,14 @@ private fun findTestFiles(): List<TestProgramSource> {
     }) + listOf(stdlibTestsSource)
 }
 
+fun run(arguments: List<String>): ExecutionResult {
+    return run(arguments, workingDirectory = null as Path?)
+}
+
+fun run(arguments: List<String>, workingDirectory: Path?): ExecutionResult {
+    return run(arguments, workingDirectory = workingDirectory?.toFile())
+}
+
 fun run(arguments: List<String>, workingDirectory: File?): ExecutionResult {
     val process = ProcessBuilder(*arguments.toTypedArray())
         .directory(workingDirectory)
@@ -145,6 +153,9 @@ fun temporaryDirectory(): TemporaryDirectory {
 }
 
 class TemporaryDirectory(val file: File) : Closeable {
+    val path: Path
+        get() = file.toPath()
+
     override fun close() {
         file.deleteRecursively()
     }

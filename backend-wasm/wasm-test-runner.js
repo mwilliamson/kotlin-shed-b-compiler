@@ -14,5 +14,5 @@ const importObject = {"wasi_snapshot_preview1": wasi.wasiImport};
     const wasm = await WebAssembly.compile(fs.readFileSync(process.argv[2]));
     const instance = await WebAssembly.instantiate(wasm, importObject);
 
-    console.log(instance.exports.test());
+    process.stdout.write(instance.exports.test().toString());
 })();

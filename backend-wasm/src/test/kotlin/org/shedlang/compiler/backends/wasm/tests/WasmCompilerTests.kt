@@ -13,11 +13,10 @@ import org.shedlang.compiler.backends.wasm.WasmFunctionContext
 import org.shedlang.compiler.backends.wasm.Wat
 import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.findRoot
-import org.shedlang.compiler.stackir.Instruction
-import org.shedlang.compiler.stackir.IrBool
-import org.shedlang.compiler.stackir.IrValue
-import org.shedlang.compiler.stackir.loadModuleSet
+import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.UnitType
 import java.lang.Exception
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
@@ -66,16 +65,22 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
     }
 
     private fun readStdout(stdout: String, type: Type): IrValue {
-        return when {
-            stdout.trim() == "0" -> {
-                IrBool(false)
-            }
-            stdout.trim() == "1" -> {
-                IrBool((true))
-            }
-            else -> {
-                throw Exception("unexpected stdout: $stdout")
-            }
+        return when (type) {
+            BoolType ->
+                when (stdout) {
+                    "0" -> IrBool(false)
+                    "1" -> IrBool(true)
+                    else -> throw Exception("unexpected stdout: $stdout")
+                }
+
+            UnitType ->
+                when (stdout) {
+                    "0" -> IrUnit
+                    else -> throw Exception("unexpected stdout: $stdout")
+                }
+
+            else ->
+                throw Exception("unhandled type: ${type.shortDescription}")
         }
     }
 
