@@ -1,8 +1,11 @@
 package org.shedlang.compiler.backends.wasm
 
 import kotlinx.collections.immutable.PersistentList
+import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.persistentMapOf
 import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.stackir.*
 import java.lang.UnsupportedOperationException
@@ -121,6 +124,22 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32Sub)
             }
 
+            is LocalLoad -> {
+                val (context2, identifier) = context.variableToLocal(
+                    variableId = instruction.variableId,
+                    name = instruction.name,
+                )
+                return context2.addInstruction(Wat.I.localGet(identifier))
+            }
+
+            is LocalStore -> {
+                val (context2, identifier) = context.variableToLocal(
+                    variableId = instruction.variableId,
+                    name = instruction.name,
+                )
+                return context2.addInstruction(Wat.I.localSet(identifier))
+            }
+
             is PushValue -> {
                 val value = instruction.value
                 when (value) {
@@ -179,13 +198,17 @@ private const val initialLocalIndex = 1
 internal data class WasmFunctionContext(
     internal val instructions: PersistentList<SExpression>,
     private val nextLocalIndex: Int,
+    internal val locals: PersistentList<String>,
+    private val variableIdToLocal: PersistentMap<Int, String>,
 ) {
     companion object {
-        val INITIAL = WasmFunctionContext(instructions = persistentListOf(), nextLocalIndex = initialLocalIndex)
+        val INITIAL = WasmFunctionContext(
+            instructions = persistentListOf(),
+            nextLocalIndex = initialLocalIndex,
+            locals = persistentListOf(),
+            variableIdToLocal = persistentMapOf(),
+        )
     }
-
-    internal val locals: List<String>
-        get() = (initialLocalIndex until nextLocalIndex).map { localIndex -> localIdentifier(localIndex) }
 
     fun addInstruction(instruction: SExpression): WasmFunctionContext {
         return copy(
@@ -193,12 +216,20 @@ internal data class WasmFunctionContext(
         )
     }
 
-    fun addLocal(): Pair<WasmFunctionContext, String> {
-        val newContext = copy(nextLocalIndex = nextLocalIndex + 1)
-        return Pair(newContext, localIdentifier(nextLocalIndex))
+    fun addLocal(name: String = "temp"): Pair<WasmFunctionContext, String> {
+        val local = "local_${name}_${nextLocalIndex}"
+        val newContext = copy(locals = locals.add(local), nextLocalIndex = nextLocalIndex + 1)
+        return Pair(newContext, local)
     }
 
-    private fun localIdentifier(localIndex: Int): String {
-        return "local_$localIndex"
+    fun variableToLocal(variableId: Int, name: Identifier): Pair<WasmFunctionContext, String> {
+        val existingLocal = variableIdToLocal[variableId]
+        if (existingLocal == null) {
+            val (context2, local) = addLocal(name.value)
+            val newContext = context2.copy(variableIdToLocal = variableIdToLocal.put(variableId, local))
+            return Pair(newContext, local)
+        } else {
+            return Pair(this, existingLocal)
+        }
     }
 }
