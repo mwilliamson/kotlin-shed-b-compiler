@@ -87,6 +87,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32Ne)
             }
 
+            is IntSubtract -> {
+                return context.addInstruction(Wat.I.i32Sub)
+            }
+
             is PushValue -> {
                 val value = instruction.value
                 when (value) {
