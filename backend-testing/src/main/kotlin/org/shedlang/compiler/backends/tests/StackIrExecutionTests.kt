@@ -317,6 +317,58 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun leftIntOperandIsLessThanRightOperandIfAndOnlyIfIntLessThanOperatorEvaluatesToFalse() {
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, 1, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, 2, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, 3, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, -3, -2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, -2, -2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN, -1, -2, isBool(false))
+    }
+
+    @Test
+    fun leftIntOperandIsLessThanOrEqualRightOperandIfAndOnlyIfIntLessThanOrEqualOperatorEvaluatesToFalse() {
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 1, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 2, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, 3, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -3, -2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -2, -2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.LESS_THAN_OR_EQUAL, -1, -2, isBool(false))
+    }
+
+    @Test
+    fun leftIntOperandIsGreaterThanRightOperandIfAndOnlyIfIntGreaterThanOperatorEvaluatesToFalse() {
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, 1, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, 2, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, 3, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -3, -2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -2, -2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN, -1, -2, isBool(true))
+    }
+
+    @Test
+    fun leftIntOperandIsGreaterThanOrEqualRightOperandIfAndOnlyIfIntGreaterThanOrEqualOperatorEvaluatesToFalse() {
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 1, 2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 2, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, 3, 2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -3, -2, isBool(false))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -2, -2, isBool(true))
+        assertIntBinaryOperation(BinaryOperator.GREATER_THAN_OR_EQUAL, -1, -2, isBool(true))
+    }
+
+    private fun assertIntBinaryOperation(operator: BinaryOperator, left: Int, right: Int, expected: Matcher<IrValue>) {
+        val left = literalInt(left)
+        val node = binaryOperation(operator, left, literalInt(right))
+        val types = createTypes(
+            expressionTypes = mapOf(left.nodeId to IntType)
+        )
+
+        val value = evaluateExpression(node, type = BoolType, types = types)
+
+        assertThat(value, expected)
+    }
+
+    @Test
     fun stringAdditionConcatenatesStrings() {
         val left = literalString("hello ")
         val node = binaryOperation(BinaryOperator.ADD, left, literalString("world"))
