@@ -4,17 +4,13 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.CompilerError
-import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.SourceError
-import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.tests.ExecutionResult
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
-import org.shedlang.compiler.backends.wasm.Wasi
-import org.shedlang.compiler.backends.wasm.Wat
+import org.shedlang.compiler.backends.wasm.WasmCompiler
 import org.shedlang.compiler.backends.withLineNumbers
-import org.shedlang.compiler.stackir.Image
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -79,7 +75,7 @@ class WasmExampleTests {
                     val moduleSet = testProgram.load()
                     val image = loadModuleSet(moduleSet)
 
-                    val compilationResult = Compiler(image = image, moduleSet = moduleSet).compile(
+                    val compilationResult = WasmCompiler(image = image, moduleSet = moduleSet).compile(
                         mainModule = testProgram.mainModule
                     )
                     println(withLineNumbers(compilationResult.wat))
@@ -103,45 +99,5 @@ class WasmExampleTests {
             listOf("wasmtime", path.toString()) + args,
             workingDirectory = path.parent.toFile(),
         )
-    }
-}
-
-internal class Compiler(private val image: Image, private val moduleSet: ModuleSet) {
-    class CompilationResult(val wat: String)
-
-    fun compile(mainModule: ModuleName): CompilationResult {
-        val messageOffset = 8
-        val message = "Hello, world!\n"
-        val wat = Wat.module(
-            imports = listOf(
-                Wasi.importFdWrite("fd_write"),
-            ),
-            body = listOf(
-                Wat.data(offset = messageOffset, value = message),
-                Wat.func(
-                    identifier = "start",
-                    body = listOf(
-                        Wat.I.i32Store(Wat.i32Const(0), Wat.i32Const(messageOffset)),
-                        Wat.I.i32Store(Wat.i32Const(4), Wat.i32Const(message.length)),
-                    ),
-                ),
-                Wat.start("start"),
-                Wat.func(
-                    identifier = "main",
-                    exportName = "_start",
-                    body = listOf(
-                        Wasi.callFdWrite(
-                            identifier = "fd_write",
-                            fileDescriptor = Wasi.stdout,
-                            iovs = Wat.i32Const(0),
-                            iovsLen = Wat.i32Const(1),
-                            nwritten = Wat.i32Const(8 + message.length),
-                        ),
-                        Wat.I.drop,
-                    ),
-                ),
-            ),
-        ).serialise()
-        return CompilationResult(wat = wat)
     }
 }

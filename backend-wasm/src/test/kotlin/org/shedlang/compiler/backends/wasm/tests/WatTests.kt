@@ -114,6 +114,27 @@ class WatTests {
     }
 
     @Test
+    fun funcIncludesResultTypeIfSet() {
+        val func = Wat.func(
+            identifier = "main",
+            result = Wat.i32,
+            body = listOf(
+                Wat.I.drop,
+            ),
+        )
+
+        assertThat(func, equalTo(
+            S.list(
+                S.symbol("func"),
+                S.identifier("main"),
+                S.list(S.symbol("result"), Wat.i32),
+                S.formatBreak,
+                Wat.I.drop,
+            ),
+        ))
+    }
+
+    @Test
     fun funcHasOptionalExport() {
         val func = Wat.func(
             identifier = "main",

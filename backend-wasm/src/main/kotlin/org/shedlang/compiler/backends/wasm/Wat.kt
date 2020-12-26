@@ -2,9 +2,11 @@ package org.shedlang.compiler.backends.wasm
 
 import java.lang.StringBuilder
 import java.lang.UnsupportedOperationException
+import java.math.BigInteger
 
 internal object Wat {
     val i32 = S.symbol("i32")
+//    val i64 = S.symbol("i64")
 
     fun i32Const(value: Int): SList {
         return S.list(
@@ -12,6 +14,15 @@ internal object Wat {
             S.int(value),
         )
     }
+
+//    fun i64Const(value: Long): SList {
+//        return S.list(
+//            S.symbol("i64.const"),
+//            S.int(value),
+//        )
+//    }
+
+//    fun i64Const(value: Int): SList = i64Const(value.toLong())
 
     fun module(imports: List<SExpression> = listOf(), body: List<SExpression> = listOf()): SExpression {
         return S.list(
@@ -49,16 +60,24 @@ internal object Wat {
         )
     }
 
-    fun func(identifier: String, exportName: String? = null, body: List<SExpression>): SExpression {
-        val export = if (exportName == null) {
+    fun func(identifier: String, exportName: String? = null, result: SExpression? = null, body: List<SExpression>): SExpression {
+        val exportExpressions = if (exportName == null) {
             listOf()
         } else {
             listOf(S.list(S.symbol("export"), S.string(exportName)))
         }
+
+        val resultExpressions = if (result == null) {
+            listOf()
+        } else {
+            listOf(S.list(S.symbol("result"), result))
+        }
+
         return S.list(
             S.symbol("func"),
             S.identifier(identifier),
-            *export.toTypedArray(),
+            *exportExpressions.toTypedArray(),
+            *resultExpressions.toTypedArray(),
             S.formatBreak,
             *body.toTypedArray(),
         )
@@ -83,7 +102,8 @@ internal object Wat {
 
 internal object S {
     val formatBreak = SFormatBreak
-    fun int(value: Int) = SInt(value)
+    fun int(value: Int) = SInt(value.toBigInteger())
+    fun int(value: Long) = SInt(value.toBigInteger())
     fun string(value: String) = SString(value)
     fun symbol(value: String) = SSymbol(value)
     fun identifier(value: String) = SIdentifier(value)
@@ -101,7 +121,7 @@ internal object SFormatBreak : SExpression {
     }
 }
 
-internal data class SInt(val value: Int): SExpression {
+internal data class SInt(val value: BigInteger): SExpression {
     override fun serialise(): String {
         return value.toString()
     }
