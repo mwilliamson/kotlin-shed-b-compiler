@@ -1024,10 +1024,4 @@ internal fun serialiseProgram(module: LlvmModule): String {
     return module.serialise()
 }
 
-fun withLineNumbers(source: String): String {
-    return source.lines().mapIndexed { index, line ->
-        (index + 1).toString().padStart(3) + " " + line
-    }.joinToString("\n")
-}
-
 internal val compiledUnitValue = LlvmOperandInt(0)

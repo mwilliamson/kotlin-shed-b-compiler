@@ -5,6 +5,7 @@ import org.shedlang.compiler.backends.llvm.*
 import org.shedlang.compiler.backends.tests.StackExecutionResult
 import org.shedlang.compiler.backends.tests.StackIrExecutionEnvironment
 import org.shedlang.compiler.backends.tests.temporaryDirectory
+import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.*
 
