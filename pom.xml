@@ -14,6 +14,7 @@
         <module>backend-llvm</module>
         <module>backend-python</module>
         <module>backend-testing</module>
+        <module>backend-wasm</module>
         <module>cli</module>
         <module>core</module>
         <module>core-tests</module>

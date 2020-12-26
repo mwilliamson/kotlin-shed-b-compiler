@@ -12,6 +12,7 @@ jobs:
                 llvm-version: ["7.0.1"]
                 node-version: ["12"]
                 python-version: ["3.6"]
+                wasmtime-version: ["0.21.0"]
 
         steps:
 
@@ -38,4 +39,9 @@ jobs:
               version: ${{ matrix.llvm-version }}
               directory: ${{ runner.temp }}/llvm
 
+        - name: Use wasmtime ${{ matrix.wasmtime-version }}
+          uses: mwilliamson/setup-wasmtime-action@v1
+          with:
+              wasmtime-version: ${{ matrix.wasmtime-version }}
+  
         - run: make test
