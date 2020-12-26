@@ -207,4 +207,21 @@ class SExpressionTests {
 
         assertThat(string, equalTo("(1\n  2\n  3\n)"))
     }
+
+    @Test
+    fun indentationCanBeNested() {
+        val expression = S.list(
+            S.int(1),
+            S.formatBreak,
+            S.list(
+                S.int(2),
+                S.formatBreak,
+                S.int(3),
+            ),
+        )
+
+        val string = expression.serialise()
+
+        assertThat(string, equalTo("(1\n  (2\n    3\n  )\n)"))
+    }
 }

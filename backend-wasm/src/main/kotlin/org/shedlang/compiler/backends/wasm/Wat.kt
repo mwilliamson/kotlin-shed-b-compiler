@@ -144,7 +144,7 @@ internal data class SList(val elements: List<SExpression>) : SExpression {
                 if (elementIndex > 0) {
                     builder.append(separator)
                 }
-                builder.append(element.serialise())
+                builder.append(element.serialise().replace("\n", "\n  "))
             }
         }
 
