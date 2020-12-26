@@ -103,6 +103,8 @@ internal object Wat {
             return S.list(S.symbol("i32.store"), offset, value)
         }
 
+        val i32Eq = S.list(S.symbol("i32.eq"))
+
         val i32Sub = S.list(S.symbol("i32.sub"))
 
         fun localGet(identifier: String) = S.list(S.symbol("local.get"), S.identifier(identifier))

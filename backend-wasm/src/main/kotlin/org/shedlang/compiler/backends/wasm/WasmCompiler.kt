@@ -53,6 +53,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     private fun compileInstruction(instruction: Instruction, context: WasmFunctionContext): WasmFunctionContext {
         when (instruction) {
+            is BoolEquals -> {
+                return context.addInstruction(Wat.I.i32Eq)
+            }
+
             is BoolNot -> {
                 val (context2, local) = context.addLocal()
 
