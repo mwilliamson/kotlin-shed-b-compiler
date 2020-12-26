@@ -105,6 +105,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32Eq)
             }
 
+            is UnicodeScalarNotEqual -> {
+                return context.addInstruction(Wat.I.i32Ne)
+            }
+
             else -> {
                 throw UnsupportedOperationException("unhandled instruction: $instruction")
             }
