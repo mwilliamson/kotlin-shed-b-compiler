@@ -110,9 +110,9 @@ object IntSubtract: Instruction()
 
 class Jump(val label: Int): Instruction()
 
-class JumpIfFalse(val label: Int): Instruction()
+class JumpIfFalse(val label: Int, val joinLabel: Int): Instruction()
 
-class JumpIfTrue(val label: Int): Instruction()
+class JumpIfTrue(val label: Int, val joinLabel: Int): Instruction()
 
 class Label(val value: Int): Instruction()
 

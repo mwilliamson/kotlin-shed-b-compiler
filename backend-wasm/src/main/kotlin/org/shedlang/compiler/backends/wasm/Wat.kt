@@ -121,6 +121,16 @@ internal object Wat {
         fun localGet(identifier: String) = S.list(S.symbol("local.get"), S.identifier(identifier))
         fun localSet(identifier: String) = S.list(S.symbol("local.set"), S.identifier(identifier))
 
+        fun if_(result: List<SExpression>): List<SExpression> {
+            return listOf(
+                S.symbol("if"),
+                S.list(S.symbol("result"), *result.toTypedArray()),
+            )
+        }
+
+        val else_ = S.symbol("else")
+        val end = S.symbol("end")
+
         fun call(identifier: String, args: List<SExpression>): SExpression {
             return S.list(S.symbol("call"), S.identifier(identifier), *args.toTypedArray())
         }

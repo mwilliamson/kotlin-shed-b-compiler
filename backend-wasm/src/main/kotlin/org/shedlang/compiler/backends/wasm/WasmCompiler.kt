@@ -51,10 +51,17 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: WasmFunctionContext): WasmFunctionContext {
-        return instructions.fold(context, { currentContext, instruction -> compileInstruction(instruction, currentContext) })
+        return instructions.foldIndexed(context, { instructionIndex, currentContext, instruction ->
+            val nextInstruction = instructions.getOrNull(instructionIndex + 1)
+            compileInstruction(instruction, currentContext, nextInstruction = nextInstruction)
+        })
     }
 
-    private fun compileInstruction(instruction: Instruction, context: WasmFunctionContext): WasmFunctionContext {
+    private fun compileInstruction(
+        instruction: Instruction,
+        context: WasmFunctionContext,
+        nextInstruction: Instruction?,
+    ): WasmFunctionContext {
         when (instruction) {
             is BoolEquals -> {
                 return context.addInstruction(Wat.I.i32Eq)
@@ -65,13 +72,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is BoolNot -> {
-                val (context2, local) = context.addLocal()
-
-                return context2
-                    .addInstruction(Wat.I.localSet(local))
-                    .addInstruction(Wat.i32Const(1))
-                    .addInstruction(Wat.I.localGet(local))
-                    .addInstruction(Wat.I.i32Sub)
+                return addBoolNot(context)
             }
 
             is Discard -> {
@@ -122,6 +123,30 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
             is IntSubtract -> {
                 return context.addInstruction(Wat.I.i32Sub)
+            }
+
+            is Jump -> {
+                return context
+            }
+
+            is JumpIfFalse -> {
+                return addJumpIfFalse(
+                    label = instruction.label,
+                    joinLabel = instruction.joinLabel,
+                    context = context,
+                )
+            }
+
+            is JumpIfTrue -> {
+                return addJumpIfFalse(
+                    label = instruction.label,
+                    joinLabel = instruction.joinLabel,
+                    context = addBoolNot(context),
+                )
+            }
+
+            is Label -> {
+                return context.onLabel(instruction.value).fold(context, WasmFunctionContext::addInstruction)
             }
 
             is LocalLoad -> {
@@ -191,6 +216,23 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
         }
     }
+
+    private fun addJumpIfFalse(label: Int, joinLabel: Int, context: WasmFunctionContext): WasmFunctionContext {
+        return context
+            .addInstructions(Wat.I.if_(result = listOf(Wat.i32)))
+            .addOnLabel(label, Wat.I.else_)
+            .addOnLabel(joinLabel, Wat.I.end)
+    }
+
+    private fun addBoolNot(context: WasmFunctionContext): WasmFunctionContext {
+        val (context2, local) = context.addLocal()
+
+        return context2
+            .addInstruction(Wat.I.localSet(local))
+            .addInstruction(Wat.i32Const(1))
+            .addInstruction(Wat.I.localGet(local))
+            .addInstruction(Wat.I.i32Sub)
+    }
 }
 
 private const val initialLocalIndex = 1
@@ -200,6 +242,7 @@ internal data class WasmFunctionContext(
     private val nextLocalIndex: Int,
     internal val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
+    private val onLabel: PersistentMap<Int, PersistentList<SExpression>>,
 ) {
     companion object {
         val INITIAL = WasmFunctionContext(
@@ -207,12 +250,19 @@ internal data class WasmFunctionContext(
             nextLocalIndex = initialLocalIndex,
             locals = persistentListOf(),
             variableIdToLocal = persistentMapOf(),
+            onLabel = persistentMapOf(),
         )
     }
 
     fun addInstruction(instruction: SExpression): WasmFunctionContext {
         return copy(
             instructions = instructions.add(instruction),
+        )
+    }
+
+    fun addInstructions(newInstructions: List<SExpression>): WasmFunctionContext {
+        return copy(
+            instructions = instructions.addAll(newInstructions),
         )
     }
 
@@ -231,5 +281,13 @@ internal data class WasmFunctionContext(
         } else {
             return Pair(this, existingLocal)
         }
+    }
+
+    fun addOnLabel(label: Int, instruction: SExpression): WasmFunctionContext {
+        return copy(onLabel = onLabel.put(label, onLabel(label).add(instruction)))
+    }
+
+    fun onLabel(label: Int): PersistentList<SExpression> {
+        return onLabel.getOrDefault(label, persistentListOf())
     }
 }

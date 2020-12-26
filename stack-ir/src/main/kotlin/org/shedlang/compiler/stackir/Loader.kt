@@ -147,7 +147,7 @@ class Loader(
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
-                                .add(JumpIfTrue(rightLabel.value))
+                                .add(JumpIfTrue(rightLabel.value, joinLabel = endLabel.value))
                                 .add(PushValue(IrBool(false)))
                                 .add(Jump(endLabel.value))
                                 .add(rightLabel)
@@ -200,7 +200,7 @@ class Loader(
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
-                                .add(JumpIfFalse(rightLabel.value))
+                                .add(JumpIfFalse(rightLabel.value, joinLabel = endLabel.value))
                                 .add(PushValue(IrBool(true)))
                                 .add(Jump(endLabel.value))
                                 .add(rightLabel)
@@ -409,7 +409,7 @@ class Loader(
                     val nextConditionLabel = conditionLabels.getOrNull(branchIndex + 1)
                     if (nextConditionLabel != null) {
                         instructions.addAll(conditionInstructions[branchIndex])
-                        instructions.add(JumpIfFalse(nextConditionLabel.value))
+                        instructions.add(JumpIfFalse(nextConditionLabel.value, joinLabel = endLabel.value))
                     }
                     instructions.addAll(conditionalBodies[branchIndex])
                     instructions.add(Jump(endLabel.value))
