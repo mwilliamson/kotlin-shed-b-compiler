@@ -104,10 +104,12 @@ internal object Wat {
         }
 
         val i32Add = S.list(S.symbol("i32.add"))
-        val i32Eq = S.list(S.symbol("i32.eq"))
         val i32Mul = S.list(S.symbol("i32.mul"))
-        val i32Ne = S.list(S.symbol("i32.ne"))
         val i32Sub = S.list(S.symbol("i32.sub"))
+
+        val i32Eq = S.list(S.symbol("i32.eq"))
+        val i32Ne = S.list(S.symbol("i32.ne"))
+        val i32GtU = S.list(S.symbol("i32.gt_u"))
 
         fun localGet(identifier: String) = S.list(S.symbol("local.get"), S.identifier(identifier))
         fun localSet(identifier: String) = S.list(S.symbol("local.set"), S.identifier(identifier))
