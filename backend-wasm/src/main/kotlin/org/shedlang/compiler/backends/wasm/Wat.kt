@@ -6,9 +6,9 @@ import java.lang.UnsupportedOperationException
 internal object Wat {
     fun module(): SExpression {
         return S.list(
-            S.string("module"),
+            S.symbol("module"),
             S.formatBreak,
-            S.list(S.string("memory"), S.int(1)),
+            S.list(S.symbol("memory"), S.int(1)),
         )
     }
 }
@@ -17,6 +17,7 @@ internal object S {
     val formatBreak = SFormatBreak
     fun int(value: Int) = SInt(value)
     fun string(value: String) = SString(value)
+    fun symbol(value: String) = SSymbol(value)
     fun list(vararg elements: SExpression) = SList(elements.toList())
 }
 
@@ -40,6 +41,13 @@ internal data class SString(val value: String): SExpression {
     override fun serialise(): String {
         // TODO: handle escaping
         return "\"${value}\""
+    }
+}
+
+internal data class SSymbol(val value: String): SExpression {
+    override fun serialise(): String {
+        // TODO: handle escaping
+        return value
     }
 }
 

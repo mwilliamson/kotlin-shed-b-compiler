@@ -12,9 +12,9 @@ class WatTests {
 
         assertThat(module, equalTo(
             S.list(
-                S.string("module"),
+                S.symbol("module"),
                 S.formatBreak,
-                S.list(S.string("memory"), S.int(1)),
+                S.list(S.symbol("memory"), S.int(1)),
             )
         ))
     }
@@ -37,6 +37,15 @@ class SExpressionTests {
         val string = expression.serialise()
 
         assertThat(string, equalTo("\"Hello, world!\""))
+    }
+
+    @Test
+    fun symbolWithoutSpecialCharactersIsSerialised() {
+        val expression = S.symbol("module")
+
+        val string = expression.serialise()
+
+        assertThat(string, equalTo("module"))
     }
 
     @Test
