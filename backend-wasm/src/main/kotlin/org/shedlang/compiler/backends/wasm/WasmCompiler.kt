@@ -83,6 +83,16 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32Eq)
             }
 
+            is IntMinus -> {
+                val (context2, local) = context.addLocal()
+
+                return context2
+                    .addInstruction(Wat.I.localSet(local))
+                    .addInstruction(Wat.i32Const(0))
+                    .addInstruction(Wat.I.localGet(local))
+                    .addInstruction(Wat.I.i32Sub)
+            }
+
             is IntMultiply -> {
                 return context.addInstruction(Wat.I.i32Mul)
             }
