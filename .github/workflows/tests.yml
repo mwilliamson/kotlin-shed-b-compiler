@@ -13,6 +13,7 @@ jobs:
                 node-version: ["12"]
                 python-version: ["3.6"]
                 wasmtime-version: ["0.21.0"]
+                wabt-version: ["1.0.20"]
 
         steps:
 
@@ -27,7 +28,7 @@ jobs:
           uses: actions/setup-node@v1
           with:
               node-version: ${{ matrix.node-version }}
-              
+
         - name: Use Python ${{ matrix.python-version }}
           uses: actions/setup-python@v2
           with:
@@ -43,5 +44,10 @@ jobs:
           uses: mwilliamson/setup-wasmtime-action@v1
           with:
               wasmtime-version: ${{ matrix.wasmtime-version }}
-  
+
+        - name: Use wabt ${{ matrix.wabt-version }}
+          uses: mwilliamson/setup-wabt-action@v1
+          with:
+              wabt-version: ${{ matrix.wabt-version }}
+
         - run: make test
