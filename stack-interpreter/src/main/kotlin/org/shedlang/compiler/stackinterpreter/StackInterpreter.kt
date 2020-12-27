@@ -743,8 +743,8 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
-        is Jump -> {
-            initialState.jump(label)
+        is JumpEnd -> {
+            initialState.jump(destinationLabel)
         }
 
         is JumpIfFalse -> {
@@ -753,7 +753,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             if (condition) {
                 state2.nextInstruction()
             } else {
-                state2.jump(label)
+                state2.jump(destinationLabel)
             }
         }
 
@@ -761,7 +761,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             val (state2, value) = initialState.popTemporary()
             val condition = (value as InterpreterBool).value
             if (condition) {
-                state2.jump(label)
+                state2.jump(destinationLabel)
             } else {
                 state2.nextInstruction()
             }

@@ -479,9 +479,9 @@ internal class Compiler(
                 return compileIntClosedOperation(::LlvmSub, context = context)
             }
 
-            is Jump -> {
+            is JumpEnd -> {
                 return context.addInstructions(
-                    LlvmBrUnconditional(labelToLlvmLabel(instruction.label))
+                    LlvmBrUnconditional(labelToLlvmLabel(instruction.destinationLabel))
                 )
             }
 
@@ -500,7 +500,7 @@ internal class Compiler(
                     LlvmBr(
                         condition = conditionTruncated,
                         ifTrue = trueLabel,
-                        ifFalse = labelToLlvmLabel(instruction.label)
+                        ifFalse = labelToLlvmLabel(instruction.destinationLabel)
                     ),
                     LlvmLabel(trueLabel)
                 )
@@ -520,7 +520,7 @@ internal class Compiler(
                     ),
                     LlvmBr(
                         condition = conditionTruncated,
-                        ifTrue = labelToLlvmLabel(instruction.label),
+                        ifTrue = labelToLlvmLabel(instruction.destinationLabel),
                         ifFalse = falseLabel
                     ),
                     LlvmLabel(falseLabel)

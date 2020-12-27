@@ -147,12 +147,12 @@ class Loader(
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
-                                .add(JumpIfTrue(rightLabel.value, joinLabel = endLabel.value))
+                                .add(JumpIfTrue(rightLabel.value, endLabel = endLabel.value))
                                 .add(PushValue(IrBool(false)))
-                                .add(Jump(endLabel.value))
+                                .add(JumpEnd(endLabel.value))
                                 .add(rightLabel)
                                 .addAll(rightInstructions)
-                                .add(Jump(endLabel.value))
+                                .add(JumpEnd(endLabel.value))
                                 .add(endLabel)
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
@@ -200,12 +200,12 @@ class Loader(
                             val leftInstructions = loadExpression(node.left)
                             val rightInstructions = loadExpression(node.right)
                             return leftInstructions
-                                .add(JumpIfFalse(rightLabel.value, joinLabel = endLabel.value))
+                                .add(JumpIfFalse(rightLabel.value, endLabel = endLabel.value))
                                 .add(PushValue(IrBool(true)))
-                                .add(Jump(endLabel.value))
+                                .add(JumpEnd(endLabel.value))
                                 .add(rightLabel)
                                 .addAll(rightInstructions)
-                                .add(Jump(endLabel.value))
+                                .add(JumpEnd(endLabel.value))
                                 .add(endLabel)
                         }
                         else -> throw UnsupportedOperationException("operator not implemented: " + node.operator)
@@ -402,23 +402,24 @@ class Loader(
                 val branchBodies = conditionalBodies + elseBranch.nullableToList()
                 val conditionLabels = branchBodies.map { createLabel() }
                 val endLabel = createLabel()
-                instructions.add(Jump(conditionLabels[0].value))
 
                 conditionInstructions.forEachIndexed { branchIndex, _ ->
-                    instructions.add(conditionLabels[branchIndex])
+                    if (branchIndex > 0) {
+                        instructions.add(conditionLabels[branchIndex])
+                    }
                     val nextConditionLabel = conditionLabels.getOrNull(branchIndex + 1)
                     if (nextConditionLabel != null) {
                         instructions.addAll(conditionInstructions[branchIndex])
-                        instructions.add(JumpIfFalse(nextConditionLabel.value, joinLabel = endLabel.value))
+                        instructions.add(JumpIfFalse(nextConditionLabel.value, endLabel = endLabel.value))
                     }
                     instructions.addAll(conditionalBodies[branchIndex])
-                    instructions.add(Jump(endLabel.value))
+                    instructions.add(JumpEnd(endLabel.value))
                 }
 
                 if (elseBranch != null) {
                     instructions.add(conditionLabels.last())
                     instructions.addAll(elseBranch)
-                    instructions.add(Jump(endLabel.value))
+                    instructions.add(JumpEnd(endLabel.value))
                 }
                 instructions.add(endLabel)
                 return instructions.toPersistentList()

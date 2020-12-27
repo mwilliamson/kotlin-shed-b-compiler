@@ -22,9 +22,9 @@ fun removeUnreachableCode(instructions: List<Instruction>): PersistentList<Instr
             newInstructions.add(instruction)
 
             val next = when (instruction) {
-                is Jump -> instruction.label
-                is JumpIfTrue -> instruction.label
-                is JumpIfFalse -> instruction.label
+                is JumpEnd -> instruction.destinationLabel
+                is JumpIfTrue -> instruction.destinationLabel
+                is JumpIfFalse -> instruction.destinationLabel
                 else -> null
             }
             if (next != null) {
@@ -32,7 +32,7 @@ fun removeUnreachableCode(instructions: List<Instruction>): PersistentList<Instr
             }
 
             when (instruction) {
-                Exit, is Jump, Resume, ResumeWithState, Return ->
+                Exit, is JumpEnd, Resume, ResumeWithState, Return ->
                     isTerminated = true
             }
         }

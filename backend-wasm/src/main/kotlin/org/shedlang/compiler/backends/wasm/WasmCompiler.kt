@@ -125,22 +125,22 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wat.I.i32Sub)
             }
 
-            is Jump -> {
+            is JumpEnd -> {
                 return context
             }
 
             is JumpIfFalse -> {
                 return addJumpIfFalse(
-                    label = instruction.label,
-                    joinLabel = instruction.joinLabel,
+                    label = instruction.destinationLabel,
+                    joinLabel = instruction.endLabel,
                     context = context,
                 )
             }
 
             is JumpIfTrue -> {
                 return addJumpIfFalse(
-                    label = instruction.label,
-                    joinLabel = instruction.joinLabel,
+                    label = instruction.destinationLabel,
+                    joinLabel = instruction.endLabel,
                     context = addBoolNot(context),
                 )
             }

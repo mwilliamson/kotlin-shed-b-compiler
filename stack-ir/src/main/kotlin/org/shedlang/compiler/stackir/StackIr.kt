@@ -108,11 +108,40 @@ object IntNotEqual: Instruction()
 
 object IntSubtract: Instruction()
 
-class Jump(val label: Int): Instruction()
+/**
+ * LLVM and WASM support different ways of representing branching,
+ * but we want to allow easy compilation to both targets.
+ *
+ * The IR instructions map easily enough to LLVM br instructions:
+ *   * JumpEnd -> unconditional jump
+ *   * JumpIfFalse, JumpIfTrue -> conditional jumps
+ *
+ * LLVM requires that basic blocks are explicitly started with a label,
+ * excluding the basic block at the start of the function,
+ * and terminated with a terminator instruction such as a jump or branch.
+ * Therefore, our IR should always jump before a label,
+ * even if we're jumping to the next instruction.
+ *
+ * WASM uses structured control instructions:
+ * for instance, an "if" is represented by the sequence of instructions:
+ *   * "if"
+ *   * true branch
+ *   * "else"
+ *   * false branch
+ *   * "end"
+ *
+ * Therefore, we have the constraint that JumpIfFalse and JumpIfTrue must be similarly structured.
+ * Consider JumpIfFalse (JumpIfTrue being the same, except with the true/false branches swapped).
+ * The instructions following the jump until a JumpEnd instruction to the end label are treated as the true branch.
+ * This should be immediately followed by the destination label.
+ * The instructions following the destination label until a JumpEnd instruction to the end label are treated as the false branch.
+ */
 
-class JumpIfFalse(val label: Int, val joinLabel: Int): Instruction()
+class JumpEnd(val destinationLabel: Int): Instruction()
 
-class JumpIfTrue(val label: Int, val joinLabel: Int): Instruction()
+class JumpIfFalse(val destinationLabel: Int, val endLabel: Int): Instruction()
+
+class JumpIfTrue(val destinationLabel: Int, val endLabel: Int): Instruction()
 
 class Label(val value: Int): Instruction()
 
