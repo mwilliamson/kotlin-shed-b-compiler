@@ -60,10 +60,15 @@ internal object Wat {
         )
     }
 
+    fun param(identifier: String, type: SExpression): SExpression {
+        return S.list(S.symbol("param"), S.identifier(identifier), type)
+    }
+
     fun func(
         identifier: String,
         exportName: String? = null,
         locals: List<SExpression> = listOf(),
+        params: List<SExpression> = listOf(),
         result: SExpression? = null,
         body: List<SExpression>,
     ): SExpression {
@@ -83,6 +88,7 @@ internal object Wat {
             S.symbol("func"),
             S.identifier(identifier),
             *exportExpressions.toTypedArray(),
+            *params.toTypedArray(),
             *resultExpressions.toTypedArray(),
             S.formatBreak,
             *locals.toTypedArray(),
@@ -102,6 +108,9 @@ internal object Wat {
         fun i32Store(offset: SExpression, value: SExpression): SExpression {
             return S.list(S.symbol("i32.store"), offset, value)
         }
+
+        val i32Load = S.list(S.symbol("i32.load"))
+        val i32Store = S.list(S.symbol("i32.store"))
 
         val i32Add = S.list(S.symbol("i32.add"))
         val i32Mul = S.list(S.symbol("i32.mul"))

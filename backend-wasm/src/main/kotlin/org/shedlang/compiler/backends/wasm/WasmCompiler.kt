@@ -175,6 +175,14 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     is IrInt -> {
                         return context.addInstruction(Wat.i32Const(value.value.intValueExact()))
                     }
+                    is IrString -> {
+                        val bytes = value.value.toByteArray(Charsets.UTF_8)
+
+                        val (context2, memoryIndex) = context.staticAllocI32(bytes.size)
+                        val (context3, _) = context2.staticAllocString(value.value)
+
+                        return context3.addInstruction(Wat.i32Const(memoryIndex))
+                    }
                     is IrUnicodeScalar -> {
                         return context.addInstruction(Wat.i32Const(value.value))
                     }
@@ -243,6 +251,9 @@ internal data class WasmFunctionContext(
     internal val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
     private val onLabel: PersistentMap<Int, PersistentList<SExpression>>,
+    internal val memorySize: Int,
+    internal val data: PersistentList<SExpression>,
+    internal val startInstructions: PersistentList<SExpression>,
 ) {
     companion object {
         val INITIAL = WasmFunctionContext(
@@ -251,6 +262,9 @@ internal data class WasmFunctionContext(
             locals = persistentListOf(),
             variableIdToLocal = persistentMapOf(),
             onLabel = persistentMapOf(),
+            memorySize = 0,
+            data = persistentListOf(),
+            startInstructions = persistentListOf(),
         )
     }
 
@@ -289,5 +303,49 @@ internal data class WasmFunctionContext(
 
     fun onLabel(label: Int): PersistentList<SExpression> {
         return onLabel.getOrDefault(label, persistentListOf())
+    }
+
+    fun staticAllocString(value: String): Pair<WasmFunctionContext, Int> {
+        val newContext = copy(
+            memorySize = memorySize + value.toByteArray(Charsets.UTF_8).size,
+            data = data.add(Wat.data(memorySize, value)),
+        )
+        return Pair(newContext, memorySize)
+    }
+
+    fun staticAllocI32(): Pair<WasmFunctionContext, Int> {
+        val aligned = align(4)
+        val newContext = aligned.copy(
+            memorySize = aligned.memorySize + 4,
+        )
+        return Pair(newContext, aligned.memorySize)
+    }
+
+    fun staticAllocI32(value: Int): Pair<WasmFunctionContext, Int> {
+        val aligned = align(4)
+        val newContext = aligned.copy(
+            memorySize = aligned.memorySize + 4,
+            startInstructions = aligned.startInstructions.add(
+                Wat.I.i32Store(Wat.i32Const(aligned.memorySize), Wat.i32Const(value)),
+            ),
+        )
+        return Pair(newContext, aligned.memorySize)
+    }
+
+    private fun align(alignment: Int): WasmFunctionContext {
+        val misalignment = memorySize % alignment
+        if (misalignment == 0) {
+            return this
+        } else {
+            return copy(memorySize = memorySize + (alignment - misalignment))
+        }
+    }
+}
+
+internal class WasmData(val size: Int, val bytes: Array<Byte>?, val storeValue: Int?) {
+    companion object {
+        fun i32(value: Int): WasmData {
+            return WasmData(size = 4, bytes = null, storeValue = value)
+        }
     }
 }

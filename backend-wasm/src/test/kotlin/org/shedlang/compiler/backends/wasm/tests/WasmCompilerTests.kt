@@ -8,6 +8,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
+import org.shedlang.compiler.backends.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.WasmCompiler
 import org.shedlang.compiler.backends.wasm.WasmFunctionContext
 import org.shedlang.compiler.backends.wasm.Wat
@@ -25,41 +26,114 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
     override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): StackExecutionResult {
         val image = loadModuleSet(moduleSet)
         val compiler = WasmCompiler(image = image, moduleSet = moduleSet)
-        val wasmInstructions = compiler.compileInstructions(instructions, WasmFunctionContext.INITIAL)
-        val module = Wat.module(
-            body = listOf(
-                Wat.func(
-                    "test",
-                    exportName = "test",
-                    result = Wat.i32,
-                    locals = wasmInstructions.locals.map { local -> Wat.local(local, Wat.i32) },
-                    body = wasmInstructions.instructions,
+        val context = compiler.compileInstructions(instructions, WasmFunctionContext.INITIAL)
+
+        if (type == StringType) {
+            // TODO: Handle memory properly -- need to pass page size
+            val (context2, stringContentsPointerMemoryIndex) = context.staticAllocI32()
+            val (context3, stringLengthMemoryIndex) = context2.staticAllocI32()
+            val module = Wat.module(
+                imports = listOf(
+                    Wasi.importFdWrite("fd_write"),
+                ),
+                body = context3.data + listOf(
+                    Wat.func(
+                        identifier = "start",
+                        body = context3.startInstructions,
+                    ),
+                    Wat.start("start"),
+                    Wat.func(
+                        "test",
+                        exportName = "_start",
+                        locals = context3.locals.map { local -> Wat.local(local, Wat.i32) },
+                        body = context3.instructions.add(Wat.I.call("print_string", listOf())),
+                    ),
+                    Wat.func(
+                        "print_string",
+                        params = listOf(Wat.param("string", Wat.i32)),
+                        body = listOf(
+                            Wat.i32Const(stringContentsPointerMemoryIndex),
+                            Wat.I.localGet("string"),
+                            Wat.i32Const(4),
+                            Wat.I.i32Add,
+                            Wat.I.i32Store,
+
+                            Wat.i32Const(stringLengthMemoryIndex),
+                            Wat.I.localGet("string"),
+                            Wat.I.i32Load,
+                            Wat.I.i32Store,
+
+                            Wasi.callFdWrite(
+                                identifier = "fd_write",
+                                fileDescriptor = Wasi.stdout,
+                                iovs = Wat.i32Const(stringContentsPointerMemoryIndex),
+                                iovsLen = Wat.i32Const(1),
+                                // Overwrites data, but we don't need it any more
+                                nwritten = Wat.i32Const(0),
+                            ),
+                            Wat.I.drop,
+                        ),
+                    )
+                ),
+            )
+            println(withLineNumbers(module.serialise()))
+
+            temporaryDirectory().use { directory ->
+                val watPath = directory.path.resolve("test.wat")
+                watPath.toFile().writeText(module.serialise())
+
+                val wasmPath = directory.path.resolve("test.wasm")
+                watToWasm(watPath, wasmPath)
+
+                val testRunnerResult = run(
+                    listOf("wasmtime", wasmPath.toString()),
+                    workingDirectory = findRoot().resolve("backend-wasm")
                 )
-            ),
-        )
-        println(withLineNumbers(module.serialise()))
 
-        temporaryDirectory().use { directory ->
-            val watPath = directory.path.resolve("test.wat")
-            watPath.toFile().writeText(module.serialise())
+                println("stderr:")
+                println(testRunnerResult.stderr)
 
-            val wasmPath = directory.path.resolve("test.wasm")
-            watToWasm(watPath, wasmPath)
-
-            val testRunnerResult = run(
-                listOf("node", "--experimental-wasi-unstable-preview1", "wasm-test-runner.js", wasmPath.toString()),
-                workingDirectory = findRoot().resolve("backend-wasm")
+                return StackExecutionResult(
+                    value = IrString(testRunnerResult.stdout),
+                    stdout = "",
+                )
+            }
+        } else {
+            val module = Wat.module(
+                body = listOf(
+                    Wat.func(
+                        "test",
+                        exportName = "test",
+                        result = Wat.i32,
+                        locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
+                        body = context.instructions,
+                    )
+                ),
             )
+            println(withLineNumbers(module.serialise()))
 
-            println("stderr:")
-            println(testRunnerResult.stderr)
+            temporaryDirectory().use { directory ->
+                val watPath = directory.path.resolve("test.wat")
+                watPath.toFile().writeText(module.serialise())
 
-            val value = readStdout(testRunnerResult.stdout, type = type)
+                val wasmPath = directory.path.resolve("test.wasm")
+                watToWasm(watPath, wasmPath)
 
-            return StackExecutionResult(
-                value = value,
-                stdout = "",
-            )
+                val testRunnerResult = run(
+                    listOf("node", "--experimental-wasi-unstable-preview1", "wasm-test-runner.js", wasmPath.toString()),
+                    workingDirectory = findRoot().resolve("backend-wasm")
+                )
+
+                println("stderr:")
+                println(testRunnerResult.stderr)
+
+                val value = readStdout(testRunnerResult.stdout, type = type)
+
+                return StackExecutionResult(
+                    value = value,
+                    stdout = "",
+                )
+            }
         }
     }
 
