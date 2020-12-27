@@ -3,6 +3,8 @@ package org.shedlang.compiler.backends.wasm
 import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 
+private val PAGE_SIZE = 65536
+
 internal data class WasmMemory(
     internal val size: Int,
     internal val data: PersistentList<SExpression>,
@@ -15,6 +17,9 @@ internal data class WasmMemory(
             startInstructions = persistentListOf(),
         )
     }
+
+    internal val pageCount: Int
+        get() = (size + PAGE_SIZE - 1) / PAGE_SIZE
 
     fun staticAllocString(value: String): Pair<WasmMemory, Int> {
         val newContext = copy(

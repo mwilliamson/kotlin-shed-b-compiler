@@ -32,6 +32,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                 imports = listOf(
                     Wasi.importFdWrite("fd_write"),
                 ),
+                memoryPageCount = context2.memory.pageCount,
                 body = context2.memory.data + listOf(
                     Wat.func(
                         identifier = "start",

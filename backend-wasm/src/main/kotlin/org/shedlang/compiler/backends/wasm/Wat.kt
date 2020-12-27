@@ -17,12 +17,12 @@ internal object Wat {
 
 //    fun i64Const(value: Int): SList = i64Const(value.toLong())
 
-    fun module(imports: List<SExpression> = listOf(), body: List<SExpression> = listOf()): SExpression {
+    fun module(imports: List<SExpression> = listOf(), memoryPageCount: Int = 0, body: List<SExpression> = listOf()): SExpression {
         return S.list(
             S.symbol("module"),
             S.formatBreak,
             *imports.toTypedArray(),
-            S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(1)),
+            S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(memoryPageCount)),
             *body.toTypedArray(),
         )
     }

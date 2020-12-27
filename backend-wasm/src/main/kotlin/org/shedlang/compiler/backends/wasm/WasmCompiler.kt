@@ -21,6 +21,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
+            memoryPageCount = 1,
             body = listOf(
                 Wat.data(offset = messageOffset, value = message),
                 Wat.func(
