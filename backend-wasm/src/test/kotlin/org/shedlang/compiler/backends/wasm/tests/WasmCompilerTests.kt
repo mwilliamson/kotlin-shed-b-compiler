@@ -52,13 +52,13 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                         "print_string",
                         params = listOf(Wat.param("string", Wat.i32)),
                         body = listOf(
-                            Wat.i32Const(stringContentsPointerMemoryIndex),
+                            Wat.I.i32Const(stringContentsPointerMemoryIndex),
                             Wat.I.localGet("string"),
-                            Wat.i32Const(4),
+                            Wat.I.i32Const(4),
                             Wat.I.i32Add,
                             Wat.I.i32Store,
 
-                            Wat.i32Const(stringLengthMemoryIndex),
+                            Wat.I.i32Const(stringLengthMemoryIndex),
                             Wat.I.localGet("string"),
                             Wat.I.i32Load,
                             Wat.I.i32Store,
@@ -66,10 +66,10 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                             Wasi.callFdWrite(
                                 identifier = "fd_write",
                                 fileDescriptor = Wasi.stdout,
-                                iovs = Wat.i32Const(stringContentsPointerMemoryIndex),
-                                iovsLen = Wat.i32Const(1),
+                                iovs = Wat.I.i32Const(stringContentsPointerMemoryIndex),
+                                iovsLen = Wat.I.i32Const(1),
                                 // Overwrites data, but we don't need it any more
-                                nwritten = Wat.i32Const(0),
+                                nwritten = Wat.I.i32Const(0),
                             ),
                             Wat.I.drop,
                         ),

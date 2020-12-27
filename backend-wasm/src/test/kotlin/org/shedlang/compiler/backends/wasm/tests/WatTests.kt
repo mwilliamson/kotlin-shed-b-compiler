@@ -88,7 +88,7 @@ class WatTests {
         assertThat(data, equalTo(
             S.list(
                 S.symbol("data"),
-                Wat.i32Const(8),
+                Wat.I.i32Const(8),
                 S.string("Hello, world!\n"),
             ),
         ))

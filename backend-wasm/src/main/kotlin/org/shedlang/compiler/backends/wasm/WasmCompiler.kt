@@ -26,8 +26,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 Wat.func(
                     identifier = "start",
                     body = listOf(
-                        Wat.I.i32Store(Wat.i32Const(0), Wat.i32Const(messageOffset)),
-                        Wat.I.i32Store(Wat.i32Const(4), Wat.i32Const(message.length)),
+                        Wat.I.i32Store(Wat.I.i32Const(0), Wat.I.i32Const(messageOffset)),
+                        Wat.I.i32Store(Wat.I.i32Const(4), Wat.I.i32Const(message.length)),
                     ),
                 ),
                 Wat.start("start"),
@@ -38,9 +38,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         Wasi.callFdWrite(
                             identifier = "fd_write",
                             fileDescriptor = Wasi.stdout,
-                            iovs = Wat.i32Const(0),
-                            iovsLen = Wat.i32Const(1),
-                            nwritten = Wat.i32Const(8 + message.length),
+                            iovs = Wat.I.i32Const(0),
+                            iovsLen = Wat.I.i32Const(1),
+                            nwritten = Wat.I.i32Const(8 + message.length),
                         ),
                         Wat.I.drop,
                     ),
@@ -108,7 +108,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                 return context2
                     .addInstruction(Wat.I.localSet(local))
-                    .addInstruction(Wat.i32Const(0))
+                    .addInstruction(Wat.I.i32Const(0))
                     .addInstruction(Wat.I.localGet(local))
                     .addInstruction(Wat.I.i32Sub)
             }
@@ -170,10 +170,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 when (value) {
                     is IrBool -> {
                         val intValue = if (value.value) 1 else 0
-                        return context.addInstruction(Wat.i32Const(intValue))
+                        return context.addInstruction(Wat.I.i32Const(intValue))
                     }
                     is IrInt -> {
-                        return context.addInstruction(Wat.i32Const(value.value.intValueExact()))
+                        return context.addInstruction(Wat.I.i32Const(value.value.intValueExact()))
                     }
                     is IrString -> {
                         val bytes = value.value.toByteArray(Charsets.UTF_8)
@@ -181,13 +181,13 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         val (context2, memoryIndex) = context.staticAllocI32(bytes.size)
                         val (context3, _) = context2.staticAllocString(value.value)
 
-                        return context3.addInstruction(Wat.i32Const(memoryIndex))
+                        return context3.addInstruction(Wat.I.i32Const(memoryIndex))
                     }
                     is IrUnicodeScalar -> {
-                        return context.addInstruction(Wat.i32Const(value.value))
+                        return context.addInstruction(Wat.I.i32Const(value.value))
                     }
                     is IrUnit -> {
-                        return context.addInstruction(Wat.i32Const(0))
+                        return context.addInstruction(Wat.I.i32Const(0))
                     }
                     else -> {
                         throw UnsupportedOperationException("unhandled IR value: $value")
@@ -237,7 +237,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         return context2
             .addInstruction(Wat.I.localSet(local))
-            .addInstruction(Wat.i32Const(1))
+            .addInstruction(Wat.I.i32Const(1))
             .addInstruction(Wat.I.localGet(local))
             .addInstruction(Wat.I.i32Sub)
     }
@@ -326,7 +326,7 @@ internal data class WasmFunctionContext(
         val newContext = aligned.copy(
             memorySize = aligned.memorySize + 4,
             startInstructions = aligned.startInstructions.add(
-                Wat.I.i32Store(Wat.i32Const(aligned.memorySize), Wat.i32Const(value)),
+                Wat.I.i32Store(Wat.I.i32Const(aligned.memorySize), Wat.I.i32Const(value)),
             ),
         )
         return Pair(newContext, aligned.memorySize)

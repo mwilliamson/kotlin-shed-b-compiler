@@ -1,7 +1,7 @@
 package org.shedlang.compiler.backends.wasm
 
 internal object Wasi {
-    val stdout = Wat.i32Const(1)
+    val stdout = Wat.I.i32Const(1)
 
     fun importFdWrite(identifier: String): SExpression {
         return Wat.importFunc(

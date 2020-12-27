@@ -8,13 +8,6 @@ internal object Wat {
     val i32 = S.symbol("i32")
 //    val i64 = S.symbol("i64")
 
-    fun i32Const(value: Int): SList {
-        return S.list(
-            S.symbol("i32.const"),
-            S.int(value),
-        )
-    }
-
 //    fun i64Const(value: Long): SList {
 //        return S.list(
 //            S.symbol("i64.const"),
@@ -49,7 +42,7 @@ internal object Wat {
     }
 
     fun data(offset: Int, value: String): SExpression {
-        return data(offset = Wat.i32Const(offset), value = S.string(value))
+        return data(offset = Wat.I.i32Const(offset), value = S.string(value))
     }
 
     fun data(offset: SExpression, value: SExpression): SExpression {
@@ -104,6 +97,13 @@ internal object Wat {
 
     object I {
         val drop = S.symbol("drop")
+
+        fun i32Const(value: Int): SList {
+            return S.list(
+                S.symbol("i32.const"),
+                S.int(value),
+            )
+        }
 
         fun i32Store(offset: SExpression, value: SExpression): SExpression {
             return S.list(S.symbol("i32.store"), offset, value)
