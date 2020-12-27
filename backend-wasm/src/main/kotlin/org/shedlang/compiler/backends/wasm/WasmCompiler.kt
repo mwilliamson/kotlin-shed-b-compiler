@@ -196,6 +196,16 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 }
             }
 
+            is StringEquals -> {
+                // TODO: extract constant
+                return context.addInstruction(Wat.I.call("string_equals"))
+            }
+
+            is StringNotEqual -> {
+                // TODO: extract constant
+                return addBoolNot(context.addInstruction(Wat.I.call("string_equals")))
+            }
+
             is UnicodeScalarEquals -> {
                 return context.addInstruction(Wat.I.i32Eq)
             }
@@ -255,13 +265,13 @@ internal data class WasmFunctionContext(
     internal val memory: WasmMemory,
 ) {
     companion object {
-        val INITIAL = WasmFunctionContext(
+        fun initial(memory: WasmMemory) = WasmFunctionContext(
             instructions = persistentListOf(),
             nextLocalIndex = initialLocalIndex,
             locals = persistentListOf(),
             variableIdToLocal = persistentMapOf(),
             onLabel = persistentMapOf(),
-            memory = WasmMemory.EMPTY,
+            memory = memory,
         )
     }
 

@@ -23,28 +23,32 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
     override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): StackExecutionResult {
         val image = loadModuleSet(moduleSet)
         val compiler = WasmCompiler(image = image, moduleSet = moduleSet)
-        val context = compiler.compileInstructions(instructions, WasmFunctionContext.INITIAL)
 
+        val context1 = compiler.compileInstructions(instructions, WasmFunctionContext.initial(memory = WasmMemory.EMPTY))
+        val (context2, printFunc) = generatePrintFunc("print_string", context1)
+        val stringEqualsFunc = generateStringEqualsFunc("string_equals")
+        val builtins = listOf(printFunc, stringEqualsFunc)
+
+        val context = context2
         if (type == StringType) {
-            val (context2, printFunc) = generatePrintFunc("print_string", context)
             val module = Wat.module(
                 imports = listOf(
                     Wasi.importFdWrite("fd_write"),
                 ),
-                memoryPageCount = context2.memory.pageCount,
-                body = context2.memory.data + listOf(
+                memoryPageCount = context.memory.pageCount,
+                body = context.memory.data + listOf(
                     Wat.func(
                         identifier = "start",
-                        body = context2.memory.startInstructions,
+                        body = context.memory.startInstructions,
                     ),
                     Wat.start("start"),
                     Wat.func(
                         "test",
                         exportName = "_start",
-                        locals = context2.locals.map { local -> Wat.local(local, Wat.i32) },
-                        body = context2.instructions.add(Wat.I.call("print_string", listOf())),
+                        locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
+                        body = context.instructions.add(Wat.I.call("print_string", listOf())),
                     ),
-                    printFunc,
+                    *builtins.toTypedArray(),
                 ),
             )
             println(withLineNumbers(module.serialise()))
@@ -71,14 +75,24 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             }
         } else {
             val module = Wat.module(
-                body = listOf(
+                imports = listOf(
+                    Wasi.importFdWrite("fd_write"),
+                ),
+                memoryPageCount = context.memory.pageCount,
+                body = context.memory.data + listOf(
+                    Wat.func(
+                        identifier = "start",
+                        body = context.memory.startInstructions,
+                    ),
+                    Wat.start("start"),
                     Wat.func(
                         "test",
                         exportName = "test",
                         result = Wat.i32,
                         locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
                         body = context.instructions,
-                    )
+                    ),
+                    *builtins.toTypedArray(),
                 ),
             )
             println(withLineNumbers(module.serialise()))

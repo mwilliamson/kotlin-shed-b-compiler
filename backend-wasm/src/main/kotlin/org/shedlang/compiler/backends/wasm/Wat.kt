@@ -110,6 +110,7 @@ internal object Wat {
         }
 
         val i32Load = S.list(S.symbol("i32.load"))
+        val i32Load8U = S.list(S.symbol("i32.load8_u"))
         val i32Store = S.list(S.symbol("i32.store"))
 
         val i32Add = S.list(S.symbol("i32.add"))
@@ -137,10 +138,22 @@ internal object Wat {
             )
         }
 
+        fun loop(identifier: String, result: List<SExpression>): List<SExpression> {
+            return listOf(
+                S.symbol("loop"),
+                S.identifier(identifier),
+                S.list(S.symbol("result"), *result.toTypedArray()),
+            )
+        }
+
+        fun br(identifier: String): SExpression {
+            return S.list(S.symbol("br"), S.identifier(identifier))
+        }
+
         val else_ = S.symbol("else")
         val end = S.symbol("end")
 
-        fun call(identifier: String, args: List<SExpression>): SExpression {
+        fun call(identifier: String, args: List<SExpression> = listOf()): SExpression {
             return S.list(S.symbol("call"), S.identifier(identifier), *args.toTypedArray())
         }
     }
