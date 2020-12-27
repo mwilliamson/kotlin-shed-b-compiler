@@ -251,9 +251,7 @@ internal data class WasmFunctionContext(
     internal val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
     private val onLabel: PersistentMap<Int, PersistentList<SExpression>>,
-    internal val memorySize: Int,
-    internal val data: PersistentList<SExpression>,
-    internal val startInstructions: PersistentList<SExpression>,
+    internal val memory: WasmMemory,
 ) {
     companion object {
         val INITIAL = WasmFunctionContext(
@@ -262,9 +260,7 @@ internal data class WasmFunctionContext(
             locals = persistentListOf(),
             variableIdToLocal = persistentMapOf(),
             onLabel = persistentMapOf(),
-            memorySize = 0,
-            data = persistentListOf(),
-            startInstructions = persistentListOf(),
+            memory = WasmMemory.EMPTY,
         )
     }
 
@@ -306,46 +302,17 @@ internal data class WasmFunctionContext(
     }
 
     fun staticAllocString(value: String): Pair<WasmFunctionContext, Int> {
-        val newContext = copy(
-            memorySize = memorySize + value.toByteArray(Charsets.UTF_8).size,
-            data = data.add(Wat.data(memorySize, value)),
-        )
-        return Pair(newContext, memorySize)
+        val (newMemory, index) = memory.staticAllocString(value)
+        return Pair(copy(memory = newMemory), index)
     }
 
     fun staticAllocI32(): Pair<WasmFunctionContext, Int> {
-        val aligned = align(4)
-        val newContext = aligned.copy(
-            memorySize = aligned.memorySize + 4,
-        )
-        return Pair(newContext, aligned.memorySize)
+        val (newMemory, index) = memory.staticAllocI32()
+        return Pair(copy(memory = newMemory), index)
     }
 
     fun staticAllocI32(value: Int): Pair<WasmFunctionContext, Int> {
-        val aligned = align(4)
-        val newContext = aligned.copy(
-            memorySize = aligned.memorySize + 4,
-            startInstructions = aligned.startInstructions.add(
-                Wat.I.i32Store(Wat.I.i32Const(aligned.memorySize), Wat.I.i32Const(value)),
-            ),
-        )
-        return Pair(newContext, aligned.memorySize)
-    }
-
-    private fun align(alignment: Int): WasmFunctionContext {
-        val misalignment = memorySize % alignment
-        if (misalignment == 0) {
-            return this
-        } else {
-            return copy(memorySize = memorySize + (alignment - misalignment))
-        }
-    }
-}
-
-internal class WasmData(val size: Int, val bytes: Array<Byte>?, val storeValue: Int?) {
-    companion object {
-        fun i32(value: Int): WasmData {
-            return WasmData(size = 4, bytes = null, storeValue = value)
-        }
+        val (newMemory, index) = memory.staticAllocI32(value)
+        return Pair(copy(memory = newMemory), index)
     }
 }

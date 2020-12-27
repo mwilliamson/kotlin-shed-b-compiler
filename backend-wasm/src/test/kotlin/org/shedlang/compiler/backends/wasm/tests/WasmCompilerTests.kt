@@ -36,10 +36,10 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                 imports = listOf(
                     Wasi.importFdWrite("fd_write"),
                 ),
-                body = context3.data + listOf(
+                body = context3.memory.data + listOf(
                     Wat.func(
                         identifier = "start",
-                        body = context3.startInstructions,
+                        body = context3.memory.startInstructions,
                     ),
                     Wat.start("start"),
                     Wat.func(
