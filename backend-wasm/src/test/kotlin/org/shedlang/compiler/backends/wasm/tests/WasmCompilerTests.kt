@@ -30,28 +30,41 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val builtins = listOf(printFunc, stringEqualsFunc)
 
         val context = context2
-        if (type == StringType) {
-            val module = Wat.module(
-                imports = listOf(
-                    Wasi.importFdWrite("fd_write"),
-                ),
-                memoryPageCount = context.memory.pageCount,
-                body = context.memory.data + listOf(
-                    Wat.func(
-                        identifier = "start",
-                        body = context.memory.startInstructions,
-                    ),
-                    Wat.start("start"),
-                    Wat.func(
-                        "test",
-                        exportName = "_start",
-                        locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
-                        body = context.instructions.add(Wat.I.call("print_string", listOf())),
-                    ),
-                    *builtins.toTypedArray(),
-                ),
+
+        val testFunc = if (type == StringType) {
+            Wat.func(
+                "test",
+                exportName = "_start",
+                locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
+                body = context.instructions.add(Wat.I.call("print_string", listOf())),
             )
-            println(withLineNumbers(module.serialise()))
+        } else {
+            Wat.func(
+                "test",
+                exportName = "test",
+                result = Wat.i32,
+                locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
+                body = context.instructions,
+            )
+        }
+
+        val module = Wat.module(
+            imports = listOf(
+                Wasi.importFdWrite("fd_write"),
+            ),
+            memoryPageCount = context.memory.pageCount,
+            body = context.memory.data + listOf(
+                Wat.func(
+                    identifier = "start",
+                    body = context.memory.startInstructions,
+                ),
+                Wat.start("start"),
+                testFunc,
+                *builtins.toTypedArray(),
+            ),
+        )
+        println(withLineNumbers(module.serialise()))
+        if (type == StringType) {
 
             temporaryDirectory().use { directory ->
                 val watPath = directory.path.resolve("test.wat")
@@ -74,29 +87,6 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                 )
             }
         } else {
-            val module = Wat.module(
-                imports = listOf(
-                    Wasi.importFdWrite("fd_write"),
-                ),
-                memoryPageCount = context.memory.pageCount,
-                body = context.memory.data + listOf(
-                    Wat.func(
-                        identifier = "start",
-                        body = context.memory.startInstructions,
-                    ),
-                    Wat.start("start"),
-                    Wat.func(
-                        "test",
-                        exportName = "test",
-                        result = Wat.i32,
-                        locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
-                        body = context.instructions,
-                    ),
-                    *builtins.toTypedArray(),
-                ),
-            )
-            println(withLineNumbers(module.serialise()))
-
             temporaryDirectory().use { directory ->
                 val watPath = directory.path.resolve("test.wat")
                 watPath.toFile().writeText(module.serialise())
