@@ -26,7 +26,6 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val context = compiler.compileInstructions(instructions, WasmFunctionContext.INITIAL)
 
         if (type == StringType) {
-            // TODO: Handle memory properly -- need to pass page size
             val (context2, printFunc) = generatePrintFunc("print_string", context)
             val module = Wat.module(
                 imports = listOf(
