@@ -1,9 +1,9 @@
 package org.shedlang.compiler.backends.wasm
 
-internal fun generatePrintFunc(identifier: String, context: WasmFunctionContext): Pair<WasmFunctionContext, SExpression> {
-    val (context2, stringContentsPointerMemoryIndex) = context.staticAllocI32()
-    val (context3, stringLengthMemoryIndex) = context2.staticAllocI32()
-    val (context4, nwrittenMemoryIndex) = context3.staticAllocI32()
+internal fun generatePrintFunc(identifier: String, memory: WasmMemory): Pair<WasmMemory, SExpression> {
+    val (memory2, stringContentsPointerMemoryIndex) = memory.staticAllocI32()
+    val (memory3, stringLengthMemoryIndex) = memory2.staticAllocI32()
+    val (memory4, nwrittenMemoryIndex) = memory3.staticAllocI32()
 
     val func = Wat.func(
         identifier,
@@ -31,5 +31,5 @@ internal fun generatePrintFunc(identifier: String, context: WasmFunctionContext)
         ),
     )
 
-    return Pair(context4, func)
+    return Pair(memory4, func)
 }

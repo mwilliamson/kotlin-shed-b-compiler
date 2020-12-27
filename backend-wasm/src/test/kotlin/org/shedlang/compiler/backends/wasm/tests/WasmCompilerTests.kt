@@ -24,27 +24,27 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val image = loadModuleSet(moduleSet)
         val compiler = WasmCompiler(image = image, moduleSet = moduleSet)
 
-        val context1 = compiler.compileInstructions(instructions, WasmFunctionContext.initial(memory = WasmMemory.EMPTY))
-        val (context2, printFunc) = generatePrintFunc("print_string", context1)
+        val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial(memory = WasmMemory.EMPTY))
+        val (memory1, printFunc) = generatePrintFunc("print_string", memory = functionContext.memory)
         val stringEqualsFunc = generateStringEqualsFunc("string_equals")
         val builtins = listOf(printFunc, stringEqualsFunc)
 
-        val context = context2
+        val memory = memory1
 
         val testFunc = if (type == StringType) {
             Wat.func(
                 "test",
                 exportName = "_start",
-                locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
-                body = context.instructions.add(Wat.I.call("print_string", listOf())),
+                locals = functionContext.locals.map { local -> Wat.local(local, Wat.i32) },
+                body = functionContext.instructions.add(Wat.I.call("print_string", listOf())),
             )
         } else {
             Wat.func(
                 "test",
                 exportName = "test",
                 result = Wat.i32,
-                locals = context.locals.map { local -> Wat.local(local, Wat.i32) },
-                body = context.instructions,
+                locals = functionContext.locals.map { local -> Wat.local(local, Wat.i32) },
+                body = functionContext.instructions,
             )
         }
 
@@ -52,11 +52,11 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
-            memoryPageCount = context.memory.pageCount,
-            body = context.memory.data + listOf(
+            memoryPageCount = memory.pageCount,
+            body = memory.data + listOf(
                 Wat.func(
                     identifier = "start",
-                    body = context.memory.startInstructions,
+                    body = memory.startInstructions,
                 ),
                 Wat.start("start"),
                 testFunc,
