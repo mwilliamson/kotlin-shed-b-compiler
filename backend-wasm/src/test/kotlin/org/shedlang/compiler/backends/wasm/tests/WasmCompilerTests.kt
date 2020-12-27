@@ -8,10 +8,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
-import org.shedlang.compiler.backends.wasm.Wasi
-import org.shedlang.compiler.backends.wasm.WasmCompiler
-import org.shedlang.compiler.backends.wasm.WasmFunctionContext
-import org.shedlang.compiler.backends.wasm.Wat
+import org.shedlang.compiler.backends.wasm.*
 import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.*
@@ -30,50 +27,24 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         if (type == StringType) {
             // TODO: Handle memory properly -- need to pass page size
-            val (context2, stringContentsPointerMemoryIndex) = context.staticAllocI32()
-            val (context3, stringLengthMemoryIndex) = context2.staticAllocI32()
+            val (context2, printFunc) = generatePrintFunc("print_string", context)
             val module = Wat.module(
                 imports = listOf(
                     Wasi.importFdWrite("fd_write"),
                 ),
-                body = context3.memory.data + listOf(
+                body = context2.memory.data + listOf(
                     Wat.func(
                         identifier = "start",
-                        body = context3.memory.startInstructions,
+                        body = context2.memory.startInstructions,
                     ),
                     Wat.start("start"),
                     Wat.func(
                         "test",
                         exportName = "_start",
-                        locals = context3.locals.map { local -> Wat.local(local, Wat.i32) },
-                        body = context3.instructions.add(Wat.I.call("print_string", listOf())),
+                        locals = context2.locals.map { local -> Wat.local(local, Wat.i32) },
+                        body = context2.instructions.add(Wat.I.call("print_string", listOf())),
                     ),
-                    Wat.func(
-                        "print_string",
-                        params = listOf(Wat.param("string", Wat.i32)),
-                        body = listOf(
-                            Wat.I.i32Const(stringContentsPointerMemoryIndex),
-                            Wat.I.localGet("string"),
-                            Wat.I.i32Const(4),
-                            Wat.I.i32Add,
-                            Wat.I.i32Store,
-
-                            Wat.I.i32Const(stringLengthMemoryIndex),
-                            Wat.I.localGet("string"),
-                            Wat.I.i32Load,
-                            Wat.I.i32Store,
-
-                            Wasi.callFdWrite(
-                                identifier = "fd_write",
-                                fileDescriptor = Wasi.stdout,
-                                iovs = Wat.I.i32Const(stringContentsPointerMemoryIndex),
-                                iovsLen = Wat.I.i32Const(1),
-                                // Overwrites data, but we don't need it any more
-                                nwritten = Wat.I.i32Const(0),
-                            ),
-                            Wat.I.drop,
-                        ),
-                    )
+                    printFunc,
                 ),
             )
             println(withLineNumbers(module.serialise()))
