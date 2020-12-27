@@ -135,6 +135,8 @@ object IntSubtract: Instruction()
  * The instructions following the jump until a JumpEnd instruction to the end label are treated as the true branch.
  * This should be immediately followed by the destination label.
  * The instructions following the destination label until a JumpEnd instruction to the end label are treated as the false branch.
+ * Note that multiple jumps may jump to the same destination:
+ * therefore, a single IR Label instruction may map to multiple WASM "end" instructions.
  */
 
 class JumpEnd(val destinationLabel: Int): Instruction()
