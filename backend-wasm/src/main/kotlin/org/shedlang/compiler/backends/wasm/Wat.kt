@@ -115,6 +115,7 @@ internal object Wat {
         val i32Store8 = S.list(S.symbol("i32.store8"))
 
         val i32Add = S.list(S.symbol("i32.add"))
+        val i32And = S.list(S.symbol("i32.and"))
         val i32DivU = S.list(S.symbol("i32.div_u"))
         val i32Mul = S.list(S.symbol("i32.mul"))
         val i32Sub = S.list(S.symbol("i32.sub"))
