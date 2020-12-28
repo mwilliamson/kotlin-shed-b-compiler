@@ -133,7 +133,26 @@ internal object Wat {
                 S.identifier(instruction.identifier),
                 S.elements(instruction.args.map(::instructionToSExpression))
             )
+            is WasmInstruction.Folded.I32Add -> S.list(
+                S.symbol("i32.add"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
+            is WasmInstruction.Folded.I32And -> S.list(
+                S.symbol("i32.and"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
             is WasmInstruction.Folded.I32Const -> S.list(S.symbol("i32.const"), S.int(instruction.value))
+            is WasmInstruction.Folded.I32Load -> S.list(
+                S.symbol("i32.load"),
+                instructionToSExpression(instruction.address),
+            )
+            is WasmInstruction.Folded.I32Multiply -> S.list(
+                S.symbol("i32.mul"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
             is WasmInstruction.Folded.I32Store -> S.list(
                 S.symbol("i32.store"),
                 instructionToSExpression(instruction.address),
@@ -147,6 +166,11 @@ internal object Wat {
             is WasmInstruction.Folded.LocalGet -> S.list(
                 S.symbol("local.get"),
                 S.identifier(instruction.identifier),
+            )
+            is WasmInstruction.Folded.LocalSet -> S.list(
+                S.symbol("local.set"),
+                S.identifier(instruction.identifier),
+                instructionToSExpression(instruction.value),
             )
             is WasmInstruction.Folded.MemorySize -> S.list(S.symbol("memory.size"))
         }

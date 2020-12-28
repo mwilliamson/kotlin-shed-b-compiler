@@ -30,32 +30,34 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
         results = listOf(Wasm.T.i32),
         body = listOf(
             // Get heap pointer
-            Wasm.I.i32Const(heapPointer),
-            Wasm.I.i32Load,
-            Wasm.I.localSet("heap_pointer"),
+            Wasm.I.localSet("heap_pointer", Wasm.I.i32Load(heapPointer)),
 
             // Align heap pointer (heap_pointer + alignment - 1) & -alignment
-            Wasm.I.localGet("heap_pointer"),
-            Wasm.I.localGet("alignment"),
-            Wasm.I.i32Add,
-            Wasm.I.i32Const(-1),
-            Wasm.I.i32Add,
-            Wasm.I.i32Const(0),
-            Wasm.I.localGet("alignment"),
-            Wasm.I.i32Sub,
-            Wasm.I.i32And,
-            Wasm.I.localSet("heap_pointer"),
+            Wasm.I.localSet(
+                "heap_pointer",
+                Wasm.I.i32And(
+                    Wasm.I.i32Add(
+                        Wasm.I.i32Add(
+                            Wasm.I.localGet("heap_pointer"),
+                            Wasm.I.localGet("alignment"),
+                        ),
+                        Wasm.I.i32Const(-1),
+                    ),
+                    Wasm.I.i32Sub(Wasm.I.i32Const(0), Wasm.I.localGet("alignment")),
+                ),
+            ),
 
             // Set result
-            Wasm.I.localGet("heap_pointer"),
-            Wasm.I.localSet("result"),
+            Wasm.I.localSet("result", Wasm.I.localGet("heap_pointer")),
 
             // Update heap pointer
-            Wasm.I.i32Const(heapPointer),
-            Wasm.I.localGet("heap_pointer"),
-            Wasm.I.localGet("size"),
-            Wasm.I.i32Add,
-            Wasm.I.i32Store,
+            Wasm.I.i32Store(
+                Wasm.I.i32Const(heapPointer),
+                Wasm.I.i32Add(
+                    Wasm.I.localGet("heap_pointer"),
+                    Wasm.I.localGet("size"),
+                ),
+            ),
 
             // Grow heap if necessary
             // TODO: grow by more than necessary?
@@ -79,11 +81,13 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
             // TODO: check for error
             Wasm.I.drop,
 
-            Wasm.I.i32Const(heapEndPointer),
-            Wasm.I.memorySize,
-            Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
-            Wasm.I.i32Multiply,
-            Wasm.I.i32Store,
+            Wasm.I.i32Store(
+                Wasm.I.i32Const(heapEndPointer),
+                Wasm.I.i32Multiply(
+                    Wasm.I.memorySize,
+                    Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+                ),
+            ),
 
             Wasm.I.end,
 

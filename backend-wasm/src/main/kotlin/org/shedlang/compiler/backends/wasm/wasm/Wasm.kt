@@ -83,10 +83,6 @@ internal object Wasm {
 
         val end = WasmInstruction.End
 
-        fun i32Const(value: Int): WasmInstruction.Folded {
-            return WasmInstruction.Folded.I32Const(value)
-        }
-
         val i32Add = WasmInstruction.I32Add
         val i32And = WasmInstruction.I32And
         val i32DivideUnsigned = WasmInstruction.I32DivideUnsigned
@@ -106,6 +102,31 @@ internal object Wasm {
         val i32Store = WasmInstruction.I32Store
         val i32Store8 = WasmInstruction.I32Store8
         val i32Sub = WasmInstruction.I32Sub
+
+
+        fun i32Add(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Add(left = left, right = right)
+        }
+
+        fun i32And(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32And(left = left, right = right)
+        }
+
+        fun i32Const(value: Int): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Const(value)
+        }
+
+        fun i32Load(address: Int): WasmInstruction.Folded {
+            return i32Load(i32Const(address))
+        }
+
+        fun i32Load(address: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Load(address = address)
+        }
+
+        fun i32Multiply(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Multiply(left = left, right = right)
+        }
 
         fun i32Store(address: Int, value: Int): WasmInstruction.Folded {
             return i32Store(i32Const(address), i32Const(value))
@@ -129,6 +150,10 @@ internal object Wasm {
 
         fun localSet(identifier: String): WasmInstruction {
             return WasmInstruction.LocalSet(identifier)
+        }
+
+        fun localSet(identifier: String, value: WasmInstruction.Folded): WasmInstruction {
+            return WasmInstruction.Folded.LocalSet(identifier = identifier, value = value)
         }
 
         fun loop(identifier: String, results: List<WasmType> = listOf()): WasmInstruction {
@@ -227,10 +252,15 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 
     sealed class Folded: WasmInstruction() {
         class Call(val identifier: String, val args: List<Folded>): Folded()
+        class I32Add(val left: Folded, val right: Folded): Folded()
+        class I32And(val left: Folded, val right: Folded): Folded()
         class I32Const(val value: Int): Folded()
+        class I32Load(val address: Folded): Folded()
+        class I32Multiply(val left: Folded, val right: Folded): Folded()
         class I32Store(val address: Folded, val value: Folded): Folded()
         class I32Sub(val left: Folded, val right: Folded): Folded()
         class LocalGet(val identifier: String): Folded()
+        class LocalSet(val identifier: String, val value: Folded): Folded()
         object MemorySize: Folded()
     }
 }
