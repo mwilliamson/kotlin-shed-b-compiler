@@ -201,7 +201,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is StringEquals -> {
-                return context.addInstruction(Wat.I.call(WasmCoreNames.stringAdd))
+                return context.addInstruction(Wat.I.call(WasmCoreNames.stringEquals))
             }
 
             is StringNotEqual -> {
