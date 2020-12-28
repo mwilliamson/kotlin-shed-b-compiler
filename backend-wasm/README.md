@@ -6,7 +6,8 @@ All values are i32.
 * Bools:
   * `0` -> `false`
   * `1` -> `true`
+* Unicode scalars are directly represented as i32s
 * Strings are pointers to structs:
-  * First 4 bytes are a u32 containing the length of the string contents
-  * Remaining bytes are the UTF-8 encoded string contents
+  * u32: the number of bytes required to UTF-8 encode the string
+  * u8[]: the UTF-8 encoding of the string 
 
