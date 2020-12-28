@@ -27,8 +27,8 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial(memory = WasmMemory.EMPTY))
         val memory1 = functionContext.memory
         val (memory2, malloc) = generateMalloc(memory = memory1)
-        val (memory3, printFunc) = generatePrintFunc("print_string", memory = memory2)
-        val stringEqualsFunc = generateStringEqualsFunc("string_equals")
+        val (memory3, printFunc) = generatePrintFunc(memory = memory2)
+        val stringEqualsFunc = generateStringEqualsFunc()
         val stringAddFunc = generateStringAddFunc()
         val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
 
@@ -39,7 +39,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                 "test",
                 exportName = "_start",
                 locals = functionContext.locals.map { local -> Wat.local(local, Wat.i32) },
-                body = functionContext.instructions.add(Wat.I.call("print_string", listOf())),
+                body = functionContext.instructions.add(Wat.I.call(WasmCoreNames.print, listOf())),
             )
         } else {
             Wat.func(

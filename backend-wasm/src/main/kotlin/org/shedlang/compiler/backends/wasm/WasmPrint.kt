@@ -1,12 +1,12 @@
 package org.shedlang.compiler.backends.wasm
 
-internal fun generatePrintFunc(identifier: String, memory: WasmMemory): Pair<WasmMemory, SExpression> {
+internal fun generatePrintFunc(memory: WasmMemory): Pair<WasmMemory, SExpression> {
     val (memory2, stringContentsPointerMemoryIndex) = memory.staticAllocI32()
     val (memory3, stringLengthMemoryIndex) = memory2.staticAllocI32()
     val (memory4, nwrittenMemoryIndex) = memory3.staticAllocI32()
 
     val func = Wat.func(
-        identifier,
+        WasmCoreNames.print,
         params = listOf(Wat.param("string", Wat.i32)),
         body = listOf(
             Wat.I.i32Const(stringContentsPointerMemoryIndex),

@@ -91,9 +91,9 @@ private fun copyStringContents(sourceIdentifier: String): List<SExpression> {
     )
 }
 
-internal fun generateStringEqualsFunc(identifier: String): SExpression {
+internal fun generateStringEqualsFunc(): SExpression {
     return Wat.func(
-        identifier,
+        WasmCoreNames.stringEquals,
         params = listOf(Wat.param("left", Wat.i32), Wat.param("right", Wat.i32)),
         locals = listOf(Wat.local("index", Wat.i32), Wat.local("length", Wat.i32)),
         result = Wat.i32,
