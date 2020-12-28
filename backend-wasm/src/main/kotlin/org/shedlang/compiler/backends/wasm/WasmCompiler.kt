@@ -196,6 +196,11 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 }
             }
 
+            is StringAdd -> {
+                // TODO: extract constant
+                return context.addInstruction(Wat.I.call(WasmCoreNames.stringAdd))
+            }
+
             is StringEquals -> {
                 // TODO: extract constant
                 return context.addInstruction(Wat.I.call("string_equals"))

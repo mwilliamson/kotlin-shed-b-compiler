@@ -25,11 +25,14 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val compiler = WasmCompiler(image = image, moduleSet = moduleSet)
 
         val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial(memory = WasmMemory.EMPTY))
-        val (memory1, printFunc) = generatePrintFunc("print_string", memory = functionContext.memory)
+        val memory1 = functionContext.memory
+        val (memory2, malloc) = generateMalloc(memory = memory1)
+        val (memory3, printFunc) = generatePrintFunc("print_string", memory = memory2)
         val stringEqualsFunc = generateStringEqualsFunc("string_equals")
-        val builtins = listOf(printFunc, stringEqualsFunc)
+        val stringAddFunc = generateStringAddFunc()
+        val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
 
-        val memory = memory1
+        val memory = memory3
 
         val testFunc = if (type == StringType) {
             Wat.func(

@@ -112,8 +112,10 @@ internal object Wat {
         val i32Load = S.list(S.symbol("i32.load"))
         val i32Load8U = S.list(S.symbol("i32.load8_u"))
         val i32Store = S.list(S.symbol("i32.store"))
+        val i32Store8 = S.list(S.symbol("i32.store8"))
 
         val i32Add = S.list(S.symbol("i32.add"))
+        val i32DivU = S.list(S.symbol("i32.div_u"))
         val i32Mul = S.list(S.symbol("i32.mul"))
         val i32Sub = S.list(S.symbol("i32.sub"))
 
@@ -156,6 +158,9 @@ internal object Wat {
         fun call(identifier: String, args: List<SExpression> = listOf()): SExpression {
             return S.list(S.symbol("call"), S.identifier(identifier), *args.toTypedArray())
         }
+
+        val memoryGrow = S.symbol("memory.grow")
+        val memorySize = S.symbol("memory.size")
     }
 }
 
