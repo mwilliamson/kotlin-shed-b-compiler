@@ -92,41 +92,41 @@ internal object Wat {
 
     fun instructionToSExpression(instruction: WasmInstruction): SExpression {
         return when (instruction) {
-            is WasmInstruction.Branch -> S.list(S.symbol("br"), S.identifier(instruction.identifier))
-            is WasmInstruction.Call -> S.list(S.symbol("call"), S.identifier(instruction.identifier))
+            is WasmInstruction.Branch -> S.elements(S.symbol("br"), S.identifier(instruction.identifier))
+            is WasmInstruction.Call -> S.elements(S.symbol("call"), S.identifier(instruction.identifier))
             is WasmInstruction.Drop -> S.symbol("drop")
             is WasmInstruction.Else -> S.symbol("else")
             is WasmInstruction.End -> S.symbol("end")
-            is WasmInstruction.I32Add -> S.list(S.symbol("i32.add"))
-            is WasmInstruction.I32And -> S.list(S.symbol("i32.and"))
-            is WasmInstruction.I32DivideUnsigned -> S.list(S.symbol("i32.div_u"))
-            is WasmInstruction.I32Equals -> S.list(S.symbol("i32.eq"))
-            is WasmInstruction.I32GreaterThanSigned -> S.list(S.symbol("i32.gt_s"))
-            is WasmInstruction.I32GreaterThanUnsigned -> S.list(S.symbol("i32.gt_u"))
-            is WasmInstruction.I32GreaterThanOrEqualSigned -> S.list(S.symbol("i32.ge_s"))
-            is WasmInstruction.I32GreaterThanOrEqualUnsigned -> S.list(S.symbol("i32.ge_u"))
-            is WasmInstruction.I32LessThanSigned -> S.list(S.symbol("i32.lt_s"))
-            is WasmInstruction.I32LessThanUnsigned -> S.list(S.symbol("i32.lt_u"))
-            is WasmInstruction.I32LessThanOrEqualSigned -> S.list(S.symbol("i32.le_s"))
-            is WasmInstruction.I32LessThanOrEqualUnsigned -> S.list(S.symbol("i32.le_u"))
-            is WasmInstruction.I32Load -> S.list(S.symbol("i32.load"))
-            is WasmInstruction.I32Load8Unsigned -> S.list(S.symbol("i32.load8_u"))
-            is WasmInstruction.I32Multiply -> S.list(S.symbol("i32.mul"))
-            is WasmInstruction.I32NotEqual -> S.list(S.symbol("i32.ne"))
-            is WasmInstruction.I32Store -> S.list(S.symbol("i32.store"))
-            is WasmInstruction.I32Store8 -> S.list(S.symbol("i32.store8"))
-            is WasmInstruction.I32Sub -> S.list(S.symbol("i32.sub"))
+            is WasmInstruction.I32Add -> S.symbol("i32.add")
+            is WasmInstruction.I32And -> S.symbol("i32.and")
+            is WasmInstruction.I32DivideUnsigned -> S.symbol("i32.div_u")
+            is WasmInstruction.I32Equals -> S.symbol("i32.eq")
+            is WasmInstruction.I32GreaterThanSigned -> S.symbol("i32.gt_s")
+            is WasmInstruction.I32GreaterThanUnsigned -> S.symbol("i32.gt_u")
+            is WasmInstruction.I32GreaterThanOrEqualSigned -> S.symbol("i32.ge_s")
+            is WasmInstruction.I32GreaterThanOrEqualUnsigned -> S.symbol("i32.ge_u")
+            is WasmInstruction.I32LessThanSigned -> S.symbol("i32.lt_s")
+            is WasmInstruction.I32LessThanUnsigned -> S.symbol("i32.lt_u")
+            is WasmInstruction.I32LessThanOrEqualSigned -> S.symbol("i32.le_s")
+            is WasmInstruction.I32LessThanOrEqualUnsigned -> S.symbol("i32.le_u")
+            is WasmInstruction.I32Load -> S.symbol("i32.load")
+            is WasmInstruction.I32Load8Unsigned -> S.symbol("i32.load8_u")
+            is WasmInstruction.I32Multiply -> S.symbol("i32.mul")
+            is WasmInstruction.I32NotEqual -> S.symbol("i32.ne")
+            is WasmInstruction.I32Store -> S.symbol("i32.store")
+            is WasmInstruction.I32Store8 -> S.symbol("i32.store8")
+            is WasmInstruction.I32Sub -> S.symbol("i32.sub")
             is WasmInstruction.If -> S.elements(
                 S.symbol("if"),
                 S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
             )
-            is WasmInstruction.LocalSet -> S.list(S.symbol("local.set"), S.identifier(instruction.identifier))
+            is WasmInstruction.LocalSet -> S.elements(S.symbol("local.set"), S.identifier(instruction.identifier))
             is WasmInstruction.Loop -> S.elements(
                 S.symbol("loop"),
                 S.identifier(instruction.identifier),
                 S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
             )
-            is WasmInstruction.MemoryGrow -> S.list(S.symbol("memory.grow"))
+            is WasmInstruction.MemoryGrow -> S.symbol("memory.grow")
 
             is WasmInstruction.Folded.Call -> S.list(
                 S.symbol("call"),
