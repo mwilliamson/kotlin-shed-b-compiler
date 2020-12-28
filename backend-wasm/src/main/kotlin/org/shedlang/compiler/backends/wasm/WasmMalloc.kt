@@ -1,88 +1,93 @@
 package org.shedlang.compiler.backends.wasm
 
-internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, SExpression> {
+import org.shedlang.compiler.backends.wasm.wasm.SExpression
+import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
+import org.shedlang.compiler.backends.wasm.wasm.Wat
+
+internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> {
     val (memory2, heapPointer) = memory.staticAllocI32()
     val (memory3, heapEndPointer) = memory2.staticAllocI32(0)
     memory3.addStartInstructions(
-        Wat.I.i32Const(heapPointer),
-        Wat.I.memorySize,
-        Wat.I.i32Const(WasmMemory.PAGE_SIZE),
-        Wat.I.i32Mul,
-        Wat.I.i32Store,
+        Wasm.I.i32Const(heapPointer),
+        Wasm.I.memorySize,
+        Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+        Wasm.I.i32Multiply,
+        Wasm.I.i32Store,
 
-        Wat.I.i32Const(heapEndPointer),
-        Wat.I.memorySize,
-        Wat.I.i32Const(WasmMemory.PAGE_SIZE),
-        Wat.I.i32Mul,
-        Wat.I.i32Store,
+        Wasm.I.i32Const(heapEndPointer),
+        Wasm.I.memorySize,
+        Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+        Wasm.I.i32Multiply,
+        Wasm.I.i32Store,
     )
 
     // TODO: test this!
-    val malloc = Wat.func(
+    val malloc = Wasm.function(
         identifier = WasmCoreNames.malloc,
-        params = listOf(Wat.param("size", Wat.i32), Wat.param("alignment", Wat.i32)),
-        locals = listOf(Wat.local("grow", Wat.i32), Wat.local("result", Wat.i32), Wat.local("heap_pointer", Wat.i32)),
-        result = Wat.i32,
+        params = listOf(Wasm.param("size", Wasm.T.i32), Wasm.param("alignment", Wasm.T.i32)),
+        locals = listOf(Wasm.local("grow", Wasm.T.i32), Wasm.local("result", Wasm.T.i32), Wasm.local("heap_pointer", Wasm.T.i32)),
+        results = listOf(Wasm.T.i32),
         body = listOf(
             // Get heap pointer
-            Wat.I.i32Const(heapPointer),
-            Wat.I.i32Load,
-            Wat.I.localSet("heap_pointer"),
+            Wasm.I.i32Const(heapPointer),
+            Wasm.I.i32Load,
+            Wasm.I.localSet("heap_pointer"),
 
             // Align heap pointer (heap_pointer + alignment - 1) & -alignment
-            Wat.I.localGet("heap_pointer"),
-            Wat.I.localGet("alignment"),
-            Wat.I.i32Add,
-            Wat.I.i32Const(-1),
-            Wat.I.i32Add,
-            Wat.I.i32Const(0),
-            Wat.I.localGet("alignment"),
-            Wat.I.i32Sub,
-            Wat.I.i32And,
-            Wat.I.localSet("heap_pointer"),
+            Wasm.I.localGet("heap_pointer"),
+            Wasm.I.localGet("alignment"),
+            Wasm.I.i32Add,
+            Wasm.I.i32Const(-1),
+            Wasm.I.i32Add,
+            Wasm.I.i32Const(0),
+            Wasm.I.localGet("alignment"),
+            Wasm.I.i32Sub,
+            Wasm.I.i32And,
+            Wasm.I.localSet("heap_pointer"),
 
             // Set result
-            Wat.I.localGet("heap_pointer"),
-            Wat.I.localSet("result"),
+            Wasm.I.localGet("heap_pointer"),
+            Wasm.I.localSet("result"),
 
             // Update heap pointer
-            Wat.I.i32Const(heapPointer),
-            Wat.I.localGet("heap_pointer"),
-            Wat.I.localGet("size"),
-            Wat.I.i32Add,
-            Wat.I.i32Store,
+            Wasm.I.i32Const(heapPointer),
+            Wasm.I.localGet("heap_pointer"),
+            Wasm.I.localGet("size"),
+            Wasm.I.i32Add,
+            Wasm.I.i32Store,
 
             // Grow heap if necessary
             // TODO: grow by more than necessary?
-            Wat.I.localGet("heap_pointer"),
-            Wat.I.i32Const(heapEndPointer),
-            Wat.I.i32Load,
-            Wat.I.i32Sub,
-            Wat.I.localSet("grow"),
-            Wat.I.localGet("grow"),
-            Wat.I.i32Const(0),
-            Wat.I.i32LeU,
-            *Wat.I.if_(result = listOf()).toTypedArray(),
-            Wat.I.else_,
+            Wasm.I.localGet("heap_pointer"),
+            Wasm.I.i32Const(heapEndPointer),
+            Wasm.I.i32Load,
+            Wasm.I.i32Sub,
+            Wasm.I.localSet("grow"),
+            Wasm.I.localGet("grow"),
+            Wasm.I.i32Const(0),
+            Wasm.I.i32LessThanOrEqualUnsigned,
+            Wasm.I.if_(results = listOf()),
+            Wasm.I.else_,
 
-            Wat.I.localGet("grow"),
-            Wat.I.i32Const(WasmMemory.PAGE_SIZE - 1),
-            Wat.I.i32Add,
-            Wat.I.i32Const(WasmMemory.PAGE_SIZE),
-            Wat.I.i32DivU,
-            Wat.I.memoryGrow,
+            Wasm.I.localGet("grow"),
+            Wasm.I.i32Const(WasmMemory.PAGE_SIZE - 1),
+            Wasm.I.i32Add,
+            Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+            Wasm.I.i32DivideUnsigned,
+            Wasm.I.memoryGrow,
             // TODO: check for error
-            Wat.I.drop,
+            Wasm.I.drop,
 
-            Wat.I.i32Const(heapEndPointer),
-            Wat.I.memorySize,
-            Wat.I.i32Const(WasmMemory.PAGE_SIZE),
-            Wat.I.i32Mul,
-            Wat.I.i32Store,
+            Wasm.I.i32Const(heapEndPointer),
+            Wasm.I.memorySize,
+            Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+            Wasm.I.i32Multiply,
+            Wasm.I.i32Store,
 
-            Wat.I.end,
+            Wasm.I.end,
 
-            Wat.I.localGet("result"),
+            Wasm.I.localGet("result"),
         ),
     )
 

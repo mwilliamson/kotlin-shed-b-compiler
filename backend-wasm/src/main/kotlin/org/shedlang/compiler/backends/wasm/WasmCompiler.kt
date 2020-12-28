@@ -7,6 +7,10 @@ import kotlinx.collections.immutable.persistentMapOf
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.wasm.wasm.*
+import org.shedlang.compiler.backends.wasm.wasm.Wasi
+import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
 import java.lang.UnsupportedOperationException
 
@@ -17,59 +21,61 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     fun compile(mainModule: ModuleName): CompilationResult {
         val messageOffset = 8
         val message = "Hello, world!\n"
-        val wat = Wat.module(
+        val wasm = Wasm.module(
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
             memoryPageCount = 1,
-            body = listOf(
-                Wat.data(offset = messageOffset, value = message),
-                Wat.func(
+            dataSegments = listOf(
+                Wasm.dataSegment(offset = messageOffset, bytes = message.toByteArray()),
+            ),
+            start = "start",
+            functions = listOf(
+                Wasm.function(
                     identifier = "start",
-                    body = listOf(
-                        Wat.I.i32Store(Wat.I.i32Const(0), Wat.I.i32Const(messageOffset)),
-                        Wat.I.i32Store(Wat.I.i32Const(4), Wat.I.i32Const(message.length)),
+                    body = Wasm.instructions(
+                        Wasm.I.i32Store(0, messageOffset),
+                        Wasm.I.i32Store(4, message.length),
                     ),
                 ),
-                Wat.start("start"),
-                Wat.func(
+                Wasm.function(
                     identifier = "main",
                     exportName = "_start",
-                    body = listOf(
+                    body = Wasm.instructions(
                         Wasi.callFdWrite(
                             identifier = "fd_write",
                             fileDescriptor = Wasi.stdout,
-                            iovs = Wat.I.i32Const(0),
-                            iovsLen = Wat.I.i32Const(1),
-                            nwritten = Wat.I.i32Const(8 + message.length),
+                            iovs = Wasm.I.i32Const(0),
+                            iovsLen = Wasm.I.i32Const(1),
+                            nwritten = Wasm.I.i32Const(8 + message.length),
                         ),
-                        Wat.I.drop,
+                        Wasm.I.drop,
                     ),
                 ),
             ),
-        ).serialise()
+        )
+
+        val wat = Wat.serialise(wasm)
         return CompilationResult(wat = wat)
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: WasmFunctionContext): WasmFunctionContext {
         return instructions.foldIndexed(context, { instructionIndex, currentContext, instruction ->
-            val nextInstruction = instructions.getOrNull(instructionIndex + 1)
-            compileInstruction(instruction, currentContext, nextInstruction = nextInstruction)
+            compileInstruction(instruction, currentContext)
         })
     }
 
     private fun compileInstruction(
         instruction: Instruction,
         context: WasmFunctionContext,
-        nextInstruction: Instruction?,
     ): WasmFunctionContext {
         when (instruction) {
             is BoolEquals -> {
-                return context.addInstruction(Wat.I.i32Eq)
+                return context.addInstruction(Wasm.I.i32Equals)
             }
 
             is BoolNotEqual -> {
-                return context.addInstruction(Wat.I.i32Ne)
+                return context.addInstruction(Wasm.I.i32NotEqual)
             }
 
             is BoolNot -> {
@@ -77,53 +83,50 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is Discard -> {
-                return context.addInstruction(Wat.I.drop)
+                return context.addInstruction(Wasm.I.drop)
             }
 
             is IntAdd -> {
-                return context.addInstruction(Wat.I.i32Add)
+                return context.addInstruction(Wasm.I.i32Add)
             }
 
             is IntEquals -> {
-                return context.addInstruction(Wat.I.i32Eq)
+                return context.addInstruction(Wasm.I.i32Equals)
             }
 
             is IntGreaterThan -> {
-                return context.addInstruction(Wat.I.i32GtS)
+                return context.addInstruction(Wasm.I.i32GreaterThanSigned)
             }
 
             is IntGreaterThanOrEqual -> {
-                return context.addInstruction(Wat.I.i32GeS)
+                return context.addInstruction(Wasm.I.i32GreaterThanOrEqualSigned)
             }
 
             is IntLessThan -> {
-                return context.addInstruction(Wat.I.i32LtS)
+                return context.addInstruction(Wasm.I.i32LessThanSigned)
             }
 
             is IntLessThanOrEqual -> {
-                return context.addInstruction(Wat.I.i32LeS)
+                return context.addInstruction(Wasm.I.i32LessThanOrEqualSigned)
             }
 
             is IntMinus -> {
                 val (context2, local) = context.addLocal()
-
                 return context2
-                    .addInstruction(Wat.I.localSet(local))
-                    .addInstruction(Wat.I.i32Const(0))
-                    .addInstruction(Wat.I.localGet(local))
-                    .addInstruction(Wat.I.i32Sub)
+                    .addInstruction(Wasm.I.localSet(local))
+                    .addInstruction(Wasm.I.i32Sub(Wasm.I.i32Const(0), Wasm.I.localGet(local)))
             }
 
             is IntMultiply -> {
-                return context.addInstruction(Wat.I.i32Mul)
+                return context.addInstruction(Wasm.I.i32Multiply)
             }
 
             is IntNotEqual -> {
-                return context.addInstruction(Wat.I.i32Ne)
+                return context.addInstruction(Wasm.I.i32NotEqual)
             }
 
             is IntSubtract -> {
-                return context.addInstruction(Wat.I.i32Sub)
+                return context.addInstruction(Wasm.I.i32Sub)
             }
 
             is JumpEnd -> {
@@ -155,7 +158,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     variableId = instruction.variableId,
                     name = instruction.name,
                 )
-                return context2.addInstruction(Wat.I.localGet(identifier))
+                return context2.addInstruction(Wasm.I.localGet(identifier))
             }
 
             is LocalStore -> {
@@ -163,7 +166,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     variableId = instruction.variableId,
                     name = instruction.name,
                 )
-                return context2.addInstruction(Wat.I.localSet(identifier))
+                return context2.addInstruction(Wasm.I.localSet(identifier))
             }
 
             is PushValue -> {
@@ -171,10 +174,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 when (value) {
                     is IrBool -> {
                         val intValue = if (value.value) 1 else 0
-                        return context.addInstruction(Wat.I.i32Const(intValue))
+                        return context.addInstruction(Wasm.I.i32Const(intValue))
                     }
                     is IrInt -> {
-                        return context.addInstruction(Wat.I.i32Const(value.value.intValueExact()))
+                        return context.addInstruction(Wasm.I.i32Const(value.value.intValueExact()))
                     }
                     is IrString -> {
                         val bytes = value.value.toByteArray(Charsets.UTF_8)
@@ -182,13 +185,13 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         val (context2, memoryIndex) = context.staticAllocI32(bytes.size)
                         val (context3, _) = context2.staticAllocString(value.value)
 
-                        return context3.addInstruction(Wat.I.i32Const(memoryIndex))
+                        return context3.addInstruction(Wasm.I.i32Const(memoryIndex))
                     }
                     is IrUnicodeScalar -> {
-                        return context.addInstruction(Wat.I.i32Const(value.value))
+                        return context.addInstruction(Wasm.I.i32Const(value.value))
                     }
                     is IrUnit -> {
-                        return context.addInstruction(Wat.I.i32Const(0))
+                        return context.addInstruction(Wasm.I.i32Const(0))
                     }
                     else -> {
                         throw UnsupportedOperationException("unhandled IR value: $value")
@@ -197,39 +200,39 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is StringAdd -> {
-                return context.addInstruction(Wat.I.call(WasmCoreNames.stringAdd))
+                return context.addInstruction(Wasm.I.call(WasmCoreNames.stringAdd))
             }
 
             is StringEquals -> {
-                return context.addInstruction(Wat.I.call(WasmCoreNames.stringEquals))
+                return context.addInstruction(Wasm.I.call(WasmCoreNames.stringEquals))
             }
 
             is StringNotEqual -> {
-                return addBoolNot(context.addInstruction(Wat.I.call(WasmCoreNames.stringEquals)))
+                return addBoolNot(context.addInstruction(Wasm.I.call(WasmCoreNames.stringEquals)))
             }
 
             is UnicodeScalarEquals -> {
-                return context.addInstruction(Wat.I.i32Eq)
+                return context.addInstruction(Wasm.I.i32Equals)
             }
 
             is UnicodeScalarGreaterThan -> {
-                return context.addInstruction(Wat.I.i32GtU)
+                return context.addInstruction(Wasm.I.i32GreaterThanUnsigned)
             }
 
             is UnicodeScalarGreaterThanOrEqual -> {
-                return context.addInstruction(Wat.I.i32GeU)
+                return context.addInstruction(Wasm.I.i32GreaterThanOrEqualUnsigned)
             }
 
             is UnicodeScalarLessThan -> {
-                return context.addInstruction(Wat.I.i32LtU)
+                return context.addInstruction(Wasm.I.i32LessThanUnsigned)
             }
 
             is UnicodeScalarLessThanOrEqual -> {
-                return context.addInstruction(Wat.I.i32LeU)
+                return context.addInstruction(Wasm.I.i32LessThanOrEqualUnsigned)
             }
 
             is UnicodeScalarNotEqual -> {
-                return context.addInstruction(Wat.I.i32Ne)
+                return context.addInstruction(Wasm.I.i32NotEqual)
             }
 
             else -> {
@@ -240,30 +243,28 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     private fun addJumpIfFalse(label: Int, joinLabel: Int, context: WasmFunctionContext): WasmFunctionContext {
         return context
-            .addInstructions(Wat.I.if_(result = listOf(Wat.i32)))
-            .addOnLabel(label, Wat.I.else_)
-            .addOnLabel(joinLabel, Wat.I.end)
+            .addInstruction(Wasm.I.if_(results = listOf(Wasm.T.i32)))
+            .addOnLabel(label, Wasm.I.else_)
+            .addOnLabel(joinLabel, Wasm.I.end)
     }
 
     private fun addBoolNot(context: WasmFunctionContext): WasmFunctionContext {
         val (context2, local) = context.addLocal()
 
         return context2
-            .addInstruction(Wat.I.localSet(local))
-            .addInstruction(Wat.I.i32Const(1))
-            .addInstruction(Wat.I.localGet(local))
-            .addInstruction(Wat.I.i32Sub)
+            .addInstruction(Wasm.I.localSet(local))
+            .addInstruction(Wasm.I.i32Sub(Wasm.I.i32Const(1), Wasm.I.localGet(local)))
     }
 }
 
 private const val initialLocalIndex = 1
 
 internal data class WasmFunctionContext(
-    internal val instructions: PersistentList<SExpression>,
+    internal val instructions: PersistentList<WasmInstruction>,
     private val nextLocalIndex: Int,
     internal val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
-    private val onLabel: PersistentMap<Int, PersistentList<SExpression>>,
+    private val onLabel: PersistentMap<Int, PersistentList<WasmInstruction>>,
     internal val memory: WasmMemory,
 ) {
     companion object {
@@ -277,15 +278,15 @@ internal data class WasmFunctionContext(
         )
     }
 
-    fun addInstruction(instruction: SExpression): WasmFunctionContext {
+    fun addInstruction(instruction: WasmInstruction): WasmFunctionContext {
         return copy(
             instructions = instructions.add(instruction),
         )
     }
 
-    fun addInstructions(newInstructions: List<SExpression>): WasmFunctionContext {
+    fun addInstructions(newInstructions: WasmInstructionSequence): WasmFunctionContext {
         return copy(
-            instructions = instructions.addAll(newInstructions),
+            instructions = instructions.addAll(newInstructions.toList()),
         )
     }
 
@@ -306,11 +307,11 @@ internal data class WasmFunctionContext(
         }
     }
 
-    fun addOnLabel(label: Int, instruction: SExpression): WasmFunctionContext {
+    fun addOnLabel(label: Int, instruction: WasmInstruction): WasmFunctionContext {
         return copy(onLabel = onLabel.put(label, onLabel(label).add(instruction)))
     }
 
-    fun onLabel(label: Int): PersistentList<SExpression> {
+    fun onLabel(label: Int): PersistentList<WasmInstruction> {
         return onLabel.getOrDefault(label, persistentListOf())
     }
 

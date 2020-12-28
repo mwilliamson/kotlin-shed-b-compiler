@@ -3,14 +3,18 @@ package org.shedlang.compiler.backends.wasm.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.backends.wasm.*
+import org.shedlang.compiler.backends.wasm.wasm.S
+import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.Wat
 
 class WatTests {
     @Test
     fun moduleHasMemoryDeclarations() {
-        val module = Wat.module()
+        val module = Wasm.module()
 
-        assertThat(module, equalTo(
+        val expression = Wat.moduleToSExpression(module)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("module"),
                 S.formatBreak,
@@ -21,19 +25,21 @@ class WatTests {
 
     @Test
     fun importsAppearBeforeMemoryDeclarations() {
-        val module = Wat.module(
+        val module = Wasm.module(
             imports = listOf(
-                Wat.importFunc(
+                Wasm.importFunction(
                     moduleName = "wasi_snapshot_preview1",
-                    exportName = "fd_write",
+                    entityName = "fd_write",
                     identifier = "write",
                     params = listOf(),
-                    result = Wat.i32,
+                    results = listOf(Wasm.T.i32),
                 )
             ),
         )
 
-        assertThat(module, equalTo(
+        val expression = Wat.moduleToSExpression(module)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("module"),
                 S.formatBreak,
@@ -44,8 +50,8 @@ class WatTests {
                     S.list(
                         S.symbol("func"),
                         S.identifier("write"),
-                        S.list(S.symbol("param")),
-                        S.list(S.symbol("result"), Wat.i32),
+                        S.list(S.symbol("param"), S.elements()),
+                        S.list(S.symbol("result"), S.elements(S.symbol("i32"))),
                     ),
                 ),
                 S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(0)),
@@ -55,15 +61,17 @@ class WatTests {
 
     @Test
     fun importFunc() {
-        val import = Wat.importFunc(
+        val import = Wasm.importFunction(
             moduleName = "wasi_snapshot_preview1",
-            exportName = "fd_write",
+            entityName = "fd_write",
             identifier = "write",
-            params = listOf(Wat.i32, Wat.i32),
-            result = Wat.i32,
+            params = listOf(Wasm.T.i32, Wasm.T.i32),
+            results = listOf(Wasm.T.i32),
         )
 
-        assertThat(import, equalTo(
+        val expression = Wat.importToSExpression(import)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("import"),
                 S.string("wasi_snapshot_preview1"),
@@ -71,8 +79,8 @@ class WatTests {
                 S.list(
                     S.symbol("func"),
                     S.identifier("write"),
-                    S.list(S.symbol("param"), Wat.i32, Wat.i32),
-                    S.list(S.symbol("result"), Wat.i32),
+                    S.list(S.symbol("param"), S.elements(S.symbol("i32"), S.symbol("i32"))),
+                    S.list(S.symbol("result"), S.elements(S.symbol("i32"))),
                 ),
             ),
         ))
@@ -80,15 +88,17 @@ class WatTests {
 
     @Test
     fun data() {
-        val data = Wat.data(
+        val dataSegment = Wasm.dataSegment(
             offset = 8,
-            value = "Hello, world!\n",
+            bytes = "Hello, world!\n".toByteArray(),
         )
 
-        assertThat(data, equalTo(
+        val expression = Wat.dataSegmentToSExpression(dataSegment)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("data"),
-                Wat.I.i32Const(8),
+                S.list(S.symbol("i32.const"), S.int(8)),
                 S.string("Hello, world!\n"),
             ),
         ))
@@ -96,82 +106,93 @@ class WatTests {
 
     @Test
     fun funcIncludesNameAndBody() {
-        val func = Wat.func(
+        val func = Wasm.function(
             identifier = "main",
             body = listOf(
-                Wat.I.drop,
+                Wasm.I.drop,
             ),
         )
 
-        assertThat(func, equalTo(
+        val expression = Wat.functionToSExpression(func)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
+                S.list(S.symbol("result"), S.elements()),
                 S.formatBreak,
-                Wat.I.drop,
+                S.symbol("drop"),
             ),
         ))
     }
 
     @Test
     fun funcIncludesResultTypeIfSet() {
-        val func = Wat.func(
+        val func = Wasm.function(
             identifier = "main",
-            result = Wat.i32,
+            results = listOf(Wasm.T.i32),
             body = listOf(
-                Wat.I.drop,
+                Wasm.I.drop,
             ),
         )
 
-        assertThat(func, equalTo(
+        val expression = Wat.functionToSExpression(func)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
-                S.list(S.symbol("result"), Wat.i32),
+                S.list(S.symbol("result"), S.elements(S.symbol("i32"))),
                 S.formatBreak,
-                Wat.I.drop,
+                S.symbol("drop"),
             ),
         ))
     }
 
     @Test
     fun funcHasOptionalExport() {
-        val func = Wat.func(
+        val func = Wasm.function(
             identifier = "main",
             exportName = "_start",
             body = listOf(
-                Wat.I.drop,
+                Wasm.I.drop,
             ),
         )
 
-        assertThat(func, equalTo(
+        val expression = Wat.functionToSExpression(func)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
                 S.list(S.symbol("export"), S.string("_start")),
+                S.list(S.symbol("result"), S.elements()),
                 S.formatBreak,
-                Wat.I.drop,
+                S.symbol("drop")
             ),
         ))
     }
 
     @Test
     fun funcHasOptionalLocals() {
-        val func = Wat.func(
+        val func = Wasm.function(
             identifier = "main",
-            locals = listOf(Wat.local("local_1", Wat.i32)),
+            locals = listOf(Wasm.local("local_1", Wasm.T.i32)),
             body = listOf(
-                Wat.I.drop,
+                Wasm.I.drop,
             ),
         )
 
-        assertThat(func, equalTo(
+        val expression = Wat.functionToSExpression(func)
+
+        assertThat(expression, equalTo(
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
+                S.list(S.symbol("result"), S.elements()),
                 S.formatBreak,
-                S.list(S.symbol("local"), S.identifier("local_1"), Wat.i32),
-                Wat.I.drop,
+                S.list(S.symbol("local"), S.identifier("local_1"), S.symbol("i32")),
+                S.symbol("drop"),
             ),
         ))
     }

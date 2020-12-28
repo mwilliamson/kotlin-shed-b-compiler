@@ -9,6 +9,9 @@ import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.*
+import org.shedlang.compiler.backends.wasm.wasm.Wasi
+import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.*
@@ -35,43 +38,44 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val memory = memory3
 
         val testFunc = if (type == StringType) {
-            Wat.func(
+            Wasm.function(
                 "test",
                 exportName = "_start",
-                locals = functionContext.locals.map { local -> Wat.local(local, Wat.i32) },
-                body = functionContext.instructions.add(Wat.I.call(WasmCoreNames.print, listOf())),
+                locals = functionContext.locals.map { local -> Wasm.local(local, Wasm.T.i32) },
+                body = functionContext.instructions.add(Wasm.I.call(WasmCoreNames.print)),
             )
         } else {
-            Wat.func(
+            Wasm.function(
                 "test",
                 exportName = "test",
-                result = Wat.i32,
-                locals = functionContext.locals.map { local -> Wat.local(local, Wat.i32) },
+                results = listOf(Wasm.T.i32),
+                locals = functionContext.locals.map { local -> Wasm.local(local, Wasm.T.i32) },
                 body = functionContext.instructions,
             )
         }
 
-        val module = Wat.module(
+        val module = Wasm.module(
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
             memoryPageCount = memory.pageCount,
-            body = memory.data + listOf(
-                Wat.func(
+            start = "start",
+            dataSegments = memory.dataSegments,
+            functions = listOf(
+                Wasm.function(
                     identifier = "start",
                     body = memory.startInstructions,
                 ),
-                Wat.start("start"),
                 testFunc,
                 *builtins.toTypedArray(),
             ),
         )
-        println(withLineNumbers(module.serialise()))
+        println(withLineNumbers(Wat.serialise(module)))
         if (type == StringType) {
 
             temporaryDirectory().use { directory ->
                 val watPath = directory.path.resolve("test.wat")
-                watPath.toFile().writeText(module.serialise())
+                watPath.toFile().writeText(Wat.serialise(module))
 
                 val wasmPath = directory.path.resolve("test.wasm")
                 watToWasm(watPath, wasmPath)
@@ -92,7 +96,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         } else {
             temporaryDirectory().use { directory ->
                 val watPath = directory.path.resolve("test.wat")
-                watPath.toFile().writeText(module.serialise())
+                watPath.toFile().writeText(Wat.serialise(module))
 
                 val wasmPath = directory.path.resolve("test.wasm")
                 watToWasm(watPath, wasmPath)
