@@ -1,9 +1,9 @@
 package org.shedlang.compiler.backends.wasm
 
-import org.shedlang.compiler.backends.wasm.wasm.SExpression
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
-import org.shedlang.compiler.backends.wasm.wasm.Wat
+import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
 internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> {
     val (memory2, heapPointer) = memory.staticAllocI32()
@@ -96,4 +96,11 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
     )
 
     return Pair(memory3, malloc)
+}
+
+internal fun callMalloc(size: WasmInstruction.Folded, alignment: WasmInstruction.Folded): WasmInstruction.Folded {
+    return Wasm.I.call(
+        WasmCoreNames.malloc,
+        listOf(size, alignment),
+    )
 }

@@ -25,18 +25,15 @@ internal fun generateStringAddFunc(): WasmFunction {
             Wasm.I.i32Load,
             Wasm.I.localSet("right_length"),
 
-            Wasm.I.call(
-                WasmCoreNames.malloc,
-                listOf(
+            callMalloc(
+                size = Wasm.I.i32Add(
                     Wasm.I.i32Add(
-                        Wasm.I.i32Add(
-                            Wasm.I.localGet("left_length"),
-                            Wasm.I.localGet("right_length"),
-                        ),
-                        Wasm.I.i32Const(4),
+                        Wasm.I.localGet("left_length"),
+                        Wasm.I.localGet("right_length"),
                     ),
                     Wasm.I.i32Const(4),
-                )
+                ),
+                alignment = Wasm.I.i32Const(4),
             ),
             Wasm.I.localSet("result"),
 
