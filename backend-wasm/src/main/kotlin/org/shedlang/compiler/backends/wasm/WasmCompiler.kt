@@ -86,6 +86,14 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wasm.I.drop)
             }
 
+            is Duplicate -> {
+                val (context2, temp) = context.addLocal("duplicate")
+                return context2
+                    .addInstruction(Wasm.I.localSet(temp))
+                    .addInstruction(Wasm.I.localGet(temp))
+                    .addInstruction(Wasm.I.localGet(temp))
+            }
+
             is IntAdd -> {
                 return context.addInstruction(Wasm.I.i32Add)
             }
@@ -209,6 +217,40 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
             is StringNotEqual -> {
                 return addBoolNot(context.addInstruction(Wasm.I.call(WasmCoreNames.stringEquals)))
+            }
+
+            is TupleAccess -> {
+                return context
+                    .addInstruction(Wasm.I.i32Const(instruction.elementIndex * WasmData.VALUE_SIZE))
+                    .addInstruction(Wasm.I.i32Add)
+                    .addInstruction(Wasm.I.i32Load)
+            }
+
+            is TupleCreate -> {
+                val (context2, tuplePointer) = context.addLocal("tuple")
+                val (context3, element) = context2.addLocal("element")
+                val context4 = context3.addInstruction(Wasm.I.localSet(
+                    tuplePointer,
+                    callMalloc(
+                        size = Wasm.I.i32Const(WasmData.VALUE_SIZE * instruction.length),
+                        alignment = Wasm.I.i32Const(4),
+                    ),
+                ))
+
+                val context5 = (instruction.length - 1 downTo 0).fold(context4) { currentContext, elementIndex ->
+                    currentContext
+                        .addInstruction(Wasm.I.localSet(element))
+                        .addInstruction(Wasm.I.i32Store(
+                            // TODO: use offset
+                            address = Wasm.I.i32Add(
+                                Wasm.I.localGet(tuplePointer),
+                                Wasm.I.i32Const(elementIndex * WasmData.VALUE_SIZE),
+                            ),
+                            value = Wasm.I.localGet(element),
+                        ))
+                }
+
+                return context5.addInstruction(Wasm.I.localGet(tuplePointer))
             }
 
             is UnicodeScalarEquals -> {
