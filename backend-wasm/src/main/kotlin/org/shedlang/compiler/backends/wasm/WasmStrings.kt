@@ -107,66 +107,64 @@ internal fun generateStringEqualsFunc(): WasmFunction {
         locals = listOf(Wasm.local("index", Wasm.T.i32), Wasm.local("length", Wasm.T.i32)),
         results = listOf(Wasm.T.i32),
         body = listOf(
-            Wasm.I.i32NotEqual(
-                Wasm.I.i32Load(Wasm.I.localGet("left")),
-                Wasm.I.i32Load(Wasm.I.localGet("right")),
+            Wasm.I.if_(
+                results = listOf(Wasm.T.i32),
+                condition = Wasm.I.i32NotEqual(
+                    Wasm.I.i32Load(Wasm.I.localGet("left")),
+                    Wasm.I.i32Load(Wasm.I.localGet("right")),
+                ),
+                ifTrue = listOf(Wasm.I.i32Const(0)),
+                ifFalse = listOf(
+                    Wasm.I.localGet("left"),
+                    Wasm.I.i32Load,
+                    Wasm.I.localSet("length"),
+
+                    Wasm.I.i32Const(0),
+                    Wasm.I.localSet("index"),
+
+                    Wasm.I.loop(identifier="iterate_chars", results = listOf(Wasm.T.i32)), // iterate_chars
+                    Wasm.I.localGet("index"),
+                    Wasm.I.localGet("length"),
+                    Wasm.I.i32GreaterThanOrEqualUnsigned,
+
+                    Wasm.I.if_(results = listOf(Wasm.T.i32)), // string_end
+
+                    Wasm.I.i32Const(1),
+
+                    Wasm.I.else_, // string_end
+
+                    // Get left char
+                    Wasm.I.localGet("left"),
+                    Wasm.I.i32Const(4),
+                    Wasm.I.i32Add,
+                    Wasm.I.localGet("index"),
+                    Wasm.I.i32Add,
+                    Wasm.I.i32Load8Unsigned,
+
+                    // Get right char
+                    Wasm.I.localGet("right"),
+                    Wasm.I.i32Const(4),
+                    Wasm.I.i32Add,
+                    Wasm.I.localGet("index"),
+                    Wasm.I.i32Add,
+                    Wasm.I.i32Load8Unsigned,
+
+                    // Compare chars
+                    Wasm.I.i32Equals,
+                    Wasm.I.if_(results = listOf(Wasm.T.i32)),
+                    Wasm.I.localGet("index"),
+                    Wasm.I.i32Const(1),
+                    Wasm.I.i32Add,
+                    Wasm.I.localSet("index"),
+                    Wasm.I.branch("iterate_chars"), // iterate_chars
+                    Wasm.I.else_,
+                    Wasm.I.i32Const(0),
+                    Wasm.I.end,
+
+                    Wasm.I.end, // string_end
+                    Wasm.I.end, // iterate_chars
+                ),
             ),
-
-            Wasm.I.if_(results = listOf(Wasm.T.i32)), // if_same_length
-
-            Wasm.I.i32Const(0),
-
-            Wasm.I.else_, // if_same_length
-
-            Wasm.I.localGet("left"),
-            Wasm.I.i32Load,
-            Wasm.I.localSet("length"),
-
-            Wasm.I.i32Const(0),
-            Wasm.I.localSet("index"),
-
-            Wasm.I.loop(identifier="iterate_chars", results = listOf(Wasm.T.i32)), // iterate_chars
-            Wasm.I.localGet("index"),
-            Wasm.I.localGet("length"),
-            Wasm.I.i32GreaterThanOrEqualUnsigned,
-
-            Wasm.I.if_(results = listOf(Wasm.T.i32)), // string_end
-
-            Wasm.I.i32Const(1),
-
-            Wasm.I.else_, // string_end
-
-            // Get left char
-            Wasm.I.localGet("left"),
-            Wasm.I.i32Const(4),
-            Wasm.I.i32Add,
-            Wasm.I.localGet("index"),
-            Wasm.I.i32Add,
-            Wasm.I.i32Load8Unsigned,
-
-            // Get right char
-            Wasm.I.localGet("right"),
-            Wasm.I.i32Const(4),
-            Wasm.I.i32Add,
-            Wasm.I.localGet("index"),
-            Wasm.I.i32Add,
-            Wasm.I.i32Load8Unsigned,
-
-            // Compare chars
-            Wasm.I.i32Equals,
-            Wasm.I.if_(results = listOf(Wasm.T.i32)),
-            Wasm.I.localGet("index"),
-            Wasm.I.i32Const(1),
-            Wasm.I.i32Add,
-            Wasm.I.localSet("index"),
-            Wasm.I.branch("iterate_chars"), // iterate_chars
-            Wasm.I.else_,
-            Wasm.I.i32Const(0),
-            Wasm.I.end,
-
-            Wasm.I.end, // string_end
-            Wasm.I.end, // iterate_chars
-            Wasm.I.end, // if_same_length
         ),
     )
 }
