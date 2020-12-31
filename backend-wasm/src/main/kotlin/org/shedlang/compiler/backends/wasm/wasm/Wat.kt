@@ -179,6 +179,13 @@ internal object Wat {
                 instructionToSExpression(instruction.left),
                 instructionToSExpression(instruction.right),
             )
+            is WasmInstruction.Folded.If -> S.list(
+                S.symbol("if"),
+                S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
+                instructionToSExpression(instruction.condition),
+                S.list(S.symbol("then")).addAll(instruction.ifTrue.map(::instructionToSExpression)),
+                S.list(S.symbol("else")).addAll(instruction.ifFalse.map(::instructionToSExpression)),
+            )
             is WasmInstruction.Folded.LocalGet -> S.list(
                 S.symbol("local.get"),
                 S.identifier(instruction.identifier),
@@ -269,6 +276,10 @@ internal data class SList(val elements: List<SExpression>) : SExpression {
         builder.append(end)
         builder.append(")")
         return builder.toString()
+    }
+
+    fun addAll(newElements: List<SExpression>): SList {
+        return SList(elements = elements + newElements)
     }
 }
 

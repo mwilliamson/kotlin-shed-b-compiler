@@ -67,30 +67,30 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
                 ),
             ),
 
-            Wasm.I.i32LessThanOrEqualUnsigned(
-                Wasm.I.localGet("grow"),
-                Wasm.I.i32Const(0),
-            ),
-            Wasm.I.if_(results = listOf()),
-            Wasm.I.else_,
-
-            // TODO: check for error from memory.grow
-            Wasm.I.drop(Wasm.I.memoryGrow(
-                Wasm.I.i32DivideUnsigned(
-                    Wasm.I.i32Add(Wasm.I.localGet("grow"), Wasm.I.i32Const(WasmMemory.PAGE_SIZE - 1)),
-                    Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+            Wasm.I.if_(
+                condition = Wasm.I.i32LessThanOrEqualUnsigned(
+                    Wasm.I.localGet("grow"),
+                    Wasm.I.i32Const(0),
                 ),
-            )),
+                ifTrue = listOf(),
+                ifFalse = listOf(
+                    // TODO: check for error from memory.grow
+                    Wasm.I.drop(Wasm.I.memoryGrow(
+                        Wasm.I.i32DivideUnsigned(
+                            Wasm.I.i32Add(Wasm.I.localGet("grow"), Wasm.I.i32Const(WasmMemory.PAGE_SIZE - 1)),
+                            Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+                        ),
+                    )),
 
-            Wasm.I.i32Store(
-                Wasm.I.i32Const(heapEndPointer),
-                Wasm.I.i32Multiply(
-                    Wasm.I.memorySize,
-                    Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+                    Wasm.I.i32Store(
+                        Wasm.I.i32Const(heapEndPointer),
+                        Wasm.I.i32Multiply(
+                            Wasm.I.memorySize,
+                            Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+                        ),
+                    ),
                 ),
             ),
-
-            Wasm.I.end,
 
             Wasm.I.localGet("result"),
         ),

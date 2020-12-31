@@ -156,6 +156,15 @@ internal object Wasm {
             return WasmInstruction.If(results = results)
         }
 
+        fun if_(
+            results: List<WasmType> = listOf(),
+            condition: WasmInstruction.Folded,
+            ifTrue: List<WasmInstruction.Folded>,
+            ifFalse: List<WasmInstruction.Folded>,
+        ): WasmInstruction.Folded {
+            return WasmInstruction.Folded.If(results = results, condition = condition, ifTrue = ifTrue, ifFalse = ifFalse)
+        }
+
         fun localGet(identifier: String): WasmInstruction.Folded {
             return WasmInstruction.Folded.LocalGet(identifier)
         }
@@ -279,6 +288,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class I32Multiply(val left: Folded, val right: Folded): Folded()
         class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
         class I32Sub(val left: Folded, val right: Folded): Folded()
+        class If(val results: List<WasmType>, val condition: Folded, val ifTrue: List<Folded>, val ifFalse: List<Folded>): Folded()
         class LocalGet(val identifier: String): Folded()
         class LocalSet(val identifier: String, val value: Folded): Folded()
         class MemoryGrow(val delta: Folded): Folded()
