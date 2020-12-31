@@ -37,11 +37,13 @@ internal fun generateStringAddFunc(): WasmFunction {
             ),
             Wasm.I.localSet("result"),
 
-            Wasm.I.localGet("result"),
-            Wasm.I.localGet("left_length"),
-            Wasm.I.localGet("right_length"),
-            Wasm.I.i32Add,
-            Wasm.I.i32Store,
+            Wasm.I.i32Store(
+                Wasm.I.localGet("result"),
+                Wasm.I.i32Add(
+                    Wasm.I.localGet("left_length"),
+                    Wasm.I.localGet("right_length"),
+                ),
+            ),
 
             Wasm.I.localGet("result"),
             Wasm.I.i32Const(4),
