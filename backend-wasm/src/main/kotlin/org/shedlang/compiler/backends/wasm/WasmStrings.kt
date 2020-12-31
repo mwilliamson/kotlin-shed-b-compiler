@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.wasm
 
+import org.shedlang.compiler.backends.wasm.WasmData.booleanType
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
@@ -7,31 +8,33 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 internal fun generateStringAddFunc(): WasmFunction {
     return Wasm.function(
         WasmCoreNames.stringAdd,
-        params = listOf(Wasm.param("left", Wasm.T.i32), Wasm.param("right", Wasm.T.i32)),
+        params = listOf(Wasm.param("left", stringPointerType), Wasm.param("right", stringPointerType)),
         locals = listOf(
-            Wasm.local("left_length", Wasm.T.i32),
-            Wasm.local("right_length", Wasm.T.i32),
-            Wasm.local("source_index", Wasm.T.i32),
-            Wasm.local("result", Wasm.T.i32),
-            Wasm.local("result_contents", Wasm.T.i32),
+            Wasm.local("left_length", stringLengthType),
+            Wasm.local("right_length", stringLengthType),
+            Wasm.local("source_index", stringIndexType),
+            Wasm.local("result", stringPointerType),
+            Wasm.local("result_contents", stringPointerType),
         ),
-        results = listOf(Wasm.T.i32),
+        results = listOf(stringPointerType),
         body = listOf(
             Wasm.I.localSet("left_length", loadStringLength(Wasm.I.localGet("left"))),
 
             Wasm.I.localSet("right_length", loadStringLength(Wasm.I.localGet("right"))),
 
-            callMalloc(
-                size = Wasm.I.i32Add(
-                    Wasm.I.i32Add(
-                        Wasm.I.localGet("left_length"),
-                        Wasm.I.localGet("right_length"),
+            Wasm.I.localSet(
+                "result",
+                callMalloc(
+                    size = Wasm.I.i32Add(
+                        Wasm.I.i32Add(
+                            Wasm.I.localGet("left_length"),
+                            Wasm.I.localGet("right_length"),
+                        ),
+                        Wasm.I.i32Const(4),
                     ),
-                    Wasm.I.i32Const(4),
-                ),
-                alignment = Wasm.I.i32Const(4),
+                    alignment = Wasm.I.i32Const(4),
+                )
             ),
-            Wasm.I.localSet("result"),
 
             Wasm.I.i32Store(
                 Wasm.I.localGet("result"),
@@ -41,10 +44,10 @@ internal fun generateStringAddFunc(): WasmFunction {
                 ),
             ),
 
-            Wasm.I.localGet("result"),
-            Wasm.I.i32Const(4),
-            Wasm.I.i32Add,
-            Wasm.I.localSet("result_contents"),
+            Wasm.I.localSet(
+                "result_contents",
+                Wasm.I.i32Add(Wasm.I.localGet("result"), Wasm.I.i32Const(STRING_LENGTH_SIZE))
+            ),
 
             *copyStringContents(sourceIdentifier = "left").toTypedArray(),
             *copyStringContents(sourceIdentifier = "right").toTypedArray(),
@@ -99,12 +102,12 @@ private fun copyStringContents(sourceIdentifier: String): List<WasmInstruction> 
 internal fun generateStringEqualsFunc(): WasmFunction {
     return Wasm.function(
         WasmCoreNames.stringEquals,
-        params = listOf(Wasm.param("left", Wasm.T.i32), Wasm.param("right", Wasm.T.i32)),
-        locals = listOf(Wasm.local("index", Wasm.T.i32), Wasm.local("length", Wasm.T.i32)),
-        results = listOf(Wasm.T.i32),
+        params = listOf(Wasm.param("left", stringPointerType), Wasm.param("right", stringPointerType)),
+        locals = listOf(Wasm.local("index", stringIndexType), Wasm.local("length", stringLengthType)),
+        results = listOf(booleanType),
         body = listOf(
             Wasm.I.if_(
-                results = listOf(Wasm.T.i32),
+                results = listOf(booleanType),
                 condition = Wasm.I.i32NotEqual(
                     loadStringLength(Wasm.I.localGet("left")),
                     loadStringLength(Wasm.I.localGet("right")),
@@ -120,13 +123,13 @@ internal fun generateStringEqualsFunc(): WasmFunction {
                         Wasm.I.i32Const(0),
                     ),
 
-                    Wasm.I.loop(identifier="iterate_chars", results = listOf(Wasm.T.i32)), // iterate_chars
+                    Wasm.I.loop(identifier="iterate_chars", results = listOf(booleanType)), // iterate_chars
                     Wasm.I.i32GreaterThanOrEqualUnsigned(
                         Wasm.I.localGet("index"),
                         Wasm.I.localGet("length"),
                     ),
 
-                    Wasm.I.if_(results = listOf(Wasm.T.i32)), // string_end
+                    Wasm.I.if_(results = listOf(booleanType)), // string_end
 
                     Wasm.I.i32Const(1),
 
@@ -150,7 +153,7 @@ internal fun generateStringEqualsFunc(): WasmFunction {
 
                     // Compare chars
                     Wasm.I.i32Equals,
-                    Wasm.I.if_(results = listOf(Wasm.T.i32)),
+                    Wasm.I.if_(results = listOf(booleanType)),
                     Wasm.I.localGet("index"),
                     Wasm.I.i32Const(1),
                     Wasm.I.i32Add,
@@ -171,3 +174,8 @@ internal fun generateStringEqualsFunc(): WasmFunction {
 private fun loadStringLength(string: WasmInstruction.Folded): WasmInstruction.Folded {
     return Wasm.I.i32Load(string)
 }
+
+private const val STRING_LENGTH_SIZE = 4
+private val stringLengthType = Wasm.T.i32
+private val stringIndexType = stringLengthType
+private val stringPointerType = Wasm.T.i32
