@@ -115,17 +115,20 @@ internal fun generateStringEqualsFunc(): WasmFunction {
                 ),
                 ifTrue = listOf(Wasm.I.i32Const(0)),
                 ifFalse = listOf(
-                    Wasm.I.localGet("left"),
-                    Wasm.I.i32Load,
-                    Wasm.I.localSet("length"),
-
-                    Wasm.I.i32Const(0),
-                    Wasm.I.localSet("index"),
+                    Wasm.I.localSet(
+                        "length",
+                        Wasm.I.i32Load(Wasm.I.localGet("left"))
+                    ),
+                    Wasm.I.localSet(
+                        "index",
+                        Wasm.I.i32Const(0),
+                    ),
 
                     Wasm.I.loop(identifier="iterate_chars", results = listOf(Wasm.T.i32)), // iterate_chars
-                    Wasm.I.localGet("index"),
-                    Wasm.I.localGet("length"),
-                    Wasm.I.i32GreaterThanOrEqualUnsigned,
+                    Wasm.I.i32GreaterThanOrEqualUnsigned(
+                        Wasm.I.localGet("index"),
+                        Wasm.I.localGet("length"),
+                    ),
 
                     Wasm.I.if_(results = listOf(Wasm.T.i32)), // string_end
 
