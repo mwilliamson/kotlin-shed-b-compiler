@@ -9,17 +9,15 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
     val (memory2, heapPointer) = memory.staticAllocI32()
     val (memory3, heapEndPointer) = memory2.staticAllocI32(0)
     memory3.addStartInstructions(
-        Wasm.I.i32Const(heapPointer),
-        Wasm.I.memorySize,
-        Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
-        Wasm.I.i32Multiply,
-        Wasm.I.i32Store,
+        Wasm.I.i32Store(
+            Wasm.I.i32Const(heapPointer),
+            Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WasmMemory.PAGE_SIZE)),
+        ),
 
-        Wasm.I.i32Const(heapEndPointer),
-        Wasm.I.memorySize,
-        Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
-        Wasm.I.i32Multiply,
-        Wasm.I.i32Store,
+        Wasm.I.i32Store(
+            Wasm.I.i32Const(heapEndPointer),
+            Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WasmMemory.PAGE_SIZE)),
+        ),
     )
 
     // TODO: test this!
