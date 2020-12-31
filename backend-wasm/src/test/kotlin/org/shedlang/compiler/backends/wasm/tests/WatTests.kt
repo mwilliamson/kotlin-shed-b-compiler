@@ -50,8 +50,8 @@ class WatTests {
                     S.list(
                         S.symbol("func"),
                         S.identifier("write"),
-                        S.list(S.symbol("param"), S.elements()),
-                        S.list(S.symbol("result"), S.elements(S.symbol("i32"))),
+                        S.list(S.symbol("param")),
+                        S.list(S.symbol("result"), S.symbol("i32")),
                     ),
                 ),
                 S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(0)),
@@ -79,8 +79,8 @@ class WatTests {
                 S.list(
                     S.symbol("func"),
                     S.identifier("write"),
-                    S.list(S.symbol("param"), S.elements(S.symbol("i32"), S.symbol("i32"))),
-                    S.list(S.symbol("result"), S.elements(S.symbol("i32"))),
+                    S.list(S.symbol("param"), S.symbol("i32"), S.symbol("i32")),
+                    S.list(S.symbol("result"), S.symbol("i32")),
                 ),
             ),
         ))
@@ -119,7 +119,7 @@ class WatTests {
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
-                S.list(S.symbol("result"), S.elements()),
+                S.list(S.symbol("result")),
                 S.formatBreak,
                 S.symbol("drop"),
             ),
@@ -142,7 +142,7 @@ class WatTests {
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
-                S.list(S.symbol("result"), S.elements(S.symbol("i32"))),
+                S.list(S.symbol("result"), S.symbol("i32")),
                 S.formatBreak,
                 S.symbol("drop"),
             ),
@@ -166,7 +166,7 @@ class WatTests {
                 S.symbol("func"),
                 S.identifier("main"),
                 S.list(S.symbol("export"), S.string("_start")),
-                S.list(S.symbol("result"), S.elements()),
+                S.list(S.symbol("result")),
                 S.formatBreak,
                 S.symbol("drop")
             ),
@@ -189,7 +189,7 @@ class WatTests {
             S.list(
                 S.symbol("func"),
                 S.identifier("main"),
-                S.list(S.symbol("result"), S.elements()),
+                S.list(S.symbol("result")),
                 S.formatBreak,
                 S.list(S.symbol("local"), S.identifier("local_1"), S.symbol("i32")),
                 S.symbol("drop"),
