@@ -15,16 +15,18 @@ internal fun generatePrintFunc(memory: WasmMemory): Pair<WasmMemory, WasmFunctio
         WasmCoreNames.print,
         params = listOf(Wasm.param("string", Wasm.T.i32)),
         body = listOf(
-            Wasm.I.i32Const(stringContentsPointerMemoryIndex),
-            Wasm.I.localGet("string"),
-            Wasm.I.i32Const(4),
-            Wasm.I.i32Add,
-            Wasm.I.i32Store,
+            Wasm.I.i32Store(
+                Wasm.I.i32Const(stringContentsPointerMemoryIndex),
+                Wasm.I.i32Add(
+                    Wasm.I.localGet("string"),
+                    Wasm.I.i32Const(4),
+                ),
+            ),
 
-            Wasm.I.i32Const(stringLengthMemoryIndex),
-            Wasm.I.localGet("string"),
-            Wasm.I.i32Load,
-            Wasm.I.i32Store,
+            Wasm.I.i32Store(
+                Wasm.I.i32Const(stringLengthMemoryIndex),
+                Wasm.I.i32Load(Wasm.I.localGet("string")),
+            ),
 
             Wasi.callFdWrite(
                 identifier = "fd_write",
