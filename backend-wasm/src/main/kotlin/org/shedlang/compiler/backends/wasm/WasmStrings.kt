@@ -17,13 +17,9 @@ internal fun generateStringAddFunc(): WasmFunction {
         ),
         results = listOf(Wasm.T.i32),
         body = listOf(
-            Wasm.I.localGet("left"),
-            Wasm.I.i32Load,
-            Wasm.I.localSet("left_length"),
+            Wasm.I.localSet("left_length", loadStringLength(Wasm.I.localGet("left"))),
 
-            Wasm.I.localGet("right"),
-            Wasm.I.i32Load,
-            Wasm.I.localSet("right_length"),
+            Wasm.I.localSet("right_length", loadStringLength(Wasm.I.localGet("right"))),
 
             callMalloc(
                 size = Wasm.I.i32Add(
@@ -110,14 +106,14 @@ internal fun generateStringEqualsFunc(): WasmFunction {
             Wasm.I.if_(
                 results = listOf(Wasm.T.i32),
                 condition = Wasm.I.i32NotEqual(
-                    Wasm.I.i32Load(Wasm.I.localGet("left")),
-                    Wasm.I.i32Load(Wasm.I.localGet("right")),
+                    loadStringLength(Wasm.I.localGet("left")),
+                    loadStringLength(Wasm.I.localGet("right")),
                 ),
                 ifTrue = listOf(Wasm.I.i32Const(0)),
                 ifFalse = listOf(
                     Wasm.I.localSet(
                         "length",
-                        Wasm.I.i32Load(Wasm.I.localGet("left"))
+                        loadStringLength(Wasm.I.localGet("left"))
                     ),
                     Wasm.I.localSet(
                         "index",
@@ -170,4 +166,8 @@ internal fun generateStringEqualsFunc(): WasmFunction {
             ),
         ),
     )
+}
+
+private fun loadStringLength(string: WasmInstruction.Folded): WasmInstruction.Folded {
+    return Wasm.I.i32Load(string)
 }
