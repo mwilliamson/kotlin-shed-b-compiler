@@ -167,6 +167,11 @@ internal object Wat {
                 instructionToSExpression(instruction.left),
                 instructionToSExpression(instruction.right),
             )
+            is WasmInstruction.Folded.I32NotEqual -> S.list(
+                S.symbol("i32.ne"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
             is WasmInstruction.Folded.I32Store -> S.list(
                 S.symbol("i32.store"),
                 *(if (instruction.offset == 0) listOf() else listOf(S.symbol("offset=${instruction.offset}"))).toTypedArray(),

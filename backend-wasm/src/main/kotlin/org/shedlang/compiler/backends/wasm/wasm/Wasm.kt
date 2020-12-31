@@ -140,6 +140,10 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Multiply(left = left, right = right)
         }
 
+        fun i32NotEqual(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32NotEqual(left = left, right = right)
+        }
+
         fun i32Store(address: Int, value: Int): WasmInstruction.Folded {
             return i32Store(i32Const(address), i32Const(value))
         }
@@ -286,6 +290,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class I32LessThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
         class I32Load(val address: Folded): Folded()
         class I32Multiply(val left: Folded, val right: Folded): Folded()
+        class I32NotEqual(val left: Folded, val right: Folded): Folded()
         class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
         class I32Sub(val left: Folded, val right: Folded): Folded()
         class If(val results: List<WasmType>, val condition: Folded, val ifTrue: List<Folded>, val ifFalse: List<Folded>): Folded()

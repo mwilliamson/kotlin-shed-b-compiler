@@ -107,13 +107,10 @@ internal fun generateStringEqualsFunc(): WasmFunction {
         locals = listOf(Wasm.local("index", Wasm.T.i32), Wasm.local("length", Wasm.T.i32)),
         results = listOf(Wasm.T.i32),
         body = listOf(
-            Wasm.I.localGet("left"),
-            Wasm.I.i32Load,
-
-            Wasm.I.localGet("right"),
-            Wasm.I.i32Load,
-
-            Wasm.I.i32NotEqual,
+            Wasm.I.i32NotEqual(
+                Wasm.I.i32Load(Wasm.I.localGet("left")),
+                Wasm.I.i32Load(Wasm.I.localGet("right")),
+            ),
 
             Wasm.I.if_(results = listOf(Wasm.T.i32)), // if_same_length
 
