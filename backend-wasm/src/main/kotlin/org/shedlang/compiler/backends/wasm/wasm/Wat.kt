@@ -153,6 +153,11 @@ internal object Wat {
                 instructionToSExpression(instruction.left),
                 instructionToSExpression(instruction.right),
             )
+            is WasmInstruction.Folded.I32LessThanOrEqualUnsigned -> S.list(
+                S.symbol("i32.le_u"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
             is WasmInstruction.Folded.I32Load -> S.list(
                 S.symbol("i32.load"),
                 instructionToSExpression(instruction.address),

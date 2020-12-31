@@ -59,14 +59,18 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
 
             // Grow heap if necessary
             // TODO: grow by more than necessary?
-            Wasm.I.localGet("heap_pointer"),
-            Wasm.I.i32Const(heapEndPointer),
-            Wasm.I.i32Load,
-            Wasm.I.i32Sub,
-            Wasm.I.localSet("grow"),
-            Wasm.I.localGet("grow"),
-            Wasm.I.i32Const(0),
-            Wasm.I.i32LessThanOrEqualUnsigned,
+            Wasm.I.localSet(
+                "grow",
+                Wasm.I.i32Sub(
+                    Wasm.I.localGet("heap_pointer"),
+                    Wasm.I.i32Load(Wasm.I.i32Const(heapEndPointer)),
+                ),
+            ),
+
+            Wasm.I.i32LessThanOrEqualUnsigned(
+                Wasm.I.localGet("grow"),
+                Wasm.I.i32Const(0),
+            ),
             Wasm.I.if_(results = listOf()),
             Wasm.I.else_,
 
