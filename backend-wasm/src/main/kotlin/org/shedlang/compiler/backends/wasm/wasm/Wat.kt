@@ -40,15 +40,15 @@ internal object Wat {
                     S.list(
                         S.symbol("func"),
                         S.identifier(import.identifier),
-                        S.list(S.symbol("param"), typesToSExpressions(descriptor.params)),
-                        S.list(S.symbol("result"), typesToSExpressions(descriptor.results)),
+                        S.list(S.symbol("param")).addAll(typesToSExpressions(descriptor.params)),
+                        S.list(S.symbol("result")).addAll(typesToSExpressions(descriptor.results)),
                     )
             },
         )
     }
 
-    fun typesToSExpressions(types: List<WasmType>): SExpression {
-        return S.elements(types.map { type -> typeToSExpression(type) })
+    fun typesToSExpressions(types: List<WasmType>): List<SExpression> {
+        return types.map { type -> typeToSExpression(type) }
     }
 
     fun typeToSExpression(type: WasmType): SExpression {
@@ -75,7 +75,7 @@ internal object Wat {
             S.identifier(function.identifier),
             *exportExpressions.toTypedArray(),
             *function.params.map { param -> paramToSExpression(param) }.toTypedArray(),
-            S.list(S.symbol("result"), typesToSExpressions(function.results)),
+            S.list(S.symbol("result")).addAll(typesToSExpressions(function.results)),
             S.formatBreak,
             *function.locals.map { local -> localToSExpression(local) }.toTypedArray(),
             *function.body.map { instruction -> instructionToSExpression(instruction) }.toTypedArray(),
@@ -118,13 +118,13 @@ internal object Wat {
             is WasmInstruction.I32Sub -> S.symbol("i32.sub")
             is WasmInstruction.If -> S.elements(
                 S.symbol("if"),
-                S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
+                S.list(S.symbol("result")).addAll(typesToSExpressions(instruction.results)),
             )
             is WasmInstruction.LocalSet -> S.elements(S.symbol("local.set"), S.identifier(instruction.identifier))
             is WasmInstruction.Loop -> S.elements(
                 S.symbol("loop"),
                 S.identifier(instruction.identifier),
-                S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
+                S.list(S.symbol("result")).addAll(typesToSExpressions(instruction.results)),
             )
             is WasmInstruction.MemoryGrow -> S.symbol("memory.grow")
 
@@ -181,7 +181,7 @@ internal object Wat {
             )
             is WasmInstruction.Folded.If -> S.list(
                 S.symbol("if"),
-                S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
+                S.list(S.symbol("result")).addAll(typesToSExpressions(instruction.results)),
                 instructionToSExpression(instruction.condition),
                 S.formatBreak,
                 S.list(S.symbol("then"), S.formatBreak).addAll(instruction.ifTrue.map(::instructionToSExpression)),
