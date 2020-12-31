@@ -79,6 +79,10 @@ internal object Wasm {
 
         val drop = WasmInstruction.Drop
 
+        fun drop(value: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.Drop(value = value)
+        }
+
         val else_ = WasmInstruction.Else
 
         val end = WasmInstruction.End
@@ -114,6 +118,10 @@ internal object Wasm {
 
         fun i32Const(value: Int): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32Const(value)
+        }
+
+        fun i32DivideUnsigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32DivideUnsigned(left = left, right = right)
         }
 
         fun i32Load(address: Int): WasmInstruction.Folded {
@@ -161,6 +169,11 @@ internal object Wasm {
         }
 
         val memoryGrow = WasmInstruction.MemoryGrow
+
+        fun memoryGrow(delta: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.MemoryGrow(delta = delta)
+        }
+
         val memorySize = WasmInstruction.Folded.MemorySize
     }
 }
@@ -252,15 +265,18 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 
     sealed class Folded: WasmInstruction() {
         class Call(val identifier: String, val args: List<Folded>): Folded()
+        class Drop(val value: Folded): Folded()
         class I32Add(val left: Folded, val right: Folded): Folded()
         class I32And(val left: Folded, val right: Folded): Folded()
         class I32Const(val value: Int): Folded()
+        class I32DivideUnsigned(val left: Folded, val right: Folded): Folded()
         class I32Load(val address: Folded): Folded()
         class I32Multiply(val left: Folded, val right: Folded): Folded()
         class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
         class I32Sub(val left: Folded, val right: Folded): Folded()
         class LocalGet(val identifier: String): Folded()
         class LocalSet(val identifier: String, val value: Folded): Folded()
+        class MemoryGrow(val delta: Folded): Folded()
         object MemorySize: Folded()
     }
 }

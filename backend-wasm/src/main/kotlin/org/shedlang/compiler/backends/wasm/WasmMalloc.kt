@@ -70,14 +70,13 @@ internal fun generateMalloc(memory: WasmMemory): Pair<WasmMemory, WasmFunction> 
             Wasm.I.if_(results = listOf()),
             Wasm.I.else_,
 
-            Wasm.I.localGet("grow"),
-            Wasm.I.i32Const(WasmMemory.PAGE_SIZE - 1),
-            Wasm.I.i32Add,
-            Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
-            Wasm.I.i32DivideUnsigned,
-            Wasm.I.memoryGrow,
-            // TODO: check for error
-            Wasm.I.drop,
+            // TODO: check for error from memory.grow
+            Wasm.I.drop(Wasm.I.memoryGrow(
+                Wasm.I.i32DivideUnsigned(
+                    Wasm.I.i32Add(Wasm.I.localGet("grow"), Wasm.I.i32Const(WasmMemory.PAGE_SIZE - 1)),
+                    Wasm.I.i32Const(WasmMemory.PAGE_SIZE),
+                ),
+            )),
 
             Wasm.I.i32Store(
                 Wasm.I.i32Const(heapEndPointer),
