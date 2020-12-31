@@ -183,8 +183,9 @@ internal object Wat {
                 S.symbol("if"),
                 S.list(S.symbol("result"), typesToSExpressions(instruction.results)),
                 instructionToSExpression(instruction.condition),
-                S.list(S.symbol("then")).addAll(instruction.ifTrue.map(::instructionToSExpression)),
-                S.list(S.symbol("else")).addAll(instruction.ifFalse.map(::instructionToSExpression)),
+                S.formatBreak,
+                S.list(S.symbol("then"), S.formatBreak).addAll(instruction.ifTrue.map(::instructionToSExpression)),
+                S.list(S.symbol("else"), S.formatBreak).addAll(instruction.ifFalse.map(::instructionToSExpression)),
             )
             is WasmInstruction.Folded.LocalGet -> S.list(
                 S.symbol("local.get"),
