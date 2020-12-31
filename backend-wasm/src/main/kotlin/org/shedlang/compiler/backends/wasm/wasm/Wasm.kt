@@ -132,8 +132,8 @@ internal object Wasm {
             return i32Store(i32Const(address), i32Const(value))
         }
 
-        fun i32Store(address: WasmInstruction.Folded, value: WasmInstruction.Folded): WasmInstruction.Folded {
-            return WasmInstruction.Folded.I32Store(address = address, value = value)
+        fun i32Store(address: WasmInstruction.Folded, value: WasmInstruction.Folded, offset: Int = 0, alignment: Int? = null): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Store(offset = offset, alignment = alignment, address = address, value = value)
         }
 
         fun i32Sub(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
@@ -257,7 +257,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class I32Const(val value: Int): Folded()
         class I32Load(val address: Folded): Folded()
         class I32Multiply(val left: Folded, val right: Folded): Folded()
-        class I32Store(val address: Folded, val value: Folded): Folded()
+        class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
         class I32Sub(val left: Folded, val right: Folded): Folded()
         class LocalGet(val identifier: String): Folded()
         class LocalSet(val identifier: String, val value: Folded): Folded()

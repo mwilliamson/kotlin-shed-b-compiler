@@ -233,7 +233,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     tuplePointer,
                     callMalloc(
                         size = Wasm.I.i32Const(WasmData.VALUE_SIZE * instruction.length),
-                        alignment = Wasm.I.i32Const(4),
+                        alignment = Wasm.I.i32Const(WasmData.VALUE_SIZE),
                     ),
                 ))
 
@@ -241,11 +241,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     currentContext
                         .addInstruction(Wasm.I.localSet(element))
                         .addInstruction(Wasm.I.i32Store(
-                            // TODO: use offset
-                            address = Wasm.I.i32Add(
-                                Wasm.I.localGet(tuplePointer),
-                                Wasm.I.i32Const(elementIndex * WasmData.VALUE_SIZE),
-                            ),
+                            offset = elementIndex * WasmData.VALUE_SIZE,
+                            alignment = WasmData.VALUE_SIZE,
+                            address = Wasm.I.localGet(tuplePointer),
                             value = Wasm.I.localGet(element),
                         ))
                 }

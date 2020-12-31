@@ -155,6 +155,8 @@ internal object Wat {
             )
             is WasmInstruction.Folded.I32Store -> S.list(
                 S.symbol("i32.store"),
+                *(if (instruction.offset == 0) listOf() else listOf(S.symbol("offset=${instruction.offset}"))).toTypedArray(),
+                *(if (instruction.alignment == null) listOf() else listOf(S.symbol("align=${instruction.alignment}"))).toTypedArray(),
                 instructionToSExpression(instruction.address),
                 instructionToSExpression(instruction.value),
             )
