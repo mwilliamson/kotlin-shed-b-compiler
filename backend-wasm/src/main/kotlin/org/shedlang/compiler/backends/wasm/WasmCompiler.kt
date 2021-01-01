@@ -287,6 +287,16 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return addBoolNot(context.addInstruction(Wasm.I.call(WasmCoreNames.stringEquals)))
             }
 
+            is Swap -> {
+                val (context2, temp1) = context.addLocal()
+                val (context3, temp2) = context2.addLocal()
+                return context3
+                    .addInstruction(Wasm.I.localSet(temp1))
+                    .addInstruction(Wasm.I.localSet(temp2))
+                    .addInstruction(Wasm.I.localGet(temp1))
+                    .addInstruction(Wasm.I.localGet(temp2))
+            }
+
             is TupleAccess -> {
                 return context
                     .addInstruction(Wasm.I.i32Const(instruction.elementIndex * WasmData.VALUE_SIZE))
