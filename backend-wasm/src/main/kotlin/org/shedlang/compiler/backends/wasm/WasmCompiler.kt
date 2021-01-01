@@ -79,6 +79,38 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return addBoolNot(context)
             }
 
+            is Call -> {
+                val wasmFuncType = WasmFuncType(
+                    params = listOf(),
+                    results = listOf(WasmData.genericValueType),
+                )
+                val (context2, callee) = context.addLocal("callee")
+                return context2
+                    .addInstruction(Wasm.I.localSet(callee))
+                    .addInstruction(Wasm.I.callIndirect(
+                        type = wasmFuncType.identifier(),
+                        tableIndex = Wasm.I.localGet(callee),
+                    ))
+            }
+
+            is DefineFunction -> {
+                // TODO: uniquify name
+                val functionName = instruction.name
+
+                val functionContext = compileInstructions(
+                    instruction.bodyInstructions,
+                    context = WasmFunctionContext.initial(),
+                )
+
+                val context2 = context.mergeGlobalContext(functionContext.globalContext)
+                val (context3, functionIndex) = context2.addFunction(Wasm.function(
+                    identifier = functionName,
+                    results = listOf(WasmData.genericValueType),
+                    body = functionContext.instructions,
+                ))
+                return context3.addInstruction(Wasm.I.i32Const(functionIndex))
+            }
+
             is Discard -> {
                 return context.addInstruction(Wasm.I.drop)
             }
@@ -204,6 +236,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 }
             }
 
+            is Return -> {
+                return context
+            }
+
             is StringAdd -> {
                 return context.addInstruction(Wasm.I.call(WasmCoreNames.stringAdd))
             }
@@ -301,22 +337,37 @@ internal fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
 internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext(
+    private val functions: PersistentList<Pair<LateIndex, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
 ) {
     companion object {
-        fun initial() = WasmGlobalContext(staticData = persistentListOf())
+        fun initial() = WasmGlobalContext(
+            functions = persistentListOf(),
+            staticData = persistentListOf()
+        )
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
             return WasmGlobalContext(
+                functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
             )
         }
+    }
+
+    fun merge(other: WasmGlobalContext): WasmGlobalContext {
+        return WasmGlobalContext(
+            functions = functions.addAll(other.functions),
+            staticData = staticData.addAll(other.staticData),
+        )
     }
 
     class Bound(
         internal val pageCount: Int,
         internal val dataSegments: List<WasmDataSegment>,
         internal val startInstructions: List<WasmInstruction>,
+        internal val functions: List<WasmFunction>,
+        internal val table: List<String>,
+        internal val types: List<WasmFuncType>,
         internal val lateIndices: Map<LateIndex, Int>,
     )
 
@@ -351,12 +402,32 @@ internal data class WasmGlobalContext(
             }
         }
 
+        val boundFunctions = mutableListOf<WasmFunction>()
+        val table = mutableListOf<String>()
+
+        functions.forEachIndexed { tableIndex, (lateIndex, function) ->
+            table.add(function.identifier)
+            lateIndices[lateIndex] = tableIndex
+            boundFunctions.add(function)
+        }
+
+        val functionTypes = boundFunctions.map { function -> function.type() }
+
         return Bound(
             pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             dataSegments = dataSegments,
             startInstructions = startInstructions,
+            functions = boundFunctions,
+            table = table,
+            types = functionTypes,
             lateIndices = lateIndices,
         )
+    }
+
+    fun addFunction(function: WasmFunction): Pair<WasmGlobalContext, LateIndex> {
+        val index = nextLateIndex()
+        val newContext = copy(functions = functions.add(Pair(index, function)))
+        return Pair(newContext, index)
     }
 
     fun addStaticI32(initial: Int) = addStaticI32(initial = Wasm.I.i32Const(initial))
@@ -411,6 +482,12 @@ internal data class WasmFunctionContext(
         )
     }
 
+    fun addFunction(function: WasmFunction): Pair<WasmFunctionContext, LateIndex> {
+        val (newGlobalContext, functionIndex) = globalContext.addFunction(function)
+        val newContext = copy(globalContext = newGlobalContext)
+        return Pair(newContext, functionIndex)
+    }
+
     fun addLocal(name: String = "temp"): Pair<WasmFunctionContext, String> {
         val local = "local_${name}_${nextLocalIndex}"
         val newContext = copy(locals = locals.add(local), nextLocalIndex = nextLocalIndex + 1)
@@ -444,5 +521,9 @@ internal data class WasmFunctionContext(
     fun addStaticI32(value: Int): Pair<WasmFunctionContext, LateIndex> {
         val (newGlobalContext, index) = globalContext.addStaticI32(value)
         return Pair(copy(globalContext = newGlobalContext), index)
+    }
+
+    fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {
+        return copy(globalContext = this.globalContext.merge(globalContext))
     }
 }

@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.wasm.tests
 
+import kotlinx.collections.immutable.persistentListOf
 import org.apiguardian.api.API
 import org.junit.jupiter.api.extension.ConditionEvaluationResult
 import org.junit.jupiter.api.extension.ExecutionCondition
@@ -9,6 +10,7 @@ import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.*
+import org.shedlang.compiler.backends.wasm.WasmGlobalContext.Companion.initial
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
@@ -59,20 +61,21 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val boundGlobalContext = globalContext.bind()
 
         val module = Wasm.module(
+            types = boundGlobalContext.types,
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
             memoryPageCount = boundGlobalContext.pageCount,
             start = "start",
             dataSegments = boundGlobalContext.dataSegments,
+            table = boundGlobalContext.table,
             functions = listOf(
                 Wasm.function(
                     identifier = "start",
                     body = boundGlobalContext.startInstructions,
                 ),
                 testFunc,
-                *builtins.toTypedArray(),
-            ),
+            ) + boundGlobalContext.functions + builtins,
         )
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices)
         val watContents = wat.serialise(module)

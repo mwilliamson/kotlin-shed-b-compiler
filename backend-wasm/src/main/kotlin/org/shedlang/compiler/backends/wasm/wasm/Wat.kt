@@ -12,21 +12,46 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
     }
 
     fun moduleToSExpression(module: WasmModule): SExpression {
+        val typeDefinitions = module.types.map { type ->
+            S.list(
+                S.symbol("type"),
+                S.identifier(type.identifier()),
+                S.list(
+                    S.symbol("func"),
+                    S.list(S.symbol("param")).addAll(typesToSExpressions(type.params)),
+                    S.list(S.symbol("result")).addAll(typesToSExpressions(type.results)),
+                ),
+            )
+        }
+
         val startExpression = if (module.start == null) {
             null
         } else {
             S.list(S.symbol("start"), S.identifier(module.start))
         }
 
+        val table = if (module.table.isEmpty()) {
+            listOf()
+        } else {
+            listOf(
+                S.list(
+                    S.symbol("table"),
+                    S.symbol("funcref"),
+                    S.list(S.symbol("elem")).addAll(module.table.map(S::identifier)),
+                ),
+            )
+        }
+
         return S.list(
             S.symbol("module"),
             S.formatBreak,
+            *typeDefinitions.toTypedArray(),
             *module.imports.map { import -> importToSExpression(import) }.toTypedArray(),
             S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(module.memoryPageCount)),
             *module.dataSegments.map { dataSegment -> dataSegmentToSExpression(dataSegment) }.toTypedArray(),
             *startExpression.nullableToList().toTypedArray(),
             *module.functions.map { function -> functionToSExpression(function) }.toTypedArray(),
-        )
+        ).addAll(table)
     }
 
     fun importToSExpression(import: WasmImport): SExpression {
@@ -133,6 +158,14 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                 S.symbol("call"),
                 S.identifier(instruction.identifier),
                 S.elements(instruction.args.map(::instructionToSExpression))
+            )
+            is WasmInstruction.Folded.CallIndirect -> S.list(
+                S.symbol("call_indirect"),
+                S.list(
+                    S.symbol("type"),
+                    S.identifier(instruction.type),
+                ),
+                instructionToSExpression(instruction.tableIndex),
             )
             is WasmInstruction.Folded.Drop -> S.list(
                 S.symbol("drop"),

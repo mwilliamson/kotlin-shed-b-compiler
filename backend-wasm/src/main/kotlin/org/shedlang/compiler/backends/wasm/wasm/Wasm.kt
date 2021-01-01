@@ -4,17 +4,21 @@ import org.shedlang.compiler.backends.wasm.LateIndex
 
 internal object Wasm {
     fun module(
+        types: List<WasmFuncType> = listOf(),
         imports: List<WasmImport> = listOf(),
         memoryPageCount: Int = 0,
         dataSegments: List<WasmDataSegment> = listOf(),
         start: String? = null,
         functions: List<WasmFunction> = listOf(),
+        table: List<String> = listOf(),
     ) = WasmModule(
+        types = types,
         imports = imports,
         memoryPageCount = memoryPageCount,
         dataSegments = dataSegments,
         start = start,
         functions = functions,
+        table = table,
     )
 
     fun importFunction(
@@ -77,6 +81,10 @@ internal object Wasm {
 
         fun call(identifier: String, args: List<WasmInstruction.Folded>): WasmInstruction.Folded {
             return WasmInstruction.Folded.Call(identifier = identifier, args = args)
+        }
+
+        fun callIndirect(type: String, tableIndex: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.CallIndirect(type = type, tableIndex = tableIndex)
         }
 
         val drop = WasmInstruction.Drop
@@ -214,12 +222,30 @@ internal interface WasmType
 internal class WasmScalarType(val name: String): WasmType
 
 internal class WasmModule(
+    val types: List<WasmFuncType>,
     val imports: List<WasmImport>,
     val memoryPageCount: Int,
     val dataSegments: List<WasmDataSegment>,
     val start: String?,
     val functions: List<WasmFunction>,
+    val table: List<String>,
 )
+
+internal data class WasmFuncType(val params: List<WasmType>, val results: List<WasmType>) {
+    fun identifier(): String {
+        val parts = mutableListOf<String>()
+        parts.add("functype")
+        parts.add(params.size.toString())
+        for (param in params) {
+            parts.add((param as WasmScalarType).name)
+        }
+        parts.add(results.size.toString())
+        for (result in results) {
+            parts.add((result as WasmScalarType).name)
+        }
+        return parts.joinToString("_")
+    }
+}
 
 internal class WasmImport(
     val moduleName: String,
@@ -241,7 +267,9 @@ internal class WasmFunction(
     val locals: List<WasmLocal>,
     val results: List<WasmType>,
     val body: List<WasmInstruction>,
-)
+) {
+    fun type() = WasmFuncType(params = params.map { param -> param.type }, results = results)
+}
 
 internal class WasmParam(val identifier: String, val type: WasmType)
 
@@ -296,6 +324,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 
     sealed class Folded: WasmInstruction() {
         class Call(val identifier: String, val args: List<Folded>): Folded()
+        class CallIndirect(val type: String, val tableIndex: WasmInstruction.Folded): Folded()
         class Drop(val value: Folded): Folded()
         class I32Add(val left: Folded, val right: Folded): Folded()
         class I32And(val left: Folded, val right: Folded): Folded()
