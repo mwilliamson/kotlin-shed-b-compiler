@@ -9,6 +9,7 @@ import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
+import java.lang.Integer.max
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
@@ -82,7 +83,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             is Call -> {
                 val argumentCount = instruction.positionalArgumentCount + instruction.namedArgumentNames.size
                 val wasmFuncType = WasmFuncType(
-                    params = (0 until argumentCount).map { WasmData.genericValueType },
+                    params = listOf(WasmData.functionPointerType) + (0 until argumentCount).map { WasmData.genericValueType },
                     results = listOf(WasmData.genericValueType),
                 )
 
@@ -112,8 +113,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                 return context6.addInstruction(Wasm.I.callIndirect(
                     type = wasmFuncType.identifier(),
-                    tableIndex = Wasm.I.localGet(callee),
-                    args = argLocals.map { argLocal -> Wasm.I.localGet(argLocal) },
+                    tableIndex = Wasm.I.i32Load(Wasm.I.localGet(callee)),
+                    args = listOf(Wasm.I.localGet(callee)) + argLocals.map { argLocal -> Wasm.I.localGet(argLocal) },
                 ))
             }
 
@@ -121,29 +122,75 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 // TODO: uniquify name
                 val functionName = instruction.name
 
+                val freeVariables = findFreeVariables(instruction)
+
+                val (context2, closure) = context.addLocal("closure")
+
+                val alignment = max(WasmData.FUNCTION_POINTER_SIZE, WasmData.VALUE_SIZE)
+                val context3 = context2.addInstruction(Wasm.I.localSet(
+                    closure,
+                    callMalloc(
+                        size = Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size),
+                        alignment = Wasm.I.i32Const(alignment),
+                    ),
+                ))
+
+                val context4 = freeVariables.foldIndexed(context3) { freeVariableIndex, currentContext, freeVariable ->
+                    val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
+
+                    currentContext2.addInstruction(Wasm.I.i32Store(
+                        address = Wasm.I.localGet(closure),
+                        offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
+                        value = Wasm.I.localGet(local),
+                        alignment = alignment,
+                    ))
+                }
+
                 val params = mutableListOf<WasmParam>()
+                params.add(WasmParam("shed_closure", type = WasmData.functionPointerType))
+
                 val paramBindings = mutableListOf<Pair<Int, String>>()
                 for (parameter in (instruction.positionalParameters + instruction.namedParameters.sortedBy { parameter -> parameter.name })) {
                     val identifier = "param_${parameter.name.value}"
                     params.add(WasmParam(identifier = identifier, type = WasmData.genericValueType))
                     paramBindings.add(parameter.variableId to identifier)
                 }
-                val initialFunctionContext = WasmFunctionContext.initial().bindVariables(paramBindings)
 
-                val functionContext = compileInstructions(
+                val functionContext1 = WasmFunctionContext.initial().bindVariables(paramBindings)
+
+                val functionContext2 = freeVariables.foldIndexed(functionContext1) { freeVariableIndex, currentContext, freeVariable ->
+                    val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
+
+                    currentContext2.addInstruction(Wasm.I.localSet(
+                        local,
+                        Wasm.I.i32Load(
+                            address = Wasm.I.localGet("shed_closure"),
+                            offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
+                            alignment = alignment,
+                        ),
+                    ))
+                }
+
+                val functionContext3 = compileInstructions(
                     instruction.bodyInstructions,
-                    context = initialFunctionContext,
+                    context = functionContext2,
                 )
 
-                val context2 = context.mergeGlobalContext(functionContext.globalContext)
+                val context5 = context4.mergeGlobalContext(functionContext3.globalContext)
 
-                val (context3, functionIndex) = context2.addFunction(Wasm.function(
+                val (context6, functionIndex) = context5.addFunction(Wasm.function(
                     identifier = functionName,
                     params = params,
                     results = listOf(WasmData.genericValueType),
-                    body = functionContext.instructions,
+                    locals = functionContext3.locals.map { local -> Wasm.local(local, WasmData.genericValueType) },
+                    body = functionContext3.instructions,
                 ))
-                return context3.addInstruction(Wasm.I.i32Const(functionIndex))
+                return context6
+                    .addInstruction(Wasm.I.i32Store(
+                        Wasm.I.localGet(closure),
+                        Wasm.I.i32Const(functionIndex),
+                    ))
+                    .addInstruction(Wasm.I.localGet(closure))
             }
 
             is Discard -> {

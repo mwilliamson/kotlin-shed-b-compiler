@@ -204,6 +204,9 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             )
             is WasmInstruction.Folded.I32Load -> S.list(
                 S.symbol("i32.load"),
+                // TODO: remove duplication with I32Store
+                *(if (instruction.offset == 0) listOf() else listOf(S.symbol("offset=${instruction.offset}"))).toTypedArray(),
+                *(if (instruction.alignment == null) listOf() else listOf(S.symbol("align=${instruction.alignment}"))).toTypedArray(),
                 instructionToSExpression(instruction.address),
             )
             is WasmInstruction.Folded.I32Multiply -> S.list(

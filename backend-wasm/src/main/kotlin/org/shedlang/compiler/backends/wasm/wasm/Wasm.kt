@@ -154,8 +154,9 @@ internal object Wasm {
             return i32Load(i32Const(address))
         }
 
-        fun i32Load(address: WasmInstruction.Folded): WasmInstruction.Folded {
-            return WasmInstruction.Folded.I32Load(address = address)
+        // TODO: make alignment required
+        fun i32Load(address: WasmInstruction.Folded, offset: Int = 0, alignment: Int? = null): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Load(offset = offset, alignment = alignment, address = address)
         }
 
         fun i32Multiply(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
@@ -170,6 +171,7 @@ internal object Wasm {
             return i32Store(i32Const(address), i32Const(value))
         }
 
+        // TODO: make alignment required
         fun i32Store(address: WasmInstruction.Folded, value: WasmInstruction.Folded, offset: Int = 0, alignment: Int? = null): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32Store(offset = offset, alignment = alignment, address = address, value = value)
         }
@@ -332,7 +334,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class I32DivideUnsigned(val left: Folded, val right: Folded): Folded()
         class I32GreaterThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
         class I32LessThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
-        class I32Load(val address: Folded): Folded()
+        class I32Load(val offset: Int, val alignment: Int?, val address: Folded): Folded()
         class I32Multiply(val left: Folded, val right: Folded): Folded()
         class I32NotEqual(val left: Folded, val right: Folded): Folded()
         class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
