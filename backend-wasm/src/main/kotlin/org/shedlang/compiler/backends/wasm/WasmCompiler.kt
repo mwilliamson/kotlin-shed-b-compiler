@@ -86,24 +86,34 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     results = listOf(WasmData.genericValueType),
                 )
 
-                val positionalArgLocals = (0 until instruction.positionalArgumentCount).map { argIndex -> "arg_$argIndex" }
-                val namedArgLocals = instruction.namedArgumentNames.map { argName -> "arg_${argName.value}" }
-                val argLocals = positionalArgLocals + namedArgLocals
-
-                val (context2, reversedArgs) = argLocals
-                    .foldRight(Pair(context, persistentListOf<String>())) { argLocal, (currentContext, args) ->
-                        val (currentContext2, arg) = currentContext.addLocal(argLocal)
-                        val currentContext3 = currentContext2.addInstruction(Wasm.I.localSet(arg))
-                        Pair(currentContext3, args.add(arg))
+                val (context2, positionalArgLocals) = (0 until instruction.positionalArgumentCount)
+                    .fold(Pair(context, persistentListOf<String>())) { (currentContext, args), argIndex ->
+                        val (currentContext2, arg) = currentContext.addLocal("arg_$argIndex")
+                        Pair(currentContext2, args.add(arg))
                     }
 
-                val (context3, callee) = context2.addLocal("callee")
-                val context4 = context3.addInstruction(Wasm.I.localSet(callee))
+                val (context3, namedArgLocals) = instruction.namedArgumentNames
+                    .fold(Pair(context2, persistentListOf<String>())) { (currentContext, args), argName ->
+                        val (currentContext2, arg) = currentContext.addLocal("arg_${argName.value}")
+                        Pair(currentContext2, args.add(arg))
+                    }
 
-                return context4.addInstruction(Wasm.I.callIndirect(
+                val context4 = (positionalArgLocals + namedArgLocals).foldRight(context3) { local, currentContext ->
+                    currentContext.addInstruction(Wasm.I.localSet(local))
+                }
+
+                val (context5, callee) = context4.addLocal("callee")
+                val context6 = context5.addInstruction(Wasm.I.localSet(callee))
+
+                val sortedNamedArgLocals = instruction.namedArgumentNames.zip(namedArgLocals)
+                    .sortedBy { (argName, _) -> argName }
+                    .map { (_, local) -> local }
+                val argLocals = positionalArgLocals + sortedNamedArgLocals
+
+                return context6.addInstruction(Wasm.I.callIndirect(
                     type = wasmFuncType.identifier(),
                     tableIndex = Wasm.I.localGet(callee),
-                    args = reversedArgs.reversed().map { arg -> Wasm.I.localGet(arg) }
+                    args = argLocals.map { argLocal -> Wasm.I.localGet(argLocal) },
                 ))
             }
 
@@ -113,8 +123,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                 val params = mutableListOf<WasmParam>()
                 val paramBindings = mutableListOf<Pair<Int, String>>()
-                // TODO: Sort named parameters
-                for (parameter in (instruction.positionalParameters + instruction.namedParameters)) {
+                for (parameter in (instruction.positionalParameters + instruction.namedParameters.sortedBy { parameter -> parameter.name })) {
                     val identifier = "param_${parameter.name.value}"
                     params.add(WasmParam(identifier = identifier, type = WasmData.genericValueType))
                     paramBindings.add(parameter.variableId to identifier)

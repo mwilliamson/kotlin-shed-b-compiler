@@ -1080,6 +1080,59 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun namedArgumentsCanBeCalledInDifferentOrderFromFunctionDefinition() {
+        val parameterA = parameter("a")
+        val parameterB = parameter("b")
+        val parameterC = parameter("c")
+        val referenceA = variableReference("a")
+        val referenceB = variableReference("b")
+        val referenceC = variableReference("c")
+        val function = function(
+            name = "f",
+            namedParameters = listOf(parameterA, parameterC, parameterB),
+            body = listOf(
+                expressionStatementReturn(
+                    binaryOperation(
+                        BinaryOperator.MULTIPLY,
+                        referenceC,
+                        binaryOperation(
+                            BinaryOperator.SUBTRACT,
+                            referenceA,
+                            referenceB,
+                        ),
+                    ),
+                ),
+            )
+        )
+        val functionReference = variableReference("f")
+        val call = call(
+            receiver = functionReference,
+            namedArguments = listOf(
+                callNamedArgument("b", literalInt(5)),
+                callNamedArgument("c", literalInt(100)),
+                callNamedArgument("a", literalInt(1)),
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            functionReference.nodeId to function,
+            referenceA.nodeId to parameterA,
+            referenceB.nodeId to parameterB,
+            referenceC.nodeId to parameterC,
+        ))
+        val types = createTypes(
+            expressionTypes = mapOf(
+                functionReference.nodeId to functionType()
+            )
+        )
+
+        val loader = loader(references = references, types = types)
+        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(-400))
+    }
+
+    @Test
     fun functionDeclarationCanMixPositionalAndNamedArguments() {
         val firstParameter = parameter("first")
         val secondParameter = parameter("second")
