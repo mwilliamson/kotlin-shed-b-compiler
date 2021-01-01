@@ -159,14 +159,16 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                 S.identifier(instruction.identifier),
                 S.elements(instruction.args.map(::instructionToSExpression))
             )
-            is WasmInstruction.Folded.CallIndirect -> S.list(
-                S.symbol("call_indirect"),
+            is WasmInstruction.Folded.CallIndirect ->
                 S.list(
-                    S.symbol("type"),
-                    S.identifier(instruction.type),
-                ),
-                instructionToSExpression(instruction.tableIndex),
-            )
+                    S.symbol("call_indirect"),
+                    S.list(
+                        S.symbol("type"),
+                        S.identifier(instruction.type),
+                    ),
+                )
+                    .addAll(instruction.args.map { arg -> instructionToSExpression(arg) })
+                    .add(instructionToSExpression(instruction.tableIndex))
             is WasmInstruction.Folded.Drop -> S.list(
                 S.symbol("drop"),
                 instructionToSExpression(instruction.value),
@@ -331,6 +333,10 @@ internal data class SList(val elements: List<SExpression>) : SExpression {
         builder.append(end)
         builder.append(")")
         return builder.toString()
+    }
+
+    fun add(newElement: SExpression): SList {
+        return addAll(listOf(newElement))
     }
 
     fun addAll(newElements: List<SExpression>): SList {

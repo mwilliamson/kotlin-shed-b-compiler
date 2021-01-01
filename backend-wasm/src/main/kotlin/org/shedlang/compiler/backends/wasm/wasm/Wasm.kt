@@ -83,8 +83,8 @@ internal object Wasm {
             return WasmInstruction.Folded.Call(identifier = identifier, args = args)
         }
 
-        fun callIndirect(type: String, tableIndex: WasmInstruction.Folded): WasmInstruction.Folded {
-            return WasmInstruction.Folded.CallIndirect(type = type, tableIndex = tableIndex)
+        fun callIndirect(type: String, tableIndex: WasmInstruction.Folded, args: List<WasmInstruction.Folded>): WasmInstruction.Folded {
+            return WasmInstruction.Folded.CallIndirect(type = type, tableIndex = tableIndex, args = args)
         }
 
         val drop = WasmInstruction.Drop
@@ -324,7 +324,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 
     sealed class Folded: WasmInstruction() {
         class Call(val identifier: String, val args: List<Folded>): Folded()
-        class CallIndirect(val type: String, val tableIndex: WasmInstruction.Folded): Folded()
+        class CallIndirect(val type: String, val tableIndex: Folded, val args: List<Folded>): Folded()
         class Drop(val value: Folded): Folded()
         class I32Add(val left: Folded, val right: Folded): Folded()
         class I32And(val left: Folded, val right: Folded): Folded()

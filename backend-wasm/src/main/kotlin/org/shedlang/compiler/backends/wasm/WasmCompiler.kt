@@ -81,30 +81,50 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
             is Call -> {
                 val wasmFuncType = WasmFuncType(
-                    params = listOf(),
+                    params = (0 until instruction.positionalArgumentCount).map { WasmData.genericValueType },
                     results = listOf(WasmData.genericValueType),
                 )
-                val (context2, callee) = context.addLocal("callee")
-                return context2
-                    .addInstruction(Wasm.I.localSet(callee))
-                    .addInstruction(Wasm.I.callIndirect(
-                        type = wasmFuncType.identifier(),
-                        tableIndex = Wasm.I.localGet(callee),
-                    ))
+
+                val (context2, reversedArgs) = (instruction.positionalArgumentCount - 1 downTo 0)
+                    .fold(Pair(context, persistentListOf<String>())) { (currentContext, args), argIndex ->
+                        val (currentContext2, arg) = currentContext.addLocal("arg_$argIndex")
+                        val currentContext3 = currentContext2.addInstruction(Wasm.I.localSet(arg))
+                        Pair(currentContext3, args.add(arg))
+                    }
+
+                val (context3, callee) = context2.addLocal("callee")
+                val context4 = context3.addInstruction(Wasm.I.localSet(callee))
+
+                return context4.addInstruction(Wasm.I.callIndirect(
+                    type = wasmFuncType.identifier(),
+                    tableIndex = Wasm.I.localGet(callee),
+                    args = reversedArgs.reversed().map { arg -> Wasm.I.localGet(arg) }
+                ))
             }
 
             is DefineFunction -> {
                 // TODO: uniquify name
                 val functionName = instruction.name
 
+                val params = instruction.positionalParameters.map { parameter ->
+                    WasmParam(identifier = "param_${parameter.name.value}", type = WasmData.genericValueType)
+                }
+                val initialFunctionContext = WasmFunctionContext.initial().bindVariables(
+                    instruction.positionalParameters.zip(params) { shedParam, wasmParam ->
+                        shedParam.variableId to wasmParam.identifier
+                    },
+                )
+
                 val functionContext = compileInstructions(
                     instruction.bodyInstructions,
-                    context = WasmFunctionContext.initial(),
+                    context = initialFunctionContext,
                 )
 
                 val context2 = context.mergeGlobalContext(functionContext.globalContext)
+
                 val (context3, functionIndex) = context2.addFunction(Wasm.function(
                     identifier = functionName,
+                    params = params,
                     results = listOf(WasmData.genericValueType),
                     body = functionContext.instructions,
                 ))
@@ -492,6 +512,13 @@ internal data class WasmFunctionContext(
         val local = "local_${name}_${nextLocalIndex}"
         val newContext = copy(locals = locals.add(local), nextLocalIndex = nextLocalIndex + 1)
         return Pair(newContext, local)
+    }
+
+    fun bindVariables(variables: List<Pair<Int, String>>): WasmFunctionContext {
+        return copy(variableIdToLocal = variables.fold(
+            variableIdToLocal,
+            { acc, (variableId, name) -> acc.put(variableId, name) }
+        ))
     }
 
     fun variableToLocal(variableId: Int, name: Identifier): Pair<WasmFunctionContext, String> {
