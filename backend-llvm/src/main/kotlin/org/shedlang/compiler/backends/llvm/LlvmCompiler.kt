@@ -305,7 +305,7 @@ internal class Compiler(
                 val llvmParameterTypes = llvmParameters.map(LlvmParameter::type)
 
 
-                val freeVariables = closures.findFreeVariables(instruction)
+                val freeVariables = findFreeVariables(instruction)
 
                 val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, generateName("environment"))
                 val bodyContextWithEnvironment = closures.loadFreeVariables(
