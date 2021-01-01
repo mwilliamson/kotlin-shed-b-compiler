@@ -80,14 +80,19 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is Call -> {
+                val argumentCount = instruction.positionalArgumentCount + instruction.namedArgumentNames.size
                 val wasmFuncType = WasmFuncType(
-                    params = (0 until instruction.positionalArgumentCount).map { WasmData.genericValueType },
+                    params = (0 until argumentCount).map { WasmData.genericValueType },
                     results = listOf(WasmData.genericValueType),
                 )
 
-                val (context2, reversedArgs) = (instruction.positionalArgumentCount - 1 downTo 0)
-                    .fold(Pair(context, persistentListOf<String>())) { (currentContext, args), argIndex ->
-                        val (currentContext2, arg) = currentContext.addLocal("arg_$argIndex")
+                val positionalArgLocals = (0 until instruction.positionalArgumentCount).map { argIndex -> "arg_$argIndex" }
+                val namedArgLocals = instruction.namedArgumentNames.map { argName -> "arg_${argName.value}" }
+                val argLocals = positionalArgLocals + namedArgLocals
+
+                val (context2, reversedArgs) = argLocals
+                    .foldRight(Pair(context, persistentListOf<String>())) { argLocal, (currentContext, args) ->
+                        val (currentContext2, arg) = currentContext.addLocal(argLocal)
                         val currentContext3 = currentContext2.addInstruction(Wasm.I.localSet(arg))
                         Pair(currentContext3, args.add(arg))
                     }
@@ -106,14 +111,15 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 // TODO: uniquify name
                 val functionName = instruction.name
 
-                val params = instruction.positionalParameters.map { parameter ->
-                    WasmParam(identifier = "param_${parameter.name.value}", type = WasmData.genericValueType)
+                val params = mutableListOf<WasmParam>()
+                val paramBindings = mutableListOf<Pair<Int, String>>()
+                // TODO: Sort named parameters
+                for (parameter in (instruction.positionalParameters + instruction.namedParameters)) {
+                    val identifier = "param_${parameter.name.value}"
+                    params.add(WasmParam(identifier = identifier, type = WasmData.genericValueType))
+                    paramBindings.add(parameter.variableId to identifier)
                 }
-                val initialFunctionContext = WasmFunctionContext.initial().bindVariables(
-                    instruction.positionalParameters.zip(params) { shedParam, wasmParam ->
-                        shedParam.variableId to wasmParam.identifier
-                    },
-                )
+                val initialFunctionContext = WasmFunctionContext.initial().bindVariables(paramBindings)
 
                 val functionContext = compileInstructions(
                     instruction.bodyInstructions,
