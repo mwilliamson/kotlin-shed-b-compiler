@@ -1,11 +1,12 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
+import org.shedlang.compiler.backends.wasm.LateIndex
 import org.shedlang.compiler.nullableToList
 import java.lang.StringBuilder
 import java.lang.UnsupportedOperationException
 import java.math.BigInteger
 
-internal object Wat {
+internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
     fun serialise(module: WasmModule): String {
         return moduleToSExpression(module).serialise()
     }
@@ -147,7 +148,10 @@ internal object Wat {
                 instructionToSExpression(instruction.left),
                 instructionToSExpression(instruction.right),
             )
-            is WasmInstruction.Folded.I32Const -> S.list(S.symbol("i32.const"), S.int(instruction.value))
+            is WasmInstruction.Folded.I32Const -> S.list(
+                S.symbol("i32.const"),
+                S.int(constValueToInt(instruction.value)),
+            )
             is WasmInstruction.Folded.I32DivideUnsigned -> S.list(
                 S.symbol("i32.div_u"),
                 instructionToSExpression(instruction.left),
@@ -211,6 +215,13 @@ internal object Wat {
                 instructionToSExpression(instruction.delta)
             )
             is WasmInstruction.Folded.MemorySize -> S.list(S.symbol("memory.size"))
+        }
+    }
+
+    private fun constValueToInt(value: WasmConstValue): Int {
+        return when (value) {
+            is WasmConstValue.I32 -> value.value
+            is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
         }
     }
 }

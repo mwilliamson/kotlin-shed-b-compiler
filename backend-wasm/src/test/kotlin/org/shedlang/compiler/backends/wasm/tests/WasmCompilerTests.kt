@@ -27,15 +27,12 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val image = loadModuleSet(moduleSet)
         val compiler = WasmCompiler(image = image, moduleSet = moduleSet)
 
-        val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial(memory = WasmMemory.EMPTY))
-        val memory1 = functionContext.memory
-        val (memory2, malloc) = generateMalloc(memory = memory1)
-        val (memory3, printFunc) = generatePrintFunc(memory = memory2)
+        val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial())
+        val (mallocGlobalContext, malloc) = generateMalloc()
+        val (printGlobalContext, printFunc) = generatePrintFunc()
         val stringEqualsFunc = generateStringEqualsFunc()
         val stringAddFunc = generateStringAddFunc()
         val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
-
-        val memory = memory3
 
         val testFunc = if (type == StringType) {
             Wasm.function(
@@ -54,28 +51,38 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             )
         }
 
+        val globalContext = WasmGlobalContext.merge(listOf(
+            functionContext.globalContext,
+            mallocGlobalContext,
+            printGlobalContext,
+        ))
+        val boundGlobalContext = globalContext.bind()
+
         val module = Wasm.module(
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
-            memoryPageCount = memory.pageCount,
+            memoryPageCount = boundGlobalContext.pageCount,
             start = "start",
-            dataSegments = memory.dataSegments,
+            dataSegments = boundGlobalContext.dataSegments,
             functions = listOf(
                 Wasm.function(
                     identifier = "start",
-                    body = memory.startInstructions,
+                    body = boundGlobalContext.startInstructions,
                 ),
                 testFunc,
                 *builtins.toTypedArray(),
             ),
         )
-        println(withLineNumbers(Wat.serialise(module)))
+        val wat = Wat(lateIndices = boundGlobalContext.lateIndices)
+        val watContents = wat.serialise(module)
+        println(withLineNumbers(watContents))
+
         if (type == StringType) {
 
             temporaryDirectory().use { directory ->
                 val watPath = directory.path.resolve("test.wat")
-                watPath.toFile().writeText(Wat.serialise(module))
+                watPath.toFile().writeText(watContents)
 
                 val wasmPath = directory.path.resolve("test.wasm")
                 watToWasm(watPath, wasmPath)
@@ -96,7 +103,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         } else {
             temporaryDirectory().use { directory ->
                 val watPath = directory.path.resolve("test.wat")
-                watPath.toFile().writeText(Wat.serialise(module))
+                watPath.toFile().writeText(watContents)
 
                 val wasmPath = directory.path.resolve("test.wasm")
                 watToWasm(watPath, wasmPath)

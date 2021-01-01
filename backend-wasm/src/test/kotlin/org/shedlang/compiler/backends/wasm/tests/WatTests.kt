@@ -12,7 +12,7 @@ class WatTests {
     fun moduleHasMemoryDeclarations() {
         val module = Wasm.module()
 
-        val expression = Wat.moduleToSExpression(module)
+        val expression = wat().moduleToSExpression(module)
 
         assertThat(expression, equalTo(
             S.list(
@@ -37,7 +37,7 @@ class WatTests {
             ),
         )
 
-        val expression = Wat.moduleToSExpression(module)
+        val expression = wat().moduleToSExpression(module)
 
         assertThat(expression, equalTo(
             S.list(
@@ -69,7 +69,7 @@ class WatTests {
             results = listOf(Wasm.T.i32),
         )
 
-        val expression = Wat.importToSExpression(import)
+        val expression = wat().importToSExpression(import)
 
         assertThat(expression, equalTo(
             S.list(
@@ -93,7 +93,7 @@ class WatTests {
             bytes = "Hello, world!\n".toByteArray(),
         )
 
-        val expression = Wat.dataSegmentToSExpression(dataSegment)
+        val expression = wat().dataSegmentToSExpression(dataSegment)
 
         assertThat(expression, equalTo(
             S.list(
@@ -113,7 +113,7 @@ class WatTests {
             ),
         )
 
-        val expression = Wat.functionToSExpression(func)
+        val expression = wat().functionToSExpression(func)
 
         assertThat(expression, equalTo(
             S.list(
@@ -136,7 +136,7 @@ class WatTests {
             ),
         )
 
-        val expression = Wat.functionToSExpression(func)
+        val expression = wat().functionToSExpression(func)
 
         assertThat(expression, equalTo(
             S.list(
@@ -159,7 +159,7 @@ class WatTests {
             ),
         )
 
-        val expression = Wat.functionToSExpression(func)
+        val expression = wat().functionToSExpression(func)
 
         assertThat(expression, equalTo(
             S.list(
@@ -183,7 +183,7 @@ class WatTests {
             ),
         )
 
-        val expression = Wat.functionToSExpression(func)
+        val expression = wat().functionToSExpression(func)
 
         assertThat(expression, equalTo(
             S.list(
@@ -196,6 +196,8 @@ class WatTests {
             ),
         ))
     }
+
+    private fun wat() = Wat(lateIndices = mapOf())
 }
 
 class SExpressionTests {

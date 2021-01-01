@@ -1,9 +1,6 @@
 package org.shedlang.compiler.backends.wasm
 
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
+import kotlinx.collections.immutable.*
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
@@ -55,7 +52,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             ),
         )
 
-        val wat = Wat.serialise(wasm)
+        val wat = Wat(lateIndices = persistentMapOf()).serialise(wasm)
         return CompilationResult(wat = wat)
     }
 
@@ -190,8 +187,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     is IrString -> {
                         val bytes = value.value.toByteArray(Charsets.UTF_8)
 
-                        val (context2, memoryIndex) = context.staticAllocI32(bytes.size)
-                        val (context3, _) = context2.staticAllocString(value.value)
+                        val (context2, memoryIndex) = context.addStaticI32(bytes.size)
+                        val (context3, _) = context2.addStaticUtf8String(value.value)
 
                         return context3.addInstruction(Wasm.I.i32Const(memoryIndex))
                     }
@@ -297,6 +294,90 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     }
 }
 
+private var nextLateIndexKey = 1
+
+internal fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
+
+internal data class LateIndex(private val key: Int)
+
+internal data class WasmGlobalContext(
+    private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
+) {
+    companion object {
+        fun initial() = WasmGlobalContext(staticData = persistentListOf())
+
+        fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
+            return WasmGlobalContext(
+                staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
+            )
+        }
+    }
+
+    class Bound(
+        internal val pageCount: Int,
+        internal val dataSegments: List<WasmDataSegment>,
+        internal val startInstructions: List<WasmInstruction>,
+        internal val lateIndices: Map<LateIndex, Int>,
+    )
+
+    fun bind(): Bound {
+        var size = 0
+        val dataSegments = mutableListOf<WasmDataSegment>()
+        val startInstructions = mutableListOf<WasmInstruction>()
+        val lateIndices = mutableMapOf<LateIndex, Int>()
+
+        fun align(alignment: Int) {
+            size = roundUp(size, alignment)
+        }
+
+        for ((lateIndex, data) in staticData) {
+            if (data.alignment != null) {
+                align(data.alignment)
+            }
+            lateIndices[lateIndex] = size
+
+            when (data) {
+                is WasmStaticData.I32 -> {
+                    if (data.initial != null) {
+                        startInstructions.add(Wasm.I.i32Store(Wasm.I.i32Const(size), data.initial))
+                    }
+                    size += 4
+                }
+                is WasmStaticData.Utf8String -> {
+                    val bytes = data.value.toByteArray(Charsets.UTF_8)
+                    dataSegments.add(WasmDataSegment(offset = size, bytes = bytes))
+                    size += bytes.size
+                }
+            }
+        }
+
+        return Bound(
+            pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
+            dataSegments = dataSegments,
+            startInstructions = startInstructions,
+            lateIndices = lateIndices,
+        )
+    }
+
+    fun addStaticI32(initial: Int) = addStaticI32(initial = Wasm.I.i32Const(initial))
+
+    fun addStaticI32(initial: WasmInstruction.Folded? = null): Pair<WasmGlobalContext, LateIndex> {
+        return addStaticData(WasmStaticData.I32(initial = initial))
+    }
+
+    fun addStaticUtf8String(value: String): Pair<WasmGlobalContext, LateIndex> {
+        return addStaticData(WasmStaticData.Utf8String(value))
+    }
+
+    private fun addStaticData(data: WasmStaticData): Pair<WasmGlobalContext, LateIndex> {
+        val ref = nextLateIndex()
+        val newContext = copy(
+            staticData = staticData.add(Pair(ref, data)),
+        )
+        return Pair(newContext, ref)
+    }
+}
+
 private const val initialLocalIndex = 1
 
 internal data class WasmFunctionContext(
@@ -305,16 +386,16 @@ internal data class WasmFunctionContext(
     internal val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
     private val onLabel: PersistentMap<Int, PersistentList<WasmInstruction>>,
-    internal val memory: WasmMemory,
+    internal val globalContext: WasmGlobalContext,
 ) {
     companion object {
-        fun initial(memory: WasmMemory) = WasmFunctionContext(
+        fun initial() = WasmFunctionContext(
             instructions = persistentListOf(),
             nextLocalIndex = initialLocalIndex,
             locals = persistentListOf(),
             variableIdToLocal = persistentMapOf(),
             onLabel = persistentMapOf(),
-            memory = memory,
+            globalContext = WasmGlobalContext.initial(),
         )
     }
 
@@ -355,18 +436,13 @@ internal data class WasmFunctionContext(
         return onLabel.getOrDefault(label, persistentListOf())
     }
 
-    fun staticAllocString(value: String): Pair<WasmFunctionContext, Int> {
-        val (newMemory, index) = memory.staticAllocString(value)
-        return Pair(copy(memory = newMemory), index)
+    fun addStaticUtf8String(value: String): Pair<WasmFunctionContext, LateIndex> {
+        val (newGlobalContext, index) = globalContext.addStaticUtf8String(value)
+        return Pair(copy(globalContext = newGlobalContext), index)
     }
 
-    fun staticAllocI32(): Pair<WasmFunctionContext, Int> {
-        val (newMemory, index) = memory.staticAllocI32()
-        return Pair(copy(memory = newMemory), index)
-    }
-
-    fun staticAllocI32(value: Int): Pair<WasmFunctionContext, Int> {
-        val (newMemory, index) = memory.staticAllocI32(value)
-        return Pair(copy(memory = newMemory), index)
+    fun addStaticI32(value: Int): Pair<WasmFunctionContext, LateIndex> {
+        val (newGlobalContext, index) = globalContext.addStaticI32(value)
+        return Pair(copy(globalContext = newGlobalContext), index)
     }
 }

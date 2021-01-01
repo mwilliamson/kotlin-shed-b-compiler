@@ -1,5 +1,7 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
+import org.shedlang.compiler.backends.wasm.LateIndex
+
 internal object Wasm {
     fun module(
         imports: List<WasmImport> = listOf(),
@@ -117,7 +119,11 @@ internal object Wasm {
         }
 
         fun i32Const(value: Int): WasmInstruction.Folded {
-            return WasmInstruction.Folded.I32Const(value)
+            return WasmInstruction.Folded.I32Const(WasmConstValue.I32(value))
+        }
+
+        fun i32Const(value: LateIndex): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Const(WasmConstValue.LateIndex(value))
         }
 
         fun i32DivideUnsigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
@@ -130,6 +136,10 @@ internal object Wasm {
 
         fun i32LessThanOrEqualUnsigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32LessThanOrEqualUnsigned(left = left, right = right)
+        }
+
+        fun i32Load(address: LateIndex): WasmInstruction.Folded {
+            return i32Load(i32Const(address))
         }
 
         fun i32Load(address: Int): WasmInstruction.Folded {
@@ -289,7 +299,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class Drop(val value: Folded): Folded()
         class I32Add(val left: Folded, val right: Folded): Folded()
         class I32And(val left: Folded, val right: Folded): Folded()
-        class I32Const(val value: Int): Folded()
+        class I32Const(val value: WasmConstValue): Folded()
         class I32DivideUnsigned(val left: Folded, val right: Folded): Folded()
         class I32GreaterThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
         class I32LessThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
@@ -309,4 +319,9 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class MemoryGrow(val delta: Folded): Folded()
         object MemorySize: Folded()
     }
+}
+
+internal sealed class WasmConstValue {
+    data class I32(val value: Int): WasmConstValue()
+    data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
 }
