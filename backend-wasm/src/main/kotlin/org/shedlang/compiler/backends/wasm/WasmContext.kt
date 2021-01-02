@@ -21,7 +21,7 @@ private fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
 
 internal data class LateIndex(private val key: Int)
 
-internal data class WasmGlobalContext(
+internal data class WasmGlobalContext private constructor(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
     private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
@@ -296,4 +296,10 @@ internal data class WasmFunctionContext(
             body = instructions,
         )
     }
+}
+
+private sealed class WasmStaticData(val alignment: Int?) {
+    data class I32(val initial: WasmInstruction.Folded?): WasmStaticData(alignment = 4)
+    data class Utf8String(val value: String): WasmStaticData(alignment = null)
+    data class Bytes(val size: Int, private val bytesAlignment: Int?): WasmStaticData(alignment = bytesAlignment)
 }
