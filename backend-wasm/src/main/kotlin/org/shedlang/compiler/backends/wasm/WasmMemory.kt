@@ -7,5 +7,3 @@ internal sealed class WasmStaticData(val alignment: Int?) {
     internal data class Utf8String(val value: String): WasmStaticData(alignment = null)
     internal data class Bytes(val size: Int, private val bytesAlignment: Int?): WasmStaticData(alignment = bytesAlignment)
 }
-
-const val WASM_PAGE_SIZE = 65536

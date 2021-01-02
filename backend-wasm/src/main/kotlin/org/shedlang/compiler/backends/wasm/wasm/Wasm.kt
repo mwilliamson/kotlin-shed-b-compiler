@@ -368,3 +368,5 @@ internal sealed class WasmConstValue {
     data class I32(val value: Int): WasmConstValue()
     data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
 }
+
+const val WASM_PAGE_SIZE = 65536

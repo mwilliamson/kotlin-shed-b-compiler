@@ -1,8 +1,8 @@
 package org.shedlang.compiler.backends.wasm.runtime
 
-import org.shedlang.compiler.backends.wasm.WASM_PAGE_SIZE
 import org.shedlang.compiler.backends.wasm.WasmGlobalContext
 import org.shedlang.compiler.backends.wasm.WasmNaming
+import org.shedlang.compiler.backends.wasm.wasm.WASM_PAGE_SIZE
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
