@@ -7,6 +7,8 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
+import org.shedlang.compiler.backends.wasm.runtime.callMalloc
+import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm

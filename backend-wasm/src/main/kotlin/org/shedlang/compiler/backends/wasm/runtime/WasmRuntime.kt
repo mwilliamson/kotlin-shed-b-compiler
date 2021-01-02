@@ -1,4 +1,6 @@
-package org.shedlang.compiler.backends.wasm
+package org.shedlang.compiler.backends.wasm.runtime
+
+import org.shedlang.compiler.backends.wasm.WasmGlobalContext
 
 internal fun compileRuntime(): WasmGlobalContext {
     return WasmGlobalContext.merge(listOf(

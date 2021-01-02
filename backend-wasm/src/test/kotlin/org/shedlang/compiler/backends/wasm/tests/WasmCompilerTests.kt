@@ -9,6 +9,7 @@ import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.*
+import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat

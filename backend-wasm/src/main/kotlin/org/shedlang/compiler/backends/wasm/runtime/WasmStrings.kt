@@ -1,6 +1,8 @@
-package org.shedlang.compiler.backends.wasm
+package org.shedlang.compiler.backends.wasm.runtime
 
 import org.shedlang.compiler.backends.wasm.WasmData.booleanType
+import org.shedlang.compiler.backends.wasm.WasmGlobalContext
+import org.shedlang.compiler.backends.wasm.WasmNaming
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
