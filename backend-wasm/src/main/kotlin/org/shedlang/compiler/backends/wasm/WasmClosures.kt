@@ -39,40 +39,24 @@ internal object WasmClosures {
             params = params,
             results = listOf(WasmData.genericValueType),
         ))
-        return compileCreate(
-            functionIndex = Wasm.I.i32Const(functionIndex),
-            freeVariables = freeVariables,
-            context = context3,
-        )
-    }
-
-    private fun compileCreate(
-        functionIndex: WasmInstruction.Folded,
-        freeVariables: List<LocalLoad>,
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, String> {
-        val (context2, closure) = context.addLocal("closure")
-
-        val context3 = context2.addInstruction(Wasm.I.localSet(
+        val (context4, closure) = context3.addLocal("closure")
+        val context5 = context4.addInstruction(Wasm.I.localSet(
             closure,
             callMalloc(
                 size = Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size),
                 alignment = Wasm.I.i32Const(WasmData.closureAlignment),
             ),
         ))
-
-        val context4 = compileFreeVariablesStore(
+        val context6 = compileFreeVariablesStore(
             closure = Wasm.I.localGet(closure),
             freeVariables = freeVariables,
-            context = context3,
+            context = context5,
         )
-
-        val context5 = context4.addInstruction(Wasm.I.i32Store(
+        val context7 = context6.addInstruction(Wasm.I.i32Store(
             Wasm.I.localGet(closure),
-            functionIndex,
+            value = Wasm.I.i32Const(functionIndex),
         ))
-
-        return Pair(context5, closure)
+        return Pair(context7, closure)
     }
 
     internal fun compileCall(
