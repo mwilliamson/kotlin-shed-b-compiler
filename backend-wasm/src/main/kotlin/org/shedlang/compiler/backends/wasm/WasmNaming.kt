@@ -13,6 +13,8 @@ internal object WasmNaming {
     private fun serialiseModuleName(moduleName: ModuleName) =
         moduleName.joinToString("_") { part -> part.value }
 
+    val closurePointer = "shed_closure"
+
     object Runtime {
         val malloc = "shed_malloc"
         val heapPointer = "shed_malloc__heap_pointer"

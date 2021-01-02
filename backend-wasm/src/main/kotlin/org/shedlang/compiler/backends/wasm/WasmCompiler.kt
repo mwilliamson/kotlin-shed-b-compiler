@@ -380,7 +380,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val freeVariables = findFreeVariables(instruction)
 
         val params = mutableListOf<WasmParam>()
-        params.add(WasmParam("shed_closure", type = WasmData.closurePointerType))
+        params.add(WasmParam(WasmNaming.closurePointer, type = WasmData.closurePointerType))
 
         val paramBindings = mutableListOf<Pair<Int, String>>()
         for (parameter in (instruction.positionalParameters + instruction.namedParameters.sortedBy { parameter -> parameter.name })) {
@@ -391,18 +391,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         val functionContext1 = WasmFunctionContext.initial().bindVariables(paramBindings)
 
-        val functionContext2 = freeVariables.foldIndexed(functionContext1) { freeVariableIndex, currentContext, freeVariable ->
-            val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
-
-            currentContext2.addInstruction(Wasm.I.localSet(
-                local,
-                Wasm.I.i32Load(
-                    address = Wasm.I.localGet("shed_closure"),
-                    offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
-                    alignment = WasmData.closureAlignment,
-                ),
-            ))
-        }
+        val functionContext2 = WasmClosures.compileFreeVariablesLoad(
+            freeVariables = freeVariables,
+            context = functionContext1,
+        )
 
         val functionContext3 = compileInstructions(
             instruction.bodyInstructions,

@@ -15,25 +15,19 @@ internal object WasmClosures {
     ): Pair<WasmFunctionContext, String> {
         val (context2, closure) = context.addLocal("closure")
 
-        val alignment = Integer.max(WasmData.FUNCTION_POINTER_SIZE, WasmData.VALUE_SIZE)
         val context3 = context2.addInstruction(Wasm.I.localSet(
             closure,
             callMalloc(
                 size = Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size),
-                alignment = Wasm.I.i32Const(alignment),
+                alignment = Wasm.I.i32Const(WasmData.closureAlignment),
             ),
         ))
 
-        val context4 = freeVariables.foldIndexed(context3) { freeVariableIndex, currentContext, freeVariable ->
-            val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
-
-            currentContext2.addInstruction(Wasm.I.i32Store(
-                address = Wasm.I.localGet(closure),
-                offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
-                value = Wasm.I.localGet(local),
-                alignment = alignment,
-            ))
-        }
+        val context4 = compileFreeVariablesStore(
+            closure = Wasm.I.localGet(closure),
+            freeVariables = freeVariables,
+            context = context3,
+        )
 
         val context5 = context4.addInstruction(Wasm.I.i32Store(
             Wasm.I.localGet(closure),
@@ -66,5 +60,40 @@ internal object WasmClosures {
             tableIndex = Wasm.I.i32Load(closurePointer),
             args = listOf(closurePointer) + args,
         ))
+    }
+
+    private fun compileFreeVariablesStore(
+        closure: WasmInstruction.Folded,
+        freeVariables: List<LocalLoad>,
+        context: WasmFunctionContext,
+    ): WasmFunctionContext {
+        return freeVariables.foldIndexed(context) { freeVariableIndex, currentContext, freeVariable ->
+            val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
+
+            currentContext2.addInstruction(Wasm.I.i32Store(
+                address = closure,
+                offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
+                value = Wasm.I.localGet(local),
+                alignment = WasmData.closureAlignment,
+            ))
+        }
+    }
+
+    internal fun compileFreeVariablesLoad(
+        freeVariables: List<LocalLoad>,
+        context: WasmFunctionContext
+    ): WasmFunctionContext {
+        return freeVariables.foldIndexed(context) { freeVariableIndex, currentContext, freeVariable ->
+            val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
+
+            currentContext2.addInstruction(Wasm.I.localSet(
+                local,
+                Wasm.I.i32Load(
+                    address = Wasm.I.localGet(WasmNaming.closurePointer),
+                    offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
+                    alignment = WasmData.closureAlignment,
+                ),
+            ))
+        }
     }
 }
