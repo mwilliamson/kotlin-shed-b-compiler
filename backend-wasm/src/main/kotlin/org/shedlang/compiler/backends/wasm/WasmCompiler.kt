@@ -416,47 +416,12 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             params = params,
             results = listOf(WasmData.genericValueType),
         ))
-        val (context4, closure) = compileCreateClosure(
+        val (context4, closure) = WasmClosures.compileCreate(
             functionIndex = Wasm.I.i32Const(functionIndex),
             freeVariables = freeVariables,
             context = context3,
         )
         return context4.addInstruction(Wasm.I.localGet(closure))
-    }
-
-    private fun compileCreateClosure(
-        functionIndex: WasmInstruction.Folded,
-        freeVariables: List<LocalLoad>,
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, String> {
-        val (context2, closure) = context.addLocal("closure")
-
-        val alignment = max(WasmData.FUNCTION_POINTER_SIZE, WasmData.VALUE_SIZE)
-        val context3 = context2.addInstruction(Wasm.I.localSet(
-            closure,
-            callMalloc(
-                size = Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size),
-                alignment = Wasm.I.i32Const(alignment),
-            ),
-        ))
-
-        val context4 = freeVariables.foldIndexed(context3) { freeVariableIndex, currentContext, freeVariable ->
-            val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
-
-            currentContext2.addInstruction(Wasm.I.i32Store(
-                address = Wasm.I.localGet(closure),
-                offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
-                value = Wasm.I.localGet(local),
-                alignment = alignment,
-            ))
-        }
-
-        val context5 = context4.addInstruction(Wasm.I.i32Store(
-            Wasm.I.localGet(closure),
-            functionIndex,
-        ))
-
-        return Pair(context5, closure)
     }
 
     private fun compileCall(
@@ -483,7 +448,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val (context5, callee) = context4.addLocal("callee")
         val context6 = context5.addInstruction(Wasm.I.localSet(callee))
 
-        return compileClosureCall(
+        return WasmClosures.compileCall(
             closurePointer = Wasm.I.localGet(callee),
             positionalArguments = positionalArgLocals.map(Wasm.I::localGet),
             namedArguments = namedArgumentNames.zip(namedArgLocals.map(Wasm.I::localGet)),
@@ -535,7 +500,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 ),
             ))
 
-            val (context3, closure) = compileCreateClosure(
+            val (context3, closure) = WasmClosures.compileCreate(
                 functionIndex = Wasm.I.i32Const(printFunction),
                 freeVariables = listOf(),
                 context2,
