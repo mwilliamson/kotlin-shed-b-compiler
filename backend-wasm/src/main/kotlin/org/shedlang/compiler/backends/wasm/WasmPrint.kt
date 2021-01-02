@@ -2,9 +2,8 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
 
-internal fun generatePrintFunc(): Pair<WasmGlobalContext, WasmFunction> {
+internal fun generatePrintFunc(): WasmGlobalContext {
     val global = WasmGlobalContext.initial()
     val (global2, stringContentsPointerMemoryIndex) = global.addStaticI32()
     val (global3, stringLengthMemoryIndex) = global2.addStaticI32()
@@ -37,5 +36,5 @@ internal fun generatePrintFunc(): Pair<WasmGlobalContext, WasmFunction> {
         ),
     )
 
-    return Pair(global4, func)
+    return global4.addStaticFunction(func)
 }

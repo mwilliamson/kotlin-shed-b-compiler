@@ -30,16 +30,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), context = it) }
             .addInstruction(Wasi.callProcExit())
 
-        val (mallocGlobalContext, malloc) = generateMalloc()
-        val (printGlobalContext, printFunc) = generatePrintFunc()
-        val stringEqualsFunc = generateStringEqualsFunc()
-        val stringAddFunc = generateStringAddFunc()
-        val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
-        val globalContext = WasmGlobalContext.merge(listOf(
-            startFunctionContext.globalContext,
-            mallocGlobalContext,
-            printGlobalContext,
-        ))
+        val globalContext = compileRuntime().merge(startFunctionContext.globalContext)
         val boundGlobalContext = globalContext.bind()
 
         val module = Wasm.module(
@@ -62,7 +53,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     identifier = WasmNaming.funcMainIdentifier,
                     exportName = "_start",
                 ),
-            ) + boundGlobalContext.functions + builtins,
+            ) + boundGlobalContext.functions,
         )
 
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices).serialise(module)
@@ -631,7 +622,7 @@ internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
-    private val functions: PersistentList<Pair<LateIndex, WasmFunction>>,
+    private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
 ) {
     companion object {
@@ -707,8 +698,10 @@ internal data class WasmGlobalContext(
         val table = mutableListOf<String>()
 
         functions.forEachIndexed { tableIndex, (lateIndex, function) ->
-            table.add(function.identifier)
-            lateIndices[lateIndex] = tableIndex
+            if (lateIndex != null) {
+                lateIndices[lateIndex] = table.size
+                table.add(function.identifier)
+            }
             boundFunctions.add(function)
         }
 
@@ -748,6 +741,10 @@ internal data class WasmGlobalContext(
                 null,
             )),
         )
+    }
+
+    fun addStaticFunction(function: WasmFunction): WasmGlobalContext {
+        return copy(functions = functions.add(Pair(null, function)))
     }
 
     fun addFunction(function: WasmFunction): Pair<WasmGlobalContext, LateIndex> {

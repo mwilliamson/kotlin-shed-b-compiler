@@ -2,11 +2,10 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.backends.wasm.WasmData.booleanType
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
-internal fun generateStringAddFunc(): WasmFunction {
-    return Wasm.function(
+internal fun generateStringAddFunc(): WasmGlobalContext {
+    val function = Wasm.function(
         WasmNaming.Runtime.stringAdd,
         params = listOf(Wasm.param("left", stringPointerType), Wasm.param("right", stringPointerType)),
         locals = listOf(
@@ -55,6 +54,7 @@ internal fun generateStringAddFunc(): WasmFunction {
             Wasm.I.localGet("result"),
         ),
     )
+    return WasmGlobalContext.initial().addStaticFunction(function)
 }
 
 private fun copyStringContents(sourceIdentifier: String): List<WasmInstruction> {
@@ -99,8 +99,8 @@ private fun copyStringContents(sourceIdentifier: String): List<WasmInstruction> 
     )
 }
 
-internal fun generateStringEqualsFunc(): WasmFunction {
-    return Wasm.function(
+internal fun generateStringEqualsFunc(): WasmGlobalContext {
+    val function = Wasm.function(
         WasmNaming.Runtime.stringEquals,
         params = listOf(Wasm.param("left", stringPointerType), Wasm.param("right", stringPointerType)),
         locals = listOf(Wasm.local("index", stringIndexType), Wasm.local("length", stringLengthType)),
@@ -169,6 +169,7 @@ internal fun generateStringEqualsFunc(): WasmFunction {
             ),
         ),
     )
+    return WasmGlobalContext.initial().addStaticFunction(function)
 }
 
 private fun loadStringLength(string: WasmInstruction.Folded): WasmInstruction.Folded {

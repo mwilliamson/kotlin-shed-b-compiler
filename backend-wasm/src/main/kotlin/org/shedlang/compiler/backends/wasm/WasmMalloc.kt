@@ -1,10 +1,9 @@
 package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
-internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
+internal fun generateMalloc(): WasmGlobalContext {
     val globalContext = WasmGlobalContext.initial()
         .addMutableGlobal(
             identifier = WasmNaming.Runtime.heapPointer,
@@ -94,7 +93,7 @@ internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
         ),
     )
 
-    return Pair(globalContext, malloc)
+    return globalContext.addStaticFunction(malloc)
 }
 
 internal fun callMalloc(size: WasmInstruction.Folded, alignment: WasmInstruction.Folded): WasmInstruction.Folded {

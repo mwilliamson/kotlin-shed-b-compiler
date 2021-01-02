@@ -28,11 +28,6 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val compiler = WasmCompiler(image = image, moduleSet = moduleSet)
 
         val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial())
-        val (mallocGlobalContext, malloc) = generateMalloc()
-        val (printGlobalContext, printFunc) = generatePrintFunc()
-        val stringEqualsFunc = generateStringEqualsFunc()
-        val stringAddFunc = generateStringAddFunc()
-        val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
 
         val testFunc = if (type == StringType) {
             functionContext.addInstruction(Wasm.I.call(WasmNaming.Runtime.print)).toFunction(
@@ -47,11 +42,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             )
         }
 
-        val globalContext = WasmGlobalContext.merge(listOf(
-            functionContext.globalContext,
-            mallocGlobalContext,
-            printGlobalContext,
-        ))
+        val globalContext = compileRuntime().merge(functionContext.globalContext)
         val boundGlobalContext = globalContext.bind()
 
         val module = Wasm.module(
@@ -70,7 +61,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                     body = boundGlobalContext.startInstructions,
                 ),
                 testFunc,
-            ) + boundGlobalContext.functions + builtins,
+            ) + boundGlobalContext.functions,
         )
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices)
         val watContents = wat.serialise(module)
