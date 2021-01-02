@@ -286,35 +286,17 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is TupleAccess -> {
-                return context.addInstruction(Wasm.I.i32Load(
-                    offset = instruction.elementIndex * WasmData.VALUE_SIZE,
-                    alignment = WasmData.VALUE_SIZE,
-                ))
+                return WasmTuples.compileAccess(
+                    elementIndex = instruction.elementIndex,
+                    context = context,
+                )
             }
 
             is TupleCreate -> {
-                val (context2, tuplePointer) = context.addLocal("tuple")
-                val (context3, element) = context2.addLocal("element")
-                val context4 = context3.addInstruction(Wasm.I.localSet(
-                    tuplePointer,
-                    callMalloc(
-                        size = Wasm.I.i32Const(WasmData.VALUE_SIZE * instruction.length),
-                        alignment = Wasm.I.i32Const(WasmData.VALUE_SIZE),
-                    ),
-                ))
-
-                val context5 = (instruction.length - 1 downTo 0).fold(context4) { currentContext, elementIndex ->
-                    currentContext
-                        .addInstruction(Wasm.I.localSet(element))
-                        .addInstruction(Wasm.I.i32Store(
-                            offset = elementIndex * WasmData.VALUE_SIZE,
-                            alignment = WasmData.VALUE_SIZE,
-                            address = Wasm.I.localGet(tuplePointer),
-                            value = Wasm.I.localGet(element),
-                        ))
-                }
-
-                return context5.addInstruction(Wasm.I.localGet(tuplePointer))
+                return WasmTuples.compileCreate(
+                    length = instruction.length,
+                    context = context,
+                )
             }
 
             is UnicodeScalarEquals -> {
