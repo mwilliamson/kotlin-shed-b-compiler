@@ -11,7 +11,7 @@ internal fun generatePrintFunc(): Pair<WasmGlobalContext, WasmFunction> {
     val (global4, nwrittenMemoryIndex) = global3.addStaticI32()
 
     val func = Wasm.function(
-        WasmCoreNames.print,
+        WasmNaming.Runtime.print,
         params = listOf(Wasm.param("string", Wasm.T.i32)),
         body = listOf(
             Wasm.I.i32Store(

@@ -7,7 +7,7 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
 internal fun generateStringAddFunc(): WasmFunction {
     return Wasm.function(
-        WasmCoreNames.stringAdd,
+        WasmNaming.Runtime.stringAdd,
         params = listOf(Wasm.param("left", stringPointerType), Wasm.param("right", stringPointerType)),
         locals = listOf(
             Wasm.local("left_length", stringLengthType),
@@ -101,7 +101,7 @@ private fun copyStringContents(sourceIdentifier: String): List<WasmInstruction> 
 
 internal fun generateStringEqualsFunc(): WasmFunction {
     return Wasm.function(
-        WasmCoreNames.stringEquals,
+        WasmNaming.Runtime.stringEquals,
         params = listOf(Wasm.param("left", stringPointerType), Wasm.param("right", stringPointerType)),
         locals = listOf(Wasm.local("index", stringIndexType), Wasm.local("length", stringLengthType)),
         results = listOf(booleanType),

@@ -269,15 +269,15 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is StringAdd -> {
-                return context.addInstruction(Wasm.I.call(WasmCoreNames.stringAdd))
+                return context.addInstruction(Wasm.I.call(WasmNaming.Runtime.stringAdd))
             }
 
             is StringEquals -> {
-                return context.addInstruction(Wasm.I.call(WasmCoreNames.stringEquals))
+                return context.addInstruction(Wasm.I.call(WasmNaming.Runtime.stringEquals))
             }
 
             is StringNotEqual -> {
-                return addBoolNot(context.addInstruction(Wasm.I.call(WasmCoreNames.stringEquals)))
+                return addBoolNot(context.addInstruction(Wasm.I.call(WasmNaming.Runtime.stringEquals)))
             }
 
             is Swap -> {
@@ -545,7 +545,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 results = listOf(WasmData.genericValueType),
                 body = listOf(
                     Wasm.I.call(
-                        identifier = WasmCoreNames.print,
+                        identifier = WasmNaming.Runtime.print,
                         args = listOf(Wasm.I.localGet("value")),
                     ),
                     WasmData.unitValue,

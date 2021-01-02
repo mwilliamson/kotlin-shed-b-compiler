@@ -35,7 +35,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
 
         val testFunc = if (type == StringType) {
-            functionContext.addInstruction(Wasm.I.call(WasmCoreNames.print)).toFunction(
+            functionContext.addInstruction(Wasm.I.call(WasmNaming.Runtime.print)).toFunction(
                 identifier = "test",
                 exportName = "_start",
             )
