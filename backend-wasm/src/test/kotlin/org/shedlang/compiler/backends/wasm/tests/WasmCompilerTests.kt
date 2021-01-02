@@ -1,6 +1,5 @@
 package org.shedlang.compiler.backends.wasm.tests
 
-import kotlinx.collections.immutable.persistentListOf
 import org.apiguardian.api.API
 import org.junit.jupiter.api.extension.ConditionEvaluationResult
 import org.junit.jupiter.api.extension.ExecutionCondition
@@ -10,7 +9,6 @@ import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.*
-import org.shedlang.compiler.backends.wasm.WasmGlobalContext.Companion.initial
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
@@ -37,19 +35,15 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val builtins = listOf(malloc, printFunc, stringAddFunc, stringEqualsFunc)
 
         val testFunc = if (type == StringType) {
-            Wasm.function(
-                "test",
+            functionContext.addInstruction(Wasm.I.call(WasmCoreNames.print)).toFunction(
+                identifier = "test",
                 exportName = "_start",
-                locals = functionContext.locals.map { local -> Wasm.local(local, Wasm.T.i32) },
-                body = functionContext.instructions.add(Wasm.I.call(WasmCoreNames.print)),
             )
         } else {
-            Wasm.function(
-                "test",
+            functionContext.toFunction(
+                identifier = "test",
                 exportName = "test",
                 results = listOf(Wasm.T.i32),
-                locals = functionContext.locals.map { local -> Wasm.local(local, Wasm.T.i32) },
-                body = functionContext.instructions,
             )
         }
 

@@ -178,12 +178,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                 val context5 = context4.mergeGlobalContext(functionContext3.globalContext)
 
-                val (context6, functionIndex) = context5.addFunction(Wasm.function(
+                val (context6, functionIndex) = context5.addFunction(functionContext3.toFunction(
                     identifier = functionName,
                     params = params,
                     results = listOf(WasmData.genericValueType),
-                    locals = functionContext3.locals.map { local -> Wasm.local(local, WasmData.genericValueType) },
-                    body = functionContext3.instructions,
                 ))
                 return context6
                     .addInstruction(Wasm.I.i32Store(
@@ -544,9 +542,9 @@ internal data class WasmGlobalContext(
 private const val initialLocalIndex = 1
 
 internal data class WasmFunctionContext(
-    internal val instructions: PersistentList<WasmInstruction>,
+    private val instructions: PersistentList<WasmInstruction>,
     private val nextLocalIndex: Int,
-    internal val locals: PersistentList<String>,
+    private val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
     private val onLabel: PersistentMap<Int, PersistentList<WasmInstruction>>,
     internal val globalContext: WasmGlobalContext,
@@ -624,5 +622,21 @@ internal data class WasmFunctionContext(
 
     fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {
         return copy(globalContext = this.globalContext.merge(globalContext))
+    }
+
+    fun toFunction(
+        identifier: String,
+        exportName: String? = null,
+        params: List<WasmParam> = listOf(),
+        results: List<WasmScalarType> = listOf(),
+    ): WasmFunction {
+        return Wasm.function(
+            identifier = identifier,
+            exportName = exportName,
+            params = params,
+            results = results,
+            locals = locals.map { local -> Wasm.local(local, WasmData.genericValueType) },
+            body = instructions,
+        )
     }
 }
