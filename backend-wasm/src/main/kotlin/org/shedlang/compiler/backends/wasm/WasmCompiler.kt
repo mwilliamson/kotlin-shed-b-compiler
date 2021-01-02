@@ -16,7 +16,6 @@ import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.Type
-import java.lang.Integer.max
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
@@ -374,46 +373,39 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     }
 
     private fun compileDefineFunction(instruction: DefineFunction, context: WasmFunctionContext): WasmFunctionContext {
-        // TODO: uniquify name
-        val functionName = instruction.name
-
         val freeVariables = findFreeVariables(instruction)
 
         val params = mutableListOf<WasmParam>()
         params.add(WasmParam(WasmNaming.closurePointer, type = WasmData.closurePointerType))
 
         val paramBindings = mutableListOf<Pair<Int, String>>()
-        for (parameter in (instruction.positionalParameters + instruction.namedParameters.sortedBy { parameter -> parameter.name })) {
+
+        fun compileParameter(parameter: DefineFunction.Parameter): WasmParam {
             val identifier = "param_${parameter.name.value}"
-            params.add(WasmParam(identifier = identifier, type = WasmData.genericValueType))
             paramBindings.add(parameter.variableId to identifier)
+            return WasmParam(identifier = identifier, type = WasmData.genericValueType)
         }
 
-        val functionContext1 = WasmFunctionContext.initial().bindVariables(paramBindings)
+        val positionalParams = instruction.positionalParameters.map(::compileParameter)
+        val namedParams = instruction.namedParameters.map { parameter ->
+            parameter.name to compileParameter(parameter)
+        }
 
-        val functionContext2 = WasmClosures.compileFreeVariablesLoad(
+        val (context2, closure) = WasmClosures.compileCreate(
+            functionName = instruction.name,
             freeVariables = freeVariables,
-            context = functionContext1,
+            compileBody = { currentContext ->
+                compileInstructions(
+                    instruction.bodyInstructions,
+                    context = currentContext,
+                )
+            },
+            positionalParams = positionalParams,
+            namedParams = namedParams,
+            paramBindings = paramBindings,
+            context = context,
         )
-
-        val functionContext3 = compileInstructions(
-            instruction.bodyInstructions,
-            context = functionContext2,
-        )
-
-        val context2 = context.mergeGlobalContext(functionContext3.globalContext)
-
-        val (context3, functionIndex) = context2.addFunction(functionContext3.toFunction(
-            identifier = functionName,
-            params = params,
-            results = listOf(WasmData.genericValueType),
-        ))
-        val (context4, closure) = WasmClosures.compileCreate(
-            functionIndex = Wasm.I.i32Const(functionIndex),
-            freeVariables = freeVariables,
-            context = context3,
-        )
-        return context4.addInstruction(Wasm.I.localGet(closure))
+        return context2.addInstruction(Wasm.I.localGet(closure))
     }
 
     private fun compileCall(
@@ -475,27 +467,21 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         } else if (moduleName == listOf(Identifier("Core"), Identifier("Io"))) {
             // TODO: implement this properly!
 
-            val (context2, printFunction) = context.addFunction(Wasm.function(
+            val (context2, closure) = WasmClosures.compileCreate(
                 // TODO: build identifiers in WasmNaming
-                identifier = "shed_module__core_io__print",
-                params = listOf(
-                    WasmParam("shed_closure", type = WasmData.closurePointerType),
-                    WasmParam("value", type = WasmData.genericValueType)
-                ),
-                results = listOf(WasmData.genericValueType),
-                body = listOf(
-                    Wasm.I.call(
+                functionName = "shed_module__core_io__print",
+                freeVariables = listOf(),
+                positionalParams = listOf(WasmParam("value", type = WasmData.genericValueType)),
+                namedParams = listOf(),
+                paramBindings = listOf(),
+                compileBody = { currentContext -> currentContext
+                    .addInstruction(Wasm.I.call(
                         identifier = WasmNaming.Runtime.print,
                         args = listOf(Wasm.I.localGet("value")),
-                    ),
-                    WasmData.unitValue,
-                ),
-            ))
-
-            val (context3, closure) = WasmClosures.compileCreate(
-                functionIndex = Wasm.I.i32Const(printFunction),
-                freeVariables = listOf(),
-                context2,
+                    ))
+                    .addInstruction(WasmData.unitValue)
+                },
+                context,
             )
 
             return moduleStore(
@@ -503,7 +489,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 exports = listOf(
                     Pair(Identifier("print"), Wasm.I.localGet(closure)),
                 ),
-                context = context3,
+                context = context2,
             )
         } else {
             throw CompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)

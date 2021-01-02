@@ -5,10 +5,48 @@ import org.shedlang.compiler.backends.wasm.runtime.callMalloc
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
+import org.shedlang.compiler.backends.wasm.wasm.WasmParam
 import org.shedlang.compiler.stackir.LocalLoad
 
 internal object WasmClosures {
     internal fun compileCreate(
+        functionName: String,
+        freeVariables: List<LocalLoad>,
+        positionalParams: List<WasmParam>,
+        namedParams: List<Pair<Identifier, WasmParam>>,
+        paramBindings: List<Pair<Int, String>>,
+        compileBody: (WasmFunctionContext) -> WasmFunctionContext,
+        context: WasmFunctionContext,
+    ): Pair<WasmFunctionContext, String> {
+        val params = listOf(WasmParam(WasmNaming.closurePointer, type = WasmData.closurePointerType)) +
+            positionalParams +
+            namedParams.sortedBy { (paramName, _) -> paramName }.map { (_, param) -> param }
+
+        val functionContext1 = WasmFunctionContext.initial().bindVariables(paramBindings)
+
+        val functionContext2 = compileFreeVariablesLoad(
+            freeVariables = freeVariables,
+            context = functionContext1,
+        )
+
+        val functionContext3 = compileBody(functionContext2)
+
+        val context2 = context.mergeGlobalContext(functionContext3.globalContext)
+
+        val (context3, functionIndex) = context2.addFunction(functionContext3.toFunction(
+            // TODO: uniquify name
+            identifier = functionName,
+            params = params,
+            results = listOf(WasmData.genericValueType),
+        ))
+        return compileCreate(
+            functionIndex = Wasm.I.i32Const(functionIndex),
+            freeVariables = freeVariables,
+            context = context3,
+        )
+    }
+
+    private fun compileCreate(
         functionIndex: WasmInstruction.Folded,
         freeVariables: List<LocalLoad>,
         context: WasmFunctionContext,
@@ -79,7 +117,7 @@ internal object WasmClosures {
         }
     }
 
-    internal fun compileFreeVariablesLoad(
+    private fun compileFreeVariablesLoad(
         freeVariables: List<LocalLoad>,
         context: WasmFunctionContext
     ): WasmFunctionContext {
