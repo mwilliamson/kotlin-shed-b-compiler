@@ -57,7 +57,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val module = Wasm.module(
             types = boundGlobalContext.types,
             imports = listOf(
-                Wasi.importFdWrite("fd_write"),
+                Wasi.importFdWrite(),
             ),
             globals = boundGlobalContext.globals,
             memoryPageCount = boundGlobalContext.pageCount,

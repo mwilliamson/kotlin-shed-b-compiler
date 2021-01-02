@@ -28,7 +28,6 @@ internal fun generatePrintFunc(): Pair<WasmGlobalContext, WasmFunction> {
             ),
 
             Wasi.callFdWrite(
-                identifier = "fd_write",
                 fileDescriptor = Wasi.stdout,
                 iovs = Wasm.I.i32Const(stringContentsPointerMemoryIndex),
                 iovsLen = Wasm.I.i32Const(1),
