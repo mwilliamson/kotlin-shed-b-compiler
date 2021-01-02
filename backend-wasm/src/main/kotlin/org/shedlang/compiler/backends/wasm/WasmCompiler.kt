@@ -375,9 +375,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     private fun compileDefineFunction(instruction: DefineFunction, context: WasmFunctionContext): WasmFunctionContext {
         val freeVariables = findFreeVariables(instruction)
 
-        val params = mutableListOf<WasmParam>()
-        params.add(WasmParam(WasmNaming.closurePointer, type = WasmData.closurePointerType))
-
         val paramBindings = mutableListOf<Pair<Int, String>>()
 
         fun compileParameter(parameter: DefineFunction.Parameter): WasmParam {
