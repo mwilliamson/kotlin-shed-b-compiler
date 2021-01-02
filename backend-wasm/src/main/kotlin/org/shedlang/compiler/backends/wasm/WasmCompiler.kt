@@ -307,6 +307,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 if (moduleInit == null) {
                     throw CompilerError(message = "module not found: ${formatModuleName(instruction.moduleName)}", source = NullSource)
                 } else {
+                    // TODO: check whether module has already been initialised
                     val initContext = compileInstructions(moduleInit, WasmFunctionContext.initial())
                     val initFunctionIdentifier = WasmNaming.moduleInit(instruction.moduleName)
                     val initFunction = initContext.toFunction(identifier = initFunctionIdentifier)
