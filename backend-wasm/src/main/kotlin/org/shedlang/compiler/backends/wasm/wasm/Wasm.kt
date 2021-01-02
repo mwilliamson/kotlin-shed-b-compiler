@@ -119,7 +119,6 @@ internal object Wasm {
         val i32LessThanUnsigned = WasmInstruction.I32LessThanUnsigned
         val i32LessThanOrEqualSigned = WasmInstruction.I32LessThanOrEqualSigned
         val i32LessThanOrEqualUnsigned = WasmInstruction.I32LessThanOrEqualUnsigned
-        val i32Load = WasmInstruction.I32Load
         val i32Load8Unsigned = WasmInstruction.I32Load8Unsigned
         val i32Multiply = WasmInstruction.I32Multiply
         val i32NotEqual = WasmInstruction.I32NotEqual
@@ -156,11 +155,11 @@ internal object Wasm {
             return WasmInstruction.Folded.I32LessThanOrEqualUnsigned(left = left, right = right)
         }
 
-        fun i32Load(address: LateIndex): WasmInstruction.Folded {
-            return i32Load(i32Const(address))
+        fun i32Load(offset: Int, alignment: Int): WasmInstruction {
+            return WasmInstruction.I32Load(offset = offset, alignment = alignment)
         }
 
-        fun i32Load(address: Int): WasmInstruction.Folded {
+        fun i32Load(address: LateIndex): WasmInstruction.Folded {
             return i32Load(i32Const(address))
         }
 
@@ -271,7 +270,7 @@ internal sealed class WasmImportDescriptor {
     class Function(val params: List<WasmType>, val results: List<WasmType>): WasmImportDescriptor()
 }
 
-internal class WasmGlobal(val identifier: String, val type: WasmScalarType, val value: WasmInstruction.Folded)
+internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmScalarType, val value: WasmInstruction.Folded)
 
 internal class WasmDataSegment(val offset: Int, val bytes: ByteArray)
 
@@ -321,7 +320,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     object I32LessThanUnsigned: WasmInstruction()
     object I32LessThanOrEqualSigned: WasmInstruction()
     object I32LessThanOrEqualUnsigned: WasmInstruction()
-    object I32Load: WasmInstruction()
+    class  I32Load(val offset: Int, val alignment: Int): WasmInstruction()
     object I32Load8Unsigned: WasmInstruction()
     object I32Multiply: WasmInstruction()
     object I32NotEqual: WasmInstruction()

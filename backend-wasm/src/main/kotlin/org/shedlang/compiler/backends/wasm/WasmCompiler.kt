@@ -1,14 +1,19 @@
 package org.shedlang.compiler.backends.wasm
 
 import kotlinx.collections.immutable.*
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.ast.NullSource
+import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.Type
 import java.lang.Integer.max
 import java.lang.UnsupportedOperationException
 
@@ -203,6 +208,16 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     .addInstruction(Wasm.I.localGet(temp))
             }
 
+            is FieldAccess -> {
+                return context.addInstruction(Wasm.I.i32Load(
+                    offset = fieldOffset(
+                        objectType = instruction.receiverType,
+                        fieldName = instruction.fieldName,
+                    ),
+                    alignment = WasmData.VALUE_SIZE,
+                ))
+            }
+
             is IntAdd -> {
                 return context.addInstruction(Wasm.I.i32Add)
             }
@@ -286,6 +301,56 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context2.addInstruction(Wasm.I.localSet(identifier))
             }
 
+            is ModuleInit -> {
+                // TODO: check whether module has already been compiled
+                val moduleInit = image.moduleInitialisation(instruction.moduleName)
+                if (moduleInit == null) {
+                    throw CompilerError(message = "module not found: ${formatModuleName(instruction.moduleName)}", source = NullSource)
+                } else {
+                    val initContext = compileInstructions(moduleInit, WasmFunctionContext.initial())
+                    val initFunctionIdentifier = WasmNaming.moduleInit(instruction.moduleName)
+                    val initFunction = initContext.toFunction(identifier = initFunctionIdentifier)
+                    val (context2, _) = context.addFunction(initFunction)
+                    return context2.mergeGlobalContext(initContext)
+                        .addInstruction(Wasm.I.call(
+                            identifier = initFunctionIdentifier,
+                            args = listOf(),
+                        ))
+                }
+            }
+
+            is ModuleInitExit -> {
+                return context
+            }
+
+            is ModuleLoad -> {
+                return context.addInstruction(Wasm.I.globalGet(WasmNaming.moduleValue(instruction.moduleName)))
+            }
+
+            is ModuleStore -> {
+                val (context2, moduleValue) = context.addStaticData(
+                    size = instruction.exports.size * WasmData.VALUE_SIZE,
+                    alignment = WasmData.VALUE_SIZE,
+                )
+
+                val context3 = instruction.exports.fold(context2) { currentContext, (exportName, exportVariableId) ->
+                    val (currentContext2, exportValue) = currentContext.variableToLocal(exportVariableId, exportName)
+                    val moduleType = moduleSet.moduleType(instruction.moduleName)!!
+                    currentContext2.addInstruction(storeField(
+                        objectPointer = Wasm.I.i32Const(moduleValue),
+                        objectType = moduleType,
+                        fieldName = exportName,
+                        fieldValue = Wasm.I.localGet(exportValue),
+                    ))
+                }
+
+                return context3.addImmutableGlobal(
+                    identifier = WasmNaming.moduleValue(instruction.moduleName),
+                    type = WasmData.moduleValuePointerType,
+                    value = Wasm.I.i32Const(moduleValue),
+                )
+            }
+
             is PushValue -> {
                 val value = instruction.value
                 when (value) {
@@ -343,10 +408,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is TupleAccess -> {
-                return context
-                    .addInstruction(Wasm.I.i32Const(instruction.elementIndex * WasmData.VALUE_SIZE))
-                    .addInstruction(Wasm.I.i32Add)
-                    .addInstruction(Wasm.I.i32Load)
+                return context.addInstruction(Wasm.I.i32Load(
+                    offset = instruction.elementIndex * WasmData.VALUE_SIZE,
+                    alignment = WasmData.VALUE_SIZE,
+                ))
             }
 
             is TupleCreate -> {
@@ -404,6 +469,40 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         }
     }
 
+    private fun storeField(
+        objectPointer: WasmInstruction.Folded,
+        objectType: ModuleType,
+        fieldName: Identifier,
+        fieldValue: WasmInstruction.Folded,
+    ): WasmInstruction.Folded {
+        objectType.fields
+
+        return Wasm.I.i32Store(
+            address = objectPointer,
+            offset = fieldOffset(objectType, fieldName),
+            alignment = WasmData.VALUE_SIZE,
+            value = fieldValue,
+        )
+    }
+
+    private fun fieldOffset(objectType: Type, fieldName: Identifier) =
+        fieldIndex(type = objectType, fieldName = fieldName) * WasmData.VALUE_SIZE
+
+    private fun fieldIndex(type: Type, fieldName: Identifier): Int {
+        if (type !is ModuleType) {
+            throw UnsupportedOperationException()
+        }
+        val sortedFieldNames = type.fields.keys.sorted()
+        val fieldIndex = sortedFieldNames.indexOf(fieldName)
+
+        if (fieldIndex == -1) {
+            // TODO: better exception
+            throw Exception("field not found: ${fieldName.value}")
+        } else {
+            return fieldIndex
+        }
+    }
+
     private fun addJumpIfFalse(label: Int, joinLabel: Int, context: WasmFunctionContext): WasmFunctionContext {
         return context
             .addInstruction(Wasm.I.if_(results = listOf(Wasm.T.i32)))
@@ -427,7 +526,7 @@ internal fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
 internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext(
-    private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded>>,
+    private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
     private val functions: PersistentList<Pair<LateIndex, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
 ) {
@@ -494,6 +593,9 @@ internal data class WasmGlobalContext(
                     dataSegments.add(WasmDataSegment(offset = size, bytes = bytes))
                     size += bytes.size
                 }
+                is WasmStaticData.Bytes -> {
+                    size += data.size
+                }
             }
         }
 
@@ -506,10 +608,12 @@ internal data class WasmGlobalContext(
             boundFunctions.add(function)
         }
 
-        val functionTypes = boundFunctions.map { function -> function.type() }
+        val functionTypes = boundFunctions.map { function -> function.type() }.distinct()
 
         for ((global, value) in globals) {
-            startInstructions.add(Wasm.I.globalSet(global.identifier, value))
+            if (value != null) {
+                startInstructions.add(Wasm.I.globalSet(global.identifier, value))
+            }
         }
 
         return Bound(
@@ -524,11 +628,20 @@ internal data class WasmGlobalContext(
         )
     }
 
-    fun addGlobal(identifier: String, type: WasmScalarType, initial: WasmInstruction.Folded): WasmGlobalContext {
+    fun addMutableGlobal(identifier: String, type: WasmScalarType, initial: WasmInstruction.Folded): WasmGlobalContext {
         return copy(
             globals = globals.add(Pair(
-                WasmGlobal(identifier = identifier, type = type, value = Wasm.I.i32Const(0)),
+                WasmGlobal(identifier = identifier, mutable = true, type = type, value = Wasm.I.i32Const(0)),
                 initial,
+            )),
+        )
+    }
+
+    fun addImmutableGlobal(identifier: String, type: WasmScalarType, value: WasmInstruction.Folded): WasmGlobalContext {
+        return copy(
+            globals = globals.add(Pair(
+                WasmGlobal(identifier = identifier, mutable = false, type = type, value = value),
+                null,
             )),
         )
     }
@@ -547,6 +660,10 @@ internal data class WasmGlobalContext(
 
     fun addStaticUtf8String(value: String): Pair<WasmGlobalContext, LateIndex> {
         return addStaticData(WasmStaticData.Utf8String(value))
+    }
+
+    fun addStaticData(size: Int, alignment: Int): Pair<WasmGlobalContext, LateIndex> {
+        return addStaticData(WasmStaticData.Bytes(size = size, bytesAlignment = alignment))
     }
 
     private fun addStaticData(data: WasmStaticData): Pair<WasmGlobalContext, LateIndex> {
@@ -629,14 +746,33 @@ internal data class WasmFunctionContext(
         return onLabel.getOrDefault(label, persistentListOf())
     }
 
+    fun addImmutableGlobal(identifier: String, type: WasmScalarType, value: WasmInstruction.Folded): WasmFunctionContext {
+        val newGlobalContext = globalContext.addImmutableGlobal(identifier = identifier, type = type, value = value)
+        return copy(globalContext = newGlobalContext)
+    }
+
     fun addStaticUtf8String(value: String): Pair<WasmFunctionContext, LateIndex> {
         val (newGlobalContext, index) = globalContext.addStaticUtf8String(value)
+        return Pair(copy(globalContext = newGlobalContext), index)
+    }
+
+    fun addStaticI32(): Pair<WasmFunctionContext, LateIndex> {
+        val (newGlobalContext, index) = globalContext.addStaticI32()
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
     fun addStaticI32(value: Int): Pair<WasmFunctionContext, LateIndex> {
         val (newGlobalContext, index) = globalContext.addStaticI32(value)
         return Pair(copy(globalContext = newGlobalContext), index)
+    }
+
+    fun addStaticData(size: Int, alignment: Int): Pair<WasmFunctionContext, LateIndex> {
+        val (newGlobalContext, index) = globalContext.addStaticData(size = size, alignment = alignment)
+        return Pair(copy(globalContext = newGlobalContext), index)
+    }
+
+    fun mergeGlobalContext(context: WasmFunctionContext): WasmFunctionContext {
+        return copy(globalContext = this.globalContext.merge(context.globalContext))
     }
 
     fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {

@@ -6,12 +6,12 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
 internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
     val globalContext = WasmGlobalContext.initial()
-        .addGlobal(
+        .addMutableGlobal(
             identifier = WasmNaming.heapPointer,
             type = Wasm.T.i32,
             initial = Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WASM_PAGE_SIZE)),
         )
-        .addGlobal(
+        .addMutableGlobal(
             identifier = WasmNaming.heapEndPointer,
             type = Wasm.T.i32,
             initial = Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WASM_PAGE_SIZE)),

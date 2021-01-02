@@ -8,4 +8,5 @@ internal object WasmData {
     val booleanType = Wasm.T.i32
     val functionPointerType = Wasm.T.i32
     val genericValueType = Wasm.T.i32
+    val moduleValuePointerType = Wasm.T.i32
 }

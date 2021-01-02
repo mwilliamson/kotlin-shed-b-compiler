@@ -7,6 +7,7 @@ internal object WasmNaming {
     val heapEndPointer = "shed_heap_pointer_end"
 
     fun moduleInit(moduleName: ModuleName) = "shed_module_init_${serialiseModuleName(moduleName)}"
+    fun moduleValue(moduleName: ModuleName) = "shed_module_value_${serialiseModuleName(moduleName)}"
 
     private fun serialiseModuleName(moduleName: ModuleName) =
         moduleName.joinToString("_") { part -> part.value }

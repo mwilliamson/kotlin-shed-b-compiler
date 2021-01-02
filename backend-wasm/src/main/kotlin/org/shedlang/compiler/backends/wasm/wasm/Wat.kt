@@ -83,10 +83,16 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
     }
 
     fun globalToSExpression(global: WasmGlobal): SExpression {
+        val type = if (global.mutable) {
+            S.list(S.symbol("mut"), typeToSExpression(global.type))
+        } else {
+            typeToSExpression(global.type)
+        }
+
         return S.list(
             S.symbol("global"),
             S.identifier(global.identifier),
-            S.list(S.symbol("mut"), typeToSExpression(global.type)),
+            type,
             instructionToSExpression(global.value),
         )
     }
@@ -145,7 +151,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             is WasmInstruction.I32LessThanUnsigned -> S.symbol("i32.lt_u")
             is WasmInstruction.I32LessThanOrEqualSigned -> S.symbol("i32.le_s")
             is WasmInstruction.I32LessThanOrEqualUnsigned -> S.symbol("i32.le_u")
-            is WasmInstruction.I32Load -> S.symbol("i32.load")
+            is WasmInstruction.I32Load -> S.elements(S.symbol("i32.load"), *memarg(offset = instruction.offset, alignment = instruction.alignment))
             is WasmInstruction.I32Load8Unsigned -> S.symbol("i32.load8_u")
             is WasmInstruction.I32Multiply -> S.symbol("i32.mul")
             is WasmInstruction.I32NotEqual -> S.symbol("i32.ne")
@@ -223,9 +229,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             )
             is WasmInstruction.Folded.I32Load -> S.list(
                 S.symbol("i32.load"),
-                // TODO: remove duplication with I32Store
-                *(if (instruction.offset == 0) listOf() else listOf(S.symbol("offset=${instruction.offset}"))).toTypedArray(),
-                *(if (instruction.alignment == null) listOf() else listOf(S.symbol("align=${instruction.alignment}"))).toTypedArray(),
+                *memarg(offset = instruction.offset, alignment = instruction.alignment),
                 instructionToSExpression(instruction.address),
             )
             is WasmInstruction.Folded.I32Multiply -> S.list(
@@ -240,8 +244,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             )
             is WasmInstruction.Folded.I32Store -> S.list(
                 S.symbol("i32.store"),
-                *(if (instruction.offset == 0) listOf() else listOf(S.symbol("offset=${instruction.offset}"))).toTypedArray(),
-                *(if (instruction.alignment == null) listOf() else listOf(S.symbol("align=${instruction.alignment}"))).toTypedArray(),
+                *memarg(offset = instruction.offset, alignment = instruction.alignment),
                 instructionToSExpression(instruction.address),
                 instructionToSExpression(instruction.value),
             )
@@ -273,6 +276,13 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             )
             is WasmInstruction.Folded.MemorySize -> S.list(S.symbol("memory.size"))
         }
+    }
+
+    private fun memarg(offset: Int, alignment: Int?): Array<SSymbol> {
+        return listOf(
+            *(if (offset == 0) listOf() else listOf(S.symbol("offset=${offset}"))).toTypedArray(),
+            *(if (alignment == null) listOf() else listOf(S.symbol("align=${alignment}"))).toTypedArray(),
+        ).toTypedArray()
     }
 
     private fun constValueToInt(value: WasmConstValue): Int {
