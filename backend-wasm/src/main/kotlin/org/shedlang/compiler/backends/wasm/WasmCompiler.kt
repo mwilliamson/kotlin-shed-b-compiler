@@ -464,12 +464,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         namedArgumentNames: List<Identifier>,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
-        val argumentCount = positionalArgumentCount + namedArgumentNames.size
-        val wasmFuncType = WasmFuncType(
-            params = listOf(WasmData.functionPointerType) + (0 until argumentCount).map { WasmData.genericValueType },
-            results = listOf(WasmData.genericValueType),
-        )
-
         val (context2, positionalArgLocals) = (0 until positionalArgumentCount)
             .fold(Pair(context, persistentListOf<String>())) { (currentContext, args), argIndex ->
                 val (currentContext2, arg) = currentContext.addLocal("arg_$argIndex")
@@ -489,16 +483,12 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val (context5, callee) = context4.addLocal("callee")
         val context6 = context5.addInstruction(Wasm.I.localSet(callee))
 
-        val sortedNamedArgLocals = namedArgumentNames.zip(namedArgLocals)
-            .sortedBy { (argName, _) -> argName }
-            .map { (_, local) -> local }
-        val argLocals = positionalArgLocals + sortedNamedArgLocals
-
-        return context6.addInstruction(Wasm.I.callIndirect(
-            type = wasmFuncType.identifier(),
-            tableIndex = Wasm.I.i32Load(Wasm.I.localGet(callee)),
-            args = listOf(Wasm.I.localGet(callee)) + argLocals.map { argLocal -> Wasm.I.localGet(argLocal) },
-        ))
+        return compileClosureCall(
+            closurePointer = Wasm.I.localGet(callee),
+            positionalArguments = positionalArgLocals.map(Wasm.I::localGet),
+            namedArguments = namedArgumentNames.zip(namedArgLocals.map(Wasm.I::localGet)),
+            context = context6,
+        )
     }
 
     private fun compileFieldAccess(objectType: Type, fieldName: Identifier): WasmInstruction {
