@@ -59,6 +59,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             imports = listOf(
                 Wasi.importFdWrite("fd_write"),
             ),
+            globals = boundGlobalContext.globals,
             memoryPageCount = boundGlobalContext.pageCount,
             start = "start",
             dataSegments = boundGlobalContext.dataSegments,

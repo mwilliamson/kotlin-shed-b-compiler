@@ -427,17 +427,20 @@ internal fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
 internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext(
+    private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded>>,
     private val functions: PersistentList<Pair<LateIndex, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
+            globals = persistentListOf(),
             functions = persistentListOf(),
             staticData = persistentListOf()
         )
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
             return WasmGlobalContext(
+                globals = contexts.flatMap { context -> context.globals }.toPersistentList(),
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
             )
@@ -446,12 +449,14 @@ internal data class WasmGlobalContext(
 
     fun merge(other: WasmGlobalContext): WasmGlobalContext {
         return WasmGlobalContext(
+            globals = globals.addAll(other.globals),
             functions = functions.addAll(other.functions),
             staticData = staticData.addAll(other.staticData),
         )
     }
 
     class Bound(
+        internal val globals: List<WasmGlobal>,
         internal val pageCount: Int,
         internal val dataSegments: List<WasmDataSegment>,
         internal val startInstructions: List<WasmInstruction>,
@@ -503,7 +508,12 @@ internal data class WasmGlobalContext(
 
         val functionTypes = boundFunctions.map { function -> function.type() }
 
+        for ((global, value) in globals) {
+            startInstructions.add(Wasm.I.globalSet(global.identifier, value))
+        }
+
         return Bound(
+            globals = globals.map { (global, _) -> global },
             pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             dataSegments = dataSegments,
             startInstructions = startInstructions,
@@ -511,6 +521,15 @@ internal data class WasmGlobalContext(
             table = table,
             types = functionTypes,
             lateIndices = lateIndices,
+        )
+    }
+
+    fun addGlobal(identifier: String, type: WasmScalarType, initial: WasmInstruction.Folded): WasmGlobalContext {
+        return copy(
+            globals = globals.add(Pair(
+                WasmGlobal(identifier = identifier, type = type, value = Wasm.I.i32Const(0)),
+                initial,
+            )),
         )
     }
 

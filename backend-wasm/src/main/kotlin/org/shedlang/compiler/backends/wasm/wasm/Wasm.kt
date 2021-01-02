@@ -6,6 +6,7 @@ internal object Wasm {
     fun module(
         types: List<WasmFuncType> = listOf(),
         imports: List<WasmImport> = listOf(),
+        globals: List<WasmGlobal> = listOf(),
         memoryPageCount: Int = 0,
         dataSegments: List<WasmDataSegment> = listOf(),
         start: String? = null,
@@ -14,6 +15,7 @@ internal object Wasm {
     ) = WasmModule(
         types = types,
         imports = imports,
+        globals = globals,
         memoryPageCount = memoryPageCount,
         dataSegments = dataSegments,
         start = start,
@@ -96,6 +98,14 @@ internal object Wasm {
         val else_ = WasmInstruction.Else
 
         val end = WasmInstruction.End
+
+        fun globalGet(identifier: String): WasmInstruction.Folded {
+            return WasmInstruction.Folded.GlobalGet(identifier)
+        }
+
+        fun globalSet(identifier: String, value: WasmInstruction.Folded): WasmInstruction {
+            return WasmInstruction.Folded.GlobalSet(identifier, value)
+        }
 
         val i32Add = WasmInstruction.I32Add
         val i32And = WasmInstruction.I32And
@@ -226,6 +236,7 @@ internal class WasmScalarType(val name: String): WasmType
 internal class WasmModule(
     val types: List<WasmFuncType>,
     val imports: List<WasmImport>,
+    val globals: List<WasmGlobal>,
     val memoryPageCount: Int,
     val dataSegments: List<WasmDataSegment>,
     val start: String?,
@@ -259,6 +270,8 @@ internal class WasmImport(
 internal sealed class WasmImportDescriptor {
     class Function(val params: List<WasmType>, val results: List<WasmType>): WasmImportDescriptor()
 }
+
+internal class WasmGlobal(val identifier: String, val type: WasmScalarType, val value: WasmInstruction.Folded)
 
 internal class WasmDataSegment(val offset: Int, val bytes: ByteArray)
 
@@ -328,6 +341,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class Call(val identifier: String, val args: List<Folded>): Folded()
         class CallIndirect(val type: String, val tableIndex: Folded, val args: List<Folded>): Folded()
         class Drop(val value: Folded): Folded()
+        class GlobalGet(val identifier: String): Folded()
+        class GlobalSet(val identifier: String, val value: Folded): Folded()
         class I32Add(val left: Folded, val right: Folded): Folded()
         class I32And(val left: Folded, val right: Folded): Folded()
         class I32Const(val value: WasmConstValue): Folded()

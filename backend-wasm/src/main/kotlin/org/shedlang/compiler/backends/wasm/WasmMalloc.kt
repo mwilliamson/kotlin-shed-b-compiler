@@ -5,13 +5,17 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 
 internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
-    val global = WasmGlobalContext.initial()
-    val (global2, heapPointer) = global.addStaticI32(
-        initial = Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WASM_PAGE_SIZE)),
-    )
-    val (global3, heapEndPointer) = global2.addStaticI32(
-        initial = Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WASM_PAGE_SIZE)),
-    )
+    val globalContext = WasmGlobalContext.initial()
+        .addGlobal(
+            identifier = WasmNaming.heapPointer,
+            type = Wasm.T.i32,
+            initial = Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WASM_PAGE_SIZE)),
+        )
+        .addGlobal(
+            identifier = WasmNaming.heapEndPointer,
+            type = Wasm.T.i32,
+            initial = Wasm.I.i32Multiply(Wasm.I.memorySize, Wasm.I.i32Const(WASM_PAGE_SIZE)),
+        )
 
     // TODO: test this!
     val malloc = Wasm.function(
@@ -21,7 +25,7 @@ internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
         results = listOf(Wasm.T.i32),
         body = listOf(
             // Get heap pointer
-            Wasm.I.localSet("heap_pointer", Wasm.I.i32Load(heapPointer)),
+            Wasm.I.localSet("heap_pointer", Wasm.I.globalGet(WasmNaming.heapPointer)),
 
             // Align heap pointer (heap_pointer + alignment - 1) & -alignment
             Wasm.I.localSet(
@@ -49,7 +53,7 @@ internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
                     Wasm.I.localGet("size"),
                 )
             ),
-            Wasm.I.i32Store(Wasm.I.i32Const(heapPointer), Wasm.I.localGet("heap_pointer")),
+            Wasm.I.globalSet(WasmNaming.heapPointer, Wasm.I.localGet("heap_pointer")),
 
             // Grow heap if necessary
             // TODO: grow by more than necessary?
@@ -57,7 +61,7 @@ internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
                 "grow",
                 Wasm.I.i32Sub(
                     Wasm.I.localGet("heap_pointer"),
-                    Wasm.I.i32Load(Wasm.I.i32Const(heapEndPointer)),
+                    Wasm.I.globalGet(WasmNaming.heapEndPointer),
                 ),
             ),
 
@@ -76,8 +80,8 @@ internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
                         ),
                     )),
 
-                    Wasm.I.i32Store(
-                        Wasm.I.i32Const(heapEndPointer),
+                    Wasm.I.globalSet(
+                        WasmNaming.heapEndPointer,
                         Wasm.I.i32Multiply(
                             Wasm.I.memorySize,
                             Wasm.I.i32Const(WASM_PAGE_SIZE),
@@ -90,7 +94,7 @@ internal fun generateMalloc(): Pair<WasmGlobalContext, WasmFunction> {
         ),
     )
 
-    return Pair(global3, malloc)
+    return Pair(globalContext, malloc)
 }
 
 internal fun callMalloc(size: WasmInstruction.Folded, alignment: WasmInstruction.Folded): WasmInstruction.Folded {

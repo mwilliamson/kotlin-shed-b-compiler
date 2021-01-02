@@ -47,6 +47,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             S.formatBreak,
             *typeDefinitions.toTypedArray(),
             *module.imports.map { import -> importToSExpression(import) }.toTypedArray(),
+            *module.globals.map { global -> globalToSExpression(global) }.toTypedArray(),
             S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(module.memoryPageCount)),
             *module.dataSegments.map { dataSegment -> dataSegmentToSExpression(dataSegment) }.toTypedArray(),
             *startExpression.nullableToList().toTypedArray(),
@@ -79,6 +80,15 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
 
     fun typeToSExpression(type: WasmType): SExpression {
         return S.symbol((type as WasmScalarType).name)
+    }
+
+    fun globalToSExpression(global: WasmGlobal): SExpression {
+        return S.list(
+            S.symbol("global"),
+            S.identifier(global.identifier),
+            S.list(S.symbol("mut"), typeToSExpression(global.type)),
+            instructionToSExpression(global.value),
+        )
     }
 
     fun dataSegmentToSExpression(dataSegment: WasmDataSegment): SExpression {
@@ -171,6 +181,15 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                     .add(instructionToSExpression(instruction.tableIndex))
             is WasmInstruction.Folded.Drop -> S.list(
                 S.symbol("drop"),
+                instructionToSExpression(instruction.value),
+            )
+            is WasmInstruction.Folded.GlobalGet -> S.list(
+                S.symbol("global.get"),
+                S.identifier(instruction.identifier),
+            )
+            is WasmInstruction.Folded.GlobalSet -> S.list(
+                S.symbol("global.set"),
+                S.identifier(instruction.identifier),
                 instructionToSExpression(instruction.value),
             )
             is WasmInstruction.Folded.I32Add -> S.list(
