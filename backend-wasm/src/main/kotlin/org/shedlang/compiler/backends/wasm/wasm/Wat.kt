@@ -18,8 +18,8 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                 S.identifier(type.identifier()),
                 S.list(
                     S.symbol("func"),
-                    S.list(S.symbol("param")).addAll(typesToSExpressions(type.params)),
-                    S.list(S.symbol("result")).addAll(typesToSExpressions(type.results)),
+                    S.list(S.symbol("param")).addAll(valueTypesToSExpressions(type.params)),
+                    S.list(S.symbol("result")).addAll(valueTypesToSExpressions(type.results)),
                 ),
             )
         }
@@ -67,26 +67,26 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                     S.list(
                         S.symbol("func"),
                         S.identifier(import.identifier),
-                        S.list(S.symbol("param")).addAll(typesToSExpressions(descriptor.params)),
-                        S.list(S.symbol("result")).addAll(typesToSExpressions(descriptor.results)),
+                        S.list(S.symbol("param")).addAll(valueTypesToSExpressions(descriptor.params)),
+                        S.list(S.symbol("result")).addAll(valueTypesToSExpressions(descriptor.results)),
                     )
             },
         )
     }
 
-    fun typesToSExpressions(types: List<WasmType>): List<SExpression> {
-        return types.map { type -> typeToSExpression(type) }
+    fun valueTypesToSExpressions(types: List<WasmValueType>): List<SExpression> {
+        return types.map { type -> valueTypeToSExpression(type) }
     }
 
-    fun typeToSExpression(type: WasmType): SExpression {
-        return S.symbol((type as WasmScalarType).name)
+    fun valueTypeToSExpression(type: WasmValueType): SExpression {
+        return S.symbol(type.name)
     }
 
     fun globalToSExpression(global: WasmGlobal): SExpression {
         val type = if (global.mutable) {
-            S.list(S.symbol("mut"), typeToSExpression(global.type))
+            S.list(S.symbol("mut"), valueTypeToSExpression(global.type))
         } else {
-            typeToSExpression(global.type)
+            valueTypeToSExpression(global.type)
         }
 
         return S.list(
@@ -117,7 +117,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             S.identifier(function.identifier),
             *exportExpressions.toTypedArray(),
             *function.params.map { param -> paramToSExpression(param) }.toTypedArray(),
-            S.list(S.symbol("result")).addAll(typesToSExpressions(function.results)),
+            S.list(S.symbol("result")).addAll(valueTypesToSExpressions(function.results)),
             S.formatBreak,
             *function.locals.map { local -> localToSExpression(local) }.toTypedArray(),
             *function.body.map { instruction -> instructionToSExpression(instruction) }.toTypedArray(),
@@ -125,11 +125,11 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
     }
 
     fun paramToSExpression(param: WasmParam): SExpression {
-        return S.list(S.symbol("param"), S.identifier(param.identifier), typeToSExpression(param.type))
+        return S.list(S.symbol("param"), S.identifier(param.identifier), valueTypeToSExpression(param.type))
     }
 
     fun localToSExpression(param: WasmLocal): SExpression {
-        return S.list(S.symbol("local"), S.identifier(param.identifier), typeToSExpression(param.type))
+        return S.list(S.symbol("local"), S.identifier(param.identifier), valueTypeToSExpression(param.type))
     }
 
     fun instructionToSExpression(instruction: WasmInstruction): SExpression {
@@ -160,13 +160,13 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             is WasmInstruction.I32Sub -> S.symbol("i32.sub")
             is WasmInstruction.If -> S.elements(
                 S.symbol("if"),
-                S.list(S.symbol("result")).addAll(typesToSExpressions(instruction.results)),
+                S.list(S.symbol("result")).addAll(valueTypesToSExpressions(instruction.results)),
             )
             is WasmInstruction.LocalSet -> S.elements(S.symbol("local.set"), S.identifier(instruction.identifier))
             is WasmInstruction.Loop -> S.elements(
                 S.symbol("loop"),
                 S.identifier(instruction.identifier),
-                S.list(S.symbol("result")).addAll(typesToSExpressions(instruction.results)),
+                S.list(S.symbol("result")).addAll(valueTypesToSExpressions(instruction.results)),
             )
             is WasmInstruction.MemoryGrow -> S.symbol("memory.grow")
 
@@ -255,7 +255,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             )
             is WasmInstruction.Folded.If -> S.list(
                 S.symbol("if"),
-                S.list(S.symbol("result")).addAll(typesToSExpressions(instruction.results)),
+                S.list(S.symbol("result")).addAll(valueTypesToSExpressions(instruction.results)),
                 instructionToSExpression(instruction.condition),
                 S.formatBreak,
                 S.list(S.symbol("then"), S.formatBreak).addAll(instruction.ifTrue.map(::instructionToSExpression)),

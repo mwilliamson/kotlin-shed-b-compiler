@@ -629,7 +629,7 @@ internal data class WasmGlobalContext(
         )
     }
 
-    fun addMutableGlobal(identifier: String, type: WasmScalarType, initial: WasmInstruction.Folded): WasmGlobalContext {
+    fun addMutableGlobal(identifier: String, type: WasmValueType, initial: WasmInstruction.Folded): WasmGlobalContext {
         return copy(
             globals = globals.add(Pair(
                 WasmGlobal(identifier = identifier, mutable = true, type = type, value = Wasm.I.i32Const(0)),
@@ -638,7 +638,7 @@ internal data class WasmGlobalContext(
         )
     }
 
-    fun addImmutableGlobal(identifier: String, type: WasmScalarType, value: WasmInstruction.Folded): WasmGlobalContext {
+    fun addImmutableGlobal(identifier: String, type: WasmValueType, value: WasmInstruction.Folded): WasmGlobalContext {
         return copy(
             globals = globals.add(Pair(
                 WasmGlobal(identifier = identifier, mutable = false, type = type, value = value),
@@ -747,7 +747,7 @@ internal data class WasmFunctionContext(
         return onLabel.getOrDefault(label, persistentListOf())
     }
 
-    fun addImmutableGlobal(identifier: String, type: WasmScalarType, value: WasmInstruction.Folded): WasmFunctionContext {
+    fun addImmutableGlobal(identifier: String, type: WasmValueType, value: WasmInstruction.Folded): WasmFunctionContext {
         val newGlobalContext = globalContext.addImmutableGlobal(identifier = identifier, type = type, value = value)
         return copy(globalContext = newGlobalContext)
     }
@@ -784,7 +784,7 @@ internal data class WasmFunctionContext(
         identifier: String,
         exportName: String? = null,
         params: List<WasmParam> = listOf(),
-        results: List<WasmScalarType> = listOf(),
+        results: List<WasmValueType> = listOf(),
     ): WasmFunction {
         return Wasm.function(
             identifier = identifier,

@@ -27,8 +27,8 @@ internal object Wasm {
         moduleName: String,
         entityName: String,
         identifier: String,
-        params: List<WasmType>,
-        results: List<WasmType>
+        params: List<WasmValueType>,
+        results: List<WasmValueType>
     ) = WasmImport(
         moduleName = moduleName,
         entityName = entityName,
@@ -49,7 +49,7 @@ internal object Wasm {
         exportName: String? = null,
         params: List<WasmParam> = listOf(),
         locals: List<WasmLocal> = listOf(),
-        results: List<WasmType> = listOf(),
+        results: List<WasmValueType> = listOf(),
         body: List<WasmInstruction>,
     ) = WasmFunction(
         identifier = identifier,
@@ -60,16 +60,16 @@ internal object Wasm {
         body = body,
     )
 
-    fun param(identifier: String, type: WasmType) = WasmParam(identifier = identifier, type = type)
+    fun param(identifier: String, type: WasmValueType) = WasmParam(identifier = identifier, type = type)
 
-    fun local(identifier: String, type: WasmType) = WasmLocal(identifier = identifier, type = type)
+    fun local(identifier: String, type: WasmValueType) = WasmLocal(identifier = identifier, type = type)
 
     fun instructions(vararg instructions: WasmInstruction): List<WasmInstruction> {
         return instructions.toList()
     }
 
     object T {
-        val i32 = WasmScalarType("i32")
+        val i32 = WasmValueType("i32")
     }
 
     object I {
@@ -189,12 +189,12 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Sub(left = left, right = right)
         }
 
-        fun if_(results: List<WasmType>): WasmInstruction {
+        fun if_(results: List<WasmValueType>): WasmInstruction {
             return WasmInstruction.If(results = results)
         }
 
         fun if_(
-            results: List<WasmType> = listOf(),
+            results: List<WasmValueType> = listOf(),
             condition: WasmInstruction.Folded,
             ifTrue: List<WasmInstruction>,
             ifFalse: List<WasmInstruction>,
@@ -214,7 +214,7 @@ internal object Wasm {
             return WasmInstruction.Folded.LocalSet(identifier = identifier, value = value)
         }
 
-        fun loop(identifier: String, results: List<WasmType> = listOf()): WasmInstruction {
+        fun loop(identifier: String, results: List<WasmValueType> = listOf()): WasmInstruction {
             return WasmInstruction.Loop(identifier = identifier, results = results)
         }
 
@@ -228,9 +228,7 @@ internal object Wasm {
     }
 }
 
-internal interface WasmType
-
-internal class WasmScalarType(val name: String): WasmType
+internal class WasmValueType(val name: String)
 
 internal class WasmModule(
     val types: List<WasmFuncType>,
@@ -243,17 +241,17 @@ internal class WasmModule(
     val table: List<String>,
 )
 
-internal data class WasmFuncType(val params: List<WasmType>, val results: List<WasmType>) {
+internal data class WasmFuncType(val params: List<WasmValueType>, val results: List<WasmValueType>) {
     fun identifier(): String {
         val parts = mutableListOf<String>()
         parts.add("functype")
         parts.add(params.size.toString())
         for (param in params) {
-            parts.add((param as WasmScalarType).name)
+            parts.add((param as WasmValueType).name)
         }
         parts.add(results.size.toString())
         for (result in results) {
-            parts.add((result as WasmScalarType).name)
+            parts.add((result as WasmValueType).name)
         }
         return parts.joinToString("_")
     }
@@ -267,10 +265,10 @@ internal class WasmImport(
 )
 
 internal sealed class WasmImportDescriptor {
-    class Function(val params: List<WasmType>, val results: List<WasmType>): WasmImportDescriptor()
+    class Function(val params: List<WasmValueType>, val results: List<WasmValueType>): WasmImportDescriptor()
 }
 
-internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmScalarType, val value: WasmInstruction.Folded)
+internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
 
 internal class WasmDataSegment(val offset: Int, val bytes: ByteArray)
 
@@ -279,15 +277,15 @@ internal class WasmFunction(
     val exportName: String?,
     val params: List<WasmParam>,
     val locals: List<WasmLocal>,
-    val results: List<WasmType>,
+    val results: List<WasmValueType>,
     val body: List<WasmInstruction>,
 ) {
     fun type() = WasmFuncType(params = params.map { param -> param.type }, results = results)
 }
 
-internal class WasmParam(val identifier: String, val type: WasmType)
+internal class WasmParam(val identifier: String, val type: WasmValueType)
 
-internal class WasmLocal(val identifier: String, val type: WasmType)
+internal class WasmLocal(val identifier: String, val type: WasmValueType)
 
 internal interface WasmInstructionSequence {
     fun toList(): List<WasmInstruction>
@@ -328,11 +326,11 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     object I32Store8: WasmInstruction()
     object I32Sub: WasmInstruction()
 
-    class If(val results: List<WasmType>): WasmInstruction()
+    class If(val results: List<WasmValueType>): WasmInstruction()
 
     class LocalSet(val identifier: String): WasmInstruction()
 
-    class Loop(val identifier: String, val results: List<WasmType>): WasmInstruction()
+    class Loop(val identifier: String, val results: List<WasmValueType>): WasmInstruction()
 
     object MemoryGrow: WasmInstruction()
 
@@ -354,7 +352,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
         class I32Sub(val left: Folded, val right: Folded): Folded()
         class If(
-            val results: List<WasmType>,
+            val results: List<WasmValueType>,
             val condition: Folded,
             val ifTrue: List<WasmInstruction>,
             val ifFalse: List<WasmInstruction>,
