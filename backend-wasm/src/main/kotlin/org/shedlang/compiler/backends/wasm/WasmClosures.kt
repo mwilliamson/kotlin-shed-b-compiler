@@ -14,7 +14,6 @@ internal object WasmClosures {
         freeVariables: List<LocalLoad>,
         positionalParams: List<WasmParam>,
         namedParams: List<Pair<Identifier, WasmParam>>,
-        paramBindings: List<Pair<Int, String>>,
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, String> {
@@ -22,7 +21,7 @@ internal object WasmClosures {
             positionalParams +
             namedParams.sortedBy { (paramName, _) -> paramName }.map { (_, param) -> param }
 
-        val functionContext1 = WasmFunctionContext.initial().bindVariables(paramBindings)
+        val functionContext1 = WasmFunctionContext.initial()
 
         val functionContext2 = compileFreeVariablesLoad(
             freeVariables = freeVariables,

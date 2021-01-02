@@ -397,12 +397,11 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             compileBody = { currentContext ->
                 compileInstructions(
                     instruction.bodyInstructions,
-                    context = currentContext,
+                    context = currentContext.bindVariables(paramBindings),
                 )
             },
             positionalParams = positionalParams,
             namedParams = namedParams,
-            paramBindings = paramBindings,
             context = context,
         )
         return context2.addInstruction(Wasm.I.localGet(closure))
@@ -473,7 +472,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 freeVariables = listOf(),
                 positionalParams = listOf(WasmParam("value", type = WasmData.genericValueType)),
                 namedParams = listOf(),
-                paramBindings = listOf(),
                 compileBody = { currentContext -> currentContext
                     .addInstruction(Wasm.I.call(
                         identifier = WasmNaming.Runtime.print,
