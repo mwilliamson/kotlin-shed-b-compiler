@@ -26,8 +26,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val moduleType = moduleSet.moduleType(mainModule)!!
         val startFunctionContext = WasmFunctionContext.initial()
             .let { compileModuleInitialisation(mainModule, context = it) }
-            .addInstruction(compileModuleLoad(mainModule))
-            .addInstruction(compileFieldAccess(objectType = moduleType, fieldName = Identifier("main")))
+            .addInstruction(WasmModules.compileLoad(mainModule))
+            .addInstruction(WasmObjects.compileFieldLoad(objectType = moduleType, fieldName = Identifier("main")))
             .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), context = it) }
             .addInstruction(Wasi.callProcExit())
 
@@ -109,7 +109,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is FieldAccess -> {
-                return context.addInstruction(compileFieldAccess(instruction.receiverType, instruction.fieldName))
+                return context.addInstruction(WasmObjects.compileFieldLoad(
+                    objectType = instruction.receiverType,
+                    fieldName = instruction.fieldName
+                ))
             }
 
             is IntAdd -> {
@@ -204,7 +207,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is ModuleLoad -> {
-                return context.addInstruction(compileModuleLoad(instruction.moduleName))
+                return context.addInstruction(WasmModules.compileLoad(instruction.moduleName))
             }
 
             is ModuleStore -> {
@@ -344,34 +347,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         }
     }
 
-    private fun moduleStore(
-        moduleName: ModuleName,
-        exports: List<Pair<Identifier, WasmInstruction.Folded>>,
-        context: WasmFunctionContext,
-    ): WasmFunctionContext {
-        val moduleType = moduleSet.moduleType(moduleName)!!
-
-        val (context2, moduleValue) = context.addStaticData(
-            size = exports.size * WasmData.VALUE_SIZE,
-            alignment = WasmData.VALUE_SIZE,
-        )
-
-        val context3 = exports.fold(context2) { currentContext, (exportName, exportValue) ->
-            currentContext.addInstruction(storeField(
-                objectPointer = Wasm.I.i32Const(moduleValue),
-                objectType = moduleType,
-                fieldName = exportName,
-                fieldValue = exportValue,
-            ))
-        }
-
-        return context3.addImmutableGlobal(
-            identifier = WasmNaming.moduleValue(moduleName),
-            type = WasmData.moduleValuePointerType,
-            value = Wasm.I.i32Const(moduleValue),
-        )
-    }
-
     private fun compileDefineFunction(instruction: DefineFunction, context: WasmFunctionContext): WasmFunctionContext {
         val freeVariables = findFreeVariables(instruction)
 
@@ -436,16 +411,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         )
     }
 
-    private fun compileFieldAccess(objectType: Type, fieldName: Identifier): WasmInstruction {
-        return Wasm.I.i32Load(
-            offset = fieldOffset(
-                objectType = objectType,
-                fieldName = fieldName,
-            ),
-            alignment = WasmData.VALUE_SIZE,
-        )
-    }
-
     private fun compileModuleInitialisation(moduleName: ModuleName, context: WasmFunctionContext): WasmFunctionContext {
         // TODO: check whether module has already been compiled
         val moduleInit = image.moduleInitialisation(moduleName)
@@ -491,41 +456,18 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         }
     }
 
-    private fun compileModuleLoad(moduleName: ModuleName) =
-        Wasm.I.globalGet(WasmNaming.moduleValue(moduleName))
-
-    private fun storeField(
-        objectPointer: WasmInstruction.Folded,
-        objectType: ModuleType,
-        fieldName: Identifier,
-        fieldValue: WasmInstruction.Folded,
-    ): WasmInstruction.Folded {
-        objectType.fields
-
-        return Wasm.I.i32Store(
-            address = objectPointer,
-            offset = fieldOffset(objectType, fieldName),
-            alignment = WasmData.VALUE_SIZE,
-            value = fieldValue,
+    private fun moduleStore(
+        moduleName: ModuleName,
+        exports: List<Pair<Identifier, WasmInstruction.Folded>>,
+        context: WasmFunctionContext,
+    ): WasmFunctionContext {
+        val moduleType = moduleSet.moduleType(moduleName)!!
+        return WasmModules.compileStore(
+            moduleName = moduleName,
+            moduleType = moduleType,
+            exports = exports,
+            context = context,
         )
-    }
-
-    private fun fieldOffset(objectType: Type, fieldName: Identifier) =
-        fieldIndex(type = objectType, fieldName = fieldName) * WasmData.VALUE_SIZE
-
-    private fun fieldIndex(type: Type, fieldName: Identifier): Int {
-        if (type !is ModuleType) {
-            throw UnsupportedOperationException()
-        }
-        val sortedFieldNames = type.fields.keys.sorted()
-        val fieldIndex = sortedFieldNames.indexOf(fieldName)
-
-        if (fieldIndex == -1) {
-            // TODO: better exception
-            throw Exception("field not found: ${fieldName.value}")
-        } else {
-            return fieldIndex
-        }
     }
 
     private fun addJumpIfFalse(label: Int, joinLabel: Int, context: WasmFunctionContext): WasmFunctionContext {
