@@ -68,6 +68,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     private fun compileModule(moduleName: ModuleName): WasmGlobalContext {
         val moduleInit = image.moduleInitialisation(moduleName)
+        val nativeModuleInit = WasmNativeModules.moduleInitialisation(moduleName)
         val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
 
         val isInited = WasmNaming.moduleIsInited(moduleName)
@@ -87,27 +88,11 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 .let { compileInstructions(moduleInit, it) }
                 .addInstructions(Wasm.I.end)
                 .toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
-        } else if (moduleName == listOf(Identifier("Core"), Identifier("Io"))) {
-            val (initContext2, closure) = WasmClosures.compileCreate(
-                // TODO: build identifiers in WasmNaming
-                functionName = "shed_module__core_io__print",
-                freeVariables = listOf(),
-                positionalParams = listOf(WasmParam("value", type = WasmData.genericValueType)),
-                namedParams = listOf(),
-                compileBody = { currentContext -> currentContext
-                    .addInstruction(Wasm.I.call(
-                        identifier = WasmNaming.Runtime.print,
-                        args = listOf(Wasm.I.localGet("value")),
-                    ))
-                    .addInstruction(WasmData.unitValue)
-                },
-                initContext,
-            )
+        } else if (nativeModuleInit != null) {
+            val (initContext2, exports) = nativeModuleInit(initContext)
             val initContext3 = moduleStore(
                 moduleName = moduleName,
-                exports = listOf(
-                    Pair(Identifier("print"), Wasm.I.localGet(closure)),
-                ),
+                exports = exports,
                 context = initContext2,
             )
             return initContext3.toStaticFunctionInGlobalContext(
