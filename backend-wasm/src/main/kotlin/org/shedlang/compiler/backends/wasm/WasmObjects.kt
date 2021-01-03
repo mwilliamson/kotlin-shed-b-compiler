@@ -15,31 +15,16 @@ internal object WasmObjects {
         fieldValues: List<Pair<Identifier, WasmInstruction.Folded>>,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
+        val layout = layout(type = objectType)
         return fieldValues.fold(context) { currentContext, (fieldName, fieldValue) ->
             currentContext
-                .addInstruction(compileFieldStore(
-                    objectPointer = objectPointer,
-                    objectType = objectType,
-                    fieldName = fieldName,
-                    fieldValue = fieldValue,
+                .addInstruction(Wasm.I.i32Store(
+                    address = objectPointer,
+                    offset = layout.fieldOffset(fieldName = fieldName),
+                    alignment = WasmData.VALUE_SIZE,
+                    value = fieldValue,
                 ))
         }
-    }
-
-    private fun compileFieldStore(
-        objectPointer: WasmInstruction.Folded,
-        objectType: Type,
-        fieldName: Identifier,
-        fieldValue: WasmInstruction.Folded,
-    ): WasmInstruction.Folded {
-        val layout = layout(objectType)
-
-        return Wasm.I.i32Store(
-            address = objectPointer,
-            offset = layout.fieldOffset(objectType, fieldName),
-            alignment = WasmData.VALUE_SIZE,
-            value = fieldValue,
-        )
     }
 
     internal fun compileFieldLoad(objectType: Type, fieldName: Identifier): WasmInstruction {
@@ -47,7 +32,6 @@ internal object WasmObjects {
 
         return Wasm.I.i32Load(
             offset = layout.fieldOffset(
-                objectType = objectType,
                 fieldName = fieldName,
             ),
             alignment = WasmData.VALUE_SIZE,
@@ -71,10 +55,10 @@ internal object WasmObjects {
         val alignment: Int
             get() = WasmData.VALUE_SIZE
 
-        fun fieldOffset(objectType: Type, fieldName: Identifier) =
-            fieldIndex(type = objectType, fieldName = fieldName) * WasmData.VALUE_SIZE
+        fun fieldOffset(fieldName: Identifier) =
+            fieldIndex(fieldName = fieldName) * WasmData.VALUE_SIZE
 
-        fun fieldIndex(type: Type, fieldName: Identifier): Int {
+        fun fieldIndex(fieldName: Identifier): Int {
             val fieldIndex = fieldNames.indexOf(fieldName)
 
             if (fieldIndex == -1) {
