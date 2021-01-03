@@ -65,7 +65,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     }
 
     private fun compileModule(moduleName: ModuleName): WasmGlobalContext {
-        // TODO: check whether module has already been compiled
         val moduleInit = image.moduleInitialisation(moduleName)
         val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
 
@@ -445,51 +444,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 identifier = initFunctionIdentifier,
                 args = listOf(),
             ))
-    }
-
-    private fun compileModuleInitialisation2(moduleName: ModuleName, context: WasmFunctionContext): WasmFunctionContext {
-        // TODO: check whether module has already been compiled
-        val moduleInit = image.moduleInitialisation(moduleName)
-        if (moduleInit != null) {
-            // TODO: check whether module has already been initialised
-            val initContext = compileInstructions(moduleInit, WasmFunctionContext.initial())
-            val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
-            val initFunction = initContext.toFunction(identifier = initFunctionIdentifier)
-            val (context2, _) = context.addFunction(initFunction)
-            return context2.mergeGlobalContext(initContext)
-                .addInstruction(Wasm.I.call(
-                    identifier = initFunctionIdentifier,
-                    args = listOf(),
-                ))
-        } else if (moduleName == listOf(Identifier("Core"), Identifier("Io"))) {
-            // TODO: implement this properly!
-
-            val (context2, closure) = WasmClosures.compileCreate(
-                // TODO: build identifiers in WasmNaming
-                functionName = "shed_module__core_io__print",
-                freeVariables = listOf(),
-                positionalParams = listOf(WasmParam("value", type = WasmData.genericValueType)),
-                namedParams = listOf(),
-                compileBody = { currentContext -> currentContext
-                    .addInstruction(Wasm.I.call(
-                        identifier = WasmNaming.Runtime.print,
-                        args = listOf(Wasm.I.localGet("value")),
-                    ))
-                    .addInstruction(WasmData.unitValue)
-                },
-                context,
-            )
-
-            return moduleStore(
-                moduleName = moduleName,
-                exports = listOf(
-                    Pair(Identifier("print"), Wasm.I.localGet(closure)),
-                ),
-                context = context2,
-            )
-        } else {
-            throw CompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)
-        }
     }
 
     private fun moduleStore(
