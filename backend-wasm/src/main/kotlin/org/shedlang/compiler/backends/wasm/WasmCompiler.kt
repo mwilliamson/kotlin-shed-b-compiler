@@ -68,12 +68,24 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val moduleInit = image.moduleInitialisation(moduleName)
         val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
 
+        val isInited = WasmNaming.moduleIsInited(moduleName)
+        val initContext = WasmFunctionContext.initial()
+            .addMutableGlobal(
+                identifier = isInited,
+                type = Wasm.T.i32,
+                initial = Wasm.I.i32Const(0),
+            )
+
         if (moduleInit != null) {
             // TODO: check whether module has already been initialised
-            val initContext = compileInstructions(moduleInit, WasmFunctionContext.initial())
-            return initContext.toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
+            return initContext
+                .addInstruction(Wasm.I.globalGet(isInited))
+                .addInstruction(Wasm.I.if_())
+                .addInstruction(Wasm.I.else_)
+                .let { compileInstructions(moduleInit, it) }
+                .addInstructions(Wasm.I.end)
+                .toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
         } else if (moduleName == listOf(Identifier("Core"), Identifier("Io"))) {
-            val initContext = WasmFunctionContext.initial()
             val (initContext2, closure) = WasmClosures.compileCreate(
                 // TODO: build identifiers in WasmNaming
                 functionName = "shed_module__core_io__print",

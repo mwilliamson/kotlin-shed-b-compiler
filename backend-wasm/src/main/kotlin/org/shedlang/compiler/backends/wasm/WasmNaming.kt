@@ -3,8 +3,8 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ast.ModuleName
 
 internal object WasmNaming {
-
     fun moduleInit(moduleName: ModuleName) = "shed_module_init_${serialiseModuleName(moduleName)}"
+    fun moduleIsInited(moduleName: ModuleName) = "shed_module_is_inited_${serialiseModuleName(moduleName)}"
     fun moduleValue(moduleName: ModuleName) = "shed_module_value_${serialiseModuleName(moduleName)}"
 
     val funcMainIdentifier = "shed_main"

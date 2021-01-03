@@ -334,6 +334,11 @@ internal data class WasmFunctionContext(
         return copy(globalContext = newGlobalContext)
     }
 
+    fun addMutableGlobal(identifier: String, type: WasmValueType, initial: WasmInstruction.Folded): WasmFunctionContext {
+        val newGlobalContext = globalContext.addMutableGlobal(identifier = identifier, type = type, initial = initial)
+        return copy(globalContext = newGlobalContext)
+    }
+
     fun addStaticUtf8String(value: String): Pair<WasmFunctionContext, LateIndex> {
         val (newGlobalContext, index) = globalContext.addStaticUtf8String(value)
         return Pair(copy(globalContext = newGlobalContext), index)

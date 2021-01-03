@@ -189,7 +189,7 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Sub(left = left, right = right)
         }
 
-        fun if_(results: List<WasmValueType>): WasmInstruction {
+        fun if_(results: List<WasmValueType> = listOf()): WasmInstruction {
             return WasmInstruction.If(results = results)
         }
 
@@ -197,7 +197,7 @@ internal object Wasm {
             results: List<WasmValueType> = listOf(),
             condition: WasmInstruction.Folded,
             ifTrue: List<WasmInstruction>,
-            ifFalse: List<WasmInstruction>,
+            ifFalse: List<WasmInstruction> = listOf(),
         ): WasmInstruction.Folded {
             return WasmInstruction.Folded.If(results = results, condition = condition, ifTrue = ifTrue, ifFalse = ifFalse)
         }

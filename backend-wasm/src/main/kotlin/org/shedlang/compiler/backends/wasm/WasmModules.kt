@@ -27,11 +27,13 @@ internal object WasmModules {
             ))
         }
 
-        return context3.addImmutableGlobal(
-            identifier = WasmNaming.moduleValue(moduleName),
-            type = WasmData.moduleValuePointerType,
-            value = Wasm.I.i32Const(moduleValue),
-        )
+        return context3
+            .addInstruction(Wasm.I.globalSet(WasmNaming.moduleIsInited(moduleName), Wasm.I.i32Const(1)))
+            .addImmutableGlobal(
+                identifier = WasmNaming.moduleValue(moduleName),
+                type = WasmData.moduleValuePointerType,
+                value = Wasm.I.i32Const(moduleValue),
+            )
     }
 
     internal fun compileLoad(moduleName: ModuleName) =
