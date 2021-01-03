@@ -260,12 +260,6 @@ internal data class WasmFunctionContext(
         )
     }
 
-    fun addFunction(function: WasmFunction): Pair<WasmFunctionContext, LateIndex> {
-        val (newGlobalContext, functionIndex) = globalContext.addFunction(function)
-        val newContext = copy(globalContext = newGlobalContext)
-        return Pair(newContext, functionIndex)
-    }
-
     fun addLocal(name: String = "temp"): Pair<WasmFunctionContext, String> {
         val local = "local_${name}_${nextLocalIndex}"
         val newContext = copy(locals = locals.add(local), nextLocalIndex = nextLocalIndex + 1)
@@ -344,11 +338,6 @@ internal data class WasmFunctionContext(
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
-    fun addStaticI32(): Pair<WasmFunctionContext, LateIndex> {
-        val (newGlobalContext, index) = globalContext.addStaticI32()
-        return Pair(copy(globalContext = newGlobalContext), index)
-    }
-
     fun addStaticI32(value: Int): Pair<WasmFunctionContext, LateIndex> {
         val (newGlobalContext, index) = globalContext.addStaticI32(value)
         return Pair(copy(globalContext = newGlobalContext), index)
@@ -361,10 +350,6 @@ internal data class WasmFunctionContext(
 
     fun addDependency(moduleName: ModuleName): WasmFunctionContext {
         return copy(globalContext = globalContext.addDependency(dependency = moduleName))
-    }
-
-    fun mergeGlobalContext(context: WasmFunctionContext): WasmFunctionContext {
-        return copy(globalContext = this.globalContext.merge(context.globalContext))
     }
 
     fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {
@@ -403,7 +388,7 @@ internal data class WasmFunctionContext(
         return globalContext.addFunction(function)
     }
 
-    fun toFunction(
+    private fun toFunction(
         identifier: String,
         exportName: String? = null,
         params: List<WasmParam> = listOf(),
