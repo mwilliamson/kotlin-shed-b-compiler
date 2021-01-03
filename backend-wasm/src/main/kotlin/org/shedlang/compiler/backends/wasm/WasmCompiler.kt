@@ -166,10 +166,11 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     },
                     compileBody = { constructorContext ->
                         val (constructorContext2, obj) = constructorContext.addLocal("obj")
+                        val layout = WasmObjects.layout(instruction.rawShapeType)
                         val constructorContext3 = constructorContext2
                             .addInstruction(Wasm.I.localSet(
                                 obj,
-                                callMalloc(size = fields.size * WasmData.VALUE_SIZE, alignment = WasmData.VALUE_SIZE),
+                                callMalloc(size = layout.size, alignment = layout.alignment),
                             ))
 
                         val constructorContext4 = WasmObjects.compileObjectStore(

@@ -54,7 +54,7 @@ internal object WasmObjects {
         )
     }
 
-    private fun layout(type: Type): Layout {
+    fun layout(type: Type): Layout {
         val fieldNames = when (type) {
             is ModuleType -> type.fields.keys
             is ShapeType -> type.allFields.keys
@@ -65,6 +65,12 @@ internal object WasmObjects {
     }
 
     class Layout(private val fieldNames: List<Identifier>) {
+        val size: Int
+            get() = fieldNames.size * WasmData.VALUE_SIZE
+
+        val alignment: Int
+            get() = WasmData.VALUE_SIZE
+
         fun fieldOffset(objectType: Type, fieldName: Identifier) =
             fieldIndex(type = objectType, fieldName = fieldName) * WasmData.VALUE_SIZE
 

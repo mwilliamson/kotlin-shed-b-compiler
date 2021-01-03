@@ -13,9 +13,10 @@ internal object WasmModules {
         exports: List<Pair<Identifier, WasmInstruction.Folded>>,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
+        val layout = WasmObjects.layout(moduleType)
         val (context2, moduleValue) = context.addStaticData(
-            size = exports.size * WasmData.VALUE_SIZE,
-            alignment = WasmData.VALUE_SIZE,
+            size = layout.size,
+            alignment = layout.alignment,
         )
 
         val context3 = WasmObjects.compileObjectStore(
