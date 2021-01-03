@@ -183,11 +183,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is LocalLoad -> {
-                val (context2, identifier) = context.variableToLocal(
+                val identifier = context.variableToStoredLocal(
                     variableId = instruction.variableId,
-                    name = instruction.name,
                 )
-                return context2.addInstruction(Wasm.I.localGet(identifier))
+                return context.addInstruction(Wasm.I.localGet(identifier))
             }
 
             is LocalStore -> {
@@ -195,7 +194,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     variableId = instruction.variableId,
                     name = instruction.name,
                 )
-                return context2.addInstruction(Wasm.I.localSet(identifier))
+                val context3 = context2.addInstruction(Wasm.I.localSet(identifier))
+                return context3.onLocalStore(instruction.variableId)
             }
 
             is ModuleInit -> {

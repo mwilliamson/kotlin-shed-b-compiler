@@ -16,7 +16,6 @@ import java.nio.file.Path
 
 class WasmExampleTests {
     private val disabledTests = setOf<String>(
-        "BooleanOperations.shed",
         "cast",
         "Cons.shed",
         "ConstantField.shed",

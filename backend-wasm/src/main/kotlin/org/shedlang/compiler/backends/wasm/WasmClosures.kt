@@ -89,14 +89,17 @@ internal object WasmClosures {
         context: WasmFunctionContext,
     ): WasmFunctionContext {
         return freeVariables.foldIndexed(context) { freeVariableIndex, currentContext, freeVariable ->
-            val (currentContext2, local) = currentContext.variableToLocal(freeVariable.variableId, freeVariable.name)
-
-            currentContext2.addInstruction(Wasm.I.i32Store(
-                address = closure,
-                offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
-                value = Wasm.I.localGet(local),
-                alignment = WasmData.closureAlignment,
-            ))
+            currentContext.variableToStoredLocal(
+                variableId = freeVariable.variableId,
+                onStore = { local ->
+                    Wasm.I.i32Store(
+                        address = closure,
+                        offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
+                        value = Wasm.I.localGet(local),
+                        alignment = WasmData.closureAlignment,
+                    )
+                }
+            )
         }
     }
 

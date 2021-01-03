@@ -1,7 +1,9 @@
 package org.shedlang.compiler.backends.wasm
 
 import kotlinx.collections.immutable.*
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmDataSegment
@@ -184,6 +186,7 @@ internal data class WasmFunctionContext(
     private val nextLocalIndex: Int,
     private val locals: PersistentList<String>,
     private val variableIdToLocal: PersistentMap<Int, String>,
+    private val onLocalStore: PersistentMap<Int, PersistentList<(String) -> WasmInstruction>>,
     private val onLabel: PersistentMap<Int, PersistentList<WasmInstruction>>,
     internal val globalContext: WasmGlobalContext,
 ) {
@@ -192,6 +195,7 @@ internal data class WasmFunctionContext(
             instructions = persistentListOf(),
             nextLocalIndex = initialLocalIndex,
             locals = persistentListOf(),
+            onLocalStore = persistentMapOf(),
             variableIdToLocal = persistentMapOf(),
             onLabel = persistentMapOf(),
             globalContext = WasmGlobalContext.initial(),
@@ -201,6 +205,12 @@ internal data class WasmFunctionContext(
     fun addInstruction(instruction: WasmInstruction): WasmFunctionContext {
         return copy(
             instructions = instructions.add(instruction),
+        )
+    }
+
+    fun addInstructions(newInstructions: List<WasmInstruction>): WasmFunctionContext {
+        return copy(
+            instructions = instructions.addAll(newInstructions),
         )
     }
 
@@ -238,6 +248,37 @@ internal data class WasmFunctionContext(
         } else {
             return Pair(this, existingLocal)
         }
+    }
+
+    fun variableToStoredLocal(variableId: Int): String {
+        val existingLocal = variableIdToLocal[variableId]
+        if (existingLocal == null) {
+            throw CompilerError("variable is not set", source = NullSource)
+        } else {
+            return existingLocal
+        }
+    }
+
+    fun variableToStoredLocal(
+        variableId: Int,
+        onStore: (String) -> WasmInstruction,
+    ): WasmFunctionContext {
+        val existingLocal = variableIdToLocal[variableId]
+        if (existingLocal == null) {
+            return addOnLocalStore(variableId, onStore)
+        } else {
+            return addInstruction(onStore(existingLocal))
+        }
+    }
+
+    private fun addOnLocalStore(variableId: Int, onStore: (String) -> WasmInstruction): WasmFunctionContext {
+        return copy(onLocalStore = onLocalStore.put(variableId, onLocalStore.getOrDefault(variableId, persistentListOf()).add(onStore)))
+    }
+
+    fun onLocalStore(variableId: Int): WasmFunctionContext {
+        val instructions = onLocalStore.getOrDefault(variableId, persistentListOf())
+            .map { onStore -> onStore(variableToStoredLocal(variableId)) }
+        return addInstructions(instructions)
     }
 
     fun addOnLabel(label: Int, instruction: WasmInstruction): WasmFunctionContext {
