@@ -622,7 +622,7 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         }
 
         is Discard -> {
-            initialState.discardTemporary().nextInstruction()
+                initialState.discardTemporary().nextInstruction()
         }
 
         is Duplicate -> {
