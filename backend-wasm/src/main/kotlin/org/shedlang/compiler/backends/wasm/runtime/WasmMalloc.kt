@@ -105,3 +105,7 @@ internal fun callMalloc(size: WasmInstruction.Folded, alignment: WasmInstruction
         listOf(size, alignment),
     )
 }
+
+internal fun callMalloc(size: Int, alignment: Int): WasmInstruction.Folded {
+    return callMalloc(size = Wasm.I.i32Const(size), alignment = Wasm.I.i32Const(alignment))
+}

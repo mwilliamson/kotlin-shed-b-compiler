@@ -4,13 +4,14 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.Type
 import java.lang.UnsupportedOperationException
 
 internal object WasmObjects {
     internal fun compileFieldStore(
         objectPointer: WasmInstruction.Folded,
-        objectType: ModuleType,
+        objectType: Type,
         fieldName: Identifier,
         fieldValue: WasmInstruction.Folded,
     ): WasmInstruction.Folded {
@@ -36,10 +37,12 @@ internal object WasmObjects {
         fieldIndex(type = objectType, fieldName = fieldName) * WasmData.VALUE_SIZE
 
     private fun fieldIndex(type: Type, fieldName: Identifier): Int {
-        if (type !is ModuleType) {
-            throw UnsupportedOperationException()
+        val fieldNames = when (type) {
+            is ModuleType -> type.fields.keys
+            is ShapeType -> type.allFields.keys
+            else -> throw UnsupportedOperationException()
         }
-        val sortedFieldNames = type.fields.keys.sorted()
+        val sortedFieldNames = fieldNames.sorted()
         val fieldIndex = sortedFieldNames.indexOf(fieldName)
 
         if (fieldIndex == -1) {

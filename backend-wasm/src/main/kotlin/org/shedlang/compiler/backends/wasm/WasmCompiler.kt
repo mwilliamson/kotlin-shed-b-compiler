@@ -7,12 +7,14 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
+import org.shedlang.compiler.backends.wasm.runtime.callMalloc
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.Field
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
@@ -149,6 +151,41 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
             is DefineFunction -> {
                 return compileDefineFunction(instruction, context)
+            }
+
+            is DefineShape -> {
+                fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
+
+                val fields = instruction.rawShapeType.allFields.values
+                val (context2, constructor) = WasmClosures.compileCreate(
+                    functionName = instruction.rawShapeType.name.value,
+                    freeVariables = listOf(),
+                    positionalParams = listOf(),
+                    namedParams = fields.map { field ->
+                        field.name to WasmParam(fieldParamIdentifier(field), type = WasmData.genericValueType)
+                    },
+                    compileBody = { constructorContext ->
+                        val (constructorContext2, obj) = constructorContext.addLocal("obj")
+                        val constructorContext3 = constructorContext2
+                            .addInstruction(Wasm.I.localSet(
+                                obj,
+                                callMalloc(size = fields.size * WasmData.VALUE_SIZE, alignment = WasmData.VALUE_SIZE),
+                            ))
+
+                        val constructorContext4 = fields.fold(constructorContext3) { currentContext, field ->
+                            currentContext
+                                .addInstruction(WasmObjects.compileFieldStore(
+                                    objectPointer = Wasm.I.localGet(obj),
+                                    objectType = instruction.rawShapeType,
+                                    fieldName = field.name,
+                                    fieldValue = Wasm.I.localGet(fieldParamIdentifier(field)),
+                                ))
+                        }
+                        constructorContext4.addInstruction(Wasm.I.localGet(obj))
+                    },
+                    context = context,
+                )
+                return context2.addInstruction(Wasm.I.localGet(constructor))
             }
 
             is Discard -> {
