@@ -31,8 +31,6 @@ class WasmExampleTests {
         "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
         "NonLocalReturnNested.shed",
-        "PolymorphicCons.shed",
-        "PolymorphicForEach.shed",
         "PolymorphicMap.shed",
         "RecursiveFactorial.shed",
         "RecursiveFibonacci.shed",
@@ -46,10 +44,6 @@ class WasmExampleTests {
         "Tuples.shed",
         "TypeName.shed",
         "usingStdlib",
-        "Varargs.shed",
-        "When.shed",
-        "WhenDestructuring.shed",
-        "WhenElse.shed",
     )
 
     @TestFactory
