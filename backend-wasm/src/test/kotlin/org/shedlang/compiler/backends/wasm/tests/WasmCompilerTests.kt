@@ -8,16 +8,16 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.platform.commons.util.AnnotationUtils.findAnnotation
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
-import org.shedlang.compiler.backends.wasm.*
+import org.shedlang.compiler.backends.wasm.WasmCompiler
+import org.shedlang.compiler.backends.wasm.WasmFunctionContext
+import org.shedlang.compiler.backends.wasm.WasmNaming
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
-import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.backends.withLineNumbers
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.*
-import java.lang.Exception
 import java.lang.annotation.Retention
 import java.lang.annotation.RetentionPolicy
 import java.nio.file.Path
@@ -47,23 +47,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val globalContext3 = compiler.compileDependencies(globalContext2)
         val boundGlobalContext = globalContext3.bind()
 
-        val module = Wasm.module(
-            types = boundGlobalContext.types,
-            imports = listOf(
-                Wasi.importFdWrite(),
-            ),
-            globals = boundGlobalContext.globals,
-            memoryPageCount = boundGlobalContext.pageCount,
-            start = "start",
-            dataSegments = boundGlobalContext.dataSegments,
-            table = boundGlobalContext.table,
-            functions = listOf(
-                Wasm.function(
-                    identifier = "start",
-                    body = boundGlobalContext.startInstructions,
-                ),
-            ) + boundGlobalContext.functions,
-        )
+        val module = boundGlobalContext.toModule()
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices)
         val watContents = wat.serialise(module)
         println(withLineNumbers(watContents))

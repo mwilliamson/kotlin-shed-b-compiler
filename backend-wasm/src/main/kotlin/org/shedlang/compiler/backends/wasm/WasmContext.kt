@@ -58,15 +58,36 @@ internal data class WasmGlobalContext private constructor(
     }
 
     class Bound(
-        internal val globals: List<WasmGlobal>,
-        internal val pageCount: Int,
-        internal val dataSegments: List<WasmDataSegment>,
-        internal val startInstructions: List<WasmInstruction>,
-        internal val functions: List<WasmFunction>,
-        internal val table: List<String>,
-        internal val types: List<WasmFuncType>,
+        private val globals: List<WasmGlobal>,
+        private val pageCount: Int,
+        private val dataSegments: List<WasmDataSegment>,
+        private val startInstructions: List<WasmInstruction>,
+        private val functions: List<WasmFunction>,
+        private val table: List<String>,
+        private val types: List<WasmFuncType>,
         internal val lateIndices: Map<LateIndex, Int>,
-    )
+    ) {
+        fun toModule(): WasmModule {
+            return Wasm.module(
+                types = types,
+                imports = listOf(
+                    Wasi.importFdWrite(),
+                    Wasi.importProcExit(),
+                ),
+                globals = globals,
+                memoryPageCount = pageCount,
+                start = WasmNaming.funcStartIdentifier,
+                dataSegments = dataSegments,
+                table = table,
+                functions = listOf(
+                    Wasm.function(
+                        identifier = WasmNaming.funcStartIdentifier,
+                        body = startInstructions,
+                    ),
+                ) + functions,
+            )
+        }
+    }
 
     fun bind(): Bound {
         var size = 0

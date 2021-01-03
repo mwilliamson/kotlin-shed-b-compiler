@@ -28,24 +28,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         val boundGlobalContext = globalContext.bind()
 
-        val module = Wasm.module(
-            types = boundGlobalContext.types,
-            imports = listOf(
-                Wasi.importFdWrite(),
-                Wasi.importProcExit(),
-            ),
-            globals = boundGlobalContext.globals,
-            memoryPageCount = boundGlobalContext.pageCount,
-            start = WasmNaming.funcStartIdentifier,
-            dataSegments = boundGlobalContext.dataSegments,
-            table = boundGlobalContext.table,
-            functions = listOf(
-                Wasm.function(
-                    identifier = WasmNaming.funcStartIdentifier,
-                    body = boundGlobalContext.startInstructions,
-                ),
-            ) + boundGlobalContext.functions,
-        )
+        val module = boundGlobalContext.toModule()
 
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices).serialise(module)
         return CompilationResult(wat = wat)
