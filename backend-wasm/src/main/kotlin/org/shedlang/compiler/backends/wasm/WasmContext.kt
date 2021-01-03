@@ -30,7 +30,7 @@ internal data class WasmGlobalContext private constructor(
     private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
     private val dependencies: PersistentList<ModuleName>,
-    private val tagValues: PersistentMap<TagValue, LateIndex>,
+    private val tagValues: PersistentMap<TagValue, Set<LateIndex>>,
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
@@ -47,7 +47,7 @@ internal data class WasmGlobalContext private constructor(
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
                 dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentList(),
-                tagValues = contexts.map { context -> context.tagValues }.reduce { a, b -> a.putAll(b) },
+                tagValues = contexts.map { context -> context.tagValues }.reduce(::mergeTagValues),
             )
         }
     }
@@ -58,7 +58,7 @@ internal data class WasmGlobalContext private constructor(
             functions = functions.addAll(other.functions),
             staticData = staticData.addAll(other.staticData),
             dependencies = dependencies.addAll(other.dependencies),
-            tagValues = tagValues.putAll(other.tagValues),
+            tagValues = mergeTagValues(tagValues, other.tagValues),
         )
     }
 
@@ -147,8 +147,10 @@ internal data class WasmGlobalContext private constructor(
             }
         }
 
-        tagValues.values.forEachIndexed { tagValueIndex, lateIndex ->
-            lateIndices[lateIndex] = tagValueIndex + 1
+        tagValues.values.forEachIndexed { tagValueIndex, lateIndicesForTagValue ->
+            for (lateIndex in lateIndicesForTagValue) {
+                lateIndices[lateIndex] = tagValueIndex + 1
+            }
         }
 
         return Bound(
@@ -233,11 +235,27 @@ internal data class WasmGlobalContext private constructor(
         } else {
             val lateIndex = nextLateIndex()
             copy(
-                tagValues = tagValues.put(tagValue, lateIndex),
+                tagValues = tagValues.put(tagValue, persistentSetOf(lateIndex)),
             )
         }
-        return Pair(newContext, newContext.tagValues.getValue(tagValue))
+        return Pair(newContext, newContext.tagValues.getValue(tagValue).first())
     }
+}
+
+private fun mergeTagValues(
+    left: PersistentMap<TagValue, Set<LateIndex>>,
+    right: PersistentMap<TagValue, Set<LateIndex>>,
+): PersistentMap<TagValue, PersistentSet<LateIndex>> {
+    val result = persistentMapOf<TagValue, PersistentSet<LateIndex>>().builder()
+    val keys = left.keys + right.keys
+    for (key in keys) {
+        if (!result.containsKey(key)) {
+            result.put(key, persistentSetOf())
+        }
+        result.put(key, result.getValue(key).addAll(left.getOrDefault(key, persistentSetOf())))
+        result.put(key, result.getValue(key).addAll(right.getOrDefault(key, persistentSetOf())))
+    }
+    return result.build()
 }
 
 private const val initialLocalIndex = 1
