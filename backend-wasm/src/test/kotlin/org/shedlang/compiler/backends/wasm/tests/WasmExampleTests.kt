@@ -25,7 +25,6 @@ class WasmExampleTests {
         "EffectHandlerExitOrResume.shed",
         "FieldDestructuring.shed",
         "HandleWithState.shed",
-        "IgnoreTarget.shed",
         "IntOperations.shed",
         "localImports",
         "Matchers.shed",
