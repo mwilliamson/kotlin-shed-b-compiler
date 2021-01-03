@@ -20,8 +20,8 @@ object WasmTuples {
         val context4 = context3.addInstruction(Wasm.I.localSet(
             tuplePointer,
             callMalloc(
-                size = Wasm.I.i32Const(WasmData.VALUE_SIZE * length),
-                alignment = Wasm.I.i32Const(WasmData.VALUE_SIZE),
+                size = WasmData.VALUE_SIZE * length,
+                alignment = WasmData.VALUE_SIZE,
             ),
         ))
 

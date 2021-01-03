@@ -41,8 +41,8 @@ internal object WasmClosures {
         val context4 = context3.addInstruction(Wasm.I.localSet(
             closure,
             callMalloc(
-                size = Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size),
-                alignment = Wasm.I.i32Const(WasmData.closureAlignment),
+                size = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size,
+                alignment = WasmData.closureAlignment,
             ),
         ))
         val context6 = compileFreeVariablesStore(
