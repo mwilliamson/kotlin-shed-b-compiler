@@ -348,21 +348,29 @@ class Loader(
             }
 
             override fun visit(node: WhenNode): PersistentList<Instruction> {
+                val expressionVariableId = freshNodeId()
+                val expressionName = Identifier("whenExpression")
                 val expressionInstructions = loadExpression(node.expression)
+                    .add(LocalStore(variableId = expressionVariableId, name = expressionName))
+
+                val loadExpression = LocalLoad(variableId = expressionVariableId, name = expressionName)
 
                 val conditionInstructions = node.conditionalBranches.map { branch ->
                     val discriminator = inspector.discriminatorForWhenBranch(node, branch)
 
-                    persistentListOf<Instruction>(Duplicate).addAll(typeConditionInstructions(discriminator))
+                    persistentListOf<Instruction>(loadExpression)
+                        .addAll(typeConditionInstructions(discriminator))
                 }
 
                 val elseBranch = node.elseBranch
                 return expressionInstructions.addAll(generateBranches(
                     conditionInstructions = conditionInstructions,
                     conditionalBodies = node.conditionalBranches.map { branch ->
-                        loadTarget(branch.target).addAll(loadBlock(branch.body))
+                        persistentListOf<Instruction>(loadExpression)
+                            .addAll(loadTarget(branch.target))
+                            .addAll(loadBlock(branch.body))
                     },
-                    elseBranch = if (elseBranch == null) null else loadBlock(elseBranch).add(0, Discard),
+                    elseBranch = if (elseBranch == null) null else loadBlock(elseBranch),
                 ))
             }
 
