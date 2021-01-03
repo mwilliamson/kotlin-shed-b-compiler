@@ -70,7 +70,7 @@ internal object WasmObjects {
         private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
 
         val size: Int
-            get() = fieldNames.size * WasmData.VALUE_SIZE
+            get() = tagValueSize + fieldNames.size * WasmData.VALUE_SIZE
 
         val alignment: Int
             get() = OBJECT_ALIGNMENT
