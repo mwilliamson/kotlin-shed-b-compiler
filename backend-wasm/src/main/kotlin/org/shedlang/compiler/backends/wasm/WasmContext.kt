@@ -207,7 +207,7 @@ internal data class WasmFunctionContext(
     private val variableIdToLocal: PersistentMap<Int, String>,
     private val onLocalStore: PersistentMap<Int, PersistentList<(String) -> WasmInstruction>>,
     private val onLabel: PersistentMap<Int, PersistentList<WasmInstruction>>,
-    internal val globalContext: WasmGlobalContext,
+    private val globalContext: WasmGlobalContext,
 ) {
     companion object {
         fun initial() = WasmFunctionContext(

@@ -29,17 +29,16 @@ internal object WasmClosures {
         )
 
         val functionContext3 = compileBody(functionContext2)
-
-        val context2 = context.mergeGlobalContext(functionContext3.globalContext)
-
-        val (context3, functionIndex) = context2.addFunction(functionContext3.toFunction(
+        val (functionGlobalContext, functionIndex) = functionContext3.toFunctionInGlobalContext(
             // TODO: uniquify name
             identifier = functionName,
             params = params,
             results = listOf(WasmData.genericValueType),
-        ))
-        val (context4, closure) = context3.addLocal("closure")
-        val context5 = context4.addInstruction(Wasm.I.localSet(
+        )
+
+        val context2 = context.mergeGlobalContext(functionGlobalContext)
+        val (context3, closure) = context2.addLocal("closure")
+        val context4 = context3.addInstruction(Wasm.I.localSet(
             closure,
             callMalloc(
                 size = Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariables.size),
@@ -49,7 +48,7 @@ internal object WasmClosures {
         val context6 = compileFreeVariablesStore(
             closure = Wasm.I.localGet(closure),
             freeVariables = freeVariables,
-            context = context5,
+            context = context4,
         )
         val context7 = context6.addInstruction(Wasm.I.i32Store(
             Wasm.I.localGet(closure),
