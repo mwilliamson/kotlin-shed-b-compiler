@@ -337,6 +337,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                         return context3.addInstruction(Wasm.I.i32Const(memoryIndex))
                     }
+                    is IrTagValue -> {
+                        val (context2, tagValue) = context.compileTagValue(value.value)
+                        return context2.addInstruction(Wasm.I.i32Const(tagValue))
+                    }
                     is IrUnicodeScalar -> {
                         return context.addInstruction(Wasm.I.i32Const(value.value))
                     }
@@ -373,6 +377,14 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     .addInstruction(Wasm.I.localSet(temp2))
                     .addInstruction(Wasm.I.localGet(temp1))
                     .addInstruction(Wasm.I.localGet(temp2))
+            }
+
+            is TagValueAccess -> {
+                return WasmObjects.compileTagValueAccess(context)
+            }
+
+            is TagValueEquals -> {
+                return context.addInstruction(Wasm.I.i32Equals)
             }
 
             is TupleAccess -> {

@@ -17,6 +17,7 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmParam
 import org.shedlang.compiler.backends.wasm.wasm.WasmValueType
 import org.shedlang.compiler.stackir.divideRoundingUp
 import org.shedlang.compiler.stackir.roundUp
+import org.shedlang.compiler.types.TagValue
 
 private var nextLateIndexKey = 1
 
@@ -29,6 +30,7 @@ internal data class WasmGlobalContext private constructor(
     private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
     private val dependencies: PersistentList<ModuleName>,
+    private val tagValues: PersistentMap<TagValue, LateIndex>,
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
@@ -36,6 +38,7 @@ internal data class WasmGlobalContext private constructor(
             functions = persistentListOf(),
             staticData = persistentListOf(),
             dependencies = persistentListOf(),
+            tagValues = persistentMapOf(),
         )
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
@@ -44,6 +47,7 @@ internal data class WasmGlobalContext private constructor(
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
                 dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentList(),
+                tagValues = contexts.map { context -> context.tagValues }.reduce { a, b -> a.putAll(b) },
             )
         }
     }
@@ -54,6 +58,7 @@ internal data class WasmGlobalContext private constructor(
             functions = functions.addAll(other.functions),
             staticData = staticData.addAll(other.staticData),
             dependencies = dependencies.addAll(other.dependencies),
+            tagValues = tagValues.putAll(other.tagValues),
         )
     }
 
@@ -142,6 +147,10 @@ internal data class WasmGlobalContext private constructor(
             }
         }
 
+        tagValues.values.forEachIndexed { tagValueIndex, lateIndex ->
+            lateIndices[lateIndex] = tagValueIndex + 1
+        }
+
         return Bound(
             globals = globals.map { (global, _) -> global },
             pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
@@ -216,6 +225,18 @@ internal data class WasmGlobalContext private constructor(
             val newContext = copy(dependencies = dependencies.removeAt(dependencies.lastIndex))
             return Pair(newContext, dependency)
         }
+    }
+
+    fun compileTagValue(tagValue: TagValue): Pair<WasmGlobalContext, LateIndex> {
+        val newContext = if (tagValues.containsKey(tagValue)) {
+            this
+        } else {
+            val lateIndex = nextLateIndex()
+            copy(
+                tagValues = tagValues.put(tagValue, lateIndex),
+            )
+        }
+        return Pair(newContext, newContext.tagValues.getValue(tagValue))
     }
 }
 
@@ -350,6 +371,12 @@ internal data class WasmFunctionContext(
 
     fun addDependency(moduleName: ModuleName): WasmFunctionContext {
         return copy(globalContext = globalContext.addDependency(dependency = moduleName))
+    }
+
+    fun compileTagValue(tagValue: TagValue): Pair<WasmFunctionContext, LateIndex> {
+        val (newGlobalContext, lateIndex) = globalContext.compileTagValue(tagValue)
+        val newContext = copy(globalContext = newGlobalContext)
+        return Pair(newContext, lateIndex)
     }
 
     fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {

@@ -5,10 +5,13 @@ import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.types.ModuleType
 import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.TagValue
 import org.shedlang.compiler.types.Type
 import java.lang.UnsupportedOperationException
 
 internal object WasmObjects {
+    private const val OBJECT_ALIGNMENT = WasmData.VALUE_SIZE
+
     internal fun compileObjectStore(
         objectPointer: WasmInstruction.Folded,
         objectType: Type,
@@ -16,15 +19,30 @@ internal object WasmObjects {
         context: WasmFunctionContext,
     ): WasmFunctionContext {
         val layout = layout(type = objectType)
-        return fieldValues.fold(context) { currentContext, (fieldName, fieldValue) ->
+        val context2 = if (layout.tagValue == null) {
+            context
+        } else {
+            val (newContext, tagValue) = context.compileTagValue(layout.tagValue)
+            newContext.addInstruction(Wasm.I.i32Store(
+                address = objectPointer,
+                offset = layout.tagValueOffset,
+                alignment = OBJECT_ALIGNMENT,
+                value = Wasm.I.i32Const(tagValue),
+            ))
+        }
+        return fieldValues.fold(context2) { currentContext, (fieldName, fieldValue) ->
             currentContext
                 .addInstruction(Wasm.I.i32Store(
                     address = objectPointer,
                     offset = layout.fieldOffset(fieldName = fieldName),
-                    alignment = WasmData.VALUE_SIZE,
+                    alignment = OBJECT_ALIGNMENT,
                     value = fieldValue,
                 ))
         }
+    }
+
+    internal fun compileTagValueAccess(context: WasmFunctionContext): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.i32Load(offset = 0, alignment = OBJECT_ALIGNMENT))
     }
 
     internal fun compileFieldLoad(objectType: Type, fieldName: Identifier): WasmInstruction {
@@ -34,31 +52,35 @@ internal object WasmObjects {
             offset = layout.fieldOffset(
                 fieldName = fieldName,
             ),
-            alignment = WasmData.VALUE_SIZE,
+            alignment = OBJECT_ALIGNMENT,
         )
     }
 
     fun layout(type: Type): Layout {
-        val fieldNames = when (type) {
-            is ModuleType -> type.fields.keys
-            is ShapeType -> type.allFields.keys
+        val (fieldNames, tagValue) = when (type) {
+            is ModuleType -> Pair(type.fields.keys, null)
+            is ShapeType -> Pair(type.allFields.keys, type.tagValue)
             else -> throw UnsupportedOperationException()
-        }.sorted()
+        }
 
-        return Layout(fieldNames = fieldNames)
+        return Layout(fieldNames = fieldNames.sorted(), tagValue = tagValue)
     }
 
-    class Layout(private val fieldNames: List<Identifier>) {
+    class Layout(private val fieldNames: List<Identifier>, val tagValue: TagValue?) {
+        private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
+
         val size: Int
             get() = fieldNames.size * WasmData.VALUE_SIZE
 
         val alignment: Int
-            get() = WasmData.VALUE_SIZE
+            get() = OBJECT_ALIGNMENT
+
+        val tagValueOffset: Int = 0
 
         fun fieldOffset(fieldName: Identifier) =
-            fieldIndex(fieldName = fieldName) * WasmData.VALUE_SIZE
+            tagValueSize + fieldIndex(fieldName = fieldName) * WasmData.VALUE_SIZE
 
-        fun fieldIndex(fieldName: Identifier): Int {
+        private fun fieldIndex(fieldName: Identifier): Int {
             val fieldIndex = fieldNames.indexOf(fieldName)
 
             if (fieldIndex == -1) {
