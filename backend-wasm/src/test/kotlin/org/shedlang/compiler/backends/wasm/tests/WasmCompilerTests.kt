@@ -30,21 +30,22 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         val functionContext = compiler.compileInstructions(instructions, WasmFunctionContext.initial())
 
-        val testFunc = if (type == StringType) {
-            functionContext.addInstruction(Wasm.I.call(WasmNaming.Runtime.print)).toFunction(
+        val globalContext1 = if (type == StringType) {
+            functionContext.addInstruction(Wasm.I.call(WasmNaming.Runtime.print)).toStaticFunctionInGlobalContext(
                 identifier = "test",
                 exportName = "_start",
             )
         } else {
-            functionContext.toFunction(
+            functionContext.toStaticFunctionInGlobalContext(
                 identifier = "test",
                 exportName = "test",
                 results = listOf(Wasm.T.i32),
             )
         }
 
-        val globalContext = compileRuntime().merge(functionContext.globalContext)
-        val boundGlobalContext = globalContext.bind()
+        val globalContext2 = globalContext1.merge(compileRuntime())
+        val globalContext3 = compiler.compileDependencies(globalContext2)
+        val boundGlobalContext = globalContext3.bind()
 
         val module = Wasm.module(
             types = boundGlobalContext.types,
@@ -61,7 +62,6 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                     identifier = "start",
                     body = boundGlobalContext.startInstructions,
                 ),
-                testFunc,
             ) + boundGlobalContext.functions,
         )
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices)

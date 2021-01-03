@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.wasm
 import kotlinx.collections.immutable.*
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
@@ -27,12 +28,14 @@ internal data class WasmGlobalContext private constructor(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
     private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
+    private val dependencies: PersistentList<ModuleName>,
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
             globals = persistentListOf(),
             functions = persistentListOf(),
-            staticData = persistentListOf()
+            staticData = persistentListOf(),
+            dependencies = persistentListOf(),
         )
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
@@ -40,6 +43,7 @@ internal data class WasmGlobalContext private constructor(
                 globals = contexts.flatMap { context -> context.globals }.toPersistentList(),
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
+                dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentList(),
             )
         }
     }
@@ -49,6 +53,7 @@ internal data class WasmGlobalContext private constructor(
             globals = globals.addAll(other.globals),
             functions = functions.addAll(other.functions),
             staticData = staticData.addAll(other.staticData),
+            dependencies = dependencies.addAll(other.dependencies),
         )
     }
 
@@ -176,6 +181,20 @@ internal data class WasmGlobalContext private constructor(
             staticData = staticData.add(Pair(ref, data)),
         )
         return Pair(newContext, ref)
+    }
+
+    fun addDependency(dependency: ModuleName): WasmGlobalContext {
+        return copy(dependencies = dependencies.add(dependency))
+    }
+
+    fun popDependency(): Pair<WasmGlobalContext, ModuleName?> {
+        if (dependencies.isEmpty()) {
+            return Pair(this, null)
+        } else {
+            val dependency = dependencies[dependencies.lastIndex]
+            val newContext = copy(dependencies = dependencies.removeAt(dependencies.lastIndex))
+            return Pair(newContext, dependency)
+        }
     }
 }
 
@@ -314,12 +333,48 @@ internal data class WasmFunctionContext(
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
+    fun addDependency(moduleName: ModuleName): WasmFunctionContext {
+        return copy(globalContext = globalContext.addDependency(dependency = moduleName))
+    }
+
     fun mergeGlobalContext(context: WasmFunctionContext): WasmFunctionContext {
         return copy(globalContext = this.globalContext.merge(context.globalContext))
     }
 
     fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {
         return copy(globalContext = this.globalContext.merge(globalContext))
+    }
+
+    fun toStaticFunctionInGlobalContext(
+        identifier: String,
+        exportName: String? = null,
+        params: List<WasmParam> = listOf(),
+        results: List<WasmValueType> = listOf(),
+    ): WasmGlobalContext {
+        val function = toFunction(
+            identifier = identifier,
+            exportName = exportName,
+            params = params,
+            results = results,
+        )
+
+        return globalContext.addStaticFunction(function)
+    }
+
+    fun toFunctionInGlobalContext(
+        identifier: String,
+        exportName: String? = null,
+        params: List<WasmParam> = listOf(),
+        results: List<WasmValueType> = listOf(),
+    ): Pair<WasmGlobalContext, LateIndex> {
+        val function = toFunction(
+            identifier = identifier,
+            exportName = exportName,
+            params = params,
+            results = results,
+        )
+
+        return globalContext.addFunction(function)
     }
 
     fun toFunction(

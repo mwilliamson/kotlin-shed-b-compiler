@@ -7,15 +7,12 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
-import org.shedlang.compiler.backends.wasm.runtime.callMalloc
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.Type
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
@@ -23,15 +20,12 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     class CompilationResult(val wat: String)
 
     fun compile(mainModule: ModuleName): CompilationResult {
-        val moduleType = moduleSet.moduleType(mainModule)!!
-        val startFunctionContext = WasmFunctionContext.initial()
-            .let { compileModuleInitialisation(mainModule, context = it) }
-            .addInstruction(WasmModules.compileLoad(mainModule))
-            .addInstruction(WasmObjects.compileFieldLoad(objectType = moduleType, fieldName = Identifier("main")))
-            .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), context = it) }
-            .addInstruction(Wasi.callProcExit())
+        val startFunctionContext = compileStartFunction(mainModule)
 
-        val globalContext = compileRuntime().merge(startFunctionContext.globalContext)
+        var globalContext = startFunctionContext.merge(compileRuntime())
+
+        globalContext = compileDependencies(globalContext)
+
         val boundGlobalContext = globalContext.bind()
 
         val module = Wasm.module(
@@ -50,15 +44,82 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     identifier = WasmNaming.funcStartIdentifier,
                     body = boundGlobalContext.startInstructions,
                 ),
-                startFunctionContext.toFunction(
-                    identifier = WasmNaming.funcMainIdentifier,
-                    exportName = "_start",
-                ),
             ) + boundGlobalContext.functions,
         )
 
         val wat = Wat(lateIndices = boundGlobalContext.lateIndices).serialise(module)
         return CompilationResult(wat = wat)
+    }
+
+    fun compileDependencies(initialContext: WasmGlobalContext): WasmGlobalContext {
+        var context = initialContext
+        val compiledModules = mutableSetOf<ModuleName>()
+        while (true) {
+            val (newContext, dependency) = context.popDependency()
+            context = newContext
+            if (dependency == null) {
+                return context
+            } else if (dependency !in compiledModules) {
+                compiledModules.add(dependency)
+                val moduleContext = compileModule(dependency)
+                context = context.merge(moduleContext)
+            }
+        }
+    }
+
+    private fun compileStartFunction(mainModule: ModuleName): WasmGlobalContext {
+        val moduleType = moduleSet.moduleType(mainModule)!!
+        return WasmFunctionContext.initial()
+            .let { compileModuleInitCall(mainModule, context = it) }
+            .addInstruction(WasmModules.compileLoad(mainModule))
+            .addInstruction(WasmObjects.compileFieldLoad(objectType = moduleType, fieldName = Identifier("main")))
+            .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), context = it) }
+            .addInstruction(Wasi.callProcExit())
+            .toStaticFunctionInGlobalContext(
+                identifier = WasmNaming.funcMainIdentifier,
+                exportName = "_start",
+            )
+    }
+
+    private fun compileModule(moduleName: ModuleName): WasmGlobalContext {
+        // TODO: check whether module has already been compiled
+        val moduleInit = image.moduleInitialisation(moduleName)
+        val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
+
+        if (moduleInit != null) {
+            // TODO: check whether module has already been initialised
+            val initContext = compileInstructions(moduleInit, WasmFunctionContext.initial())
+            return initContext.toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
+        } else if (moduleName == listOf(Identifier("Core"), Identifier("Io"))) {
+            val initContext = WasmFunctionContext.initial()
+            val (initContext2, closure) = WasmClosures.compileCreate(
+                // TODO: build identifiers in WasmNaming
+                functionName = "shed_module__core_io__print",
+                freeVariables = listOf(),
+                positionalParams = listOf(WasmParam("value", type = WasmData.genericValueType)),
+                namedParams = listOf(),
+                compileBody = { currentContext -> currentContext
+                    .addInstruction(Wasm.I.call(
+                        identifier = WasmNaming.Runtime.print,
+                        args = listOf(Wasm.I.localGet("value")),
+                    ))
+                    .addInstruction(WasmData.unitValue)
+                },
+                initContext,
+            )
+            val initContext3 = moduleStore(
+                moduleName = moduleName,
+                exports = listOf(
+                    Pair(Identifier("print"), Wasm.I.localGet(closure)),
+                ),
+                context = initContext2,
+            )
+            return initContext3.toStaticFunctionInGlobalContext(
+                identifier = initFunctionIdentifier,
+            )
+        } else {
+            throw CompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)
+        }
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: WasmFunctionContext): WasmFunctionContext {
@@ -199,7 +260,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is ModuleInit -> {
-                return compileModuleInitialisation(instruction.moduleName, context)
+                return compileModuleInitCall(instruction.moduleName, context)
             }
 
             is ModuleInitExit -> {
@@ -393,7 +454,17 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         )
     }
 
-    private fun compileModuleInitialisation(moduleName: ModuleName, context: WasmFunctionContext): WasmFunctionContext {
+    private fun compileModuleInitCall(moduleName: ModuleName, context: WasmFunctionContext): WasmFunctionContext {
+        val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
+        return context
+            .addDependency(moduleName)
+            .addInstruction(Wasm.I.call(
+                identifier = initFunctionIdentifier,
+                args = listOf(),
+            ))
+    }
+
+    private fun compileModuleInitialisation2(moduleName: ModuleName, context: WasmFunctionContext): WasmFunctionContext {
         // TODO: check whether module has already been compiled
         val moduleInit = image.moduleInitialisation(moduleName)
         if (moduleInit != null) {
