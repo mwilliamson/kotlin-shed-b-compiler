@@ -18,14 +18,12 @@ internal object WasmModules {
             alignment = WasmData.VALUE_SIZE,
         )
 
-        val context3 = exports.fold(context2) { currentContext, (exportName, exportValue) ->
-            currentContext.addInstruction(WasmObjects.compileFieldStore(
-                objectPointer = Wasm.I.i32Const(moduleValue),
-                objectType = moduleType,
-                fieldName = exportName,
-                fieldValue = exportValue,
-            ))
-        }
+        val context3 = WasmObjects.compileObjectStore(
+            objectPointer = Wasm.I.i32Const(moduleValue),
+            objectType = moduleType,
+            fieldValues = exports,
+            context = context2,
+        )
 
         return context3
             .addInstruction(Wasm.I.globalSet(WasmNaming.moduleIsInited(moduleName), Wasm.I.i32Const(1)))

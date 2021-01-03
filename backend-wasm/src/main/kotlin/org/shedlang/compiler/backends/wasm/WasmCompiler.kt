@@ -172,15 +172,12 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                                 callMalloc(size = fields.size * WasmData.VALUE_SIZE, alignment = WasmData.VALUE_SIZE),
                             ))
 
-                        val constructorContext4 = fields.fold(constructorContext3) { currentContext, field ->
-                            currentContext
-                                .addInstruction(WasmObjects.compileFieldStore(
-                                    objectPointer = Wasm.I.localGet(obj),
-                                    objectType = instruction.rawShapeType,
-                                    fieldName = field.name,
-                                    fieldValue = Wasm.I.localGet(fieldParamIdentifier(field)),
-                                ))
-                        }
+                        val constructorContext4 = WasmObjects.compileObjectStore(
+                            objectPointer = Wasm.I.localGet(obj),
+                            objectType = instruction.rawShapeType,
+                            fieldValues = fields.map { field -> field.name to Wasm.I.localGet(fieldParamIdentifier(field)) },
+                            context = constructorContext3,
+                        )
                         constructorContext4.addInstruction(Wasm.I.localGet(obj))
                     },
                     context = context,
