@@ -78,29 +78,26 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 type = Wasm.T.i32,
                 initial = Wasm.I.i32Const(0),
             )
+            .addInstruction(Wasm.I.globalGet(isInited))
+            .addInstruction(Wasm.I.if_())
+            .addInstruction(Wasm.I.else_)
 
-        if (moduleInit != null) {
+        val finalInitContext = if (moduleInit != null) {
             // TODO: check whether module has already been initialised
-            return initContext
-                .addInstruction(Wasm.I.globalGet(isInited))
-                .addInstruction(Wasm.I.if_())
-                .addInstruction(Wasm.I.else_)
-                .let { compileInstructions(moduleInit, it) }
-                .addInstructions(Wasm.I.end)
-                .toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
+            compileInstructions(moduleInit, initContext)
         } else if (nativeModuleInit != null) {
             val (initContext2, exports) = nativeModuleInit(initContext)
-            val initContext3 = moduleStore(
+            moduleStore(
                 moduleName = moduleName,
                 exports = exports,
                 context = initContext2,
             )
-            return initContext3.toStaticFunctionInGlobalContext(
-                identifier = initFunctionIdentifier,
-            )
         } else {
             throw CompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)
         }
+        return finalInitContext
+            .addInstructions(Wasm.I.end)
+            .toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: WasmFunctionContext): WasmFunctionContext {
