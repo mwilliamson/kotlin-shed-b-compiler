@@ -83,7 +83,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             .addInstruction(Wasm.I.else_)
 
         val finalInitContext = if (moduleInit != null) {
-            // TODO: check whether module has already been initialised
             compileInstructions(moduleInit, initContext)
         } else if (nativeModuleInit != null) {
             val (initContext2, exports) = nativeModuleInit(initContext)
