@@ -31,14 +31,14 @@ val successTestCases = list(
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("parseInt", list(
         Tests.suite("can parse", Lists.map(
-            fun (testCase: SuccessTestCase) => Tests.testCase(testCase.text, fun () {
-                Tests.assertThat(Strings.parseInt(testCase.text), Matchers.isSome(Matchers.isInt(testCase.value)))
+            fun (testCase: SuccessTestCase) => Tests.testCase(testCase.text, fun () !_ {
+                Tests.assertThat!(Strings.parseInt(testCase.text), Matchers.isSome(Matchers.isInt(testCase.value)));
             }),
             successTestCases,
         )),
 
-        Tests.testCase("empty string is parsed as none", fun () {
-            Tests.assertThat(Strings.parseInt(""), Matchers.isNone())
+        Tests.testCase("empty string is parsed as none", fun () !_ {
+            Tests.assertThat!(Strings.parseInt(""), Matchers.isNone());
         }),
     )),
 ));

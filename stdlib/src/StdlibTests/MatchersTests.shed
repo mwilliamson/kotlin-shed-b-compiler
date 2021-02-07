@@ -8,7 +8,7 @@ import TypeTests from .Matchers.TypeTests;
 
 val allOfTestCases = Tests.suite(moduleName, list(
     Tests.suite("allOf", list(
-        Tests.testCase("allOf() succeeds when all sub-matchers succeed", fun () {
+        Tests.testCase("allOf() succeeds when all sub-matchers succeed", fun () !_ {
             shape X {
                 one: Int,
                 two: Int,
@@ -24,10 +24,10 @@ val allOfTestCases = Tests.suite(moduleName, list(
                 .two = 2,
             ));
 
-            Tests.assert(M.isSuccess(result))
+            Tests.assert!(M.isSuccess(result));
         }),
 
-        Tests.testCase("allOf() fails with first error when any sub-matchers fails", fun () {
+        Tests.testCase("allOf() fails with first error when any sub-matchers fails", fun () !_ {
             shape X {
                 one: Int,
                 two: Int,
@@ -48,10 +48,10 @@ val allOfTestCases = Tests.suite(moduleName, list(
 
             when (result) {
                 is M.Failure {
-                    Tests.assertStringEquals(result.message, ".two:\n  was 1")
+                    Tests.assertStringEquals!(result.message, ".two:\n  was 1");
                 }
                 is M.Success {
-                    Tests.fail("expected failure but was success")
+                    Tests.fail!("expected failure but was success");
                 }
             }
         }),

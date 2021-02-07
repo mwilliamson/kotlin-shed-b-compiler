@@ -1,43 +1,39 @@
-export assert, assertStringEquals, assertThat, fail, Test, TestCase, TestSuite, suite, testCase, runTests;
+export assert, assertStringEquals, assertThat, Effect, fail, Test, TestCase, TestSuite, suite, testCase, runTests;
 
 import Lists from .Lists;
 import Matchers from .Matchers;
 import @(.indent as indent) from .Matchers.Formatting;
 
+effect Effect {
+    .fail: (String) -> Nothing
+}
+
 shape AssertionError {
     message: String,
 }
 
-fun fail(message: String) -> AssertionResult {
-    AssertionResult(.error = some(AssertionError(.message = message)))
-}
+val fail = Effect.fail;
 
-fun assert(value: Bool) -> AssertionResult {
-    if (value) {
-        AssertionResult(.error = none)
-    } else {
-        fail("value was false")
+fun assert(value: Bool) !Effect -> Unit {
+    if (not value) {
+        fail!("value was false");
     }
 }
 
-fun assertStringEquals(left: String, right: String) -> AssertionResult {
-    if (left == right) {
-        AssertionResult(.error = none)
-    } else {
-        fail("left:" + indent("\n" + left) + "\nright:" + indent("\n" + right))
+fun assertStringEquals(left: String, right: String) !Effect -> Unit {
+    if (left != right) {
+        fail!("left:" + indent("\n" + left) + "\nright:" + indent("\n" + right));
     }
 }
 
-fun assertThat[T](value: T, matcher: Matchers.Matcher[T]) -> AssertionResult {
+fun assertThat[T](value: T, matcher: Matchers.Matcher[T]) !Effect -> Unit {
     val result = matcher.match(value);
     when (result) {
         is Matchers.Failure {
             val message = "expected:" + indent("\n" + matcher.description) + "\nbut:" + indent("\n" + result.message);
-            val error = AssertionError(.message = message);
-            AssertionResult(.error = some(error))
+            fail!(message);
         }
         is Matchers.Success {
-            AssertionResult(.error = none)
         }
     }
 }
@@ -49,7 +45,7 @@ shape AssertionResult {
 union Test =
     | TestCase {
         name: String,
-        run: Fun () -> AssertionResult,
+        run: Fun () !Effect -> Unit,
     }
     | TestSuite {
         name: String,
@@ -66,7 +62,7 @@ union TestResult =
         results: Lists.List[TestResult],
     };
 
-fun testCase(name: String, run: Fun () -> AssertionResult) -> TestCase {
+fun testCase(name: String, run: Fun () !Effect -> Unit) -> TestCase {
     TestCase(.name = name, .run = run)
 }
 
@@ -168,11 +164,16 @@ fun runTest(test: Test, .parent: Option[String]) !Io -> TestResult {
 
     when (test) {
         is TestCase {
-            val result = test.run();
-            val error = result.error;
-
+            val error = handle Effect {
+                test.run!();
+                none
+            } on {
+                .fail = (message: String) {
+                    some(AssertionError(.message = message))
+                }
+            };
             when (error) {
-                is Some[AssertionError] {
+                is Some {
                     print!(redCode);
                     print!("✖");
                 }
@@ -182,7 +183,7 @@ fun runTest(test: Test, .parent: Option[String]) !Io -> TestResult {
                 }
             }
             print!(blackCode);
-            TestCaseResult(.name = namePrefix + test.name, .error = result.error)
+            TestCaseResult(.name = namePrefix + test.name, .error = error)
         }
         is TestSuite {
             // TODO: indentation

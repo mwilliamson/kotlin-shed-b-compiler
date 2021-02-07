@@ -6,112 +6,112 @@ import Tests from Stdlib.Tests;
 
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("isBool", list(
-        Tests.testCase("isBool(true) matches true", fun () {
+        Tests.testCase("isBool(true) matches true", fun () !_ {
             val matcher = M.isBool(true);
             val result = matcher.match(true);
-            Tests.assert(M.isSuccess(result))
+            Tests.assert!(M.isSuccess(result))
         }),
 
-        Tests.testCase("isBool(false) matches false", fun () {
+        Tests.testCase("isBool(false) matches false", fun () !_ {
             val matcher = M.isBool(false);
             val result = matcher.match(false);
-            Tests.assert(M.isSuccess(result))
+            Tests.assert!(M.isSuccess(result))
         }),
 
-        Tests.testCase("isBool(true) mismatches false", fun () {
+        Tests.testCase("isBool(true) mismatches false", fun () !_ {
             val matcher = M.isBool(true);
             val result = matcher.match(false);
 
             when (result) {
                 is M.Failure {
-                    Tests.assert(result.message == "was false")
+                    Tests.assert!(result.message == "was false")
                 }
                 is M.Success {
-                    Tests.fail("expected failure but was success")
+                    Tests.fail!("expected failure but was success")
                 }
             }
         }),
 
-        Tests.testCase("isBool(false) mismatches true", fun () {
+        Tests.testCase("isBool(false) mismatches true", fun () !_ {
             val matcher = M.isBool(false);
             val result = matcher.match(true);
 
             when (result) {
                 is M.Failure {
-                    Tests.assert(result.message == "was true")
+                    Tests.assert!(result.message == "was true")
                 }
                 is M.Success {
-                    Tests.fail("expected failure but was success")
+                    Tests.fail!("expected failure but was success")
                 }
             }
         }),
 
-        Tests.testCase("description of isBool(true) is true", fun () {
+        Tests.testCase("description of isBool(true) is true", fun () !_ {
             val matcher = M.isBool(true);
 
-            Tests.assert(matcher.description == "is true")
+            Tests.assert!(matcher.description == "is true")
         }),
 
-        Tests.testCase("description of isBool(false) is false", fun () {
+        Tests.testCase("description of isBool(false) is false", fun () !_ {
             val matcher = M.isBool(false);
 
-            Tests.assert(matcher.description == "is false")
+            Tests.assert!(matcher.description == "is false")
         }),
     )),
 
     Tests.suite("isInt", list(
-        Tests.testCase("matches when values are equal", fun () {
+        Tests.testCase("matches when values are equal", fun () !_ {
             val matcher = M.isInt(42);
             val result = matcher.match(42);
-            Tests.assert(M.isSuccess(result))
+            Tests.assert!(M.isSuccess(result))
         }),
 
-        Tests.testCase("mismatches with int string when values are not equal", fun () {
+        Tests.testCase("mismatches with int string when values are not equal", fun () !_ {
             val matcher = M.isInt(42);
             val result = matcher.match(47);
 
             when (result) {
                 is M.Failure {
-                    Tests.assert(result.message == "was 47")
+                    Tests.assert!(result.message == "was 47")
                 }
                 is M.Success {
-                    Tests.fail("expected failure but was success")
+                    Tests.fail!("expected failure but was success")
                 }
             }
         }),
 
-        Tests.testCase("description is int string", fun () {
+        Tests.testCase("description is int string", fun () !_ {
             val matcher = M.isInt(42);
 
-            Tests.assert(matcher.description == "is 42")
+            Tests.assert!(matcher.description == "is 42")
         }),
     )),
 
     Tests.suite("isString", list(
-        Tests.testCase("matches when values are equal", fun () {
+        Tests.testCase("matches when values are equal", fun () !_ {
             val matcher = M.isString("<string>");
             val result = matcher.match("<string>");
-            Tests.assert(M.isSuccess(result))
+            Tests.assert!(M.isSuccess(result))
         }),
 
-        Tests.testCase("mismatches with string when values are not equal", fun () {
+        Tests.testCase("mismatches with string when values are not equal", fun () !_ {
             val matcher = M.isString("<expected>");
             val result = matcher.match("<actual>");
 
             when (result) {
                 is M.Failure {
-                    Tests.assertStringEquals(result.message, "was \"<actual>\"")
+                    Tests.assertStringEquals!(result.message, "was \"<actual>\"")
                 }
                 is M.Success {
-                    Tests.fail("expected failure but was success")
+                    Tests.fail!("expected failure but was success")
                 }
             }
         }),
 
-        Tests.testCase("description is string", fun () {
+        Tests.testCase("description is string", fun () !_ {
             val matcher = M.isString("<string>");
 
-            Tests.assertStringEquals(matcher.description, "is \"<string>\"")
+            Tests.assertStringEquals!(matcher.description, "is \"<string>\"")
         }),
     )),
 ));

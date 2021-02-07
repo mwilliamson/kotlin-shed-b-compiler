@@ -11,70 +11,70 @@ fun addOne(value: Int) -> Int {
 
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("default", list(
-        Tests.testCase("default(x, some(y)) is y", fun () {
-            Tests.assertThat(
+        Tests.testCase("default(x, some(y)) is y", fun () !_ {
+            Tests.assertThat!(
                 Options.default(1, some(2)),
                 Matchers.isInt(2)
-            )
+            );
         }),
 
-        Tests.testCase("default(x, none) is x", fun () {
-            Tests.assertThat(
+        Tests.testCase("default(x, none) is x", fun () !_ {
+            Tests.assertThat!(
                 Options.default(1, none),
                 Matchers.isInt(1)
-            )
+            );
         }),
     )),
 
     Tests.suite("flatMap", list(
-        Tests.testCase("flatMap(f, none) is none", fun () {
-            Tests.assertThat(
+        Tests.testCase("flatMap(f, none) is none", fun () !_ {
+            Tests.assertThat!(
                 Options.flatMap(fun (value: Int) => some(value + 1), none),
                 Matchers.isNone(),
-            )
+            );
         }),
 
-        Tests.testCase("flatMap(f, some(x)) is f(x)", fun () {
-            Tests.assertThat(
+        Tests.testCase("flatMap(f, some(x)) is f(x)", fun () !_ {
+            Tests.assertThat!(
                 Options.flatMap(fun (value: Int) => some(value + 1), some(42)),
                 Matchers.isSome(Matchers.isInt(43))
-            )
+            );
         }),
     )),
 
     Tests.suite("flatten", list(
-        Tests.testCase("flatten(none) is none", fun () {
-            Tests.assertThat(
+        Tests.testCase("flatten(none) is none", fun () !_ {
+            Tests.assertThat!(
                 Options.flatten[Int](none),
                 Matchers.isNone(),
-            )
+            );
         }),
 
-        Tests.testCase("flatten(some(none)) is none", fun () {
-            Tests.assertThat(
+        Tests.testCase("flatten(some(none)) is none", fun () !_ {
+            Tests.assertThat!(
                 Options.flatten[Int](some(none)),
                 Matchers.isNone(),
-            )
+            );
         }),
 
-        Tests.testCase("flatten(some(some(x))) is some(x)", fun () {
-            Tests.assertThat(
+        Tests.testCase("flatten(some(some(x))) is some(x)", fun () !_ {
+            Tests.assertThat!(
                 Options.flatten(some(some(42))),
                 Matchers.isSome(Matchers.isInt(42))
-            )
+            );
         }),
     )),
 
     Tests.suite("map", list(
-        Tests.testCase("map(f, none) is none", fun () {
-            Tests.assertThat(Options.map(addOne, none), Matchers.isNone())
+        Tests.testCase("map(f, none) is none", fun () !_ {
+            Tests.assertThat!(Options.map(addOne, none), Matchers.isNone())
         }),
 
-        Tests.testCase("map(f, some(x)) is some(f(x))", fun () {
-            Tests.assertThat(
+        Tests.testCase("map(f, some(x)) is some(f(x))", fun () !_ {
+            Tests.assertThat!(
                 Options.map(addOne, some(42)),
                 Matchers.isSome(Matchers.isInt(43))
-            )
+            );
         }),
     )),
 ));

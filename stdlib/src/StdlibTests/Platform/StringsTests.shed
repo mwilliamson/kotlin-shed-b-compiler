@@ -7,9 +7,9 @@ import Strings from Stdlib.Platform.Strings;
 import Tests from Stdlib.Tests;
 
 fun unicodeScalarCountTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
-    Tests.testCase(string, fun () {
+    Tests.testCase(string, fun () !_ {
         val count = Strings.unicodeScalarCount(string);
-        Tests.assertThat(count, Matchers.isInt(expectedCount))
+        Tests.assertThat!(count, Matchers.isInt(expectedCount));
     })
 }
 
@@ -23,142 +23,142 @@ val unicodeScalarCountTestSuite = Tests.suite("unicodeScalarCount", list(
 ));
 
 val dropLeftUnicodeScalarsTestSuite = Tests.suite("dropLeftUnicodeScalars", list(
-    Tests.testCase("characters in BMP, positive count", fun() {
+    Tests.testCase("characters in BMP, positive count", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.dropLeftUnicodeScalars(2, string);
 
-        Tests.assertThat(result, Matchers.isString("cdef"))
+        Tests.assertThat!(result, Matchers.isString("cdef"));
     }),
 
-    Tests.testCase("characters outside BMP, positive count", fun() {
+    Tests.testCase("characters outside BMP, positive count", fun() !_ {
         val string = "𝔼bcdef";
 
         val result = Strings.dropLeftUnicodeScalars(2, string);
 
-        Tests.assertThat(result, Matchers.isString("cdef"))
+        Tests.assertThat!(result, Matchers.isString("cdef"));
     }),
 
-    Tests.testCase("characters in BMP, negative count", fun() {
+    Tests.testCase("characters in BMP, negative count", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.dropLeftUnicodeScalars(-2, string);
 
-        Tests.assertThat(result, Matchers.isString("ef"))
+        Tests.assertThat!(result, Matchers.isString("ef"));
     }),
 
-    Tests.testCase("characters outside BMP, negative count", fun() {
+    Tests.testCase("characters outside BMP, negative count", fun() !_ {
         val string = "abcd𝔼f";
 
         val result = Strings.dropLeftUnicodeScalars(-2, string);
 
-        Tests.assertThat(result, Matchers.isString("𝔼f"))
+        Tests.assertThat!(result, Matchers.isString("𝔼f"));
     }),
 
-    Tests.testCase("when positive count is equal to string code point count then empty string is returned", fun() {
+    Tests.testCase("when positive count is equal to string code point count then empty string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.dropLeftUnicodeScalars(6, string);
 
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("when positive count is larger than string then empty string is returned", fun() {
+    Tests.testCase("when positive count is larger than string then empty string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.dropLeftUnicodeScalars(7, string);
 
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("when negative count is equal to string code point count then entire string is returned", fun() {
+    Tests.testCase("when negative count is equal to string code point count then entire string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.dropLeftUnicodeScalars(-6, string);
 
-        Tests.assertThat(result, Matchers.isString("abcdef"))
+        Tests.assertThat!(result, Matchers.isString("abcdef"));
     }),
 
-    Tests.testCase("when negative count is larger than string then entire string is returned", fun() {
+    Tests.testCase("when negative count is larger than string then entire string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.dropLeftUnicodeScalars(-7, string);
 
-        Tests.assertThat(result, Matchers.isString("abcdef"))
+        Tests.assertThat!(result, Matchers.isString("abcdef"));
     }),
 ));
 
 val substringTestSuite = Tests.suite("substring", list(
-    Tests.testCase("characters in BMP, positive startIndex, positive endIndex, startIndex < endIndex", fun() {
+    Tests.testCase("characters in BMP, positive startIndex, positive endIndex, startIndex < endIndex", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(2, 4, string);
 
-        Tests.assertThat(result, Matchers.isString("cd"))
+        Tests.assertThat!(result, Matchers.isString("cd"));
     }),
 
-    Tests.testCase("when startIndex is negative then startIndex is from end of string", fun() {
+    Tests.testCase("when startIndex is negative then startIndex is from end of string", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(-4, 4, string);
 
-        Tests.assertThat(result, Matchers.isString("cd"))
+        Tests.assertThat!(result, Matchers.isString("cd"));
     }),
 
-    Tests.testCase("when endIndex is negative then endIndex is from end of string", fun() {
+    Tests.testCase("when endIndex is negative then endIndex is from end of string", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(2, -2, string);
 
-        Tests.assertThat(result, Matchers.isString("cd"))
+        Tests.assertThat!(result, Matchers.isString("cd"));
     }),
 
-    Tests.testCase("when startIndex equals endIndex then empty string is returned", fun() {
+    Tests.testCase("when startIndex equals endIndex then empty string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(3, 3, string);
 
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("when startIndex is greater than end index then empty string is returned", fun() {
+    Tests.testCase("when startIndex is greater than end index then empty string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(4, 3, string);
 
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("when startIndex is equal to code point count then empty string is returned", fun() {
+    Tests.testCase("when startIndex is equal to code point count then empty string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(6, 10, string);
 
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("when startIndex is greater than code point count then empty string is returned", fun() {
+    Tests.testCase("when startIndex is greater than code point count then empty string is returned", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(7, 10, string);
 
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("when negative startIndex is equal to code point count then substring starts at start of string", fun() {
+    Tests.testCase("when negative startIndex is equal to code point count then substring starts at start of string", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(-6, 10, string);
 
-        Tests.assertThat(result, Matchers.isString("abcdef"))
+        Tests.assertThat!(result, Matchers.isString("abcdef"));
     }),
 
-    Tests.testCase("when negative startIndex is greater than code point count then substring starts at start of string", fun() {
+    Tests.testCase("when negative startIndex is greater than code point count then substring starts at start of string", fun() !_ {
         val string = "abcdef";
 
         val result = Strings.substring(-7, 10, string);
 
-        Tests.assertThat(result, Matchers.isString("abcdef"))
+        Tests.assertThat!(result, Matchers.isString("abcdef"));
     }),
 ));
 

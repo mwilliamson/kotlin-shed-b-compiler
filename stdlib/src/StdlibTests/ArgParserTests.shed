@@ -35,7 +35,7 @@ fun isSuccess[T](valueMatcher: M.Matcher[T]) -> M.Matcher[ArgParser.ParseResult[
 }
 
 val testCases = Tests.suite(moduleName, list(
-    Tests.testCase("can parse single required positional argument", fun () {
+    Tests.testCase("can parse single required positional argument", fun () !_ {
         shape Args {
             x: String,
         }
@@ -46,12 +46,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isString("hello")),
-        ))
+        ));
     }),
 
-    Tests.testCase("can parse multiple required positional argument", fun () {
+    Tests.testCase("can parse multiple required positional argument", fun () !_ {
         shape Args {
             one: String,
             two: String,
@@ -67,14 +67,14 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(M.allOf(list(
+        Tests.assertThat!(arguments, isSuccess(M.allOf(list(
             M.hasField(Args.fields.one, M.isString("hello")),
             M.hasField(Args.fields.two, M.isString("world")),
             M.hasField(Args.fields.three, M.isString("!")),
-        ))))
+        ))));
     }),
 
-    Tests.testCase("when required positional argument is missing then result is failure", fun () {
+    Tests.testCase("when required positional argument is missing then result is failure", fun () !_ {
         shape Args {
             one: String,
             two: String,
@@ -90,12 +90,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("required argument is missing: two"),
-        ))
+        ));
     }),
 
-    Tests.testCase("when argument is present then optional positional argument is some", fun () {
+    Tests.testCase("when argument is present then optional positional argument is some", fun () !_ {
         shape Args {
             x: Option[String],
         }
@@ -106,12 +106,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isSome(M.isString("hello"))),
-        ))
+        ));
     }),
 
-    Tests.testCase("when argument is not present then optional positional argument is none", fun () {
+    Tests.testCase("when argument is not present then optional positional argument is none", fun () !_ {
         shape Args {
             x: Option[String],
         }
@@ -122,12 +122,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isNone()),
-        ))
+        ));
     }),
 
-    Tests.testCase("extra positional argument causes error", fun () {
+    Tests.testCase("extra positional argument causes error", fun () !_ {
         shape Args {
             x: String,
         }
@@ -138,12 +138,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("extra positional argument: world"),
-        ))
+        ));
     }),
 
-    Tests.testCase("when optional long option is present as separate element then value is some", fun () {
+    Tests.testCase("when optional long option is present as separate element then value is some", fun () !_ {
         shape Args {
             x: Option[String],
         }
@@ -154,12 +154,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isSome(M.isString("value"))),
-        ))
+        ));
     }),
 
-    Tests.testCase("when optional long option is present using equals then value is some", fun() {
+    Tests.testCase("when optional long option is present using equals then value is some", fun() !_ {
         shape Args {
             x: Option[String],
         }
@@ -170,12 +170,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isSome(M.isString("value"))),
-        ))
+        ));
     }),
 
-    Tests.testCase("when optional long option is absent then value is none", fun () {
+    Tests.testCase("when optional long option is absent then value is none", fun () !_ {
         shape Args {
             x: Option[String],
         }
@@ -186,12 +186,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isNone()),
-        ))
+        ));
     }),
 
-    Tests.testCase("when required long option is present then value is stored", fun () {
+    Tests.testCase("when required long option is present then value is stored", fun () !_ {
         shape Args {
             x: String,
         }
@@ -202,12 +202,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isString("hello")),
-        ))
+        ));
     }),
 
-    Tests.testCase("when required long option is missing then result is failure", fun () {
+    Tests.testCase("when required long option is missing then result is failure", fun () !_ {
         shape Args {
             x: String,
         }
@@ -218,12 +218,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("required argument is missing: --long-option"),
-        ))
+        ));
     }),
 
-    Tests.testCase("when unrecognised long option is present then result is failure", fun () {
+    Tests.testCase("when unrecognised long option is present then result is failure", fun () !_ {
         shape Args {
             x: String,
         }
@@ -234,12 +234,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("unknown option: --unknown-option"),
-        ))
+        ));
     }),
 
-    Tests.testCase("when required long option is missing value then result is failure", fun () {
+    Tests.testCase("when required long option is missing value then result is failure", fun () !_ {
         shape Args {
             x: String,
         }
@@ -250,12 +250,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("option is missing value: --long-option"),
-        ))
+        ));
     }),
 
-    Tests.testCase("when optional long option is missing value then result is failure", fun () {
+    Tests.testCase("when optional long option is missing value then result is failure", fun () !_ {
         shape Args {
             x: Option[String],
         }
@@ -266,12 +266,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("option is missing value: --long-option"),
         ))
     }),
 
-    Tests.testCase("when flag is missing then value is false", fun () {
+    Tests.testCase("when flag is missing then value is false", fun () !_ {
         shape Args {
             x: Bool,
         }
@@ -282,12 +282,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isBool(false)),
-        ))
+        ));
     }),
 
-    Tests.testCase("when flag is present then value is true", fun () {
+    Tests.testCase("when flag is present then value is true", fun () !_ {
         shape Args {
             x: Bool,
         }
@@ -298,12 +298,12 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isSuccess(
+        Tests.assertThat!(arguments, isSuccess(
             M.hasField(Args.fields.x, M.isBool(true)),
-        ))
+        ));
     }),
 
-    Tests.testCase("when flag has value using equals then result is failure", fun () {
+    Tests.testCase("when flag has value using equals then result is failure", fun () !_ {
         shape Args {
             x: Bool,
         }
@@ -314,8 +314,8 @@ val testCases = Tests.suite(moduleName, list(
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
-        Tests.assertThat(arguments, isFailure(
+        Tests.assertThat!(arguments, isFailure(
             .message = M.isString("flag does not take value: --flag"),
-        ))
+        ));
     }),
 ));

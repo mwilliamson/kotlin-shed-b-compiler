@@ -110,226 +110,226 @@ fun isJsonString(value: String) -> M.Matcher[Json.JsonValue] {
 
 val testCases = Tests.suite(moduleName, list(
     Tests.suite("valueToText", list(
-        Tests.testCase("null", fun () {
+        Tests.testCase("null", fun () !_ {
             val value = Json.null;
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("null"))
+            Tests.assertThat!(text, M.isString("null"));
         }),
 
-        Tests.testCase("true", fun () {
+        Tests.testCase("true", fun () !_ {
             val value = Json.boolean(true);
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("true"))
+            Tests.assertThat!(text, M.isString("true"));
         }),
 
-        Tests.testCase("false", fun () {
+        Tests.testCase("false", fun () !_ {
             val value = Json.boolean(false);
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("false"))
+            Tests.assertThat!(text, M.isString("false"));
         }),
 
-        Tests.testCase("number", fun () {
+        Tests.testCase("number", fun () !_ {
             val value = Json.number("1.2");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("1.2"))
+            Tests.assertThat!(text, M.isString("1.2"));
         }),
 
-        Tests.testCase("empty string", fun () {
+        Tests.testCase("empty string", fun () !_ {
             val value = Json.string("");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\""))
+            Tests.assertThat!(text, M.isString("\"\""));
         }),
 
-        Tests.testCase("string without special characters", fun () {
+        Tests.testCase("string without special characters", fun () !_ {
             val value = Json.string("apples");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"apples\""))
+            Tests.assertThat!(text, M.isString("\"apples\""));
         }),
 
-        Tests.testCase("backslashes are escaped", fun () {
+        Tests.testCase("backslashes are escaped", fun () !_ {
             val value = Json.string("\\ \\");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\\\\ \\\\\""))
+            Tests.assertThat!(text, M.isString("\"\\\\ \\\\\""));
         }),
 
-        Tests.testCase("double quotes are escaped", fun () {
+        Tests.testCase("double quotes are escaped", fun () !_ {
             val value = Json.string("\" \"");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\\\" \\\"\""))
+            Tests.assertThat!(text, M.isString("\"\\\" \\\"\""));
         }),
 
-        Tests.testCase("tabs are escaped", fun () {
+        Tests.testCase("tabs are escaped", fun () !_ {
             val value = Json.string("\t \t");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\\t \\t\""))
+            Tests.assertThat!(text, M.isString("\"\\t \\t\""));
         }),
 
-        Tests.testCase("line feeds are escaped", fun () {
+        Tests.testCase("line feeds are escaped", fun () !_ {
             val value = Json.string("\n \n");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\\n \\n\""))
+            Tests.assertThat!(text, M.isString("\"\\n \\n\""));
         }),
 
-        Tests.testCase("carriage returns are escaped", fun () {
+        Tests.testCase("carriage returns are escaped", fun () !_ {
             val value = Json.string("\r \r");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\\r \\r\""))
+            Tests.assertThat!(text, M.isString("\"\\r \\r\""));
         }),
 
-        Tests.testCase("control codes are escaped", fun () {
+        Tests.testCase("control codes are escaped", fun () !_ {
             val value = Json.string("\u{B}");
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("\"\\u000B\""))
+            Tests.assertThat!(text, M.isString("\"\\u000B\""));
         }),
 
-        Tests.testCase("empty array is serialised to square brackets", fun () {
+        Tests.testCase("empty array is serialised to square brackets", fun () !_ {
             val value = Json.array(list());
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("[]"))
+            Tests.assertThat!(text, M.isString("[]"));
         }),
 
-        Tests.testCase("singleton array is serialised to square brackets containing element", fun () {
+        Tests.testCase("singleton array is serialised to square brackets containing element", fun () !_ {
             val value = Json.array(list(Json.null));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("[null]"))
+            Tests.assertThat!(text, M.isString("[null]"));
         }),
 
-        Tests.testCase("array elements are comma separated", fun () {
+        Tests.testCase("array elements are comma separated", fun () !_ {
             val value = Json.array(list(Json.null, Json.boolean(true), Json.boolean(false)));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("[null,true,false]"))
+            Tests.assertThat!(text, M.isString("[null,true,false]"));
         }),
 
-        Tests.testCase("empty object is serialised to curly braces", fun () {
+        Tests.testCase("empty object is serialised to curly braces", fun () !_ {
             val value = Json.object(list());
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("{}"))
+            Tests.assertThat!(text, M.isString("{}"));
         }),
 
-        Tests.testCase("singleton object is serialised to curly braces containing property", fun () {
+        Tests.testCase("singleton object is serialised to curly braces containing property", fun () !_ {
             val value = Json.object(list(Json.property("apples", Json.null)));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("{\"apples\":null}"))
+            Tests.assertThat!(text, M.isString("{\"apples\":null}"));
         }),
 
-        Tests.testCase("object properties are comma separated", fun () {
+        Tests.testCase("object properties are comma separated", fun () !_ {
             val value = Json.object(list(
                 Json.property("apples", Json.null),
                 Json.property("bananas", Json.boolean(true)),
                 Json.property("coconut", Json.boolean(false)),
             ));
             val text = Json.valueToText(value);
-            Tests.assertThat(text, M.isString("{\"apples\":null,\"bananas\":true,\"coconut\":false}"))
+            Tests.assertThat!(text, M.isString("{\"apples\":null,\"bananas\":true,\"coconut\":false}"));
         }),
     )),
 
     Tests.suite("textToValue", list(
-        Tests.testCase("null", fun () {
+        Tests.testCase("null", fun () !_ {
             val text = "null";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonNull))
+            Tests.assertThat!(result, isSuccess(isJsonNull));
         }),
 
-        Tests.testCase("true", fun () {
+        Tests.testCase("true", fun () !_ {
             val text = "true";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonBoolean(true)))
+            Tests.assertThat!(result, isSuccess(isJsonBoolean(true)));
         }),
 
-        Tests.testCase("false", fun () {
+        Tests.testCase("false", fun () !_ {
             val text = "false";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
+            Tests.assertThat!(result, isSuccess(isJsonBoolean(false)));
         }),
 
-        Tests.testCase("empty string", fun () {
+        Tests.testCase("empty string", fun () !_ {
             val text = "\"\"";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonString("")))
+            Tests.assertThat!(result, isSuccess(isJsonString("")));
         }),
 
-        Tests.testCase("single character string", fun () {
+        Tests.testCase("single character string", fun () !_ {
             val text = "\"a\"";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonString("a")))
+            Tests.assertThat!(result, isSuccess(isJsonString("a")));
         }),
 
-        Tests.testCase("multiple character string", fun () {
+        Tests.testCase("multiple character string", fun () !_ {
             val text = "\"aasfcasf\"";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonString("aasfcasf")))
+            Tests.assertThat!(result, isSuccess(isJsonString("aasfcasf")));
         }),
 
-        Tests.testCase("empty array", fun () {
+        Tests.testCase("empty array", fun () !_ {
             val text = "[]";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("[]")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("[]")));
         }),
 
-        Tests.testCase("array with single element", fun () {
+        Tests.testCase("array with single element", fun () !_ {
             val text = "[true]";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("[true]")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("[true]")));
         }),
 
-        Tests.testCase("array with two elements", fun () {
+        Tests.testCase("array with two elements", fun () !_ {
             val text = "[true, false]";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("[true,false]")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("[true,false]")));
         }),
 
-        Tests.testCase("array with three elements", fun () {
+        Tests.testCase("array with three elements", fun () !_ {
             val text = "[true, false, null]";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("[true,false,null]")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("[true,false,null]")));
         }),
 
-        Tests.testCase("unclosed array causes failure", fun () {
+        Tests.testCase("unclosed array causes failure", fun () !_ {
             val text = "[true, false";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isFailure)
+            Tests.assertThat!(result, isFailure);
         }),
 
-        Tests.testCase("empty object", fun () {
+        Tests.testCase("empty object", fun () !_ {
             val text = "{}";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("{}")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("{}")));
         }),
 
-        Tests.testCase("object with one property", fun () {
+        Tests.testCase("object with one property", fun () !_ {
             val text = "{\"first\": true}";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("{\"first\":true}")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("{\"first\":true}")));
         }),
 
-        Tests.testCase("object with two properties", fun () {
+        Tests.testCase("object with two properties", fun () !_ {
             val text = "{\"first\": true, \"second\": false}";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("{\"first\":true,\"second\":false}")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("{\"first\":true,\"second\":false}")));
         }),
 
-        Tests.testCase("object with three properties", fun () {
+        Tests.testCase("object with three properties", fun () !_ {
             val text = "{\"first\": true, \"second\": false, \"third\": null}";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(hasJsonText("{\"first\":true,\"second\":false,\"third\":null}")))
+            Tests.assertThat!(result, isSuccess(hasJsonText("{\"first\":true,\"second\":false,\"third\":null}")));
         }),
 
-        Tests.testCase("leading whitespace is ignored", fun () {
+        Tests.testCase("leading whitespace is ignored", fun () !_ {
             val text = "  \n\r\tfalse";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
+            Tests.assertThat!(result, isSuccess(isJsonBoolean(false)));
         }),
 
-        Tests.testCase("trailing whitespace is ignored", fun () {
+        Tests.testCase("trailing whitespace is ignored", fun () !_ {
             val text = "false  \n\r\t";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isSuccess(isJsonBoolean(false)))
+            Tests.assertThat!(result, isSuccess(isJsonBoolean(false)));
         }),
 
-        Tests.testCase("text after top-level value causes failure", fun () {
+        Tests.testCase("text after top-level value causes failure", fun () !_ {
             val text = "false true";
             val result = Json.textToValue(text);
-            Tests.assertThat(result, isFailure)
+            Tests.assertThat!(result, isFailure);
         }),
     )),
 ));

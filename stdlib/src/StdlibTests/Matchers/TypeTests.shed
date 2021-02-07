@@ -15,54 +15,54 @@ union X =
 val hasMatcher = M.has("value", fun (value: Y) => value.value, M.isInt(42));
 
 val hasSuite = Tests.suite("has", list(
-    Tests.testCase("matches when feature matcher matches", fun () {
+    Tests.testCase("matches when feature matcher matches", fun () !_ {
         val result = hasMatcher.match(Y(.value = 42));
 
-        Tests.assert(M.isSuccess(result))
+        Tests.assert!(M.isSuccess(result));
     }),
 
-    Tests.testCase("when feature mismatches then mismatches with feature mismatch description", fun () {
+    Tests.testCase("when feature mismatches then mismatches with feature mismatch description", fun () !_ {
         val result = hasMatcher.match(Y(.value = 47));
 
         when (result) {
             is M.Failure {
-                Tests.assertStringEquals(result.message, "value:\n  was 47")
+                Tests.assertStringEquals!(result.message, "value:\n  was 47");
             }
             is M.Success {
-                Tests.fail("expected failure but was success")
+                Tests.fail!("expected failure but was success");
             }
         }
     }),
 
-    Tests.testCase("description has feature name and description", fun () {
-        Tests.assertStringEquals(hasMatcher.description, "value:\n  is 42")
+    Tests.testCase("description has feature name and description", fun () !_ {
+        Tests.assertStringEquals!(hasMatcher.description, "value:\n  is 42");
     }),
 ));
 
 val hasFieldMatcher = M.hasField(Y.fields.value, M.isInt(42));
 
 val hasFieldSuite = Tests.suite("hasField", list(
-    Tests.testCase("matches when field value matcher matches", fun () {
+    Tests.testCase("matches when field value matcher matches", fun () !_ {
         val result = hasFieldMatcher.match(Y(.value = 42));
 
-        Tests.assert(M.isSuccess(result))
+        Tests.assert!(M.isSuccess(result));
     }),
 
-    Tests.testCase("when field value mismatches then mismatches with field value mismatch description", fun () {
+    Tests.testCase("when field value mismatches then mismatches with field value mismatch description", fun () !_ {
         val result = hasFieldMatcher.match(Y(.value = 47));
 
         when (result) {
             is M.Failure {
-                Tests.assertStringEquals(result.message, ".value:\n  was 47")
+                Tests.assertStringEquals!(result.message, ".value:\n  was 47");
             }
             is M.Success {
-                Tests.fail("expected failure but was success")
+                Tests.fail!("expected failure but was success");
             }
         }
     }),
 
-    Tests.testCase("description has field name and description", fun () {
-        Tests.assertStringEquals(hasFieldMatcher.description, ".value:\n  is 42")
+    Tests.testCase("description has field name and description", fun () !_ {
+        Tests.assertStringEquals!(hasFieldMatcher.description, ".value:\n  is 42");
     }),
 ));
 
@@ -78,27 +78,27 @@ val isTypeMatcher = M.isType[X, Y](
 );
 
 val isTypeSuite = Tests.suite("isType", list(
-    Tests.testCase("matches when cast succeeds", fun () {
+    Tests.testCase("matches when cast succeeds", fun () !_ {
         val result = isTypeMatcher.match(Y(.value = 42));
 
-        Tests.assert(M.isSuccess(result))
+        Tests.assert!(M.isSuccess(result));
     }),
 
-    Tests.testCase("mismatches with value description when cast fails", fun () {
+    Tests.testCase("mismatches with value description when cast fails", fun () !_ {
         val result = isTypeMatcher.match(Z());
 
         when (result) {
             is M.Failure {
-                Tests.assert(result.message == "was Z")
+                Tests.assert!(result.message == "was Z");
             }
             is M.Success {
-                Tests.fail("expected failure but was success")
+                Tests.fail!("expected failure but was success");
             }
         }
     }),
 
-    Tests.testCase("description is passed as argument", fun () {
-        Tests.assert(isTypeMatcher.description == "Y")
+    Tests.testCase("description is passed as argument", fun () !_ {
+        Tests.assert!(isTypeMatcher.description == "Y");
     }),
 ));
 
@@ -124,40 +124,40 @@ val isTypeWithMatcher = M.isTypeWith[X, Y](
 );
 
 val isTypeWithSuite = Tests.suite("isTypeWith", list(
-    Tests.testCase("matches when cast and with matcher succeeds", fun () {
+    Tests.testCase("matches when cast and with matcher succeeds", fun () !_ {
         val result = isTypeWithMatcher.match(Y(.value = 42));
 
-        Tests.assert(M.isSuccess(result))
+        Tests.assert!(M.isSuccess(result));
     }),
 
-    Tests.testCase("mismatches with value description when cast fails", fun () {
+    Tests.testCase("mismatches with value description when cast fails", fun () !_ {
         val result = isTypeWithMatcher.match(Z());
 
         when (result) {
             is M.Failure {
-                Tests.assert(result.message == "was Z")
+                Tests.assert!(result.message == "was Z");
             }
             is M.Success {
-                Tests.fail("expected failure but was success")
+                Tests.fail!("expected failure but was success");
             }
         }
     }),
 
-    Tests.testCase("mismatches with with mismatch description when with fails", fun () {
+    Tests.testCase("mismatches with with mismatch description when with fails", fun () !_ {
         val result = isTypeWithMatcher.match(Y(.value = 47));
 
         when (result) {
             is M.Failure {
-                Tests.assertStringEquals(result.message, "Y:\n  value was 47")
+                Tests.assertStringEquals!(result.message, "Y:\n  value was 47");
             }
             is M.Success {
-                Tests.fail("expected failure but was success")
+                Tests.fail!("expected failure but was success");
             }
         }
     }),
 
-    Tests.testCase("description has type and with description", fun () {
-        Tests.assertStringEquals(isTypeWithMatcher.description, "Y:\n  value of 42")
+    Tests.testCase("description has type and with description", fun () !_ {
+        Tests.assertStringEquals!(isTypeWithMatcher.description, "Y:\n  value of 42");
     }),
 ));
 

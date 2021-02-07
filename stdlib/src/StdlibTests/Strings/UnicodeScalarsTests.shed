@@ -7,9 +7,9 @@ import UnicodeScalars from Stdlib.Strings.UnicodeScalars;
 import Tests from Stdlib.Tests;
 
 fun countTestCase(string: String, expectedCount: Int) -> Tests.TestCase {
-    Tests.testCase(string, fun () {
+    Tests.testCase(string, fun () !_ {
         val count = UnicodeScalars.count(string);
-        Tests.assertThat(count, Matchers.isInt(expectedCount))
+        Tests.assertThat!(count, Matchers.isInt(expectedCount));
     })
 }
 
@@ -23,31 +23,31 @@ val countTestSuite = Tests.suite("count", list(
 ));
 
 val foldLeftTestSuite = Tests.suite("foldLeft", list(
-    Tests.testCase("empty string produces initial value", fun () {
+    Tests.testCase("empty string produces initial value", fun () !_ {
         val result = UnicodeScalars.foldLeft(fun (acc: Int, unicodeScalar: UnicodeScalar) => acc + 1, 0, "");
-        Tests.assertThat(result, Matchers.isInt(0))
+        Tests.assertThat!(result, Matchers.isInt(0));
     }),
 
-    Tests.testCase("code points outside BMP are treated as single code point", fun () {
+    Tests.testCase("code points outside BMP are treated as single code point", fun () !_ {
         val result = UnicodeScalars.foldLeft(fun (acc: Int, unicodeScalar: UnicodeScalar) => acc + 1, 0, "☃𝔼☃𝔼☃");
-        Tests.assertThat(result, Matchers.isInt(5))
+        Tests.assertThat!(result, Matchers.isInt(5));
     }),
 ));
 
 val joinTestSuite = Tests.suite("join", list(
-    Tests.testCase("empty iterable is joined to empty string", fun () {
+    Tests.testCase("empty iterable is joined to empty string", fun () !_ {
         val result = UnicodeScalars.join(", ", list());
-        Tests.assertThat(result, Matchers.isString(""))
+        Tests.assertThat!(result, Matchers.isString(""));
     }),
 
-    Tests.testCase("singleton iterable is joined without separator", fun () {
+    Tests.testCase("singleton iterable is joined without separator", fun () !_ {
         val result = UnicodeScalars.join(", ", list("apple"));
-        Tests.assertThat(result, Matchers.isString("apple"))
+        Tests.assertThat!(result, Matchers.isString("apple"));
     }),
 
-    Tests.testCase("iterable with multiple values is joined with separator", fun () {
+    Tests.testCase("iterable with multiple values is joined with separator", fun () !_ {
         val result = UnicodeScalars.join(", ", list("apple", "banana", "coconut"));
-        Tests.assertThat(result, Matchers.isString("apple, banana, coconut"))
+        Tests.assertThat!(result, Matchers.isString("apple, banana, coconut"));
     }),
 ));
 
