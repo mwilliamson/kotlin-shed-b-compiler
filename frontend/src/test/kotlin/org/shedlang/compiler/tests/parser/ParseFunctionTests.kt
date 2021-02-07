@@ -3,10 +3,7 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.ExpressionStatementNode
-import org.shedlang.compiler.ast.FunctionDefinitionNode
-import org.shedlang.compiler.ast.FunctionExpressionNode
-import org.shedlang.compiler.ast.FunctionNode
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.isIdentifier
@@ -138,9 +135,16 @@ class ParseFunctionTests {
     fun canReadFunctionWithEffect() {
         val source = "fun f() !Io -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
-        assertThat(function, has(FunctionNode::effect, present(
-            isStaticReference("Io")
-        )))
+        assertThat(function, has(FunctionNode::effect, present(cast(
+            has(FunctionEffectNode.Explicit::expression, isStaticReference("Io")),
+        ))))
+    }
+
+    @Test
+    fun canReadFunctionWithInferredEffect() {
+        val source = "fun f() !_ -> Unit { }"
+        val function = parseString(::parseFunctionDefinition, source)
+        assertThat(function, has(FunctionNode::effect, present(isA<FunctionEffectNode.Infer>())))
     }
 
     @Test

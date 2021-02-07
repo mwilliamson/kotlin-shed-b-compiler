@@ -339,7 +339,7 @@ fun function(
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
-    effect = effect,
+    effect = if (effect == null) null else FunctionEffectNode.Explicit(effect, source = anySource()),
     body = Block(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
@@ -349,7 +349,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effect: StaticExpressionNode? = null,
+    effect: FunctionEffectNode? = null,
     returnType: StaticExpressionNode? = null,
     body: List<FunctionStatementNode> = listOf(),
     inferReturnType: Boolean = false
@@ -368,7 +368,7 @@ fun functionExpression(
     typeParameters: List<TypeParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effect: StaticExpressionNode? = null,
+    effect: FunctionEffectNode? = null,
     returnType: StaticExpressionNode? = staticReference("Unit"),
     body: ExpressionNode,
     inferReturnType: Boolean = true
@@ -383,6 +383,8 @@ fun functionExpression(
     ),
     inferReturnType = inferReturnType
 )
+
+fun functionEffectInfer() = FunctionEffectNode.Infer(source = anySource())
 
 fun effectDefinition(
     name: String,

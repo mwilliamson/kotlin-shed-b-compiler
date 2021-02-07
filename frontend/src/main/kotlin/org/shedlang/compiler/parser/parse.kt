@@ -458,7 +458,7 @@ internal fun parseFunctionDefinition(tokens: TokenIterator<TokenType>): Function
 
     tokens.skip(TokenType.KEYWORD_FUN)
     val name = parseIdentifier(tokens)
-    val signature = parseFunctionSignature(tokens)
+    val signature = parseFunctionDefinitionSignature(tokens)
     val body = parseFunctionStatements(tokens)
 
     if (signature.returnType == null) {
@@ -482,16 +482,16 @@ private data class FunctionSignature(
     val staticParameters: List<StaticParameterNode>,
     val parameters: List<ParameterNode>,
     val namedParameters: List<ParameterNode>,
-    val effect: StaticExpressionNode?,
+    val effect: FunctionEffectNode?,
     val returnType: StaticExpressionNode?
 )
 
-private fun parseFunctionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
+private fun parseFunctionDefinitionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
     val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
 
     val parameters = parseParameters(tokens)
 
-    val effect = parseSignatureEffect(tokens)
+    val effect = parseFunctionDefinitionEffect(tokens)
 
     val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
         parseStaticExpression(tokens)
@@ -561,7 +561,22 @@ internal fun parseStaticParameters(
     }
 }
 
-private fun parseSignatureEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode? {
+private fun parseFunctionDefinitionEffect(tokens: TokenIterator<TokenType>): FunctionEffectNode? {
+    val source = tokens.location()
+
+    if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
+        if (tokens.trySkip(TokenType.SYMBOL_UNDERSCORE)) {
+            return FunctionEffectNode.Infer(source = source)
+        } else {
+            val expression = parseStaticExpression(tokens)
+            return FunctionEffectNode.Explicit(expression, source = source)
+        }
+    } else {
+        return null
+    }
+}
+
+private fun parseFunctionTypeEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode? {
     if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
         return parseStaticExpression(tokens)
     } else {
@@ -1291,7 +1306,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
         }
         TokenType.KEYWORD_FUN -> {
             tokens.skip()
-            val signature = parseFunctionSignature(tokens)
+            val signature = parseFunctionDefinitionSignature(tokens)
 
             val body = if (tokens.trySkip(TokenType.SYMBOL_FAT_ARROW)) {
                 val expression = parseExpression(tokens)
@@ -1507,7 +1522,7 @@ private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressio
     val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
     val parameters = parseFunctionTypeParameters(tokens)
 
-    val effect = parseSignatureEffect(tokens)
+    val effect = parseFunctionTypeEffect(tokens)
     tokens.skip(TokenType.SYMBOL_ARROW)
     val returnType = parseStaticExpression(tokens)
     return FunctionTypeNode(

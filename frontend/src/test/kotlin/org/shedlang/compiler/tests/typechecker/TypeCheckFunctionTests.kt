@@ -3,6 +3,7 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.FunctionEffectNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.tests.throwsException
@@ -265,6 +266,32 @@ class TypeCheckFunctionTests {
             },
             throws(has(UnhandledEffectError::effect, cast(equalTo(IoEffect))))
         )
+    }
+
+    @Test
+    fun whenFunctionHasInferredEffectThenEffectIsTakenFromHint() {
+        val unitType = staticReference("Unit")
+        val effect = staticReference("Io")
+        val functionReference = variableReference("f")
+
+        val node = functionExpression(
+            returnType = unitType,
+            effect = functionEffectInfer(),
+            body = listOf(
+                expressionStatement(call(functionReference, hasEffect = true))
+            )
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(
+                effect = IoEffect,
+                returns = UnitType
+            ),
+            unitType to UnitMetaType,
+            effect to StaticValueType(IoEffect)
+        ))
+        inferType(node, typeContext, hint = functionType(effect = IoEffect))
+        // TODO: come up with a way of ensuring undefer() is eventually called
+        typeContext.undefer()
     }
 
     @Test

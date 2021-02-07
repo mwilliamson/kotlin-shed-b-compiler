@@ -383,7 +383,8 @@ internal fun typeCheckFunction(
         { argument, argumentType -> argument.nodeId to argumentType }
     ).toMap())
 
-    val explicitEffect = evalEffect(function.effect, context)
+    val functionHint = hint as? FunctionType
+    val explicitEffect = evalFunctionDefinitionEffect(function.effect, context, effectHint = functionHint?.effect)
     val effect = effectUnion(implicitEffect, explicitEffect)
 
     val body = function.body
@@ -408,7 +409,7 @@ internal fun typeCheckFunction(
         explicitReturnType
     } else if (function.inferReturnType) {
         actualReturnType.value
-    } else if (hint != null && hint is FunctionType) {
+    } else if (functionHint != null) {
         hint.returns
     } else {
         throw MissingReturnTypeError("Could not infer return type for function", source = function.source)
@@ -428,6 +429,24 @@ internal fun typeCheckFunction(
         effect = effect,
         returns = returnType
     )
+}
+
+private fun evalFunctionDefinitionEffect(node: FunctionEffectNode?, context: TypeContext, effectHint: Effect?): Effect {
+    return when (node) {
+        is FunctionEffectNode.Infer ->
+            if (effectHint == null) {
+                // TODO: better error
+                throw SourceError("cannot infer effect, no hint available", source = node.source)
+            } else {
+                return effectHint
+            }
+
+        is FunctionEffectNode.Explicit ->
+            evalEffect(node.expression, context)
+
+        null ->
+            evalEffect(node, context)
+    }
 }
 
 private fun evalEffects(effectNodes: List<StaticExpressionNode>, context: TypeContext): Effect {

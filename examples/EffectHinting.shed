@@ -1,0 +1,14 @@
+// stdout:
+//   Hello, world!
+
+export main;
+
+fun main() !Io -> Unit {
+    doIo!(fun() !_ {
+        print!("Hello, world!\n");
+    });
+}
+
+fun doIo(func: Fun () !Io -> Unit) !Io -> Unit {
+    func!();
+}

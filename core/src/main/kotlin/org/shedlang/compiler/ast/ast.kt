@@ -502,9 +502,28 @@ interface FunctionNode : Node {
     val parameters: List<ParameterNode>
     val namedParameters: List<ParameterNode>
     val returnType: StaticExpressionNode?
-    val effect: StaticExpressionNode?
+    val effect: FunctionEffectNode?
     val body: Block
     val inferReturnType: Boolean
+}
+
+sealed class FunctionEffectNode: Node {
+    data class Infer(
+        override val source: Source,
+        override val nodeId: Int = freshNodeId(),
+    ): FunctionEffectNode() {
+        override val structure: List<NodeStructure>
+            get() = listOf()
+    }
+
+    data class Explicit(
+        val expression: StaticExpressionNode,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId(),
+    ): FunctionEffectNode() {
+        override val structure: List<NodeStructure>
+            get() = listOf(NodeStructures.staticEval(expression))
+    }
 }
 
 data class Block(
@@ -536,7 +555,7 @@ data class FunctionExpressionNode(
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode?,
-    override val effect: StaticExpressionNode?,
+    override val effect: FunctionEffectNode?,
     override val body: Block,
     override val inferReturnType: Boolean,
     override val source: Source,
@@ -556,7 +575,7 @@ data class FunctionDefinitionNode(
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
     override val returnType: StaticExpressionNode,
-    override val effect: StaticExpressionNode?,
+    override val effect: FunctionEffectNode?,
     override val body: Block,
     override val inferReturnType: Boolean,
     override val source: Source,
