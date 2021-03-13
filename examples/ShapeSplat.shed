@@ -1,0 +1,21 @@
+// stdout:
+//   apples
+//   oranges
+//   bananas
+//   oranges
+
+export main;
+
+shape Pair {
+    first: String,
+    second: String,
+}
+
+fun main() !Io -> Unit {
+    val x = Pair(.first = "apples\n", .second = "oranges\n");
+    val y = Pair(...x, .first = "bananas\n");
+    print!(x.first);
+    print!(x.second);
+    print!(y.first);
+    print!(y.second);
+}
