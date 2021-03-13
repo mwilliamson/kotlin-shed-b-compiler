@@ -23,6 +23,8 @@ class UnexpectedTypeError(val expected: TypeGroup, val actual: Type, source: Sou
     : TypeCheckError("Expected type ${expected.shortDescription} but was ${actual.shortDescription}", source)
 class WrongNumberOfArgumentsError(val expected: Int, val actual: Int, source: Source)
     : TypeCheckError("Expected $expected arguments, but got $actual", source)
+class UnexpectedSplatArgumentError(source: Source)
+    : TypeCheckError("Splat arguments are only allowed in constructor calls", source)
 class WrongNumberOfStaticArgumentsError(val expected: Int, val actual: Int, source: Source)
     : TypeCheckError("Expected $expected static arguments, but got $actual", source)
 class MissingArgumentError(val argumentName: Identifier, source: Source)

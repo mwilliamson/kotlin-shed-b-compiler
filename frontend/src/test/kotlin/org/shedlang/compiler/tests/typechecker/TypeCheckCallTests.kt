@@ -4,10 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
@@ -316,6 +313,22 @@ class TypeCheckCallTests {
     }
 
     @Test
+    fun errorWhenFunctionIsCalledWithSplatArgument() {
+        val functionReference = variableReference("f")
+        val node = call(
+            receiver = functionReference,
+            namedArguments = listOf(splatArgument(variableReference("x"))),
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            functionReference to functionType(),
+        ))
+        assertThat(
+            { inferCallType(node, typeContext) },
+            throwsException<UnexpectedSplatArgumentError>(),
+        )
+    }
+
+    @Test
     fun shapeCallTypeIsShapeType() {
         val shapeReference = variableReference("X")
         val node = call(receiver = shapeReference)
@@ -398,7 +411,7 @@ class TypeCheckCallTests {
 
         assertThat(
             { inferCallType(node, typeContext) },
-            throws<CouldNotInferTypeParameterError>()
+            throwsException<CouldNotInferTypeParameterError>()
         )
     }
 
@@ -476,7 +489,7 @@ class TypeCheckCallTests {
 
         assertThat(
             { inferCallType(node, typeContext) },
-            throws<PositionalArgumentPassedToShapeConstructorError>()
+            throwsException<PositionalArgumentPassedToShapeConstructorError>()
         )
     }
 
@@ -866,6 +879,35 @@ class TypeCheckCallTests {
         ))
     }
 
+    @Test
+    fun errorWhenEmptyFunctionIsCalledWithSplatArgument() {
+        val boxTypeReference = staticReference("Box")
+        val emptyReference = staticReference("empty")
+
+        val boxType = shapeType(
+            "Box",
+            fields = listOf(
+                field("value", IntType)
+            )
+        )
+
+        val node = call(
+            receiver = emptyReference,
+            staticArguments = listOf(boxTypeReference),
+            namedArguments = listOf(splatArgument(variableReference("x"))),
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                boxTypeReference to metaType(boxType),
+                emptyReference to EmptyFunctionType
+            )
+        )
+        val type = { inferCallType(node, typeContext) }
+
+        assertThat(type, throwsException<UnexpectedSplatArgumentError>())
+    }
+
     @Nested
     inner class VarargsTests {
         private val headTypeParameter = invariantTypeParameter("Head")
@@ -946,6 +988,25 @@ class TypeCheckCallTests {
                     isUnitType
                 ))
             )))
+        }
+
+        @Test
+        fun errorWhenVarargsFunctionIsCalledWithSplatArgument() {
+            val node = call(
+                receiver = receiverReference,
+                namedArguments = listOf(splatArgument(variableReference("x"))),
+            )
+
+            val typeContext = typeContext(
+                referenceTypes = mapOf(
+                    receiverReference to varargsType,
+                )
+            )
+
+            assertThat(
+                { inferCallType(node, typeContext) },
+                throwsException<UnexpectedSplatArgumentError>(),
+            )
         }
     }
 

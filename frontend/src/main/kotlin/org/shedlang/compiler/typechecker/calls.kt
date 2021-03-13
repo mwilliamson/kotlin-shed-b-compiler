@@ -195,7 +195,8 @@ private fun checkArguments(
         )
     }
 
-    // TODO: handle splat
+    verifyNoSplatArguments(call)
+
     val namedArguments = call.fieldArguments.filterIsInstance<FieldArgumentNode.Named>()
     val namedArgumentsGroupedByName = namedArguments.groupBy(FieldArgumentNode.Named::name)
 
@@ -347,11 +348,16 @@ private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
             source = node.positionalArguments[0].source,
         )
     } else if (node.fieldArguments.isNotEmpty()) {
-        // TODO: handle splat
-        throw ExtraArgumentError(
-            argumentName = (node.fieldArguments[0] as FieldArgumentNode.Named).name,
-            source = node.fieldArguments[0].source,
-        )
+        val fieldArgument = node.fieldArguments[0]
+        when (fieldArgument) {
+            is FieldArgumentNode.Named -> throw ExtraArgumentError(
+                argumentName = fieldArgument.name,
+                source = fieldArgument.source,
+            )
+            is FieldArgumentNode.Splat -> throw UnexpectedSplatArgumentError(
+                source = fieldArgument.source,
+            )
+        }
     } else {
         return createEmptyShapeType(staticArgument)
     }
@@ -379,6 +385,8 @@ internal fun evalEmptyStaticArguments(arguments: List<StaticExpressionNode>, con
 }
 
 private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeContext): Type {
+    verifyNoSplatArguments(node)
+
     val typeParameters = type.cons.staticParameters.filterIsInstance<TypeParameter>()
     val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
 
@@ -414,6 +422,13 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
             }
 
         replaceStaticValuesInType(type.cons.returns, typeMap())
+    }
+}
+
+private fun verifyNoSplatArguments(call: CallBaseNode) {
+    val splatArgument = call.fieldArguments.filterIsInstance<FieldArgumentNode.Splat>().firstOrNull()
+    if (splatArgument != null) {
+        throw UnexpectedSplatArgumentError(source = splatArgument.source)
     }
 }
 

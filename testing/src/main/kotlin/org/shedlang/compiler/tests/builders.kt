@@ -278,6 +278,11 @@ fun callNamedArgument(
     source = anySource()
 )
 
+fun splatArgument(expression: ExpressionNode) = FieldArgumentNode.Splat(
+    expression = expression,
+    source = anySource(),
+)
+
 fun staticCall(
     receiver: ExpressionNode,
     arguments: List<StaticExpressionNode> = listOf(),
