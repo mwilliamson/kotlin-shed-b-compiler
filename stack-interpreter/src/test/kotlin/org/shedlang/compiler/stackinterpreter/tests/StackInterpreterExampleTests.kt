@@ -33,7 +33,6 @@ class StackInterpreterExampleTests {
                 try {
                     val modules = testProgram.load()
                     val image = loadModuleSet(modules)
-                    val mainFunction = findMainFunction(modules, testProgram)
                     val world = InMemoryWorld(args = testProgram.args)
                     val exitCode = executeMain(
                         mainModule = testProgram.mainModule,
@@ -56,15 +55,6 @@ class StackInterpreterExampleTests {
                 }
             }
         }
-    }
-
-    private fun findMainFunction(modules: ModuleSet, testProgram: TestProgram): ModuleStatementNode {
-        val mainModule = modules.modules.find { module ->
-            module.name == testProgram.mainModule
-        }!! as Module.Shed
-        return mainModule.node.body.find { statement ->
-            statement is FunctionDefinitionNode && statement.name == Identifier("main")
-        }!!
     }
 }
 
