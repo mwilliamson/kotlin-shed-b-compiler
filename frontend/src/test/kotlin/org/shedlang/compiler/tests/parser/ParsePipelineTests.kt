@@ -15,7 +15,7 @@ class ParsePipelineTests {
             positionalArguments = isSequence(
                 isVariableReference("x")
             ),
-            namedArguments = isSequence(),
+            fieldArguments = isSequence(),
             typeArguments = isSequence()
         ))
     }

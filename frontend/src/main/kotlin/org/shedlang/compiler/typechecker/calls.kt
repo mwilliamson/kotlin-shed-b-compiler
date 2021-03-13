@@ -1,7 +1,6 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.CompilerError
-import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
@@ -13,7 +12,7 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
                 CallNode(
                     receiver = receiver.receiver,
                     positionalArguments = receiver.positionalArguments + node.positionalArguments,
-                    namedArguments = receiver.namedArguments + node.namedArguments,
+                    fieldArguments = receiver.fieldArguments + node.fieldArguments,
                     staticArguments = listOf(),
                     hasEffect = node.hasEffect,
                     source = receiver.source,
@@ -163,7 +162,8 @@ internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext, b
             .drop(node.positionalArguments.size)
             .map { parameter -> replaceStaticValuesInType(parameter, bindings) }
         val remainingNamedParameters = receiverType.namedParameters
-            .filterKeys { name -> !node.namedArguments.any { argument -> argument.name == name } }
+            // TODO: Handle splats
+            .filterKeys { name -> !node.fieldArguments.any { argument -> (argument as FieldArgumentNode.Named).name == name } }
             .mapValues { (name, parameter) -> replaceStaticValuesInType(parameter, bindings) }
         return FunctionType(
             staticParameters = listOf(),
@@ -186,7 +186,7 @@ private fun checkArguments(
     bindingsHint: StaticBindings? = null,
     allowMissing: Boolean
 ): StaticBindings {
-    val positionalArguments = call.positionalArguments.zip(positionalParameters)
+    val positionalArgumentsWithTypes = call.positionalArguments.zip(positionalParameters)
     if ((!allowMissing && call.positionalArguments.size < positionalParameters.size) || call.positionalArguments.size > positionalParameters.size) {
         throw WrongNumberOfArgumentsError(
             expected = positionalParameters.size,
@@ -195,29 +195,33 @@ private fun checkArguments(
         )
     }
 
-    for ((name, arguments) in call.namedArguments.groupBy(CallNamedArgumentNode::name)) {
+    // TODO: handle splat
+    val namedArguments = call.fieldArguments.filterIsInstance<FieldArgumentNode.Named>()
+    val namedArgumentsGroupedByName = namedArguments.groupBy(FieldArgumentNode.Named::name)
+
+    for ((name, arguments) in namedArgumentsGroupedByName) {
         if (arguments.size > 1) {
             throw ArgumentAlreadyPassedError(name, source = arguments[1].source)
         }
     }
 
-    val namedArguments = call.namedArguments.map({ argument ->
+    val namedArgumentsWithTypes = namedArguments.map { argument ->
         val fieldType = namedParameters[argument.name]
         if (fieldType == null) {
             throw ExtraArgumentError(argument.name, source = argument.source)
         } else {
             argument.expression to fieldType
         }
-    })
+    }
 
     if (!allowMissing) {
-        val missingNamedArguments = namedParameters.keys - call.namedArguments.map({ argument -> argument.name })
+        val missingNamedArguments = namedParameters.keys - namedArguments.map({ argument -> argument.name })
         for (missingNamedArgument in missingNamedArguments) {
             throw MissingArgumentError(missingNamedArgument, source = call.operatorSource)
         }
     }
 
-    val arguments = positionalArguments + namedArguments
+    val arguments = positionalArgumentsWithTypes + namedArgumentsWithTypes
     return checkArgumentTypes(
         staticParameters = staticParameters,
         staticArgumentNodes = call.staticArguments,
@@ -342,10 +346,11 @@ private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
             actual = node.positionalArguments.size,
             source = node.positionalArguments[0].source,
         )
-    } else if (node.namedArguments.isNotEmpty()) {
+    } else if (node.fieldArguments.isNotEmpty()) {
+        // TODO: handle splat
         throw ExtraArgumentError(
-            argumentName = node.namedArguments[0].name,
-            source = node.namedArguments[0].source,
+            argumentName = (node.fieldArguments[0] as FieldArgumentNode.Named).name,
+            source = node.fieldArguments[0].source,
         )
     } else {
         return createEmptyShapeType(staticArgument)

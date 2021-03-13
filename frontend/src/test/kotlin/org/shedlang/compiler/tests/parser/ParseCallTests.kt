@@ -50,8 +50,8 @@ class ParseCallTests {
         assertThat(node, isCall(
             receiver = isVariableReference("x"),
             positionalArguments = isSequence(),
-            namedArguments = isSequence(
-                isCallNamedArgument(
+            fieldArguments = isSequence(
+                isNamedArgument(
                     name = isIdentifier("y"),
                     expression = isVariableReference("z")
                 )
@@ -66,6 +66,17 @@ class ParseCallTests {
             { parseString(::parseExpression, source) },
             throwsException<PositionalArgumentAfterNamedArgumentError>()
         )
+    }
+
+    @Test
+    fun canParseFunctionCallWithSplatArguments() {
+        val source = "x(...y)"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isCall(
+            fieldArguments = isSequence(
+                isSplatArgument(expression = isVariableReference("y")),
+            ),
+        ))
     }
 
     @Test
@@ -122,8 +133,8 @@ class ParseCallTests {
             positionalArguments = isSequence(
                 isVariableReference("x")
             ),
-            namedArguments = isSequence(
-                isCallNamedArgument(
+            fieldArguments = isSequence(
+                isNamedArgument(
                     name = isIdentifier("y"),
                     expression = isVariableReference("z")
                 )

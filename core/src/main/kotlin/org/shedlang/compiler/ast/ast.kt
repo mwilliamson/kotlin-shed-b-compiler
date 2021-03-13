@@ -1072,7 +1072,7 @@ interface CallBaseNode: ExpressionNode {
     val receiver: ExpressionNode
     val staticArguments: List<StaticExpressionNode>
     val positionalArguments: List<ExpressionNode>
-    val namedArguments: List<CallNamedArgumentNode>
+    val fieldArguments: List<FieldArgumentNode>
     val operatorSource: Source
 }
 
@@ -1080,7 +1080,7 @@ data class CallNode(
     override val receiver: ExpressionNode,
     override val staticArguments: List<StaticExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
-    override val namedArguments: List<CallNamedArgumentNode>,
+    override val fieldArguments: List<FieldArgumentNode>,
     val hasEffect: Boolean,
     override val source: Source,
     override val operatorSource: Source,
@@ -1089,7 +1089,7 @@ data class CallNode(
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(receiver)) +
             staticArguments.map(NodeStructures::staticEval) +
-            (positionalArguments + namedArguments).map(NodeStructures::eval)
+            (positionalArguments + fieldArguments).map(NodeStructures::eval)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -1100,7 +1100,7 @@ data class PartialCallNode(
     override val receiver: ExpressionNode,
     override val staticArguments: List<StaticExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
-    override val namedArguments: List<CallNamedArgumentNode>,
+    override val fieldArguments: List<FieldArgumentNode>,
     override val source: Source,
     override val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
@@ -1108,21 +1108,32 @@ data class PartialCallNode(
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(receiver)) +
             staticArguments.map(NodeStructures::staticEval) +
-            (positionalArguments + namedArguments).map(NodeStructures::eval)
+            (positionalArguments + fieldArguments).map(NodeStructures::eval)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-data class CallNamedArgumentNode(
-    val name: Identifier,
-    val expression: ExpressionNode,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-): Node {
-    override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.eval(expression))
+sealed class FieldArgumentNode: Node {
+    data class Named(
+        val name: Identifier,
+        val expression: ExpressionNode,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ): FieldArgumentNode() {
+        override val structure: List<NodeStructure>
+            get() = listOf(NodeStructures.eval(expression))
+    }
+
+    data class Splat(
+        val expression: ExpressionNode,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ): FieldArgumentNode() {
+        override val structure: List<NodeStructure>
+            get() = listOf(NodeStructures.eval(expression))
+    }
 }
 
 data class StaticCallNode(

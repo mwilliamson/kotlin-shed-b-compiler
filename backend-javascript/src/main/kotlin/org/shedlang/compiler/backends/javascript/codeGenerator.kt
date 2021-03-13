@@ -645,11 +645,11 @@ internal fun generateCode(node: ExpressionNode, context: CodeGenerationContext):
             val positionalArguments = node.positionalArguments.map { argument ->
                 generateCode(argument, context)
             }
-            val namedArguments = node.namedArguments
-                .sortedBy { argument -> argument.name }
+            val namedArguments = node.fieldArguments
+                .sortedBy { argument -> (argument as FieldArgumentNode.Named).name }
                 .map { argument ->
                     JavascriptPropertyNode(
-                        name = generateName(argument.name),
+                        name = generateName((argument as FieldArgumentNode.Named).name),
                         expression = generateCode(argument.expression, context),
                         source = NodeSource(node),
                     )
@@ -791,13 +791,14 @@ private fun generateCodeForCall(node: CallNode, context: CodeGenerationContext):
     val positionalArguments = node.positionalArguments.map { argument ->
         generateCode(argument, context)
     }
-    val namedArguments = if (node.namedArguments.isEmpty()) {
+    val namedArguments = if (node.fieldArguments.isEmpty()) {
         listOf()
     } else {
         listOf(JavascriptObjectLiteralNode(
-            node.namedArguments.map { argument ->
+            node.fieldArguments.map { argument ->
                 JavascriptPropertyNode(
-                    generateName(argument.name),
+                    // TODO: handle splat
+                    generateName((argument as FieldArgumentNode.Named).name),
                     generateCode(argument.expression, context),
                     source = NodeSource(node),
                 )

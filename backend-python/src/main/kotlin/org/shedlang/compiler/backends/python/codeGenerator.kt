@@ -1058,8 +1058,9 @@ internal fun generateExpressionCode(node: ExpressionNode, context: CodeGeneratio
         }
 
         private fun generateNamedArguments(node: CallBaseNode): GeneratedCode<List<Pair<String, PythonExpressionNode>>> {
-            val results = node.namedArguments.map({ argument ->
-                generateExpressionCode(argument.expression, context).pureMap { expression ->
+            // TODO: handle splat
+            val results = node.fieldArguments.map({ argument ->
+                generateExpressionCode((argument as FieldArgumentNode.Named).expression, context).pureMap { expression ->
                     pythoniseName(argument.name) to expression
                 }
             })

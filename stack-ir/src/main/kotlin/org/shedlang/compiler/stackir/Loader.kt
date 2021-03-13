@@ -251,7 +251,10 @@ class Loader(
                     val argumentInstructions = loadArguments(node)
                     val call = Call(
                         positionalArgumentCount = node.positionalArguments.size,
-                        namedArgumentNames = node.namedArguments.map { argument -> argument.name }
+                        namedArgumentNames = node.fieldArguments.map {
+                            // TODO: handle splat
+                            argument -> (argument as FieldArgumentNode.Named).name
+                        }
                     )
                     return receiverInstructions.addAll(argumentInstructions).add(call)
                 }
@@ -278,11 +281,12 @@ class Loader(
                     )
                 }
 
-                val namedArgumentVariables = node.namedArguments.map { argument ->
-                    DefineFunction.Parameter(name = argument.name, variableId = freshNodeId())
+                // TODO: Handle splat
+                val namedArgumentVariables = node.fieldArguments.map { argument ->
+                    DefineFunction.Parameter(name = (argument as FieldArgumentNode.Named).name, variableId = freshNodeId())
                 }
-                val namedArgumentInstructions = node.namedArguments.zip(namedArgumentVariables) { argument, variable ->
-                    loadExpression(argument.expression).add(LocalStore(variable))
+                val namedArgumentInstructions = node.fieldArguments.zip(namedArgumentVariables) { argument, variable ->
+                    loadExpression((argument as FieldArgumentNode.Named).expression).add(LocalStore(variable))
                 }.flatten()
 
                 val namedParameterNames = partialFunctionType.namedParameters.keys.toList()
@@ -307,7 +311,7 @@ class Loader(
                             })
                             .add(Call(
                                 positionalArgumentCount = node.positionalArguments.size + partialFunctionType.positionalParameters.size,
-                                namedArgumentNames = node.namedArguments.map { argument -> argument.name } + namedParameterNames
+                                namedArgumentNames = node.fieldArguments.map { argument -> (argument as FieldArgumentNode.Named).name } + namedParameterNames
                             ))
                             .add(Return)
                     )
@@ -438,8 +442,9 @@ class Loader(
     private fun loadArguments(node: CallBaseNode): List<Instruction> {
         return node.positionalArguments.flatMap { argument ->
             loadExpression(argument)
-        } + node.namedArguments.flatMap { argument ->
-            loadExpression(argument.expression)
+        } + node.fieldArguments.flatMap { argument ->
+            // TODO: handle splat
+            loadExpression((argument as FieldArgumentNode.Named).expression)
         }
     }
 

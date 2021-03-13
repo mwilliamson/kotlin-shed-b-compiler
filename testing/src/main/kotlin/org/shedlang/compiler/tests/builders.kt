@@ -242,14 +242,14 @@ fun isOperation(
 fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
-    namedArguments: List<CallNamedArgumentNode> = listOf(),
+    namedArguments: List<FieldArgumentNode> = listOf(),
     staticArguments: List<StaticExpressionNode> = listOf(),
     hasEffect: Boolean = false
 ) = CallNode(
     receiver = receiver,
     staticArguments = staticArguments,
     positionalArguments = positionalArguments,
-    namedArguments = namedArguments,
+    fieldArguments = namedArguments,
     hasEffect = hasEffect,
     source = anySource(),
     operatorSource = anySource(),
@@ -258,13 +258,13 @@ fun call(
 fun partialCall(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
-    namedArguments: List<CallNamedArgumentNode> = listOf(),
+    namedArguments: List<FieldArgumentNode> = listOf(),
     staticArguments: List<StaticExpressionNode> = listOf()
 ) = PartialCallNode(
     receiver = receiver,
     staticArguments = staticArguments,
     positionalArguments = positionalArguments,
-    namedArguments = namedArguments,
+    fieldArguments = namedArguments,
     source = anySource(),
     operatorSource = anySource(),
 )
@@ -272,7 +272,7 @@ fun partialCall(
 fun callNamedArgument(
     name: String,
     expression: ExpressionNode
-) = CallNamedArgumentNode(
+) = FieldArgumentNode.Named(
     name = Identifier(name),
     expression = expression,
     source = anySource()

@@ -1077,7 +1077,7 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
                 receiver = left,
                 staticArguments = typeArguments,
                 positionalArguments = positionalArguments,
-                namedArguments = namedArguments,
+                fieldArguments = namedArguments,
                 hasEffect = hasEffect,
                 source = left.source,
                 operatorSource = operatorSource,
@@ -1101,7 +1101,7 @@ private object PartialCallParser : OperationParser {
             receiver = left,
             staticArguments = listOf(),
             positionalArguments = positionalArguments,
-            namedArguments = namedArguments,
+            fieldArguments = namedArguments,
             source = left.source,
             operatorSource = operatorSource,
         )
@@ -1111,7 +1111,7 @@ private object PartialCallParser : OperationParser {
         get() = CALL_PRECEDENCE
 }
 
-private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<ExpressionNode>, List<CallNamedArgumentNode>> {
+private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<ExpressionNode>, List<FieldArgumentNode>> {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseMany(
         parseElement = ::parseArgument,
@@ -1124,7 +1124,7 @@ private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<Expr
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
     val positionalArguments = mutableListOf<ExpressionNode>()
-    val namedArguments = mutableListOf<CallNamedArgumentNode>()
+    val namedArguments = mutableListOf<FieldArgumentNode>()
 
     for (argument in arguments) {
         when (argument) {
@@ -1145,17 +1145,23 @@ private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<Expr
 
 private sealed class ParsedArgument {
     class Positional(val expression: ExpressionNode): ParsedArgument()
-    class Named(val node: CallNamedArgumentNode): ParsedArgument()
+    class Named(val node: FieldArgumentNode): ParsedArgument()
 }
 
 private fun parseArgument(tokens: TokenIterator<TokenType>): ParsedArgument {
     val source = tokens.location()
 
-    if (tokens.trySkip(TokenType.SYMBOL_DOT)) {
+    if (tokens.trySkip(TokenType.SYMBOL_ELLIPSIS)) {
+        val expression = parseExpression(tokens)
+        return ParsedArgument.Named(FieldArgumentNode.Splat(
+            expression = expression,
+            source = source,
+        ))
+    } else if (tokens.trySkip(TokenType.SYMBOL_DOT)) {
         val name = parseIdentifier(tokens)
         tokens.skip(TokenType.SYMBOL_EQUALS)
         val expression = parseExpression(tokens)
-        return ParsedArgument.Named(CallNamedArgumentNode(
+        return ParsedArgument.Named(FieldArgumentNode.Named(
             name = name,
             expression = expression,
             source = source
@@ -1181,7 +1187,7 @@ private object PipelineParser : OperationParser {
         return CallNode(
             receiver = right,
             positionalArguments = listOf(left),
-            namedArguments = listOf(),
+            fieldArguments = listOf(),
             staticArguments = listOf(),
             hasEffect = false,
             source = left.source,

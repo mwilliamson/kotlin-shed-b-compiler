@@ -281,7 +281,7 @@ internal fun isIsOperation(
 internal fun isCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
-    namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
+    fieldArguments: Matcher<List<FieldArgumentNode>> = anything,
     typeArguments: Matcher<List<StaticExpressionNode>> = anything,
     hasEffect: Matcher<Boolean> = anything
 ) : Matcher<ExpressionNode> {
@@ -289,7 +289,7 @@ internal fun isCall(
         has(CallNode::receiver, receiver),
         has(CallNode::staticArguments, typeArguments),
         has(CallNode::positionalArguments, positionalArguments),
-        has(CallNode::namedArguments, namedArguments),
+        has(CallNode::fieldArguments, fieldArguments),
         has(CallNode::hasEffect, hasEffect)
     ))
 }
@@ -297,23 +297,29 @@ internal fun isCall(
 internal fun isPartialCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
-    namedArguments: Matcher<List<CallNamedArgumentNode>> = anything,
+    fieldArguments: Matcher<List<FieldArgumentNode>> = anything,
     typeArguments: Matcher<List<StaticExpressionNode>> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(PartialCallNode::receiver, receiver),
         has(PartialCallNode::staticArguments, typeArguments),
         has(PartialCallNode::positionalArguments, positionalArguments),
-        has(PartialCallNode::namedArguments, namedArguments)
+        has(PartialCallNode::fieldArguments, fieldArguments)
     ))
 }
 
-internal fun isCallNamedArgument(
+internal fun isNamedArgument(
     name: Matcher<Identifier>,
     expression: Matcher<ExpressionNode>
-) = allOf(
-    has(CallNamedArgumentNode::name, name),
-    has(CallNamedArgumentNode::expression, expression)
+): Matcher<FieldArgumentNode> = cast(allOf(
+    has(FieldArgumentNode.Named::name, name),
+    has(FieldArgumentNode.Named::expression, expression)
+))
+
+internal fun isSplatArgument(
+    expression: Matcher<ExpressionNode>,
+): Matcher<FieldArgumentNode> = cast(
+    has(FieldArgumentNode.Splat::expression, expression)
 )
 
 internal fun isStaticCall(
