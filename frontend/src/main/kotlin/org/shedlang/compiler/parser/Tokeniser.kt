@@ -46,6 +46,8 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
 
     RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
 
+    symbol(TokenType.SYMBOL_ELLIPSIS, "..."),
+
     symbol(TokenType.SYMBOL_ARROW, "->"),
     symbol(TokenType.SYMBOL_FAT_ARROW, "=>"),
     symbol(TokenType.SYMBOL_SUBTYPE, "<:"),
@@ -129,6 +131,7 @@ internal enum class TokenType {
 
     IDENTIFIER,
 
+    SYMBOL_ELLIPSIS,
     SYMBOL_ARROW,
     SYMBOL_FAT_ARROW,
     SYMBOL_SUBTYPE,
