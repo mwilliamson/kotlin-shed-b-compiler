@@ -123,6 +123,7 @@ private fun inferConstructorCallType(
         namedParameters = shapeType.populatedFields
             .filter { field -> !field.value.isConstant }
             .mapValues { field -> field.value.type },
+        splatType = shapeType,
         context = context,
         allowMissing = false
     )
@@ -184,6 +185,7 @@ private fun checkArguments(
     namedParameters: Map<Identifier, Type>,
     context: TypeContext,
     bindingsHint: StaticBindings? = null,
+    splatType: ShapeType? = null,
     allowMissing: Boolean
 ): StaticBindings {
     val positionalArgumentsWithTypes = call.positionalArguments.zip(positionalParameters)
@@ -195,28 +197,48 @@ private fun checkArguments(
         )
     }
 
-    verifyNoSplatArguments(call)
+    val explicitNamedArgumentsGroupedByName = call.fieldArguments
+        .filterIsInstance<FieldArgumentNode.Named>()
+        .groupBy(FieldArgumentNode.Named::name)
 
-    val namedArguments = call.fieldArguments.filterIsInstance<FieldArgumentNode.Named>()
-    val namedArgumentsGroupedByName = namedArguments.groupBy(FieldArgumentNode.Named::name)
-
-    for ((name, arguments) in namedArgumentsGroupedByName) {
+    for ((name, arguments) in explicitNamedArgumentsGroupedByName) {
         if (arguments.size > 1) {
             throw ArgumentAlreadyPassedError(name, source = arguments[1].source)
         }
     }
 
-    val namedArgumentsWithTypes = namedArguments.map { argument ->
-        val fieldType = namedParameters[argument.name]
-        if (fieldType == null) {
-            throw ExtraArgumentError(argument.name, source = argument.source)
-        } else {
-            argument.expression to fieldType
+    val namedArgumentNames = mutableSetOf<Identifier>()
+    val namedArgumentsWithTypes = mutableListOf<Pair<ExpressionNode, Type>>()
+
+    for (argument in call.fieldArguments) {
+        when (argument) {
+            is FieldArgumentNode.Named -> {
+                val fieldType = namedParameters[argument.name]
+                if (fieldType == null) {
+                    throw ExtraArgumentError(argument.name, source = argument.source)
+                } else {
+                    namedArgumentNames += argument.name
+                    namedArgumentsWithTypes.add(Pair(argument.expression, fieldType))
+                }
+            }
+            is FieldArgumentNode.Splat -> {
+                if (splatType == null) {
+                    throw UnexpectedSplatArgumentError(source = argument.source)
+                } else {
+                    // TODO: handle non-shape types
+                    // TODO: handle generic types
+                    val type = inferType(argument.expression, context = context) as ShapeType
+                    namedArgumentNames += type.populatedFields.keys
+                    namedArgumentsWithTypes.add(Pair(argument.expression, splatType))
+                    type.populatedFields.mapValues { (_, field) -> field.type }
+                }
+            }
         }
+        // TODO: check for redundant arguments
     }
 
     if (!allowMissing) {
-        val missingNamedArguments = namedParameters.keys - namedArguments.map({ argument -> argument.name })
+        val missingNamedArguments = namedParameters.keys - namedArgumentNames
         for (missingNamedArgument in missingNamedArguments) {
             throw MissingArgumentError(missingNamedArgument, source = call.operatorSource)
         }

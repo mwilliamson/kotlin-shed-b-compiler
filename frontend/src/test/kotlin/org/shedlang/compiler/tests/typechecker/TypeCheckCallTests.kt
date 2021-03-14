@@ -341,6 +341,77 @@ class TypeCheckCallTests {
     }
 
     @Test
+    fun whenSplatArgumentMatchesTypeOfShapeCallThenCallTypeChecks() {
+        // TODO: Handling of partial types?
+        val shapeReference = variableReference("X")
+        val splatArgumentValueReference = variableReference("previous")
+        val node = call(
+            receiver = shapeReference,
+            namedArguments = listOf(
+                splatArgument(splatArgumentValueReference),
+                callNamedArgument(name = "first", expression = literalString()),
+            ),
+        )
+
+        val shapeType = shapeType(
+            name = "X",
+            fields = listOf(
+                field(name = "first", type = StringType),
+                field(name = "second", type = IntType),
+            ),
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                shapeReference to metaType(shapeType),
+                splatArgumentValueReference to shapeType,
+            ),
+        )
+        val type = inferCallType(node, typeContext)
+
+        assertThat(type, cast(equalTo(shapeType)))
+    }
+
+    @Test
+    fun whenSplatArgumentUsesShapeOfUnrelatedTypeInShapeCallThenCallDoesNotTypeCheck() {
+        val shapeReference = variableReference("X")
+        val splatArgumentValueReference = variableReference("previous")
+        val node = call(
+            receiver = shapeReference,
+            namedArguments = listOf(
+                splatArgument(splatArgumentValueReference),
+                callNamedArgument(name = "first", expression = literalString()),
+            ),
+        )
+
+        val shapeType = shapeType(
+            name = "X",
+            fields = listOf(
+                field(name = "first", type = StringType),
+                field(name = "second", type = IntType),
+            ),
+        )
+        val otherShapeType = shapeType(
+            name = "Other",
+            fields = listOf(
+                field(name = "first", type = StringType),
+                field(name = "second", type = IntType),
+            ),
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(
+                shapeReference to metaType(shapeType),
+                splatArgumentValueReference to otherShapeType,
+            ),
+        )
+        val type = { inferCallType(node, typeContext) }
+
+        assertThat(type, throwsException(allOf(
+            has(UnexpectedTypeError::expected, cast(isType(shapeType))),
+            has(UnexpectedTypeError::actual, isType(otherShapeType)),
+        )))
+    }
+
+    @Test
     fun shapeCallWithImplicitTypeArguments() {
         val shapeReference = variableReference("Box")
 
