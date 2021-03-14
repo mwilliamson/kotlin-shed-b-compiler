@@ -679,6 +679,79 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     @Test
+    fun canCallShapeConstructorUsingSplatArgument() {
+        val shapeDeclaration = shape("Pair")
+        val shapeReference = variableReference("Pair")
+
+        val originalTarget = targetVariable("original")
+        val originalDeclaration = valStatement(
+            target = originalTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    callNamedArgument("first", literalInt(1)),
+                    callNamedArgument("second", literalInt(10))
+                )
+            )
+        )
+        val originalReference = variableReference("original")
+
+        val updatedTarget = targetVariable("updated")
+        val updatedDeclaration = valStatement(
+            target = updatedTarget,
+            expression = call(
+                shapeReference,
+                namedArguments = listOf(
+                    splatArgument(originalReference),
+                    callNamedArgument("first", literalInt(100))
+                )
+            )
+        )
+        val updatedReference = variableReference("updated")
+
+        val inspector = SimpleCodeInspector(
+            shapeFields = mapOf(
+                shapeDeclaration to listOf(
+                    fieldInspector(name = "first"),
+                    fieldInspector(name = "second")
+                )
+            )
+        )
+        val references = ResolvedReferencesMap(mapOf(
+            shapeReference.nodeId to shapeDeclaration,
+            originalReference.nodeId to originalTarget,
+            updatedReference.nodeId to updatedTarget,
+        ))
+        val shapeType = shapeType(
+            fields = listOf(
+                field("first", type = IntType),
+                field("second", type = IntType)
+            )
+        )
+        val types = createTypes(
+            expressionTypes = mapOf(
+                originalReference.nodeId to shapeType,
+                updatedReference.nodeId to shapeType,
+                shapeReference.nodeId to metaType(shapeType)
+            ),
+            variableTypes = mapOf(
+                shapeDeclaration.nodeId to metaType(shapeType)
+            )
+        )
+
+        val loader = loader(inspector = inspector, references = references, types = types)
+        val instructions = loader.loadModuleStatement(shapeDeclaration)
+            .addAll(loader.loadFunctionStatement(originalDeclaration))
+            .addAll(loader.loadFunctionStatement(updatedDeclaration))
+            .addAll(loader.loadExpression(fieldAccess(updatedReference, "first")))
+            .addAll(loader.loadExpression(fieldAccess(updatedReference, "second")))
+            .add(IntSubtract)
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(90))
+    }
+
+    @Test
     fun canDestructureFieldsInVal() {
         val shapeDeclaration = shape("Pair")
         val shapeReference = variableReference("Pair")
