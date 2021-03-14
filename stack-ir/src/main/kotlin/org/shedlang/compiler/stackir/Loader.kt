@@ -8,6 +8,7 @@ import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.ModuleCodeInspector
+import org.shedlang.compiler.backends.fieldArgumentsToFieldsProvided
 import org.shedlang.compiler.types.*
 
 class Image internal constructor(private val modules: Map<ModuleName, PersistentList<Instruction>>) {
@@ -437,23 +438,7 @@ class Loader(
     }
 
     private fun loadArguments(node: CallBaseNode): Pair<List<Instruction>, List<Identifier>> {
-        val providesFields = mutableListOf<LinkedHashSet<Identifier>>()
-
-        node.fieldArguments.forEachIndexed { fieldArgumentIndex, fieldArgument ->
-            val argumentProvidesFields = when (fieldArgument) {
-                is FieldArgumentNode.Named -> {
-                    setOf(fieldArgument.name)
-                }
-                is FieldArgumentNode.Splat -> {
-                    val argType = types.typeOfExpression(fieldArgument.expression) as ShapeType
-                    argType.populatedFieldNames
-                }
-            }
-            for (previousArgumentProvidesFields in providesFields) {
-                previousArgumentProvidesFields.removeAll(argumentProvidesFields)
-            }
-            providesFields.add(LinkedHashSet(argumentProvidesFields))
-        }
+        val providesFields = fieldArgumentsToFieldsProvided(node.fieldArguments, types = types)
 
         val namedArgumentNames = mutableListOf<Identifier>()
         val instructions =  node.positionalArguments.flatMap { argument ->
