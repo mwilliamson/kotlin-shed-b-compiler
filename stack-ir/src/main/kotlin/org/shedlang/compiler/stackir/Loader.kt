@@ -438,7 +438,7 @@ class Loader(
     }
 
     private fun loadArguments(node: CallBaseNode): Pair<List<Instruction>, List<Identifier>> {
-        val providesFields = fieldArgumentsToFieldsProvided(node.fieldArguments, types = types)
+        val providesFields = fieldArgumentsToFieldsProvided(node.fieldArguments, typeOfExpression = types::typeOfExpression)
 
         val namedArgumentNames = mutableListOf<Identifier>()
         val instructions =  node.positionalArguments.flatMap { argument ->
