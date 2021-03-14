@@ -15,7 +15,6 @@ import org.shedlang.compiler.backends.withLineNumbers
 class LlvmExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
-        "ShapeSplat.shed",
     )
 
     @TestFactory

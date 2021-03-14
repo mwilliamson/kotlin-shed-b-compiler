@@ -248,13 +248,10 @@ class Loader(
                         })
                 } else {
                     val receiverInstructions = loadExpression(node.receiver)
-                    val argumentInstructions = loadArguments(node)
+                    val (argumentInstructions, namedArgumentNames) = loadArguments(node)
                     val call = Call(
                         positionalArgumentCount = node.positionalArguments.size,
-                        namedArgumentNames = node.fieldArguments.map {
-                            // TODO: handle splat
-                            argument -> (argument as FieldArgumentNode.Named).name
-                        }
+                        namedArgumentNames = namedArgumentNames,
                     )
                     return receiverInstructions.addAll(argumentInstructions).add(call)
                 }
@@ -439,13 +436,59 @@ class Loader(
         })
     }
 
-    private fun loadArguments(node: CallBaseNode): List<Instruction> {
-        return node.positionalArguments.flatMap { argument ->
-            loadExpression(argument)
-        } + node.fieldArguments.flatMap { argument ->
-            // TODO: handle splat
-            loadExpression((argument as FieldArgumentNode.Named).expression)
+    private fun loadArguments(node: CallBaseNode): Pair<List<Instruction>, List<Identifier>> {
+        val providesFields = mutableListOf<LinkedHashSet<Identifier>>()
+
+        node.fieldArguments.forEachIndexed { fieldArgumentIndex, fieldArgument ->
+            val argumentProvidesFields = when (fieldArgument) {
+                is FieldArgumentNode.Named -> {
+                    setOf(fieldArgument.name)
+                }
+                is FieldArgumentNode.Splat -> {
+                    val argType = types.typeOfExpression(fieldArgument.expression) as ShapeType
+                    argType.populatedFieldNames
+                }
+            }
+            for (previousArgumentProvidesFields in providesFields) {
+                previousArgumentProvidesFields.removeAll(argumentProvidesFields)
+            }
+            providesFields.add(LinkedHashSet(argumentProvidesFields))
         }
+
+        val namedArgumentNames = mutableListOf<Identifier>()
+        val instructions =  node.positionalArguments.flatMap { argument ->
+            loadExpression(argument)
+        } + node.fieldArguments.zip(providesFields).flatMap { (argument, argumentProvidesFields) ->
+            when (argument) {
+                is FieldArgumentNode.Named -> {
+                    val expressionInstructions = loadExpression(argument.expression)
+                    if (argumentProvidesFields.contains(argument.name)) {
+                        namedArgumentNames.add(argument.name)
+                        expressionInstructions
+                    } else {
+                        expressionInstructions.add(Discard)
+                    }
+                }
+                is FieldArgumentNode.Splat -> {
+                    val argumentVariable = DefineFunction.Parameter(
+                        name = Identifier("splatArg"),
+                        variableId = freshNodeId()
+                    )
+                    val expressionInstructions = loadExpression(argument.expression)
+                        .add(LocalStore(argumentVariable))
+
+                    namedArgumentNames.addAll(argumentProvidesFields)
+                    expressionInstructions
+                        .addAll(argumentProvidesFields.flatMap { fieldName ->
+                            listOf(
+                                LocalLoad(argumentVariable),
+                                FieldAccess(fieldName = fieldName, receiverType = types.typeOfExpression(argument.expression)),
+                            )
+                        })
+                }
+            }
+        }
+        return Pair(instructions, namedArgumentNames)
     }
 
     fun loadBlock(block: Block): PersistentList<Instruction> {

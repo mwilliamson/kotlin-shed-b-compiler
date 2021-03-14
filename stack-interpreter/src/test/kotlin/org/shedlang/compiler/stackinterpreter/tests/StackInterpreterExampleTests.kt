@@ -20,7 +20,6 @@ import org.shedlang.compiler.SourceError
 class StackInterpreterExampleTests {
     private val disabledTests = setOf<String>(
         "ConstantField.shed",
-        "ShapeSplat.shed",
         "TailRec.shed"
     )
 
