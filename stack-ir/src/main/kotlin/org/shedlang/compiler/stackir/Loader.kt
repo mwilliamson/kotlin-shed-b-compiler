@@ -470,21 +470,18 @@ class Loader(
                     }
                 }
                 is FieldArgumentNode.Splat -> {
-                    val argumentVariable = DefineFunction.Parameter(
-                        name = Identifier("splatArg"),
-                        variableId = freshNodeId()
-                    )
                     val expressionInstructions = loadExpression(argument.expression)
-                        .add(LocalStore(argumentVariable))
 
                     namedArgumentNames.addAll(argumentProvidesFields)
                     expressionInstructions
                         .addAll(argumentProvidesFields.flatMap { fieldName ->
                             listOf(
-                                LocalLoad(argumentVariable),
+                                Duplicate,
                                 FieldAccess(fieldName = fieldName, receiverType = types.typeOfExpression(argument.expression)),
+                                Swap
                             )
                         })
+                        .add(Discard)
                 }
             }
         }
