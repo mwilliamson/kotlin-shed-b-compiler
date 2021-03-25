@@ -96,7 +96,7 @@ class StackValueToLlvmOperandTests {
 private fun stackValueToLlvmOperand(value: IrValue): Pair<List<LlvmTopLevelEntity>, LlvmOperand> {
     val moduleSet = ModuleSet(setOf())
     val image = loadModuleSet(moduleSet)
-    val compiler = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
+    val compiler = LlvmCompiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
     return compiler.stackValueToLlvmOperand(value)
 }
 

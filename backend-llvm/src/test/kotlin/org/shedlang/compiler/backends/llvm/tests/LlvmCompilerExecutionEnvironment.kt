@@ -27,7 +27,7 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             modules = modules,
             strings = strings
         )
-        val compiler = Compiler(
+        val compiler = LlvmCompiler(
             image = image,
             moduleSet = moduleSet,
             irBuilder = irBuilder

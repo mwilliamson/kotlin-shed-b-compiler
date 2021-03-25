@@ -16,7 +16,7 @@ object LlvmBackend : Backend {
         val file = createTempDir()
         try {
             val llPath = file.resolve("main.ll")
-            val compiler = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
+            val compiler = LlvmCompiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
             val compilationResult = compiler.compile(
                 mainModule = mainModule
             )

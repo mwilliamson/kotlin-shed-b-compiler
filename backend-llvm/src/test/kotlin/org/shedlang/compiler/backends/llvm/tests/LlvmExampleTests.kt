@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.CompilerError
-import org.shedlang.compiler.backends.llvm.Compiler
+import org.shedlang.compiler.backends.llvm.LlvmCompiler
 import org.shedlang.compiler.backends.llvm.LlvmIrBuilder
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
@@ -28,7 +28,7 @@ class LlvmExampleTests {
                     val moduleSet = testProgram.load()
                     val image = loadModuleSet(moduleSet)
 
-                    val compilationResult = Compiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder()).compile(
+                    val compilationResult = LlvmCompiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder()).compile(
                         mainModule = testProgram.mainModule
                     )
                     println(withLineNumbers(compilationResult.llvmIr))

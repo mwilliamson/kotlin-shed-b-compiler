@@ -11,7 +11,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 
 // TODO: Int implementation should be big integers, not i64
-internal class Compiler(
+internal class LlvmCompiler(
     private val image: Image,
     private val moduleSet: ModuleSet,
     private val irBuilder: LlvmIrBuilder
