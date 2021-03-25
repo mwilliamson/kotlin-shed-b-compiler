@@ -15,6 +15,7 @@ import org.shedlang.compiler.SourceError
 class PythonExampleTests {
     private val disabledTests = setOf<String>(
         "ShapeSplat.shed",
+        "stdlib",
         "TailRec.shed",
     )
 

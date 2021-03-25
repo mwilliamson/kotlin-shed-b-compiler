@@ -165,7 +165,7 @@ fun toStringArgs(
             val args = state.args;
             when (args) {
                 is Lists.Cons {
-                    val newState = state |> State.fields.args.update~(args.tail);
+                    val newState = State(...state, .args = args.tail);
                     resume args.head withstate newState
                 }
                 is Lists.Nil {
@@ -178,7 +178,7 @@ fun toStringArgs(
             val args = state.args;
             when (args) {
                 is Lists.Cons {
-                    val newState = state |> State.fields.args.update~(args.tail);
+                    val newState = State(...state, .args = args.tail);
                     resume args.head withstate newState
                 }
                 is Lists.Nil {
@@ -200,17 +200,20 @@ fun toStringArgs(
 
         .storeOption = (state: State, option: ArgDefinition, value: String) {
             val newResult = Lists.cons(#(option.name, value), state.result);
-            val newState = state |> State.fields.result.update~(newResult);
+            val newState = State(...state, .result = newResult);
             resume unit withstate newState
         },
 
         .storePositional = (state: State, value: String) {
-            when (state.positionals) {
-                is Lists.Cons(.head as positional, .tail as positionalsRest) {
-                    val newResult = Lists.cons(#(positional.name, value), state.result);
-                    val newState = state
-                        |> State.fields.positionals.update~(positionalsRest)
-                        |> State.fields.result.update~(newResult);
+            val positionals = state.positionals;
+            when (positionals) {
+                is Lists.Cons {
+                    val newResult = Lists.cons(#(positionals.head.name, value), state.result);
+                    val newState = State(
+                        ...state,
+                        .positionals = positionals.tail,
+                        .result = newResult,
+                    );
                     resume unit withstate newState
                 }
                 is Lists.Nil {
@@ -234,9 +237,9 @@ fun positional[A, T, R](
     );
 
     Parser[R](
-        .argDefinitions = ArgDefinitions.fields.positional.update(
-            ListBuilder.append(parser.argDefinitions.positional, argDefinition),
-            parser.argDefinitions,
+        .argDefinitions = ArgDefinitions(
+            ...parser.argDefinitions,
+            .positional = ListBuilder.append(parser.argDefinitions.positional, argDefinition),
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
@@ -260,9 +263,9 @@ fun option[A, T, R](
     );
 
     Parser[R](
-        .argDefinitions = ArgDefinitions.fields.options.update(
-            ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
-            parser.argDefinitions,
+        .argDefinitions = ArgDefinitions(
+            ...parser.argDefinitions,
+            .options = ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
@@ -285,9 +288,9 @@ fun flag[T, R](
     );
 
     Parser[R](
-        .argDefinitions = ArgDefinitions.fields.options.update(
-            ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
-            parser.argDefinitions,
+        .argDefinitions = ArgDefinitions(
+            ...parser.argDefinitions,
+            .options = ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
         ),
         .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
             val otherArgs = parser.parseStringArgs!(stringArgs);
