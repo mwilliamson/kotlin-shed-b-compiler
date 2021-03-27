@@ -37,7 +37,7 @@ internal class ClosureCompiler(
             body = bodyContext.instructions
         )
 
-        val newContext = context
+        return context
             .addTopLevelEntities(bodyContext.topLevelEntities)
             .addTopLevelEntities(functionDefinition)
             .let {
@@ -49,8 +49,6 @@ internal class ClosureCompiler(
                     context = it
                 )
             }
-
-        return newContext
     }
 
     internal fun createClosure(
