@@ -32,47 +32,41 @@ internal class EffectCompiler(
         return context
             .let {
                 effect.operations.entries.fold(it) { context2, (operationName, operationType) ->
-                    val functionName = irBuilder.generateName(operationName)
                     val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
                     val returnValue = irBuilder.generateLocal("return")
-                    val closureEnvironmentParameter = LlvmParameter(
-                        compiledClosureEnvironmentPointerType,
-                        irBuilder.generateName("environment")
-                    )
                     val llvmParameters = (0 until parameterCount).map { parameterIndex ->
                         LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
                     }
                     val operationArguments = irBuilder.generateLocal("arguments")
                     val operationArgumentsType = compiledOperationArgumentsType(operationType)
 
-                    closures.createClosure(
+                    closures.compileCreate(
                         target = operationOperands.getValue(operationName),
-                        functionName = functionName,
-                        parameterTypes = llvmParameters.map { llvmParameter -> llvmParameter.type },
+                        functionName = operationName.value,
+                        positionalParams = llvmParameters,
+                        namedParams = listOf(),
                         freeVariables = listOf(),
+                        compileBody = { bodyContext ->
+                            bodyContext
+                                .addInstructions(packArguments(
+                                    target = operationArguments,
+                                    arguments = llvmParameters.map { llvmParameter ->
+                                        LlvmOperandLocal(llvmParameter.name)
+                                    }
+                                ))
+                                .addInstructions(effectHandlersCall(
+                                    target = returnValue,
+                                    effect = effect,
+                                    operationName = operationName,
+                                    operationArguments = LlvmTypedOperand(
+                                        type = LlvmTypes.pointer(operationArgumentsType),
+                                        operand = operationArguments
+                                    )
+                                ))
+                                .addInstruction(LlvmReturn(type = compiledValueType, value = returnValue))
+                        },
                         context = context2
-                    ).addTopLevelEntities(LlvmFunctionDefinition(
-                        name = functionName,
-                        returnType = compiledValueType,
-                        parameters = listOf(closureEnvironmentParameter) + llvmParameters,
-                        body = persistentListOf<LlvmInstruction>()
-                            .addAll(packArguments(
-                                target = operationArguments,
-                                arguments = llvmParameters.map { llvmParameter ->
-                                    LlvmOperandLocal(llvmParameter.name)
-                                }
-                            ))
-                            .addAll(effectHandlersCall(
-                                target = returnValue,
-                                effect = effect,
-                                operationName = operationName,
-                                operationArguments = LlvmTypedOperand(
-                                    type = LlvmTypes.pointer(operationArgumentsType),
-                                    operand = operationArguments
-                                )
-                            ))
-                            .add(LlvmReturn(type = compiledValueType, value = returnValue))
-                    ))
+                    )
                 }
             }
             .addInstructions(objects.createObject(
