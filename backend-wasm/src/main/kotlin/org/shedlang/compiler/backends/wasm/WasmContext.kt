@@ -29,7 +29,8 @@ internal data class WasmGlobalContext private constructor(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
     private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
-    private val dependencies: PersistentList<ModuleName>,
+    private val moduleNames: PersistentSet<ModuleName>,
+    private val dependencies: PersistentSet<ModuleName>,
     private val tagValues: PersistentMap<TagValue, Set<LateIndex>>,
 ) {
     companion object {
@@ -37,7 +38,8 @@ internal data class WasmGlobalContext private constructor(
             globals = persistentListOf(),
             functions = persistentListOf(),
             staticData = persistentListOf(),
-            dependencies = persistentListOf(),
+            moduleNames = persistentSetOf(),
+            dependencies = persistentSetOf(),
             tagValues = persistentMapOf(),
         )
 
@@ -46,7 +48,8 @@ internal data class WasmGlobalContext private constructor(
                 globals = contexts.flatMap { context -> context.globals }.toPersistentList(),
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
-                dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentList(),
+                moduleNames = contexts.flatMap { context -> context.moduleNames }.toPersistentSet(),
+                dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentSet(),
                 tagValues = contexts.map { context -> context.tagValues }.reduce(::mergeTagValues),
             )
         }
@@ -57,6 +60,7 @@ internal data class WasmGlobalContext private constructor(
             globals = globals.addAll(other.globals),
             functions = functions.addAll(other.functions),
             staticData = staticData.addAll(other.staticData),
+            moduleNames = moduleNames.addAll(other.moduleNames),
             dependencies = dependencies.addAll(other.dependencies),
             tagValues = mergeTagValues(tagValues, other.tagValues),
         )
@@ -219,14 +223,12 @@ internal data class WasmGlobalContext private constructor(
         return copy(dependencies = dependencies.add(dependency))
     }
 
-    fun popDependency(): Pair<WasmGlobalContext, ModuleName?> {
-        if (dependencies.isEmpty()) {
-            return Pair(this, null)
-        } else {
-            val dependency = dependencies[dependencies.lastIndex]
-            val newContext = copy(dependencies = dependencies.removeAt(dependencies.lastIndex))
-            return Pair(newContext, dependency)
-        }
+    fun addModuleName(moduleName: List<Identifier>): WasmGlobalContext {
+        return copy(moduleNames = moduleNames.add(moduleName))
+    }
+
+    fun missingDependencies(): PersistentSet<ModuleName> {
+        return dependencies.removeAll(moduleNames)
     }
 
     fun compileTagValue(tagValue: TagValue): Pair<WasmGlobalContext, LateIndex> {

@@ -38,17 +38,15 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     fun compileDependencies(initialContext: WasmGlobalContext): WasmGlobalContext {
         var context = initialContext
-        val compiledModules = mutableSetOf<ModuleName>()
         while (true) {
-            val (newContext, dependency) = context.popDependency()
-            context = newContext
-            if (dependency == null) {
+            val missingDependencies = context.missingDependencies()
+            if (missingDependencies.isEmpty()) {
                 return context
-            } else if (dependency !in compiledModules) {
-                compiledModules.add(dependency)
-                val moduleContext = compileModule(dependency)
-                context = context.merge(moduleContext)
             }
+
+            val dependencyContexts = missingDependencies.map { dependency -> compileModule(dependency) }
+
+            context = context.merge(WasmGlobalContext.merge(dependencyContexts))
         }
     }
 
@@ -97,6 +95,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         return finalInitContext
             .addInstructions(Wasm.I.end)
             .toStaticFunctionInGlobalContext(identifier = initFunctionIdentifier)
+            .addModuleName(moduleName)
     }
 
     internal fun compileInstructions(instructions: List<Instruction>, context: WasmFunctionContext): WasmFunctionContext {
