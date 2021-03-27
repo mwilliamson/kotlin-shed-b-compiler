@@ -293,55 +293,37 @@ internal class LlvmCompiler(
             }
 
             is DefineFunction -> {
-                val functionName = generateName(instruction.name)
-                val temporary = LlvmOperandLocal(generateName("value"))
-
-                val irParameters = instruction.positionalParameters + instruction.namedParameters
-                    .sortedBy { namedParameter -> namedParameter.name }
-
-                val llvmParameters = irParameters.map { irParameter ->
-                    LlvmParameter(compiledValueType, generateName(irParameter.name))
-                }
-                val llvmParameterTypes = llvmParameters.map(LlvmParameter::type)
-
-
                 val freeVariables = findFreeVariables(instruction)
 
-                val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, generateName("environment"))
-                val bodyContextWithEnvironment = closures.loadFreeVariables(
+                val paramBindings = mutableListOf<Pair<Int, LlvmOperand>>()
+
+                fun compileParameter(parameter: DefineFunction.Parameter): LlvmParameter {
+                    val identifier = generateName(parameter.name)
+                    paramBindings.add(parameter.variableId to LlvmOperandLocal(identifier))
+                    return LlvmParameter(compiledValueType, identifier)
+                }
+
+                val positionalParams = instruction.positionalParameters.map(::compileParameter)
+                val namedParams = instruction.namedParameters.map { parameter ->
+                    parameter.name to compileParameter(parameter)
+                }
+
+                val temporary = LlvmOperandLocal(generateName("value"))
+
+                return closures.compileCreate(
+                    target = temporary,
+                    functionName = instruction.name,
                     freeVariables = freeVariables,
-                    closureEnvironmentPointer = LlvmOperandLocal(closureEnvironmentParameter.name),
-                    context = startFunction()
-                )
-                val bodyContextWithEnvironmentAndParameters =
-                    irParameters.zip(llvmParameters).fold(bodyContextWithEnvironment) { bodyContext, (irParameter, llvmParameter) ->
-                        bodyContext.localStore(irParameter.variableId, LlvmOperandLocal(llvmParameter.name))
-                    }
-
-                val bodyContext = compileInstructions(
-                    instruction.bodyInstructions,
-                    context = bodyContextWithEnvironmentAndParameters
-                )
-                val functionDefinition = LlvmFunctionDefinition(
-                    name = functionName,
-                    returnType = compiledValueType,
-                    parameters = listOf(closureEnvironmentParameter) + llvmParameters,
-                    body = bodyContext.instructions
-                )
-
-                return context
-                    .addTopLevelEntities(bodyContext.topLevelEntities)
-                    .addTopLevelEntities(listOf(functionDefinition))
-                    .let {
-                        closures.createClosure(
-                            target = temporary,
-                            functionName = functionName,
-                            parameterTypes = llvmParameterTypes,
-                            freeVariables = freeVariables,
-                            context = it
+                    positionalParams = positionalParams,
+                    namedParams = namedParams,
+                    compileBody = { bodyContext ->
+                        compileInstructions(
+                            instruction.bodyInstructions,
+                            context = bodyContext.localStore(paramBindings),
                         )
-                    }
-                    .pushTemporary(temporary)
+                    },
+                    context = context,
+                ).pushTemporary(temporary)
             }
 
             is DefineShape -> {
@@ -667,16 +649,7 @@ internal class LlvmCompiler(
     }
 
     internal fun startFunction(): FunctionContext {
-        return FunctionContext(
-            basicBlockName = generateName("entry"),
-            instructions = persistentListOf(),
-            stack = persistentListOf(),
-            locals = persistentMapOf(),
-            onLocalStore = persistentMultiMapOf(),
-            topLevelEntities = persistentListOf(),
-            labelPredecessors = persistentMultiMapOf(),
-            generateName = ::generateName
-        )
+        return FunctionContext.initial(generateName = ::generateName)
     }
 
     private fun compileBoolNot(context: FunctionContext): FunctionContext {

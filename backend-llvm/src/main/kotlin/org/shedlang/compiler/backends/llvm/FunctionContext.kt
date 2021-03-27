@@ -1,9 +1,6 @@
 package org.shedlang.compiler.backends.llvm
 
-import kotlinx.collections.immutable.PersistentList
-import kotlinx.collections.immutable.PersistentMap
-import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.toPersistentList
+import kotlinx.collections.immutable.*
 
 internal interface LabelPredecessor {
     val stack: PersistentList<LlvmOperand>
@@ -20,6 +17,19 @@ internal class FunctionContext(
     private val labelPredecessors: PersistentMultiMap<String, LabelPredecessor>,
     private val generateName: (String) -> String
 ): LabelPredecessor {
+    companion object {
+        fun initial(generateName: (String) -> String) = FunctionContext(
+            basicBlockName = generateName("entry"),
+            instructions = persistentListOf(),
+            stack = persistentListOf(),
+            locals = persistentMapOf(),
+            onLocalStore = persistentMultiMapOf(),
+            topLevelEntities = persistentListOf(),
+            labelPredecessors = persistentMultiMapOf(),
+            generateName = generateName
+        )
+    }
+
     fun addInstructions(vararg newInstructions: LlvmInstruction): FunctionContext {
         return addInstructions(newInstructions.asList())
     }
@@ -109,6 +119,12 @@ internal class FunctionContext(
             )
         } else {
             return onStore(value, this)
+        }
+    }
+
+    fun localStore(variables: Iterable<Pair<Int, LlvmOperand>>): FunctionContext {
+        return variables.fold(this) { acc, (variableId, operand) ->
+            acc.localStore(variableId, operand)
         }
     }
 

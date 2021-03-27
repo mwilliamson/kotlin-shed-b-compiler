@@ -44,25 +44,21 @@ internal class BuiltinModuleCompiler(
         // TODO: allocation of global names
         val functionName = "Core_Io_print"
 
-        val print = LlvmFunctionDefinition(
-            name = functionName,
-            parameters = listOf(
-                LlvmParameter(compiledClosureEnvironmentPointerType, "environment"),
-                LlvmParameter(compiledValueType, "value")
-            ),
-            returnType = compiledValueType,
-            body = print(LlvmOperandLocal("value")) + listOf(
-                LlvmReturn(type = compiledValueType, value = compiledUnitValue)
-            )
-        )
-
         val printClosure = irBuilder.generateLocal("print")
 
-        return closures.createClosure(
+        return closures.compileCreate(
             target = printClosure,
             functionName = functionName,
-            parameterTypes = listOf(compiledValueType),
+            positionalParams = listOf(LlvmParameter(compiledValueType, "value")),
+            namedParams = listOf(),
             freeVariables = listOf(),
+            compileBody = { bodyContext ->
+                bodyContext.addInstructions(
+                    print(LlvmOperandLocal("value")) + listOf(
+                        LlvmReturn(type = compiledValueType, value = compiledUnitValue)
+                    ),
+                )
+            },
             context = context
         )
             .addInstructions(
@@ -73,7 +69,6 @@ internal class BuiltinModuleCompiler(
                     )
                 )
             )
-            .addTopLevelEntities(print)
     }
 
     internal fun print(stringValue: LlvmOperand): List<LlvmInstruction> {
@@ -119,74 +114,70 @@ internal class BuiltinModuleCompiler(
         )
 
         val maxLength = 21
-        val intToString = LlvmFunctionDefinition(
-            name = functionName,
-            parameters = listOf(
-                LlvmParameter(compiledClosureEnvironmentPointerType, "environment"),
-                LlvmParameter(compiledValueType, "value")
-            ),
-            returnType = compiledValueType,
-            body = strings.allocString(
-                target = string,
-                dataSize = LlvmOperandInt(maxLength)
-            ) + listOf(
-                strings.stringDataStart(target = stringDataStart, source = string),
-                LlvmGetElementPtr(
-                    target = format,
-                    pointerType = LlvmTypes.pointer(intToStringFormatStringDefinition.type),
-                    pointer = LlvmOperandGlobal(intToStringFormatStringDefinition.name),
-                    indices = listOf(
-                        LlvmIndex.i64(0),
-                        LlvmIndex.i64(0)
-                    )
-                ),
-                libc.snprintf(
-                    target = stringLength,
-                    str = stringDataStart,
-                    size = LlvmOperandInt(maxLength),
-                    format = format,
-                    args = listOf(
-                        LlvmTypedOperand(compiledIntType, LlvmOperandLocal("value"))
-                    )
-                ),
-                LlvmZext(
-                    target = stringLengthExtended,
-                    sourceType = CTypes.int,
-                    operand = stringLength,
-                    targetType = compiledStringLengthType
-                )
-            ) + strings.storeStringDataSize(
-                string = string,
-                size = stringLengthExtended
-            ) + listOf(
-                LlvmPtrToInt(
-                    target = result,
-                    sourceType = compiledStringType(0),
-                    value = string,
-                    targetType = compiledValueType
-                ),
-                LlvmReturn(type = compiledValueType, value = result)
-            )
-        )
 
         val intToStringClosure = irBuilder.generateLocal("intToString")
 
-        return closures.createClosure(
+        return closures.compileCreate(
             target = intToStringClosure,
             functionName = functionName,
-            parameterTypes = listOf(compiledValueType),
             freeVariables = listOf(),
-            context = context
-        )
-            .addInstructions(
-                modules.storeFields(
-                    moduleName = listOf(Identifier("Core"), Identifier("IntToString")),
-                    exports = listOf(
-                        Identifier("intToString") to intToStringClosure
+            positionalParams = listOf(LlvmParameter(compiledValueType, "value")),
+            namedParams = listOf(),
+            compileBody = { bodyContext ->
+                val instructions = strings.allocString(
+                    target = string,
+                    dataSize = LlvmOperandInt(maxLength)
+                ) + listOf(
+                    strings.stringDataStart(target = stringDataStart, source = string),
+                    LlvmGetElementPtr(
+                        target = format,
+                        pointerType = LlvmTypes.pointer(intToStringFormatStringDefinition.type),
+                        pointer = LlvmOperandGlobal(intToStringFormatStringDefinition.name),
+                        indices = listOf(
+                            LlvmIndex.i64(0),
+                            LlvmIndex.i64(0)
+                        )
+                    ),
+                    libc.snprintf(
+                        target = stringLength,
+                        str = stringDataStart,
+                        size = LlvmOperandInt(maxLength),
+                        format = format,
+                        args = listOf(
+                            LlvmTypedOperand(compiledIntType, LlvmOperandLocal("value"))
+                        )
+                    ),
+                    LlvmZext(
+                        target = stringLengthExtended,
+                        sourceType = CTypes.int,
+                        operand = stringLength,
+                        targetType = compiledStringLengthType
                     )
+                ) + strings.storeStringDataSize(
+                    string = string,
+                    size = stringLengthExtended
+                ) + listOf(
+                    LlvmPtrToInt(
+                        target = result,
+                        sourceType = compiledStringType(0),
+                        value = string,
+                        targetType = compiledValueType
+                    ),
+                    LlvmReturn(type = compiledValueType, value = result)
+                )
+                bodyContext
+                    .addInstructions(instructions)
+                    .addTopLevelEntities(intToStringFormatStringDefinition)
+            },
+            context = context
+        ).addInstructions(
+            modules.storeFields(
+                moduleName = listOf(Identifier("Core"), Identifier("IntToString")),
+                exports = listOf(
+                    Identifier("intToString") to intToStringClosure
                 )
             )
-            .addTopLevelEntities(intToString, intToStringFormatStringDefinition)
+        )
     }
 
     private fun compileStdlibPlatformProcess(context: FunctionContext): FunctionContext {

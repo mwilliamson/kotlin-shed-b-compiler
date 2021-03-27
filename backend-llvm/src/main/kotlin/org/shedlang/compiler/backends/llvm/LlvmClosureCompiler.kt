@@ -1,11 +1,58 @@
 package org.shedlang.compiler.backends.llvm
 
+import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.stackir.*
 
 internal class ClosureCompiler(
     private val irBuilder: LlvmIrBuilder,
     private val libc: LibcCallCompiler
 ) {
+    internal fun compileCreate(
+        target: LlvmVariable,
+        functionName: String,
+        freeVariables: List<LocalLoad>,
+        positionalParams: List<LlvmParameter>,
+        namedParams: List<Pair<Identifier, LlvmParameter>>,
+        compileBody: (FunctionContext) -> FunctionContext,
+        context: FunctionContext,
+    ): FunctionContext {
+        val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, irBuilder.generateName("environment"))
+        val explicitParams = positionalParams + namedParams.sortedBy { (paramName, _) -> paramName }.map { (_, param) -> param }
+        val params = listOf(closureEnvironmentParameter) + explicitParams
+
+        val bodyContextWithEnvironment = loadFreeVariables(
+            freeVariables = freeVariables,
+            closureEnvironmentPointer = LlvmOperandLocal(closureEnvironmentParameter.name),
+            context = FunctionContext.initial(generateName = irBuilder::generateName),
+        )
+
+        val bodyContext = compileBody(bodyContextWithEnvironment)
+
+        val identifier = irBuilder.generateName(functionName)
+
+        val functionDefinition = LlvmFunctionDefinition(
+            name = identifier,
+            returnType = compiledValueType,
+            parameters = params,
+            body = bodyContext.instructions
+        )
+
+        val newContext = context
+            .addTopLevelEntities(bodyContext.topLevelEntities)
+            .addTopLevelEntities(functionDefinition)
+            .let {
+                createClosure(
+                    target = target,
+                    functionName = identifier,
+                    parameterTypes = explicitParams.map { param -> param.type },
+                    freeVariables = freeVariables,
+                    context = it
+                )
+            }
+
+        return newContext
+    }
+
     internal fun createClosure(
         target: LlvmVariable,
         functionName: String,
@@ -165,7 +212,7 @@ internal class ClosureCompiler(
         }
     }
 
-    internal fun loadFreeVariables(
+    private fun loadFreeVariables(
         freeVariables: List<LocalLoad>,
         closureEnvironmentPointer: LlvmOperandLocal,
         context: FunctionContext
