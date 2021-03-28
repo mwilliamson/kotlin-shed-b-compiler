@@ -7,6 +7,7 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.*
+import java.math.BigInteger
 import java.nio.file.Path
 import java.nio.file.Paths
 
@@ -412,6 +413,52 @@ internal class LlvmCompiler(
 
             is IntAdd -> {
                 return compileIntClosedOperation(::LlvmAdd, context = context)
+            }
+
+            is IntDivide -> {
+                val (context2, right) = context.popTemporary()
+                val (context3, left) = context2.popTemporary()
+
+                val isDivisionByZero = generateLocal("is_division_by_zero")
+                val result = generateLocal("op")
+                val divisionByZeroLabel = createLlvmLabel("division_by_zero")
+                val notDivisionByZeroLabel = createLlvmLabel("not_division_by_zero")
+                val endLabel = createLlvmLabel("division_end")
+
+                return context3
+                    .addInstructions(
+                        LlvmIcmp(
+                            target = isDivisionByZero,
+                            conditionCode = LlvmIcmp.ConditionCode.EQ,
+                            type = compiledIntType,
+                            left = right,
+                            right = LlvmOperandInt(0),
+                        ),
+                        LlvmBr(
+                            condition = isDivisionByZero,
+                            ifTrue = divisionByZeroLabel,
+                            ifFalse = notDivisionByZeroLabel,
+                        ),
+
+                        LlvmLabel(divisionByZeroLabel),
+                    )
+                    .pushTemporary(shedIntToLlvmOperand(BigInteger.ZERO))
+                    .addInstructions(
+                        LlvmBrUnconditional(endLabel),
+                        LlvmLabel(notDivisionByZeroLabel),
+                        LlvmSdiv(
+                            target = result,
+                            type = compiledIntType,
+                            left = left,
+                            right = right,
+                        ),
+                    )
+                    .pushTemporary(result)
+                    .addInstructions(
+                        LlvmBrUnconditional(endLabel),
+
+                        LlvmLabel(endLabel),
+                    )
             }
 
             is IntEquals -> {
@@ -963,7 +1010,7 @@ internal class LlvmCompiler(
                 listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value)
 
             is IrInt ->
-                listOf<LlvmTopLevelEntity>() to LlvmOperandInt(value.value.toLong())
+                listOf<LlvmTopLevelEntity>() to shedIntToLlvmOperand(value.value)
 
             is IrString -> {
                 val globalName = generateName("string")
@@ -988,6 +1035,10 @@ internal class LlvmCompiler(
             else ->
                 throw UnsupportedOperationException(value.toString())
         }
+    }
+
+    private fun shedIntToLlvmOperand(value: BigInteger): LlvmOperandInt {
+        return LlvmOperandInt(value.toLong())
     }
 
     private fun moduleType(moduleName: ModuleName) =

@@ -143,8 +143,16 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Const(WasmConstValue.LateIndex(value))
         }
 
+        fun i32DivideSigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32DivideSigned(left = left, right = right)
+        }
+
         fun i32DivideUnsigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32DivideUnsigned(left = left, right = right)
+        }
+
+        fun i32Equals(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Equals(left = left, right = right)
         }
 
         fun i32GreaterThanOrEqualUnsigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
@@ -343,7 +351,9 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         class I32Add(val left: Folded, val right: Folded): Folded()
         class I32And(val left: Folded, val right: Folded): Folded()
         class I32Const(val value: WasmConstValue): Folded()
+        class I32DivideSigned(val left: Folded, val right: Folded): Folded()
         class I32DivideUnsigned(val left: Folded, val right: Folded): Folded()
+        class I32Equals(val left: Folded, val right: Folded): Folded()
         class I32GreaterThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
         class I32LessThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
         class I32Load(val offset: Int, val alignment: Int?, val address: Folded): Folded()

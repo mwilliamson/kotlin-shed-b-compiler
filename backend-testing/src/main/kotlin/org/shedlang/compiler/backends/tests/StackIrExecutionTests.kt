@@ -2,12 +2,16 @@ package org.shedlang.compiler.backends.tests
 
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
+import com.natpryce.hamkrest.equalTo
 import kotlinx.collections.immutable.persistentListOf
+import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.SimpleCodeInspector
+import org.shedlang.compiler.backends.serialiseCStringLiteral
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -262,6 +266,29 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val value = evaluateExpression(node, type = IntType)
 
         assertThat(value, isInt(12))
+    }
+
+    @TestFactory
+    fun integerDivideDividesOperands(): List<DynamicTest> {
+        return listOf(
+            Triple(12, 3, 4),
+            Triple(13, 3, 4),
+            Triple(14, 3, 4),
+            Triple(15, 3, 5),
+            Triple(-12, 3, -4),
+            Triple(-13, 3, -4),
+            Triple(-14, 3, -4),
+            Triple(-15, 3, -5),
+            Triple(1, 0, 0),
+            Triple(-1, 0, 0),
+            Triple(0, 0, 0),
+        ).map { (left, right, expected) -> DynamicTest.dynamicTest("$left / $right is $expected") {
+            val node = binaryOperation(BinaryOperator.DIVIDE, literalInt(left), literalInt(right))
+
+            val value = evaluateExpression(node, type = IntType)
+
+            assertThat(value, isInt(expected))
+        }}
     }
 
     @Test
@@ -1737,7 +1764,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     private fun createTypes(
         expressionTypes: Map<Int, Type> = mapOf(),
         targetTypes: Map<Int, Type> = mapOf(),
-        variableTypes: Map<Int, Type> = mapOf()
+        variableTypes: Map<Int, Type> = mapOf(),
     ): Types {
         return TypesMap(
             discriminators = mapOf(),
@@ -1753,7 +1780,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         node: ModuleNode,
         type: ModuleType,
         references: ResolvedReferences = ResolvedReferencesMap.EMPTY,
-        types: Types = EMPTY_TYPES
+        types: Types = EMPTY_TYPES,
     ): Module.Shed {
         return Module.Shed(
             name = name,

@@ -1,0 +1,33 @@
+// stdout:
+//   12 / 3 is 4
+//   13 / 3 is 4
+//   14 / 3 is 4
+//   15 / 3 is 5
+//   -12 / 3 is -4
+//   -13 / 3 is -4
+//   -14 / 3 is -4
+//   -15 / 3 is -5
+//   1 / 0 is 0
+//   -1 / 0 is 0
+//   0 / 0 is 0
+
+export main;
+
+fun main() !Io -> Unit {
+    printDivision!(12, 3);
+    printDivision!(13, 3);
+    printDivision!(14, 3);
+    printDivision!(15, 3);
+    printDivision!(-12, 3);
+    printDivision!(-13, 3);
+    printDivision!(-14, 3);
+    printDivision!(-15, 3);
+    printDivision!(1, 0);
+    printDivision!(-1, 0);
+    printDivision!(0, 0);
+}
+
+fun printDivision(left: Int, right: Int) !Io -> Unit {
+    val result = left / right;
+    print!(intToString(left) + " / " + intToString(right) + " is " + intToString(result) + "\n");
+}

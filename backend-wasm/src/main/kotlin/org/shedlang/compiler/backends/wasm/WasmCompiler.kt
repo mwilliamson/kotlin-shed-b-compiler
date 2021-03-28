@@ -189,6 +189,20 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context.addInstruction(Wasm.I.i32Add)
             }
 
+            is IntDivide -> {
+                val (context2, left) = context.addLocal("left")
+                val (context3, right) = context2.addLocal("left")
+                return context3
+                    .addInstruction(Wasm.I.localSet(right))
+                    .addInstruction(Wasm.I.localSet(left))
+                    .addInstruction(Wasm.I.if_(
+                        results = listOf(WasmData.intType),
+                        condition = Wasm.I.i32Equals(Wasm.I.localGet(right), Wasm.I.i32Const(0)),
+                        ifTrue = listOf(Wasm.I.i32Const(0)),
+                        ifFalse = listOf(Wasm.I.i32DivideSigned(Wasm.I.localGet(left), Wasm.I.localGet(right))),
+                    ))
+            }
+
             is IntEquals -> {
                 return context.addInstruction(Wasm.I.i32Equals)
             }

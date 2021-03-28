@@ -23,6 +23,7 @@ class WasmExampleTests {
         "EffectHandlerExitOrResume.shed",
         "FieldDestructuring.shed",
         "HandleWithState.shed",
+        "IntDivision.shed",
         "Matchers.shed",
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",

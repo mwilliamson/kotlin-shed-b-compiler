@@ -212,8 +212,18 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                 S.symbol("i32.const"),
                 S.int(constValueToInt(instruction.value)),
             )
+            is WasmInstruction.Folded.I32DivideSigned -> S.list(
+                S.symbol("i32.div_s"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
             is WasmInstruction.Folded.I32DivideUnsigned -> S.list(
                 S.symbol("i32.div_u"),
+                instructionToSExpression(instruction.left),
+                instructionToSExpression(instruction.right),
+            )
+            is WasmInstruction.Folded.I32Equals -> S.list(
+                S.symbol("i32.eq"),
                 instructionToSExpression(instruction.left),
                 instructionToSExpression(instruction.right),
             )

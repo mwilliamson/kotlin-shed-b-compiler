@@ -16,6 +16,7 @@ class JavascriptExampleTests {
         "EffectHandlerDiscard.shed",
         "EffectHandlerExitOrResume.shed",
         "HandleWithState.shed",
+        "IntDivision.shed",
         "nestedStringBuilderAndNonLocalReturns",
         "NonLocalReturnNested.shed",
         "Resume.shed",

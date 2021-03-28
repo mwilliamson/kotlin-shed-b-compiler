@@ -689,6 +689,16 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             }
         }
 
+        is IntDivide -> {
+            runBinaryIntOperation(initialState) { left, right ->
+                if (right == BigInteger.ZERO) {
+                    InterpreterInt(BigInteger.ZERO)
+                } else {
+                    InterpreterInt(left / right)
+                }
+            }
+        }
+
         is IntEquals -> {
             runBinaryIntOperation(initialState) { left, right ->
                 InterpreterBool(left == right)

@@ -90,6 +90,8 @@ class FieldUpdate(val fieldName: Identifier, val receiverType: Type): Instructio
 
 object IntAdd: Instruction()
 
+object IntDivide: Instruction()
+
 object IntEquals: Instruction()
 
 object IntGreaterThan: Instruction()

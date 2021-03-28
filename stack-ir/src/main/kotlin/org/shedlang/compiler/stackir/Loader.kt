@@ -160,6 +160,7 @@ class Loader(
                     }
                     BinaryOperator.SUBTRACT -> IntSubtract
                     BinaryOperator.MULTIPLY -> IntMultiply
+                    BinaryOperator.DIVIDE -> IntDivide
                     BinaryOperator.EQUALS -> when (types.typeOfExpression(node.left)) {
                         BoolType -> BoolEquals
                         UnicodeScalarType -> UnicodeScalarEquals

@@ -379,6 +379,17 @@ internal object LlvmReturnVoid: LlvmInstruction {
     }
 }
 
+internal data class LlvmSdiv(
+    val target: LlvmVariable,
+    val type: LlvmType,
+    val left: LlvmOperand,
+    val right: LlvmOperand
+): LlvmInstruction {
+    override fun serialise(): String {
+        return "${target.serialise()} = sdiv ${type.serialise()} ${left.serialise()}, ${right.serialise()}"
+    }
+}
+
 internal data class LlvmStore(val type: LlvmType, val value: LlvmOperand, val pointer: LlvmOperand): LlvmInstruction {
     override fun serialise(): String {
         return "store ${type.serialise()} ${value.serialise()}, ${LlvmTypes.pointer(type).serialise()} ${pointer.serialise()}"
