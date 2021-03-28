@@ -59,6 +59,13 @@ class TypeCheckBinaryOperationTests {
         assertThat(type, isIntType)
     }
 
+    @Test
+    fun integerDivisionOperationReturnsInteger() {
+        val node = binaryOperation(BinaryOperator.DIVIDE, literalInt(), literalInt())
+        val type = inferType(node, emptyTypeContext())
+        assertThat(type, isIntType)
+    }
+
     @TestFactory
     fun intComparisonOperationReturnsBoolean(): List<DynamicTest> {
         return listOf(

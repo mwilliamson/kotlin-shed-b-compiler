@@ -111,6 +111,7 @@ private fun inferBinaryOperationType(node: BinaryOperationNode, context: TypeCon
         BinaryOperationType(BinaryOperator.ADD, IntType, IntType) -> IntType
         BinaryOperationType(BinaryOperator.SUBTRACT, IntType, IntType) -> IntType
         BinaryOperationType(BinaryOperator.MULTIPLY, IntType, IntType) -> IntType
+        BinaryOperationType(BinaryOperator.DIVIDE, IntType, IntType) -> IntType
 
         BinaryOperationType(BinaryOperator.EQUALS, StringType, StringType) -> BoolType
         BinaryOperationType(BinaryOperator.NOT_EQUAL, StringType, StringType) -> BoolType
