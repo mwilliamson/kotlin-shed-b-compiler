@@ -1190,6 +1190,7 @@ enum class BinaryOperator {
     ADD,
     SUBTRACT,
     MULTIPLY,
+    DIVIDE,
     AND,
     OR
 }

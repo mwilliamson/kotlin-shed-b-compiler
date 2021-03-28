@@ -45,6 +45,12 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     keyword(TokenType.KEYWORD_WITH_STATE, "withstate"),
 
     RegexTokeniser.rule(TokenType.INTEGER, "-?[0-9]+"),
+    RegexTokeniser.rule(TokenType.IDENTIFIER, identifierPattern),
+    RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
+    RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
+    RegexTokeniser.rule(TokenType.CODE_POINT, "'(?:[^\\\\'\n\r]|\\\\.)*'"),
+    RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+"),
+    RegexTokeniser.rule(TokenType.COMMENT, "//[^\n]*"),
 
     symbol(TokenType.SYMBOL_ELLIPSIS, "..."),
 
@@ -75,19 +81,12 @@ private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
     symbol(TokenType.SYMBOL_PLUS, "+"),
     symbol(TokenType.SYMBOL_MINUS, "-"),
     symbol(TokenType.SYMBOL_ASTERISK, "*"),
+    symbol(TokenType.SYMBOL_FORWARD_SLASH, "/"),
     symbol(TokenType.SYMBOL_BAR, "|"),
     symbol(TokenType.SYMBOL_TILDE, "~"),
     symbol(TokenType.SYMBOL_BANG, "!"),
     symbol(TokenType.SYMBOL_HASH, "#"),
     symbol(TokenType.SYMBOL_UNDERSCORE, "_"),
-
-    RegexTokeniser.rule(TokenType.IDENTIFIER, identifierPattern),
-    RegexTokeniser.rule(TokenType.STRING, unterminatedStringPattern + "\""),
-    RegexTokeniser.rule(TokenType.UNTERMINATED_STRING, unterminatedStringPattern),
-    RegexTokeniser.rule(TokenType.CODE_POINT, "'(?:[^\\\\'\n\r]|\\\\.)*'"),
-    RegexTokeniser.rule(TokenType.WHITESPACE, "[\r\n\t ]+"),
-    RegexTokeniser.rule(TokenType.COMMENT, "//[^\n]*"),
-
     symbol(TokenType.SYMBOL_AT, "@")
 ))
 
@@ -158,6 +157,7 @@ internal enum class TokenType {
     SYMBOL_PLUS,
     SYMBOL_MINUS,
     SYMBOL_ASTERISK,
+    SYMBOL_FORWARD_SLASH,
     SYMBOL_BAR,
     SYMBOL_TILDE,
     SYMBOL_BANG,

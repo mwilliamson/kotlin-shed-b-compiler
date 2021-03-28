@@ -64,6 +64,17 @@ class ParseBinaryOperationTests {
     }
 
     @Test
+    fun canParseDivision() {
+        val source = "x / y"
+        val node = parseString(::parseExpression, source)
+        assertThat(node, isBinaryOperation(
+            BinaryOperator.DIVIDE,
+            isVariableReference("x"),
+            isVariableReference("y")
+        ))
+    }
+
+    @Test
     fun canParseLeftAssociativeOperationsWithThreeOperands() {
         val source = "x + y + z"
         val node = parseString(::parseExpression, source)
