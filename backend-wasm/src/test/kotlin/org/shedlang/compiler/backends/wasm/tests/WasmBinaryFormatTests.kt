@@ -8,6 +8,7 @@ import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
+import org.shedlang.compiler.backends.wasm.wasm.WasmModule
 import org.shedlang.compiler.tests.Snapshotter
 import org.shedlang.compiler.tests.SnapshotterResolver
 import java.nio.file.Path
@@ -18,16 +19,7 @@ class WasmBinaryFormatTests {
     fun emptyModule(snapshotter: Snapshotter) {
         val module = Wasm.module()
 
-        temporaryDirectory().use { temporaryDirectory ->
-            val path = temporaryDirectory.path.resolve("module.wasm")
-            path.toFile().outputStream().use { outputStream ->
-                WasmBinaryFormat.write(module, outputStream)
-            }
-
-            validate(path)
-
-            snapshotter.assertSnapshot(objdump(path))
-        }
+        checkSnapshot(module, snapshotter)
     }
 
     @Test
@@ -38,6 +30,10 @@ class WasmBinaryFormatTests {
             ),
         )
 
+        checkSnapshot(module, snapshotter)
+    }
+
+    private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
             path.toFile().outputStream().use { outputStream ->
