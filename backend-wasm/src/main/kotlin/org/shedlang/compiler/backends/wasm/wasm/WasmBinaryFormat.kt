@@ -39,6 +39,7 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
         writeTypesSection(module)
         writeImportsSection(module)
         writeMemorySection(module)
+        writeDataSection(module)
     }
 
     private fun writeTypesSection(module: WasmModule) {
@@ -82,6 +83,30 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
     private fun writeMemorySectionContents(memoryPageCount: Int, output: BufferWriter) {
         output.writeVecSize(1)
         writeLimits(memoryPageCount, output)
+    }
+
+    private fun writeDataSection(module: WasmModule) {
+        if (module.dataSegments.size > 0) {
+            writeSection(SectionType.DATA) { output ->
+                writeDataSectionContents(module.dataSegments, output)
+            }
+        }
+    }
+
+    private fun writeDataSectionContents(dataSegments: List<WasmDataSegment>, output: BufferWriter) {
+        output.writeVecSize(dataSegments.size)
+        for (dataSegment in dataSegments) {
+            writeDataSegment(dataSegment, output)
+        }
+    }
+
+    private fun writeDataSegment(dataSegment: WasmDataSegment, output: BufferWriter) {
+        output.write8(0x00)
+        output.write8(0x41) // i32.const
+        output.writeSignedLeb128(dataSegment.offset)
+        output.write8(0x0B) // end
+        output.writeVecSize(dataSegment.bytes.size)
+        output.write(dataSegment.bytes)
     }
 
     private fun writeImport(import: WasmImport, output: BufferWriter) {
@@ -197,6 +222,20 @@ private class BufferWriter {
                 write8(((currentValue and 0x7Fu) or 0x80u).toByte())
                 currentValue = currentValue shr 7
             }
+        }
+    }
+
+    fun writeSignedLeb128(initialValue: Int) {
+        var value = initialValue
+        var remaining = value shr 7
+        var hasMore = true
+        val end = if (value and Int.MIN_VALUE == 0) 0 else -1
+        while (hasMore) {
+            hasMore = (remaining != end
+                || remaining and 1 != value shr 6 and 1)
+            write8((value and 0x7f or if (hasMore) 0x80 else 0).toByte())
+            value = remaining
+            remaining = remaining shr 7
         }
     }
 

@@ -63,6 +63,18 @@ class WasmBinaryFormatTests {
         checkSnapshot(module, snapshotter)
     }
 
+    @Test
+    fun dataSegment(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            memoryPageCount = 1,
+            dataSegments = listOf(
+                Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+            ),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
     private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
