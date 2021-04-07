@@ -5,8 +5,17 @@ import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
+    internal fun write(module: WasmModule, output: OutputStream) {
+        val writer = WasmBinaryFormatWriter(output)
+        writer.write(module)
+    }
+}
+
+private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
+    private val typeIndices = mutableMapOf<WasmFuncType, Int>()
+
 
     private enum class SectionType(val id: Byte) {
         CUSTOM(0),
@@ -24,15 +33,16 @@ internal object WasmBinaryFormat {
         DATA_COUNT(12),
     }
 
-    internal fun write(module: WasmModule, output: OutputStream) {
-        output.write(WASM_MAGIC)
-        output.write(WASM_VERSION)
-        writeTypesSection(module, output)
+    internal fun write(module: WasmModule) {
+        outputStream.write(WASM_MAGIC)
+        outputStream.write(WASM_VERSION)
+        writeTypesSection(module)
+        writeImportsSection(module)
     }
 
-    private fun writeTypesSection(module: WasmModule, output: OutputStream) {
+    private fun writeTypesSection(module: WasmModule) {
         if (module.types.size > 0) {
-            writeSection(SectionType.TYPE, output) { output ->
+            writeSection(SectionType.TYPE) { output ->
                 writeTypesSectionContents(module.types, output)
             }
         }
@@ -45,7 +55,41 @@ internal object WasmBinaryFormat {
         }
     }
 
+    private fun writeImportsSection(module: WasmModule) {
+        if (module.imports.size > 0) {
+            writeSection(SectionType.IMPORT) { output ->
+                writeImportsSectionContents(module.imports, output)
+            }
+        }
+    }
+
+    private fun writeImportsSectionContents(imports: List<WasmImport>, output: BufferWriter) {
+        output.writeVecSize(imports.size)
+        for (import in imports) {
+            writeImport(import, output)
+        }
+    }
+
+    private fun writeImport(import: WasmImport, output: BufferWriter) {
+        output.writeString(import.moduleName)
+        output.writeString(import.entityName)
+        when (import.descriptor) {
+            is WasmImportDescriptor.Function ->
+                writeImportDescriptionFunction(import.descriptor, output)
+        }
+    }
+
+    private fun writeImportDescriptionFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
+        output.write8(0x00)
+        output.writeUnsignedLeb128(typeIndex(params = descriptor.params, results = descriptor.results))
+    }
+
+    private fun typeIndex(params: List<WasmValueType>, results: List<WasmValueType>): Int {
+        return typeIndices.getValue(Wasm.T.funcType(params = params, results = results))
+    }
+
     private fun writeFuncType(type: WasmFuncType, output: BufferWriter) {
+        typeIndices[type] = typeIndices.size
         output.write8(0x60)
         writeResultType(type.params, output)
         writeResultType(type.results, output)
@@ -62,21 +106,18 @@ internal object WasmBinaryFormat {
         output.write8(type.binaryEncoding)
     }
 
-    private fun writeSection(sectionType: SectionType, output: OutputStream, writeContents: (BufferWriter) -> Unit) {
-        output.write8(sectionType.id)
+    private fun writeSection(sectionType: SectionType, writeContents: (BufferWriter) -> Unit) {
+        outputStream.write8(sectionType.id)
         val bufferWriter = BufferWriter()
         writeContents(bufferWriter)
-        output.writeUnsignedLeb128(bufferWriter.size)
-        bufferWriter.writeTo(output)
+        outputStream.writeUnsignedLeb128(bufferWriter.size)
+        bufferWriter.writeTo(outputStream)
     }
 }
 
+
 private fun OutputStream.write8(byte: Byte) {
     write(byte.toInt())
-}
-
-private fun OutputStream.write32(int: Int) {
-    write(ByteBuffer.allocate(4).putInt(int).array())
 }
 
 private fun OutputStream.writeUnsignedLeb128(value: Int) {
@@ -138,5 +179,11 @@ private class BufferWriter {
                 currentValue = currentValue shr 7
             }
         }
+    }
+
+    fun writeString(value: String) {
+        val bytes = value.toByteArray(Charsets.UTF_8)
+        writeUnsignedLeb128(bytes.size)
+        write(bytes)
     }
 }

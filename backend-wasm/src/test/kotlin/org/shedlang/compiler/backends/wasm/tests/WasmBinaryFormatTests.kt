@@ -33,6 +33,26 @@ class WasmBinaryFormatTests {
         checkSnapshot(module, snapshotter)
     }
 
+    @Test
+    fun functionImport(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(Wasm.T.i32, Wasm.T.i32), results = listOf(Wasm.T.i32)),
+            ),
+            imports = listOf(
+                Wasm.importFunction(
+                    moduleName = "MODULE",
+                    entityName = "ENTITY",
+                    identifier = "DONT_CARE",
+                    params = listOf(Wasm.T.i32, Wasm.T.i32),
+                    results = listOf(Wasm.T.i32),
+                ),
+            ),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
     private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
