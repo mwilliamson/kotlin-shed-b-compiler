@@ -246,7 +246,7 @@ internal class WasmModule(
     val types: List<WasmFuncType>,
     val imports: List<WasmImport>,
     val globals: List<WasmGlobal>,
-    val memoryPageCount: Int,
+    val memoryPageCount: Int?,
     val dataSegments: List<WasmDataSegment>,
     val start: String?,
     val functions: List<WasmFunction>,

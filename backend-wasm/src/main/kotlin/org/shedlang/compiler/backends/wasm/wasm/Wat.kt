@@ -24,6 +24,12 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             )
         }
 
+        val memoryExpression = if (module.memoryPageCount == null) {
+            null
+        } else {
+            S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(module.memoryPageCount))
+        }
+
         val startExpression = if (module.start == null) {
             null
         } else {
@@ -48,7 +54,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
             *typeDefinitions.toTypedArray(),
             *module.imports.map { import -> importToSExpression(import) }.toTypedArray(),
             *module.globals.map { global -> globalToSExpression(global) }.toTypedArray(),
-            S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(module.memoryPageCount)),
+            *memoryExpression.nullableToList().toTypedArray(),
             *module.dataSegments.map { dataSegment -> dataSegmentToSExpression(dataSegment) }.toTypedArray(),
             *startExpression.nullableToList().toTypedArray(),
             *module.functions.map { function -> functionToSExpression(function) }.toTypedArray(),
