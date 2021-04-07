@@ -1,0 +1,10 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Memory[1]:
+ - memory[0] pages: initial=42
+
+Code Disassembly:
+

@@ -9,7 +9,7 @@ import org.shedlang.compiler.backends.wasm.wasm.Wat
 
 class WatTests {
     @Test
-    fun moduleHasMemoryDeclarations() {
+    fun emptyModule() {
         val module = Wasm.module()
 
         val expression = wat().moduleToSExpression(module)
@@ -18,7 +18,23 @@ class WatTests {
             S.list(
                 S.symbol("module"),
                 S.formatBreak,
-                S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(0)),
+            )
+        ))
+    }
+
+    @Test
+    fun moduleWithMemoryDeclarations() {
+        val module = Wasm.module(
+            memoryPageCount = 42
+        )
+
+        val expression = wat().moduleToSExpression(module)
+
+        assertThat(expression, equalTo(
+            S.list(
+                S.symbol("module"),
+                S.formatBreak,
+                S.list(S.symbol("memory"), S.list(S.symbol("export"), S.string("memory")), S.int(42)),
             )
         ))
     }
@@ -35,6 +51,7 @@ class WatTests {
                     results = listOf(Wasm.T.i32),
                 )
             ),
+            memoryPageCount = 0,
         )
 
         val expression = wat().moduleToSExpression(module)

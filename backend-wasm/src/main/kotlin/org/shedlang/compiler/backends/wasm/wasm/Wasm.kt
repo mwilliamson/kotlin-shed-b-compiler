@@ -7,7 +7,7 @@ internal object Wasm {
         types: List<WasmFuncType> = listOf(),
         imports: List<WasmImport> = listOf(),
         globals: List<WasmGlobal> = listOf(),
-        memoryPageCount: Int = 0,
+        memoryPageCount: Int? = null,
         dataSegments: List<WasmDataSegment> = listOf(),
         start: String? = null,
         functions: List<WasmFunction> = listOf(),

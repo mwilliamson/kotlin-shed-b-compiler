@@ -38,6 +38,7 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
         outputStream.write(WASM_VERSION)
         writeTypesSection(module)
         writeImportsSection(module)
+        writeMemorySection(module)
     }
 
     private fun writeTypesSection(module: WasmModule) {
@@ -70,6 +71,19 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
         }
     }
 
+    private fun writeMemorySection(module: WasmModule) {
+        if (module.memoryPageCount != null) {
+            writeSection(SectionType.MEMORY) { output ->
+                writeMemorySectionContents(module.memoryPageCount, output)
+            }
+        }
+    }
+
+    private fun writeMemorySectionContents(memoryPageCount: Int, output: BufferWriter) {
+        output.writeVecSize(1)
+        writeLimits(memoryPageCount, output)
+    }
+
     private fun writeImport(import: WasmImport, output: BufferWriter) {
         output.writeString(import.moduleName)
         output.writeString(import.entityName)
@@ -82,6 +96,11 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
     private fun writeImportDescriptionFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
         output.write8(0x00)
         output.writeUnsignedLeb128(typeIndex(params = descriptor.params, results = descriptor.results))
+    }
+
+    private fun writeLimits(min: Int, output: BufferWriter) {
+        output.write8(0x00)
+        output.writeUnsignedLeb128(min)
     }
 
     private fun typeIndex(params: List<WasmValueType>, results: List<WasmValueType>): Int {

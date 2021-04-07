@@ -1,7 +1,5 @@
 package org.shedlang.compiler.backends.wasm.tests
 
-import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.shedlang.compiler.backends.tests.run
@@ -51,6 +49,15 @@ class WasmBinaryFormatTests {
                     results = listOf(Wasm.T.i32),
                 ),
             ),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
+    @Test
+    fun memory(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            memoryPageCount = 42,
         )
 
         checkSnapshot(module, snapshotter)
