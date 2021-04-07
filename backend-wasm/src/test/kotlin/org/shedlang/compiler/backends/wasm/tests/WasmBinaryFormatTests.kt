@@ -30,6 +30,26 @@ class WasmBinaryFormatTests {
         }
     }
 
+    @Test
+    fun typeSection(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(Wasm.T.i32, Wasm.T.i32), results = listOf(Wasm.T.i32)),
+            ),
+        )
+
+        temporaryDirectory().use { temporaryDirectory ->
+            val path = temporaryDirectory.path.resolve("module.wasm")
+            path.toFile().outputStream().use { outputStream ->
+                WasmBinaryFormat.write(module, outputStream)
+            }
+
+            validate(path)
+
+            snapshotter.assertSnapshot(objdump(path))
+        }
+    }
+
     private fun validate(path: Path) {
         run(listOf("wasm-validate", path.toString())).throwOnError()
     }
