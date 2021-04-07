@@ -147,7 +147,10 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
     }
 
     private fun writeValueType(type: WasmValueType, output: BufferWriter) {
-        output.write8(type.binaryEncoding)
+        val binaryEncoding = when (type) {
+            WasmValueType.i32 -> 0x7F
+        }.toByte()
+        output.write8(binaryEncoding)
     }
 
     private fun writeSection(sectionType: SectionType, writeContents: (BufferWriter) -> Unit) {

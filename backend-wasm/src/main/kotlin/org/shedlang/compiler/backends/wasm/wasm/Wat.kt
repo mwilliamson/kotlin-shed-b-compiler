@@ -85,7 +85,10 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
     }
 
     fun valueTypeToSExpression(type: WasmValueType): SExpression {
-        return S.symbol(type.name)
+        val name = when (type) {
+            WasmValueType.i32 -> "i32"
+        }
+        return S.symbol(name)
     }
 
     fun globalToSExpression(global: WasmGlobal): SExpression {

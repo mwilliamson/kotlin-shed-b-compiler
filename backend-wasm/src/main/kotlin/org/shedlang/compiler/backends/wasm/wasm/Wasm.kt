@@ -69,7 +69,7 @@ internal object Wasm {
     }
 
     object T {
-        val i32 = WasmValueType("i32", 0x7F)
+        val i32 = WasmValueType.i32
 
         fun funcType(params: List<WasmValueType>, results: List<WasmValueType>): WasmFuncType {
             return WasmFuncType(params = params, results = results)
@@ -240,7 +240,9 @@ internal object Wasm {
     }
 }
 
-internal class WasmValueType(val name: String, val binaryEncoding: Byte)
+internal enum class WasmValueType {
+    i32
+}
 
 internal class WasmModule(
     val types: List<WasmFuncType>,
