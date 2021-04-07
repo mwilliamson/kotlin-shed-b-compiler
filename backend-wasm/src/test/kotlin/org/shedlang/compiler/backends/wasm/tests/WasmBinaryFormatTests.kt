@@ -36,8 +36,11 @@ class WasmBinaryFormatTests {
     @Test
     fun functionImport(snapshotter: Snapshotter) {
         val module = Wasm.module(
+            // Multiple types to make sure we pick the right index
             types = listOf(
+                Wasm.T.funcType(params = listOf(Wasm.T.i32, Wasm.T.i32), results = listOf()),
                 Wasm.T.funcType(params = listOf(Wasm.T.i32, Wasm.T.i32), results = listOf(Wasm.T.i32)),
+                Wasm.T.funcType(params = listOf(Wasm.T.i32), results = listOf()),
             ),
             imports = listOf(
                 Wasm.importFunction(
