@@ -97,6 +97,34 @@ class WasmBinaryFormatTests {
         checkSnapshot(module, snapshotter)
     }
 
+    @Test
+    fun functionsAreWrittenToFuncAndCodeSections(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(Wasm.T.i32, Wasm.T.i32), results = listOf(Wasm.T.i32)),
+                Wasm.T.funcType(params = listOf(Wasm.T.i32), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(Wasm.param("arg0", Wasm.T.i32)),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+                Wasm.function(
+                    identifier = "SECOND",
+                    params = listOf(Wasm.param("arg0", Wasm.T.i32), Wasm.param("arg1", Wasm.T.i32)),
+                    results = listOf(Wasm.T.i32),
+                    body = listOf(
+                        Wasm.I.i32Const(42),
+                    ),
+                ),
+            ),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
     private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")

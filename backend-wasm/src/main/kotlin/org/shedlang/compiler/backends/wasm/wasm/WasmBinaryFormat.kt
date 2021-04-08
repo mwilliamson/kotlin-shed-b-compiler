@@ -43,8 +43,10 @@ private class WasmBinaryFormatWriter(
         outputStream.write(WASM_VERSION)
         writeTypesSection(module)
         writeImportsSection(module)
+        writeFunctionsSection(module)
         writeMemorySection(module)
         writeGlobalsSection(module)
+        writeCodeSection(module)
         writeDataSection(module)
     }
 
@@ -75,6 +77,21 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(imports.size)
         for (import in imports) {
             writeImport(import, output)
+        }
+    }
+
+    private fun writeFunctionsSection(module: WasmModule) {
+        if (module.functions.size > 0) {
+            writeSection(SectionType.FUNCTION) { output ->
+                writeFunctionsSectionContents(module.functions, output)
+            }
+        }
+    }
+
+    private fun writeFunctionsSectionContents(functions: List<WasmFunction>, output: BufferWriter) {
+        output.writeVecSize(functions.size)
+        for (function in functions) {
+            writeTypeIndex(function.type(), output)
         }
     }
 
@@ -109,7 +126,38 @@ private class WasmBinaryFormatWriter(
     private fun writeGlobal(global: WasmGlobal, output: BufferWriter) {
         writeValueType(global.type, output)
         output.write8(if (global.mutable) 0x01 else 0x00)
-        writeExpression(global.value, output)
+        writeExpression(listOf(global.value), output)
+    }
+
+    private fun writeCodeSection(module: WasmModule) {
+        if (module.functions.size > 0) {
+            writeSection(SectionType.CODE) { output ->
+                writeCodeSectionContents(module.functions, output)
+            }
+        }
+    }
+
+    private fun writeCodeSectionContents(functions: List<WasmFunction>, output: BufferWriter) {
+        output.writeVecSize(functions.size)
+        for (function in functions) {
+            writeFunction(function, output)
+        }
+    }
+
+    private fun writeFunction(function: WasmFunction, output: BufferWriter) {
+        val functionCodeOutput = BufferWriter()
+        writeFunctionCode(function, functionCodeOutput)
+        output.writeUnsignedLeb128(functionCodeOutput.size)
+        functionCodeOutput.writeTo(output)
+    }
+
+    private fun writeFunctionCode(function: WasmFunction, output: BufferWriter) {
+        output.writeVecSize(function.locals.size)
+        for (local in function.locals) {
+            output.writeUnsignedLeb128(1)
+            writeValueType(local.type, output)
+        }
+        writeExpression(function.body, output)
     }
 
     private fun writeDataSection(module: WasmModule) {
@@ -147,7 +195,8 @@ private class WasmBinaryFormatWriter(
 
     private fun writeImportDescriptionFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
         output.write8(0x00)
-        output.writeUnsignedLeb128(typeIndex(params = descriptor.params, results = descriptor.results))
+        val funcType = Wasm.T.funcType(params = descriptor.params, results = descriptor.results)
+        writeTypeIndex(funcType, output)
     }
 
     private fun writeLimits(min: Int, output: BufferWriter) {
@@ -155,8 +204,12 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(min)
     }
 
-    private fun typeIndex(params: List<WasmValueType>, results: List<WasmValueType>): Int {
-        return typeIndices.getValue(Wasm.T.funcType(params = params, results = results))
+    private fun writeTypeIndex(funcType: WasmFuncType, output: BufferWriter) {
+        output.writeUnsignedLeb128(typeIndex(funcType))
+    }
+
+    private fun typeIndex(funcType: WasmFuncType): Int {
+        return typeIndices.getValue(funcType)
     }
 
     private fun writeFuncType(type: WasmFuncType, output: BufferWriter) {
@@ -188,8 +241,10 @@ private class WasmBinaryFormatWriter(
         bufferWriter.writeTo(outputStream)
     }
 
-    private fun writeExpression(instruction: WasmInstruction, output: BufferWriter) {
-        writeInstruction(instruction, output)
+    private fun writeExpression(instructions: List<WasmInstruction>, output: BufferWriter) {
+        for (instruction in instructions) {
+            writeInstruction(instruction, output)
+        }
         output.write8(0x0B) // end
     }
 
@@ -203,7 +258,6 @@ private class WasmBinaryFormatWriter(
             else ->
                 throw UnsupportedOperationException(instruction.toString())
         }
-        output
     }
 
     private fun constValueToInt(value: WasmConstValue): Int {
@@ -245,8 +299,17 @@ private class BufferWriter {
         buffer.limit(buffer.capacity())
     }
 
+    fun write(bytes: ByteArray, offset: Int, length: Int) {
+        val minCapacity = buffer.position() + size - offset
+        growTo(minCapacity)
+        buffer.put(bytes, offset, length)
+    }
+
     fun write(bytes: ByteArray) {
-        val minCapacity = buffer.position() + bytes.size
+        write(bytes, offset = 0, length = bytes.size)
+    }
+
+    private fun growTo(minCapacity: Int) {
         if (minCapacity > buffer.capacity()) {
             var newCapacity = buffer.capacity() * 2
             while (minCapacity > newCapacity) {
@@ -256,7 +319,6 @@ private class BufferWriter {
             newBuffer.put(buffer)
             buffer = newBuffer
         }
-        buffer.put(bytes)
     }
 
     fun write8(byte: Byte) {
@@ -298,5 +360,9 @@ private class BufferWriter {
         val bytes = value.toByteArray(Charsets.UTF_8)
         writeUnsignedLeb128(bytes.size)
         write(bytes)
+    }
+
+    fun writeTo(output: BufferWriter) {
+        output.write(buffer.array(), 0, buffer.position())
     }
 }

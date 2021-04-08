@@ -24,17 +24,20 @@ class Snapshotter(val uniqueId: String) {
 
         val expectedSnapshotPath = snapshotDirectory.resolve(uniqueId + ".expected")
         val expectedSnapshotFile = expectedSnapshotPath.toFile()
+        val actualSnapshotPath = snapshotDirectory.resolve(uniqueId + ".actual")
+        val actualSnapshotFile = actualSnapshotPath.toFile()
 
         try {
             if (expectedSnapshotFile.exists()) {
                 val expectedSnapshot = expectedSnapshotFile.readText()
                 assertThat(actualSnapshot, equalTo(expectedSnapshot))
+                if (actualSnapshotFile.exists()) {
+                    actualSnapshotFile.delete()
+                }
             } else {
                 throw AssertionError("snapshot does not exist, got:\n" + actualSnapshot)
             }
         } catch (error: AssertionError) {
-            val actualSnapshotPath = snapshotDirectory.resolve(uniqueId + ".actual")
-            val actualSnapshotFile = actualSnapshotPath.toFile()
             actualSnapshotFile.parentFile.mkdirs()
             actualSnapshotFile.writeText(actualSnapshot)
             throw error
