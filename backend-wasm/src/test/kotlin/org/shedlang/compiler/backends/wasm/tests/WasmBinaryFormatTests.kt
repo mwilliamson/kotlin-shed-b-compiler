@@ -55,9 +55,31 @@ class WasmBinaryFormatTests {
     }
 
     @Test
-    fun memory(snapshotter: Snapshotter) {
+    fun whenMemoryIsRequiredThenPageCountIsWrittenToMemorySection(snapshotter: Snapshotter) {
         val module = Wasm.module(
             memoryPageCount = 42,
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
+    @Test
+    fun globalsAreWrittenToGlobalSection(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            globals = listOf(
+                Wasm.global(
+                    identifier = "FIRST",
+                    mutable = true,
+                    type = Wasm.T.i32,
+                    value = Wasm.I.i32Const(42),
+                ),
+                Wasm.global(
+                    identifier = "SECOND",
+                    mutable = false,
+                    type = Wasm.T.i32,
+                    value = Wasm.I.i32Const(47),
+                ),
+            ),
         )
 
         checkSnapshot(module, snapshotter)
@@ -79,7 +101,7 @@ class WasmBinaryFormatTests {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
             path.toFile().outputStream().use { outputStream ->
-                WasmBinaryFormat.write(module, outputStream)
+                WasmBinaryFormat.write(module, outputStream, lateIndices = mapOf())
             }
 
             validate(path)

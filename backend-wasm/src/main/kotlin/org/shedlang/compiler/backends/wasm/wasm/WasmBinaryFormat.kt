@@ -1,17 +1,22 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
+import org.shedlang.compiler.backends.wasm.LateIndex
 import java.io.OutputStream
+import java.lang.UnsupportedOperationException
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
-    internal fun write(module: WasmModule, output: OutputStream) {
-        val writer = WasmBinaryFormatWriter(output)
+    internal fun write(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+        val writer = WasmBinaryFormatWriter(outputStream = output, lateIndices = lateIndices)
         writer.write(module)
     }
 }
 
-private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
+private class WasmBinaryFormatWriter(
+    private val lateIndices: Map<LateIndex, Int>,
+    private val outputStream: OutputStream,
+) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
     private val typeIndices = mutableMapOf<WasmFuncType, Int>()
@@ -39,6 +44,7 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
         writeTypesSection(module)
         writeImportsSection(module)
         writeMemorySection(module)
+        writeGlobalsSection(module)
         writeDataSection(module)
     }
 
@@ -83,6 +89,27 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
     private fun writeMemorySectionContents(memoryPageCount: Int, output: BufferWriter) {
         output.writeVecSize(1)
         writeLimits(memoryPageCount, output)
+    }
+
+    private fun writeGlobalsSection(module: WasmModule) {
+        if (module.globals.size > 0) {
+            writeSection(SectionType.GLOBAL) { output ->
+                writeGlobalsSectionContents(module.globals, output)
+            }
+        }
+    }
+
+    private fun writeGlobalsSectionContents(globals: List<WasmGlobal>, output: BufferWriter) {
+        output.writeVecSize(globals.size)
+        for (global in globals) {
+            writeGlobal(global, output)
+        }
+    }
+
+    private fun writeGlobal(global: WasmGlobal, output: BufferWriter) {
+        writeValueType(global.type, output)
+        output.write8(if (global.mutable) 0x01 else 0x00)
+        writeExpression(global.value, output)
     }
 
     private fun writeDataSection(module: WasmModule) {
@@ -159,6 +186,31 @@ private class WasmBinaryFormatWriter(private val outputStream: OutputStream) {
         writeContents(bufferWriter)
         outputStream.writeUnsignedLeb128(bufferWriter.size)
         bufferWriter.writeTo(outputStream)
+    }
+
+    private fun writeExpression(instruction: WasmInstruction, output: BufferWriter) {
+        writeInstruction(instruction, output)
+        output.write8(0x0B) // end
+    }
+
+    private fun writeInstruction(instruction: WasmInstruction, output: BufferWriter) {
+        when (instruction) {
+            is WasmInstruction.Folded.I32Const -> {
+                output.write8(0x41)
+                output.writeSignedLeb128(constValueToInt(instruction.value))
+            }
+
+            else ->
+                throw UnsupportedOperationException(instruction.toString())
+        }
+        output
+    }
+
+    private fun constValueToInt(value: WasmConstValue): Int {
+        return when (value) {
+            is WasmConstValue.I32 -> value.value
+            is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
+        }
     }
 }
 

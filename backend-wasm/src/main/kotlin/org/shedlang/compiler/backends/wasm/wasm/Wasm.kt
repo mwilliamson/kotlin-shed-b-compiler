@@ -60,6 +60,18 @@ internal object Wasm {
         body = body,
     )
 
+    fun global(
+        identifier: String,
+        mutable: Boolean,
+        type: WasmValueType,
+        value: WasmInstruction.Folded,
+    ) = WasmGlobal(
+        identifier = identifier,
+        mutable = mutable,
+        type = type,
+        value = value
+    )
+
     fun param(identifier: String, type: WasmValueType) = WasmParam(identifier = identifier, type = type)
 
     fun local(identifier: String, type: WasmValueType) = WasmLocal(identifier = identifier, type = type)
