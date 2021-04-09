@@ -7,12 +7,14 @@ import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.parseModuleName
 import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.llvm.LlvmBackend
+import org.shedlang.compiler.backends.wasm.WasmBackend
 
 
 private val backends = mapOf(
     "python" to org.shedlang.compiler.backends.python.backend,
     "javascript" to org.shedlang.compiler.backends.javascript.backend,
-    "llvm" to LlvmBackend
+    "llvm" to LlvmBackend,
+    "wasm" to WasmBackend,
 )
 
 internal fun ArgParser.shedSource(): ArgParser.Delegate<String> {
