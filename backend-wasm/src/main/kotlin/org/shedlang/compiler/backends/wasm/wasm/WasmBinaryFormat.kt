@@ -331,18 +331,8 @@ private class BufferWriter {
         write(Leb128Encoding.encodeUnsignedInt32(value))
     }
 
-    fun writeSignedLeb128(initialValue: Int) {
-        var value = initialValue
-        var remaining = value shr 7
-        var hasMore = true
-        val end = if (value and Int.MIN_VALUE == 0) 0 else -1
-        while (hasMore) {
-            hasMore = (remaining != end
-                || remaining and 1 != value shr 6 and 1)
-            write8((value and 0x7f or if (hasMore) 0x80 else 0).toByte())
-            value = remaining
-            remaining = remaining shr 7
-        }
+    fun writeSignedLeb128(value: Int) {
+        write(Leb128Encoding.encodeUnsignedInt32(value))
     }
 
     fun writeString(value: String) {
