@@ -6,6 +6,7 @@ import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
+import org.shedlang.compiler.backends.wasm.wasm.WasmLocal
 import org.shedlang.compiler.backends.wasm.wasm.WasmModule
 import org.shedlang.compiler.tests.Snapshotter
 import org.shedlang.compiler.tests.SnapshotterResolver
@@ -118,6 +119,26 @@ class WasmBinaryFormatTests {
                     body = listOf(
                         Wasm.I.i32Const(42),
                     ),
+                ),
+            ),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
+    @Test
+    fun functionLocalsAreWritten(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(Wasm.T.i32), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(Wasm.param("arg0", Wasm.T.i32)),
+                    results = listOf(),
+                    locals = listOf(WasmLocal("local0", Wasm.T.i32)),
+                    body = listOf(),
                 ),
             ),
         )

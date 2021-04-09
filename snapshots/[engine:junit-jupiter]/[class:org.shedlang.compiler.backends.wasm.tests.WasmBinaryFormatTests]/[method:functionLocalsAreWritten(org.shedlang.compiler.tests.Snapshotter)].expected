@@ -1,0 +1,17 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] (i32) -> nil
+Function[1]:
+ - func[0] sig=0
+Code[1]:
+ - func[0] size=4
+
+Code Disassembly:
+
+000017 func[0]:
+ 000018: 01 7f                      | local[0] type=i32
+ 00001a: 0b                         | end
