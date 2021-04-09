@@ -5,6 +5,8 @@ Section Details:
 
 Memory[1]:
  - memory[0] pages: initial=42
+Export[1]:
+ - memory[0] -> "memory"
 
 Code Disassembly:
 

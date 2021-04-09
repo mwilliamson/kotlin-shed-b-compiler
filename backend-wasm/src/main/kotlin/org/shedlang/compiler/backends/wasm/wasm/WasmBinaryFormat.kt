@@ -156,19 +156,36 @@ private class WasmBinaryFormatWriter(
 
     private fun writeExportSection(module: WasmModule) {
         val exportedFunctions = module.functions.filter { function -> function.exportName != null}
-        if (exportedFunctions.size > 0) {
+        val exports = exportedFunctions.map { function ->
+            WasmExport(
+                function.exportName!!,
+                WasmExportDescriptor.Function(funcIndex(function.identifier)),
+            )
+        }.toMutableList()
+        if (module.memoryPageCount != null) {
+            exports.add(WasmExport("memory", WasmExportDescriptor.Memory(0)))
+        }
+        if (exports.size > 0) {
             writeSection(SectionType.EXPORT) { output ->
-                writeExportSectionContents(functions = exportedFunctions, output)
+                writeExportSectionContents(exports, output)
             }
         }
     }
 
-    private fun writeExportSectionContents(functions: List<WasmFunction>, output: BufferWriter) {
-        output.writeVecSize(functions.size)
-        for (function in functions) {
-            output.writeString(function.exportName!!)
-            output.write8(0x00) // func export
-            writeFuncIndex(function.identifier, output)
+    private fun writeExportSectionContents(exports: List<WasmExport>, output: BufferWriter) {
+        output.writeVecSize(exports.size)
+        for (export in exports) {
+            output.writeString(export.name)
+            when (export.descriptor) {
+                is WasmExportDescriptor.Function -> {
+                    output.write8(0x00)
+                    output.writeUnsignedLeb128(export.descriptor.funcIndex)
+                }
+                is WasmExportDescriptor.Memory -> {
+                    output.write8(0x02)
+                    output.writeUnsignedLeb128(export.descriptor.memoryIndex)
+                }
+            }
         }
     }
 
@@ -434,4 +451,14 @@ private fun <K, V> MutableMap<K,V>.add(key: K, value: V) {
     if (this.putIfAbsent(key, value) !== null) {
         throw CompilerError("duplicate key: $key", NullSource)
     }
+}
+
+private class WasmExport(
+    val name: String,
+    val descriptor: WasmExportDescriptor,
+)
+
+private sealed class WasmExportDescriptor {
+    class Function(val funcIndex: Int): WasmExportDescriptor()
+    class Memory(val memoryIndex: Int): WasmExportDescriptor()
 }
