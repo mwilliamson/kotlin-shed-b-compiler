@@ -1,0 +1,23 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Function[2]:
+ - func[0] sig=0 <EXPORT_FIRST>
+ - func[1] sig=0 <EXPORT_SECOND>
+Export[2]:
+ - func[0] <EXPORT_FIRST> -> "EXPORT_FIRST"
+ - func[1] <EXPORT_SECOND> -> "EXPORT_SECOND"
+Code[2]:
+ - func[0] size=2 <EXPORT_FIRST>
+ - func[1] size=2 <EXPORT_SECOND>
+
+Code Disassembly:
+
+000039 func[0] <EXPORT_FIRST>:
+ 00003a: 0b                         | end
+00003c func[1] <EXPORT_SECOND>:
+ 00003d: 0b                         | end

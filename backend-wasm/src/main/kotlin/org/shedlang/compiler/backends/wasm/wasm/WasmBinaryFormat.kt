@@ -51,6 +51,7 @@ private class WasmBinaryFormatWriter(
         writeTableSection(module)
         writeMemorySection(module)
         writeGlobalsSection(module)
+        writeExportSection(module)
         writeStartSection(module)
         writeElementSection(module)
         writeCodeSection(module)
@@ -151,6 +152,24 @@ private class WasmBinaryFormatWriter(
         writeValueType(global.type, output)
         output.write8(if (global.mutable) 0x01 else 0x00)
         writeExpression(listOf(global.value), output)
+    }
+
+    private fun writeExportSection(module: WasmModule) {
+        val exportedFunctions = module.functions.filter { function -> function.exportName != null}
+        if (exportedFunctions.size > 0) {
+            writeSection(SectionType.EXPORT) { output ->
+                writeExportSectionContents(functions = exportedFunctions, output)
+            }
+        }
+    }
+
+    private fun writeExportSectionContents(functions: List<WasmFunction>, output: BufferWriter) {
+        output.writeVecSize(functions.size)
+        for (function in functions) {
+            output.writeString(function.exportName!!)
+            output.write8(0x00) // func export
+            writeFuncIndex(function.identifier, output)
+        }
     }
 
     private fun writeStartSection(module: WasmModule) {

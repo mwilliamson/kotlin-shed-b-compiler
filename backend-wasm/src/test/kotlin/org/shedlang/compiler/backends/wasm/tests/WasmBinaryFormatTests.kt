@@ -147,6 +147,33 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun exportedFunctionsAreWrittenToExportSection(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    exportName = "EXPORT_FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+                Wasm.function(
+                    identifier = "SECOND",
+                    exportName = "EXPORT_SECOND",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+            ),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun startFunctionIsWrittenToStartSection(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(
