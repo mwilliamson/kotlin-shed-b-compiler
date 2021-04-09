@@ -10,7 +10,7 @@ import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.backends.wasm.WasmCompiler
-import org.shedlang.compiler.backends.withLineNumbers
+import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -54,18 +54,26 @@ class WasmExampleTests {
         }.map { testProgram -> DynamicTest.dynamicTest(testProgram.name) {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
-                    val outputPath = temporaryDirectory.file.toPath().resolve("program.wat")
+                    val watPath = temporaryDirectory.path.resolve("program.wat")
+                    val wasmPath = temporaryDirectory.path.resolve("program.wasm")
                     val moduleSet = testProgram.load()
                     val image = loadModuleSet(moduleSet)
 
                     val compilationResult = WasmCompiler(image = image, moduleSet = moduleSet).compile(
                         mainModule = testProgram.mainModule
                     )
-                    println(withLineNumbers(compilationResult.wat))
-                    outputPath.toFile().writeText(compilationResult.wat)
 
-                    val result = executeWat(outputPath, args = testProgram.args)
-                    assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
+                    watPath.toFile().writeText(compilationResult.wat)
+
+                    wasmPath.toFile().outputStream().use { outputStream ->
+                        WasmBinaryFormat.write(compilationResult.module, outputStream, lateIndices = compilationResult.lateIndices)
+                    }
+
+                    val resultWat = executeWasm(watPath, args = testProgram.args)
+                    assertThat("stdout was:\n" + resultWat.stdout + "\nstderr was:\n" + resultWat.stderr, resultWat, testProgram.expectedResult)
+
+                    val resultWasm = executeWasm(wasmPath, args = testProgram.args)
+                    assertThat("stdout was:\n" + resultWasm.stdout + "\nstderr was:\n" + resultWasm.stderr, resultWasm, testProgram.expectedResult)
                 }
             } catch (error: SourceError) {
                 print(error.source.describe())
@@ -77,7 +85,7 @@ class WasmExampleTests {
         } }
     }
 
-    private fun executeWat(path: Path, args: List<String>): ExecutionResult {
+    private fun executeWasm(path: Path, args: List<String>): ExecutionResult {
         return run(
             listOf("wasmtime", path.toString()) + args,
             workingDirectory = path.parent.toFile(),

@@ -67,6 +67,7 @@ internal data class WasmGlobalContext private constructor(
     }
 
     class Bound(
+        private val imports: List<WasmImport>,
         private val globals: List<WasmGlobal>,
         private val pageCount: Int,
         private val dataSegments: List<WasmDataSegment>,
@@ -79,10 +80,7 @@ internal data class WasmGlobalContext private constructor(
         fun toModule(): WasmModule {
             return Wasm.module(
                 types = types,
-                imports = listOf(
-                    Wasi.importFdWrite(),
-                    Wasi.importProcExit(),
-                ),
+                imports = imports,
                 globals = globals,
                 memoryPageCount = pageCount,
                 start = WasmNaming.funcStartIdentifier,
@@ -99,6 +97,11 @@ internal data class WasmGlobalContext private constructor(
     }
 
     fun bind(): Bound {
+        val imports = listOf(
+            Wasi.importFdWrite(),
+            Wasi.importProcExit(),
+        )
+
         var size = 0
         val dataSegments = mutableListOf<WasmDataSegment>()
         val startInstructions = mutableListOf<WasmInstruction>()
@@ -143,7 +146,12 @@ internal data class WasmGlobalContext private constructor(
             boundFunctions.add(function)
         }
 
-        val functionTypes = boundFunctions.map { function -> function.type() }.distinct()
+        val importFunctionTypes = imports
+            .map { import -> import.descriptor }
+            .filterIsInstance<WasmImportDescriptor.Function>()
+            .map { descriptor -> descriptor.type() }
+        val definedFunctionTypes = boundFunctions.map { function -> function.type() }
+        val functionTypes = (importFunctionTypes + definedFunctionTypes).distinct()
 
         for ((global, value) in globals) {
             if (value != null) {
@@ -158,6 +166,7 @@ internal data class WasmGlobalContext private constructor(
         }
 
         return Bound(
+            imports = imports,
             globals = globals.map { (global, _) -> global },
             pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             dataSegments = dataSegments,

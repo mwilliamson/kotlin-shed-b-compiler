@@ -145,11 +145,17 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
         return when (instruction) {
             is WasmInstruction.Branch -> S.elements(S.symbol("br"), S.identifier(instruction.identifier))
             is WasmInstruction.Call -> S.elements(S.symbol("call"), S.identifier(instruction.identifier))
+            is WasmInstruction.CallIndirect -> S.elements(S.symbol("call_indirect"), S.list(
+                S.symbol("type"),
+                S.identifier(instruction.type.identifier()),
+            ))
             is WasmInstruction.Drop -> S.symbol("drop")
             is WasmInstruction.Else -> S.symbol("else")
             is WasmInstruction.End -> S.symbol("end")
+            is WasmInstruction.GlobalSet -> S.elements(S.symbol("global.set"), S.identifier(instruction.identifier))
             is WasmInstruction.I32Add -> S.symbol("i32.add")
             is WasmInstruction.I32And -> S.symbol("i32.and")
+            is WasmInstruction.I32DivideSigned -> S.symbol("i32.div_s")
             is WasmInstruction.I32DivideUnsigned -> S.symbol("i32.div_u")
             is WasmInstruction.I32Equals -> S.symbol("i32.eq")
             is WasmInstruction.I32GreaterThanSigned -> S.symbol("i32.gt_s")
@@ -189,7 +195,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
                     S.symbol("call_indirect"),
                     S.list(
                         S.symbol("type"),
-                        S.identifier(instruction.type),
+                        S.identifier(instruction.type.identifier()),
                     ),
                 )
                     .addAll(instruction.args.map { arg -> instructionToSExpression(arg) })

@@ -101,7 +101,7 @@ internal object Wasm {
             return WasmInstruction.Folded.Call(identifier = identifier, args = args)
         }
 
-        fun callIndirect(type: String, tableIndex: WasmInstruction.Folded, args: List<WasmInstruction.Folded>): WasmInstruction.Folded {
+        fun callIndirect(type: WasmFuncType, tableIndex: WasmInstruction.Folded, args: List<WasmInstruction.Folded>): WasmInstruction.Folded {
             return WasmInstruction.Folded.CallIndirect(type = type, tableIndex = tableIndex, args = args)
         }
 
@@ -138,7 +138,6 @@ internal object Wasm {
         val i32Load8Unsigned = WasmInstruction.I32Load8Unsigned
         val i32Multiply = WasmInstruction.I32Multiply
         val i32NotEqual = WasmInstruction.I32NotEqual
-        val i32Store = WasmInstruction.I32Store
         val i32Store8 = WasmInstruction.I32Store8
         val i32Sub = WasmInstruction.I32Sub
 
@@ -200,8 +199,9 @@ internal object Wasm {
             return WasmInstruction.Folded.I32NotEqual(left = left, right = right)
         }
 
-        fun i32Store(address: Int, value: Int): WasmInstruction.Folded {
-            return i32Store(i32Const(address), i32Const(value))
+        // TODO: make alignment required
+        fun i32Store(offset: Int = 0, alignment: Int? = null): WasmInstruction {
+            return WasmInstruction.I32Store(offset = offset, alignment = alignment)
         }
 
         // TODO: make alignment required
@@ -269,6 +269,7 @@ internal class WasmModule(
 
 internal data class WasmFuncType(val params: List<WasmValueType>, val results: List<WasmValueType>) {
     fun identifier(): String {
+        // TODO: should be in Wat
         val parts = mutableListOf<String>()
         parts.add("functype")
         parts.add(params.size.toString())
@@ -291,7 +292,11 @@ internal class WasmImport(
 )
 
 internal sealed class WasmImportDescriptor {
-    class Function(val params: List<WasmValueType>, val results: List<WasmValueType>): WasmImportDescriptor()
+    class Function(val params: List<WasmValueType>, val results: List<WasmValueType>): WasmImportDescriptor() {
+        fun type(): WasmFuncType {
+            return Wasm.T.funcType(params = params, results = results)
+        }
+    }
 }
 
 internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
@@ -325,6 +330,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     class Branch(val identifier: String): WasmInstruction()
 
     class Call(val identifier: String): WasmInstruction()
+    class CallIndirect(val type: WasmFuncType): WasmInstruction()
 
     object Drop: WasmInstruction()
 
@@ -332,8 +338,11 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 
     object End: WasmInstruction()
 
+    class GlobalSet(val identifier: String): WasmInstruction()
+
     object I32Add: WasmInstruction()
     object I32And: WasmInstruction()
+    object I32DivideSigned: WasmInstruction()
     object I32DivideUnsigned: WasmInstruction()
     object I32Equals: WasmInstruction()
     object I32GreaterThanSigned: WasmInstruction()
@@ -344,11 +353,11 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     object I32LessThanUnsigned: WasmInstruction()
     object I32LessThanOrEqualSigned: WasmInstruction()
     object I32LessThanOrEqualUnsigned: WasmInstruction()
-    class  I32Load(val offset: Int, val alignment: Int): WasmInstruction()
+    class  I32Load(val offset: Int, val alignment: Int?): WasmInstruction()
     object I32Load8Unsigned: WasmInstruction()
     object I32Multiply: WasmInstruction()
     object I32NotEqual: WasmInstruction()
-    object I32Store: WasmInstruction()
+    class I32Store(val alignment: Int?, val offset: Int): WasmInstruction()
     object I32Store8: WasmInstruction()
     object I32Sub: WasmInstruction()
 
@@ -360,34 +369,137 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 
     object MemoryGrow: WasmInstruction()
 
+    interface Unfoldable {
+        fun unfold(): List<WasmInstruction>
+    }
+
     sealed class Folded: WasmInstruction() {
-        class Call(val identifier: String, val args: List<Folded>): Folded()
-        class CallIndirect(val type: String, val tableIndex: Folded, val args: List<Folded>): Folded()
-        class Drop(val value: Folded): Folded()
+        class Call(val identifier: String, val args: List<Folded>): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return args + listOf(WasmInstruction.Call(identifier = identifier))
+            }
+        }
+
+        class CallIndirect(val type: WasmFuncType, val tableIndex: Folded, val args: List<Folded>): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return args + listOf(tableIndex) + listOf(WasmInstruction.CallIndirect(type = type))
+            }
+        }
+
+        class Drop(val value: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(value, WasmInstruction.Drop)
+            }
+        }
+
         class GlobalGet(val identifier: String): Folded()
-        class GlobalSet(val identifier: String, val value: Folded): Folded()
-        class I32Add(val left: Folded, val right: Folded): Folded()
-        class I32And(val left: Folded, val right: Folded): Folded()
+
+        class GlobalSet(val identifier: String, val value: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(value, WasmInstruction.GlobalSet(identifier = identifier))
+            }
+        }
+
+        class I32Add(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32Add)
+            }
+        }
+
+        class I32And(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32And)
+            }
+        }
+
         class I32Const(val value: WasmConstValue): Folded()
-        class I32DivideSigned(val left: Folded, val right: Folded): Folded()
-        class I32DivideUnsigned(val left: Folded, val right: Folded): Folded()
-        class I32Equals(val left: Folded, val right: Folded): Folded()
-        class I32GreaterThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
-        class I32LessThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded()
-        class I32Load(val offset: Int, val alignment: Int?, val address: Folded): Folded()
-        class I32Multiply(val left: Folded, val right: Folded): Folded()
-        class I32NotEqual(val left: Folded, val right: Folded): Folded()
-        class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded()
-        class I32Sub(val left: Folded, val right: Folded): Folded()
+
+        class I32DivideSigned(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32DivideSigned)
+            }
+        }
+
+        class I32DivideUnsigned(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32DivideUnsigned)
+            }
+        }
+
+        class I32Equals(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32Equals)
+            }
+        }
+
+        class I32GreaterThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32GreaterThanOrEqualUnsigned)
+            }
+        }
+
+        class I32LessThanOrEqualUnsigned(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32LessThanOrEqualUnsigned)
+            }
+        }
+
+        class I32Load(val offset: Int, val alignment: Int?, val address: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(address, WasmInstruction.I32Load(offset = offset, alignment = alignment))
+            }
+        }
+
+        class I32Multiply(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32Multiply)
+            }
+        }
+
+        class I32NotEqual(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32NotEqual)
+            }
+        }
+
+        class I32Store(val alignment: Int?, val offset: Int, val address: Folded, val value: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(address, value, WasmInstruction.I32Store(alignment = alignment, offset = offset))
+            }
+        }
+
+        class I32Sub(val left: Folded, val right: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(left, right, WasmInstruction.I32Sub)
+            }
+        }
+
         class If(
             val results: List<WasmValueType>,
             val condition: Folded,
             val ifTrue: List<WasmInstruction>,
             val ifFalse: List<WasmInstruction>,
-        ): Folded()
+        ): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(condition, WasmInstruction.If(results = results)) +
+                    ifTrue + listOf(WasmInstruction.Else) + ifFalse + listOf(WasmInstruction.End)
+            }
+        }
+
         class LocalGet(val identifier: String): Folded()
-        class LocalSet(val identifier: String, val value: Folded): Folded()
-        class MemoryGrow(val delta: Folded): Folded()
+
+        class LocalSet(val identifier: String, val value: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(value, WasmInstruction.LocalSet(identifier = identifier))
+            }
+        }
+
+        class MemoryGrow(val delta: Folded): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return listOf(delta, WasmInstruction.MemoryGrow)
+            }
+        }
+
         object MemorySize: Folded()
     }
 }

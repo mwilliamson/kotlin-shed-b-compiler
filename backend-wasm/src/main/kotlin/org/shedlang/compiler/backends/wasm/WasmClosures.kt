@@ -88,7 +88,7 @@ internal object WasmClosures {
         val args = positionalArguments + sortedNamedArgLocals
 
         return context.addInstruction(Wasm.I.callIndirect(
-            type = wasmFuncType.identifier(),
+            type = wasmFuncType,
             tableIndex = Wasm.I.i32Load(closurePointer),
             args = listOf(closurePointer) + args,
         ))

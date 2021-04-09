@@ -28,7 +28,6 @@ class Leb128EncodingTests {
         assertThat(Leb128Encoding.encodeSignedInt32(-0x1), isUByteArrayOf(0x7Fu))
         assertThat(Leb128Encoding.encodeSignedInt32(-0x40), isUByteArrayOf(0x40u))
         assertThat(Leb128Encoding.encodeSignedInt32(-0x41), isUByteArrayOf(0xBFu, 0x7Fu))
-
     }
 
     private fun isUByteArrayOf(vararg bytes: UByte): Matcher<UByteArray> {

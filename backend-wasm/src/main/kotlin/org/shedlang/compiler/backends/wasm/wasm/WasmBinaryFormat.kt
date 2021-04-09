@@ -22,8 +22,11 @@ private class WasmBinaryFormatWriter(
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
-    private val typeIndices = mutableMapOf<WasmFuncType, Int>()
     private val funcIndices = mutableMapOf<String, Int>()
+    private val globalIndices = mutableMapOf<String, Int>()
+    private val labelStack = mutableListOf<String?>()
+    private var localIndices = mutableMapOf<String, Int>()
+    private val typeIndices = mutableMapOf<WasmFuncType, Int>()
 
 
     private enum class SectionType(val id: Byte) {
@@ -100,7 +103,7 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(functions.size)
         for (function in functions) {
             writeTypeIndex(function.type(), output)
-            funcIndices.add(function.identifier, funcIndices.size)
+            addFuncIndex(function.identifier)
         }
     }
 
@@ -145,6 +148,7 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(globals.size)
         for (global in globals) {
             writeGlobal(global, output)
+            addGlobalIndex(global.identifier)
         }
     }
 
@@ -238,10 +242,15 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeFunctionCode(function: WasmFunction, output: BufferWriter) {
+        localIndices = mutableMapOf()
+        for (param in function.params) {
+            addLocalIndex(param.identifier)
+        }
         output.writeVecSize(function.locals.size)
         for (local in function.locals) {
             output.writeUnsignedLeb128(1)
             writeValueType(local.type, output)
+            addLocalIndex(local.identifier)
         }
         writeExpression(function.body, output)
     }
@@ -263,9 +272,7 @@ private class WasmBinaryFormatWriter(
 
     private fun writeDataSegment(dataSegment: WasmDataSegment, output: BufferWriter) {
         output.write8(0x00)
-        output.write8(0x41) // i32.const
-        output.writeSignedLeb128(dataSegment.offset)
-        output.write8(0x0B) // end
+        writeExpression(listOf(Wasm.I.i32Const(dataSegment.offset)), output)
         output.writeVecSize(dataSegment.bytes.size)
         output.write(dataSegment.bytes)
     }
@@ -276,15 +283,14 @@ private class WasmBinaryFormatWriter(
         when (import.descriptor) {
             is WasmImportDescriptor.Function -> {
                 writeImportDescriptionFunction(import.descriptor, output)
-                funcIndices.add(import.identifier, funcIndices.size)
+                addFuncIndex(import.identifier)
             }
         }
     }
 
     private fun writeImportDescriptionFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
         output.write8(0x00)
-        val funcType = Wasm.T.funcType(params = descriptor.params, results = descriptor.results)
-        writeTypeIndex(funcType, output)
+        writeTypeIndex(descriptor.type(), output)
     }
 
     private fun writeLimits(min: Int, output: BufferWriter) {
@@ -298,12 +304,8 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(max)
     }
 
-    private fun writeTypeIndex(funcType: WasmFuncType, output: BufferWriter) {
-        output.writeUnsignedLeb128(typeIndex(funcType))
-    }
-
-    private fun typeIndex(funcType: WasmFuncType): Int {
-        return typeIndices.getValue(funcType)
+    private fun addFuncIndex(name: String) {
+        funcIndices.add(name, funcIndices.size)
     }
 
     private fun writeFuncIndex(name: String, output: BufferWriter) {
@@ -314,8 +316,61 @@ private class WasmBinaryFormatWriter(
         return funcIndices.getValue(name)
     }
 
+    private fun addGlobalIndex(name: String) {
+        globalIndices.add(name, globalIndices.size)
+    }
+
+    private fun writeGlobalIndex(name: String, output: BufferWriter) {
+        output.writeUnsignedLeb128(globalIndex(name))
+    }
+
+    private fun globalIndex(name: String): Int {
+        return globalIndices.getValue(name)
+    }
+
+    private fun writeLabelIndex(name: String, output: BufferWriter) {
+        output.writeUnsignedLeb128(labelIndex(name))
+    }
+
+    private fun labelIndex(name: String): Int {
+        val index = labelStack.indexOf(name)
+        if (index == -1) {
+            throw CompilerError("could not find label", NullSource)
+        } else {
+            return labelStack.size - 1 - index
+        }
+    }
+
+    private fun addLocalIndex(name: String) {
+        localIndices[name] = localIndices.size
+    }
+
+    private fun writeLocalIndex(name: String, output: BufferWriter) {
+        output.writeUnsignedLeb128(localIndex(name))
+    }
+
+    private fun localIndex(name: String): Int {
+        return localIndices.getValue(name)
+    }
+
+    private fun writeTableIndex(tableIndex: Int, output: BufferWriter) {
+        output.writeUnsignedLeb128(tableIndex)
+    }
+
+    private fun addTypeIndex(funcType: WasmFuncType) {
+        typeIndices.add(funcType, typeIndices.size)
+    }
+
+    private fun writeTypeIndex(funcType: WasmFuncType, output: BufferWriter) {
+        output.writeUnsignedLeb128(typeIndex(funcType))
+    }
+
+    private fun typeIndex(funcType: WasmFuncType): Int {
+        return typeIndices.getValue(funcType)
+    }
+
     private fun writeFuncType(type: WasmFuncType, output: BufferWriter) {
-        typeIndices.add(type, typeIndices.size)
+        addTypeIndex(type)
         output.write8(0x60)
         writeResultType(type.params, output)
         writeResultType(type.results, output)
@@ -335,6 +390,17 @@ private class WasmBinaryFormatWriter(
         output.write8(binaryEncoding)
     }
 
+    private fun writeBlockType(results: List<WasmValueType>, output: BufferWriter) {
+        if (results.size == 0) {
+            output.write8(0x40)
+        } else if (results.size == 1) {
+            writeValueType(results[0], output)
+        } else {
+            // TODO: Generate type when building module
+            throw CompilerError("blocktype of multiple types not supported", NullSource)
+        }
+    }
+
     private fun writeSection(sectionType: SectionType, writeContents: (BufferWriter) -> Unit) {
         outputStream.write8(sectionType.id)
         val bufferWriter = BufferWriter()
@@ -352,14 +418,150 @@ private class WasmBinaryFormatWriter(
 
     private fun writeInstruction(instruction: WasmInstruction, output: BufferWriter) {
         when (instruction) {
+            is WasmInstruction.Branch -> {
+                output.write8(0x0C)
+                writeLabelIndex(instruction.identifier, output)
+            }
+            is WasmInstruction.Call -> {
+                output.write8(0x10)
+                writeFuncIndex(instruction.identifier, output)
+            }
+            is WasmInstruction.CallIndirect -> {
+                output.write8(0x11)
+                writeTypeIndex(instruction.type, output)
+                writeTableIndex(0, output)
+            }
+            WasmInstruction.Drop -> {
+                output.write8(0x1A)
+            }
+            WasmInstruction.Else -> {
+                output.write8(0x05)
+            }
+            WasmInstruction.End -> {
+                output.write8(0x0B)
+                labelStack.removeAt(labelStack.lastIndex)
+            }
+            is WasmInstruction.GlobalSet -> {
+                output.write8(0x24)
+                writeGlobalIndex(instruction.identifier, output)
+            }
+            WasmInstruction.I32Add -> {
+                output.write8(0x6A)
+            }
+            WasmInstruction.I32And -> {
+                output.write8(0x71)
+            }
+            WasmInstruction.I32DivideUnsigned -> {
+                output.write8(0x6E)
+            }
+            WasmInstruction.I32Equals -> {
+                output.write8(0x46)
+            }
+            WasmInstruction.I32GreaterThanSigned -> {
+                output.write8(0x4A)
+            }
+            WasmInstruction.I32GreaterThanUnsigned -> {
+                output.write8(0x4B)
+            }
+            WasmInstruction.I32GreaterThanOrEqualSigned -> {
+                output.write8(0x4E)
+            }
+            WasmInstruction.I32GreaterThanOrEqualUnsigned -> {
+                output.write8(0x4F)
+            }
+            WasmInstruction.I32LessThanSigned -> {
+                output.write8(0x48)
+            }
+            WasmInstruction.I32LessThanUnsigned -> {
+                output.write8(0x49)
+            }
+            WasmInstruction.I32LessThanOrEqualSigned -> {
+                output.write8(0x4C)
+            }
+            WasmInstruction.I32LessThanOrEqualUnsigned -> {
+                output.write8(0x4D)
+            }
+            is WasmInstruction.I32Load -> {
+                output.write8(0x28)
+                writeMemArg(alignment = instruction.alignment ?: 4, offset = instruction.offset, output)
+            }
+            WasmInstruction.I32Load8Unsigned -> {
+                output.write8(0x2D)
+                writeMemArg(alignment = 1, offset = 0, output)
+            }
+            WasmInstruction.I32Multiply -> {
+                output.write8(0x6C)
+            }
+            WasmInstruction.I32NotEqual -> {
+                output.write8(0x47)
+            }
+            is WasmInstruction.I32Store -> {
+                output.write8(0x36)
+                writeMemArg(alignment = instruction.alignment ?: 4, offset = instruction.offset, output)
+            }
+            WasmInstruction.I32Store8 -> {
+                output.write8(0x3A)
+                writeMemArg(alignment = 1, offset = 0, output)
+
+            }
+            WasmInstruction.I32Sub -> {
+                output.write8(0x6B)
+            }
+            is WasmInstruction.If -> {
+                output.write8(0x04)
+                writeBlockType(instruction.results, output)
+                labelStack.add(null)
+            }
+            is WasmInstruction.LocalSet -> {
+                output.write8(0x21)
+                writeLocalIndex(instruction.identifier, output)
+            }
+            is WasmInstruction.Loop -> {
+                output.write8(0x03)
+                writeBlockType(instruction.results, output)
+                labelStack.add(instruction.identifier)
+            }
+            WasmInstruction.MemoryGrow -> {
+                output.write8(0x40)
+                output.write8(0x00)
+            }
+            is WasmInstruction.Folded.GlobalGet -> {
+                output.write8(0x23)
+                writeGlobalIndex(instruction.identifier, output)
+            }
             is WasmInstruction.Folded.I32Const -> {
                 output.write8(0x41)
                 output.writeSignedLeb128(constValueToInt(instruction.value))
             }
-
-            else ->
-                throw UnsupportedOperationException(instruction.toString())
+            is WasmInstruction.Folded.LocalGet -> {
+                output.write8(0x20)
+                writeLocalIndex(instruction.identifier, output)
+            }
+            WasmInstruction.Folded.MemorySize -> {
+                output.write8(0x3F)
+                output.write8(0x00)
+            }
+            is WasmInstruction.Unfoldable -> {
+                for (unfoldedInstruction in instruction.unfold()) {
+                    writeInstruction(unfoldedInstruction, output)
+                }
+            }
+            else -> {
+                throw CompilerError("unhandled instruction: $instruction", NullSource)
+            }
         }
+    }
+
+    private fun writeMemArg(alignment: Int, offset: Int, output: BufferWriter) {
+        val alignmentEncoding = when (alignment) {
+            1 -> 0
+            2 -> 1
+            4 -> 2
+            8 -> 3
+            else -> throw CompilerError("unexpected alignment $alignment", NullSource)
+        }
+        output.writeUnsignedLeb128(alignmentEncoding)
+        output.writeUnsignedLeb128(offset)
     }
 
     private fun constValueToInt(value: WasmConstValue): Int {
@@ -395,7 +597,7 @@ private class BufferWriter {
     }
 
     fun write(bytes: ByteArray, offset: Int, length: Int) {
-        val minCapacity = buffer.position() + size - offset
+        val minCapacity = buffer.position() + length - offset
         growTo(minCapacity)
         buffer.put(bytes, offset, length)
     }
@@ -415,6 +617,7 @@ private class BufferWriter {
                 newCapacity *= 2
             }
             val newBuffer = ByteBuffer.allocate(newCapacity)
+            buffer.flip()
             newBuffer.put(buffer)
             buffer = newBuffer
         }
@@ -433,7 +636,7 @@ private class BufferWriter {
     }
 
     fun writeSignedLeb128(value: Int) {
-        write(Leb128Encoding.encodeUnsignedInt32(value))
+        write(Leb128Encoding.encodeSignedInt32(value))
     }
 
     fun writeString(value: String) {
