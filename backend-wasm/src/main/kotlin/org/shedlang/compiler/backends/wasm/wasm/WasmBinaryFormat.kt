@@ -13,6 +13,7 @@ internal object WasmBinaryFormat {
     }
 }
 
+@ExperimentalUnsignedTypes
 private class WasmBinaryFormatWriter(
     private val lateIndices: Map<LateIndex, Int>,
     private val outputStream: OutputStream,
@@ -273,19 +274,12 @@ private fun OutputStream.write8(byte: Byte) {
     write(byte.toInt())
 }
 
+@ExperimentalUnsignedTypes
 private fun OutputStream.writeUnsignedLeb128(value: Int) {
-    var currentValue = value.toUInt()
-    while (true) {
-        if ((currentValue shr 7) == 0u) {
-            write8((currentValue and 0x7Fu).toByte())
-            return
-        } else {
-            write8(((currentValue and 0x7Fu) or 0x80u).toByte())
-            currentValue = currentValue shr 7
-        }
-    }
+    write(Leb128Encoding.encodeUnsignedInt32(value).toByteArray())
 }
 
+@ExperimentalUnsignedTypes
 private class BufferWriter {
     private var buffer = ByteBuffer.allocate(1024)
 
@@ -303,6 +297,10 @@ private class BufferWriter {
         val minCapacity = buffer.position() + size - offset
         growTo(minCapacity)
         buffer.put(bytes, offset, length)
+    }
+
+    fun write(bytes: UByteArray) {
+        write(bytes.toByteArray())
     }
 
     fun write(bytes: ByteArray) {
@@ -330,16 +328,7 @@ private class BufferWriter {
     }
 
     fun writeUnsignedLeb128(value: Int) {
-        var currentValue = value.toUInt()
-        while (true) {
-            if ((currentValue shr 7) == 0u) {
-                write8((currentValue and 0x7Fu).toByte())
-                return
-            } else {
-                write8(((currentValue and 0x7Fu) or 0x80u).toByte())
-                currentValue = currentValue shr 7
-            }
-        }
+        write(Leb128Encoding.encodeUnsignedInt32(value))
     }
 
     fun writeSignedLeb128(initialValue: Int) {
