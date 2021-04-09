@@ -48,9 +48,11 @@ private class WasmBinaryFormatWriter(
         writeTypesSection(module)
         writeImportsSection(module)
         writeFunctionsSection(module)
+        writeTableSection(module)
         writeMemorySection(module)
         writeGlobalsSection(module)
         writeStartSection(module)
+        writeElementSection(module)
         writeCodeSection(module)
         writeDataSection(module)
     }
@@ -101,6 +103,22 @@ private class WasmBinaryFormatWriter(
         }
     }
 
+    private fun writeTableSection(module: WasmModule) {
+        if (module.table.size > 0) {
+            writeSection(SectionType.TABLE) { output ->
+                writeTableSectionContents(module.table, output)
+            }
+        }
+    }
+
+    private fun writeTableSectionContents(table: List<String>, output: BufferWriter) {
+        output.writeVecSize(1)
+        // reftype
+        output.write8(0x70) // funcref
+        // limits
+        writeLimits(table.size, table.size, output)
+    }
+
     private fun writeMemorySection(module: WasmModule) {
         if (module.memoryPageCount != null) {
             writeSection(SectionType.MEMORY) { output ->
@@ -140,6 +158,24 @@ private class WasmBinaryFormatWriter(
             writeSection(SectionType.START) { output ->
                 writeFuncIndex(module.start, output)
             }
+        }
+    }
+
+    private fun writeElementSection(module: WasmModule) {
+        if (module.table.size > 0) {
+            writeSection(SectionType.ELEMENT) { output ->
+                writeElementSectionContents(module.table, output)
+            }
+        }
+    }
+
+    private fun writeElementSectionContents(table: List<String>, output: BufferWriter) {
+        output.writeVecSize(1)
+        output.write8(0x00)
+        writeExpression(listOf(Wasm.I.i32Const(0)), output)
+        output.writeVecSize(table.size)
+        for (name in table) {
+            writeFuncIndex(name, output)
         }
     }
 
@@ -218,6 +254,12 @@ private class WasmBinaryFormatWriter(
     private fun writeLimits(min: Int, output: BufferWriter) {
         output.write8(0x00)
         output.writeUnsignedLeb128(min)
+    }
+
+    private fun writeLimits(min: Int, max:Int, output: BufferWriter) {
+        output.write8(0x01)
+        output.writeUnsignedLeb128(min)
+        output.writeUnsignedLeb128(max)
     }
 
     private fun writeTypeIndex(funcType: WasmFuncType, output: BufferWriter) {

@@ -155,6 +155,32 @@ class WasmBinaryFormatTests {
         checkSnapshot(module, snapshotter)
     }
 
+    @Test
+    fun tablesAreWrittenUsingTableAndElemSection(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+                Wasm.function(
+                    identifier = "SECOND",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+            ),
+            table = listOf("SECOND", "FIRST"),
+        )
+
+        checkSnapshot(module, snapshotter)
+    }
+
     private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
