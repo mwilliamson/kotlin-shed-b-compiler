@@ -1,5 +1,7 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
+import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.LateIndex
 import java.io.OutputStream
 import java.lang.UnsupportedOperationException
@@ -21,6 +23,7 @@ private class WasmBinaryFormatWriter(
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
     private val typeIndices = mutableMapOf<WasmFuncType, Int>()
+    private val funcIndices = mutableMapOf<String, Int>()
 
 
     private enum class SectionType(val id: Byte) {
@@ -47,6 +50,7 @@ private class WasmBinaryFormatWriter(
         writeFunctionsSection(module)
         writeMemorySection(module)
         writeGlobalsSection(module)
+        writeStartSection(module)
         writeCodeSection(module)
         writeDataSection(module)
     }
@@ -93,6 +97,7 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(functions.size)
         for (function in functions) {
             writeTypeIndex(function.type(), output)
+            funcIndices.add(function.identifier, funcIndices.size)
         }
     }
 
@@ -128,6 +133,14 @@ private class WasmBinaryFormatWriter(
         writeValueType(global.type, output)
         output.write8(if (global.mutable) 0x01 else 0x00)
         writeExpression(listOf(global.value), output)
+    }
+
+    private fun writeStartSection(module: WasmModule) {
+        if (module.start != null) {
+            writeSection(SectionType.START) { output ->
+                writeFuncIndex(module.start, output)
+            }
+        }
     }
 
     private fun writeCodeSection(module: WasmModule) {
@@ -189,8 +202,10 @@ private class WasmBinaryFormatWriter(
         output.writeString(import.moduleName)
         output.writeString(import.entityName)
         when (import.descriptor) {
-            is WasmImportDescriptor.Function ->
+            is WasmImportDescriptor.Function -> {
                 writeImportDescriptionFunction(import.descriptor, output)
+                funcIndices.add(import.identifier, funcIndices.size)
+            }
         }
     }
 
@@ -213,8 +228,16 @@ private class WasmBinaryFormatWriter(
         return typeIndices.getValue(funcType)
     }
 
+    private fun writeFuncIndex(name: String, output: BufferWriter) {
+        output.writeUnsignedLeb128(funcIndex(name))
+    }
+
+    private fun funcIndex(name: String): Int {
+        return funcIndices.getValue(name)
+    }
+
     private fun writeFuncType(type: WasmFuncType, output: BufferWriter) {
-        typeIndices[type] = typeIndices.size
+        typeIndices.add(type, typeIndices.size)
         output.write8(0x60)
         writeResultType(type.params, output)
         writeResultType(type.results, output)
@@ -343,5 +366,11 @@ private class BufferWriter {
 
     fun writeTo(output: BufferWriter) {
         output.write(buffer.array(), 0, buffer.position())
+    }
+}
+
+private fun <K, V> MutableMap<K,V>.add(key: K, value: V) {
+    if (this.putIfAbsent(key, value) !== null) {
+        throw CompilerError("duplicate key: $key", NullSource)
     }
 }
