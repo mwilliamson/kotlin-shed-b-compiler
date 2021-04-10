@@ -41,7 +41,6 @@ private class WasmBinaryFormatWriter(
     private var localIndices = mutableMapOf<String, Int>()
     private val typeIndices = mutableMapOf<WasmFuncType, Int>()
 
-
     private enum class SectionType(val id: Byte) {
         CUSTOM(0),
         TYPE(1),
@@ -56,6 +55,23 @@ private class WasmBinaryFormatWriter(
         CODE(10),
         DATA(11),
         DATA_COUNT(12),
+    }
+
+    private enum class LinkingSubsectionType(val id: Byte) {
+        WASM_SEGMENT_INFO(5),
+        WASM_INIT_FUNCS(6),
+        WASM_COMDAT_INFO(7),
+        WASM_SYMBOL_TABLE(8),
+
+    }
+
+    private enum class SymbolType(val id: Byte) {
+        FUNCTION(0),
+        DATA(1),
+        GLOBAL(2),
+        SECTION(3),
+        EVENT(4),
+        TABLE(5),
     }
 
     internal fun write(module: WasmModule, output: OutputStream) {
@@ -307,11 +323,32 @@ private class WasmBinaryFormatWriter(
         writeTypeIndex(descriptor.type(), output)
     }
 
+
+
     private fun writeLinkingSection(module: WasmModule, output: OutputStream) {
         writeSection(SectionType.CUSTOM, output) { sectionOutput ->
             sectionOutput.writeString("linking")
             sectionOutput.writeUnsignedLeb128(2) // Version
+
+            sectionOutput.write8(LinkingSubsectionType.WASM_SYMBOL_TABLE.id)
+            writeWithSizePrefix(sectionOutput) { subsectionOutput ->
+                writeSymbolTableContents(module, subsectionOutput)
+            }
         }
+    }
+
+    private fun writeSymbolTableContents(module: WasmModule, output: BufferWriter) {
+        output.writeVecSize(module.functions.size)
+        for (function in module.functions) {
+            writeFunctionSymbolInfo(function, output)
+        }
+    }
+
+    private fun writeFunctionSymbolInfo(function: WasmFunction, output: BufferWriter) {
+        output.write8(SymbolType.FUNCTION.id)
+        output.write8(0) // flags
+        writeFuncIndex(function.identifier, output)
+        output.writeString(function.identifier)
     }
 
     private fun writeLimits(min: Int, output: BufferWriter) {

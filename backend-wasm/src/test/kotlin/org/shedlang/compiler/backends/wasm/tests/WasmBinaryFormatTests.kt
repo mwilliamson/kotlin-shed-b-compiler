@@ -236,6 +236,31 @@ class WasmBinaryFormatTests {
         checkModuleSnapshot(module, snapshotter)
     }
 
+    @Test
+    fun functionsHaveSymbolsInObjectFile(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+                Wasm.function(
+                    identifier = "SECOND",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
     private fun checkModuleSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         checkSnapshot(module, snapshotter, objectFile = false)
     }

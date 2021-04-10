@@ -5,6 +5,7 @@ Section Details:
 
 Custom:
  - name: "linking"
+  - symbol table [count=0]
 
 Code Disassembly:
 
