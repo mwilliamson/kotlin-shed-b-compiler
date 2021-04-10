@@ -158,7 +158,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeExportSection(module: WasmModule) {
-        val exportedFunctions = module.functions.filter { function -> function.exportName != null}
+        val exportedFunctions = module.functions.filter { function -> function.exportName != null }
         val exports = exportedFunctions.map { function ->
             WasmExport(
                 function.exportName!!,
@@ -296,7 +296,7 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(min)
     }
 
-    private fun writeLimits(min: Int, max:Int, output: BufferWriter) {
+    private fun writeLimits(min: Int, max: Int, output: BufferWriter) {
         output.write8(0x01)
         output.writeUnsignedLeb128(min)
         output.writeUnsignedLeb128(max)
@@ -473,7 +473,8 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.I32Load -> {
                 output.write8(0x28)
-                writeMemArg(alignment = instruction.alignment ?: 4, offset = instruction.offset, output)
+                writeMemArg(alignment = instruction.alignment
+                    ?: 4, offset = instruction.offset, output)
             }
             WasmInstruction.I32Load8Unsigned -> {
                 output.write8(0x2D)
@@ -487,7 +488,8 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.I32Store -> {
                 output.write8(0x36)
-                writeMemArg(alignment = instruction.alignment ?: 4, offset = instruction.offset, output)
+                writeMemArg(alignment = instruction.alignment
+                    ?: 4, offset = instruction.offset, output)
             }
             WasmInstruction.I32Store8 -> {
                 output.write8(0x3A)
@@ -558,6 +560,7 @@ private class WasmBinaryFormatWriter(
         return when (value) {
             is WasmConstValue.I32 -> value.value
             is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
+            is WasmConstValue.TableEntryIndex -> symbolTable.tableEntryIndex(value.identifier)
         }
     }
 }
@@ -646,6 +649,6 @@ private class WasmExport(
 )
 
 private sealed class WasmExportDescriptor {
-    class Function(val funcIndex: Int): WasmExportDescriptor()
-    class Memory(val memoryIndex: Int): WasmExportDescriptor()
+    class Function(val funcIndex: Int) : WasmExportDescriptor()
+    class Memory(val memoryIndex: Int) : WasmExportDescriptor()
 }

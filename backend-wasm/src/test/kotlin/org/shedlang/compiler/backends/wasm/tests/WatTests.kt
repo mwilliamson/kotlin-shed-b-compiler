@@ -5,6 +5,7 @@ import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.backends.wasm.wasm.S
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.WasmSymbolTable
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 
 class WatTests {
@@ -214,7 +215,7 @@ class WatTests {
         ))
     }
 
-    private fun wat() = Wat(lateIndices = mapOf())
+    private fun wat() = Wat(lateIndices = mapOf(), symbolTable = WasmSymbolTable())
 }
 
 class SExpressionTests {

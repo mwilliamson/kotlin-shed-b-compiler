@@ -27,7 +27,7 @@ internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext private constructor(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
-    private val functions: PersistentList<Pair<LateIndex?, WasmFunction>>,
+    private val functions: PersistentList<Pair<WasmFunction, Boolean>>,
     private val staticData: PersistentList<Pair<LateIndex, WasmStaticData>>,
     private val moduleNames: PersistentSet<ModuleName>,
     private val dependencies: PersistentSet<ModuleName>,
@@ -138,9 +138,8 @@ internal data class WasmGlobalContext private constructor(
         val boundFunctions = mutableListOf<WasmFunction>()
         val table = mutableListOf<String>()
 
-        functions.forEachIndexed { tableIndex, (lateIndex, function) ->
-            if (lateIndex != null) {
-                lateIndices[lateIndex] = table.size
+        for ((function, addToTable) in functions) {
+            if (addToTable) {
                 table.add(function.identifier)
             }
             boundFunctions.add(function)
@@ -197,13 +196,11 @@ internal data class WasmGlobalContext private constructor(
     }
 
     fun addStaticFunction(function: WasmFunction): WasmGlobalContext {
-        return copy(functions = functions.add(Pair(null, function)))
+        return copy(functions = functions.add(Pair(function, false)))
     }
 
-    fun addFunction(function: WasmFunction): Pair<WasmGlobalContext, LateIndex> {
-        val index = nextLateIndex()
-        val newContext = copy(functions = functions.add(Pair(index, function)))
-        return Pair(newContext, index)
+    fun addFunction(function: WasmFunction): WasmGlobalContext {
+        return copy(functions = functions.add(Pair(function, true)))
     }
 
     fun addStaticI32(initial: Int) = addStaticI32(initial = Wasm.I.i32Const(initial))
@@ -433,7 +430,7 @@ internal data class WasmFunctionContext(
         exportName: String? = null,
         params: List<WasmParam> = listOf(),
         results: List<WasmValueType> = listOf(),
-    ): Pair<WasmGlobalContext, LateIndex> {
+    ): WasmGlobalContext {
         val function = toFunction(
             identifier = identifier,
             exportName = exportName,

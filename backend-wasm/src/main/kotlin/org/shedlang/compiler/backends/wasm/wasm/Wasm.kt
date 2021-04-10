@@ -158,6 +158,10 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Const(WasmConstValue.LateIndex(value))
         }
 
+        fun i32Const(value: WasmConstValue): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Const(value)
+        }
+
         fun i32DivideSigned(left: WasmInstruction.Folded, right: WasmInstruction.Folded): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32DivideSigned(left = left, right = right)
         }
@@ -507,6 +511,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 internal sealed class WasmConstValue {
     data class I32(val value: Int): WasmConstValue()
     data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
+    data class TableEntryIndex(val identifier: String): WasmConstValue()
 }
 
 const val WASM_PAGE_SIZE = 65536

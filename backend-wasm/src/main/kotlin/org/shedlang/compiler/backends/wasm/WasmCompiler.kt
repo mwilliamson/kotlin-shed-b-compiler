@@ -32,7 +32,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         val module = boundGlobalContext.toModule()
 
-        val wat = Wat(lateIndices = boundGlobalContext.lateIndices).serialise(module)
+        val wat = Wat.serialise(module, lateIndices = boundGlobalContext.lateIndices)
         return CompilationResult(lateIndices = boundGlobalContext.lateIndices, module = module, wat = wat)
     }
 

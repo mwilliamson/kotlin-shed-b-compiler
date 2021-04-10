@@ -6,7 +6,14 @@ import java.lang.StringBuilder
 import java.lang.UnsupportedOperationException
 import java.math.BigInteger
 
-internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
+internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val symbolTable: WasmSymbolTable) {
+    companion object {
+        fun serialise(module: WasmModule, lateIndices: Map<LateIndex, Int>): String {
+            return Wat(lateIndices = lateIndices, symbolTable = WasmSymbolTable.forModule(module))
+                .serialise(module)
+        }
+    }
+
     fun serialise(module: WasmModule): String {
         return moduleToSExpression(module).serialise()
     }
@@ -314,6 +321,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>) {
         return when (value) {
             is WasmConstValue.I32 -> value.value
             is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
+            is WasmConstValue.TableEntryIndex -> symbolTable.tableEntryIndex(value.identifier)
         }
     }
 }

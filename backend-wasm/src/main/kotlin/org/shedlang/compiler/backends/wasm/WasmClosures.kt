@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.wasm.runtime.callMalloc
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.backends.wasm.wasm.WasmParam
@@ -29,7 +30,7 @@ internal object WasmClosures {
         )
 
         val functionContext3 = compileBody(functionContext2)
-        val (functionGlobalContext, functionIndex) = functionContext3.toFunctionInGlobalContext(
+        val functionGlobalContext = functionContext3.toFunctionInGlobalContext(
             // TODO: uniquify name
             identifier = functionName,
             params = params,
@@ -38,14 +39,14 @@ internal object WasmClosures {
 
         val context2 = context.mergeGlobalContext(functionGlobalContext)
         return compileCreateForFunction(
-            functionIndex = functionIndex,
+            tableIndex = WasmConstValue.TableEntryIndex(functionName),
             freeVariables = freeVariables,
             context = context2,
         )
     }
 
     internal fun compileCreateForFunction(
-        functionIndex: LateIndex,
+        tableIndex: WasmConstValue,
         freeVariables: List<LocalLoad>,
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, String> {
@@ -64,7 +65,7 @@ internal object WasmClosures {
         )
         val context5 = context4.addInstruction(Wasm.I.i32Store(
             Wasm.I.localGet(closure),
-            value = Wasm.I.i32Const(functionIndex),
+            value = Wasm.I.i32Const(tableIndex),
         ))
         return Pair(context5, closure)
     }

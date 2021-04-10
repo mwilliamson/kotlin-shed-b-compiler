@@ -17,11 +17,16 @@ internal class WasmSymbolTable {
                 symbolTable.addFuncIndex(function.identifier)
             }
 
+            for (tableEntry in module.table) {
+                symbolTable.addTableEntryIndex(tableEntry)
+            }
+
             return symbolTable
         }
     }
 
     private val funcIndices = mutableMapOf<String, Int>()
+    private val tableEntryIndices = mutableMapOf<String, Int>()
 
     private fun addFuncIndex(name: String) {
         funcIndices.add(name, funcIndices.size)
@@ -29,5 +34,13 @@ internal class WasmSymbolTable {
 
     fun funcIndex(name: String): Int {
         return funcIndices.getValue(name)
+    }
+
+    private fun addTableEntryIndex(name: String) {
+        tableEntryIndices.add(name, tableEntryIndices.size)
+    }
+
+    fun tableEntryIndex(name: String): Int {
+        return tableEntryIndices.getValue(name)
     }
 }
