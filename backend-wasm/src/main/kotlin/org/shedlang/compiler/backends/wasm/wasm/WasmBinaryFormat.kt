@@ -11,22 +11,20 @@ import java.nio.channels.Channels
 internal object WasmBinaryFormat {
     internal fun writeModule(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
         val writer = WasmBinaryFormatWriter(
-            outputStream = output,
             lateIndices = lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = false,
         )
-        writer.write(module)
+        writer.write(module, output)
     }
 
     internal fun writeObjectFile(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
         val writer = WasmBinaryFormatWriter(
-            outputStream = output,
             lateIndices = lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = true,
         )
-        writer.write(module)
+        writer.write(module, output)
     }
 }
 
@@ -34,7 +32,6 @@ internal object WasmBinaryFormat {
 private class WasmBinaryFormatWriter(
     private val lateIndices: Map<LateIndex, Int>,
     private val symbolTable: WasmSymbolTable,
-    private val outputStream: OutputStream,
     private val objectFile: Boolean,
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
@@ -61,30 +58,30 @@ private class WasmBinaryFormatWriter(
         DATA_COUNT(12),
     }
 
-    internal fun write(module: WasmModule) {
-        outputStream.write(WASM_MAGIC)
-        outputStream.write(WASM_VERSION)
-        writeTypesSection(module)
-        writeImportsSection(module)
-        writeFunctionsSection(module)
-        writeTableSection(module)
-        writeMemorySection(module)
-        writeGlobalsSection(module)
-        writeExportSection(module)
-        writeStartSection(module)
-        writeElementSection(module)
-        writeCodeSection(module)
-        writeDataSection(module)
+    internal fun write(module: WasmModule, output: OutputStream) {
+        output.write(WASM_MAGIC)
+        output.write(WASM_VERSION)
+        writeTypesSection(module, output)
+        writeImportsSection(module, output)
+        writeFunctionsSection(module, output)
+        writeTableSection(module, output)
+        writeMemorySection(module, output)
+        writeGlobalsSection(module, output)
+        writeExportSection(module, output)
+        writeStartSection(module, output)
+        writeElementSection(module, output)
+        writeCodeSection(module, output)
+        writeDataSection(module, output)
 
         if (objectFile) {
-            writeLinkingSection(module)
+            writeLinkingSection(module, output)
         }
     }
 
-    private fun writeTypesSection(module: WasmModule) {
+    private fun writeTypesSection(module: WasmModule, output: OutputStream) {
         if (module.types.size > 0) {
-            writeSection(SectionType.TYPE) { output ->
-                writeTypesSectionContents(module.types, output)
+            writeSection(SectionType.TYPE, output) { sectionOutput ->
+                writeTypesSectionContents(module.types, sectionOutput)
             }
         }
     }
@@ -96,10 +93,10 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeImportsSection(module: WasmModule) {
+    private fun writeImportsSection(module: WasmModule, output: OutputStream) {
         if (module.imports.size > 0) {
-            writeSection(SectionType.IMPORT) { output ->
-                writeImportsSectionContents(module.imports, output)
+            writeSection(SectionType.IMPORT, output) { sectionOutput ->
+                writeImportsSectionContents(module.imports, sectionOutput)
             }
         }
     }
@@ -111,10 +108,10 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeFunctionsSection(module: WasmModule) {
+    private fun writeFunctionsSection(module: WasmModule, output: OutputStream) {
         if (module.functions.size > 0) {
-            writeSection(SectionType.FUNCTION) { output ->
-                writeFunctionsSectionContents(module.functions, output)
+            writeSection(SectionType.FUNCTION, output) { sectionOutput ->
+                writeFunctionsSectionContents(module.functions, sectionOutput)
             }
         }
     }
@@ -126,10 +123,10 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeTableSection(module: WasmModule) {
+    private fun writeTableSection(module: WasmModule ,output: OutputStream) {
         if (module.table.size > 0) {
-            writeSection(SectionType.TABLE) { output ->
-                writeTableSectionContents(module.table, output)
+            writeSection(SectionType.TABLE, output) { sectionOutput ->
+                writeTableSectionContents(module.table, sectionOutput)
             }
         }
     }
@@ -142,10 +139,10 @@ private class WasmBinaryFormatWriter(
         writeLimits(table.size, table.size, output)
     }
 
-    private fun writeMemorySection(module: WasmModule) {
+    private fun writeMemorySection(module: WasmModule, output: OutputStream) {
         if (module.memoryPageCount != null) {
-            writeSection(SectionType.MEMORY) { output ->
-                writeMemorySectionContents(module.memoryPageCount, output)
+            writeSection(SectionType.MEMORY, output) { sectionOutput ->
+                writeMemorySectionContents(module.memoryPageCount, sectionOutput)
             }
         }
     }
@@ -155,10 +152,10 @@ private class WasmBinaryFormatWriter(
         writeLimits(memoryPageCount, output)
     }
 
-    private fun writeGlobalsSection(module: WasmModule) {
+    private fun writeGlobalsSection(module: WasmModule, output: OutputStream) {
         if (module.globals.size > 0) {
-            writeSection(SectionType.GLOBAL) { output ->
-                writeGlobalsSectionContents(module.globals, output)
+            writeSection(SectionType.GLOBAL, output) { sectionOutput ->
+                writeGlobalsSectionContents(module.globals, sectionOutput)
             }
         }
     }
@@ -177,7 +174,7 @@ private class WasmBinaryFormatWriter(
         writeExpression(listOf(global.value), output)
     }
 
-    private fun writeExportSection(module: WasmModule) {
+    private fun writeExportSection(module: WasmModule, output: OutputStream) {
         val exportedFunctions = module.functions.filter { function -> function.exportName != null }
         val exports = exportedFunctions.map { function ->
             WasmExport(
@@ -189,8 +186,8 @@ private class WasmBinaryFormatWriter(
             exports.add(WasmExport("memory", WasmExportDescriptor.Memory(0)))
         }
         if (exports.size > 0) {
-            writeSection(SectionType.EXPORT) { output ->
-                writeExportSectionContents(exports, output)
+            writeSection(SectionType.EXPORT, output) { sectionOutput ->
+                writeExportSectionContents(exports, sectionOutput)
             }
         }
     }
@@ -212,18 +209,18 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeStartSection(module: WasmModule) {
+    private fun writeStartSection(module: WasmModule, output: OutputStream) {
         if (module.start != null) {
-            writeSection(SectionType.START) { output ->
-                writeFuncIndex(module.start, output)
+            writeSection(SectionType.START, output) { sectionOutput ->
+                writeFuncIndex(module.start, sectionOutput)
             }
         }
     }
 
-    private fun writeElementSection(module: WasmModule) {
+    private fun writeElementSection(module: WasmModule, output: OutputStream) {
         if (module.table.size > 0) {
-            writeSection(SectionType.ELEMENT) { output ->
-                writeElementSectionContents(module.table, output)
+            writeSection(SectionType.ELEMENT, output) { sectionOutput ->
+                writeElementSectionContents(module.table, sectionOutput)
             }
         }
     }
@@ -238,10 +235,10 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeCodeSection(module: WasmModule) {
+    private fun writeCodeSection(module: WasmModule, output: OutputStream) {
         if (module.functions.size > 0) {
-            writeSection(SectionType.CODE) { output ->
-                writeCodeSectionContents(module.functions, output)
+            writeSection(SectionType.CODE, output) { sectionOutput ->
+                writeCodeSectionContents(module.functions, sectionOutput)
             }
         }
     }
@@ -274,10 +271,10 @@ private class WasmBinaryFormatWriter(
         writeExpression(function.body, output)
     }
 
-    private fun writeDataSection(module: WasmModule) {
+    private fun writeDataSection(module: WasmModule, output: OutputStream) {
         if (module.dataSegments.size > 0) {
-            writeSection(SectionType.DATA) { output ->
-                writeDataSectionContents(module.dataSegments, output)
+            writeSection(SectionType.DATA, output) { sectionOutput ->
+                writeDataSectionContents(module.dataSegments, sectionOutput)
             }
         }
     }
@@ -311,10 +308,10 @@ private class WasmBinaryFormatWriter(
         writeTypeIndex(descriptor.type(), output)
     }
 
-    private fun writeLinkingSection(module: WasmModule) {
-        writeSection(SectionType.CUSTOM) { output ->
-            output.writeString("linking")
-            output.writeUnsignedLeb128(2) // Version
+    private fun writeLinkingSection(module: WasmModule, output: OutputStream) {
+        writeSection(SectionType.CUSTOM, output) { sectionOutput ->
+            sectionOutput.writeString("linking")
+            sectionOutput.writeUnsignedLeb128(2) // Version
         }
     }
 
@@ -418,12 +415,12 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeSection(sectionType: SectionType, writeContents: (BufferWriter) -> Unit) {
-        outputStream.write8(sectionType.id)
+    private fun writeSection(sectionType: SectionType, output: OutputStream, writeContents: (BufferWriter) -> Unit) {
+        output.write8(sectionType.id)
         val bufferWriter = BufferWriter()
         writeContents(bufferWriter)
-        outputStream.writeUnsignedLeb128(bufferWriter.size)
-        bufferWriter.writeTo(outputStream)
+        output.writeUnsignedLeb128(bufferWriter.size)
+        bufferWriter.writeTo(output)
     }
 
     private fun writeExpression(instructions: List<WasmInstruction>, output: BufferWriter) {
