@@ -3,8 +3,8 @@ package org.shedlang.compiler.backends.wasm.wasm
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.LateIndex
+import org.shedlang.compiler.backends.wasm.add
 import java.io.OutputStream
-import java.lang.UnsupportedOperationException
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
@@ -22,7 +22,7 @@ private class WasmBinaryFormatWriter(
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
-    private val funcIndices = mutableMapOf<String, Int>()
+    private val symbolTable = WasmSymbolTable()
     private val globalIndices = mutableMapOf<String, Int>()
     private val labelStack = mutableListOf<String?>()
     private var localIndices = mutableMapOf<String, Int>()
@@ -103,7 +103,7 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(functions.size)
         for (function in functions) {
             writeTypeIndex(function.type(), output)
-            addFuncIndex(function.identifier)
+            symbolTable.addFuncIndex(function.identifier)
         }
     }
 
@@ -163,7 +163,7 @@ private class WasmBinaryFormatWriter(
         val exports = exportedFunctions.map { function ->
             WasmExport(
                 function.exportName!!,
-                WasmExportDescriptor.Function(funcIndex(function.identifier)),
+                WasmExportDescriptor.Function(symbolTable.funcIndex(function.identifier)),
             )
         }.toMutableList()
         if (module.memoryPageCount != null) {
@@ -283,7 +283,7 @@ private class WasmBinaryFormatWriter(
         when (import.descriptor) {
             is WasmImportDescriptor.Function -> {
                 writeImportDescriptionFunction(import.descriptor, output)
-                addFuncIndex(import.identifier)
+                symbolTable.addFuncIndex(import.identifier)
             }
         }
     }
@@ -304,16 +304,8 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(max)
     }
 
-    private fun addFuncIndex(name: String) {
-        funcIndices.add(name, funcIndices.size)
-    }
-
     private fun writeFuncIndex(name: String, output: BufferWriter) {
-        output.writeUnsignedLeb128(funcIndex(name))
-    }
-
-    private fun funcIndex(name: String): Int {
-        return funcIndices.getValue(name)
+        output.writeUnsignedLeb128(symbolTable.funcIndex(name))
     }
 
     private fun addGlobalIndex(name: String) {
@@ -647,12 +639,6 @@ private class BufferWriter {
 
     fun writeTo(output: BufferWriter) {
         output.write(buffer.array(), 0, buffer.position())
-    }
-}
-
-private fun <K, V> MutableMap<K,V>.add(key: K, value: V) {
-    if (this.putIfAbsent(key, value) !== null) {
-        throw CompilerError("duplicate key: $key", NullSource)
     }
 }
 
