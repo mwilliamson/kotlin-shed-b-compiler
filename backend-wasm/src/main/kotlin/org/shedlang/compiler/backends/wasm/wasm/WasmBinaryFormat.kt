@@ -336,37 +336,59 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeSymbolTableContents(module: WasmModule, output: BufferWriter) {
-        val functionSymbolInfos = mutableListOf<FunctionSymbolInfo>()
+        val symbolInfos = mutableListOf<SymbolInfo>()
         for (import in module.imports) {
             if (import.descriptor is WasmImportDescriptor.Function) {
-                functionSymbolInfos.add(importedFunctionSymbolInfo(import))
+                symbolInfos.add(importedFunctionSymbolInfo(import))
             }
         }
         for (function in module.functions) {
-            functionSymbolInfos.add(definedFunctionSymbolInfo(function))
+            symbolInfos.add(definedFunctionSymbolInfo(function))
+        }
+        for (global in module.globals) {
+            symbolInfos.add(SymbolInfo.Global(flags = 0, identifier = global.identifier))
         }
 
-        output.writeVecSize(functionSymbolInfos.size)
-        for (functionSymbolInfo in functionSymbolInfos) {
-            writeFunctionSymbolInfo(functionSymbolInfo, output)
+        output.writeVecSize(symbolInfos.size)
+        for (symbolInfo in symbolInfos) {
+            writeSymbolInfo(symbolInfo, output)
         }
     }
 
-    private fun importedFunctionSymbolInfo(import: WasmImport): FunctionSymbolInfo {
+    private fun importedFunctionSymbolInfo(import: WasmImport): SymbolInfo.Function {
         val flags: Byte = 0x10 or 0x40 // WASM_SYM_UNDEFINED | WASM_SYM_EXPLICIT_NAME
-        return FunctionSymbolInfo(identifier = import.identifier, flags = flags)
+        return SymbolInfo.Function(identifier = import.identifier, flags = flags)
     }
 
-    private fun definedFunctionSymbolInfo(function: WasmFunction): FunctionSymbolInfo {
-        return FunctionSymbolInfo(identifier = function.identifier, flags = 0)
+    private fun definedFunctionSymbolInfo(function: WasmFunction): SymbolInfo.Function {
+        return SymbolInfo.Function(identifier = function.identifier, flags = 0)
     }
 
-    private class FunctionSymbolInfo(val flags: Byte, val identifier: String)
+    private sealed class SymbolInfo(val flags: Byte) {
+        class Function(flags: Byte, val identifier: String): SymbolInfo(flags)
+        class Global(flags: Byte, val identifier: String): SymbolInfo(flags)
+    }
 
-    private fun writeFunctionSymbolInfo(info: FunctionSymbolInfo, output: BufferWriter) {
+    private fun writeSymbolInfo(info: SymbolInfo, output: BufferWriter) {
+        when (info) {
+            is SymbolInfo.Function ->
+                writeFunctionSymbolInfo(info, output)
+            is SymbolInfo.Global ->
+                writeGlobalSymbolInfo(info, output)
+        }
+    }
+
+    private fun writeFunctionSymbolInfo(info: SymbolInfo.Function, output: BufferWriter) {
         output.write8(SymbolType.FUNCTION.id)
         output.write8(info.flags)
         writeFuncIndex(info.identifier, output)
+        output.writeString(info.identifier)
+    }
+
+    private fun writeGlobalSymbolInfo(info: SymbolInfo.Global, output: BufferWriter) {
+        output.write8(SymbolType.GLOBAL.id)
+        output.write8(info.flags)
+        writeGlobalIndex(info.identifier, output)
         output.writeString(info.identifier)
     }
 

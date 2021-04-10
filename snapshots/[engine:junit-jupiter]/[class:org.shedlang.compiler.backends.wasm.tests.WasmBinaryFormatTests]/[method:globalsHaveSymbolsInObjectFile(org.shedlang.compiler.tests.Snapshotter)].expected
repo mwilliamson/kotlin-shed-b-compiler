@@ -1,0 +1,16 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Global[2]:
+ - global[0] i32 mutable=1 <FIRST> - init i32=42
+ - global[1] i32 mutable=0 <SECOND> - init i32=47
+Custom:
+ - name: "linking"
+  - symbol table [count=2]
+   - 0: G <FIRST> global=0 binding=global vis=default
+   - 1: G <SECOND> global=1 binding=global vis=default
+
+Code Disassembly:
+

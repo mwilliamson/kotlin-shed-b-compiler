@@ -237,6 +237,28 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun globalsHaveSymbolsInObjectFile(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            globals = listOf(
+                Wasm.global(
+                    identifier = "FIRST",
+                    mutable = true,
+                    type = Wasm.T.i32,
+                    value = Wasm.I.i32Const(42),
+                ),
+                Wasm.global(
+                    identifier = "SECOND",
+                    mutable = false,
+                    type = Wasm.T.i32,
+                    value = Wasm.I.i32Const(47),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun functionsHaveSymbolsInObjectFile(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(
