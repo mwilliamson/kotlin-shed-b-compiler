@@ -251,10 +251,9 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeFunction(function: WasmFunction, output: BufferWriter) {
-        val functionCodeOutput = BufferWriter()
-        writeFunctionCode(function, functionCodeOutput)
-        output.writeUnsignedLeb128(functionCodeOutput.size)
-        functionCodeOutput.writeTo(output)
+        writeWithSizePrefix(output) { functionCodeOutput ->
+            writeFunctionCode(function, functionCodeOutput)
+        }
     }
 
     private fun writeFunctionCode(function: WasmFunction, output: BufferWriter) {
@@ -586,6 +585,13 @@ private class WasmBinaryFormatWriter(
             is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
             is WasmConstValue.TableEntryIndex -> symbolTable.tableEntryIndex(value.identifier)
         }
+    }
+
+    private fun writeWithSizePrefix(output: BufferWriter, writeContents: (BufferWriter) -> Unit) {
+        val functionCodeOutput = BufferWriter()
+        writeContents(functionCodeOutput)
+        output.writeUnsignedLeb128(functionCodeOutput.size)
+        functionCodeOutput.writeTo(output)
     }
 }
 
