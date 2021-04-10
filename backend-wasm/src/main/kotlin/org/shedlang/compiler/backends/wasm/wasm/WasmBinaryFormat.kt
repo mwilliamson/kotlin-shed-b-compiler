@@ -9,8 +9,23 @@ import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
-    internal fun write(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
-        val writer = WasmBinaryFormatWriter(outputStream = output, lateIndices = lateIndices, symbolTable = WasmSymbolTable.forModule(module))
+    internal fun writeModule(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+        val writer = WasmBinaryFormatWriter(
+            outputStream = output,
+            lateIndices = lateIndices,
+            symbolTable = WasmSymbolTable.forModule(module),
+            objectFile = false,
+        )
+        writer.write(module)
+    }
+
+    internal fun writeObjectFile(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+        val writer = WasmBinaryFormatWriter(
+            outputStream = output,
+            lateIndices = lateIndices,
+            symbolTable = WasmSymbolTable.forModule(module),
+            objectFile = true,
+        )
         writer.write(module)
     }
 }
@@ -20,6 +35,7 @@ private class WasmBinaryFormatWriter(
     private val lateIndices: Map<LateIndex, Int>,
     private val symbolTable: WasmSymbolTable,
     private val outputStream: OutputStream,
+    private val objectFile: Boolean,
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
@@ -59,6 +75,10 @@ private class WasmBinaryFormatWriter(
         writeElementSection(module)
         writeCodeSection(module)
         writeDataSection(module)
+
+        if (objectFile) {
+            writeLinkingSection(module)
+        }
     }
 
     private fun writeTypesSection(module: WasmModule) {
@@ -289,6 +309,13 @@ private class WasmBinaryFormatWriter(
     private fun writeImportDescriptionFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
         output.write8(0x00)
         writeTypeIndex(descriptor.type(), output)
+    }
+
+    private fun writeLinkingSection(module: WasmModule) {
+        writeSection(SectionType.CUSTOM) { output ->
+            output.writeString("linking")
+            output.writeUnsignedLeb128(2) // Version
+        }
     }
 
     private fun writeLimits(min: Int, output: BufferWriter) {

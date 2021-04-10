@@ -1,0 +1,10 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Custom:
+ - name: "linking"
+
+Code Disassembly:
+

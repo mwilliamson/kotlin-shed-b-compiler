@@ -18,7 +18,14 @@ class WasmBinaryFormatTests {
     fun emptyModule(snapshotter: Snapshotter) {
         val module = Wasm.module()
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
+    }
+
+    @Test
+    fun emptyObjectFile(snapshotter: Snapshotter) {
+        val module = Wasm.module()
+
+        checkObjectFileSnapshot(module, snapshotter)
     }
 
     @Test
@@ -29,7 +36,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -52,7 +59,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -61,7 +68,7 @@ class WasmBinaryFormatTests {
             memoryPageCount = 42,
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -83,7 +90,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -95,7 +102,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -123,7 +130,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -143,7 +150,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -170,7 +177,7 @@ class WasmBinaryFormatTests {
             ),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -200,7 +207,7 @@ class WasmBinaryFormatTests {
             start = "FIRST",
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
     @Test
@@ -226,14 +233,26 @@ class WasmBinaryFormatTests {
             table = listOf("SECOND", "FIRST"),
         )
 
-        checkSnapshot(module, snapshotter)
+        checkModuleSnapshot(module, snapshotter)
     }
 
-    private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter) {
+    private fun checkModuleSnapshot(module: WasmModule, snapshotter: Snapshotter) {
+        checkSnapshot(module, snapshotter, objectFile = false)
+    }
+
+    private fun checkObjectFileSnapshot(module: WasmModule, snapshotter: Snapshotter) {
+        checkSnapshot(module, snapshotter, objectFile = true)
+    }
+
+    private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter, objectFile: Boolean) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
             path.toFile().outputStream().use { outputStream ->
-                WasmBinaryFormat.write(module, outputStream, lateIndices = mapOf())
+                if (objectFile) {
+                    WasmBinaryFormat.writeObjectFile(module, outputStream, lateIndices = mapOf())
+                } else {
+                    WasmBinaryFormat.writeModule(module, outputStream, lateIndices = mapOf())
+                }
             }
 
             validate(path)
