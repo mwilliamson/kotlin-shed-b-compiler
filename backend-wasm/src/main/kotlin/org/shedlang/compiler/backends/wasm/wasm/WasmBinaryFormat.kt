@@ -323,8 +323,6 @@ private class WasmBinaryFormatWriter(
         writeTypeIndex(descriptor.type(), output)
     }
 
-
-
     private fun writeLinkingSection(module: WasmModule, output: OutputStream) {
         writeSection(SectionType.CUSTOM, output) { sectionOutput ->
             sectionOutput.writeString("linking")
@@ -338,17 +336,38 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeSymbolTableContents(module: WasmModule, output: BufferWriter) {
-        output.writeVecSize(module.functions.size)
+        val functionSymbolInfos = mutableListOf<FunctionSymbolInfo>()
+        for (import in module.imports) {
+            if (import.descriptor is WasmImportDescriptor.Function) {
+                functionSymbolInfos.add(importedFunctionSymbolInfo(import))
+            }
+        }
         for (function in module.functions) {
-            writeFunctionSymbolInfo(function, output)
+            functionSymbolInfos.add(definedFunctionSymbolInfo(function))
+        }
+
+        output.writeVecSize(functionSymbolInfos.size)
+        for (functionSymbolInfo in functionSymbolInfos) {
+            writeFunctionSymbolInfo(functionSymbolInfo, output)
         }
     }
 
-    private fun writeFunctionSymbolInfo(function: WasmFunction, output: BufferWriter) {
+    private fun importedFunctionSymbolInfo(import: WasmImport): FunctionSymbolInfo {
+        val flags: Byte = 0x10 or 0x40 // WASM_SYM_UNDEFINED | WASM_SYM_EXPLICIT_NAME
+        return FunctionSymbolInfo(identifier = import.identifier, flags = flags)
+    }
+
+    private fun definedFunctionSymbolInfo(function: WasmFunction): FunctionSymbolInfo {
+        return FunctionSymbolInfo(identifier = function.identifier, flags = 0)
+    }
+
+    private class FunctionSymbolInfo(val flags: Byte, val identifier: String)
+
+    private fun writeFunctionSymbolInfo(info: FunctionSymbolInfo, output: BufferWriter) {
         output.write8(SymbolType.FUNCTION.id)
-        output.write8(0) // flags
-        writeFuncIndex(function.identifier, output)
-        output.writeString(function.identifier)
+        output.write8(info.flags)
+        writeFuncIndex(info.identifier, output)
+        output.writeString(info.identifier)
     }
 
     private fun writeLimits(min: Int, output: BufferWriter) {

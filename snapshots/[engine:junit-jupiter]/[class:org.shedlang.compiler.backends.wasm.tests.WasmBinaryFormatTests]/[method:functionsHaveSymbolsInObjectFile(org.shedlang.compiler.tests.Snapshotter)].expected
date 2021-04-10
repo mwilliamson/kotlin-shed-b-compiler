@@ -5,21 +5,24 @@ Section Details:
 
 Type[1]:
  - type[0] () -> nil
+Import[1]:
+ - func[0] sig=0 <IMPORTED> <- MODULE.ENTITY
 Function[2]:
- - func[0] sig=0 <FIRST>
- - func[1] sig=0 <SECOND>
+ - func[1] sig=0 <FIRST>
+ - func[2] sig=0 <SECOND>
 Code[2]:
- - func[0] size=2 <FIRST>
- - func[1] size=2 <SECOND>
+ - func[1] size=2 <FIRST>
+ - func[2] size=2 <SECOND>
 Custom:
  - name: "linking"
-  - symbol table [count=2]
-   - 0: F <FIRST> func=0 binding=global vis=default
-   - 1: F <SECOND> func=1 binding=global vis=default
+  - symbol table [count=3]
+   - 0: F <IMPORTED> func=0 undefined explicit_name binding=global vis=default
+   - 1: F <FIRST> func=1 binding=global vis=default
+   - 2: F <SECOND> func=2 binding=global vis=default
 
 Code Disassembly:
 
-000017 func[0] <FIRST>:
- 000018: 0b                         | end
-00001a func[1] <SECOND>:
- 00001b: 0b                         | end
+00002a func[1] <FIRST>:
+ 00002b: 0b                         | end
+00002d func[2] <SECOND>:
+ 00002e: 0b                         | end

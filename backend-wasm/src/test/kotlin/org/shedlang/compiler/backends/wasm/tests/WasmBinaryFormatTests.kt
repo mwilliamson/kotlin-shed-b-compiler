@@ -242,6 +242,15 @@ class WasmBinaryFormatTests {
             types = listOf(
                 Wasm.T.funcType(params = listOf(), results = listOf()),
             ),
+            imports = listOf(
+                Wasm.importFunction(
+                    moduleName = "MODULE",
+                    entityName = "ENTITY",
+                    identifier = "IMPORTED",
+                    params = listOf(),
+                    results = listOf(),
+                ),
+            ),
             functions = listOf(
                 Wasm.function(
                     identifier = "FIRST",
