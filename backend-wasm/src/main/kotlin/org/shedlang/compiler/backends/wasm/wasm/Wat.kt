@@ -22,7 +22,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
         val typeDefinitions = module.types.map { type ->
             S.list(
                 S.symbol("type"),
-                S.identifier(type.identifier()),
+                S.identifier(funcTypeIdentifier(type)),
                 S.list(
                     S.symbol("func"),
                     S.list(S.symbol("param")).addAll(valueTypesToSExpressions(type.params)),
@@ -154,7 +154,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
             is WasmInstruction.Call -> S.elements(S.symbol("call"), S.identifier(instruction.identifier))
             is WasmInstruction.CallIndirect -> S.elements(S.symbol("call_indirect"), S.list(
                 S.symbol("type"),
-                S.identifier(instruction.type.identifier()),
+                S.identifier(funcTypeIdentifier(instruction.type)),
             ))
             is WasmInstruction.Drop -> S.symbol("drop")
             is WasmInstruction.Else -> S.symbol("else")
@@ -202,7 +202,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
                     S.symbol("call_indirect"),
                     S.list(
                         S.symbol("type"),
-                        S.identifier(instruction.type.identifier()),
+                        S.identifier(funcTypeIdentifier(instruction.type)),
                     ),
                 )
                     .addAll(instruction.args.map { arg -> instructionToSExpression(arg) })
@@ -323,6 +323,20 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
             is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
             is WasmConstValue.TableEntryIndex -> symbolTable.tableEntryIndex(value.identifier)
         }
+    }
+
+    private fun funcTypeIdentifier(type: WasmFuncType): String {
+        val parts = mutableListOf<String>()
+        parts.add("functype")
+        parts.add(type.params.size.toString())
+        for (param in type.params) {
+            parts.add(param.name)
+        }
+        parts.add(type.results.size.toString())
+        for (result in type.results) {
+            parts.add(result.name)
+        }
+        return parts.joinToString("_")
     }
 }
 

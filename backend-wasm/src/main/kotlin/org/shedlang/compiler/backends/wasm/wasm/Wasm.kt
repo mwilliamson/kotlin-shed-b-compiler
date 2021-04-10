@@ -271,22 +271,7 @@ internal class WasmModule(
     val table: List<String>,
 )
 
-internal data class WasmFuncType(val params: List<WasmValueType>, val results: List<WasmValueType>) {
-    fun identifier(): String {
-        // TODO: should be in Wat
-        val parts = mutableListOf<String>()
-        parts.add("functype")
-        parts.add(params.size.toString())
-        for (param in params) {
-            parts.add((param as WasmValueType).name)
-        }
-        parts.add(results.size.toString())
-        for (result in results) {
-            parts.add((result as WasmValueType).name)
-        }
-        return parts.joinToString("_")
-    }
-}
+internal data class WasmFuncType(val params: List<WasmValueType>, val results: List<WasmValueType>)
 
 internal class WasmImport(
     val moduleName: String,
