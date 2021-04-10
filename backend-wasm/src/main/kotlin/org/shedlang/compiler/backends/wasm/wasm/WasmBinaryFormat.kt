@@ -364,6 +364,16 @@ private class WasmBinaryFormatWriter(
         for (global in module.globals) {
             symbolInfos.add(SymbolInfo.Global(flags = 0, identifier = global.identifier))
         }
+        module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
+            symbolInfos.add(SymbolInfo.Data(
+                flags = 0,
+                identifier = "DATA_$dataSegmentIndex",
+                dataSegmentIndex = dataSegmentIndex,
+                offset = 0,
+                size = dataSegment.bytes.size,
+
+            ))
+        }
 
         output.writeVecSize(symbolInfos.size)
         for (symbolInfo in symbolInfos) {
@@ -381,17 +391,29 @@ private class WasmBinaryFormatWriter(
     }
 
     private sealed class SymbolInfo(val flags: Byte) {
+        class Data(flags: Byte, val identifier: String, val dataSegmentIndex: Int, val offset: Int, val size: Int): SymbolInfo(flags)
         class Function(flags: Byte, val identifier: String): SymbolInfo(flags)
         class Global(flags: Byte, val identifier: String): SymbolInfo(flags)
     }
 
     private fun writeSymbolInfo(info: SymbolInfo, output: BufferWriter) {
         when (info) {
+            is SymbolInfo.Data ->
+                writeDataSymbolInfo(info, output)
             is SymbolInfo.Function ->
                 writeFunctionSymbolInfo(info, output)
             is SymbolInfo.Global ->
                 writeGlobalSymbolInfo(info, output)
         }
+    }
+
+    private fun writeDataSymbolInfo(info: SymbolInfo.Data, output: BufferWriter) {
+        output.write8(SymbolType.DATA.id)
+        output.write8(info.flags)
+        output.writeString(info.identifier)
+        output.writeUnsignedLeb128(info.dataSegmentIndex)
+        output.writeUnsignedLeb128(info.offset)
+        output.writeUnsignedLeb128(info.size)
     }
 
     private fun writeFunctionSymbolInfo(info: SymbolInfo.Function, output: BufferWriter) {

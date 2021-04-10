@@ -14,7 +14,8 @@ Custom:
  - name: "linking"
   - segment info [count=1]
    - 0: DATA_SEGMENT_0 p2align=0 flags=0
-  - symbol table [count=0]
+  - symbol table [count=1]
+   - 0: D <DATA_0> segment=0 offset=0 size=2 binding=global vis=default
 
 Code Disassembly:
 
