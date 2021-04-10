@@ -10,7 +10,7 @@ import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
     internal fun write(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
-        val writer = WasmBinaryFormatWriter(outputStream = output, lateIndices = lateIndices)
+        val writer = WasmBinaryFormatWriter(outputStream = output, lateIndices = lateIndices, symbolTable = WasmSymbolTable.forModule(module))
         writer.write(module)
     }
 }
@@ -18,11 +18,11 @@ internal object WasmBinaryFormat {
 @ExperimentalUnsignedTypes
 private class WasmBinaryFormatWriter(
     private val lateIndices: Map<LateIndex, Int>,
+    private val symbolTable: WasmSymbolTable,
     private val outputStream: OutputStream,
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
-    private val symbolTable = WasmSymbolTable()
     private val globalIndices = mutableMapOf<String, Int>()
     private val labelStack = mutableListOf<String?>()
     private var localIndices = mutableMapOf<String, Int>()
@@ -103,7 +103,6 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(functions.size)
         for (function in functions) {
             writeTypeIndex(function.type(), output)
-            symbolTable.addFuncIndex(function.identifier)
         }
     }
 
@@ -283,7 +282,6 @@ private class WasmBinaryFormatWriter(
         when (import.descriptor) {
             is WasmImportDescriptor.Function -> {
                 writeImportDescriptionFunction(import.descriptor, output)
-                symbolTable.addFuncIndex(import.identifier)
             }
         }
     }
