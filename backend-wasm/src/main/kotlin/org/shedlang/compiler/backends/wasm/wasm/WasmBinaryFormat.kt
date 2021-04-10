@@ -328,10 +328,26 @@ private class WasmBinaryFormatWriter(
             sectionOutput.writeString("linking")
             sectionOutput.writeUnsignedLeb128(2) // Version
 
+            if (module.dataSegments.size > 0) {
+                sectionOutput.write8(LinkingSubsectionType.WASM_SEGMENT_INFO.id)
+                writeWithSizePrefix(sectionOutput) { subsectionOutput ->
+                    writeSegmentInfoContents(module, subsectionOutput)
+                }
+            }
+
             sectionOutput.write8(LinkingSubsectionType.WASM_SYMBOL_TABLE.id)
             writeWithSizePrefix(sectionOutput) { subsectionOutput ->
                 writeSymbolTableContents(module, subsectionOutput)
             }
+        }
+    }
+
+    private fun writeSegmentInfoContents(module: WasmModule, output: BufferWriter) {
+        output.writeVecSize(module.dataSegments.size)
+        module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
+            output.writeString("DATA_SEGMENT_$dataSegmentIndex")
+            writeMemoryAlignment(1, output)
+            output.write8(0) // flags
         }
     }
 
@@ -646,6 +662,11 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeMemArg(alignment: Int, offset: Int, output: BufferWriter) {
+        writeMemoryAlignment(alignment, output)
+        output.writeUnsignedLeb128(offset)
+    }
+
+    private fun writeMemoryAlignment(alignment: Int, output: BufferWriter) {
         val alignmentEncoding = when (alignment) {
             1 -> 0
             2 -> 1
@@ -654,7 +675,6 @@ private class WasmBinaryFormatWriter(
             else -> throw CompilerError("unexpected alignment $alignment", NullSource)
         }
         output.writeUnsignedLeb128(alignmentEncoding)
-        output.writeUnsignedLeb128(offset)
     }
 
     private fun constValueToInt(value: WasmConstValue): Int {

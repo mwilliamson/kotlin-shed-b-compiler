@@ -237,6 +237,18 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun dataSegmentIsPresentInLinkingSectionInObjectFile(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            memoryPageCount = 1,
+            dataSegments = listOf(
+                Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun globalsHaveSymbolsInObjectFile(snapshotter: Snapshotter) {
         val module = Wasm.module(
             globals = listOf(
