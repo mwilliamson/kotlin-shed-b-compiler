@@ -267,7 +267,7 @@ class WasmBinaryFormatTests {
     }
 
     @Test
-    fun dataAddressesHaveRelocationEntries(snapshotter: Snapshotter) {
+    fun dataAddressesInCodeSectionHaveRelocationEntries(snapshotter: Snapshotter) {
         val dataSegment = Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
 
         val module = Wasm.module(
@@ -286,6 +286,28 @@ class WasmBinaryFormatTests {
                         Wasm.I.drop,
                     ),
                 ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
+    fun dataAddressesInGlobalSectionHaveRelocationEntries(snapshotter: Snapshotter) {
+        val dataSegment = Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+
+        val module = Wasm.module(
+            memoryPageCount = 1,
+            dataSegments = listOf(
+                dataSegment
+            ),
+            globals = listOf(
+                Wasm.global(
+                    identifier="GLOBAL",
+                    type = Wasm.T.i32,
+                    mutable = false,
+                    value = Wasm.I.i32Const(dataSegment.key),
+                )
             ),
         )
 

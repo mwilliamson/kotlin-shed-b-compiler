@@ -55,6 +55,7 @@ class WasmExampleTests {
             try {
                 temporaryDirectory().use { temporaryDirectory ->
                     val watPath = temporaryDirectory.path.resolve("program.wat")
+                    val objectFilePath = temporaryDirectory.path.resolve("program.o")
                     val wasmPath = temporaryDirectory.path.resolve("program.wasm")
                     val moduleSet = testProgram.load()
                     val image = loadModuleSet(moduleSet)
@@ -65,14 +66,18 @@ class WasmExampleTests {
 
                     watPath.toFile().writeText(compilationResult.wat)
 
-                    wasmPath.toFile().outputStream().use { outputStream ->
-                        WasmBinaryFormat.writeModule(
+                    objectFilePath.toFile().outputStream().use { outputStream ->
+                        WasmBinaryFormat.writeObjectFile(
                             compilationResult.module,
                             outputStream,
                             lateIndices = compilationResult.lateIndices,
                         )
                     }
 
+                    println(run(listOf("wasm-objdump", "-xd", objectFilePath.toString())).stdout)
+                    run(listOf("wasm-ld", objectFilePath.toString(), "-o", wasmPath.toString())).throwOnError()
+
+                    println(run(listOf("wasm-objdump", "-xd", wasmPath.toString())).stdout)
                     val resultWat = executeWasm(watPath, args = testProgram.args)
                     assertThat("stdout was:\n" + resultWat.stdout + "\nstderr was:\n" + resultWat.stderr, resultWat, testProgram.expectedResult)
 

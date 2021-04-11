@@ -476,7 +476,7 @@ private class WasmBinaryFormatWriter(
 
     private fun writeRelocationSection(sectionIndex: Int, relocationEntries: List<RelocationEntry>) {
         writeSection(SectionType.CUSTOM) {
-            output.writeString("reloc.CODE") // TODO: don't assume CODE
+            output.writeString("reloc.$sectionIndex") // TODO: use section name
             output.writeUnsignedLeb128(sectionIndex)
             output.writeVecSize(relocationEntries.size)
             for (relocationEntry in relocationEntries) {
@@ -578,7 +578,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeRelocatableIndex(relocationType: RelocationType, index: Int, symbolIndex: Int, addend: Int? = null) {
-        if (objectFile && currentSectionType == SectionType.CODE) {
+        if (objectFile && (currentSectionType == SectionType.CODE || currentSectionType == SectionType.GLOBAL)) {
             relocationEntries.add(RelocationEntry(
                 sectionIndex = currentSectionIndex,
                 type = relocationType,
