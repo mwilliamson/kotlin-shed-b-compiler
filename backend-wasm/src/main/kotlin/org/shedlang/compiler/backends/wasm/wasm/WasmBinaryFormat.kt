@@ -85,16 +85,6 @@ private class WasmBinaryFormatWriter(
         TABLE(5),
     }
 
-    private enum class SymbolFlags(val id: Int) {
-        BINDING_WEAK(1),
-        BINDING_LOCAL(2),
-        VISIBILITY_HIDDEN(4),
-        UNDEFINED(0x10),
-        EXPORTED(0x20),
-        EXPLICIT_NAME(0x40),
-        NO_STRIP(0x80),
-    }
-
     private enum class RelocationType(val id: Byte) {
         FUNCTION_INDEX_LEB(0),
         TABLE_INDEX_SLEB(1),
@@ -263,7 +253,7 @@ private class WasmBinaryFormatWriter(
         val exports = exportedFunctions.map { function ->
             WasmExport(
                 function.identifier,
-                WasmExportDescriptor.Function(symbolTable.funcIndex(function.identifier)),
+                WasmExportDescriptor.Function(symbolTable.functionIndex(function.identifier)),
             )
         }.toMutableList()
         if (!objectFile && module.memoryPageCount != null) {
@@ -437,27 +427,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeSymbolTableContents(module: WasmModule) {
-        val symbolInfos = mutableListOf<SymbolInfo>()
-        for (import in module.imports) {
-            if (import.descriptor is WasmImportDescriptor.Function) {
-                symbolInfos.add(importedFunctionSymbolInfo(import))
-            }
-        }
-        for (function in module.functions) {
-            symbolInfos.add(definedFunctionSymbolInfo(function))
-        }
-        for (global in module.globals) {
-            symbolInfos.add(SymbolInfo.Global(flags = 0, identifier = global.identifier))
-        }
-        module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
-            symbolInfos.add(SymbolInfo.Data(
-                flags = 0,
-                identifier = "DATA_$dataSegmentIndex",
-                dataSegmentIndex = dataSegmentIndex,
-                offset = 0,
-                size = dataSegment.bytes.size,
-            ))
-        }
+        val symbolInfos = symbolTable.symbolInfos()
 
         output.writeVecSize(symbolInfos.size)
         for (symbolInfo in symbolInfos) {
@@ -465,39 +435,18 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun importedFunctionSymbolInfo(import: WasmImport): SymbolInfo.Function {
-        val flags = SymbolFlags.UNDEFINED.id or SymbolFlags.EXPLICIT_NAME.id
-        return SymbolInfo.Function(identifier = import.identifier, flags = flags)
-    }
-
-    private fun definedFunctionSymbolInfo(function: WasmFunction): SymbolInfo.Function {
-        var flags = 0
-
-        if (function.export) {
-            flags = flags or SymbolFlags.EXPORTED.id
-        }
-
-        return SymbolInfo.Function(identifier = function.identifier, flags = flags)
-    }
-
-    private sealed class SymbolInfo(val flags: Int) {
-        class Data(flags: Int, val identifier: String, val dataSegmentIndex: Int, val offset: Int, val size: Int) : SymbolInfo(flags)
-        class Function(flags: Int, val identifier: String) : SymbolInfo(flags)
-        class Global(flags: Int, val identifier: String) : SymbolInfo(flags)
-    }
-
-    private fun writeSymbolInfo(info: SymbolInfo) {
+    private fun writeSymbolInfo(info: WasmSymbolInfo) {
         when (info) {
-            is SymbolInfo.Data ->
+            is WasmSymbolInfo.Data ->
                 writeDataSymbolInfo(info)
-            is SymbolInfo.Function ->
+            is WasmSymbolInfo.Function ->
                 writeFunctionSymbolInfo(info)
-            is SymbolInfo.Global ->
+            is WasmSymbolInfo.Global ->
                 writeGlobalSymbolInfo(info)
         }
     }
 
-    private fun writeDataSymbolInfo(info: SymbolInfo.Data) {
+    private fun writeDataSymbolInfo(info: WasmSymbolInfo.Data) {
         output.write8(SymbolType.DATA.id)
         output.writeUnsignedLeb128(info.flags)
         output.writeString(info.identifier)
@@ -506,14 +455,14 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(info.size)
     }
 
-    private fun writeFunctionSymbolInfo(info: SymbolInfo.Function) {
+    private fun writeFunctionSymbolInfo(info: WasmSymbolInfo.Function) {
         output.write8(SymbolType.FUNCTION.id)
         output.writeUnsignedLeb128(info.flags)
         writeFuncIndex(info.identifier)
         output.writeString(info.identifier)
     }
 
-    private fun writeGlobalSymbolInfo(info: SymbolInfo.Global) {
+    private fun writeGlobalSymbolInfo(info: WasmSymbolInfo.Global) {
         output.write8(SymbolType.GLOBAL.id)
         output.writeUnsignedLeb128(info.flags)
         writeGlobalIndex(info.identifier)
@@ -567,8 +516,12 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeFuncIndex(name: String) {
-        val funcIndex = symbolTable.funcIndex(name)
-        writeRelocatableIndex(RelocationType.FUNCTION_INDEX_LEB, funcIndex)
+        val funcIndex = symbolTable.functionIndex(name)
+        writeRelocatableIndex(
+            relocationType = RelocationType.FUNCTION_INDEX_LEB,
+            index = funcIndex,
+            symbolIndex = symbolTable.functionIndexToSymbolIndex(funcIndex),
+        )
     }
 
     private fun addGlobalIndex(name: String) {
@@ -577,7 +530,11 @@ private class WasmBinaryFormatWriter(
 
     private fun writeGlobalIndex(name: String) {
         val globalIndex = globalIndex(name)
-        writeRelocatableIndex(RelocationType.GLOBAL_INDEX_LEB, globalIndex)
+        writeRelocatableIndex(
+            relocationType = RelocationType.GLOBAL_INDEX_LEB,
+            index = globalIndex,
+            symbolIndex = symbolTable.globalIndexToSymbolIndex(globalIndex),
+        )
     }
 
     private fun globalIndex(name: String): Int {
@@ -618,20 +575,25 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeTypeIndex(funcType: WasmFuncType) {
-        writeRelocatableIndex(RelocationType.TYPE_INDEX_LEB, typeIndex(funcType))
+        val typeIndex = typeIndex(funcType)
+        writeRelocatableIndex(
+            relocationType = RelocationType.TYPE_INDEX_LEB,
+            index = typeIndex,
+            symbolIndex = typeIndex,
+        )
     }
 
     private fun typeIndex(funcType: WasmFuncType): Int {
         return typeIndices.getValue(funcType)
     }
 
-    private fun writeRelocatableIndex(relocationType: RelocationType, index: Int) {
+    private fun writeRelocatableIndex(relocationType: RelocationType, index: Int, symbolIndex: Int) {
         if (objectFile && currentSectionType == SectionType.CODE) {
             relocationEntries.add(RelocationEntry(
                 sectionIndex = currentSectionIndex,
                 type = relocationType,
                 offset = currentSectionOffset(),
-                index = index,
+                index = symbolIndex,
                 addend = null,
             ))
             output.writePaddedUnsignedLeb128(index)
