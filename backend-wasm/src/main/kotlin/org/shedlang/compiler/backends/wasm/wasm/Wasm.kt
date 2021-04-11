@@ -48,6 +48,18 @@ internal object Wasm {
         descriptor = WasmImportDescriptor.Memory(limits = limits),
     )
 
+    fun importTable(
+        moduleName: String,
+        entityName: String,
+        identifier: String,
+        limits: WasmLimits,
+    ) = WasmImport(
+        moduleName = moduleName,
+        entityName = entityName,
+        identifier = identifier,
+        descriptor = WasmImportDescriptor.Table(limits = limits),
+    )
+
     fun dataSegment(
         offset: Int,
         bytes: ByteArray,
@@ -300,6 +312,7 @@ internal sealed class WasmImportDescriptor {
     }
 
     class Memory(val limits: WasmLimits): WasmImportDescriptor()
+    class Table(val limits: WasmLimits): WasmImportDescriptor()
 }
 
 internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)

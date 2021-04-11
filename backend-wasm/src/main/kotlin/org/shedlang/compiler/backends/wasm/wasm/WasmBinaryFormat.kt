@@ -112,14 +112,26 @@ private class WasmBinaryFormatWriter(
     private fun writeImportsSection(module: WasmModule, output: OutputStream) {
         var imports = module.imports
 
-        if (objectFile && module.memoryPageCount != null) {
-            val memoryImport = Wasm.importMemory(
-                moduleName = "env",
-                entityName = "__linear_memory",
-                identifier = "memory",
-                limits = WasmLimits(module.memoryPageCount, null),
-            )
-            imports = imports + listOf(memoryImport)
+        if (objectFile) {
+            if (module.memoryPageCount != null) {
+                val memoryImport = Wasm.importMemory(
+                    moduleName = "env",
+                    entityName = "__linear_memory",
+                    identifier = "memory",
+                    limits = WasmLimits(module.memoryPageCount, null),
+                )
+                imports = imports + listOf(memoryImport)
+            }
+
+            if (module.table.size > 0) {
+                val tableImport = Wasm.importTable(
+                    moduleName = "env",
+                    entityName = "__indirect_function_table",
+                    identifier = "indirect_function_table",
+                    limits = WasmLimits(module.table.size, null),
+                )
+                imports = imports + listOf(tableImport)
+            }
         }
 
         if (imports.size > 0) {
@@ -152,7 +164,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeTableSection(module: WasmModule ,output: OutputStream) {
-        if (module.table.size > 0) {
+        if (!objectFile && module.table.size > 0) {
             writeSection(SectionType.TABLE, output) { sectionOutput ->
                 writeTableSectionContents(module.table, sectionOutput)
             }
@@ -161,9 +173,7 @@ private class WasmBinaryFormatWriter(
 
     private fun writeTableSectionContents(table: List<String>, output: BufferWriter) {
         output.writeVecSize(1)
-        // reftype
-        output.write8(0x70) // funcref
-        // limits
+        writeReferenceTypeFunction(output)
         writeLimits(table.size, table.size, output)
     }
 
@@ -330,6 +340,9 @@ private class WasmBinaryFormatWriter(
             is WasmImportDescriptor.Memory -> {
                 writeImportDescriptorMemory(import.descriptor, output)
             }
+            is WasmImportDescriptor.Table -> {
+                writeImportDescriptorTable(import.descriptor, output)
+            }
         }
     }
 
@@ -340,6 +353,12 @@ private class WasmBinaryFormatWriter(
 
     private fun writeImportDescriptorMemory(descriptor: WasmImportDescriptor.Memory, output: BufferWriter) {
         output.write8(0x02)
+        writeLimits(descriptor.limits, output)
+    }
+
+    private fun writeImportDescriptorTable(descriptor: WasmImportDescriptor.Table, output: BufferWriter) {
+        output.write8(0x01)
+        writeReferenceTypeFunction(output)
         writeLimits(descriptor.limits, output)
     }
 
@@ -556,6 +575,10 @@ private class WasmBinaryFormatWriter(
             // TODO: Generate type when building module
             throw CompilerError("blocktype of multiple types not supported", NullSource)
         }
+    }
+
+    private fun writeReferenceTypeFunction(output: BufferWriter) {
+        output.write8(0x70)
     }
 
     private fun writeSection(sectionType: SectionType, output: OutputStream, writeContents: (BufferWriter) -> Unit) {

@@ -1,0 +1,31 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Import[1]:
+ - table[0] type=funcref initial=2 <- env.__indirect_function_table
+Function[2]:
+ - func[0] sig=0 <FIRST>
+ - func[1] sig=0 <SECOND>
+Elem[1]:
+ - segment[0] flags=0 table=0 count=2 - init i32=0
+  - elem[0] = func[1] <SECOND>
+  - elem[1] = func[0] <FIRST>
+Code[2]:
+ - func[0] size=2 <FIRST>
+ - func[1] size=2 <SECOND>
+Custom:
+ - name: "linking"
+  - symbol table [count=2]
+   - 0: F <FIRST> func=0 binding=global vis=default
+   - 1: F <SECOND> func=1 binding=global vis=default
+
+Code Disassembly:
+
+000046 func[0] <FIRST>:
+ 000047: 0b                         | end
+000049 func[1] <SECOND>:
+ 00004a: 0b                         | end
