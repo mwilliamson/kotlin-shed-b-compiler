@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
 import org.shedlang.compiler.backends.wasm.LateIndex
+import org.shedlang.compiler.backends.wasm.StaticDataKey
 
 internal object Wasm {
     fun module(
@@ -176,6 +177,10 @@ internal object Wasm {
 
         fun i32Const(value: Int): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32Const(WasmConstValue.I32(value))
+        }
+
+        fun i32Const(value: StaticDataKey): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Const(WasmConstValue.DataIndex(value))
         }
 
         fun i32Const(value: LateIndex): WasmInstruction.Folded {
@@ -521,6 +526,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 }
 
 internal sealed class WasmConstValue {
+    data class DataIndex(val key: StaticDataKey): WasmConstValue()
     data class I32(val value: Int): WasmConstValue()
     data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
     data class TableEntryIndex(val identifier: String): WasmConstValue()

@@ -451,9 +451,9 @@ class WasmBinaryFormatTests {
             val path = temporaryDirectory.path.resolve("module.wasm")
             path.toFile().outputStream().use { outputStream ->
                 if (objectFile) {
-                    WasmBinaryFormat.writeObjectFile(module, outputStream, lateIndices = mapOf())
+                    WasmBinaryFormat.writeObjectFile(module, outputStream, dataAddresses = mapOf(), lateIndices = mapOf())
                 } else {
-                    WasmBinaryFormat.writeModule(module, outputStream, lateIndices = mapOf())
+                    WasmBinaryFormat.writeModule(module, outputStream, dataAddresses = mapOf(), lateIndices = mapOf())
                 }
             }
 

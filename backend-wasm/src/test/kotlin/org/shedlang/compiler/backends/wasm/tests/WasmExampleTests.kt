@@ -66,7 +66,12 @@ class WasmExampleTests {
                     watPath.toFile().writeText(compilationResult.wat)
 
                     wasmPath.toFile().outputStream().use { outputStream ->
-                        WasmBinaryFormat.writeModule(compilationResult.module, outputStream, lateIndices = compilationResult.lateIndices)
+                        WasmBinaryFormat.writeModule(
+                            compilationResult.module,
+                            outputStream,
+                            dataAddresses = compilationResult.dataAddresses,
+                            lateIndices = compilationResult.lateIndices,
+                        )
                     }
 
                     val resultWat = executeWasm(watPath, args = testProgram.args)
