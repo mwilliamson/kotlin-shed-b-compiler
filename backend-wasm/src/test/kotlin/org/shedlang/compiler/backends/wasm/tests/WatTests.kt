@@ -117,7 +117,7 @@ class WatTests {
             S.list(
                 S.symbol("data"),
                 S.list(S.symbol("i32.const"), S.int(8)),
-                S.string("Hello, world!\n"),
+                S.bytes("Hello, world!\n".toByteArray()),
             ),
         ))
     }

@@ -18,6 +18,8 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmValueType
 import org.shedlang.compiler.stackir.divideRoundingUp
 import org.shedlang.compiler.stackir.roundUp
 import org.shedlang.compiler.types.TagValue
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 private var nextLateIndexKey = 1
 
@@ -118,7 +120,8 @@ internal data class WasmGlobalContext private constructor(
             when (data) {
                 is WasmStaticData.I32 -> {
                     if (data.initial != null) {
-                        startInstructions.add(Wasm.I.i32Store(Wasm.I.i32Const(size), data.initial))
+                        val bytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(data.initial).array();
+                        dataSegments.add(WasmDataSegment(offset = size, bytes = bytes))
                     }
                     size += 4
                 }
@@ -201,9 +204,7 @@ internal data class WasmGlobalContext private constructor(
         return copy(functions = functions.add(Pair(function, true)))
     }
 
-    fun addStaticI32(initial: Int) = addStaticI32(initial = Wasm.I.i32Const(initial))
-
-    fun addStaticI32(initial: WasmInstruction.Folded? = null): Pair<WasmGlobalContext, LateIndex> {
+    fun addStaticI32(initial: Int? = null): Pair<WasmGlobalContext, LateIndex> {
         return addStaticData(WasmStaticData.I32(initial = initial))
     }
 
@@ -457,7 +458,7 @@ internal data class WasmFunctionContext(
 }
 
 private sealed class WasmStaticData(val alignment: Int) {
-    data class I32(val initial: WasmInstruction.Folded?): WasmStaticData(alignment = 4)
+    data class I32(val initial: Int?): WasmStaticData(alignment = 4)
     data class Utf8String(val value: String): WasmStaticData(alignment = 1)
     data class Bytes(val size: Int, private val bytesAlignment: Int): WasmStaticData(alignment = bytesAlignment)
 }

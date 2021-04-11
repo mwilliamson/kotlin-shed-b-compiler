@@ -5,6 +5,7 @@ import org.shedlang.compiler.nullableToList
 import java.lang.StringBuilder
 import java.lang.UnsupportedOperationException
 import java.math.BigInteger
+import java.util.*
 
 internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val symbolTable: WasmSymbolTable) {
     companion object {
@@ -118,7 +119,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
         return S.list(
             S.symbol("data"),
             instructionToSExpression(Wasm.I.i32Const(dataSegment.offset)),
-            S.string(dataSegment.bytes.decodeToString()),
+            S.bytes(dataSegment.bytes),
         )
     }
 
@@ -348,6 +349,7 @@ internal object S {
     fun int(value: Int) = SInt(value.toBigInteger())
     fun int(value: Long) = SInt(value.toBigInteger())
     fun string(value: String) = SString(value)
+    fun bytes(value: ByteArray) = SBytes(value)
     fun symbol(value: String) = SSymbol(value)
     fun identifier(value: String) = SIdentifier(value)
     fun list(vararg elements: SExpression) = SList(elements.toList())
@@ -373,6 +375,22 @@ internal data class SString(val value: String): SExpression {
     override fun serialise(): String {
         // TODO: handle escaping
         return "\"${value.replace("\n", "\\n")}\""
+    }
+}
+
+internal data class SBytes(val value: ByteArray): SExpression {
+    override fun serialise(): String {
+        val encodedBytes = value
+            .joinToString("") { byte -> "\\%02X".format(byte) }
+        return "\"$encodedBytes\""
+    }
+
+    override fun equals(other: Any?): Boolean {
+        return other is SBytes && this.value.contentEquals(other.value)
+    }
+
+    override fun hashCode(): Int {
+        return value.contentHashCode()
     }
 }
 
