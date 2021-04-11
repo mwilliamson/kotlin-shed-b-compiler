@@ -9,7 +9,7 @@ jobs:
         strategy:
             matrix:
                 java-version: ["11"]
-                llvm-version: ["7.0.1"]
+                llvm-version: ["11.1.0"]
                 node-version: ["12"]
                 python-version: ["3.6"]
                 wasmtime-version: ["0.21.0"]
