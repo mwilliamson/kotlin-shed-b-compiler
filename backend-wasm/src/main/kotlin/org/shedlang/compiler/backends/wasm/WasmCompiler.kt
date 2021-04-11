@@ -61,6 +61,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     private fun compileStartFunction(mainModule: ModuleName): WasmGlobalContext {
         val moduleType = moduleSet.moduleType(mainModule)!!
         return WasmFunctionContext.initial()
+            .addInstruction(Wasm.I.call("shed_start"))
             .let { compileModuleInitCall(mainModule, context = it) }
             .addInstruction(WasmModules.compileLoad(mainModule))
             .addInstruction(WasmObjects.compileFieldLoad(objectType = moduleType, fieldName = Identifier("main")))

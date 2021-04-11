@@ -19,7 +19,7 @@ Custom:
   - symbol table [count=1]
    - 0: F <FIRST> func=0 binding=global vis=default
 Custom:
- - name: "reloc.CODE"
+ - name: "reloc.4"
   - relocations for section: 4 (Code) [1]
    - R_WASM_TYPE_INDEX_LEB offset=0x00000a(file=0x000060) type=0
 

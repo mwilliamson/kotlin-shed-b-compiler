@@ -17,7 +17,7 @@ Custom:
    - 0: F <FIRST> func=0 binding=global vis=default
    - 1: G <GLOBAL> global=0 binding=global vis=default
 Custom:
- - name: "reloc.CODE"
+ - name: "reloc.3"
   - relocations for section: 3 (Code) [1]
    - R_WASM_GLOBAL_INDEX_LEB offset=0x000008(file=0x000034) symbol=1 <GLOBAL>
 

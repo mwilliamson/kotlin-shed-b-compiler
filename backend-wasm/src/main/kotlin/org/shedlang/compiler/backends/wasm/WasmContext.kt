@@ -169,9 +169,8 @@ internal data class WasmGlobalContext private constructor(
         val functionTypes = (importFunctionTypes + definedFunctionTypes).distinct()
 
         for ((global, value) in globals) {
-            if (value != null) {
-                startInstructions.add(Wasm.I.globalSet(global.identifier, value))
-            }
+            val initialValue = value ?: global.value
+            startInstructions.add(Wasm.I.globalSet(global.identifier, initialValue))
         }
 
         tagValues.values.forEachIndexed { tagValueIndex, lateIndicesForTagValue ->
@@ -182,7 +181,7 @@ internal data class WasmGlobalContext private constructor(
 
         return Bound(
             imports = imports,
-            globals = globals.map { (global, _) -> global },
+            globals = globals.map { (global, _) -> global.copy(mutable = true) },
             pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             dataSegments = dataSegments,
             startInstructions = startInstructions,

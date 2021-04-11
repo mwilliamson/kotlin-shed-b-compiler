@@ -1,0 +1,26 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Import[1]:
+ - memory[0] pages: initial=1 <- env.__linear_memory
+Global[1]:
+ - global[0] i32 mutable=0 <GLOBAL> - init i32=42
+Data[1]:
+ - segment[0] <DATA_SEGMENT_0> memory=0 size=2 - init i32=42
+  - 000002a: 8889                                     ..
+Custom:
+ - name: "linking"
+  - segment info [count=1]
+   - 0: DATA_SEGMENT_0 p2align=0 flags=0
+  - symbol table [count=2]
+   - 0: G <GLOBAL> global=0 binding=global vis=default
+   - 1: D <DATA_0> segment=0 offset=0 size=2 binding=global vis=default
+Custom:
+ - name: "reloc.1"
+  - relocations for section: 1 (Global) [1]
+   - R_WASM_MEMORY_ADDR_SLEB offset=0x000004(file=0x000030) symbol=1 <DATA_0>
+
+Code Disassembly:
+

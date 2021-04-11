@@ -331,7 +331,7 @@ internal sealed class WasmImportDescriptor {
     class Table(val limits: WasmLimits): WasmImportDescriptor()
 }
 
-internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
+internal data class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
 
 private var nextWasmDataSegmentKey = 1
 
