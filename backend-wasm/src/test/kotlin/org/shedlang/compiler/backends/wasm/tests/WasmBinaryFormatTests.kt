@@ -4,10 +4,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.shedlang.compiler.backends.tests.run
 import org.shedlang.compiler.backends.tests.temporaryDirectory
-import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
-import org.shedlang.compiler.backends.wasm.wasm.WasmLocal
-import org.shedlang.compiler.backends.wasm.wasm.WasmModule
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.tests.Snapshotter
 import org.shedlang.compiler.tests.SnapshotterResolver
 import java.nio.file.Path
@@ -435,13 +432,25 @@ class WasmBinaryFormatTests {
                     identifier = "FIRST",
                     params = listOf(),
                     results = listOf(),
-                    body = listOf(),
+                    body = listOf(
+                        Wasm.I.callIndirect(
+                            type = Wasm.T.funcType(params = listOf(), results = listOf()),
+                            tableIndex = Wasm.I.i32Const(WasmConstValue.TableEntryIndex("SECOND")),
+                            args = listOf(),
+                        ),
+                    ),
                 ),
                 Wasm.function(
                     identifier = "SECOND",
                     params = listOf(),
                     results = listOf(),
-                    body = listOf(),
+                    body = listOf(
+                        Wasm.I.callIndirect(
+                            type = Wasm.T.funcType(params = listOf(), results = listOf()),
+                            tableIndex = Wasm.I.i32Const(WasmConstValue.TableEntryIndex("FIRST")),
+                            args = listOf(),
+                        ),
+                    ),
                 ),
             ),
             table = listOf("SECOND", "FIRST"),

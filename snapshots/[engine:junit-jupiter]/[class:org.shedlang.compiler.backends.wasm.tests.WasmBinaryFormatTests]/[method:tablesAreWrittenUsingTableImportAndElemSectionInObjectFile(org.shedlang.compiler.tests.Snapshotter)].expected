@@ -15,17 +15,28 @@ Elem[1]:
   - elem[0] = func[1] <SECOND>
   - elem[1] = func[0] <FIRST>
 Code[2]:
- - func[0] size=2 <FIRST>
- - func[1] size=2 <SECOND>
+ - func[0] size=15 <FIRST>
+ - func[1] size=15 <SECOND>
 Custom:
  - name: "linking"
   - symbol table [count=2]
    - 0: F <FIRST> func=0 binding=global vis=default
    - 1: F <SECOND> func=1 binding=global vis=default
+Custom:
+ - name: "reloc.CODE"
+  - relocations for section: 4 (Code) [4]
+   - R_WASM_TABLE_INDEX_SLEB offset=0x000008(file=0x000060) symbol=1 <SECOND>
+   - R_WASM_TYPE_INDEX_LEB offset=0x00000e(file=0x000066) type=0
+   - R_WASM_TABLE_INDEX_SLEB offset=0x00001c(file=0x000074) symbol=0 <FIRST>
+   - R_WASM_TYPE_INDEX_LEB offset=0x000022(file=0x00007a) type=0
 
 Code Disassembly:
 
 00005e func[0] <FIRST>:
- 00005f: 0b                         | end
-000065 func[1] <SECOND>:
- 000066: 0b                         | end
+ 00005f: 41 80 80 80 80 00          | i32.const 0
+ 000065: 11 80 80 80 80 00 00       | call_indirect 0 0
+ 00006c: 0b                         | end
+000072 func[1] <SECOND>:
+ 000073: 41 81 80 80 80 00          | i32.const 1
+ 000079: 11 80 80 80 80 00 00       | call_indirect 0 0
+ 000080: 0b                         | end

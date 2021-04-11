@@ -770,7 +770,27 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.Folded.I32Const -> {
                 output.write8(0x41)
-                output.writeSignedLeb128(constValueToInt(instruction.value))
+                when (instruction.value) {
+                    is WasmConstValue.I32 ->
+                        output.writeSignedLeb128(instruction.value.value)
+
+                    // TODO: relocate
+                    is WasmConstValue.DataIndex ->
+                        output.writeSignedLeb128(dataAddresses[instruction.value.key]!!)
+
+                    is WasmConstValue.LateIndex ->
+                        output.writeSignedLeb128(lateIndices[instruction.value.ref]!!)
+
+                    is WasmConstValue.TableEntryIndex -> {
+                        val functionIndex = symbolTable.functionIndex(instruction.value.identifier)
+                        val tableEntryIndex = symbolTable.tableEntryIndex(instruction.value.identifier)
+                        writeRelocatableIndex(
+                            RelocationType.TABLE_INDEX_SLEB,
+                            index = tableEntryIndex,
+                            symbolIndex = symbolTable.functionIndexToSymbolIndex(functionIndex),
+                        )
+                    }
+                }
             }
             is WasmInstruction.Folded.LocalGet -> {
                 output.write8(0x20)
@@ -805,17 +825,6 @@ private class WasmBinaryFormatWriter(
             else -> throw CompilerError("unexpected alignment $alignment", NullSource)
         }
         output.writeUnsignedLeb128(alignmentEncoding)
-    }
-
-    private fun constValueToInt(value: WasmConstValue): Int {
-        return when (value) {
-            is WasmConstValue.I32 -> value.value
-            // TODO: relocate
-            is WasmConstValue.DataIndex -> dataAddresses[value.key]!!
-            is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
-            // TODO: relocate
-            is WasmConstValue.TableEntryIndex -> symbolTable.tableEntryIndex(value.identifier)
-        }
     }
 
     private fun writeWithSizePrefix(writeContents: () -> Unit) {
