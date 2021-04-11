@@ -106,6 +106,18 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun dataSegmentWithoutBytesIsInitialisedToZero(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            memoryPageCount = 1,
+            dataSegments = listOf(
+                Wasm.dataSegmentZeroed(offset = 42, size = 8)
+            ),
+        )
+
+        checkModuleSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun functionsAreWrittenToFuncAndCodeSections(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(

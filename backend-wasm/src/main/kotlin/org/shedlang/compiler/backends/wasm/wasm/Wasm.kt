@@ -70,6 +70,15 @@ internal object Wasm {
         bytes = bytes,
     )
 
+    fun dataSegmentZeroed(
+        offset: Int,
+        size: Int,
+    ) = WasmDataSegment(
+        offset = offset,
+        size = size,
+        bytes = null,
+    )
+
     fun function(
         identifier: String,
         export: Boolean = false,

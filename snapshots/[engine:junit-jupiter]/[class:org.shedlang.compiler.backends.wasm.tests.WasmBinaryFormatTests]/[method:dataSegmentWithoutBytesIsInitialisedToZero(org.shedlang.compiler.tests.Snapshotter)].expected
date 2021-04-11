@@ -1,0 +1,15 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Memory[1]:
+ - memory[0] pages: initial=1
+Export[1]:
+ - memory[0] -> "memory"
+Data[1]:
+ - segment[0] memory=0 size=8 - init i32=42
+  - 000002a: 0000 0000 0000 0000                      ........
+
+Code Disassembly:
+
