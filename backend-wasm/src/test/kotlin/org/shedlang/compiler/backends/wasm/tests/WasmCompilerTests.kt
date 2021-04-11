@@ -25,13 +25,13 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         val globalContext1 = if (type == StringType) {
             functionContext.addInstruction(Wasm.I.call(WasmNaming.Runtime.print)).toStaticFunctionInGlobalContext(
-                identifier = "test",
-                exportName = "_start",
+                identifier = WasmNaming.Wasi.start,
+                export = true,
             )
         } else {
             functionContext.toStaticFunctionInGlobalContext(
                 identifier = "test",
-                exportName = "test",
+                export = true,
                 results = listOf(Wasm.T.i32),
             )
         }

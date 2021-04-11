@@ -7,7 +7,6 @@ internal object WasmNaming {
     fun moduleIsInited(moduleName: ModuleName) = "shed_module_is_inited_${serialiseModuleName(moduleName)}"
     fun moduleValue(moduleName: ModuleName) = "shed_module_value_${serialiseModuleName(moduleName)}"
 
-    val funcMainIdentifier = "shed_main"
     val funcStartIdentifier = "shed_start"
 
     private fun serialiseModuleName(moduleName: ModuleName) =
@@ -25,7 +24,8 @@ internal object WasmNaming {
         val print = "shed_print"
     }
 
-    object WasiImports {
+    object Wasi {
+        val start = "_start"
         val fdWrite = "wasi_fd_write"
         val procExit = "wasi_proc_exit"
     }

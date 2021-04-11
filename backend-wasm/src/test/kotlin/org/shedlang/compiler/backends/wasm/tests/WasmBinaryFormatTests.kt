@@ -162,14 +162,14 @@ class WasmBinaryFormatTests {
             functions = listOf(
                 Wasm.function(
                     identifier = "FIRST",
-                    exportName = "EXPORT_FIRST",
+                    export = true,
                     params = listOf(),
                     results = listOf(),
                     body = listOf(),
                 ),
                 Wasm.function(
                     identifier = "SECOND",
-                    exportName = "EXPORT_SECOND",
+                    export = true,
                     params = listOf(),
                     results = listOf(),
                     body = listOf(),
@@ -394,14 +394,14 @@ class WasmBinaryFormatTests {
             functions = listOf(
                 Wasm.function(
                     identifier = "FIRST",
-                    exportName = "FIRST",
+                    export = true,
                     params = listOf(),
                     results = listOf(),
                     body = listOf(),
                 ),
                 Wasm.function(
                     identifier = "SECOND",
-                    exportName = "SECOND",
+                    export = true,
                     params = listOf(),
                     results = listOf(),
                     body = listOf(),

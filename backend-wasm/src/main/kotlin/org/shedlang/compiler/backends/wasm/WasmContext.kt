@@ -411,13 +411,13 @@ internal data class WasmFunctionContext(
 
     fun toStaticFunctionInGlobalContext(
         identifier: String,
-        exportName: String? = null,
+        export: Boolean = false,
         params: List<WasmParam> = listOf(),
         results: List<WasmValueType> = listOf(),
     ): WasmGlobalContext {
         val function = toFunction(
             identifier = identifier,
-            exportName = exportName,
+            export = export,
             params = params,
             results = results,
         )
@@ -427,13 +427,13 @@ internal data class WasmFunctionContext(
 
     fun toFunctionInGlobalContext(
         identifier: String,
-        exportName: String? = null,
+        export: Boolean = false,
         params: List<WasmParam> = listOf(),
         results: List<WasmValueType> = listOf(),
     ): WasmGlobalContext {
         val function = toFunction(
             identifier = identifier,
-            exportName = exportName,
+            export = export,
             params = params,
             results = results,
         )
@@ -443,13 +443,13 @@ internal data class WasmFunctionContext(
 
     private fun toFunction(
         identifier: String,
-        exportName: String? = null,
+        export: Boolean = false,
         params: List<WasmParam> = listOf(),
         results: List<WasmValueType> = listOf(),
     ): WasmFunction {
         return Wasm.function(
             identifier = identifier,
-            exportName = exportName,
+            export = export,
             params = params,
             results = results,
             locals = locals.map { local -> Wasm.local(local, WasmData.genericValueType) },

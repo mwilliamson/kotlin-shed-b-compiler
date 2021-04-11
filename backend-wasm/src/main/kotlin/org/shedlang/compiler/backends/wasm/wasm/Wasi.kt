@@ -10,7 +10,7 @@ internal object Wasi {
         return Wasm.importFunction(
             moduleName = moduleName,
             entityName = "fd_write",
-            identifier = WasmNaming.WasiImports.fdWrite,
+            identifier = WasmNaming.Wasi.fdWrite,
             params = listOf(Wasm.T.i32, Wasm.T.i32, Wasm.T.i32, Wasm.T.i32),
             results = listOf(Wasm.T.i32),
         )
@@ -23,7 +23,7 @@ internal object Wasi {
         nwritten: WasmInstruction.Folded,
     ): WasmInstruction {
         return Wasm.I.call(
-            WasmNaming.WasiImports.fdWrite,
+            WasmNaming.Wasi.fdWrite,
             args = listOf(
                 fileDescriptor,
                 iovs,
@@ -37,13 +37,13 @@ internal object Wasi {
         return Wasm.importFunction(
             moduleName = moduleName,
             entityName = "proc_exit",
-            identifier = WasmNaming.WasiImports.procExit,
+            identifier = WasmNaming.Wasi.procExit,
             params = listOf(Wasm.T.i32),
             results = listOf(),
         )
     }
 
     fun callProcExit(): WasmInstruction {
-        return Wasm.I.call(identifier = WasmNaming.WasiImports.procExit)
+        return Wasm.I.call(identifier = WasmNaming.Wasi.procExit)
     }
 }

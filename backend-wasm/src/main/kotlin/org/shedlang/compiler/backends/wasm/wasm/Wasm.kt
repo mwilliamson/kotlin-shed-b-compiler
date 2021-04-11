@@ -70,14 +70,14 @@ internal object Wasm {
 
     fun function(
         identifier: String,
-        exportName: String? = null,
+        export: Boolean = false,
         params: List<WasmParam> = listOf(),
         locals: List<WasmLocal> = listOf(),
         results: List<WasmValueType> = listOf(),
         body: List<WasmInstruction>,
     ) = WasmFunction(
         identifier = identifier,
-        exportName = exportName,
+        export = export,
         params = params,
         locals = locals,
         results = results,
@@ -321,7 +321,7 @@ internal class WasmDataSegment(val offset: Int, val bytes: ByteArray)
 
 internal class WasmFunction(
     val identifier: String,
-    val exportName: String?,
+    val export: Boolean,
     val params: List<WasmParam>,
     val locals: List<WasmLocal>,
     val results: List<WasmValueType>,

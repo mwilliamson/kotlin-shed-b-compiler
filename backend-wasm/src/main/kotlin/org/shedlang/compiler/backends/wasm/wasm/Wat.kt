@@ -123,10 +123,10 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
     }
 
     fun functionToSExpression(function: WasmFunction): SExpression {
-        val exportExpressions = if (function.exportName == null) {
-            listOf()
+        val exportExpressions = if (function.export) {
+            listOf(S.list(S.symbol("export"), S.string(function.identifier)))
         } else {
-            listOf(S.list(S.symbol("export"), S.string(function.exportName)))
+            listOf()
         }
 
         return S.list(

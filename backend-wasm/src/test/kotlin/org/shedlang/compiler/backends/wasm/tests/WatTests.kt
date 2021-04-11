@@ -170,8 +170,8 @@ class WatTests {
     @Test
     fun funcHasOptionalExport() {
         val func = Wasm.function(
-            identifier = "main",
-            exportName = "_start",
+            identifier = "_start",
+            export = true,
             body = listOf(
                 Wasm.I.drop,
             ),
@@ -182,7 +182,7 @@ class WatTests {
         assertThat(expression, equalTo(
             S.list(
                 S.symbol("func"),
-                S.identifier("main"),
+                S.identifier("_start"),
                 S.list(S.symbol("export"), S.string("_start")),
                 S.list(S.symbol("result")),
                 S.formatBreak,

@@ -59,10 +59,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), context = it) }
             .addInstruction(Wasi.callProcExit())
             .toStaticFunctionInGlobalContext(
-                // TODO: Was WasmNaming.funcMainIdentifier, but changed to be equivalent so export in symbol table works
-                // enforce identifier == exportName?
-                identifier = "_start",
-                exportName = "_start",
+                identifier = WasmNaming.Wasi.start,
+                export = true,
             )
     }
 

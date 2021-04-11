@@ -259,10 +259,10 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeExportSection(module: WasmModule) {
-        val exportedFunctions = module.functions.filter { function -> function.exportName != null }
+        val exportedFunctions = module.functions.filter { function -> function.export }
         val exports = exportedFunctions.map { function ->
             WasmExport(
-                function.exportName!!,
+                function.identifier,
                 WasmExportDescriptor.Function(symbolTable.funcIndex(function.identifier)),
             )
         }.toMutableList()
@@ -473,12 +473,8 @@ private class WasmBinaryFormatWriter(
     private fun definedFunctionSymbolInfo(function: WasmFunction): SymbolInfo.Function {
         var flags = 0
 
-        if (function.exportName != null) {
-            if (function.exportName == function.identifier) {
-                flags = flags or SymbolFlags.EXPORTED.id
-            } else {
-                throw NotImplementedError("expected exportName and identifier to be the same")
-            }
+        if (function.export) {
+            flags = flags or SymbolFlags.EXPORTED.id
         }
 
         return SymbolInfo.Function(identifier = function.identifier, flags = flags)
