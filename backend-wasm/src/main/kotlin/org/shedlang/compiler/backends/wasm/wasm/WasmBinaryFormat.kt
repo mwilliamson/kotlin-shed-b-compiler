@@ -47,6 +47,10 @@ private class WasmBinaryFormatWriter(
     private val labelStack = mutableListOf<String?>()
     private var localIndices = mutableMapOf<String, Int>()
     private val typeIndices = mutableMapOf<WasmFuncType, Int>()
+    private val relocationEntries = mutableListOf<RelocationEntry>()
+    private var currentSectionType: SectionType? = null
+    private var currentSectionIndex = -1
+    private var currentSectionStartPosition = -1
 
     private enum class SectionType(val id: Byte) {
         CUSTOM(0),
@@ -91,6 +95,30 @@ private class WasmBinaryFormatWriter(
         NO_STRIP(0x80),
     }
 
+    private enum class RelocationType(val id: Byte) {
+        FUNCTION_INDEX_LEB(0),
+        TABLE_INDEX_SLEB(1),
+        TABLE_INDEX_I32(2),
+        MEMORY_ADDR_LEB(3),
+        MEMORY_ADDR_SLEB(4),
+        MEMORY_ADDR_I32(5),
+        TYPE_INDEX_LEB(6),
+        GLOBAL_INDEX_LEB(7),
+        FUNCTION_OFFSET_I32(8),
+        SECTION_OFFSET_I32(9),
+        EVENT_INDEX_LEB(10),
+        GLOBAL_INDEX_I32(13),
+        MEMORY_ADDR_LEB64(14),
+        MEMORY_ADDR_SLEB64(15),
+        MEMORY_ADDR_I64(16),
+        MEMORY_ADDR_REL_SLEB64(17),
+        TABLE_INDEX_SLEB64(18),
+        TABLE_INDEX_I64(19),
+        TABLE_NUMBER_LEB(20),
+    }
+
+    private class RelocationEntry(val sectionIndex: Int, val type: RelocationType, val offset: Int, val index: Int, val addend: Int?)
+
     internal fun write(module: WasmModule) {
         output.write(WASM_MAGIC)
         output.write(WASM_VERSION)
@@ -108,6 +136,7 @@ private class WasmBinaryFormatWriter(
 
         if (objectFile) {
             writeLinkingSection(module)
+            writeRelocationSections(module)
         }
     }
 
@@ -495,6 +524,33 @@ private class WasmBinaryFormatWriter(
         output.writeString(info.identifier)
     }
 
+    private fun writeRelocationSections(module: WasmModule) {
+        val relocationsBySectionIndex = relocationEntries.groupBy { relocation -> relocation.sectionIndex }
+        for ((sectionIndex, relocationsInSection) in relocationsBySectionIndex) {
+            writeRelocationSection(sectionIndex, relocationsInSection)
+        }
+    }
+
+    private fun writeRelocationSection(sectionIndex: Int, relocationEntries: List<RelocationEntry>) {
+        writeSection(SectionType.CUSTOM) {
+            output.writeString("reloc.CODE") // TODO: don't assume CODE
+            output.writeUnsignedLeb128(sectionIndex)
+            output.writeVecSize(relocationEntries.size)
+            for (relocationEntry in relocationEntries) {
+                writeRelocationEntry(relocationEntry)
+            }
+        }
+    }
+
+    private fun writeRelocationEntry(relocationEntry: RelocationEntry) {
+        output.write8(relocationEntry.type.id)
+        output.writeUnsignedLeb128(relocationEntry.offset)
+        output.writeUnsignedLeb128(relocationEntry.index)
+        if (relocationEntry.addend != null) {
+            output.writeSignedLeb128(relocationEntry.addend)
+        }
+    }
+
     private fun writeLimits(min: Int) {
         output.write8(0x00)
         output.writeUnsignedLeb128(min)
@@ -515,7 +571,19 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeFuncIndex(name: String) {
-        output.writeUnsignedLeb128(symbolTable.funcIndex(name))
+        val funcIndex = symbolTable.funcIndex(name)
+        if (objectFile && currentSectionType == SectionType.CODE) {
+            relocationEntries.add(RelocationEntry(
+                sectionIndex = currentSectionIndex,
+                type = RelocationType.FUNCTION_INDEX_LEB,
+                offset = currentSectionOffset(),
+                index = funcIndex,
+                addend = null,
+            ))
+            output.writePaddedUnsignedLeb128(funcIndex)
+        } else {
+            output.writeUnsignedLeb128(funcIndex)
+        }
     }
 
     private fun addGlobalIndex(name: String) {
@@ -608,8 +676,17 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeSection(sectionType: SectionType, writeContents: () -> Unit) {
+        currentSectionIndex++
+        currentSectionType = sectionType
         output.write8(sectionType.id)
-        writeWithSizePrefix(writeContents)
+        val writeSize = output.writeSizePlaceholder()
+        currentSectionStartPosition = output.position
+        writeContents()
+        writeSize()
+    }
+
+    private fun currentSectionOffset(): Int {
+        return output.position - currentSectionStartPosition
     }
 
     private fun writeExpression(instructions: List<WasmInstruction>) {
@@ -792,6 +869,9 @@ private class WasmBinaryFormatWriter(
 private class BufferWriter {
     private var buffer = ByteBuffer.allocate(1024)
 
+    val position: Int
+        get() = buffer.position()
+
     fun writeTo(output: OutputStream) {
         buffer.limit(buffer.position())
         buffer.position(0)
@@ -836,6 +916,10 @@ private class BufferWriter {
 
     fun writeUnsignedLeb128(value: Int) {
         write(Leb128Encoding.encodeUnsignedInt32(value))
+    }
+
+    fun writePaddedUnsignedLeb128(value: Int) {
+        write(Leb128Encoding.encodePaddedUnsignedInt32(value))
     }
 
     fun writeSignedLeb128(value: Int) {

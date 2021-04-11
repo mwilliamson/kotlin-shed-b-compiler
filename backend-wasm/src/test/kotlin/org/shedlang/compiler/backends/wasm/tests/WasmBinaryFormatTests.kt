@@ -314,6 +314,27 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun functionIndicesInCodeSectionAreRelocated(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(
+                        Wasm.I.call("FIRST"),
+                    ),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun exportedFunctionsAreWrittenToSymbolSectionWithExportedFlag(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(
