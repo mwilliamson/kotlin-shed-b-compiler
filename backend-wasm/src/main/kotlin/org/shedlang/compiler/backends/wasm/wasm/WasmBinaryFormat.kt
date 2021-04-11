@@ -572,18 +572,7 @@ private class WasmBinaryFormatWriter(
 
     private fun writeFuncIndex(name: String) {
         val funcIndex = symbolTable.funcIndex(name)
-        if (objectFile && currentSectionType == SectionType.CODE) {
-            relocationEntries.add(RelocationEntry(
-                sectionIndex = currentSectionIndex,
-                type = RelocationType.FUNCTION_INDEX_LEB,
-                offset = currentSectionOffset(),
-                index = funcIndex,
-                addend = null,
-            ))
-            output.writePaddedUnsignedLeb128(funcIndex)
-        } else {
-            output.writeUnsignedLeb128(funcIndex)
-        }
+        writeRelocatableIndex(RelocationType.FUNCTION_INDEX_LEB, funcIndex)
     }
 
     private fun addGlobalIndex(name: String) {
@@ -591,7 +580,8 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeGlobalIndex(name: String) {
-        output.writeUnsignedLeb128(globalIndex(name))
+        val globalIndex = globalIndex(name)
+        writeRelocatableIndex(RelocationType.GLOBAL_INDEX_LEB, globalIndex)
     }
 
     private fun globalIndex(name: String): Int {
@@ -637,6 +627,21 @@ private class WasmBinaryFormatWriter(
 
     private fun typeIndex(funcType: WasmFuncType): Int {
         return typeIndices.getValue(funcType)
+    }
+
+    private fun writeRelocatableIndex(relocationType: RelocationType, index: Int) {
+        if (objectFile && currentSectionType == SectionType.CODE) {
+            relocationEntries.add(RelocationEntry(
+                sectionIndex = currentSectionIndex,
+                type = relocationType,
+                offset = currentSectionOffset(),
+                index = index,
+                addend = null,
+            ))
+            output.writePaddedUnsignedLeb128(index)
+        } else {
+            output.writeUnsignedLeb128(index)
+        }
     }
 
     private fun writeFuncType(type: WasmFuncType) {

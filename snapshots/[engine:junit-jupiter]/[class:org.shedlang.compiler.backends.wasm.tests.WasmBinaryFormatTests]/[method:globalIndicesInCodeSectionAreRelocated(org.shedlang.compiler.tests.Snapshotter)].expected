@@ -1,0 +1,29 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Function[1]:
+ - func[0] sig=0 <FIRST>
+Global[1]:
+ - global[0] i32 mutable=0 <GLOBAL> - init i32=0
+Code[1]:
+ - func[0] size=9 <FIRST>
+Custom:
+ - name: "linking"
+  - symbol table [count=2]
+   - 0: F <FIRST> func=0 binding=global vis=default
+   - 1: G <GLOBAL> global=0 binding=global vis=default
+Custom:
+ - name: "reloc.CODE"
+  - relocations for section: 3 (Code) [1]
+   - R_WASM_GLOBAL_INDEX_LEB offset=0x000008(file=0x000034) symbol=0 <FIRST>
+
+Code Disassembly:
+
+000032 func[0] <FIRST>:
+ 000033: 23 80 80 80 80 00          | global.get 0 <GLOBAL>
+ 000039: 1a                         | drop
+ 00003a: 0b                         | end

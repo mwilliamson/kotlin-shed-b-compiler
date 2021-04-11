@@ -335,6 +335,31 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun globalIndicesInCodeSectionAreRelocated(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            globals = listOf(
+                Wasm.global("GLOBAL", mutable = false, type = Wasm.T.i32, value = Wasm.I.i32Const(0))
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(
+                        Wasm.I.globalGet("GLOBAL"),
+                        Wasm.I.drop,
+                    ),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun exportedFunctionsAreWrittenToSymbolSectionWithExportedFlag(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(
