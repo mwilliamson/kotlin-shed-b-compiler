@@ -22,14 +22,14 @@ internal class WasmSymbolTable {
             }
 
             module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
-                symbolTable.addDataAddress(dataSegment.key, dataSegment.offset)
-                symbolTable.addSymbolInfo(WasmSymbolInfo.Data(
+                val symbolInfo = WasmSymbolInfo.Data(
                     flags = 0,
                     identifier = "DATA_$dataSegmentIndex",
                     dataSegmentIndex = dataSegmentIndex,
                     offset = 0,
                     size = dataSegment.size,
-                ))
+                )
+                symbolTable.addDataSegment(dataSegment, symbolInfo)
             }
 
             for (tableEntry in module.table) {
@@ -60,8 +60,9 @@ internal class WasmSymbolTable {
     private val globalIndices = mutableMapOf<String, Int>()
     private val globalSymbolIndices = mutableMapOf<Int, Int>()
     private val tableEntryIndices = mutableMapOf<String, Int>()
-    private val symbolInfos = mutableListOf<WasmSymbolInfo>()
     private val dataAddresses = mutableMapOf<WasmDataSegmentKey, Int>()
+    private val dataSymbolIndices = mutableMapOf<WasmDataSegmentKey, Int>()
+    private val symbolInfos = mutableListOf<WasmSymbolInfo>()
 
     private fun addFunction(name: String, symbolInfo: WasmSymbolInfo.Function) {
         val functionIndex = functionIndices.size
@@ -103,20 +104,23 @@ internal class WasmSymbolTable {
         return tableEntryIndices.getValue(name)
     }
 
-    private fun addSymbolInfo(info: WasmSymbolInfo) {
-        symbolInfos.add(info)
-    }
-
-    fun symbolInfos(): List<WasmSymbolInfo> {
-        return symbolInfos
-    }
-
-    private fun addDataAddress(key: WasmDataSegmentKey, offset: Int) {
-        dataAddresses.add(key, offset)
+    private fun addDataSegment(dataSegment: WasmDataSegment, symbolInfo: WasmSymbolInfo.Data) {
+        dataAddresses.add(dataSegment.key, dataSegment.offset)
+        val symbolIndex = symbolInfos.size
+        dataSymbolIndices.add(dataSegment.key, symbolIndex)
+        symbolInfos.add(symbolInfo)
     }
 
     fun dataAddress(key: WasmDataSegmentKey): Int {
         return dataAddresses.getValue(key)
+    }
+
+    fun dataSymbolIndex(key: WasmDataSegmentKey): Int {
+        return dataSymbolIndices.getValue(key)
+    }
+
+    fun symbolInfos(): List<WasmSymbolInfo> {
+        return symbolInfos
     }
 }
 

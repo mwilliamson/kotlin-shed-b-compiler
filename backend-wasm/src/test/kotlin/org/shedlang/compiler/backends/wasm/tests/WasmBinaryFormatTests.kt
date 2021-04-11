@@ -267,6 +267,32 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun dataAddressesHaveRelocationEntries(snapshotter: Snapshotter) {
+        val dataSegment = Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+
+        val module = Wasm.module(
+            memoryPageCount = 1,
+            dataSegments = listOf(
+                dataSegment
+            ),
+            types = listOf(Wasm.T.funcType(params = listOf(), results = listOf())),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(
+                        Wasm.I.i32Const(dataSegment.key),
+                        Wasm.I.drop,
+                    ),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun globalsHaveSymbolsInObjectFile(snapshotter: Snapshotter) {
         val module = Wasm.module(
             globals = listOf(
@@ -463,18 +489,33 @@ class WasmBinaryFormatTests {
         checkSnapshot(module, snapshotter, objectFile = false)
     }
 
-    private fun checkObjectFileSnapshot(module: WasmModule, snapshotter: Snapshotter) {
+    private fun checkObjectFileSnapshot(
+        module: WasmModule,
+        snapshotter: Snapshotter,
+    ) {
         checkSnapshot(module, snapshotter, objectFile = true)
     }
 
-    private fun checkSnapshot(module: WasmModule, snapshotter: Snapshotter, objectFile: Boolean) {
+    private fun checkSnapshot(
+        module: WasmModule,
+        snapshotter: Snapshotter,
+        objectFile: Boolean,
+    ) {
         temporaryDirectory().use { temporaryDirectory ->
             val path = temporaryDirectory.path.resolve("module.wasm")
             path.toFile().outputStream().use { outputStream ->
                 if (objectFile) {
-                    WasmBinaryFormat.writeObjectFile(module, outputStream, lateIndices = mapOf())
+                    WasmBinaryFormat.writeObjectFile(
+                        module,
+                        outputStream,
+                        lateIndices = mapOf(),
+                    )
                 } else {
-                    WasmBinaryFormat.writeModule(module, outputStream, lateIndices = mapOf())
+                    WasmBinaryFormat.writeModule(
+                        module,
+                        outputStream,
+                        lateIndices = mapOf(),
+                    )
                 }
             }
 

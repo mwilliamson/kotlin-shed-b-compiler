@@ -84,26 +84,26 @@ private class WasmBinaryFormatWriter(
         TABLE(5),
     }
 
-    private enum class RelocationType(val id: Byte) {
-        FUNCTION_INDEX_LEB(0),
-        TABLE_INDEX_SLEB(1),
-        TABLE_INDEX_I32(2),
-        MEMORY_ADDR_LEB(3),
-        MEMORY_ADDR_SLEB(4),
-        MEMORY_ADDR_I32(5),
-        TYPE_INDEX_LEB(6),
-        GLOBAL_INDEX_LEB(7),
-        FUNCTION_OFFSET_I32(8),
-        SECTION_OFFSET_I32(9),
-        EVENT_INDEX_LEB(10),
-        GLOBAL_INDEX_I32(13),
-        MEMORY_ADDR_LEB64(14),
-        MEMORY_ADDR_SLEB64(15),
-        MEMORY_ADDR_I64(16),
-        MEMORY_ADDR_REL_SLEB64(17),
-        TABLE_INDEX_SLEB64(18),
-        TABLE_INDEX_I64(19),
-        TABLE_NUMBER_LEB(20),
+    private enum class RelocationType(val id: Byte, val isSigned: Boolean) {
+        FUNCTION_INDEX_LEB(0, isSigned = false),
+        TABLE_INDEX_SLEB(1, isSigned = true),
+        TABLE_INDEX_I32(2, isSigned = true),
+        MEMORY_ADDR_LEB(3, isSigned = false),
+        MEMORY_ADDR_SLEB(4, isSigned = true),
+        MEMORY_ADDR_I32(5, isSigned = true),
+        TYPE_INDEX_LEB(6, isSigned = false),
+        GLOBAL_INDEX_LEB(7, isSigned = false),
+        FUNCTION_OFFSET_I32(8, isSigned = true),
+        SECTION_OFFSET_I32(9, isSigned = true),
+        EVENT_INDEX_LEB(10, isSigned = false),
+        GLOBAL_INDEX_I32(13, isSigned = true),
+        MEMORY_ADDR_LEB64(14, isSigned = false),
+        MEMORY_ADDR_SLEB64(15, isSigned = true),
+        MEMORY_ADDR_I64(16, isSigned = true),
+        MEMORY_ADDR_REL_SLEB64(17, isSigned = true),
+        TABLE_INDEX_SLEB64(18, isSigned = true),
+        TABLE_INDEX_I64(19, isSigned = true),
+        TABLE_NUMBER_LEB(20, isSigned = false),
     }
 
     private class RelocationEntry(val sectionIndex: Int, val type: RelocationType, val offset: Int, val index: Int, val addend: Int?)
@@ -577,18 +577,26 @@ private class WasmBinaryFormatWriter(
         return typeIndices.getValue(funcType)
     }
 
-    private fun writeRelocatableIndex(relocationType: RelocationType, index: Int, symbolIndex: Int) {
+    private fun writeRelocatableIndex(relocationType: RelocationType, index: Int, symbolIndex: Int, addend: Int? = null) {
         if (objectFile && currentSectionType == SectionType.CODE) {
             relocationEntries.add(RelocationEntry(
                 sectionIndex = currentSectionIndex,
                 type = relocationType,
                 offset = currentSectionOffset(),
                 index = symbolIndex,
-                addend = null,
+                addend = addend,
             ))
-            output.writePaddedUnsignedLeb128(index)
+            if (relocationType.isSigned) {
+                output.writePaddedSignedLeb128(index)
+            } else {
+                output.writePaddedUnsignedLeb128(index)
+            }
         } else {
-            output.writeUnsignedLeb128(index)
+            if (relocationType.isSigned) {
+                output.writeSignedLeb128(index)
+            } else {
+                output.writeUnsignedLeb128(index)
+            }
         }
     }
 
@@ -770,9 +778,14 @@ private class WasmBinaryFormatWriter(
                     is WasmConstValue.I32 ->
                         output.writeSignedLeb128(instruction.value.value)
 
-                    // TODO: relocate
-                    is WasmConstValue.DataIndex ->
-                        output.writeSignedLeb128(symbolTable.dataAddress(instruction.value.key))
+                    is WasmConstValue.DataIndex -> {
+                        writeRelocatableIndex(
+                            RelocationType.MEMORY_ADDR_SLEB,
+                            index = symbolTable.dataAddress(instruction.value.key),
+                            symbolIndex = symbolTable.dataSymbolIndex(instruction.value.key),
+                            addend = 0,
+                        )
+                    }
 
                     is WasmConstValue.LateIndex ->
                         output.writeSignedLeb128(lateIndices[instruction.value.ref]!!)
@@ -889,6 +902,10 @@ private class BufferWriter {
 
     fun writeSignedLeb128(value: Int) {
         write(Leb128Encoding.encodeSignedInt32(value))
+    }
+
+    fun writePaddedSignedLeb128(value: Int) {
+        write(Leb128Encoding.encodePaddedSignedInt32(value))
     }
 
     fun writeSizePlaceholder(): () -> Unit {
