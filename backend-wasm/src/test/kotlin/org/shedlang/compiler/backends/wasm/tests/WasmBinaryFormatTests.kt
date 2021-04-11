@@ -314,6 +314,33 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun exportedFunctionsAreWrittenToSymbolSectionWithExportedFlag(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    exportName = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+                Wasm.function(
+                    identifier = "SECOND",
+                    exportName = "SECOND",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun tablesAreWrittenUsingTableImportAndElemSectionInObjectFile(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(

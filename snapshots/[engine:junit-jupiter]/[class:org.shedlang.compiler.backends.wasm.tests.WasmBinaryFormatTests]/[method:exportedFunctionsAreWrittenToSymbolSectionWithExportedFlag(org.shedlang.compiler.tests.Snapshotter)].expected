@@ -1,0 +1,28 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Function[2]:
+ - func[0] sig=0 <FIRST>
+ - func[1] sig=0 <SECOND>
+Export[2]:
+ - func[0] <FIRST> -> "FIRST"
+ - func[1] <SECOND> -> "SECOND"
+Code[2]:
+ - func[0] size=2 <FIRST>
+ - func[1] size=2 <SECOND>
+Custom:
+ - name: "linking"
+  - symbol table [count=2]
+   - 0: F <FIRST> func=0 exported binding=global vis=default
+   - 1: F <SECOND> func=1 exported binding=global vis=default
+
+Code Disassembly:
+
+00002b func[0] <FIRST>:
+ 00002c: 0b                         | end
+00002e func[1] <SECOND>:
+ 00002f: 0b                         | end

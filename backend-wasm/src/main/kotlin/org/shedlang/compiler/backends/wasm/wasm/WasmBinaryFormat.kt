@@ -74,6 +74,16 @@ private class WasmBinaryFormatWriter(
         TABLE(5),
     }
 
+    private enum class SymbolFlags(val id: Int) {
+        BINDING_WEAK(1),
+        BINDING_LOCAL(2),
+        VISIBILITY_HIDDEN(4),
+        UNDEFINED(0x10),
+        EXPORTED(0x20),
+        EXPLICIT_NAME(0x40),
+        NO_STRIP(0x80),
+    }
+
     internal fun write(module: WasmModule, output: OutputStream) {
         output.write(WASM_MAGIC)
         output.write(WASM_VERSION)
@@ -163,7 +173,7 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeTableSection(module: WasmModule ,output: OutputStream) {
+    private fun writeTableSection(module: WasmModule, output: OutputStream) {
         if (!objectFile && module.table.size > 0) {
             writeSection(SectionType.TABLE, output) { sectionOutput ->
                 writeTableSectionContents(module.table, sectionOutput)
@@ -410,7 +420,6 @@ private class WasmBinaryFormatWriter(
                 dataSegmentIndex = dataSegmentIndex,
                 offset = 0,
                 size = dataSegment.bytes.size,
-
             ))
         }
 
@@ -421,18 +430,28 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun importedFunctionSymbolInfo(import: WasmImport): SymbolInfo.Function {
-        val flags: Byte = 0x10 or 0x40 // WASM_SYM_UNDEFINED | WASM_SYM_EXPLICIT_NAME
+        val flags = SymbolFlags.UNDEFINED.id or SymbolFlags.EXPLICIT_NAME.id
         return SymbolInfo.Function(identifier = import.identifier, flags = flags)
     }
 
     private fun definedFunctionSymbolInfo(function: WasmFunction): SymbolInfo.Function {
-        return SymbolInfo.Function(identifier = function.identifier, flags = 0)
+        var flags = 0
+
+        if (function.exportName != null) {
+            if (function.exportName == function.identifier) {
+                flags = flags or SymbolFlags.EXPORTED.id
+            } else {
+                throw NotImplementedError("expected exportName and identifier to be the same")
+            }
+        }
+
+        return SymbolInfo.Function(identifier = function.identifier, flags = flags)
     }
 
-    private sealed class SymbolInfo(val flags: Byte) {
-        class Data(flags: Byte, val identifier: String, val dataSegmentIndex: Int, val offset: Int, val size: Int): SymbolInfo(flags)
-        class Function(flags: Byte, val identifier: String): SymbolInfo(flags)
-        class Global(flags: Byte, val identifier: String): SymbolInfo(flags)
+    private sealed class SymbolInfo(val flags: Int) {
+        class Data(flags: Int, val identifier: String, val dataSegmentIndex: Int, val offset: Int, val size: Int) : SymbolInfo(flags)
+        class Function(flags: Int, val identifier: String) : SymbolInfo(flags)
+        class Global(flags: Int, val identifier: String) : SymbolInfo(flags)
     }
 
     private fun writeSymbolInfo(info: SymbolInfo, output: BufferWriter) {
@@ -448,7 +467,7 @@ private class WasmBinaryFormatWriter(
 
     private fun writeDataSymbolInfo(info: SymbolInfo.Data, output: BufferWriter) {
         output.write8(SymbolType.DATA.id)
-        output.write8(info.flags)
+        output.writeUnsignedLeb128(info.flags)
         output.writeString(info.identifier)
         output.writeUnsignedLeb128(info.dataSegmentIndex)
         output.writeUnsignedLeb128(info.offset)
@@ -457,14 +476,14 @@ private class WasmBinaryFormatWriter(
 
     private fun writeFunctionSymbolInfo(info: SymbolInfo.Function, output: BufferWriter) {
         output.write8(SymbolType.FUNCTION.id)
-        output.write8(info.flags)
+        output.writeUnsignedLeb128(info.flags)
         writeFuncIndex(info.identifier, output)
         output.writeString(info.identifier)
     }
 
     private fun writeGlobalSymbolInfo(info: SymbolInfo.Global, output: BufferWriter) {
         output.write8(SymbolType.GLOBAL.id)
-        output.write8(info.flags)
+        output.writeUnsignedLeb128(info.flags)
         writeGlobalIndex(info.identifier, output)
         output.writeString(info.identifier)
     }
