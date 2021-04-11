@@ -126,8 +126,15 @@ internal data class WasmGlobalContext private constructor(
                     }
                     Pair(4, bytes)
                 }
-                is WasmStaticData.Utf8String -> {
-                    val bytes = data.value.toByteArray(Charsets.UTF_8)
+                is WasmStaticData.SizedUtf8String -> {
+                    val utf8Bytes = data.value.toByteArray(Charsets.UTF_8)
+
+                    val bytes = ByteBuffer.allocate(4 + utf8Bytes.size)
+                        .order(ByteOrder.LITTLE_ENDIAN)
+                        .putInt(utf8Bytes.size)
+                        .put(utf8Bytes)
+                        .array()
+
                     Pair(bytes.size, bytes)
                 }
                 is WasmStaticData.Bytes -> {
@@ -216,8 +223,8 @@ internal data class WasmGlobalContext private constructor(
         return addStaticData(WasmStaticData.I32(initial = initial))
     }
 
-    fun addStaticUtf8String(value: String): Pair<WasmGlobalContext, WasmDataSegmentKey> {
-        return addStaticData(WasmStaticData.Utf8String(value))
+    fun addSizedStaticUtf8String(value: String): Pair<WasmGlobalContext, WasmDataSegmentKey> {
+        return addStaticData(WasmStaticData.SizedUtf8String(value))
     }
 
     fun addStaticData(size: Int, alignment: Int): Pair<WasmGlobalContext, WasmDataSegmentKey> {
@@ -387,8 +394,8 @@ internal data class WasmFunctionContext(
         return copy(globalContext = newGlobalContext)
     }
 
-    fun addStaticUtf8String(value: String): Pair<WasmFunctionContext, WasmDataSegmentKey> {
-        val (newGlobalContext, index) = globalContext.addStaticUtf8String(value)
+    fun addSizedStaticUtf8String(value: String): Pair<WasmFunctionContext, WasmDataSegmentKey> {
+        val (newGlobalContext, index) = globalContext.addSizedStaticUtf8String(value)
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
@@ -467,6 +474,6 @@ internal data class WasmFunctionContext(
 
 private sealed class WasmStaticData(val alignment: Int) {
     data class I32(val initial: Int?): WasmStaticData(alignment = 4)
-    data class Utf8String(val value: String): WasmStaticData(alignment = 1)
+    data class SizedUtf8String(val value: String): WasmStaticData(alignment = 1)
     data class Bytes(val size: Int, private val bytesAlignment: Int): WasmStaticData(alignment = bytesAlignment)
 }

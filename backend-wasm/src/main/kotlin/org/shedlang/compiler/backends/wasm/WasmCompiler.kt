@@ -332,12 +332,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         return context.addInstruction(Wasm.I.i32Const(value.value.intValueExact()))
                     }
                     is IrString -> {
-                        val bytes = value.value.toByteArray(Charsets.UTF_8)
+                        val (context2, memoryIndex) = context.addSizedStaticUtf8String(value.value)
 
-                        val (context2, memoryIndex) = context.addStaticI32(bytes.size)
-                        val (context3, _) = context2.addStaticUtf8String(value.value)
-
-                        return context3.addInstruction(Wasm.I.i32Const(memoryIndex))
+                        return context2.addInstruction(Wasm.I.i32Const(memoryIndex))
                     }
                     is IrTagValue -> {
                         val (context2, tagValue) = context.compileTagValue(value.value)
