@@ -347,9 +347,11 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeDataSection(module: WasmModule) {
-        if (module.dataSegments.size > 0) {
+        val nonZeroDataSegments = module.dataSegments.filter { dataSegment -> dataSegment.bytes != null }
+
+        if (nonZeroDataSegments.size > 0) {
             writeSection(SectionType.DATA) {
-                writeDataSectionContents(module.dataSegments)
+                writeDataSectionContents(nonZeroDataSegments)
             }
         }
     }
@@ -364,8 +366,8 @@ private class WasmBinaryFormatWriter(
     private fun writeDataSegment(dataSegment: WasmDataSegment) {
         output.write8(0x00)
         writeExpression(listOf(Wasm.I.i32Const(dataSegment.offset)))
-        output.writeVecSize(dataSegment.bytes.size)
-        output.write(dataSegment.bytes)
+        output.writeVecSize(dataSegment.size)
+        output.write(dataSegment.bytes!!)
     }
 
     private fun writeImport(import: WasmImport) {

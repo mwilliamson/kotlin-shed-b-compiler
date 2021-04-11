@@ -27,7 +27,7 @@ internal class WasmSymbolTable {
                     identifier = "DATA_$dataSegmentIndex",
                     dataSegmentIndex = dataSegmentIndex,
                     offset = 0,
-                    size = dataSegment.bytes.size,
+                    size = dataSegment.size,
                 ))
             }
 

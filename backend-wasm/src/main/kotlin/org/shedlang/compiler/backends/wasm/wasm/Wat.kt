@@ -72,7 +72,7 @@ internal class Wat(
             *module.imports.map { import -> importToSExpression(import) }.toTypedArray(),
             *module.globals.map { global -> globalToSExpression(global) }.toTypedArray(),
             *memoryExpression.nullableToList().toTypedArray(),
-            *module.dataSegments.map { dataSegment -> dataSegmentToSExpression(dataSegment) }.toTypedArray(),
+            *module.dataSegments.mapNotNull { dataSegment -> dataSegmentToSExpression(dataSegment) }.toTypedArray(),
             *startExpression.nullableToList().toTypedArray(),
             *module.functions.map { function -> functionToSExpression(function) }.toTypedArray(),
         ).addAll(table)
@@ -124,12 +124,16 @@ internal class Wat(
         )
     }
 
-    fun dataSegmentToSExpression(dataSegment: WasmDataSegment): SExpression {
-        return S.list(
-            S.symbol("data"),
-            instructionToSExpression(Wasm.I.i32Const(dataSegment.offset)),
-            S.bytes(dataSegment.bytes),
-        )
+    fun dataSegmentToSExpression(dataSegment: WasmDataSegment): SExpression? {
+        if (dataSegment.bytes == null) {
+            return null
+        } else {
+            return S.list(
+                S.symbol("data"),
+                instructionToSExpression(Wasm.I.i32Const(dataSegment.offset)),
+                S.bytes(dataSegment.bytes),
+            )
+        }
     }
 
     fun functionToSExpression(function: WasmFunction): SExpression {

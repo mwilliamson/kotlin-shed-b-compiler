@@ -66,6 +66,7 @@ internal object Wasm {
         bytes: ByteArray,
     ) = WasmDataSegment(
         offset = offset,
+        size = bytes.size,
         bytes = bytes,
     )
 
@@ -322,7 +323,7 @@ internal sealed class WasmImportDescriptor {
 
 internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
 
-internal class WasmDataSegment(val offset: Int, val bytes: ByteArray)
+internal class WasmDataSegment(val offset: Int, val size: Int, val bytes: ByteArray?)
 
 internal class WasmFunction(
     val identifier: String,

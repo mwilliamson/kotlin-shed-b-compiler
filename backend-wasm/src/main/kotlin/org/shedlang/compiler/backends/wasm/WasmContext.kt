@@ -125,23 +125,26 @@ internal data class WasmGlobalContext private constructor(
             align(data.alignment)
             dataAddresses[staticDataKey] = size
 
-            when (data) {
+            val dataSegment = when (data) {
                 is WasmStaticData.I32 -> {
-                    if (data.initial != null) {
-                        val bytes = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(data.initial).array();
-                        dataSegments.add(WasmDataSegment(offset = size, bytes = bytes))
+                    val bytes = if (data.initial == null) {
+                        null
+                    } else {
+                         ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(data.initial).array();
+
                     }
-                    size += 4
+                    WasmDataSegment(offset = size, size = 4, bytes = bytes)
                 }
                 is WasmStaticData.Utf8String -> {
                     val bytes = data.value.toByteArray(Charsets.UTF_8)
-                    dataSegments.add(WasmDataSegment(offset = size, bytes = bytes))
-                    size += bytes.size
+                    WasmDataSegment(offset = size, size = bytes.size, bytes = bytes)
                 }
                 is WasmStaticData.Bytes -> {
-                    size += data.size
+                    WasmDataSegment(offset = size, size = data.size, bytes = null)
                 }
             }
+            size += dataSegment.size
+            dataSegments.add(dataSegment)
         }
 
         val boundFunctions = mutableListOf<WasmFunction>()
