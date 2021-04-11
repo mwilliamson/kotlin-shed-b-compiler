@@ -3,17 +3,15 @@ package org.shedlang.compiler.backends.wasm.wasm
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.LateIndex
-import org.shedlang.compiler.backends.wasm.StaticDataKey
 import org.shedlang.compiler.backends.wasm.add
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
-    internal fun writeModule(module: WasmModule, output: OutputStream, dataAddresses: Map<StaticDataKey, Int>, lateIndices: Map<LateIndex, Int>) {
+    internal fun writeModule(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
         val buffer = BufferWriter()
         val writer = WasmBinaryFormatWriter(
-            dataAddresses = dataAddresses,
             lateIndices = lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = false,
@@ -23,10 +21,9 @@ internal object WasmBinaryFormat {
         buffer.writeTo(output)
     }
 
-    internal fun writeObjectFile(module: WasmModule, output: OutputStream, dataAddresses: Map<StaticDataKey, Int>, lateIndices: Map<LateIndex, Int>) {
+    internal fun writeObjectFile(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
         val buffer = BufferWriter()
         val writer = WasmBinaryFormatWriter(
-            dataAddresses = dataAddresses,
             lateIndices = lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = true,
@@ -39,7 +36,6 @@ internal object WasmBinaryFormat {
 
 @ExperimentalUnsignedTypes
 private class WasmBinaryFormatWriter(
-    private val dataAddresses: Map<StaticDataKey, Int>,
     private val lateIndices: Map<LateIndex, Int>,
     private val symbolTable: WasmSymbolTable,
     private val objectFile: Boolean,
@@ -776,7 +772,7 @@ private class WasmBinaryFormatWriter(
 
                     // TODO: relocate
                     is WasmConstValue.DataIndex ->
-                        output.writeSignedLeb128(dataAddresses[instruction.value.key]!!)
+                        output.writeSignedLeb128(symbolTable.dataAddress(instruction.value.key))
 
                     is WasmConstValue.LateIndex ->
                         output.writeSignedLeb128(lateIndices[instruction.value.ref]!!)

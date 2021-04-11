@@ -20,7 +20,6 @@ import java.lang.UnsupportedOperationException
 // TODO: Int implementation should be big integers, not i32
 internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
     class CompilationResult(
-        val dataAddresses: Map<StaticDataKey, Int>,
         val lateIndices: Map<LateIndex, Int>,
         val module: WasmModule,
         val wat: String,
@@ -37,9 +36,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         val module = boundGlobalContext.toModule()
 
-        val wat = Wat.serialise(module, dataAddresses = boundGlobalContext.dataAddresses, lateIndices = boundGlobalContext.lateIndices)
+        val wat = Wat.serialise(module, lateIndices = boundGlobalContext.lateIndices)
         return CompilationResult(
-            dataAddresses = boundGlobalContext.dataAddresses,
             lateIndices = boundGlobalContext.lateIndices,
             module = module,
             wat = wat,

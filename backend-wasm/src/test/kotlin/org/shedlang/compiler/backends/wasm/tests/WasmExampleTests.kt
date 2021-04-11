@@ -69,7 +69,6 @@ class WasmExampleTests {
                         WasmBinaryFormat.writeModule(
                             compilationResult.module,
                             outputStream,
-                            dataAddresses = compilationResult.dataAddresses,
                             lateIndices = compilationResult.lateIndices,
                         )
                     }

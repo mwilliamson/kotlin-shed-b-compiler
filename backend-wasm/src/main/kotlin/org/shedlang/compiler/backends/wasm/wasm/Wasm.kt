@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
 import org.shedlang.compiler.backends.wasm.LateIndex
-import org.shedlang.compiler.backends.wasm.StaticDataKey
 
 internal object Wasm {
     fun module(
@@ -65,6 +64,7 @@ internal object Wasm {
         offset: Int,
         bytes: ByteArray,
     ) = WasmDataSegment(
+        key = nextWasmDataSegmentKey(),
         offset = offset,
         size = bytes.size,
         bytes = bytes,
@@ -74,6 +74,7 @@ internal object Wasm {
         offset: Int,
         size: Int,
     ) = WasmDataSegment(
+        key = nextWasmDataSegmentKey(),
         offset = offset,
         size = size,
         bytes = null,
@@ -189,7 +190,7 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Const(WasmConstValue.I32(value))
         }
 
-        fun i32Const(value: StaticDataKey): WasmInstruction.Folded {
+        fun i32Const(value: WasmDataSegmentKey): WasmInstruction.Folded {
             return WasmInstruction.Folded.I32Const(WasmConstValue.DataIndex(value))
         }
 
@@ -332,7 +333,13 @@ internal sealed class WasmImportDescriptor {
 
 internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
 
-internal class WasmDataSegment(val offset: Int, val size: Int, val bytes: ByteArray?)
+private var nextWasmDataSegmentKey = 1
+
+internal fun nextWasmDataSegmentKey() = WasmDataSegmentKey(value = nextWasmDataSegmentKey++)
+
+internal data class WasmDataSegmentKey(private val value: Int)
+
+internal class WasmDataSegment(val key: WasmDataSegmentKey, val offset: Int, val size: Int, val bytes: ByteArray?)
 
 internal class WasmFunction(
     val identifier: String,
@@ -536,7 +543,7 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 }
 
 internal sealed class WasmConstValue {
-    data class DataIndex(val key: StaticDataKey): WasmConstValue()
+    data class DataIndex(val key: WasmDataSegmentKey): WasmConstValue()
     data class I32(val value: Int): WasmConstValue()
     data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
     data class TableEntryIndex(val identifier: String): WasmConstValue()

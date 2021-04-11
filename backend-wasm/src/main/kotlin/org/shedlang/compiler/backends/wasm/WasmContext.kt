@@ -27,16 +27,10 @@ private fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
 
 internal data class LateIndex(private val key: Int)
 
-private var nextStaticDataKey = 1
-
-private fun nextStaticDataKey() = StaticDataKey(value = nextStaticDataKey++)
-
-internal data class StaticDataKey(private val value: Int)
-
 internal data class WasmGlobalContext private constructor(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
     private val functions: PersistentList<Pair<WasmFunction, Boolean>>,
-    private val staticData: PersistentList<Pair<StaticDataKey, WasmStaticData>>,
+    private val staticData: PersistentList<Pair<WasmDataSegmentKey, WasmStaticData>>,
     private val moduleNames: PersistentSet<ModuleName>,
     private val dependencies: PersistentSet<ModuleName>,
     private val tagValues: PersistentMap<TagValue, Set<LateIndex>>,
@@ -84,7 +78,6 @@ internal data class WasmGlobalContext private constructor(
         private val table: List<String>,
         private val types: List<WasmFuncType>,
         internal val lateIndices: Map<LateIndex, Int>,
-        internal val dataAddresses: Map<StaticDataKey, Int>,
     ) {
         fun toModule(): WasmModule {
             return Wasm.module(
@@ -115,7 +108,6 @@ internal data class WasmGlobalContext private constructor(
         val dataSegments = mutableListOf<WasmDataSegment>()
         val startInstructions = mutableListOf<WasmInstruction>()
         val lateIndices = mutableMapOf<LateIndex, Int>()
-        val dataAddresses = mutableMapOf<StaticDataKey, Int>()
 
         fun align(alignment: Int) {
             size = roundUp(size, alignment)
@@ -123,9 +115,8 @@ internal data class WasmGlobalContext private constructor(
 
         for ((staticDataKey, data) in staticData) {
             align(data.alignment)
-            dataAddresses[staticDataKey] = size
 
-            val dataSegment = when (data) {
+            val (dataSegmentSize, dataSegmentBytes) = when (data) {
                 is WasmStaticData.I32 -> {
                     val bytes = if (data.initial == null) {
                         null
@@ -133,16 +124,22 @@ internal data class WasmGlobalContext private constructor(
                          ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putInt(data.initial).array();
 
                     }
-                    WasmDataSegment(offset = size, size = 4, bytes = bytes)
+                    Pair(4, bytes)
                 }
                 is WasmStaticData.Utf8String -> {
                     val bytes = data.value.toByteArray(Charsets.UTF_8)
-                    WasmDataSegment(offset = size, size = bytes.size, bytes = bytes)
+                    Pair(bytes.size, bytes)
                 }
                 is WasmStaticData.Bytes -> {
-                    WasmDataSegment(offset = size, size = data.size, bytes = null)
+                    Pair(data.size, null)
                 }
             }
+            val dataSegment = WasmDataSegment(
+                key = staticDataKey,
+                offset = size,
+                size = dataSegmentSize,
+                bytes = dataSegmentBytes,
+            )
             size += dataSegment.size
             dataSegments.add(dataSegment)
         }
@@ -186,7 +183,6 @@ internal data class WasmGlobalContext private constructor(
             table = table,
             types = functionTypes,
             lateIndices = lateIndices,
-            dataAddresses = dataAddresses,
         )
     }
 
@@ -216,20 +212,20 @@ internal data class WasmGlobalContext private constructor(
         return copy(functions = functions.add(Pair(function, true)))
     }
 
-    fun addStaticI32(initial: Int? = null): Pair<WasmGlobalContext, StaticDataKey> {
+    fun addStaticI32(initial: Int? = null): Pair<WasmGlobalContext, WasmDataSegmentKey> {
         return addStaticData(WasmStaticData.I32(initial = initial))
     }
 
-    fun addStaticUtf8String(value: String): Pair<WasmGlobalContext, StaticDataKey> {
+    fun addStaticUtf8String(value: String): Pair<WasmGlobalContext, WasmDataSegmentKey> {
         return addStaticData(WasmStaticData.Utf8String(value))
     }
 
-    fun addStaticData(size: Int, alignment: Int): Pair<WasmGlobalContext, StaticDataKey> {
+    fun addStaticData(size: Int, alignment: Int): Pair<WasmGlobalContext, WasmDataSegmentKey> {
         return addStaticData(WasmStaticData.Bytes(size = size, bytesAlignment = alignment))
     }
 
-    private fun addStaticData(data: WasmStaticData): Pair<WasmGlobalContext, StaticDataKey> {
-        val ref = nextStaticDataKey()
+    private fun addStaticData(data: WasmStaticData): Pair<WasmGlobalContext, WasmDataSegmentKey> {
+        val ref = nextWasmDataSegmentKey()
         val newContext = copy(
             staticData = staticData.add(Pair(ref, data)),
         )
@@ -391,17 +387,17 @@ internal data class WasmFunctionContext(
         return copy(globalContext = newGlobalContext)
     }
 
-    fun addStaticUtf8String(value: String): Pair<WasmFunctionContext, StaticDataKey> {
+    fun addStaticUtf8String(value: String): Pair<WasmFunctionContext, WasmDataSegmentKey> {
         val (newGlobalContext, index) = globalContext.addStaticUtf8String(value)
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
-    fun addStaticI32(value: Int): Pair<WasmFunctionContext, StaticDataKey> {
+    fun addStaticI32(value: Int): Pair<WasmFunctionContext, WasmDataSegmentKey> {
         val (newGlobalContext, index) = globalContext.addStaticI32(value)
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
-    fun addStaticData(size: Int, alignment: Int): Pair<WasmFunctionContext, StaticDataKey> {
+    fun addStaticData(size: Int, alignment: Int): Pair<WasmFunctionContext, WasmDataSegmentKey> {
         val (newGlobalContext, index) = globalContext.addStaticData(size = size, alignment = alignment)
         return Pair(copy(globalContext = newGlobalContext), index)
     }

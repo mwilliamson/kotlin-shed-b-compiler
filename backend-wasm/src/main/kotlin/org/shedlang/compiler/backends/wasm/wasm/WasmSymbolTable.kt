@@ -22,6 +22,7 @@ internal class WasmSymbolTable {
             }
 
             module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
+                symbolTable.addDataAddress(dataSegment.key, dataSegment.offset)
                 symbolTable.addSymbolInfo(WasmSymbolInfo.Data(
                     flags = 0,
                     identifier = "DATA_$dataSegmentIndex",
@@ -60,6 +61,7 @@ internal class WasmSymbolTable {
     private val globalSymbolIndices = mutableMapOf<Int, Int>()
     private val tableEntryIndices = mutableMapOf<String, Int>()
     private val symbolInfos = mutableListOf<WasmSymbolInfo>()
+    private val dataAddresses = mutableMapOf<WasmDataSegmentKey, Int>()
 
     private fun addFunction(name: String, symbolInfo: WasmSymbolInfo.Function) {
         val functionIndex = functionIndices.size
@@ -107,6 +109,14 @@ internal class WasmSymbolTable {
 
     fun symbolInfos(): List<WasmSymbolInfo> {
         return symbolInfos
+    }
+
+    private fun addDataAddress(key: WasmDataSegmentKey, offset: Int) {
+        dataAddresses.add(key, offset)
+    }
+
+    fun dataAddress(key: WasmDataSegmentKey): Int {
+        return dataAddresses.getValue(key)
     }
 }
 
