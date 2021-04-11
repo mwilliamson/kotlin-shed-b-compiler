@@ -622,7 +622,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeTypeIndex(funcType: WasmFuncType) {
-        output.writeUnsignedLeb128(typeIndex(funcType))
+        writeRelocatableIndex(RelocationType.TYPE_INDEX_LEB, typeIndex(funcType))
     }
 
     private fun typeIndex(funcType: WasmFuncType): Int {

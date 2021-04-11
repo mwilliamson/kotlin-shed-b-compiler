@@ -1,0 +1,31 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Import[1]:
+ - table[0] type=funcref initial=1 <- env.__indirect_function_table
+Function[1]:
+ - func[0] sig=0 <FIRST>
+Elem[1]:
+ - segment[0] flags=0 table=0 count=1 - init i32=0
+  - elem[0] = func[0] <FIRST>
+Code[1]:
+ - func[0] size=11 <FIRST>
+Custom:
+ - name: "linking"
+  - symbol table [count=1]
+   - 0: F <FIRST> func=0 binding=global vis=default
+Custom:
+ - name: "reloc.CODE"
+  - relocations for section: 4 (Code) [1]
+   - R_WASM_TYPE_INDEX_LEB offset=0x00000a(file=0x000060) type=0
+
+Code Disassembly:
+
+00005c func[0] <FIRST>:
+ 00005d: 41 00                      | i32.const 0
+ 00005f: 11 80 80 80 80 00 00       | call_indirect 0 0
+ 000066: 0b                         | end

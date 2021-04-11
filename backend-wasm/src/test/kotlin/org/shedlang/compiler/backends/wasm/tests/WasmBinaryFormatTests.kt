@@ -360,6 +360,32 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun typeIndicesInCodeSectionAreRelocated(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            table = listOf("FIRST"),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(
+                        Wasm.I.callIndirect(
+                            type = Wasm.T.funcType(params = listOf(), results = listOf()),
+                            tableIndex = Wasm.I.i32Const(0),
+                            args = listOf(),
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun exportedFunctionsAreWrittenToSymbolSectionWithExportedFlag(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(
