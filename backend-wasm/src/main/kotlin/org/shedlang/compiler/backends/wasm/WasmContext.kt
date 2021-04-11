@@ -112,9 +112,7 @@ internal data class WasmGlobalContext private constructor(
         }
 
         for ((lateIndex, data) in staticData) {
-            if (data.alignment != null) {
-                align(data.alignment)
-            }
+            align(data.alignment)
             lateIndices[lateIndex] = size
 
             when (data) {
@@ -458,8 +456,8 @@ internal data class WasmFunctionContext(
     }
 }
 
-private sealed class WasmStaticData(val alignment: Int?) {
+private sealed class WasmStaticData(val alignment: Int) {
     data class I32(val initial: WasmInstruction.Folded?): WasmStaticData(alignment = 4)
-    data class Utf8String(val value: String): WasmStaticData(alignment = null)
+    data class Utf8String(val value: String): WasmStaticData(alignment = 1)
     data class Bytes(val size: Int, private val bytesAlignment: Int): WasmStaticData(alignment = bytesAlignment)
 }
