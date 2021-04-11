@@ -20,7 +20,7 @@ Code[2]:
 
 Code Disassembly:
 
-000028 func[0]:
- 000029: 0b                         | end
-00002b func[1]:
- 00002c: 0b                         | end
+000040 func[0]:
+ 000041: 0b                         | end
+000047 func[1]:
+ 000048: 0b                         | end

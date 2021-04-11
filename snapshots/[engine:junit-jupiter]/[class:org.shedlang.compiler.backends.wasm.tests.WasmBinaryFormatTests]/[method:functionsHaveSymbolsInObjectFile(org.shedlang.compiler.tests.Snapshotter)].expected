@@ -22,7 +22,7 @@ Custom:
 
 Code Disassembly:
 
-00002a func[1] <FIRST>:
- 00002b: 0b                         | end
-00002d func[2] <SECOND>:
- 00002e: 0b                         | end
+00003e func[1] <FIRST>:
+ 00003f: 0b                         | end
+000045 func[2] <SECOND>:
+ 000046: 0b                         | end

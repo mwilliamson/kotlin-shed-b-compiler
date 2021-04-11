@@ -17,7 +17,7 @@ Code[2]:
 
 Code Disassembly:
 
-000039 func[0] <EXPORT_FIRST>:
- 00003a: 0b                         | end
-00003c func[1] <EXPORT_SECOND>:
- 00003d: 0b                         | end
+00004d func[0] <EXPORT_FIRST>:
+ 00004e: 0b                         | end
+000054 func[1] <EXPORT_SECOND>:
+ 000055: 0b                         | end

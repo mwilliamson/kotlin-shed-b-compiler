@@ -12,6 +12,6 @@ Code[1]:
 
 Code Disassembly:
 
-000017 func[0]:
- 000018: 01 7f                      | local[0] type=i32
- 00001a: 0b                         | end
+000027 func[0]:
+ 000028: 01 7f                      | local[0] type=i32
+ 00002a: 0b                         | end

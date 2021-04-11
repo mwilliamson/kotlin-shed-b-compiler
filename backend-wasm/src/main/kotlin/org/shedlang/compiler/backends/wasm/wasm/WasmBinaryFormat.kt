@@ -10,21 +10,27 @@ import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
     internal fun writeModule(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+        val buffer = BufferWriter()
         val writer = WasmBinaryFormatWriter(
             lateIndices = lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = false,
+            output = buffer,
         )
-        writer.write(module, output)
+        writer.write(module)
+        buffer.writeTo(output)
     }
 
     internal fun writeObjectFile(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+        val buffer = BufferWriter()
         val writer = WasmBinaryFormatWriter(
             lateIndices = lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = true,
+            output = buffer,
         )
-        writer.write(module, output)
+        writer.write(module)
+        buffer.writeTo(output)
     }
 }
 
@@ -33,6 +39,7 @@ private class WasmBinaryFormatWriter(
     private val lateIndices: Map<LateIndex, Int>,
     private val symbolTable: WasmSymbolTable,
     private val objectFile: Boolean,
+    private val output: BufferWriter,
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
@@ -84,42 +91,42 @@ private class WasmBinaryFormatWriter(
         NO_STRIP(0x80),
     }
 
-    internal fun write(module: WasmModule, output: OutputStream) {
+    internal fun write(module: WasmModule) {
         output.write(WASM_MAGIC)
         output.write(WASM_VERSION)
-        writeTypesSection(module, output)
-        writeImportsSection(module, output)
-        writeFunctionsSection(module, output)
-        writeTableSection(module, output)
-        writeMemorySection(module, output)
-        writeGlobalsSection(module, output)
-        writeExportSection(module, output)
-        writeStartSection(module, output)
-        writeElementSection(module, output)
-        writeCodeSection(module, output)
-        writeDataSection(module, output)
+        writeTypesSection(module)
+        writeImportsSection(module)
+        writeFunctionsSection(module)
+        writeTableSection(module)
+        writeMemorySection(module)
+        writeGlobalsSection(module)
+        writeExportSection(module)
+        writeStartSection(module)
+        writeElementSection(module)
+        writeCodeSection(module)
+        writeDataSection(module)
 
         if (objectFile) {
-            writeLinkingSection(module, output)
+            writeLinkingSection(module)
         }
     }
 
-    private fun writeTypesSection(module: WasmModule, output: OutputStream) {
+    private fun writeTypesSection(module: WasmModule) {
         if (module.types.size > 0) {
-            writeSection(SectionType.TYPE, output) { sectionOutput ->
-                writeTypesSectionContents(module.types, sectionOutput)
+            writeSection(SectionType.TYPE) {
+                writeTypesSectionContents(module.types)
             }
         }
     }
 
-    private fun writeTypesSectionContents(types: List<WasmFuncType>, output: BufferWriter) {
+    private fun writeTypesSectionContents(types: List<WasmFuncType>) {
         output.writeVecSize(types.size)
         for (type in types) {
-            writeFuncType(type, output)
+            writeFuncType(type)
         }
     }
 
-    private fun writeImportsSection(module: WasmModule, output: OutputStream) {
+    private fun writeImportsSection(module: WasmModule) {
         var imports = module.imports
 
         if (objectFile) {
@@ -145,84 +152,84 @@ private class WasmBinaryFormatWriter(
         }
 
         if (imports.size > 0) {
-            writeSection(SectionType.IMPORT, output) { sectionOutput ->
-                writeImportsSectionContents(imports, sectionOutput)
+            writeSection(SectionType.IMPORT) {
+                writeImportsSectionContents(imports)
             }
         }
     }
 
-    private fun writeImportsSectionContents(imports: List<WasmImport>, output: BufferWriter) {
+    private fun writeImportsSectionContents(imports: List<WasmImport>) {
         output.writeVecSize(imports.size)
         for (import in imports) {
-            writeImport(import, output)
+            writeImport(import)
         }
     }
 
-    private fun writeFunctionsSection(module: WasmModule, output: OutputStream) {
+    private fun writeFunctionsSection(module: WasmModule) {
         if (module.functions.size > 0) {
-            writeSection(SectionType.FUNCTION, output) { sectionOutput ->
-                writeFunctionsSectionContents(module.functions, sectionOutput)
+            writeSection(SectionType.FUNCTION) {
+                writeFunctionsSectionContents(module.functions)
             }
         }
     }
 
-    private fun writeFunctionsSectionContents(functions: List<WasmFunction>, output: BufferWriter) {
+    private fun writeFunctionsSectionContents(functions: List<WasmFunction>) {
         output.writeVecSize(functions.size)
         for (function in functions) {
-            writeTypeIndex(function.type(), output)
+            writeTypeIndex(function.type())
         }
     }
 
-    private fun writeTableSection(module: WasmModule, output: OutputStream) {
+    private fun writeTableSection(module: WasmModule) {
         if (!objectFile && module.table.size > 0) {
-            writeSection(SectionType.TABLE, output) { sectionOutput ->
-                writeTableSectionContents(module.table, sectionOutput)
+            writeSection(SectionType.TABLE) {
+                writeTableSectionContents(module.table)
             }
         }
     }
 
-    private fun writeTableSectionContents(table: List<String>, output: BufferWriter) {
+    private fun writeTableSectionContents(table: List<String>) {
         output.writeVecSize(1)
-        writeReferenceTypeFunction(output)
-        writeLimits(table.size, table.size, output)
+        writeReferenceTypeFunction()
+        writeLimits(table.size, table.size)
     }
 
-    private fun writeMemorySection(module: WasmModule, output: OutputStream) {
+    private fun writeMemorySection(module: WasmModule) {
         if (!objectFile && module.memoryPageCount != null) {
-            writeSection(SectionType.MEMORY, output) { sectionOutput ->
-                writeMemorySectionContents(module.memoryPageCount, sectionOutput)
+            writeSection(SectionType.MEMORY) {
+                writeMemorySectionContents(module.memoryPageCount)
             }
         }
     }
 
-    private fun writeMemorySectionContents(memoryPageCount: Int, output: BufferWriter) {
+    private fun writeMemorySectionContents(memoryPageCount: Int) {
         output.writeVecSize(1)
-        writeLimits(memoryPageCount, output)
+        writeLimits(memoryPageCount)
     }
 
-    private fun writeGlobalsSection(module: WasmModule, output: OutputStream) {
+    private fun writeGlobalsSection(module: WasmModule) {
         if (module.globals.size > 0) {
-            writeSection(SectionType.GLOBAL, output) { sectionOutput ->
-                writeGlobalsSectionContents(module.globals, sectionOutput)
+            writeSection(SectionType.GLOBAL) {
+                writeGlobalsSectionContents(module.globals)
             }
         }
     }
 
-    private fun writeGlobalsSectionContents(globals: List<WasmGlobal>, output: BufferWriter) {
+    private fun writeGlobalsSectionContents(globals: List<WasmGlobal>) {
         output.writeVecSize(globals.size)
         for (global in globals) {
-            writeGlobal(global, output)
+            writeGlobal(global)
             addGlobalIndex(global.identifier)
         }
     }
 
-    private fun writeGlobal(global: WasmGlobal, output: BufferWriter) {
-        writeValueType(global.type, output)
+    private fun writeGlobal(global: WasmGlobal) {
+        writeValueType(global.type)
         output.write8(if (global.mutable) 0x01 else 0x00)
-        writeExpression(listOf(global.value), output)
+        writeExpression(listOf(global.value))
     }
 
-    private fun writeExportSection(module: WasmModule, output: OutputStream) {
+    private fun writeExportSection(module: WasmModule) {
         val exportedFunctions = module.functions.filter { function -> function.exportName != null }
         val exports = exportedFunctions.map { function ->
             WasmExport(
@@ -234,13 +241,13 @@ private class WasmBinaryFormatWriter(
             exports.add(WasmExport("memory", WasmExportDescriptor.Memory(0)))
         }
         if (exports.size > 0) {
-            writeSection(SectionType.EXPORT, output) { sectionOutput ->
-                writeExportSectionContents(exports, sectionOutput)
+            writeSection(SectionType.EXPORT) {
+                writeExportSectionContents(exports)
             }
         }
     }
 
-    private fun writeExportSectionContents(exports: List<WasmExport>, output: BufferWriter) {
+    private fun writeExportSectionContents(exports: List<WasmExport>) {
         output.writeVecSize(exports.size)
         for (export in exports) {
             output.writeString(export.name)
@@ -257,54 +264,54 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeStartSection(module: WasmModule, output: OutputStream) {
+    private fun writeStartSection(module: WasmModule) {
         if (module.start != null) {
-            writeSection(SectionType.START, output) { sectionOutput ->
-                writeFuncIndex(module.start, sectionOutput)
+            writeSection(SectionType.START) {
+                writeFuncIndex(module.start)
             }
         }
     }
 
-    private fun writeElementSection(module: WasmModule, output: OutputStream) {
+    private fun writeElementSection(module: WasmModule) {
         if (module.table.size > 0) {
-            writeSection(SectionType.ELEMENT, output) { sectionOutput ->
-                writeElementSectionContents(module.table, sectionOutput)
+            writeSection(SectionType.ELEMENT) {
+                writeElementSectionContents(module.table)
             }
         }
     }
 
-    private fun writeElementSectionContents(table: List<String>, output: BufferWriter) {
+    private fun writeElementSectionContents(table: List<String>) {
         output.writeVecSize(1)
         output.write8(0x00)
-        writeExpression(listOf(Wasm.I.i32Const(0)), output)
+        writeExpression(listOf(Wasm.I.i32Const(0)))
         output.writeVecSize(table.size)
         for (name in table) {
-            writeFuncIndex(name, output)
+            writeFuncIndex(name)
         }
     }
 
-    private fun writeCodeSection(module: WasmModule, output: OutputStream) {
+    private fun writeCodeSection(module: WasmModule) {
         if (module.functions.size > 0) {
-            writeSection(SectionType.CODE, output) { sectionOutput ->
-                writeCodeSectionContents(module.functions, sectionOutput)
+            writeSection(SectionType.CODE) {
+                writeCodeSectionContents(module.functions)
             }
         }
     }
 
-    private fun writeCodeSectionContents(functions: List<WasmFunction>, output: BufferWriter) {
+    private fun writeCodeSectionContents(functions: List<WasmFunction>) {
         output.writeVecSize(functions.size)
         for (function in functions) {
-            writeFunction(function, output)
+            writeFunction(function)
         }
     }
 
-    private fun writeFunction(function: WasmFunction, output: BufferWriter) {
-        writeWithSizePrefix(output) { functionCodeOutput ->
-            writeFunctionCode(function, functionCodeOutput)
+    private fun writeFunction(function: WasmFunction) {
+        writeWithSizePrefix {
+            writeFunctionCode(function)
         }
     }
 
-    private fun writeFunctionCode(function: WasmFunction, output: BufferWriter) {
+    private fun writeFunctionCode(function: WasmFunction) {
         localIndices = mutableMapOf()
         for (param in function.params) {
             addLocalIndex(param.identifier)
@@ -312,95 +319,95 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(function.locals.size)
         for (local in function.locals) {
             output.writeUnsignedLeb128(1)
-            writeValueType(local.type, output)
+            writeValueType(local.type)
             addLocalIndex(local.identifier)
         }
-        writeExpression(function.body, output)
+        writeExpression(function.body)
     }
 
-    private fun writeDataSection(module: WasmModule, output: OutputStream) {
+    private fun writeDataSection(module: WasmModule) {
         if (module.dataSegments.size > 0) {
-            writeSection(SectionType.DATA, output) { sectionOutput ->
-                writeDataSectionContents(module.dataSegments, sectionOutput)
+            writeSection(SectionType.DATA) {
+                writeDataSectionContents(module.dataSegments)
             }
         }
     }
 
-    private fun writeDataSectionContents(dataSegments: List<WasmDataSegment>, output: BufferWriter) {
+    private fun writeDataSectionContents(dataSegments: List<WasmDataSegment>) {
         output.writeVecSize(dataSegments.size)
         for (dataSegment in dataSegments) {
-            writeDataSegment(dataSegment, output)
+            writeDataSegment(dataSegment)
         }
     }
 
-    private fun writeDataSegment(dataSegment: WasmDataSegment, output: BufferWriter) {
+    private fun writeDataSegment(dataSegment: WasmDataSegment) {
         output.write8(0x00)
-        writeExpression(listOf(Wasm.I.i32Const(dataSegment.offset)), output)
+        writeExpression(listOf(Wasm.I.i32Const(dataSegment.offset)))
         output.writeVecSize(dataSegment.bytes.size)
         output.write(dataSegment.bytes)
     }
 
-    private fun writeImport(import: WasmImport, output: BufferWriter) {
+    private fun writeImport(import: WasmImport) {
         output.writeString(import.moduleName)
         output.writeString(import.entityName)
         when (import.descriptor) {
             is WasmImportDescriptor.Function -> {
-                writeImportDescriptorFunction(import.descriptor, output)
+                writeImportDescriptorFunction(import.descriptor)
             }
             is WasmImportDescriptor.Memory -> {
-                writeImportDescriptorMemory(import.descriptor, output)
+                writeImportDescriptorMemory(import.descriptor)
             }
             is WasmImportDescriptor.Table -> {
-                writeImportDescriptorTable(import.descriptor, output)
+                writeImportDescriptorTable(import.descriptor)
             }
         }
     }
 
-    private fun writeImportDescriptorFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
+    private fun writeImportDescriptorFunction(descriptor: WasmImportDescriptor.Function) {
         output.write8(0x00)
-        writeTypeIndex(descriptor.type(), output)
+        writeTypeIndex(descriptor.type())
     }
 
-    private fun writeImportDescriptorMemory(descriptor: WasmImportDescriptor.Memory, output: BufferWriter) {
+    private fun writeImportDescriptorMemory(descriptor: WasmImportDescriptor.Memory) {
         output.write8(0x02)
-        writeLimits(descriptor.limits, output)
+        writeLimits(descriptor.limits)
     }
 
-    private fun writeImportDescriptorTable(descriptor: WasmImportDescriptor.Table, output: BufferWriter) {
+    private fun writeImportDescriptorTable(descriptor: WasmImportDescriptor.Table) {
         output.write8(0x01)
-        writeReferenceTypeFunction(output)
-        writeLimits(descriptor.limits, output)
+        writeReferenceTypeFunction()
+        writeLimits(descriptor.limits)
     }
 
-    private fun writeLinkingSection(module: WasmModule, output: OutputStream) {
-        writeSection(SectionType.CUSTOM, output) { sectionOutput ->
-            sectionOutput.writeString("linking")
-            sectionOutput.writeUnsignedLeb128(2) // Version
+    private fun writeLinkingSection(module: WasmModule) {
+        writeSection(SectionType.CUSTOM) {
+            output.writeString("linking")
+            output.writeUnsignedLeb128(2) // Version
 
             if (module.dataSegments.size > 0) {
-                sectionOutput.write8(LinkingSubsectionType.WASM_SEGMENT_INFO.id)
-                writeWithSizePrefix(sectionOutput) { subsectionOutput ->
-                    writeSegmentInfoContents(module, subsectionOutput)
+                output.write8(LinkingSubsectionType.WASM_SEGMENT_INFO.id)
+                writeWithSizePrefix {
+                    writeSegmentInfoContents(module)
                 }
             }
 
-            sectionOutput.write8(LinkingSubsectionType.WASM_SYMBOL_TABLE.id)
-            writeWithSizePrefix(sectionOutput) { subsectionOutput ->
-                writeSymbolTableContents(module, subsectionOutput)
+            output.write8(LinkingSubsectionType.WASM_SYMBOL_TABLE.id)
+            writeWithSizePrefix {
+                writeSymbolTableContents(module)
             }
         }
     }
 
-    private fun writeSegmentInfoContents(module: WasmModule, output: BufferWriter) {
+    private fun writeSegmentInfoContents(module: WasmModule) {
         output.writeVecSize(module.dataSegments.size)
         module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
             output.writeString("DATA_SEGMENT_$dataSegmentIndex")
-            writeMemoryAlignment(1, output)
+            writeMemoryAlignment(1)
             output.write8(0) // flags
         }
     }
 
-    private fun writeSymbolTableContents(module: WasmModule, output: BufferWriter) {
+    private fun writeSymbolTableContents(module: WasmModule) {
         val symbolInfos = mutableListOf<SymbolInfo>()
         for (import in module.imports) {
             if (import.descriptor is WasmImportDescriptor.Function) {
@@ -425,7 +432,7 @@ private class WasmBinaryFormatWriter(
 
         output.writeVecSize(symbolInfos.size)
         for (symbolInfo in symbolInfos) {
-            writeSymbolInfo(symbolInfo, output)
+            writeSymbolInfo(symbolInfo)
         }
     }
 
@@ -454,18 +461,18 @@ private class WasmBinaryFormatWriter(
         class Global(flags: Int, val identifier: String) : SymbolInfo(flags)
     }
 
-    private fun writeSymbolInfo(info: SymbolInfo, output: BufferWriter) {
+    private fun writeSymbolInfo(info: SymbolInfo) {
         when (info) {
             is SymbolInfo.Data ->
-                writeDataSymbolInfo(info, output)
+                writeDataSymbolInfo(info)
             is SymbolInfo.Function ->
-                writeFunctionSymbolInfo(info, output)
+                writeFunctionSymbolInfo(info)
             is SymbolInfo.Global ->
-                writeGlobalSymbolInfo(info, output)
+                writeGlobalSymbolInfo(info)
         }
     }
 
-    private fun writeDataSymbolInfo(info: SymbolInfo.Data, output: BufferWriter) {
+    private fun writeDataSymbolInfo(info: SymbolInfo.Data) {
         output.write8(SymbolType.DATA.id)
         output.writeUnsignedLeb128(info.flags)
         output.writeString(info.identifier)
@@ -474,40 +481,40 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(info.size)
     }
 
-    private fun writeFunctionSymbolInfo(info: SymbolInfo.Function, output: BufferWriter) {
+    private fun writeFunctionSymbolInfo(info: SymbolInfo.Function) {
         output.write8(SymbolType.FUNCTION.id)
         output.writeUnsignedLeb128(info.flags)
-        writeFuncIndex(info.identifier, output)
+        writeFuncIndex(info.identifier)
         output.writeString(info.identifier)
     }
 
-    private fun writeGlobalSymbolInfo(info: SymbolInfo.Global, output: BufferWriter) {
+    private fun writeGlobalSymbolInfo(info: SymbolInfo.Global) {
         output.write8(SymbolType.GLOBAL.id)
         output.writeUnsignedLeb128(info.flags)
-        writeGlobalIndex(info.identifier, output)
+        writeGlobalIndex(info.identifier)
         output.writeString(info.identifier)
     }
 
-    private fun writeLimits(min: Int, output: BufferWriter) {
+    private fun writeLimits(min: Int) {
         output.write8(0x00)
         output.writeUnsignedLeb128(min)
     }
 
-    private fun writeLimits(min: Int, max: Int, output: BufferWriter) {
+    private fun writeLimits(min: Int, max: Int) {
         output.write8(0x01)
         output.writeUnsignedLeb128(min)
         output.writeUnsignedLeb128(max)
     }
 
-    private fun writeLimits(limits: WasmLimits, output: BufferWriter) {
+    private fun writeLimits(limits: WasmLimits) {
         if (limits.max == null) {
-            writeLimits(limits.min, output)
+            writeLimits(limits.min)
         } else {
-            writeLimits(limits.min, limits.max, output)
+            writeLimits(limits.min, limits.max)
         }
     }
 
-    private fun writeFuncIndex(name: String, output: BufferWriter) {
+    private fun writeFuncIndex(name: String) {
         output.writeUnsignedLeb128(symbolTable.funcIndex(name))
     }
 
@@ -515,7 +522,7 @@ private class WasmBinaryFormatWriter(
         globalIndices.add(name, globalIndices.size)
     }
 
-    private fun writeGlobalIndex(name: String, output: BufferWriter) {
+    private fun writeGlobalIndex(name: String) {
         output.writeUnsignedLeb128(globalIndex(name))
     }
 
@@ -523,7 +530,7 @@ private class WasmBinaryFormatWriter(
         return globalIndices.getValue(name)
     }
 
-    private fun writeLabelIndex(name: String, output: BufferWriter) {
+    private fun writeLabelIndex(name: String) {
         output.writeUnsignedLeb128(labelIndex(name))
     }
 
@@ -540,7 +547,7 @@ private class WasmBinaryFormatWriter(
         localIndices[name] = localIndices.size
     }
 
-    private fun writeLocalIndex(name: String, output: BufferWriter) {
+    private fun writeLocalIndex(name: String) {
         output.writeUnsignedLeb128(localIndex(name))
     }
 
@@ -548,7 +555,7 @@ private class WasmBinaryFormatWriter(
         return localIndices.getValue(name)
     }
 
-    private fun writeTableIndex(tableIndex: Int, output: BufferWriter) {
+    private fun writeTableIndex(tableIndex: Int) {
         output.writeUnsignedLeb128(tableIndex)
     }
 
@@ -556,7 +563,7 @@ private class WasmBinaryFormatWriter(
         typeIndices.add(funcType, typeIndices.size)
     }
 
-    private fun writeTypeIndex(funcType: WasmFuncType, output: BufferWriter) {
+    private fun writeTypeIndex(funcType: WasmFuncType) {
         output.writeUnsignedLeb128(typeIndex(funcType))
     }
 
@@ -564,71 +571,68 @@ private class WasmBinaryFormatWriter(
         return typeIndices.getValue(funcType)
     }
 
-    private fun writeFuncType(type: WasmFuncType, output: BufferWriter) {
+    private fun writeFuncType(type: WasmFuncType) {
         addTypeIndex(type)
         output.write8(0x60)
-        writeResultType(type.params, output)
-        writeResultType(type.results, output)
+        writeResultType(type.params)
+        writeResultType(type.results)
     }
 
-    private fun writeResultType(types: List<WasmValueType>, output: BufferWriter) {
+    private fun writeResultType(types: List<WasmValueType>) {
         output.writeVecSize(types.size)
         for (type in types) {
-            writeValueType(type, output)
+            writeValueType(type)
         }
     }
 
-    private fun writeValueType(type: WasmValueType, output: BufferWriter) {
+    private fun writeValueType(type: WasmValueType) {
         val binaryEncoding = when (type) {
             WasmValueType.i32 -> 0x7F
         }.toByte()
         output.write8(binaryEncoding)
     }
 
-    private fun writeBlockType(results: List<WasmValueType>, output: BufferWriter) {
+    private fun writeBlockType(results: List<WasmValueType>) {
         if (results.size == 0) {
             output.write8(0x40)
         } else if (results.size == 1) {
-            writeValueType(results[0], output)
+            writeValueType(results[0])
         } else {
             // TODO: Generate type when building module
             throw CompilerError("blocktype of multiple types not supported", NullSource)
         }
     }
 
-    private fun writeReferenceTypeFunction(output: BufferWriter) {
+    private fun writeReferenceTypeFunction() {
         output.write8(0x70)
     }
 
-    private fun writeSection(sectionType: SectionType, output: OutputStream, writeContents: (BufferWriter) -> Unit) {
+    private fun writeSection(sectionType: SectionType, writeContents: () -> Unit) {
         output.write8(sectionType.id)
-        val bufferWriter = BufferWriter()
-        writeContents(bufferWriter)
-        output.writeUnsignedLeb128(bufferWriter.size)
-        bufferWriter.writeTo(output)
+        writeWithSizePrefix(writeContents)
     }
 
-    private fun writeExpression(instructions: List<WasmInstruction>, output: BufferWriter) {
+    private fun writeExpression(instructions: List<WasmInstruction>) {
         for (instruction in instructions) {
-            writeInstruction(instruction, output)
+            writeInstruction(instruction)
         }
         output.write8(0x0B) // end
     }
 
-    private fun writeInstruction(instruction: WasmInstruction, output: BufferWriter) {
+    private fun writeInstruction(instruction: WasmInstruction) {
         when (instruction) {
             is WasmInstruction.Branch -> {
                 output.write8(0x0C)
-                writeLabelIndex(instruction.identifier, output)
+                writeLabelIndex(instruction.identifier)
             }
             is WasmInstruction.Call -> {
                 output.write8(0x10)
-                writeFuncIndex(instruction.identifier, output)
+                writeFuncIndex(instruction.identifier)
             }
             is WasmInstruction.CallIndirect -> {
                 output.write8(0x11)
-                writeTypeIndex(instruction.type, output)
-                writeTableIndex(0, output)
+                writeTypeIndex(instruction.type)
+                writeTableIndex(0)
             }
             WasmInstruction.Drop -> {
                 output.write8(0x1A)
@@ -642,7 +646,7 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.GlobalSet -> {
                 output.write8(0x24)
-                writeGlobalIndex(instruction.identifier, output)
+                writeGlobalIndex(instruction.identifier)
             }
             WasmInstruction.I32Add -> {
                 output.write8(0x6A)
@@ -683,11 +687,11 @@ private class WasmBinaryFormatWriter(
             is WasmInstruction.I32Load -> {
                 output.write8(0x28)
                 writeMemArg(alignment = instruction.alignment
-                    ?: 4, offset = instruction.offset, output)
+                    ?: 4, offset = instruction.offset)
             }
             WasmInstruction.I32Load8Unsigned -> {
                 output.write8(0x2D)
-                writeMemArg(alignment = 1, offset = 0, output)
+                writeMemArg(alignment = 1, offset = 0)
             }
             WasmInstruction.I32Multiply -> {
                 output.write8(0x6C)
@@ -698,11 +702,11 @@ private class WasmBinaryFormatWriter(
             is WasmInstruction.I32Store -> {
                 output.write8(0x36)
                 writeMemArg(alignment = instruction.alignment
-                    ?: 4, offset = instruction.offset, output)
+                    ?: 4, offset = instruction.offset)
             }
             WasmInstruction.I32Store8 -> {
                 output.write8(0x3A)
-                writeMemArg(alignment = 1, offset = 0, output)
+                writeMemArg(alignment = 1, offset = 0)
 
             }
             WasmInstruction.I32Sub -> {
@@ -710,16 +714,16 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.If -> {
                 output.write8(0x04)
-                writeBlockType(instruction.results, output)
+                writeBlockType(instruction.results)
                 labelStack.add(null)
             }
             is WasmInstruction.LocalSet -> {
                 output.write8(0x21)
-                writeLocalIndex(instruction.identifier, output)
+                writeLocalIndex(instruction.identifier)
             }
             is WasmInstruction.Loop -> {
                 output.write8(0x03)
-                writeBlockType(instruction.results, output)
+                writeBlockType(instruction.results)
                 labelStack.add(instruction.identifier)
             }
             WasmInstruction.MemoryGrow -> {
@@ -728,7 +732,7 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.Folded.GlobalGet -> {
                 output.write8(0x23)
-                writeGlobalIndex(instruction.identifier, output)
+                writeGlobalIndex(instruction.identifier)
             }
             is WasmInstruction.Folded.I32Const -> {
                 output.write8(0x41)
@@ -736,7 +740,7 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.Folded.LocalGet -> {
                 output.write8(0x20)
-                writeLocalIndex(instruction.identifier, output)
+                writeLocalIndex(instruction.identifier)
             }
             WasmInstruction.Folded.MemorySize -> {
                 output.write8(0x3F)
@@ -744,7 +748,7 @@ private class WasmBinaryFormatWriter(
             }
             is WasmInstruction.Unfoldable -> {
                 for (unfoldedInstruction in instruction.unfold()) {
-                    writeInstruction(unfoldedInstruction, output)
+                    writeInstruction(unfoldedInstruction)
                 }
             }
             else -> {
@@ -753,12 +757,12 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeMemArg(alignment: Int, offset: Int, output: BufferWriter) {
-        writeMemoryAlignment(alignment, output)
+    private fun writeMemArg(alignment: Int, offset: Int) {
+        writeMemoryAlignment(alignment)
         output.writeUnsignedLeb128(offset)
     }
 
-    private fun writeMemoryAlignment(alignment: Int, output: BufferWriter) {
+    private fun writeMemoryAlignment(alignment: Int) {
         val alignmentEncoding = when (alignment) {
             1 -> 0
             2 -> 1
@@ -777,30 +781,16 @@ private class WasmBinaryFormatWriter(
         }
     }
 
-    private fun writeWithSizePrefix(output: BufferWriter, writeContents: (BufferWriter) -> Unit) {
-        val functionCodeOutput = BufferWriter()
-        writeContents(functionCodeOutput)
-        output.writeUnsignedLeb128(functionCodeOutput.size)
-        functionCodeOutput.writeTo(output)
+    private fun writeWithSizePrefix(writeContents: () -> Unit) {
+        val writeSize = output.writeSizePlaceholder()
+        writeContents()
+        writeSize()
     }
-}
-
-
-private fun OutputStream.write8(byte: Byte) {
-    write(byte.toInt())
-}
-
-@ExperimentalUnsignedTypes
-private fun OutputStream.writeUnsignedLeb128(value: Int) {
-    write(Leb128Encoding.encodeUnsignedInt32(value).toByteArray())
 }
 
 @ExperimentalUnsignedTypes
 private class BufferWriter {
     private var buffer = ByteBuffer.allocate(1024)
-
-    val size: Int
-        get() = buffer.position()
 
     fun writeTo(output: OutputStream) {
         buffer.limit(buffer.position())
@@ -852,14 +842,23 @@ private class BufferWriter {
         write(Leb128Encoding.encodeSignedInt32(value))
     }
 
+    fun writeSizePlaceholder(): () -> Unit {
+        val sizePosition = buffer.position()
+        write(Leb128Encoding.encodePaddedUnsignedInt32(0))
+        val contentPosition = buffer.position()
+        return {
+            val currentPosition = buffer.position()
+            val size = currentPosition - contentPosition
+            buffer.position(sizePosition)
+            write(Leb128Encoding.encodePaddedUnsignedInt32(size))
+            buffer.position(currentPosition)
+        }
+    }
+
     fun writeString(value: String) {
         val bytes = value.toByteArray(Charsets.UTF_8)
         writeUnsignedLeb128(bytes.size)
         write(bytes)
-    }
-
-    fun writeTo(output: BufferWriter) {
-        output.write(buffer.array(), 0, buffer.position())
     }
 }
 

@@ -15,8 +15,8 @@ Code[2]:
 
 Code Disassembly:
 
-00001e func[0]:
- 00001f: 0b                         | end
-000021 func[1]:
- 000022: 41 2a                      | i32.const 42
- 000024: 0b                         | end
+00002e func[0]:
+ 00002f: 0b                         | end
+000035 func[1]:
+ 000036: 41 2a                      | i32.const 42
+ 000038: 0b                         | end
