@@ -43,7 +43,6 @@ private class WasmBinaryFormatWriter(
 ) {
     private val WASM_MAGIC = byteArrayOf(0x00, 0x61, 0x73, 0x6D)
     private val WASM_VERSION = byteArrayOf(0x01, 0x00, 0x00, 0x00)
-    private val globalIndices = mutableMapOf<String, Int>()
     private val labelStack = mutableListOf<String?>()
     private var localIndices = mutableMapOf<String, Int>()
     private val typeIndices = mutableMapOf<WasmFuncType, Int>()
@@ -238,7 +237,6 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(globals.size)
         for (global in globals) {
             writeGlobal(global)
-            addGlobalIndex(global.identifier)
         }
     }
 
@@ -524,21 +522,13 @@ private class WasmBinaryFormatWriter(
         )
     }
 
-    private fun addGlobalIndex(name: String) {
-        globalIndices.add(name, globalIndices.size)
-    }
-
     private fun writeGlobalIndex(name: String) {
-        val globalIndex = globalIndex(name)
+        val globalIndex = symbolTable.globalIndex(name)
         writeRelocatableIndex(
             relocationType = RelocationType.GLOBAL_INDEX_LEB,
             index = globalIndex,
             symbolIndex = symbolTable.globalIndexToSymbolIndex(globalIndex),
         )
-    }
-
-    private fun globalIndex(name: String): Int {
-        return globalIndices.getValue(name)
     }
 
     private fun writeLabelIndex(name: String) {

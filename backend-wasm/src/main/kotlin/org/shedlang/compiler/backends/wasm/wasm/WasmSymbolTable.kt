@@ -85,6 +85,10 @@ internal class WasmSymbolTable {
         symbolInfos.add(symbolInfo)
     }
 
+    fun globalIndex(name: String): Int {
+        return globalIndices.getValue(name)
+    }
+
     fun globalIndexToSymbolIndex(globalIndex: Int): Int {
         return globalSymbolIndices.getValue(globalIndex)
     }
