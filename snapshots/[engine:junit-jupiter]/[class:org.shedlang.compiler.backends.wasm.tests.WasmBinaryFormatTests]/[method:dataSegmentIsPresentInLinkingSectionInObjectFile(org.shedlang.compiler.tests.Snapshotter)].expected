@@ -3,10 +3,8 @@ module.wasm:	file format wasm 0x1
 
 Section Details:
 
-Memory[1]:
- - memory[0] pages: initial=1
-Export[1]:
- - memory[0] -> "memory"
+Import[1]:
+ - memory[0] pages: initial=1 <- env.__linear_memory
 Data[1]:
  - segment[0] <DATA_SEGMENT_0> memory=0 size=2 - init i32=42
   - 000002a: 8889                                     ..

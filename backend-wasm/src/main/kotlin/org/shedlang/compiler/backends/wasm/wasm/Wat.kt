@@ -83,6 +83,7 @@ internal class Wat(private val lateIndices: Map<LateIndex, Int>, private val sym
                         S.list(S.symbol("param")).addAll(valueTypesToSExpressions(descriptor.params)),
                         S.list(S.symbol("result")).addAll(valueTypesToSExpressions(descriptor.results)),
                     )
+                else -> TODO()
             },
         )
     }

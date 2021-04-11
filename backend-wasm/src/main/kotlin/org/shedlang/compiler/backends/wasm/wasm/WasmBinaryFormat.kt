@@ -110,9 +110,21 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeImportsSection(module: WasmModule, output: OutputStream) {
-        if (module.imports.size > 0) {
+        var imports = module.imports
+
+        if (objectFile && module.memoryPageCount != null) {
+            val memoryImport = Wasm.importMemory(
+                moduleName = "env",
+                entityName = "__linear_memory",
+                identifier = "memory",
+                limits = WasmLimits(module.memoryPageCount, null),
+            )
+            imports = imports + listOf(memoryImport)
+        }
+
+        if (imports.size > 0) {
             writeSection(SectionType.IMPORT, output) { sectionOutput ->
-                writeImportsSectionContents(module.imports, sectionOutput)
+                writeImportsSectionContents(imports, sectionOutput)
             }
         }
     }
@@ -156,7 +168,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeMemorySection(module: WasmModule, output: OutputStream) {
-        if (module.memoryPageCount != null) {
+        if (!objectFile && module.memoryPageCount != null) {
             writeSection(SectionType.MEMORY, output) { sectionOutput ->
                 writeMemorySectionContents(module.memoryPageCount, sectionOutput)
             }
@@ -198,7 +210,7 @@ private class WasmBinaryFormatWriter(
                 WasmExportDescriptor.Function(symbolTable.funcIndex(function.identifier)),
             )
         }.toMutableList()
-        if (module.memoryPageCount != null) {
+        if (!objectFile && module.memoryPageCount != null) {
             exports.add(WasmExport("memory", WasmExportDescriptor.Memory(0)))
         }
         if (exports.size > 0) {
@@ -313,14 +325,22 @@ private class WasmBinaryFormatWriter(
         output.writeString(import.entityName)
         when (import.descriptor) {
             is WasmImportDescriptor.Function -> {
-                writeImportDescriptionFunction(import.descriptor, output)
+                writeImportDescriptorFunction(import.descriptor, output)
+            }
+            is WasmImportDescriptor.Memory -> {
+                writeImportDescriptorMemory(import.descriptor, output)
             }
         }
     }
 
-    private fun writeImportDescriptionFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
+    private fun writeImportDescriptorFunction(descriptor: WasmImportDescriptor.Function, output: BufferWriter) {
         output.write8(0x00)
         writeTypeIndex(descriptor.type(), output)
+    }
+
+    private fun writeImportDescriptorMemory(descriptor: WasmImportDescriptor.Memory, output: BufferWriter) {
+        output.write8(0x02)
+        writeLimits(descriptor.limits, output)
     }
 
     private fun writeLinkingSection(module: WasmModule, output: OutputStream) {
@@ -439,6 +459,14 @@ private class WasmBinaryFormatWriter(
         output.write8(0x01)
         output.writeUnsignedLeb128(min)
         output.writeUnsignedLeb128(max)
+    }
+
+    private fun writeLimits(limits: WasmLimits, output: BufferWriter) {
+        if (limits.max == null) {
+            writeLimits(limits.min, output)
+        } else {
+            writeLimits(limits.min, limits.max, output)
+        }
     }
 
     private fun writeFuncIndex(name: String, output: BufferWriter) {

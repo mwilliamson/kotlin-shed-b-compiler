@@ -36,6 +36,18 @@ internal object Wasm {
         descriptor = WasmImportDescriptor.Function(params = params, results = results),
     )
 
+    fun importMemory(
+        moduleName: String,
+        entityName: String,
+        identifier: String,
+        limits: WasmLimits,
+    ) = WasmImport(
+        moduleName = moduleName,
+        entityName = entityName,
+        identifier = identifier,
+        descriptor = WasmImportDescriptor.Memory(limits = limits),
+    )
+
     fun dataSegment(
         offset: Int,
         bytes: ByteArray,
@@ -286,6 +298,8 @@ internal sealed class WasmImportDescriptor {
             return Wasm.T.funcType(params = params, results = results)
         }
     }
+
+    class Memory(val limits: WasmLimits): WasmImportDescriptor()
 }
 
 internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
@@ -498,5 +512,7 @@ internal sealed class WasmConstValue {
     data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
     data class TableEntryIndex(val identifier: String): WasmConstValue()
 }
+
+internal class WasmLimits(val min: Int, val max: Int?)
 
 const val WASM_PAGE_SIZE = 65536

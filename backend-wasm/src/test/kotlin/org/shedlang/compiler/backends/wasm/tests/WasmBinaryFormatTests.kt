@@ -237,6 +237,15 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun whenMemoryIsRequiredThenPageCountIsWrittenToMemoryImportInObjectFile(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            memoryPageCount = 42,
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun dataSegmentIsPresentInLinkingSectionInObjectFile(snapshotter: Snapshotter) {
         val module = Wasm.module(
             memoryPageCount = 1,

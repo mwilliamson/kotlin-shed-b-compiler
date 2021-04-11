@@ -1,0 +1,13 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Import[1]:
+ - memory[0] pages: initial=42 <- env.__linear_memory
+Custom:
+ - name: "linking"
+  - symbol table [count=0]
+
+Code Disassembly:
+
