@@ -27,12 +27,11 @@ internal object WasmModules {
         )
 
         return context3
-            .addInstruction(Wasm.I.globalSet(WasmNaming.moduleValue(moduleName), Wasm.I.i32Const(moduleValue)))
             .addInstruction(Wasm.I.globalSet(WasmNaming.moduleIsInited(moduleName), Wasm.I.i32Const(1)))
             .addMutableGlobal(
                 identifier = WasmNaming.moduleValue(moduleName),
                 type = WasmData.moduleValuePointerType,
-                initial = Wasm.I.i32Const(0),
+                initial = Wasm.I.i32Const(moduleValue),
             )
     }
 
