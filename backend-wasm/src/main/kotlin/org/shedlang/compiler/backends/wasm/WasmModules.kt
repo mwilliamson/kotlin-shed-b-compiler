@@ -28,10 +28,10 @@ internal object WasmModules {
 
         return context3
             .addInstruction(Wasm.I.globalSet(WasmNaming.moduleIsInited(moduleName), Wasm.I.i32Const(1)))
-            .addImmutableGlobal(
+            .addMutableGlobal(
                 identifier = WasmNaming.moduleValue(moduleName),
                 type = WasmData.moduleValuePointerType,
-                value = Wasm.I.i32Const(moduleValue),
+                initial = Wasm.I.i32Const(moduleValue),
             )
     }
 
