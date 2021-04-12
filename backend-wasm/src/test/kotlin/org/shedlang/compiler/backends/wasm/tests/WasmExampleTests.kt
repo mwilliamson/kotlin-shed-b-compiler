@@ -86,7 +86,34 @@ class WasmExampleTests {
                     }
                 return wasmPath
             }
+        },
 
+        object : CompilationMethod {
+            override val name: String
+                get() = "binary format object file"
+            override val isObjectFile: Boolean
+                get() = true
+
+            override fun compile(
+                compilationResult: WasmCompiler.CompilationResult,
+                temporaryDirectory: TemporaryDirectory
+            ): Path {
+                val objectFilePath = temporaryDirectory.path.resolve("program.o")
+                objectFilePath.toFile().outputStream()
+                    .use { outputStream ->
+                        WasmBinaryFormat.writeObjectFile(
+                            compilationResult.module,
+                            outputStream,
+                            lateIndices = compilationResult.lateIndices,
+                        )
+                    }
+
+                val wasmPath = temporaryDirectory.path.resolve("program.wasm")
+                run(listOf("wasm-ld", objectFilePath.toString(), "-o", wasmPath.toString())).throwOnError()
+                println(run(listOf("wasm-objdump", "-xd", wasmPath.toString())).throwOnError())
+
+                return wasmPath
+            }
         }
     )
 
@@ -107,7 +134,7 @@ class WasmExampleTests {
                                 image = image,
                                 moduleSet = moduleSet
                             ).compile(
-                                mainModule = testProgram.mainModule
+                                mainModule = testProgram.mainModule,
                             )
 
                             val outputPath = compilationMethod.compile(compilationResult, temporaryDirectory)
