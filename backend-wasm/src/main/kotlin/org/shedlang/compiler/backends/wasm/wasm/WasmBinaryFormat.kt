@@ -408,6 +408,11 @@ private class WasmBinaryFormatWriter(
                 }
             }
 
+            output.write8(LinkingSubsectionType.WASM_SYMBOL_TABLE.id)
+            writeWithSizePrefix {
+                writeSymbolTableContents(module)
+            }
+
             if (module.start != null) {
                 output.write8(LinkingSubsectionType.WASM_INIT_FUNCS.id)
                 writeWithSizePrefix {
@@ -417,11 +422,6 @@ private class WasmBinaryFormatWriter(
                     output.writeUnsignedLeb128(0)
                     output.writeUnsignedLeb128(symbolIndex)
                 }
-            }
-
-            output.write8(LinkingSubsectionType.WASM_SYMBOL_TABLE.id)
-            writeWithSizePrefix {
-                writeSymbolTableContents(module)
             }
         }
     }

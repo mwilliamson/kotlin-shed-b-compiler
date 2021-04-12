@@ -13,11 +13,11 @@ Code[1]:
  - func[1] size=2 <FIRST>
 Custom:
  - name: "linking"
-  - init functions [count=1]
-   - 1: priority=0
   - symbol table [count=2]
    - 0: F <DONT_CARE> func=0 undefined explicit_name binding=global vis=default
    - 1: F <FIRST> func=1 binding=global vis=default
+  - init functions [count=1]
+   - 1: priority=0
 
 Code Disassembly:
 
