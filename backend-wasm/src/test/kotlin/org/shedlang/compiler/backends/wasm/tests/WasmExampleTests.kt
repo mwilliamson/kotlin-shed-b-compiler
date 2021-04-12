@@ -5,10 +5,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.SourceError
-import org.shedlang.compiler.backends.tests.ExecutionResult
-import org.shedlang.compiler.backends.tests.run
-import org.shedlang.compiler.backends.tests.temporaryDirectory
-import org.shedlang.compiler.backends.tests.testPrograms
+import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.WasmCompiler
 import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
 import org.shedlang.compiler.stackir.loadModuleSet
@@ -47,46 +44,92 @@ class WasmExampleTests {
         "usingStdlib",
     )
 
-    @TestFactory
-    fun testProgram(): List<DynamicTest> {
-        return testPrograms().filter { testProgram ->
-            !disabledTests.contains(testProgram.name)
-        }.map { testProgram -> DynamicTest.dynamicTest(testProgram.name) {
-            try {
-                temporaryDirectory().use { temporaryDirectory ->
-                    val watPath = temporaryDirectory.path.resolve("program.wat")
-                    val wasmPath = temporaryDirectory.path.resolve("program.wasm")
-                    val moduleSet = testProgram.load()
-                    val image = loadModuleSet(moduleSet)
+    private interface CompilationMethod {
+        val name: String
+        val isObjectFile: Boolean
+        fun compile(compilationResult: WasmCompiler.CompilationResult, temporaryDirectory: TemporaryDirectory): Path
+    }
 
-                    val compilationResult = WasmCompiler(image = image, moduleSet = moduleSet).compile(
-                        mainModule = testProgram.mainModule
-                    )
+    private val compilationMethods = listOf<CompilationMethod>(
+        object : CompilationMethod {
+            override val name: String
+                get() = "text format module"
 
-                    watPath.toFile().writeText(compilationResult.wat)
+            override val isObjectFile: Boolean
+                get() = false
 
-                    wasmPath.toFile().outputStream().use { outputStream ->
+            override fun compile(compilationResult: WasmCompiler.CompilationResult, temporaryDirectory: TemporaryDirectory): Path {
+                val watPath = temporaryDirectory.path.resolve("program.wat")
+                watPath.toFile().writeText(compilationResult.wat)
+                return watPath
+            }
+        },
+
+        object : CompilationMethod {
+            override val name: String
+                get() = "binary format module"
+            override val isObjectFile: Boolean
+                get() = false
+
+            override fun compile(
+                compilationResult: WasmCompiler.CompilationResult,
+                temporaryDirectory: TemporaryDirectory
+            ): Path {
+                val wasmPath = temporaryDirectory.path.resolve("program.wasm")
+                wasmPath.toFile().outputStream()
+                    .use { outputStream ->
                         WasmBinaryFormat.writeModule(
                             compilationResult.module,
                             outputStream,
                             lateIndices = compilationResult.lateIndices,
                         )
                     }
-
-                    val resultWat = executeWasm(watPath, args = testProgram.args)
-                    assertThat("stdout was:\n" + resultWat.stdout + "\nstderr was:\n" + resultWat.stderr, resultWat, testProgram.expectedResult)
-
-                    val resultWasm = executeWasm(wasmPath, args = testProgram.args)
-                    assertThat("stdout was:\n" + resultWasm.stdout + "\nstderr was:\n" + resultWasm.stderr, resultWasm, testProgram.expectedResult)
-                }
-            } catch (error: SourceError) {
-                print(error.source.describe())
-                throw error
-            } catch (error: CompilerError) {
-                print(error.source.describe())
-                throw error
+                return wasmPath
             }
-        } }
+
+        }
+    )
+
+    @TestFactory
+    fun testProgram(): List<DynamicTest> {
+        val testPrograms = testPrograms().filter { testProgram ->
+            !disabledTests.contains(testProgram.name)
+        }
+        return compilationMethods.flatMap { compilationMethod ->
+            testPrograms.map { testProgram ->
+                DynamicTest.dynamicTest("${compilationMethod.name}: ${testProgram.name}") {
+                    try {
+                        temporaryDirectory().use { temporaryDirectory ->
+                            val moduleSet = testProgram.load()
+                            val image = loadModuleSet(moduleSet)
+
+                            val compilationResult = WasmCompiler(
+                                image = image,
+                                moduleSet = moduleSet
+                            ).compile(
+                                mainModule = testProgram.mainModule
+                            )
+
+                            val outputPath = compilationMethod.compile(compilationResult, temporaryDirectory)
+
+                            val result =
+                                executeWasm(outputPath, args = testProgram.args)
+                            assertThat(
+                                "stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr,
+                                result,
+                                testProgram.expectedResult
+                            )
+                        }
+                    } catch (error: SourceError) {
+                        print(error.source.describe())
+                        throw error
+                    } catch (error: CompilerError) {
+                        print(error.source.describe())
+                        throw error
+                    }
+                }
+            }
+        }
     }
 
     private fun executeWasm(path: Path, args: List<String>): ExecutionResult {
