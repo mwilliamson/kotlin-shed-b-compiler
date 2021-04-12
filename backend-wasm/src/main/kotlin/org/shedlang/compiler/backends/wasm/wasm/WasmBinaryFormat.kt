@@ -282,7 +282,7 @@ private class WasmBinaryFormatWriter(
     }
 
     private fun writeStartSection(module: WasmModule) {
-        if (module.start != null) {
+        if (!objectFile && module.start != null) {
             writeSection(SectionType.START) {
                 writeFuncIndex(module.start)
             }
@@ -405,6 +405,17 @@ private class WasmBinaryFormatWriter(
                 output.write8(LinkingSubsectionType.WASM_SEGMENT_INFO.id)
                 writeWithSizePrefix {
                     writeSegmentInfoContents(module)
+                }
+            }
+
+            if (module.start != null) {
+                output.write8(LinkingSubsectionType.WASM_INIT_FUNCS.id)
+                writeWithSizePrefix {
+                    output.writeVecSize(1)
+                    val funcIndex = symbolTable.functionIndex(module.start)
+                    val symbolIndex = symbolTable.functionIndexToSymbolIndex(funcIndex)
+                    output.writeUnsignedLeb128(0)
+                    output.writeUnsignedLeb128(symbolIndex)
                 }
             }
 

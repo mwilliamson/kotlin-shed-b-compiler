@@ -1,0 +1,25 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[1]:
+ - type[0] () -> nil
+Import[1]:
+ - func[0] sig=0 <DONT_CARE> <- MODULE.ENTITY
+Function[1]:
+ - func[1] sig=0 <FIRST>
+Code[1]:
+ - func[1] size=2 <FIRST>
+Custom:
+ - name: "linking"
+  - init functions [count=1]
+   - 1: priority=0
+  - symbol table [count=2]
+   - 0: F <DONT_CARE> func=0 undefined explicit_name binding=global vis=default
+   - 1: F <FIRST> func=1 binding=global vis=default
+
+Code Disassembly:
+
+00003d func[1] <FIRST>:
+ 00003e: 0b                         | end

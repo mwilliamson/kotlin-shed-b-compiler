@@ -485,6 +485,36 @@ class WasmBinaryFormatTests {
         checkObjectFileSnapshot(module, snapshotter)
     }
 
+    @Test
+    fun startFunctionIsWrittenToInitFuncsSubSection(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            // include an import to make sure we index funcs properly
+            imports = listOf(
+                Wasm.importFunction(
+                    moduleName = "MODULE",
+                    entityName = "ENTITY",
+                    identifier = "DONT_CARE",
+                    params = listOf(),
+                    results = listOf(),
+                ),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(),
+                ),
+            ),
+            start = "FIRST",
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
     private fun checkModuleSnapshot(module: WasmModule, snapshotter: Snapshotter) {
         checkSnapshot(module, snapshotter, objectFile = false)
     }
