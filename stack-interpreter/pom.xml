@@ -48,8 +48,8 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-collections-immutable</artifactId>
-            <version>0.2</version>
+            <artifactId>kotlinx-collections-immutable-jvm</artifactId>
+            <version>0.3.4</version>
         </dependency>
     </dependencies>
 

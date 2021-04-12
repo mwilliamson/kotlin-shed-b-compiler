@@ -25,22 +25,11 @@
     </modules>
 
     <properties>
-        <kotlin.version>1.4.0</kotlin.version>
+        <kotlin.version>1.4.32</kotlin.version>
         <junit.jupiter.version>5.4.1</junit.jupiter.version>
         <junit.platform.version>1.4.1</junit.platform.version>
         <hamkrest.version>1.7.0.0</hamkrest.version>
     </properties>
-
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>kotlinx</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/kotlin/kotlinx</url>
-        </repository>
-    </repositories>
 
     <dependencies>
         <dependency>
