@@ -28,6 +28,7 @@ private fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
 internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext private constructor(
+    private val imports: PersistentList<WasmImport>,
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
     private val functions: PersistentList<WasmFunction>,
     private val table: PersistentList<String>,
@@ -38,6 +39,7 @@ internal data class WasmGlobalContext private constructor(
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
+            imports = persistentListOf(),
             globals = persistentListOf(),
             functions = persistentListOf(),
             table = persistentListOf(),
@@ -49,6 +51,7 @@ internal data class WasmGlobalContext private constructor(
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
             return WasmGlobalContext(
+                imports = contexts.flatMap { context -> context.imports }.toPersistentList(),
                 globals = contexts.flatMap { context -> context.globals }.toPersistentList(),
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
                 table = contexts.flatMap { context -> context.table }.toPersistentList(),
@@ -62,6 +65,7 @@ internal data class WasmGlobalContext private constructor(
 
     fun merge(other: WasmGlobalContext): WasmGlobalContext {
         return WasmGlobalContext(
+            imports = imports.addAll(other.imports),
             globals = globals.addAll(other.globals),
             functions = functions.addAll(other.functions),
             table = table.addAll(other.table),
@@ -106,7 +110,7 @@ internal data class WasmGlobalContext private constructor(
         val imports = listOf(
             Wasi.importFdWrite(),
             Wasi.importProcExit(),
-        )
+        ) + imports
 
         var size = 0
         val dataSegments = mutableListOf<WasmDataSegment>()
@@ -185,6 +189,14 @@ internal data class WasmGlobalContext private constructor(
             types = functionTypes,
             lateIndices = lateIndices,
         )
+    }
+
+    fun addImport(import: WasmImport): WasmGlobalContext {
+        return copy(imports = imports.add(import))
+    }
+
+    fun addTableEntry(identifier: String): WasmGlobalContext {
+        return copy(table = table.add(identifier))
     }
 
     fun addMutableGlobal(identifier: String, type: WasmValueType, initial: WasmInstruction.Folded): WasmGlobalContext {
@@ -376,6 +388,16 @@ internal data class WasmFunctionContext(
 
     fun onLabel(label: Int): PersistentList<WasmInstruction> {
         return onLabel.getOrDefault(label, persistentListOf())
+    }
+
+    fun addImport(import: WasmImport): WasmFunctionContext {
+        val newGlobalContext = globalContext.addImport(import)
+        return copy(globalContext = newGlobalContext)
+    }
+
+    fun addTableEntry(identifier: String): WasmFunctionContext {
+        val newGlobalContext = globalContext.addTableEntry(identifier)
+        return copy(globalContext = newGlobalContext)
     }
 
     fun addImmutableGlobal(identifier: String, type: WasmValueType, value: WasmInstruction.Folded): WasmFunctionContext {

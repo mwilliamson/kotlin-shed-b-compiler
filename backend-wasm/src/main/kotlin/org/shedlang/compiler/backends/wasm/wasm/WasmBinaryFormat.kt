@@ -703,6 +703,9 @@ private class WasmBinaryFormatWriter(
             WasmInstruction.I32And -> {
                 output.write8(0x71)
             }
+            WasmInstruction.I32DivideSigned -> {
+                output.write8(0x6D)
+            }
             WasmInstruction.I32DivideUnsigned -> {
                 output.write8(0x6E)
             }

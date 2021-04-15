@@ -8,6 +8,7 @@ import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.WasmCompiler
 import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
+import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -20,7 +21,6 @@ class WasmExampleTests {
         "EffectHandlerExitOrResume.shed",
         "FieldDestructuring.shed",
         "HandleWithState.shed",
-        "IntDivision.shed",
         "Matchers.shed",
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
@@ -53,43 +53,6 @@ class WasmExampleTests {
     private val compilationMethods = listOf<CompilationMethod>(
         object : CompilationMethod {
             override val name: String
-                get() = "text format module"
-
-            override val isObjectFile: Boolean
-                get() = false
-
-            override fun compile(compilationResult: WasmCompiler.CompilationResult, temporaryDirectory: TemporaryDirectory): Path {
-                val watPath = temporaryDirectory.path.resolve("program.wat")
-                watPath.toFile().writeText(compilationResult.wat)
-                return watPath
-            }
-        },
-
-        object : CompilationMethod {
-            override val name: String
-                get() = "binary format module"
-            override val isObjectFile: Boolean
-                get() = false
-
-            override fun compile(
-                compilationResult: WasmCompiler.CompilationResult,
-                temporaryDirectory: TemporaryDirectory
-            ): Path {
-                val wasmPath = temporaryDirectory.path.resolve("program.wasm")
-                wasmPath.toFile().outputStream()
-                    .use { outputStream ->
-                        WasmBinaryFormat.writeModule(
-                            compilationResult.module,
-                            outputStream,
-                            lateIndices = compilationResult.lateIndices,
-                        )
-                    }
-                return wasmPath
-            }
-        },
-
-        object : CompilationMethod {
-            override val name: String
                 get() = "binary format object file"
             override val isObjectFile: Boolean
                 get() = true
@@ -109,7 +72,8 @@ class WasmExampleTests {
                     }
 
                 val wasmPath = temporaryDirectory.path.resolve("program.wasm")
-                run(listOf("wasm-ld", objectFilePath.toString(), "-o", wasmPath.toString())).throwOnError()
+                val intToStringObjectPath = findRoot().resolve("backend-wasm/stdlib/Core.IntToString.o")
+                run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", wasmPath.toString())).throwOnError()
                 println(run(listOf("wasm-objdump", "-xd", wasmPath.toString())).throwOnError())
 
                 return wasmPath
