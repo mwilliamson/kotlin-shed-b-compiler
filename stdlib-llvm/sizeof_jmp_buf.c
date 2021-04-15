@@ -2,7 +2,7 @@
 #include <stdio.h>
 
 int main() {
-    printf("%d\n", sizeof(jmp_buf));
+    printf("%lu\n", sizeof(jmp_buf));
 
     return 0;
 }
