@@ -29,7 +29,8 @@ internal data class LateIndex(private val key: Int)
 
 internal data class WasmGlobalContext private constructor(
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
-    private val functions: PersistentList<Pair<WasmFunction, Boolean>>,
+    private val functions: PersistentList<WasmFunction>,
+    private val table: PersistentList<String>,
     private val staticData: PersistentList<Pair<WasmDataSegmentKey, WasmStaticData>>,
     private val moduleNames: PersistentSet<ModuleName>,
     private val dependencies: PersistentSet<ModuleName>,
@@ -39,6 +40,7 @@ internal data class WasmGlobalContext private constructor(
         fun initial() = WasmGlobalContext(
             globals = persistentListOf(),
             functions = persistentListOf(),
+            table = persistentListOf(),
             staticData = persistentListOf(),
             moduleNames = persistentSetOf(),
             dependencies = persistentSetOf(),
@@ -49,6 +51,7 @@ internal data class WasmGlobalContext private constructor(
             return WasmGlobalContext(
                 globals = contexts.flatMap { context -> context.globals }.toPersistentList(),
                 functions = contexts.flatMap { context -> context.functions }.toPersistentList(),
+                table = contexts.flatMap { context -> context.table }.toPersistentList(),
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
                 moduleNames = contexts.flatMap { context -> context.moduleNames }.toPersistentSet(),
                 dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentSet(),
@@ -61,6 +64,7 @@ internal data class WasmGlobalContext private constructor(
         return WasmGlobalContext(
             globals = globals.addAll(other.globals),
             functions = functions.addAll(other.functions),
+            table = table.addAll(other.table),
             staticData = staticData.addAll(other.staticData),
             moduleNames = moduleNames.addAll(other.moduleNames),
             dependencies = dependencies.addAll(other.dependencies),
@@ -151,21 +155,11 @@ internal data class WasmGlobalContext private constructor(
             dataSegments.add(dataSegment)
         }
 
-        val boundFunctions = mutableListOf<WasmFunction>()
-        val table = mutableListOf<String>()
-
-        for ((function, addToTable) in functions) {
-            if (addToTable) {
-                table.add(function.identifier)
-            }
-            boundFunctions.add(function)
-        }
-
         val importFunctionTypes = imports
             .map { import -> import.descriptor }
             .filterIsInstance<WasmImportDescriptor.Function>()
             .map { descriptor -> descriptor.type() }
-        val definedFunctionTypes = boundFunctions.map { function -> function.type() }
+        val definedFunctionTypes = functions.map { function -> function.type() }
         val functionTypes = (importFunctionTypes + definedFunctionTypes).distinct()
 
         for ((global, value) in globals) {
@@ -186,7 +180,7 @@ internal data class WasmGlobalContext private constructor(
             pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             dataSegments = dataSegments,
             startInstructions = startInstructions,
-            functions = boundFunctions,
+            functions = functions,
             table = table,
             types = functionTypes,
             lateIndices = lateIndices,
@@ -212,11 +206,11 @@ internal data class WasmGlobalContext private constructor(
     }
 
     fun addStaticFunction(function: WasmFunction): WasmGlobalContext {
-        return copy(functions = functions.add(Pair(function, false)))
+        return copy(functions = functions.add(function))
     }
 
     fun addFunction(function: WasmFunction): WasmGlobalContext {
-        return copy(functions = functions.add(Pair(function, true)))
+        return copy(functions = functions.add(function), table = table.add(function.identifier))
     }
 
     fun addStaticI32(initial: Int? = null): Pair<WasmGlobalContext, WasmDataSegmentKey> {
