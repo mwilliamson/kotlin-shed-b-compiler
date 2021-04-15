@@ -1,8 +1,8 @@
-.PHONY: package run-stdlib-tests stdlib-tests test clean-deps build-bdwgc build-utf8proc stdlib-llvm/build/libshed.a c-bindings
+.PHONY: package run-stdlib-tests stdlib-tests test clean-deps build-bdwgc build-utf8proc stdlib-llvm/build/libshed.a c-bindings build-stdlib-wasm
 
 CFLAGS = -Wall -Werror
 
-package: build-stdlib-llvm
+package: build-stdlib-llvm build-stdlib-wasm
 	mvn package -Dmaven.test.skip=true
 
 stdlib-tests: package run-stdlib-tests
@@ -44,3 +44,6 @@ stdlib-llvm/sizeof_jmp_buf.txt: stdlib-llvm/sizeof_jmp_buf.c
 
 c-bindings:
 	java -cp cli/target/shed-compiler-cli-0.1.0-SNAPSHOT.jar org.shedlang.compiler.cli.ShedBindingsCli --backend=llvm --output-path=c-bindings
+
+build-stdlib-wasm:
+	cd backend-wasm/stdlib && make
