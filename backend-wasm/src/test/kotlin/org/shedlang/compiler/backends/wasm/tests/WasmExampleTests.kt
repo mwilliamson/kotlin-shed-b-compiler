@@ -44,80 +44,51 @@ class WasmExampleTests {
         "usingStdlib",
     )
 
-    private interface CompilationMethod {
-        val name: String
-        val isObjectFile: Boolean
-        fun compile(compilationResult: WasmCompiler.CompilationResult, temporaryDirectory: TemporaryDirectory): Path
-    }
-
-    private val compilationMethods = listOf<CompilationMethod>(
-        object : CompilationMethod {
-            override val name: String
-                get() = "binary format object file"
-            override val isObjectFile: Boolean
-                get() = true
-
-            override fun compile(
-                compilationResult: WasmCompiler.CompilationResult,
-                temporaryDirectory: TemporaryDirectory
-            ): Path {
-                val objectFilePath = temporaryDirectory.path.resolve("program.o")
-                objectFilePath.toFile().outputStream()
-                    .use { outputStream ->
-                        WasmBinaryFormat.writeObjectFile(
-                            compilationResult.module,
-                            outputStream,
-                            lateIndices = compilationResult.lateIndices,
-                        )
-                    }
-
-                val wasmPath = temporaryDirectory.path.resolve("program.wasm")
-                val intToStringObjectPath = findRoot().resolve("backend-wasm/stdlib/Core.IntToString.o")
-                run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", wasmPath.toString())).throwOnError()
-                println(run(listOf("wasm-objdump", "-xd", wasmPath.toString())).throwOnError())
-
-                return wasmPath
-            }
-        }
-    )
-
     @TestFactory
     fun testProgram(): List<DynamicTest> {
         val testPrograms = testPrograms().filter { testProgram ->
             !disabledTests.contains(testProgram.name)
         }
-        return compilationMethods.flatMap { compilationMethod ->
-            testPrograms.map { testProgram ->
-                DynamicTest.dynamicTest("${compilationMethod.name}: ${testProgram.name}") {
-                    try {
-                        temporaryDirectory().use { temporaryDirectory ->
-                            val moduleSet = testProgram.load()
-                            val image = loadModuleSet(moduleSet)
+        return testPrograms.map { testProgram ->
+            DynamicTest.dynamicTest(testProgram.name) {
+                try {
+                    temporaryDirectory().use { temporaryDirectory ->
+                        val moduleSet = testProgram.load()
+                        val image = loadModuleSet(moduleSet)
 
-                            val compilationResult = WasmCompiler(
-                                image = image,
-                                moduleSet = moduleSet
-                            ).compile(
-                                mainModule = testProgram.mainModule,
-                            )
+                        val compilationResult = WasmCompiler(
+                            image = image,
+                            moduleSet = moduleSet
+                        ).compile(
+                            mainModule = testProgram.mainModule,
+                        )
+                        val objectFilePath = temporaryDirectory.path.resolve("program.o")
+                        objectFilePath.toFile().outputStream()
+                            .use { outputStream ->
+                                WasmBinaryFormat.writeObjectFile(
+                                    compilationResult.module,
+                                    outputStream,
+                                    lateIndices = compilationResult.lateIndices,
+                                )
+                            }
 
-                            val outputPath = compilationMethod.compile(compilationResult, temporaryDirectory)
+                        val outputPath = temporaryDirectory.path.resolve("program.wasm")
+                        val intToStringObjectPath = findRoot().resolve("backend-wasm/stdlib/Core.IntToString.o")
+                        run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", outputPath.toString())).throwOnError()
 
-                            val result =
-                                executeWasm(outputPath, args = testProgram.args)
-                            assertThat(
-                                "stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr,
-                                result,
-                                testProgram.expectedResult
-                            )
-                        }
-                    } catch (error: SourceError) {
-                        print(error.source.describe())
-                        throw error
-                    } catch (error: CompilerError) {
-                        print(error.source.describe())
-                        throw error
+                        val result = executeWasm(outputPath, args = testProgram.args)
+                        assertThat(
+                            "stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr,
+                            result,
+                            testProgram.expectedResult
+                        )
                     }
+                } catch (error: SourceError) {
+                    print(error.source.describe())
+                    throw error
+                } catch (error: CompilerError) {
+                    print(error.source.describe())
+                    throw error
                 }
             }
         }
