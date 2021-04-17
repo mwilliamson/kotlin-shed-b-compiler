@@ -3,7 +3,9 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
 import org.shedlang.compiler.backends.wasm.wasm.Wat
+import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -16,12 +18,19 @@ object WasmBackend : Backend {
             val compilationResult = WasmCompiler(image = image, moduleSet = moduleSet).compile(
                 mainModule = mainModule
             )
-            val wat = Wat.serialise(compilationResult.module, tagValuesToInt = compilationResult.tagValuesToInt)
 
-            val watPath = temporaryDirectory.toPath().resolve("program.wat")
-            watPath.toFile().writeText(wat)
+            val objectFilePath = temporaryDirectory.resolve("program.o")
+            objectFilePath.outputStream()
+                .use { outputStream ->
+                    WasmBinaryFormat.writeObjectFile(
+                        compilationResult.module,
+                        outputStream,
+                        tagValuesToInt = compilationResult.tagValuesToInt,
+                    )
+                }
 
-            run(listOf("wat2wasm", watPath.toString(), "-o", target.toString()))
+            val intToStringObjectPath = findRoot().resolve("backend-wasm/stdlib/Core.IntToString.o")
+            run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", target.toString()))
         } finally {
             temporaryDirectory.deleteRecursively()
         }
@@ -38,7 +47,13 @@ object WasmBackend : Backend {
     }
 
     override fun run(path: Path, module: ModuleName, args: List<String>): Int {
-        throw UnsupportedOperationException("not implemented")
+        val command = listOf("wasmtime", path.toAbsolutePath().toString()) + args
+
+        val process = ProcessBuilder(command)
+            .inheritIO()
+            .start()
+
+        return process.waitFor()
     }
 
     override fun generateBindings(target: Path) {
