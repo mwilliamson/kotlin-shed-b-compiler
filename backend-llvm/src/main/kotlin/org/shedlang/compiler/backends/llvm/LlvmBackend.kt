@@ -4,6 +4,7 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.createTempDirectory
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
 import org.shedlang.compiler.stackir.loadModuleSet
@@ -13,22 +14,22 @@ object LlvmBackend : Backend {
     override fun compile(moduleSet: ModuleSet, mainModule: ModuleName, target: Path) {
         val image = loadModuleSet(moduleSet)
 
-        val file = createTempDir()
+        val file = createTempDirectory()
         try {
             val llPath = file.resolve("main.ll")
             val compiler = LlvmCompiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
             val compilationResult = compiler.compile(
                 mainModule = mainModule
             )
-            llPath.writeText(compilationResult.llvmIr)
-            compileBinary(llPath = llPath.toPath(), target = target, linkerFiles = compilationResult.linkerFiles)
+            llPath.toFile().writeText(compilationResult.llvmIr)
+            compileBinary(llPath = llPath, target = target, linkerFiles = compilationResult.linkerFiles)
         } finally {
-            file.deleteRecursively()
+            file.toFile().deleteRecursively()
         }
     }
 
     internal fun compileBinary(llPath: Path, target: Path, linkerFiles: List<String>) {
-        val file = createTempDir()
+        val file = createTempDirectory()
         try {
             val objectPath = file.resolve("main.o")
             run(listOf(
@@ -44,7 +45,7 @@ object LlvmBackend : Backend {
             ) + linkerFiles.map { path -> findRoot().resolve(path).toString() }
             run(gccCommand)
         } finally {
-            file.deleteRecursively()
+            file.toFile().deleteRecursively()
         }
     }
 

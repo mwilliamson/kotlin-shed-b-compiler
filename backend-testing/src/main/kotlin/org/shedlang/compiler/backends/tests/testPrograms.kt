@@ -6,6 +6,7 @@ import com.natpryce.hamkrest.has
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.createTempDirectory
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream
@@ -148,8 +149,8 @@ data class ExecutionResult(val exitCode: Int = 0, val stdout: String = "", val s
 }
 
 fun temporaryDirectory(): TemporaryDirectory {
-    val file = createTempDir()
-    return TemporaryDirectory(file)
+    val file = createTempDirectory()
+    return TemporaryDirectory(file.toFile())
 }
 
 class TemporaryDirectory(val file: File) : Closeable {

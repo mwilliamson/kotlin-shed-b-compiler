@@ -3,24 +3,26 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.createTempDirectory
 import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.loadModuleSet
+import java.nio.file.Files.createTempDirectory
 import java.nio.file.Path
 
 object WasmBackend : Backend {
     override fun compile(moduleSet: ModuleSet, mainModule: ModuleName, target: Path) {
         val image = loadModuleSet(moduleSet)
 
-        val temporaryDirectory = createTempDir()
+        val temporaryDirectory = createTempDirectory()
         try {
             val compilationResult = WasmCompiler(image = image, moduleSet = moduleSet).compile(
                 mainModule = mainModule
             )
 
             val objectFilePath = temporaryDirectory.resolve("program.o")
-            objectFilePath.outputStream()
+            objectFilePath.toFile().outputStream()
                 .use { outputStream ->
                     WasmBinaryFormat.writeObjectFile(
                         compilationResult.module,
@@ -32,7 +34,7 @@ object WasmBackend : Backend {
             val intToStringObjectPath = findRoot().resolve("backend-wasm/stdlib/Core.IntToString.o")
             run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", target.toString()))
         } finally {
-            temporaryDirectory.deleteRecursively()
+            temporaryDirectory.toFile().deleteRecursively()
         }
     }
 

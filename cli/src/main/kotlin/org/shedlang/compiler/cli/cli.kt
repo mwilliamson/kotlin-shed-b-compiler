@@ -14,6 +14,7 @@ import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
 import org.shedlang.compiler.standaloneModulePathToName
 import org.shedlang.compiler.SourceError
+import org.shedlang.compiler.backends.createTempDirectory
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.system.exitProcess
@@ -57,8 +58,8 @@ object ShedCli {
                 )
             }
         } else {
-            val tempDir = createTempDir()
-            val target = tempDir.resolve("target").toPath()
+            val tempDir = createTempDirectory()
+            val target = tempDir.resolve("target")
             try {
                 val mainModuleName = compile(
                     sourcePath = sourcePath,
@@ -68,7 +69,7 @@ object ShedCli {
                 )
                 return backend.run(target, mainModuleName, args = programArguments)
             } finally {
-                tempDir.deleteRecursively()
+                tempDir.toFile().deleteRecursively()
             }
         }
     }
