@@ -6,10 +6,7 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.tests.*
-import org.shedlang.compiler.backends.wasm.WasmCompiler
-import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
-import org.shedlang.compiler.findRoot
-import org.shedlang.compiler.stackir.loadModuleSet
+import org.shedlang.compiler.backends.wasm.WasmBackend
 import java.nio.file.Path
 
 class WasmExampleTests {
@@ -52,28 +49,12 @@ class WasmExampleTests {
             DynamicTest.dynamicTest(testProgram.name) {
                 try {
                     temporaryDirectory().use { temporaryDirectory ->
-                        val moduleSet = testProgram.load()
-                        val image = loadModuleSet(moduleSet)
-
-                        val compilationResult = WasmCompiler(
-                            image = image,
-                            moduleSet = moduleSet
-                        ).compile(
-                            mainModule = testProgram.mainModule,
-                        )
-                        val objectFilePath = temporaryDirectory.path.resolve("program.o")
-                        objectFilePath.toFile().outputStream()
-                            .use { outputStream ->
-                                WasmBinaryFormat.writeObjectFile(
-                                    compilationResult.module,
-                                    outputStream,
-                                    tagValuesToInt = compilationResult.tagValuesToInt,
-                                )
-                            }
-
                         val outputPath = temporaryDirectory.path.resolve("program.wasm")
-                        val intToStringObjectPath = findRoot().resolve("backend-wasm/stdlib/Core.IntToString.o")
-                        run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", outputPath.toString())).throwOnError()
+                        WasmBackend.compile(
+                            moduleSet = testProgram.load(),
+                            mainModule = testProgram.mainModule,
+                            target = outputPath
+                        )
 
                         val result = executeWasm(outputPath, args = testProgram.args)
                         assertThat(
