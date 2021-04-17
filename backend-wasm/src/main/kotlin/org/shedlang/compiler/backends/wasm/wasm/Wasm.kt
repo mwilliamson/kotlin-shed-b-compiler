@@ -112,10 +112,6 @@ internal object Wasm {
 
     fun local(identifier: String, type: WasmValueType) = WasmLocal(identifier = identifier, type = type)
 
-    fun instructions(vararg instructions: WasmInstruction): List<WasmInstruction> {
-        return instructions.toList()
-    }
-
     object T {
         val i32 = WasmValueType.i32
 
