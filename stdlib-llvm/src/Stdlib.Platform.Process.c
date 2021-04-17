@@ -7,7 +7,7 @@
 
 #include "../../c-bindings/Stdlib.Lists.h"
 
-ShedValue Shed_Stdlib_Platform_Process_args() {
+ShedValue shed_module_fun__Stdlib__Platform__Process__args() {
     // TODO: deal with encoding
     ShedValue args = shed__module_value__Stdlib_Lists.nil;
 

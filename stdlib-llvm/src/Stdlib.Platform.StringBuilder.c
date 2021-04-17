@@ -13,7 +13,7 @@ static ShedValue handle_write(struct EffectHandler* effect_handler, void* contex
     return shed_unit;
 }
 
-ShedString Shed_Stdlib_Platform_StringBuilder_build(ShedEnvironment env, struct ShedClosure* closure) {
+ShedString shed_module_fun__Stdlib__Platform__StringBuilder__build(ShedEnvironment env, struct ShedClosure* closure) {
     StringLength initial_capacity = 16;
 
     struct StringBuilder string_builder;
@@ -30,6 +30,6 @@ ShedString Shed_Stdlib_Platform_StringBuilder_build(ShedEnvironment env, struct 
     return string_builder_build(&string_builder);
 }
 
-ShedValue Shed_Stdlib_Platform_StringBuilder_write(ShedEnvironment env, ShedString value) {
+ShedValue shed_module_fun__Stdlib__Platform__StringBuilder__write(ShedEnvironment env, ShedString value) {
     return shed_effect_handlers_call(effect_id, 0, (ShedValue*)&value);
 }

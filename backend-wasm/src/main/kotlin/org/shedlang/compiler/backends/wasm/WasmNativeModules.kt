@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
@@ -45,16 +46,19 @@ internal object WasmNativeModules {
     private fun generateCoreIntToStringModule(
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+        val symbolName = ShedRuntime.functionSymbolName(
+            listOf(Identifier("Core"), Identifier("IntToString")),
+            Identifier("intToString"),
+        )
         val intToStringImport = Wasm.importFunction(
             moduleName = "env",
-            entityName = "Shed_Core_IntToString__intToString",
-            identifier = "Shed_Core_IntToString__intToString",
+            entityName = symbolName,
+            identifier = symbolName,
             params = listOf(WasmData.genericValueType, WasmData.genericValueType),
             results = listOf(WasmData.genericValueType),
         )
         val (context2, closure) = WasmClosures.compileCreateForFunction(
-            // TODO: build identifiers in WasmNaming
-            tableIndex = WasmConstValue.TableEntryIndex("Shed_Core_IntToString__intToString"),
+            tableIndex = WasmConstValue.TableEntryIndex(symbolName),
             freeVariables = listOf(),
             context.addImport(intToStringImport).addTableEntry(intToStringImport.identifier),
         )

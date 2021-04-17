@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.llvm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.types.FunctionType
 
 internal class BuiltinModuleCompiler(
@@ -41,8 +42,8 @@ internal class BuiltinModuleCompiler(
     }
 
     private fun compileCoreIo(context: FunctionContext): FunctionContext {
-        // TODO: allocation of global names
-        val functionName = "Core_Io_print"
+        val moduleName = listOf(Identifier("Core"), Identifier("Io"))
+        val functionName = ShedRuntime.functionSymbolName(moduleName, Identifier("print"))
 
         val printClosure = irBuilder.generateLocal("print")
 
@@ -95,8 +96,8 @@ internal class BuiltinModuleCompiler(
     }
 
     private fun compileCoreIntToString(context: FunctionContext): FunctionContext {
-        // TODO: allocation of global names
-        val functionName = "Core_Io_intToString"
+        val moduleName = listOf(Identifier("Core"), Identifier("IntToString"))
+        val functionName = ShedRuntime.functionSymbolName(moduleName, Identifier("intToString"))
 
         val format = LlvmOperandLocal("format")
         val string = LlvmOperandLocal("string")
@@ -172,7 +173,7 @@ internal class BuiltinModuleCompiler(
             context = context
         ).addInstructions(
             modules.storeFields(
-                moduleName = listOf(Identifier("Core"), Identifier("IntToString")),
+                moduleName = moduleName,
                 exports = listOf(
                     Identifier("intToString") to intToStringClosure
                 )
@@ -233,7 +234,7 @@ internal class BuiltinModuleCompiler(
             val functionType = moduleType.fieldType(Identifier(functionName)) as FunctionType
             createClosureForCFunction(
                 target = closure,
-                functionName = "Shed_" + (moduleName.map(Identifier::value) + listOf(functionName)).joinToString("_"),
+                functionName = ShedRuntime.functionSymbolName(moduleName, Identifier(functionName)),
                 parameterCount = functionType.positionalParameters.size + functionType.namedParameters.size,
                 context = context2
             )

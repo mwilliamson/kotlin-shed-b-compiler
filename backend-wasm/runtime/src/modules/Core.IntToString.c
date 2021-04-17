@@ -45,7 +45,7 @@ int itoa(uint8_t* string, int value) {
     }
 }
 
-ShedValue Shed_Core_IntToString__intToString(void* environment, ShedValue value) {
+ShedValue shed_module_fun__Core__IntToString__intToString(void* environment, ShedValue value) {
     ShedString string = shed_malloc(4 + 11, 4);
     string->length = itoa(string->data, value);
     return (ShedValue)string;
