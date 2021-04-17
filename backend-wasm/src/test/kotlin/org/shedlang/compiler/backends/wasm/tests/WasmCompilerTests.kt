@@ -47,9 +47,15 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val watContents = wat.serialise(compilationResult.module)
         println(withLineNumbers(watContents))
 
-        if (type == StringType) {
+        temporaryDirectory().use { directory ->
+            val watPath = directory.path.resolve("test.wat")
+            watPath.toFile().writeText(watContents)
 
-            temporaryDirectory().use { directory ->
+            val wasmPath = directory.path.resolve("test.wasm")
+            watToWasm(watPath, wasmPath)
+
+            if (type == StringType) {
+
                 val watPath = directory.path.resolve("test.wat")
                 watPath.toFile().writeText(watContents)
 
@@ -68,17 +74,15 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                     value = IrString(testRunnerResult.stdout),
                     stdout = "",
                 )
-            }
-        } else {
-            temporaryDirectory().use { directory ->
-                val watPath = directory.path.resolve("test.wat")
-                watPath.toFile().writeText(watContents)
-
-                val wasmPath = directory.path.resolve("test.wasm")
-                watToWasm(watPath, wasmPath)
+            } else {
 
                 val testRunnerResult = run(
-                    listOf("node", "--experimental-wasi-unstable-preview1", "wasm-test-runner.js", wasmPath.toString()),
+                    listOf(
+                        "node",
+                        "--experimental-wasi-unstable-preview1",
+                        "wasm-test-runner.js",
+                        wasmPath.toString()
+                    ),
                     workingDirectory = findRoot().resolve("backend-wasm")
                 )
 
