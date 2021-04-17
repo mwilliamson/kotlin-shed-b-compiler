@@ -1,6 +1,6 @@
 .PHONY: package stdlib-tests run-stdlib-tests test c-bindings build-runtime-llvm build-runtime-wasm
 
-package: build-stdlib-llvm build-runtime-wasm
+package: build-runtime-llvm build-runtime-wasm
 	mvn package -Dmaven.test.skip=true
 
 stdlib-tests: package run-stdlib-tests
