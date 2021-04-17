@@ -24,4 +24,4 @@ deps/utf8proc-2.4.0:
 
 sizeof_jmp_buf.txt: sizeof_jmp_buf.c
 	gcc sizeof_jmp_buf.c -o sizeof_jmp_buf
-	sizeof_jmp_buf > sizeof_jmp_buf.txt
+	./sizeof_jmp_buf > sizeof_jmp_buf.txt
