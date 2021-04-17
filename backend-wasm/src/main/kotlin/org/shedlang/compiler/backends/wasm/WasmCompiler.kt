@@ -12,7 +12,6 @@ import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.Field
 import org.shedlang.compiler.types.TagValue
