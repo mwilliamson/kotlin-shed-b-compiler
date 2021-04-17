@@ -5,7 +5,7 @@
 
 #include "./shed.h"
 
-#include "../../c-bindings/Stdlib.Lists.h"
+#include "../../../c-bindings/Stdlib.Lists.h"
 
 ShedValue shed_module_fun__Stdlib__Platform__Process__args() {
     // TODO: deal with encoding

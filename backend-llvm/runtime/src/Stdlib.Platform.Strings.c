@@ -9,7 +9,7 @@
 #include "./shed.h"
 #include "./stringbuilder.h"
 
-#include "../../c-bindings/Core.Options.h"
+#include "../../../c-bindings/Core.Options.h"
 
 static bool isContinuationByte(uint8_t byte) {
     return (byte & 0xc0) == 0x80;

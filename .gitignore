@@ -15,10 +15,10 @@
 /interpreter/target
 /stack-interpreter/target
 /stack-ir/target
-/stdlib-llvm/build/
-/stdlib-llvm/deps/gc-8.0.4/
-/stdlib-llvm/deps/utf8proc-2.4.0/
-/stdlib-llvm/sizeof_jmp_buf
-stdlib-llvm/sizeof_jmp_buf.txt
+/backend-llvm/runtime/build/
+/backend-llvm/runtime/deps/gc-8.0.4/
+/backend-llvm/runtime/deps/utf8proc-2.4.0/
+/backend-llvm/runtime/sizeof_jmp_buf
+/backend-llvm/runtime/sizeof_jmp_buf.txt
 /testing/target
 shedDependencies

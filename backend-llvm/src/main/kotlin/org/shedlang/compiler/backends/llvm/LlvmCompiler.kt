@@ -1,7 +1,6 @@
 package org.shedlang.compiler.backends.llvm
 
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentMapOf
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
@@ -123,11 +122,11 @@ internal class LlvmCompiler(
     }
 
     internal fun linkerFiles(): List<String> {
-        val stdlibPath = Paths.get("stdlib-llvm")
-        val depsPath = stdlibPath.resolve("deps")
+        val runtimePath = Paths.get("backend-llvm", "runtime")
+        val depsPath = runtimePath.resolve("deps")
 
         val files = listOf(
-            stdlibPath.resolve("build/libshed.a"),
+            runtimePath.resolve("build/libshed.a"),
             depsPath.resolve("gc/.libs/libgc.a"),
             depsPath.resolve("utf8proc/libutf8proc.a")
         )

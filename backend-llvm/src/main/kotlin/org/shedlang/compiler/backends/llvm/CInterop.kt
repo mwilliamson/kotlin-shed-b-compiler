@@ -12,7 +12,7 @@ internal object CTypes {
     val void = LlvmTypes.void
     val jmpBuf by lazy {
         LlvmTypes.arrayType(
-            size = findRoot().resolve("stdlib-llvm/sizeof_jmp_buf.txt").toFile().readText().trim().toInt(),
+            size = findRoot().resolve("backend-llvm/runtime/sizeof_jmp_buf.txt").toFile().readText().trim().toInt(),
             elementType = LlvmTypes.i8
         )
     }
