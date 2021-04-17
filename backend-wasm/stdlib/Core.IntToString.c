@@ -17,7 +17,7 @@ void reverse(uint8_t* string, int length) {
     int right_index = length - 1;
 
     while (left_index < right_index) {
-        int temp = string[left_index];
+        uint8_t temp = string[left_index];
         string[left_index] = string[right_index];
         string[right_index] = temp;
         left_index++;
