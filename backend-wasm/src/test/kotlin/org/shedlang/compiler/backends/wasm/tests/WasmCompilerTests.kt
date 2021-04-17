@@ -7,14 +7,10 @@ import org.shedlang.compiler.backends.wasm.WasmFunctionContext
 import org.shedlang.compiler.backends.wasm.WasmNaming
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.WasmSymbolTable
-import org.shedlang.compiler.backends.wasm.wasm.Wat
-import org.shedlang.compiler.backends.withLineNumbers
+import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.*
-import java.nio.file.Path
-
 
 object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
     override fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet): StackExecutionResult {
@@ -40,28 +36,16 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
         val globalContext3 = compiler.compileDependencies(globalContext2)
         val compilationResult = globalContext3.toModule()
 
-        val wat = Wat(
-            symbolTable = WasmSymbolTable.forModule(compilationResult.module),
-            tagValuesToInt = compilationResult.tagValuesToInt,
-        )
-        val watContents = wat.serialise(compilationResult.module)
-        println(withLineNumbers(watContents))
-
         temporaryDirectory().use { directory ->
-            val watPath = directory.path.resolve("test.wat")
-            watPath.toFile().writeText(watContents)
-
             val wasmPath = directory.path.resolve("test.wasm")
-            watToWasm(watPath, wasmPath)
+
+            WasmBinaryFormat.writeModule(
+                module = compilationResult.module,
+                tagValuesToInt = compilationResult.tagValuesToInt,
+                output = wasmPath.toFile().outputStream(),
+            )
 
             if (type == StringType) {
-
-                val watPath = directory.path.resolve("test.wat")
-                watPath.toFile().writeText(watContents)
-
-                val wasmPath = directory.path.resolve("test.wasm")
-                watToWasm(watPath, wasmPath)
-
                 val testRunnerResult = run(
                     listOf("wasmtime", wasmPath.toString()),
                     workingDirectory = findRoot().resolve("backend-wasm")
@@ -123,16 +107,6 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             else ->
                 throw Exception("unhandled type: ${type.shortDescription}")
         }
-    }
-
-    private fun watToWasm(watPath: Path, wasmPath: Path) {
-        val arguments = listOf(
-            "wat2wasm",
-            watPath.toAbsolutePath().toString(),
-            "-o", wasmPath.toAbsolutePath().toString(),
-        )
-        val watToWasmResult = run(arguments)
-        watToWasmResult.throwOnError()
     }
 }
 
