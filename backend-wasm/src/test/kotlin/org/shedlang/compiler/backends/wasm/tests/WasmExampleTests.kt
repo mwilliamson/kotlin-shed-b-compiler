@@ -39,7 +39,6 @@ class WasmExampleTests {
         "stdlib",
         "stringBuilder",
         "TailRec.shed",
-        "Tuples.shed",
         "TypeName.shed",
         "usingStdlib",
     )
