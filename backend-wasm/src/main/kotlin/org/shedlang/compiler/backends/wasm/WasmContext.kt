@@ -122,18 +122,25 @@ internal data class WasmGlobalContext private constructor(
             dataSegments.add(dataSegment)
         }
 
-        val importFunctionTypes = imports
-            .map { import -> import.descriptor }
-            .filterIsInstance<WasmImportDescriptor.Function>()
-            .map { descriptor -> descriptor.type() }
-        val definedFunctionTypes = functions.map { function -> function.type() }
-        val functionTypes = (importFunctionTypes + definedFunctionTypes).distinct()
-
         for ((global, value) in globals) {
             if (value != null) {
                 startInstructions.add(Wasm.I.globalSet(global.identifier, value))
             }
         }
+
+        val moduleFunctions = listOf(
+            Wasm.function(
+                identifier = WasmNaming.funcStartIdentifier,
+                body = startInstructions,
+            ),
+        ) + functions
+
+        val importFunctionTypes = imports
+            .map { import -> import.descriptor }
+            .filterIsInstance<WasmImportDescriptor.Function>()
+            .map { descriptor -> descriptor.type() }
+        val definedFunctionTypes = moduleFunctions.map { function -> function.type() }
+        val functionTypes = (importFunctionTypes + definedFunctionTypes).distinct()
 
         val tagValuesToInt = tagValues.mapIndexed { tagValueIndex, tagValue ->
             tagValue to tagValueIndex
@@ -142,12 +149,7 @@ internal data class WasmGlobalContext private constructor(
         val module = Wasm.module(
             dataSegments = dataSegments,
             globals = globals.map { (global, _) -> global },
-            functions = listOf(
-                Wasm.function(
-                    identifier = WasmNaming.funcStartIdentifier,
-                    body = startInstructions,
-                ),
-            ) + functions,
+            functions = moduleFunctions,
             imports = imports,
             memoryPageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             start = WasmNaming.funcStartIdentifier,
