@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 
@@ -15,8 +16,10 @@ object WasmBackend : Backend {
             val compilationResult = WasmCompiler(image = image, moduleSet = moduleSet).compile(
                 mainModule = mainModule
             )
+            val wat = Wat.serialise(compilationResult.module, tagValuesToInt = compilationResult.tagValuesToInt)
+
             val watPath = temporaryDirectory.toPath().resolve("program.wat")
-            watPath.toFile().writeText(compilationResult.wat)
+            watPath.toFile().writeText(wat)
 
             run(listOf("wat2wasm", watPath.toString(), "-o", target.toString()))
         } finally {

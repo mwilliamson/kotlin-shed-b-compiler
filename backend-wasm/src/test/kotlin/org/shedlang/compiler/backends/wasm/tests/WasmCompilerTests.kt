@@ -38,14 +38,13 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         val globalContext2 = globalContext1.merge(compileRuntime())
         val globalContext3 = compiler.compileDependencies(globalContext2)
-        val boundGlobalContext = globalContext3.bind()
+        val compilationResult = globalContext3.toModule()
 
-        val module = boundGlobalContext.toModule()
         val wat = Wat(
-            symbolTable = WasmSymbolTable.forModule(module),
-            tagValuesToInt = boundGlobalContext.tagValuesToInt,
+            symbolTable = WasmSymbolTable.forModule(compilationResult.module),
+            tagValuesToInt = compilationResult.tagValuesToInt,
         )
-        val watContents = wat.serialise(module)
+        val watContents = wat.serialise(compilationResult.module)
         println(withLineNumbers(watContents))
 
         if (type == StringType) {

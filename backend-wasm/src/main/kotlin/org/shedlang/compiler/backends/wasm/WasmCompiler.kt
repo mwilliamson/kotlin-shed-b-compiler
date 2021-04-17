@@ -19,30 +19,20 @@ import org.shedlang.compiler.types.TagValue
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
-internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
-    class CompilationResult(
-        val tagValuesToInt: Map<TagValue, Int>,
-        val module: WasmModule,
-        val wat: String,
-    )
+internal class WasmCompilationResult(
+    val tagValuesToInt: Map<TagValue, Int>,
+    val module: WasmModule,
+)
 
-    fun compile(mainModule: ModuleName): CompilationResult {
+internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
+    fun compile(mainModule: ModuleName): WasmCompilationResult {
         val startFunctionContext = compileStartFunction(mainModule)
 
         var globalContext = startFunctionContext.merge(compileRuntime())
 
         globalContext = compileDependencies(globalContext)
 
-        val boundGlobalContext = globalContext.bind()
-
-        val module = boundGlobalContext.toModule()
-
-        val wat = Wat.serialise(module, tagValuesToInt = boundGlobalContext.tagValuesToInt)
-        return CompilationResult(
-            tagValuesToInt = boundGlobalContext.tagValuesToInt,
-            module = module,
-            wat = wat,
-        )
+        return globalContext.toModule()
     }
 
     fun compileDependencies(initialContext: WasmGlobalContext): WasmGlobalContext {

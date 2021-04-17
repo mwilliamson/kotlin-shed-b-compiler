@@ -70,37 +70,7 @@ internal data class WasmGlobalContext private constructor(
         )
     }
 
-    class Bound(
-        private val imports: List<WasmImport>,
-        private val globals: List<WasmGlobal>,
-        private val pageCount: Int,
-        private val dataSegments: List<WasmDataSegment>,
-        private val startInstructions: List<WasmInstruction>,
-        private val functions: List<WasmFunction>,
-        private val table: List<String>,
-        private val types: List<WasmFuncType>,
-        internal val tagValuesToInt: Map<TagValue, Int>,
-    ) {
-        fun toModule(): WasmModule {
-            return Wasm.module(
-                types = types,
-                imports = imports,
-                globals = globals,
-                memoryPageCount = pageCount,
-                start = WasmNaming.funcStartIdentifier,
-                dataSegments = dataSegments,
-                table = table,
-                functions = listOf(
-                    Wasm.function(
-                        identifier = WasmNaming.funcStartIdentifier,
-                        body = startInstructions,
-                    ),
-                ) + functions,
-            )
-        }
-    }
-
-    fun bind(): Bound {
+    fun toModule(): WasmCompilationResult {
         val imports = listOf(
             Wasi.importFdWrite(),
             Wasi.importProcExit(),
@@ -169,17 +139,23 @@ internal data class WasmGlobalContext private constructor(
             tagValue to tagValueIndex
         }.toMap()
 
-        return Bound(
-            imports = imports,
-            globals = globals.map { (global, _) -> global },
-            pageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
+        val module = Wasm.module(
             dataSegments = dataSegments,
-            startInstructions = startInstructions,
-            functions = functions,
+            globals = globals.map { (global, _) -> global },
+            functions = listOf(
+                Wasm.function(
+                    identifier = WasmNaming.funcStartIdentifier,
+                    body = startInstructions,
+                ),
+            ) + functions,
+            imports = imports,
+            memoryPageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
+            start = WasmNaming.funcStartIdentifier,
             table = table,
             types = functionTypes,
-            tagValuesToInt = tagValuesToInt,
         )
+
+        return WasmCompilationResult(module = module, tagValuesToInt = tagValuesToInt)
     }
 
     fun addImport(import: WasmImport): WasmGlobalContext {
