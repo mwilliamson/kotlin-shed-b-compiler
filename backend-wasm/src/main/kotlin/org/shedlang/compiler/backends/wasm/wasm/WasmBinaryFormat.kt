@@ -2,17 +2,17 @@ package org.shedlang.compiler.backends.wasm.wasm
 
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.NullSource
-import org.shedlang.compiler.backends.wasm.LateIndex
 import org.shedlang.compiler.backends.wasm.add
+import org.shedlang.compiler.types.TagValue
 import java.io.OutputStream
 import java.nio.ByteBuffer
 import java.nio.channels.Channels
 
 internal object WasmBinaryFormat {
-    internal fun writeModule(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+    internal fun writeModule(module: WasmModule, output: OutputStream, tagValuesToInt: Map<TagValue, Int>) {
         val buffer = BufferWriter()
         val writer = WasmBinaryFormatWriter(
-            lateIndices = lateIndices,
+            tagValuesToInt = tagValuesToInt,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = false,
             output = buffer,
@@ -21,10 +21,10 @@ internal object WasmBinaryFormat {
         buffer.writeTo(output)
     }
 
-    internal fun writeObjectFile(module: WasmModule, output: OutputStream, lateIndices: Map<LateIndex, Int>) {
+    internal fun writeObjectFile(module: WasmModule, output: OutputStream, tagValuesToInt: Map<TagValue, Int>) {
         val buffer = BufferWriter()
         val writer = WasmBinaryFormatWriter(
-            lateIndices = lateIndices,
+            tagValuesToInt = tagValuesToInt,
             symbolTable = WasmSymbolTable.forModule(module),
             objectFile = true,
             output = buffer,
@@ -36,7 +36,7 @@ internal object WasmBinaryFormat {
 
 @ExperimentalUnsignedTypes
 private class WasmBinaryFormatWriter(
-    private val lateIndices: Map<LateIndex, Int>,
+    private val tagValuesToInt: Map<TagValue, Int>,
     private val symbolTable: WasmSymbolTable,
     private val objectFile: Boolean,
     private val output: BufferWriter,
@@ -801,8 +801,8 @@ private class WasmBinaryFormatWriter(
                         )
                     }
 
-                    is WasmConstValue.LateIndex ->
-                        output.writeSignedLeb128(lateIndices[instruction.value.ref]!!)
+                    is WasmConstValue.TagValue ->
+                        output.writeSignedLeb128(tagValuesToInt[instruction.value.tagValue]!!)
 
                     is WasmConstValue.TableEntryIndex -> {
                         val functionIndex = symbolTable.functionIndex(instruction.value.identifier)

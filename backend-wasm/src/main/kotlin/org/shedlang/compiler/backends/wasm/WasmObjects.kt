@@ -22,12 +22,12 @@ internal object WasmObjects {
         val context2 = if (layout.tagValue == null) {
             context
         } else {
-            val (newContext, tagValue) = context.compileTagValue(layout.tagValue)
+            val newContext = context.compileTagValue(layout.tagValue)
             newContext.addInstruction(Wasm.I.i32Store(
                 address = objectPointer,
                 offset = layout.tagValueOffset,
                 alignment = OBJECT_ALIGNMENT,
-                value = Wasm.I.i32Const(tagValue),
+                value = Wasm.I.i32Const(layout.tagValue),
             ))
         }
         return fieldValues.fold(context2) { currentContext, (fieldName, fieldValue) ->

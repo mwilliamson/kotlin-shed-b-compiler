@@ -215,7 +215,7 @@ class WatTests {
         ))
     }
 
-    private fun wat() = Wat(lateIndices = mapOf(), symbolTable = WasmSymbolTable())
+    private fun wat() = Wat(tagValuesToInt = mapOf(), symbolTable = WasmSymbolTable())
 }
 
 class SExpressionTests {

@@ -21,12 +21,6 @@ import org.shedlang.compiler.types.TagValue
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-private var nextLateIndexKey = 1
-
-private fun nextLateIndex() = LateIndex(key = nextLateIndexKey++)
-
-internal data class LateIndex(private val key: Int)
-
 internal data class WasmGlobalContext private constructor(
     private val imports: PersistentList<WasmImport>,
     private val globals: PersistentList<Pair<WasmGlobal, WasmInstruction.Folded?>>,
@@ -35,7 +29,7 @@ internal data class WasmGlobalContext private constructor(
     private val staticData: PersistentList<Pair<WasmDataSegmentKey, WasmStaticData>>,
     private val moduleNames: PersistentSet<ModuleName>,
     private val dependencies: PersistentSet<ModuleName>,
-    private val tagValues: PersistentMap<TagValue, Set<LateIndex>>,
+    private val tagValues: PersistentSet<TagValue>,
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
@@ -46,7 +40,7 @@ internal data class WasmGlobalContext private constructor(
             staticData = persistentListOf(),
             moduleNames = persistentSetOf(),
             dependencies = persistentSetOf(),
-            tagValues = persistentMapOf(),
+            tagValues = persistentSetOf(),
         )
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
@@ -58,7 +52,7 @@ internal data class WasmGlobalContext private constructor(
                 staticData = contexts.flatMap { context -> context.staticData }.toPersistentList(),
                 moduleNames = contexts.flatMap { context -> context.moduleNames }.toPersistentSet(),
                 dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentSet(),
-                tagValues = contexts.map { context -> context.tagValues }.reduce(::mergeTagValues),
+                tagValues = contexts.flatMap { context -> context.tagValues }.toPersistentSet(),
             )
         }
     }
@@ -72,7 +66,7 @@ internal data class WasmGlobalContext private constructor(
             staticData = staticData.addAll(other.staticData),
             moduleNames = moduleNames.addAll(other.moduleNames),
             dependencies = dependencies.addAll(other.dependencies),
-            tagValues = mergeTagValues(tagValues, other.tagValues),
+            tagValues = tagValues.addAll(other.tagValues),
         )
     }
 
@@ -85,7 +79,7 @@ internal data class WasmGlobalContext private constructor(
         private val functions: List<WasmFunction>,
         private val table: List<String>,
         private val types: List<WasmFuncType>,
-        internal val lateIndices: Map<LateIndex, Int>,
+        internal val tagValuesToInt: Map<TagValue, Int>,
     ) {
         fun toModule(): WasmModule {
             return Wasm.module(
@@ -115,7 +109,6 @@ internal data class WasmGlobalContext private constructor(
         var size = 0
         val dataSegments = mutableListOf<WasmDataSegment>()
         val startInstructions = mutableListOf<WasmInstruction>()
-        val lateIndices = mutableMapOf<LateIndex, Int>()
 
         fun align(alignment: Int) {
             size = roundUp(size, alignment)
@@ -172,11 +165,9 @@ internal data class WasmGlobalContext private constructor(
             }
         }
 
-        tagValues.values.forEachIndexed { tagValueIndex, lateIndicesForTagValue ->
-            for (lateIndex in lateIndicesForTagValue) {
-                lateIndices[lateIndex] = tagValueIndex + 1
-            }
-        }
+        val tagValuesToInt = tagValues.mapIndexed { tagValueIndex, tagValue ->
+            tagValue to tagValueIndex
+        }.toMap()
 
         return Bound(
             imports = imports,
@@ -187,7 +178,7 @@ internal data class WasmGlobalContext private constructor(
             functions = functions,
             table = table,
             types = functionTypes,
-            lateIndices = lateIndices,
+            tagValuesToInt = tagValuesToInt,
         )
     }
 
@@ -257,33 +248,9 @@ internal data class WasmGlobalContext private constructor(
         return dependencies.removeAll(moduleNames)
     }
 
-    fun compileTagValue(tagValue: TagValue): Pair<WasmGlobalContext, LateIndex> {
-        val newContext = if (tagValues.containsKey(tagValue)) {
-            this
-        } else {
-            val lateIndex = nextLateIndex()
-            copy(
-                tagValues = tagValues.put(tagValue, persistentSetOf(lateIndex)),
-            )
-        }
-        return Pair(newContext, newContext.tagValues.getValue(tagValue).first())
+    fun compileTagValue(tagValue: TagValue): WasmGlobalContext {
+        return copy(tagValues = tagValues.add(tagValue))
     }
-}
-
-private fun mergeTagValues(
-    left: PersistentMap<TagValue, Set<LateIndex>>,
-    right: PersistentMap<TagValue, Set<LateIndex>>,
-): PersistentMap<TagValue, PersistentSet<LateIndex>> {
-    val result = persistentMapOf<TagValue, PersistentSet<LateIndex>>().builder()
-    val keys = left.keys + right.keys
-    for (key in keys) {
-        if (!result.containsKey(key)) {
-            result.put(key, persistentSetOf())
-        }
-        result.put(key, result.getValue(key).addAll(left.getOrDefault(key, persistentSetOf())))
-        result.put(key, result.getValue(key).addAll(right.getOrDefault(key, persistentSetOf())))
-    }
-    return result.build()
 }
 
 private const val initialLocalIndex = 1
@@ -429,10 +396,9 @@ internal data class WasmFunctionContext(
         return copy(globalContext = globalContext.addDependency(dependency = moduleName))
     }
 
-    fun compileTagValue(tagValue: TagValue): Pair<WasmFunctionContext, LateIndex> {
-        val (newGlobalContext, lateIndex) = globalContext.compileTagValue(tagValue)
-        val newContext = copy(globalContext = newGlobalContext)
-        return Pair(newContext, lateIndex)
+    fun compileTagValue(tagValue: TagValue): WasmFunctionContext {
+        val newGlobalContext = globalContext.compileTagValue(tagValue)
+        return copy(globalContext = newGlobalContext)
     }
 
     fun mergeGlobalContext(globalContext: WasmGlobalContext): WasmFunctionContext {

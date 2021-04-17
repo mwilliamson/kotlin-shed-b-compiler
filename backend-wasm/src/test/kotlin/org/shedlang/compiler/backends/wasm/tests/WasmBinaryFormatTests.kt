@@ -538,13 +538,13 @@ class WasmBinaryFormatTests {
                     WasmBinaryFormat.writeObjectFile(
                         module,
                         outputStream,
-                        lateIndices = mapOf(),
+                        tagValuesToInt = mapOf(),
                     )
                 } else {
                     WasmBinaryFormat.writeModule(
                         module,
                         outputStream,
-                        lateIndices = mapOf(),
+                        tagValuesToInt = mapOf(),
                     )
                 }
             }

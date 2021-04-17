@@ -1,21 +1,21 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
-import org.shedlang.compiler.backends.wasm.LateIndex
 import org.shedlang.compiler.nullableToList
+import org.shedlang.compiler.types.TagValue
 import java.lang.StringBuilder
 import java.lang.UnsupportedOperationException
 import java.math.BigInteger
 
 internal class Wat(
-    private val lateIndices: Map<LateIndex, Int>,
+    private val tagValuesToInt: Map<TagValue, Int>,
     private val symbolTable: WasmSymbolTable,
 ) {
     companion object {
         fun serialise(
             module: WasmModule,
-            lateIndices: Map<LateIndex, Int>,
+            tagValuesToInt: Map<TagValue, Int>,
         ): String {
-            return Wat(lateIndices = lateIndices, symbolTable = WasmSymbolTable.forModule(module))
+            return Wat(tagValuesToInt = tagValuesToInt, symbolTable = WasmSymbolTable.forModule(module))
                 .serialise(module)
         }
     }
@@ -332,8 +332,8 @@ internal class Wat(
         return when (value) {
             is WasmConstValue.DataIndex -> symbolTable.dataAddress(value.key)
             is WasmConstValue.I32 -> value.value
-            is WasmConstValue.LateIndex -> lateIndices[value.ref]!!
             is WasmConstValue.TableEntryIndex -> symbolTable.tableEntryIndex(value.identifier)
+            is WasmConstValue.TagValue -> tagValuesToInt[value.tagValue]!!
         }
     }
 

@@ -15,12 +15,13 @@ import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.Wat
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.Field
+import org.shedlang.compiler.types.TagValue
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
 internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
     class CompilationResult(
-        val lateIndices: Map<LateIndex, Int>,
+        val tagValuesToInt: Map<TagValue, Int>,
         val module: WasmModule,
         val wat: String,
     )
@@ -36,9 +37,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         val module = boundGlobalContext.toModule()
 
-        val wat = Wat.serialise(module, lateIndices = boundGlobalContext.lateIndices)
+        val wat = Wat.serialise(module, tagValuesToInt = boundGlobalContext.tagValuesToInt)
         return CompilationResult(
-            lateIndices = boundGlobalContext.lateIndices,
+            tagValuesToInt = boundGlobalContext.tagValuesToInt,
             module = module,
             wat = wat,
         )
@@ -337,8 +338,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         return context2.addInstruction(Wasm.I.i32Const(memoryIndex))
                     }
                     is IrTagValue -> {
-                        val (context2, tagValue) = context.compileTagValue(value.value)
-                        return context2.addInstruction(Wasm.I.i32Const(tagValue))
+                        val context2 = context.compileTagValue(value.value)
+                        return context2.addInstruction(Wasm.I.i32Const(value.value))
                     }
                     is IrUnicodeScalar -> {
                         return context.addInstruction(Wasm.I.i32Const(value.value))

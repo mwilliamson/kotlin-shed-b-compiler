@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
-import org.shedlang.compiler.backends.wasm.LateIndex
+import org.shedlang.compiler.types.TagValue
 
 internal object Wasm {
     fun module(
@@ -194,8 +194,8 @@ internal object Wasm {
             return WasmInstruction.Folded.I32Const(WasmConstValue.DataIndex(value))
         }
 
-        fun i32Const(value: LateIndex): WasmInstruction.Folded {
-            return WasmInstruction.Folded.I32Const(WasmConstValue.LateIndex(value))
+        fun i32Const(value: TagValue): WasmInstruction.Folded {
+            return WasmInstruction.Folded.I32Const(WasmConstValue.TagValue(value))
         }
 
         fun i32Const(value: WasmConstValue): WasmInstruction.Folded {
@@ -224,10 +224,6 @@ internal object Wasm {
 
         fun i32Load(offset: Int, alignment: Int): WasmInstruction {
             return WasmInstruction.I32Load(offset = offset, alignment = alignment)
-        }
-
-        fun i32Load(address: LateIndex): WasmInstruction.Folded {
-            return i32Load(i32Const(address))
         }
 
         // TODO: make alignment required
@@ -545,8 +541,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 internal sealed class WasmConstValue {
     data class DataIndex(val key: WasmDataSegmentKey): WasmConstValue()
     data class I32(val value: Int): WasmConstValue()
-    data class LateIndex(val ref: org.shedlang.compiler.backends.wasm.LateIndex): WasmConstValue()
     data class TableEntryIndex(val identifier: String): WasmConstValue()
+    data class TagValue(val tagValue: org.shedlang.compiler.types.TagValue): WasmConstValue()
 }
 
 internal class WasmLimits(val min: Int, val max: Int?)

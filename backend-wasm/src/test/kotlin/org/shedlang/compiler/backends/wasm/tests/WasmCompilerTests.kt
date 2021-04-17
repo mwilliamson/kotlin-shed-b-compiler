@@ -42,8 +42,8 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         val module = boundGlobalContext.toModule()
         val wat = Wat(
-            lateIndices = boundGlobalContext.lateIndices,
             symbolTable = WasmSymbolTable.forModule(module),
+            tagValuesToInt = boundGlobalContext.tagValuesToInt,
         )
         val watContents = wat.serialise(module)
         println(withLineNumbers(watContents))

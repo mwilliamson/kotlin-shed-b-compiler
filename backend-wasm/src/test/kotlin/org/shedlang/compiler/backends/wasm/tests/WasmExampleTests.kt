@@ -67,7 +67,7 @@ class WasmExampleTests {
                                 WasmBinaryFormat.writeObjectFile(
                                     compilationResult.module,
                                     outputStream,
-                                    lateIndices = compilationResult.lateIndices,
+                                    tagValuesToInt = compilationResult.tagValuesToInt,
                                 )
                             }
 
