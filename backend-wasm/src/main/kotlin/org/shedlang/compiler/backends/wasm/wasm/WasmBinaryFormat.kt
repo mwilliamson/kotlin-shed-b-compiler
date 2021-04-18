@@ -430,7 +430,7 @@ private class WasmBinaryFormatWriter(
         output.writeVecSize(module.dataSegments.size)
         module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
             output.writeString("DATA_SEGMENT_$dataSegmentIndex")
-            writeMemoryAlignment(1)
+            writeMemoryAlignment(dataSegment.alignment)
             output.write8(0) // flags
         }
     }

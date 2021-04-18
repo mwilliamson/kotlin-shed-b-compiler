@@ -115,6 +115,7 @@ internal data class WasmGlobalContext private constructor(
             val dataSegment = WasmDataSegment(
                 key = staticDataKey,
                 offset = size,
+                alignment = data.alignment,
                 size = dataSegmentSize,
                 bytes = dataSegmentBytes,
             )

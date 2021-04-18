@@ -95,7 +95,7 @@ class WasmBinaryFormatTests {
         val module = Wasm.module(
             memoryPageCount = 1,
             dataSegments = listOf(
-                Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+                Wasm.dataSegment(44, 4, byteArrayOf(0x88.toByte(), 0x89.toByte()))
             ),
         )
 
@@ -107,7 +107,7 @@ class WasmBinaryFormatTests {
         val module = Wasm.module(
             memoryPageCount = 1,
             dataSegments = listOf(
-                Wasm.dataSegmentZeroed(offset = 42, size = 8)
+                Wasm.dataSegmentZeroed(offset = 44, alignment = 4, size = 8)
             ),
         )
 
@@ -259,7 +259,7 @@ class WasmBinaryFormatTests {
         val module = Wasm.module(
             memoryPageCount = 1,
             dataSegments = listOf(
-                Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+                Wasm.dataSegment(44, 4, byteArrayOf(0x88.toByte(), 0x89.toByte()))
             ),
         )
 
@@ -268,7 +268,7 @@ class WasmBinaryFormatTests {
 
     @Test
     fun dataAddressesHaveRelocationEntries(snapshotter: Snapshotter) {
-        val dataSegment = Wasm.dataSegment(42, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+        val dataSegment = Wasm.dataSegment(44, 4, byteArrayOf(0x88.toByte(), 0x89.toByte()))
 
         val module = Wasm.module(
             memoryPageCount = 1,

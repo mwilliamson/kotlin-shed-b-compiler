@@ -62,20 +62,24 @@ internal object Wasm {
 
     fun dataSegment(
         offset: Int,
+        alignment: Int,
         bytes: ByteArray,
     ) = WasmDataSegment(
         key = nextWasmDataSegmentKey(),
         offset = offset,
+        alignment = alignment,
         size = bytes.size,
         bytes = bytes,
     )
 
     fun dataSegmentZeroed(
         offset: Int,
+        alignment: Int,
         size: Int,
     ) = WasmDataSegment(
         key = nextWasmDataSegmentKey(),
         offset = offset,
+        alignment = alignment,
         size = size,
         bytes = null,
     )
@@ -331,7 +335,13 @@ internal fun nextWasmDataSegmentKey() = WasmDataSegmentKey(value = nextWasmDataS
 
 internal data class WasmDataSegmentKey(private val value: Int)
 
-internal class WasmDataSegment(val key: WasmDataSegmentKey, val offset: Int, val size: Int, val bytes: ByteArray?)
+internal class WasmDataSegment(
+    val key: WasmDataSegmentKey,
+    val offset: Int,
+    val alignment: Int,
+    val size: Int,
+    val bytes: ByteArray?
+)
 
 internal class WasmFunction(
     val identifier: String,
