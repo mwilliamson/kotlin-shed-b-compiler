@@ -2,12 +2,12 @@ package org.shedlang.compiler.backends.wasm.tests
 
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
+import org.shedlang.compiler.backends.wasm.WasmBackend
 import org.shedlang.compiler.backends.wasm.WasmCompiler
 import org.shedlang.compiler.backends.wasm.WasmFunctionContext
 import org.shedlang.compiler.backends.wasm.WasmNaming
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
-import org.shedlang.compiler.backends.wasm.wasm.WasmBinaryFormat
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.*
@@ -38,11 +38,11 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
         temporaryDirectory().use { directory ->
             val wasmPath = directory.path.resolve("test.wasm")
-
-            WasmBinaryFormat.writeModule(
-                module = compilationResult.module,
-                tagValuesToInt = compilationResult.tagValuesToInt,
-                output = wasmPath.toFile().outputStream(),
+            WasmBackend.compile(
+                result = compilationResult,
+                target = wasmPath,
+                temporaryDirectory = directory.path,
+                noEntry = type != StringType,
             )
 
             if (type == StringType) {

@@ -19,23 +19,38 @@ object WasmBackend : Backend {
                 mainModule = mainModule
             )
 
-            val objectFilePath = temporaryDirectory.resolve("program.o")
-            objectFilePath.toFile().outputStream()
-                .use { outputStream ->
-                    WasmBinaryFormat.writeObjectFile(
-                        compilationResult.module,
-                        outputStream,
-                        tagValuesToInt = compilationResult.tagValuesToInt,
-                    )
-                }
-
-            val runtimeObjectFilePaths = listOf("strings.o", "modules/Core.IntToString.o").map { path ->
-                findRoot().resolve("backend-wasm/runtime/build").resolve(path).toString()
-            }
-            run(listOf("wasm-ld",  objectFilePath.toString(), "-o", target.toString()) + runtimeObjectFilePaths)
+            compile(
+                temporaryDirectory = temporaryDirectory,
+                result = compilationResult,
+                target = target,
+            )
         } finally {
             temporaryDirectory.toFile().deleteRecursively()
         }
+    }
+
+    internal fun compile(temporaryDirectory: Path, result: WasmCompilationResult, target: Path, noEntry: Boolean = false) {
+        val objectFilePath = temporaryDirectory.resolve("program.o")
+        objectFilePath.toFile().outputStream()
+            .use { outputStream ->
+                WasmBinaryFormat.writeObjectFile(
+                    result.module,
+                    outputStream,
+                    tagValuesToInt = result.tagValuesToInt,
+                )
+            }
+
+        val runtimeObjectFilePaths = listOf("strings.o", "modules/Core.IntToString.o").map { path ->
+            findRoot().resolve("backend-wasm/runtime/build").resolve(path).toString()
+        }
+
+        val ldArgs = mutableListOf("wasm-ld",  objectFilePath.toString(), "-o", target.toString())
+        ldArgs.addAll(runtimeObjectFilePaths)
+        if (noEntry) {
+            ldArgs.add("--no-entry")
+        }
+
+        run(ldArgs)
     }
 
     private fun run(args: List<String>) {
