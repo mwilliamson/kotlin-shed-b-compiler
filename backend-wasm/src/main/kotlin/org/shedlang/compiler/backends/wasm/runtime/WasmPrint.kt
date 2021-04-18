@@ -7,9 +7,8 @@ import org.shedlang.compiler.backends.wasm.wasm.Wasm
 
 internal fun generatePrintFunc(): WasmGlobalContext {
     val global = WasmGlobalContext.initial()
-    val (global2, stringContentsPointerMemoryIndex) = global.addStaticI32()
-    val (global3, stringLengthMemoryIndex) = global2.addStaticI32()
-    val (global4, nwrittenMemoryIndex) = global3.addStaticI32()
+    val (global2, stringContentsPointerMemoryIndex) = global.addStaticData(size = 8, alignment = 4)
+    val (global3, nwrittenMemoryIndex) = global2.addStaticI32()
 
     val func = Wasm.function(
         WasmNaming.Runtime.print,
@@ -24,7 +23,10 @@ internal fun generatePrintFunc(): WasmGlobalContext {
             ),
 
             Wasm.I.i32Store(
-                Wasm.I.i32Const(stringLengthMemoryIndex),
+                Wasm.I.i32Add(
+                    Wasm.I.i32Const(stringContentsPointerMemoryIndex),
+                    Wasm.I.i32Const(4),
+                ),
                 Wasm.I.i32Load(Wasm.I.localGet("string")),
             ),
 
@@ -38,5 +40,5 @@ internal fun generatePrintFunc(): WasmGlobalContext {
         ),
     )
 
-    return global4.addStaticFunction(func)
+    return global3.addStaticFunction(func)
 }
