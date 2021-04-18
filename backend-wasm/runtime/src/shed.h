@@ -5,11 +5,13 @@
 
 typedef uint32_t ShedAny;
 
-typedef uint32_t StringLength;
+typedef uint32_t ShedSize;
 struct ShedString {
-    StringLength length;
+    ShedSize length;
     uint8_t data[];
 };
 typedef struct ShedString* ShedString;
+
+extern void* shed_malloc(ShedSize, uint32_t alignment);
 
 #endif

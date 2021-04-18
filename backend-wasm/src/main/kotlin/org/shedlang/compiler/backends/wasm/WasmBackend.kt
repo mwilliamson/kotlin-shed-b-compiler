@@ -29,8 +29,10 @@ object WasmBackend : Backend {
                     )
                 }
 
-            val intToStringObjectPath = findRoot().resolve("backend-wasm/runtime/build/modules/Core.IntToString.o")
-            run(listOf("wasm-ld",  objectFilePath.toString(), intToStringObjectPath.toString(), "-o", target.toString()))
+            val runtimeObjectFilePaths = listOf("strings.o", "modules/Core.IntToString.o").map { path ->
+                findRoot().resolve("backend-wasm/runtime/build").resolve(path).toString()
+            }
+            run(listOf("wasm-ld",  objectFilePath.toString(), "-o", target.toString()) + runtimeObjectFilePaths)
         } finally {
             temporaryDirectory.toFile().deleteRecursively()
         }

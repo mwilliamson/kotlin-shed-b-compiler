@@ -1,7 +1,5 @@
 #include "../shed.h"
 
-extern void* shed_malloc(uint32_t, uint32_t alignment);
-
 void reverse(uint8_t* string, int length) {
     int left_index = 0;
     int right_index = length - 1;
