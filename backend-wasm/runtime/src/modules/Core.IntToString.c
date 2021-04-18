@@ -1,4 +1,4 @@
-#include "../shed.h"
+#include "shed.h"
 
 void reverse(uint8_t* string, int length) {
     int left_index = 0;

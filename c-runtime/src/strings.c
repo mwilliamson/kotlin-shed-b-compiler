@@ -1,4 +1,4 @@
-#include "./shed.h"
+#include "shed.h"
 
 void* memcpy(void* dest, const void* src, unsigned long n) {
     for (ShedSize i = 0; i < n; i++) {
