@@ -2,6 +2,7 @@
 
 #include "../deps/gc/include/gc.h"
 
+#include "./effects.h"
 #include "./shed.h"
 #include "./stringbuilder.h"
 
