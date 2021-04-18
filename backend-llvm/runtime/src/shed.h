@@ -15,9 +15,9 @@ typedef uint64_t ShedAny;
 
 extern ShedAny const shed_unit;
 
-typedef uint64_t StringLength;
+typedef uint64_t ShedSize;
 struct ShedString {
-    StringLength length;
+    ShedSize length;
     uint8_t data[];
 };
 
@@ -27,8 +27,8 @@ typedef struct ShedString* ShedString;
 
 struct ShedStringSlice {
     ShedString string;
-    StringLength startIndex;
-    StringLength endIndex;
+    ShedSize startIndex;
+    ShedSize endIndex;
 };
 
 typedef struct ShedStringSlice* ShedStringSlice;

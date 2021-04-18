@@ -14,7 +14,7 @@ static ShedAny handle_write(struct EffectHandler* effect_handler, void* context,
 }
 
 ShedString shed_module_fun__Stdlib__Platform__StringBuilder__build(ShedEnvironment env, struct ShedClosure* closure) {
-    StringLength initial_capacity = 16;
+    ShedSize initial_capacity = 16;
 
     struct StringBuilder string_builder;
     string_builder_init(&string_builder, initial_capacity);

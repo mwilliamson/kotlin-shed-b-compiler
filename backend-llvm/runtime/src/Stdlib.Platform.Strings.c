@@ -16,7 +16,7 @@ static bool isContinuationByte(uint8_t byte) {
 }
 
 static utf8proc_size_t unicodeScalarCountToIndex(ShedInt count, ShedString string) {
-    StringLength length = string->length;
+    ShedSize length = string->length;
     if (count >= 0) {
         utf8proc_ssize_t currentCount = -1;
 
@@ -48,7 +48,7 @@ static utf8proc_size_t unicodeScalarCountToIndex(ShedInt count, ShedString strin
 
 static ShedString substringAtIndices(utf8proc_size_t startIndex, utf8proc_size_t endIndex, ShedString string) {
     if (startIndex < endIndex) {
-        StringLength length = endIndex - startIndex;
+        ShedSize length = endIndex - startIndex;
         ShedString result = alloc_string(length);
         result->length = length;
         memcpy(result->data, &string->data[startIndex], length);
@@ -93,15 +93,15 @@ ShedAny shed_module_fun__Stdlib__Platform__Strings__next(ShedEnvironment env, Sh
 ShedString shed_module_fun__Stdlib__Platform__Strings__replace(ShedEnvironment env, ShedString old, ShedString new, ShedString string) {
     // TODO: handle non-ASCII characters
     // TODO: handle zero-length old
-    StringLength old_length = old->length;
-    StringLength new_length = new->length;
-    StringLength string_length = string->length;
+    ShedSize old_length = old->length;
+    ShedSize new_length = new->length;
+    ShedSize string_length = string->length;
 
     struct StringBuilder string_builder;
     string_builder_init(&string_builder, string_length);
 
-    StringLength string_index = 0;
-    StringLength last_index = 0;
+    ShedSize string_index = 0;
+    ShedSize last_index = 0;
 
     while (string_index + old_length <= string_length) {
         if (memcmp(&string->data[string_index], old->data, old_length) == 0) {
@@ -139,9 +139,9 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToString(She
 }
 
 ShedInt shed_module_fun__Stdlib__Platform__Strings__unicodeScalarCount(ShedEnvironment env, ShedString string) {
-    StringLength length = string->length;
+    ShedSize length = string->length;
     long count = 0;
-    for (StringLength index = 0; index < length; index++) {
+    for (ShedSize index = 0; index < length; index++) {
         if (!isContinuationByte(string->data[index])) {
             count++;
         }
@@ -160,7 +160,7 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToHexString(
         string->data[0] = '0';
         return string;
     } else {
-        StringLength length = 0;
+        ShedSize length = 0;
 
         ShedUnicodeScalar remaining = scalar;
         while (remaining != 0) {
@@ -171,7 +171,7 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToHexString(
         ShedString string = alloc_string(length);
         string->length = length;
 
-        StringLength index = length;
+        ShedSize index = length;
         remaining = scalar;
         while (remaining != 0) {
             index -= 1;
