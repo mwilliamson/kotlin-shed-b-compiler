@@ -434,6 +434,6 @@ internal data class WasmFunctionContext(
 
 private sealed class WasmStaticData(val alignment: Int) {
     data class I32(val initial: Int?): WasmStaticData(alignment = 4)
-    data class SizedUtf8String(val value: String): WasmStaticData(alignment = 1)
+    data class SizedUtf8String(val value: String): WasmStaticData(alignment = 4)
     data class Bytes(val size: Int, private val bytesAlignment: Int): WasmStaticData(alignment = bytesAlignment)
 }
