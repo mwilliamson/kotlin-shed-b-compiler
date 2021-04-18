@@ -1,5 +1,5 @@
-#ifndef SHED_H
-#define SHED_H
+#ifndef SHED_PLATFORM_H
+#define SHED_PLATFORM_H
 
 #include <stdint.h>
 #include <setjmp.h>
@@ -16,24 +16,8 @@ typedef uint64_t ShedAny;
 extern ShedAny const shed_unit;
 
 typedef uint64_t ShedSize;
-struct ShedString {
-    ShedSize length;
-    uint8_t data[];
-};
 
 extern struct ShedString empty_string;
-
-typedef struct ShedString* ShedString;
-
-struct ShedStringSlice {
-    ShedString string;
-    ShedSize startIndex;
-    ShedSize endIndex;
-};
-
-typedef struct ShedStringSlice* ShedStringSlice;
-
-ShedString alloc_string(uint64_t capacity);
 
 typedef ShedAny* ShedEnvironment;
 

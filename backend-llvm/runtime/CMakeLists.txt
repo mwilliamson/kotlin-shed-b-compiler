@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 3.7)
 project(ShedStdlib LANGUAGES C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror")
+
+include_directories(../../c-runtime/src src)
 
 add_library(
     shed STATIC
-    src/shed.h src/shed.c
+    src/shed_platform.h src/shed_platform.c
+    ../../c-runtime/src/shed.c
     src/effects.c
     src/stringbuilder.h src/stringbuilder.c
     src/Core.Cast.c

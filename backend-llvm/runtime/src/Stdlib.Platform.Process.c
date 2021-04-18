@@ -16,7 +16,7 @@ ShedAny shed_module_fun__Stdlib__Platform__Process__args() {
 
     for (int index = shed__argc - 1; index >= 1; index--) {
         size_t length = strlen(shed__argv[index]);
-        ShedString arg = alloc_string(length);
+        ShedString arg = shed_string_alloc(length);
         arg->length = length;
         memcpy(arg->data, shed__argv[index], length);
         args = consFunction(&consClosure->environment[0], (ShedAny)arg, args);

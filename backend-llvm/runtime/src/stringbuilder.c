@@ -2,7 +2,7 @@
 
 #include "../deps/gc/include/gc.h"
 
-#include "./shed.h"
+#include "shed.h"
 #include "./stringbuilder.h"
 
 void string_builder_init(struct StringBuilder* string_builder, ShedSize initial_capacity) {
@@ -12,7 +12,7 @@ void string_builder_init(struct StringBuilder* string_builder, ShedSize initial_
 }
 
 ShedString string_builder_build(struct StringBuilder* string_builder) {
-    ShedString string = alloc_string(string_builder->length);
+    ShedString string = shed_string_alloc(string_builder->length);
     string->length = string_builder->length;
     memcpy(
         string->data,

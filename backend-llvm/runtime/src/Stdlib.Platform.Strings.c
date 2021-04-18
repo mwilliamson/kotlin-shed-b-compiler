@@ -49,7 +49,7 @@ static utf8proc_size_t unicodeScalarCountToIndex(ShedInt count, ShedString strin
 static ShedString substringAtIndices(utf8proc_size_t startIndex, utf8proc_size_t endIndex, ShedString string) {
     if (startIndex < endIndex) {
         ShedSize length = endIndex - startIndex;
-        ShedString result = alloc_string(length);
+        ShedString result = shed_string_alloc(length);
         result->length = length;
         memcpy(result->data, &string->data[startIndex], length);
         return result;
@@ -133,7 +133,7 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__substring(ShedEnvironment
 }
 
 ShedString shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToString(ShedEnvironment env, ShedUnicodeScalar scalar) {
-    ShedString string = alloc_string(4);
+    ShedString string = shed_string_alloc(4);
     string->length = utf8proc_encode_char(scalar, &string->data[0]);
     return string;
 }
@@ -155,7 +155,7 @@ ShedInt shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToInt(ShedEnvir
 
 ShedString shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToHexString(ShedEnvironment env, ShedUnicodeScalar scalar) {
     if (scalar == 0) {
-        ShedString string = alloc_string(1);
+        ShedString string = shed_string_alloc(1);
         string->length = 1;
         string->data[0] = '0';
         return string;
@@ -168,7 +168,7 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__unicodeScalarToHexString(
             remaining = remaining >> 4;
         }
 
-        ShedString string = alloc_string(length);
+        ShedString string = shed_string_alloc(length);
         string->length = length;
 
         ShedSize index = length;

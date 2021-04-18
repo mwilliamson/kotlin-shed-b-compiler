@@ -10,6 +10,16 @@ struct ShedString {
 
 typedef struct ShedString* ShedString;
 
+struct ShedStringSlice {
+    ShedString string;
+    ShedSize startIndex;
+    ShedSize endIndex;
+};
+
+typedef struct ShedStringSlice* ShedStringSlice;
+
 extern void* shed_malloc(ShedSize, uint32_t alignment);
+
+ShedString shed_string_alloc(ShedSize capacity);
 
 #endif

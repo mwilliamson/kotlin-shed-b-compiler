@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "./shed.h"
+#include "shed.h"
 
 struct StringBuilder {
     uint8_t* data;
