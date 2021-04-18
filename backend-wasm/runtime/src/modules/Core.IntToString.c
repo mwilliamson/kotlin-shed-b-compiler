@@ -1,14 +1,4 @@
-#include <stddef.h>
-#include <stdint.h>
-
-typedef uint32_t ShedValue;
-
-typedef uint32_t StringLength;
-struct ShedString {
-    StringLength length;
-    uint8_t data[];
-};
-typedef struct ShedString* ShedString;
+#include "../shed.h"
 
 extern void* shed_malloc(uint32_t, uint32_t alignment);
 
