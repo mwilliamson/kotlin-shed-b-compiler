@@ -2,7 +2,7 @@
 
 #include "./shed.h"
 
-ShedValue const shed_unit = 0;
+ShedAny const shed_unit = 0;
 
 struct ShedString empty_string = { .length = 0, .data = {} };
 
@@ -20,16 +20,16 @@ void shed_effect_handlers_discard() {
     effect_handler_stack = effect_handler_stack->next;
 }
 
-ShedValue shed_operation_handler_exit(ShedValue exit_value) {
+ShedAny shed_operation_handler_exit(ShedAny exit_value) {
     shed_exit_value = exit_value;
     longjmp(*effect_handler_stack->exit_env, 1);
 }
 
-void shed_effect_handlers_set_state(ShedValue state) {
+void shed_effect_handlers_set_state(ShedAny state) {
     effect_handler_stack->child_state = state;
 }
 
-ShedValue shed_effect_handlers_get_state(void) {
+ShedAny shed_effect_handlers_get_state(void) {
     return effect_handler_stack->child_state;
 }
 
@@ -59,7 +59,7 @@ void shed_effect_handlers_set_operation_handler(
     effect_handler->operation_handlers[operation_index].context = context;
 }
 
-ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedValue* operation_arguments) {
+ShedAny shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedAny* operation_arguments) {
     struct EffectHandler* effect_handler = effect_handler_stack;
     while (effect_handler != NULL) {
         if (effect_handler->effect_id == effect_id) {

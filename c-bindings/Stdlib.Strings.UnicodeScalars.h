@@ -1,21 +1,23 @@
 #ifndef SHED__Stdlib_Strings_UnicodeScalars_H
 #define SHED__Stdlib_Strings_UnicodeScalars_H
 extern struct {
-    ShedValue count;
-    ShedValue dropLeft;
-    ShedValue first;
-    ShedValue flatMap;
-    ShedValue foldLeft;
-    ShedValue isEmpty;
-    ShedValue join;
-    ShedValue left;
-    ShedValue leftWhile;
-    ShedValue padLeft;
-    ShedValue replace;
-    ShedValue startsWith;
-    ShedValue substring;
-    ShedValue unicodeScalarToHexString;
-    ShedValue unicodeScalarToInt;
-    ShedValue unicodeScalarToString;
+    ShedAny count;
+    ShedAny dropLeft;
+    ShedAny eq;
+    ShedAny first;
+    ShedAny flatMap;
+    ShedAny foldLeft;
+    ShedAny isEmpty;
+    ShedAny join;
+    ShedAny left;
+    ShedAny leftWhile;
+    ShedAny padLeft;
+    ShedAny replace;
+    ShedAny startsWith;
+    ShedAny stringToSequence;
+    ShedAny substring;
+    ShedAny unicodeScalarToHexString;
+    ShedAny unicodeScalarToInt;
+    ShedAny unicodeScalarToString;
 } shed__module_value__Stdlib_Strings_UnicodeScalars;
 #endif

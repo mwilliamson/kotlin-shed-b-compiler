@@ -63,7 +63,7 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__dropLeftUnicodeScalars(Sh
     return substringAtIndices(startIndex, string->length, string);
 }
 
-ShedValue shed_module_fun__Stdlib__Platform__Strings__next(ShedEnvironment env, ShedStringSlice slice) {
+ShedAny shed_module_fun__Stdlib__Platform__Strings__next(ShedEnvironment env, ShedStringSlice slice) {
     if (slice->startIndex < slice->endIndex) {
         utf8proc_int32_t scalar;
 
@@ -78,13 +78,13 @@ ShedValue shed_module_fun__Stdlib__Platform__Strings__next(ShedEnvironment env, 
         newSlice->startIndex = slice->startIndex + bytesRead;
         newSlice->endIndex = slice->endIndex;
 
-        ShedValue* result = GC_malloc(sizeof(ShedValue) * 2);
+        ShedAny* result = GC_malloc(sizeof(ShedAny) * 2);
         result[0] = scalar;
-        result[1] = (ShedValue) newSlice;
+        result[1] = (ShedAny) newSlice;
 
         struct ShedClosure* someClosure = (struct ShedClosure*) shed__module_value__Core_Options.some;
-        ShedValue (*someFunction)(ShedEnvironment, ShedValue) = (ShedValue (*)(ShedEnvironment, ShedValue)) someClosure->function;
-        return someFunction(&someClosure->environment[0], (ShedValue)result);
+        ShedAny (*someFunction)(ShedEnvironment, ShedAny) = (ShedAny (*)(ShedEnvironment, ShedAny)) someClosure->function;
+        return someFunction(&someClosure->environment[0], (ShedAny)result);
     } else {
         return shed__module_value__Core_Options.none;
     }

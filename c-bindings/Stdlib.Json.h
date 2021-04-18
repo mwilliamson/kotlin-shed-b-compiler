@@ -1,25 +1,25 @@
 #ifndef SHED__Stdlib_Json_H
 #define SHED__Stdlib_Json_H
 extern struct {
-    ShedValue JsonArray;
-    ShedValue JsonBoolean;
-    ShedValue JsonFailure;
-    ShedValue JsonNull;
-    ShedValue JsonNumber;
-    ShedValue JsonObject;
-    ShedValue JsonProperty;
-    ShedValue JsonResult;
-    ShedValue JsonString;
-    ShedValue JsonSuccess;
-    ShedValue JsonValue;
-    ShedValue array;
-    ShedValue boolean;
-    ShedValue null;
-    ShedValue number;
-    ShedValue object;
-    ShedValue property;
-    ShedValue string;
-    ShedValue textToValue;
-    ShedValue valueToText;
+    ShedAny JsonArray;
+    ShedAny JsonBoolean;
+    ShedAny JsonFailure;
+    ShedAny JsonNull;
+    ShedAny JsonNumber;
+    ShedAny JsonObject;
+    ShedAny JsonProperty;
+    ShedAny JsonResult;
+    ShedAny JsonString;
+    ShedAny JsonSuccess;
+    ShedAny JsonValue;
+    ShedAny array;
+    ShedAny boolean;
+    ShedAny null;
+    ShedAny number;
+    ShedAny object;
+    ShedAny property;
+    ShedAny string;
+    ShedAny textToValue;
+    ShedAny valueToText;
 } shed__module_value__Stdlib_Json;
 #endif

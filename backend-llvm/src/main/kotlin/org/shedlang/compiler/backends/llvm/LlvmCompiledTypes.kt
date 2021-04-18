@@ -175,7 +175,7 @@ internal class CompiledObjectType(
 
     fun cType(): CType {
         val members = sortedFieldNames.map { fieldName ->
-            CNamedType("ShedValue") to fieldName.value
+            CNamedType("ShedAny") to fieldName.value
         }
         return CStruct(members = members)
     }

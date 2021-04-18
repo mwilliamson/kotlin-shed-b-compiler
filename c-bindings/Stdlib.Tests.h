@@ -1,14 +1,16 @@
 #ifndef SHED__Stdlib_Tests_H
 #define SHED__Stdlib_Tests_H
 extern struct {
-    ShedValue Test;
-    ShedValue TestCase;
-    ShedValue TestSuite;
-    ShedValue assert;
-    ShedValue assertThat;
-    ShedValue fail;
-    ShedValue runTests;
-    ShedValue suite;
-    ShedValue testCase;
+    ShedAny Effect;
+    ShedAny Test;
+    ShedAny TestCase;
+    ShedAny TestSuite;
+    ShedAny assert;
+    ShedAny assertStringEquals;
+    ShedAny assertThat;
+    ShedAny fail;
+    ShedAny runTests;
+    ShedAny suite;
+    ShedAny testCase;
 } shed__module_value__Stdlib_Tests;
 #endif

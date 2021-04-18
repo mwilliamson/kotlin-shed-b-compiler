@@ -1,6 +1,6 @@
 #ifndef SHED__StdlibTests_ArgParserTests_H
 #define SHED__StdlibTests_ArgParserTests_H
 extern struct {
-    ShedValue testCases;
+    ShedAny testCases;
 } shed__module_value__StdlibTests_ArgParserTests;
 #endif

@@ -1,22 +1,22 @@
 #ifndef SHED__Stdlib_Lists_H
 #define SHED__Stdlib_Lists_H
 extern struct {
-    ShedValue Cons;
-    ShedValue List;
-    ShedValue Nil;
-    ShedValue all;
-    ShedValue any;
-    ShedValue cons;
-    ShedValue firstSome;
-    ShedValue flatten;
-    ShedValue foldLeft;
-    ShedValue forEach;
-    ShedValue forEachInterspersed;
-    ShedValue list;
-    ShedValue listToSequence;
-    ShedValue map;
-    ShedValue nil;
-    ShedValue reverse;
-    ShedValue sequenceToList;
+    ShedAny Cons;
+    ShedAny List;
+    ShedAny Nil;
+    ShedAny all;
+    ShedAny any;
+    ShedAny cons;
+    ShedAny firstSome;
+    ShedAny flatten;
+    ShedAny foldLeft;
+    ShedAny forEach;
+    ShedAny forEachInterspersed;
+    ShedAny list;
+    ShedAny listToSequence;
+    ShedAny map;
+    ShedAny nil;
+    ShedAny reverse;
+    ShedAny sequenceToList;
 } shed__module_value__Stdlib_Lists;
 #endif

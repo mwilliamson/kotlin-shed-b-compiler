@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-typedef uint32_t ShedValue;
+typedef uint32_t ShedAny;
 
 typedef uint32_t StringLength;
 struct ShedString {

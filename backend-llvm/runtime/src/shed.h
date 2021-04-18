@@ -11,9 +11,9 @@ extern char** shed__argv;
 
 typedef uint64_t ShedUnicodeScalar;
 typedef int64_t ShedInt;
-typedef uint64_t ShedValue;
+typedef uint64_t ShedAny;
 
-extern ShedValue const shed_unit;
+extern ShedAny const shed_unit;
 
 typedef uint64_t StringLength;
 struct ShedString {
@@ -35,11 +35,11 @@ typedef struct ShedStringSlice* ShedStringSlice;
 
 ShedString alloc_string(uint64_t capacity);
 
-typedef ShedValue* ShedEnvironment;
+typedef ShedAny* ShedEnvironment;
 
 struct ShedClosure {
     void* function;
-    ShedValue environment[];
+    ShedAny environment[];
 };
 
 typedef uint64_t ShedTagValue;
@@ -60,14 +60,14 @@ typedef struct ShedMetaType* ShedMetaType;
 typedef uint32_t EffectId;
 typedef size_t OperationIndex;
 
-ShedValue shed_exit_value;
+ShedAny shed_exit_value;
 
 struct EffectHandler;
 
-typedef ShedValue (OperationHandlerFunction)(
+typedef ShedAny (OperationHandlerFunction)(
     struct EffectHandler* effect_handler,
     void* context,
-    ShedValue* operation_arguments
+    ShedAny* operation_arguments
 );
 
 struct OperationHandler {
@@ -79,7 +79,7 @@ struct EffectHandler {
     EffectId effect_id;
     struct EffectHandler* next;
     jmp_buf* exit_env;
-    ShedValue child_state;
+    ShedAny child_state;
     struct OperationHandler operation_handlers[];
 };
 
@@ -95,7 +95,7 @@ void shed_effect_handlers_set_operation_handler(
     OperationHandlerFunction* function,
     void* context
 );
-ShedValue shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedValue* operation_arguments);
+ShedAny shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedAny* operation_arguments);
 
-ShedValue shed_operation_handler_exit(ShedValue exit_value);
+ShedAny shed_operation_handler_exit(ShedAny exit_value);
 #endif
