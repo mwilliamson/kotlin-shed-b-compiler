@@ -18,6 +18,8 @@ struct ShedStringSlice {
 
 typedef struct ShedStringSlice* ShedStringSlice;
 
+extern struct ShedString empty_string;
+
 extern void* shed_malloc(ShedSize, uint32_t alignment);
 
 ShedString shed_string_alloc(ShedSize capacity);

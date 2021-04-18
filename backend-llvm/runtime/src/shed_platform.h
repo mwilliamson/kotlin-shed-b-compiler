@@ -17,8 +17,6 @@ extern ShedAny const shed_unit;
 
 typedef uint64_t ShedSize;
 
-extern struct ShedString empty_string;
-
 typedef ShedAny* ShedEnvironment;
 
 struct ShedClosure {
