@@ -5,6 +5,8 @@
 
 typedef uint32_t ShedAny;
 
+typedef uint32_t ShedBool;
+
 typedef uint32_t ShedSize;
 struct ShedString {
     ShedSize length;

@@ -22,3 +22,16 @@ ShedString shed_string_add(ShedString left, ShedString right) {
 
     return result;
 }
+
+ShedBool shed_string_equals(ShedString left, ShedString right) {
+    if (left->length != right->length) {
+        return 0;
+    } else {
+        for (ShedSize index = 0; index < left->length; index++) {
+            if (left->data[index] != right->data[index]) {
+                return 0;
+            }
+        }
+        return 1;
+    }
+}

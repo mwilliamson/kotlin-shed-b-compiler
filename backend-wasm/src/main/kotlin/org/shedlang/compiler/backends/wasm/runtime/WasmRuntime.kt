@@ -9,7 +9,6 @@ internal fun compileRuntime(): WasmGlobalContext {
     return WasmGlobalContext.merge(listOf(
         generateMalloc(),
         generatePrintFunc(),
-        generateStringEqualsFunc(),
     ))
         .addImport(Wasm.importFunction(
             moduleName = "env",
@@ -17,5 +16,12 @@ internal fun compileRuntime(): WasmGlobalContext {
             identifier = WasmNaming.Runtime.stringAdd,
             params = listOf(WasmData.stringType, WasmData.stringType),
             results = listOf(WasmData.stringType),
+        ))
+        .addImport(Wasm.importFunction(
+            moduleName = "env",
+            entityName = WasmNaming.Runtime.stringEquals,
+            identifier = WasmNaming.Runtime.stringEquals,
+            params = listOf(WasmData.stringType, WasmData.stringType),
+            results = listOf(WasmData.booleanType),
         ))
 }
