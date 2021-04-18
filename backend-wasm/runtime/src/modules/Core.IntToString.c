@@ -34,7 +34,7 @@ ShedSize itoa(uint8_t* string, ShedInt value) {
 }
 
 ShedAny shed_module_fun__Core__IntToString__intToString(void* environment, ShedAny value) {
-    ShedString string = shed_malloc(4 + 11, 4);
+    ShedString string = shed_string_alloc(11);
     string->length = itoa(string->data, value);
     return (ShedAny)string;
 }
