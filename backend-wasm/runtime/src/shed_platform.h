@@ -7,6 +7,8 @@ typedef uint32_t ShedAny;
 
 typedef uint32_t ShedBool;
 
+typedef int32_t ShedInt;
+
 typedef uint32_t ShedSize;
 
 #endif

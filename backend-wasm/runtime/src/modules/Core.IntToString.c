@@ -1,6 +1,6 @@
 #include "shed.h"
 
-void reverse(uint8_t* string, int length) {
+void reverse(uint8_t* string, ShedSize length) {
     int left_index = 0;
     int right_index = length - 1;
 
@@ -13,7 +13,7 @@ void reverse(uint8_t* string, int length) {
     }
 }
 
-int itoa(uint8_t* string, int value) {
+ShedSize itoa(uint8_t* string, ShedInt value) {
     if (value == 0) {
         string[0] = '0';
         return 1;
