@@ -13,6 +13,7 @@ add_library(
     src/effects.c
     src/stringbuilder.h src/stringbuilder.c
     src/Core.Cast.c
+    src/Core.Io.c
     src/Stdlib.Platform.Process.c
     src/Stdlib.Platform.StringBuilder.c
     src/Stdlib.Platform.Strings.c

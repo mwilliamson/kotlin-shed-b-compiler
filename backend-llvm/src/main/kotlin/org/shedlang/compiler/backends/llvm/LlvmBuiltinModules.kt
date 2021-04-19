@@ -42,34 +42,13 @@ internal class BuiltinModuleCompiler(
     }
 
     private fun compileCoreIo(context: FunctionContext): FunctionContext {
-        val moduleName = listOf(Identifier("Core"), Identifier("Io"))
-        val functionName = ShedRuntime.functionSymbolName(moduleName, Identifier("print"))
-
-        val printClosure = irBuilder.generateLocal("print")
-
-        return closures.compileCreate(
-            target = printClosure,
-            functionName = functionName,
-            positionalParams = listOf(LlvmParameter(compiledValueType, "value")),
-            namedParams = listOf(),
-            freeVariables = listOf(),
-            compileBody = { bodyContext ->
-                bodyContext.addInstructions(
-                    print(LlvmOperandLocal("value")) + listOf(
-                        LlvmReturn(type = compiledValueType, value = compiledUnitValue)
-                    ),
-                )
-            },
+        return compileCModule(
+            moduleName = listOf(Identifier("Core"), Identifier("Io")),
+            functionNames = listOf(
+                "print"
+            ),
             context = context
         )
-            .addInstructions(
-                modules.storeFields(
-                    moduleName = listOf(Identifier("Core"), Identifier("Io")),
-                    exports = listOf(
-                        Identifier("print") to printClosure
-                    )
-                )
-            )
     }
 
     internal fun print(stringValue: LlvmOperand): List<LlvmInstruction> {
