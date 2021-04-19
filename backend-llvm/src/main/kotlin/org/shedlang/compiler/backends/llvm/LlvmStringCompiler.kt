@@ -42,91 +42,10 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
         instruction: StringAdd,
         context: FunctionContext
     ): FunctionContext {
-        val (context2, right) = context.popTemporary()
-        val (context3, left) = context2.popTemporary()
-
-        val result = LlvmOperandLocal(generateName("op"))
-
-        val leftString = LlvmOperandLocal(generateName("left"))
-        val rightString = LlvmOperandLocal(generateName("right"))
-        val leftSize = LlvmOperandLocal(generateName("leftSize"))
-        val rightSize = LlvmOperandLocal(generateName("rightSize"))
-        val leftStringDataStart = LlvmOperandLocal(generateName("leftStringDataStart"))
-        val rightStringDataStart = LlvmOperandLocal(generateName("rightStringDataStart"))
-        val newDataSize = LlvmOperandLocal(generateName("newDataSize"))
-        val newString = LlvmOperandLocal(generateName("newString"))
-        val newStringData = LlvmOperandLocal(generateName("newStringData"))
-        val newStringLeftStart = LlvmOperandLocal(generateName("newStringLeftStart"))
-        val newStringRightStart = LlvmOperandLocal(generateName("newStringRightStart"))
-
-        return context3.addInstructions(listOf(
-            listOf(
-                rawValueToString(target = leftString, source = left),
-                rawValueToString(target = rightString, source = right)
-            ),
-            stringSize(target = leftSize, source = leftString),
-            stringSize(target = rightSize, source = rightString),
-            listOf(
-                LlvmAdd(
-                    target = newDataSize,
-                    type = compiledStringLengthType,
-                    left = leftSize,
-                    right = rightSize
-                )
-            ),
-            allocString(target = newString, dataSize = newDataSize),
-            storeStringDataSize(string = newString, size = newDataSize),
-            listOf(
-                stringData(
-                    target = newStringData,
-                    source = newString
-                ),
-                LlvmGetElementPtr(
-                    target = newStringLeftStart,
-                    pointerType = LlvmTypes.pointer(compiledStringDataType(0)),
-                    pointer = newStringData,
-                    indices = listOf(
-                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0))
-                    )
-                ),
-                stringDataStart(
-                    target = leftStringDataStart,
-                    source = leftString
-                ),
-                libc.memcpy(
-                    target = null,
-                    dest = newStringLeftStart,
-                    src = leftStringDataStart,
-                    n = leftSize
-                ),
-                LlvmGetElementPtr(
-                    target = newStringRightStart,
-                    pointerType = LlvmTypes.pointer(compiledStringDataType(0)),
-                    pointer = newStringData,
-                    indices = listOf(
-                        LlvmIndex(LlvmTypes.i64, LlvmOperandInt(0)),
-                        LlvmIndex(LlvmTypes.i64, leftSize)
-                    )
-                ),
-                stringDataStart(
-                    target = rightStringDataStart,
-                    source = rightString
-                ),
-                libc.memcpy(
-                    target = null,
-                    dest = newStringRightStart,
-                    src = rightStringDataStart,
-                    n = rightSize
-                ),
-                LlvmPtrToInt(
-                    target = result,
-                    sourceType = compiledStringType(0),
-                    value = newString,
-                    targetType = compiledValueType
-                )
-            )
-        ).flatten()).pushTemporary(result)
+        return compileStringBinaryOperation(
+            function = stringAddDeclaration,
+            context = context
+        )
     }
 
     internal fun allocString(target: LlvmOperandLocal, dataSize: LlvmOperand): List<LlvmInstruction> {
@@ -157,20 +76,20 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
     }
 
     internal fun compileStringEquals(context: FunctionContext): FunctionContext {
-        return compileStringComparison(
+        return compileStringBinaryOperation(
             function = stringEqualsDeclaration,
             context = context,
         )
     }
 
     internal fun compileStringNotEqual(context: FunctionContext): FunctionContext {
-        return compileStringComparison(
+        return compileStringBinaryOperation(
             function = stringNotEqualDeclaration,
             context = context
         )
     }
 
-    private fun compileStringComparison(
+    private fun compileStringBinaryOperation(
         function: LlvmFunctionDeclaration,
         context: FunctionContext,
     ): FunctionContext {
@@ -245,6 +164,16 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
 
     private fun generateName(prefix: String) = irBuilder.generateName(prefix)
 
+    private val stringAddDeclaration = LlvmFunctionDeclaration(
+        name = ShedRuntime.stringAdd,
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = compiledValueType,
+        parameters = listOf(
+            LlvmParameter(compiledValueType, "left"),
+            LlvmParameter(compiledValueType, "right"),
+        )
+    )
+
     private val stringEqualsDeclaration = LlvmFunctionDeclaration(
         name = ShedRuntime.stringEquals,
         callingConvention = LlvmCallingConvention.ccc,
@@ -266,6 +195,6 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
     )
 
     fun declarations(): List<LlvmTopLevelEntity> {
-        return listOf(stringEqualsDeclaration, stringNotEqualDeclaration)
+        return listOf(stringAddDeclaration, stringEqualsDeclaration, stringNotEqualDeclaration)
     }
 }
