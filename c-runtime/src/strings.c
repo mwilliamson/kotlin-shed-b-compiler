@@ -9,7 +9,7 @@ void* memcpy(void* dest, const void* src, unsigned long n) {
 }
 
 ShedString shed_string_alloc(uint32_t capacity) {
-    return shed_malloc(sizeof(ShedSize) + sizeof(uint8_t) * capacity, 4);
+    return shed_malloc(sizeof(ShedSize) + sizeof(uint8_t) * capacity, sizeof(ShedSize));
 }
 
 ShedString shed_string_add(ShedString left, ShedString right) {
@@ -34,4 +34,8 @@ ShedBool shed_string_equals(ShedString left, ShedString right) {
         }
         return 1;
     }
+}
+
+ShedBool shed_string_not_equal(ShedString left, ShedString right) {
+    return !shed_string_equals(left, right);
 }

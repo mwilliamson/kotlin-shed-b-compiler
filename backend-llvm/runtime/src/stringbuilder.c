@@ -3,6 +3,7 @@
 #include "../deps/gc/include/gc.h"
 
 #include "shed.h"
+#include "strings.h"
 #include "./stringbuilder.h"
 
 void string_builder_init(struct StringBuilder* string_builder, ShedSize initial_capacity) {

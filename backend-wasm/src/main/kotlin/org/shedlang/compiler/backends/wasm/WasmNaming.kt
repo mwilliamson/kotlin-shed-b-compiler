@@ -1,6 +1,7 @@
 package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.ShedRuntime
 
 internal object WasmNaming {
     fun moduleInit(moduleName: ModuleName) = "shed_module_init_${serialiseModuleName(moduleName)}"
@@ -19,8 +20,8 @@ internal object WasmNaming {
         val heapPointer = "shed_malloc__heap_pointer"
         val heapEndPointer = "shed_malloc__heap_pointer_end"
 
-        val stringAdd = "shed_string_add"
-        val stringEquals = "shed_string_equals"
+        val stringAdd = ShedRuntime.stringAdd
+        val stringEquals = ShedRuntime.stringEquals
         val print = "shed_print"
     }
 

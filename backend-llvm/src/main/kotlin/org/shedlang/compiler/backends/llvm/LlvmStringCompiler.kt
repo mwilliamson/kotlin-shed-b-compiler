@@ -1,5 +1,6 @@
 package org.shedlang.compiler.backends.llvm
 
+import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.stackir.StringAdd
 
 internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val libc: LibcCallCompiler) {
@@ -157,109 +158,31 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
 
     internal fun compileStringEquals(context: FunctionContext): FunctionContext {
         return compileStringComparison(
-            differentSizeValue = 0,
-            memcmpConditionCode = LlvmIcmp.ConditionCode.EQ,
-            context = context
+            function = stringEqualsDeclaration,
+            context = context,
         )
     }
 
     internal fun compileStringNotEqual(context: FunctionContext): FunctionContext {
         return compileStringComparison(
-            differentSizeValue = 1,
-            memcmpConditionCode = LlvmIcmp.ConditionCode.NE,
+            function = stringNotEqualDeclaration,
             context = context
         )
     }
 
     private fun compileStringComparison(
-        differentSizeValue: Int,
-        memcmpConditionCode: LlvmIcmp.ConditionCode,
-        context: FunctionContext
+        function: LlvmFunctionDeclaration,
+        context: FunctionContext,
     ): FunctionContext {
         val (context2, right) = context.popTemporary()
         val (context3, left) = context2.popTemporary()
 
         val result = LlvmOperandLocal(generateName("op"))
 
-        val leftString = LlvmOperandLocal(generateName("left"))
-        val rightString = LlvmOperandLocal(generateName("right"))
-        val leftSize = LlvmOperandLocal(generateName("leftSize"))
-        val rightSize = LlvmOperandLocal(generateName("rightSize"))
-        val sameSize = LlvmOperandLocal(generateName("sameSize"))
-        val resultPointer = LlvmOperandLocal(generateName("resultPointer"))
-        val differentSizeLabel = generateName("differentSize")
-        val compareBytesLabel = generateName("compareBytes")
-        val leftBytesPointer = LlvmOperandLocal(generateName("leftBytesPointer"))
-        val rightBytesPointer = LlvmOperandLocal(generateName("rightBytesPointer"))
-        val memcmpResult = LlvmOperandLocal(generateName("memcmpResult"))
-        val sameBytes = LlvmOperandLocal(generateName("sameBytes"))
-        val endLabel = generateName("end")
-        val resultBool = LlvmOperandLocal(generateName("resultBool"))
-
-        return context3.addInstructions(listOf(
-            listOf(
-                rawValueToString(target = leftString, source = left),
-                rawValueToString(target = rightString, source = right)
-            ),
-            stringSize(target = leftSize, source = leftString),
-            stringSize(target = rightSize, source = rightString),
-            listOf(
-                LlvmAlloca(target = resultPointer, type = LlvmTypes.i1),
-                LlvmIcmp(
-                    target = sameSize,
-                    conditionCode = LlvmIcmp.ConditionCode.EQ,
-                    type = compiledStringLengthType,
-                    left = leftSize,
-                    right = rightSize
-                ),
-                LlvmBr(
-                    condition = sameSize,
-                    ifFalse = differentSizeLabel,
-                    ifTrue = compareBytesLabel
-                ),
-                LlvmLabel(differentSizeLabel),
-                LlvmStore(
-                    type = LlvmTypes.i1,
-                    value = LlvmOperandInt(differentSizeValue),
-                    pointer = resultPointer
-                ),
-                LlvmBrUnconditional(endLabel),
-                LlvmLabel(compareBytesLabel),
-                stringDataStart(target = leftBytesPointer, source = leftString),
-                stringDataStart(target = rightBytesPointer, source = rightString),
-                libc.memcmp(
-                    target = memcmpResult,
-                    s1 = leftBytesPointer,
-                    s2 = rightBytesPointer,
-                    n = leftSize
-                ),
-                LlvmIcmp(
-                    target = sameBytes,
-                    conditionCode = memcmpConditionCode,
-                    type = CTypes.int,
-                    left = memcmpResult,
-                    right = LlvmOperandInt(0)
-                ),
-                LlvmStore(
-                    type = LlvmTypes.i1,
-                    value = sameBytes,
-                    pointer = resultPointer
-                ),
-                LlvmBrUnconditional(endLabel),
-                LlvmLabel(endLabel),
-                LlvmLoad(
-                    target = resultBool,
-                    type = LlvmTypes.i1,
-                    pointer = resultPointer
-                ),
-                LlvmZext(
-                    target = result,
-                    sourceType = LlvmTypes.i1,
-                    operand = resultBool,
-                    targetType = compiledValueType
-                )
-            )
-        ).flatten()).pushTemporary(result)
+        return context3.addInstruction(function.call(
+            target = result,
+            arguments = listOf(left, right),
+        )).pushTemporary(result)
     }
 
     internal fun rawValueToString(target: LlvmOperandLocal, source: LlvmOperand): LlvmIntToPtr {
@@ -321,4 +244,28 @@ internal class StringCompiler(private val irBuilder: LlvmIrBuilder, private val 
     }
 
     private fun generateName(prefix: String) = irBuilder.generateName(prefix)
+
+    private val stringEqualsDeclaration = LlvmFunctionDeclaration(
+        name = ShedRuntime.stringEquals,
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = compiledValueType,
+        parameters = listOf(
+            LlvmParameter(compiledValueType, "left"),
+            LlvmParameter(compiledValueType, "right"),
+        )
+    )
+
+    private val stringNotEqualDeclaration = LlvmFunctionDeclaration(
+        name = ShedRuntime.stringNotEqual,
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = compiledValueType,
+        parameters = listOf(
+            LlvmParameter(compiledValueType, "left"),
+            LlvmParameter(compiledValueType, "right"),
+        )
+    )
+
+    fun declarations(): List<LlvmTopLevelEntity> {
+        return listOf(stringEqualsDeclaration, stringNotEqualDeclaration)
+    }
 }

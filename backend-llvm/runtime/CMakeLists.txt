@@ -9,6 +9,7 @@ add_library(
     shed STATIC
     src/shed_platform.h src/shed_platform.c
     ../../c-runtime/src/shed.c
+    ../../c-runtime/src/strings.c
     src/effects.c
     src/stringbuilder.h src/stringbuilder.c
     src/Core.Cast.c

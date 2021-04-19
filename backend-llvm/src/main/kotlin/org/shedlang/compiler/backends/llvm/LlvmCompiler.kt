@@ -114,7 +114,8 @@ internal class LlvmCompiler(
                     main
                 ),
                 libc.declarations(),
-                effects.declarations()
+                effects.declarations(),
+                strings.declarations(),
             ).flatten()
         )
 

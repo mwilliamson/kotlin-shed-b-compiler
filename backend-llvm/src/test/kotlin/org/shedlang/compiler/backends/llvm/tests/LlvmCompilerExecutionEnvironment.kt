@@ -100,6 +100,7 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
             context.topLevelEntities
                 .add(mainFunctionDefinition)
                 .addAll(libc.declarations())
+                .addAll(strings.declarations())
         )
 
         temporaryDirectory().use { temporaryDirectory ->
