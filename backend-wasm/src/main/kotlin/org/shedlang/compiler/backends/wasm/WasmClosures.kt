@@ -18,9 +18,39 @@ internal object WasmClosures {
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, String> {
-        val params = listOf(WasmParam(WasmNaming.closurePointer, type = WasmData.closurePointerType)) +
+        val context2 = compileFunction(
+            functionName = functionName,
+            freeVariables = freeVariables,
+            positionalParams = positionalParams,
+            namedParams = namedParams,
+            compileBody = compileBody,
+            context = context,
+        )
+
+        return compileCreateForFunction(
+            tableIndex = WasmConstValue.TableEntryIndex(functionName),
+            freeVariables = freeVariables,
+            context = context2,
+        )
+    }
+
+    internal fun compileFunction(
+        functionName: String,
+        freeVariables: List<LocalLoad>,
+        positionalParams: List<WasmParam>,
+        namedParams: List<Pair<Identifier, WasmParam>>,
+        compileBody: (WasmFunctionContext) -> WasmFunctionContext,
+        context: WasmFunctionContext,
+    ): WasmFunctionContext {
+        val params = listOf(
+            WasmParam(
+                WasmNaming.closurePointer,
+                type = WasmData.closurePointerType
+            )
+        ) +
             positionalParams +
-            namedParams.sortedBy { (paramName, _) -> paramName }.map { (_, param) -> param }
+            namedParams.sortedBy { (paramName, _) -> paramName }
+                .map { (_, param) -> param }
 
         val functionContext1 = WasmFunctionContext.initial()
 
@@ -36,13 +66,7 @@ internal object WasmClosures {
             params = params,
             results = listOf(WasmData.genericValueType),
         )
-
-        val context2 = context.mergeGlobalContext(functionGlobalContext)
-        return compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(functionName),
-            freeVariables = freeVariables,
-            context = context2,
-        )
+        return context.mergeGlobalContext(functionGlobalContext)
     }
 
     internal fun compileCreateForFunction(
