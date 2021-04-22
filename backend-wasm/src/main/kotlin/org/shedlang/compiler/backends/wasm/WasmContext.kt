@@ -205,7 +205,7 @@ internal data class WasmGlobalContext private constructor(
     }
 
     fun addStaticData(size: Int, alignment: Int, name: String? = null): Pair<WasmGlobalContext, WasmDataSegmentKey> {
-        return addStaticData(WasmStaticData.Bytes(size = size, bytesAlignment = alignment, name = name))
+        return addStaticData(WasmStaticData.Bytes(size = size, alignment = alignment, name = name))
     }
 
     private fun addStaticData(data: WasmStaticData): Pair<WasmGlobalContext, WasmDataSegmentKey> {
@@ -434,22 +434,29 @@ internal data class WasmFunctionContext(
     }
 }
 
-private sealed class WasmStaticData(val alignment: Int) {
+private sealed class WasmStaticData {
+    abstract val alignment: Int
     abstract val name: String?
 
-    data class I32(val initial: Int?): WasmStaticData(alignment = 4) {
+    data class I32(val initial: Int?): WasmStaticData() {
+        override val alignment: Int
+            get() = 4
+
         override val name: String?
             get() = null
     }
 
-    data class SizedUtf8String(val value: String): WasmStaticData(alignment = 4) {
+    data class SizedUtf8String(val value: String): WasmStaticData() {
+        override val alignment: Int
+            get() = 4
+
         override val name: String?
             get() = null
     }
 
     data class Bytes(
         val size: Int,
-        private val bytesAlignment: Int,
+        override val alignment: Int,
         override val name: String?
-    ): WasmStaticData(alignment = bytesAlignment)
+    ): WasmStaticData()
 }
