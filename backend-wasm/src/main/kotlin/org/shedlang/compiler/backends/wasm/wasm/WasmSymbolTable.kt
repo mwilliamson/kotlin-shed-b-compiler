@@ -60,8 +60,10 @@ internal class WasmSymbolTable {
     private val globalIndices = mutableMapOf<String, Int>()
     private val globalSymbolIndices = mutableMapOf<Int, Int>()
     private val tableEntryIndices = mutableMapOf<String, Int>()
-    private val dataAddresses = mutableMapOf<WasmDataSegmentKey, Int>()
-    private val dataSymbolIndices = mutableMapOf<WasmDataSegmentKey, Int>()
+    private val dataAddressesByKey = mutableMapOf<WasmDataSegmentKey, Int>()
+    private val dataAddressesByName = mutableMapOf<String, Int>()
+    private val dataSymbolIndicesByKey = mutableMapOf<WasmDataSegmentKey, Int>()
+    private val dataSymbolIndicesByName = mutableMapOf<String, Int>()
     private val symbolInfos = mutableListOf<WasmSymbolInfo>()
 
     private fun addFunction(name: String, symbolInfo: WasmSymbolInfo.Function) {
@@ -105,18 +107,31 @@ internal class WasmSymbolTable {
     }
 
     private fun addDataSegment(dataSegment: WasmDataSegment, symbolInfo: WasmSymbolInfo.Data) {
-        dataAddresses.add(dataSegment.key, dataSegment.offset)
         val symbolIndex = symbolInfos.size
-        dataSymbolIndices.add(dataSegment.key, symbolIndex)
         symbolInfos.add(symbolInfo)
+
+        dataAddressesByKey.add(dataSegment.key, dataSegment.offset)
+        dataSymbolIndicesByKey.add(dataSegment.key, symbolIndex)
+        if (dataSegment.name != null) {
+            dataAddressesByName.add(dataSegment.name, dataSegment.offset)
+            dataSymbolIndicesByName.add(dataSegment.name, symbolIndex)
+        }
+    }
+
+    fun dataAddress(name: String): Int {
+        return dataAddressesByName.getValue(name)
     }
 
     fun dataAddress(key: WasmDataSegmentKey): Int {
-        return dataAddresses.getValue(key)
+        return dataAddressesByKey.getValue(key)
+    }
+
+    fun dataSymbolIndex(name: String): Int {
+        return dataSymbolIndicesByName.getValue(name)
     }
 
     fun dataSymbolIndex(key: WasmDataSegmentKey): Int {
-        return dataSymbolIndices.getValue(key)
+        return dataSymbolIndicesByKey.getValue(key)
     }
 
     fun symbolInfos(): List<WasmSymbolInfo> {

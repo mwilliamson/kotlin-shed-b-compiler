@@ -4,6 +4,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
+import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.types.ModuleType
 
@@ -30,13 +31,10 @@ internal object WasmModules {
 
         return context3
             .addInstruction(Wasm.I.globalSet(WasmNaming.moduleIsInited(moduleName), Wasm.I.i32Const(1)))
-            .addMutableGlobal(
-                identifier = WasmNaming.moduleValue(moduleName),
-                type = WasmData.moduleValuePointerType,
-                initial = Wasm.I.i32Const(moduleValue),
-            )
     }
 
-    internal fun compileLoad(moduleName: ModuleName) =
-        Wasm.I.globalGet(WasmNaming.moduleValue(moduleName))
+    internal fun compileLoad(moduleName: ModuleName): WasmInstruction.Folded {
+        val symbolName = ShedRuntime.moduleValueSymbolName(moduleName)
+        return Wasm.I.i32Const(WasmConstValue.DataIndexByName(symbolName))
+    }
 }

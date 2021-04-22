@@ -195,7 +195,7 @@ internal object Wasm {
         }
 
         fun i32Const(value: WasmDataSegmentKey): WasmInstruction.Folded {
-            return WasmInstruction.Folded.I32Const(WasmConstValue.DataIndex(value))
+            return WasmInstruction.Folded.I32Const(WasmConstValue.DataIndexByKey(value))
         }
 
         fun i32Const(value: TagValue): WasmInstruction.Folded {
@@ -550,7 +550,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
 }
 
 internal sealed class WasmConstValue {
-    data class DataIndex(val key: WasmDataSegmentKey): WasmConstValue()
+    data class DataIndexByKey(val key: WasmDataSegmentKey): WasmConstValue()
+    data class DataIndexByName(val identifier: String): WasmConstValue()
     data class I32(val value: Int): WasmConstValue()
     data class TableEntryIndex(val identifier: String): WasmConstValue()
     data class TagValue(val tagValue: org.shedlang.compiler.types.TagValue): WasmConstValue()

@@ -792,11 +792,20 @@ private class WasmBinaryFormatWriter(
                     is WasmConstValue.I32 ->
                         output.writeSignedLeb128(instruction.value.value)
 
-                    is WasmConstValue.DataIndex -> {
+                    is WasmConstValue.DataIndexByKey -> {
                         writeRelocatableIndex(
                             RelocationType.MEMORY_ADDR_SLEB,
                             index = symbolTable.dataAddress(instruction.value.key),
                             symbolIndex = symbolTable.dataSymbolIndex(instruction.value.key),
+                            addend = 0,
+                        )
+                    }
+
+                    is WasmConstValue.DataIndexByName -> {
+                        writeRelocatableIndex(
+                            RelocationType.MEMORY_ADDR_SLEB,
+                            index = symbolTable.dataAddress(instruction.value.identifier),
+                            symbolIndex = symbolTable.dataSymbolIndex(instruction.value.identifier),
                             addend = 0,
                         )
                     }
