@@ -24,7 +24,7 @@ internal class WasmSymbolTable {
             module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
                 val symbolInfo = WasmSymbolInfo.Data(
                     flags = 0,
-                    identifier = "DATA_$dataSegmentIndex",
+                    identifier = dataSegment.name ?: "DATA_$dataSegmentIndex",
                     dataSegmentIndex = dataSegmentIndex,
                     offset = 0,
                     size = dataSegment.size,

@@ -118,6 +118,7 @@ internal data class WasmGlobalContext private constructor(
                 alignment = data.alignment,
                 size = dataSegmentSize,
                 bytes = dataSegmentBytes,
+                name = data.name,
             )
             size += dataSegment.size
             dataSegments.add(dataSegment)
@@ -203,8 +204,8 @@ internal data class WasmGlobalContext private constructor(
         return addStaticData(WasmStaticData.SizedUtf8String(value))
     }
 
-    fun addStaticData(size: Int, alignment: Int): Pair<WasmGlobalContext, WasmDataSegmentKey> {
-        return addStaticData(WasmStaticData.Bytes(size = size, bytesAlignment = alignment))
+    fun addStaticData(size: Int, alignment: Int, name: String? = null): Pair<WasmGlobalContext, WasmDataSegmentKey> {
+        return addStaticData(WasmStaticData.Bytes(size = size, bytesAlignment = alignment, name = name))
     }
 
     private fun addStaticData(data: WasmStaticData): Pair<WasmGlobalContext, WasmDataSegmentKey> {
@@ -366,8 +367,8 @@ internal data class WasmFunctionContext(
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
-    fun addStaticData(size: Int, alignment: Int): Pair<WasmFunctionContext, WasmDataSegmentKey> {
-        val (newGlobalContext, index) = globalContext.addStaticData(size = size, alignment = alignment)
+    fun addStaticData(size: Int, alignment: Int, name: String? = null): Pair<WasmFunctionContext, WasmDataSegmentKey> {
+        val (newGlobalContext, index) = globalContext.addStaticData(size = size, alignment = alignment, name = name)
         return Pair(copy(globalContext = newGlobalContext), index)
     }
 
@@ -434,7 +435,21 @@ internal data class WasmFunctionContext(
 }
 
 private sealed class WasmStaticData(val alignment: Int) {
-    data class I32(val initial: Int?): WasmStaticData(alignment = 4)
-    data class SizedUtf8String(val value: String): WasmStaticData(alignment = 4)
-    data class Bytes(val size: Int, private val bytesAlignment: Int): WasmStaticData(alignment = bytesAlignment)
+    abstract val name: String?
+
+    data class I32(val initial: Int?): WasmStaticData(alignment = 4) {
+        override val name: String?
+            get() = null
+    }
+
+    data class SizedUtf8String(val value: String): WasmStaticData(alignment = 4) {
+        override val name: String?
+            get() = null
+    }
+
+    data class Bytes(
+        val size: Int,
+        private val bytesAlignment: Int,
+        override val name: String?
+    ): WasmStaticData(alignment = bytesAlignment)
 }

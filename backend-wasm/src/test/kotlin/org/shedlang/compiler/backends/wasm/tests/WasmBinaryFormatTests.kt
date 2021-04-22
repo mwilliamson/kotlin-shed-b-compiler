@@ -259,7 +259,8 @@ class WasmBinaryFormatTests {
         val module = Wasm.module(
             memoryPageCount = 1,
             dataSegments = listOf(
-                Wasm.dataSegment(44, 4, byteArrayOf(0x88.toByte(), 0x89.toByte()))
+                Wasm.dataSegment(44, 4, byteArrayOf(0x88.toByte(), 0x89.toByte()), name = null),
+                Wasm.dataSegment(48, 4, byteArrayOf(0x98.toByte(), 0x99.toByte()), name = "SOME_DATA"),
             ),
         )
 

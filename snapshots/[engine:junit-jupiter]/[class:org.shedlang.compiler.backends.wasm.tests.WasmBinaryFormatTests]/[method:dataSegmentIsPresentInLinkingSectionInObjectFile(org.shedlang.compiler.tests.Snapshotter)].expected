@@ -5,15 +5,19 @@ Section Details:
 
 Import[1]:
  - memory[0] pages: initial=1 <- env.__linear_memory
-Data[1]:
+Data[2]:
  - segment[0] <DATA_SEGMENT_0> memory=0 size=2 - init i32=44
   - 000002c: 8889                                     ..
+ - segment[1] <DATA_SEGMENT_1> memory=0 size=2 - init i32=48
+  - 0000030: 9899                                     ..
 Custom:
  - name: "linking"
-  - segment info [count=1]
+  - segment info [count=2]
    - 0: DATA_SEGMENT_0 p2align=2 flags=0
-  - symbol table [count=1]
+   - 1: DATA_SEGMENT_1 p2align=2 flags=0
+  - symbol table [count=2]
    - 0: D <DATA_0> segment=0 offset=0 size=2 binding=global vis=default
+   - 1: D <SOME_DATA> segment=1 offset=0 size=2 binding=global vis=default
 
 Code Disassembly:
 
