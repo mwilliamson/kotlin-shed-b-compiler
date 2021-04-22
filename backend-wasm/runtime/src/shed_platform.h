@@ -11,4 +11,6 @@ typedef int32_t ShedInt;
 
 typedef uint32_t ShedSize;
 
+typedef uint32_t ShedTagValue;
+
 #endif

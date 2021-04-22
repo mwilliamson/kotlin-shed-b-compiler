@@ -18,26 +18,6 @@ extern ShedAny const shed_unit;
 
 typedef uint64_t ShedSize;
 
-typedef ShedAny* ShedEnvironment;
-
-struct ShedClosure {
-    void* function;
-    ShedAny environment[];
-};
-
 typedef uint64_t ShedTagValue;
-
-struct ShedCastable {
-    ShedTagValue tagValue;
-};
-
-typedef struct ShedCastable* ShedCastable;
-
-struct ShedMetaType {
-    void* constructor;
-    ShedTagValue typeTagValue;
-};
-
-typedef struct ShedMetaType* ShedMetaType;
 
 #endif

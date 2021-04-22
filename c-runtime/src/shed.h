@@ -22,4 +22,24 @@ extern struct ShedString empty_string;
 
 extern void* shed_malloc(ShedSize, uint32_t alignment);
 
+typedef ShedAny* ShedEnvironment;
+
+struct ShedClosure {
+    void* function;
+    ShedAny environment[];
+};
+
+struct ShedCastable {
+    ShedTagValue tagValue;
+};
+
+typedef struct ShedCastable* ShedCastable;
+
+struct ShedMetaType {
+    void* constructor;
+    ShedTagValue typeTagValue;
+};
+
+typedef struct ShedMetaType* ShedMetaType;
+
 #endif
