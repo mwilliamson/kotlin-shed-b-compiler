@@ -134,9 +134,19 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             is DefineShape -> {
                 fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
 
+                val (context2, shape) = context.addLocal("shape")
+                val context3 = context2.addInstruction(Wasm.I.localSet(
+                    shape,
+                    callMalloc(
+                        size = WasmData.FUNCTION_POINTER_SIZE + WasmData.TAG_VALUE_SIZE,
+                        alignment = WasmData.closureAlignment,
+                    ),
+                ))
+
                 val fields = instruction.rawShapeType.allFields.values
-                val (context2, constructor) = WasmClosures.compileCreate(
-                    functionName = instruction.rawShapeType.name.value,
+                val constructorName = instruction.rawShapeType.name.value
+                val context4 = WasmClosures.compileFunction(
+                    functionName = constructorName,
                     freeVariables = listOf(),
                     positionalParams = listOf(),
                     namedParams = fields.map { field ->
@@ -159,9 +169,13 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         )
                         constructorContext4.addInstruction(Wasm.I.localGet(obj))
                     },
-                    context = context,
+                    context = context3,
                 )
-                return context2.addInstruction(Wasm.I.localGet(constructor))
+                val context5 = context4.addInstruction(Wasm.I.i32Store(
+                    Wasm.I.localGet(shape),
+                    value = Wasm.I.i32Const(WasmConstValue.TableEntryIndex(constructorName)),
+                ))
+                return context5.addInstruction(Wasm.I.localGet(shape))
             }
 
             is Discard -> {

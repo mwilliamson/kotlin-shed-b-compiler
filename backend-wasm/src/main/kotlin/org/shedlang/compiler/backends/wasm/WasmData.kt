@@ -6,6 +6,7 @@ import java.lang.Integer.max
 internal object WasmData {
     const val FUNCTION_POINTER_SIZE = 4
     const val VALUE_SIZE = 4
+    const val TAG_VALUE_SIZE = 4
     val pointerType = Wasm.T.i32
     val booleanType = Wasm.T.i32
     val functionPointerType = Wasm.T.i32
