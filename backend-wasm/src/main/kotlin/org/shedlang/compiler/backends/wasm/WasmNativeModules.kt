@@ -22,9 +22,12 @@ internal object WasmNativeModules {
     private fun generateCoreIoModule(
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+        val symbolName = ShedRuntime.functionSymbolName(
+            listOf(Identifier("Core"), Identifier("Io")),
+            Identifier("print"),
+        )
         val (context2, closure) = WasmClosures.compileCreate(
-            // TODO: build identifiers in WasmNaming
-            functionName = "shed_module__core_io__print",
+            functionName = symbolName,
             freeVariables = listOf(),
             positionalParams = listOf(WasmParam("value", type = WasmData.genericValueType)),
             namedParams = listOf(),
