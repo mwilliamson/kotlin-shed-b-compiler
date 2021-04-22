@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.types.ModuleType
@@ -17,6 +18,7 @@ internal object WasmModules {
         val (context2, moduleValue) = context.addStaticData(
             size = layout.size,
             alignment = layout.alignment,
+            name = ShedRuntime.moduleValueSymbolName(moduleName),
         )
 
         val context3 = WasmObjects.compileObjectStore(

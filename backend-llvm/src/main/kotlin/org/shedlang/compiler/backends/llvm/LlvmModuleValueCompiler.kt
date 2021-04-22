@@ -3,6 +3,7 @@ package org.shedlang.compiler.backends.llvm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.backends.ShedRuntime
 
 internal class ModuleValueCompiler(
     private val moduleSet: ModuleSet,
@@ -11,7 +12,7 @@ internal class ModuleValueCompiler(
     internal fun defineModuleValue(moduleName: ModuleName): LlvmGlobalDefinition {
         val compiledModuleType = compiledModuleType(moduleName)
         return LlvmGlobalDefinition(
-            name = nameForModuleValue(moduleName),
+            name = ShedRuntime.moduleValueSymbolName(moduleName),
             type = compiledModuleType.llvmType(),
             value = LlvmOperandStructure(
                 compiledModuleType.llvmType().elementTypes.map { elementType ->
@@ -43,7 +44,7 @@ internal class ModuleValueCompiler(
     }
 
     private fun operandForModuleValue(moduleName: ModuleName): LlvmVariable {
-        return LlvmOperandGlobal(nameForModuleValue(moduleName))
+        return LlvmOperandGlobal(ShedRuntime.moduleValueSymbolName(moduleName))
     }
 
     private fun compiledModuleType(moduleName: ModuleName) =
@@ -52,10 +53,3 @@ internal class ModuleValueCompiler(
     private fun moduleType(moduleName: ModuleName) =
         moduleSet.moduleType(moduleName)!!
 }
-
-internal fun nameForModuleValue(moduleName: ModuleName): String {
-    return "shed__module_value__${serialiseModuleName(moduleName)}"
-}
-
-private fun serialiseModuleName(moduleName: ModuleName) =
-    moduleName.joinToString("_") { part -> part.value }

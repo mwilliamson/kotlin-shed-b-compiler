@@ -4,6 +4,7 @@ import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.formatModuleName
 import org.shedlang.compiler.backends.Backend
+import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.backends.createTempDirectory
 import org.shedlang.compiler.findRoot
 import org.shedlang.compiler.readPackage
@@ -92,7 +93,7 @@ object LlvmBackend : Backend {
             includeGuardName = includeGuardName,
             statements = listOf(
                 CVariableDeclaration(
-                    name = nameForModuleValue(moduleName),
+                    name = ShedRuntime.moduleValueSymbolName(moduleName),
                     type = compiledModuleType.cType()
                 )
             )
