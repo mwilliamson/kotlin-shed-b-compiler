@@ -1,4 +1,5 @@
 #include "shed.h"
+#include "strings.h"
 
 void reverse(uint8_t* string, ShedSize length) {
     int left_index = 0;
