@@ -12,7 +12,7 @@ add_library(
     ../../c-runtime/src/strings.c
     src/effects.c
     src/stringbuilder.h src/stringbuilder.c
-    src/Core.Cast.c
+    ../../c-runtime/src/modules/Core.Cast.c
     src/Core.Io.c
     src/Stdlib.Platform.Process.c
     src/Stdlib.Platform.StringBuilder.c
