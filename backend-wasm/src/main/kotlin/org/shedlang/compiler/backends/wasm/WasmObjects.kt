@@ -3,7 +3,10 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
-import org.shedlang.compiler.types.*
+import org.shedlang.compiler.types.ModuleType
+import org.shedlang.compiler.types.ShapeType
+import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.Type
 import java.lang.UnsupportedOperationException
 
 internal object WasmObjects {
@@ -57,7 +60,6 @@ internal object WasmObjects {
         val (fieldNames, tagValue) = when (type) {
             is ModuleType -> Pair(type.fields.keys, null)
             is ShapeType -> Pair(type.allFields.keys, type.tagValue)
-            is TypeAlias -> return layout(type.aliasedType)
             else -> throw UnsupportedOperationException()
         }
 
