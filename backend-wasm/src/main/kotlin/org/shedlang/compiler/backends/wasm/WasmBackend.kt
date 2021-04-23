@@ -40,7 +40,7 @@ object WasmBackend : Backend {
                 )
             }
 
-        val runtimeObjectFilePaths = listOf("strings.o", "modules/Core.IntToString.o").map { path ->
+        val runtimeObjectFilePaths = listOf("strings.o", "modules/Core.Cast.o", "modules/Core.IntToString.o").map { path ->
             findRoot().resolve("backend-wasm/runtime/build").resolve(path).toString()
         }
 

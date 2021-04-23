@@ -44,7 +44,7 @@ internal object WasmClosures {
     ): WasmFunctionContext {
         val params = listOf(
             WasmParam(
-                WasmNaming.closurePointer,
+                WasmNaming.environmentPointer,
                 type = WasmData.closurePointerType
             )
         ) +
@@ -115,7 +115,7 @@ internal object WasmClosures {
         return context.addInstruction(Wasm.I.callIndirect(
             type = wasmFuncType,
             tableIndex = Wasm.I.i32Load(closurePointer),
-            args = listOf(closurePointer) + args,
+            args = listOf(Wasm.I.i32Add(closurePointer, Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE))) + args,
         ))
     }
 
@@ -149,8 +149,8 @@ internal object WasmClosures {
             currentContext2.addInstruction(Wasm.I.localSet(
                 local,
                 Wasm.I.i32Load(
-                    address = Wasm.I.localGet(WasmNaming.closurePointer),
-                    offset = WasmData.FUNCTION_POINTER_SIZE + WasmData.VALUE_SIZE * freeVariableIndex,
+                    address = Wasm.I.localGet(WasmNaming.environmentPointer),
+                    offset = WasmData.VALUE_SIZE * freeVariableIndex,
                     alignment = WasmData.closureAlignment,
                 ),
             ))

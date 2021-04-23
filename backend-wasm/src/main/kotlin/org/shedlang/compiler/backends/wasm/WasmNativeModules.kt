@@ -13,11 +13,38 @@ internal object WasmNativeModules {
         ModuleName,
         (WasmFunctionContext) -> Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>>,
     >(
+        listOf(Identifier("Core"), Identifier("Cast")) to ::generateCoreCastModule,
         listOf(Identifier("Core"), Identifier("Io")) to ::generateCoreIoModule,
         listOf(Identifier("Core"), Identifier("IntToString")) to ::generateCoreIntToStringModule,
     )
 
     fun moduleInitialisation(moduleName: ModuleName) = modules[moduleName]
+
+    private fun generateCoreCastModule(
+        context: WasmFunctionContext,
+    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+        val symbolName = ShedRuntime.functionSymbolName(
+            listOf(Identifier("Core"), Identifier("Cast")),
+            Identifier("cast"),
+        )
+        val intToStringImport = Wasm.importFunction(
+            moduleName = "env",
+            entityName = symbolName,
+            identifier = symbolName,
+            params = listOf(WasmData.genericValueType, WasmData.genericValueType, WasmData.genericValueType),
+            results = listOf(WasmData.genericValueType),
+        )
+        val (context2, closure) = WasmClosures.compileCreateForFunction(
+            tableIndex = WasmConstValue.TableEntryIndex(symbolName),
+            freeVariables = listOf(),
+            context.addImport(intToStringImport).addTableEntry(intToStringImport.identifier),
+        )
+        val exports = listOf(
+            Pair(Identifier("cast"), Wasm.I.localGet(closure))
+        )
+        val context3 = context2.addDependency(listOf(Identifier("Core"), Identifier("Options")))
+        return Pair(context3, exports)
+    }
 
     private fun generateCoreIoModule(
         context: WasmFunctionContext,
