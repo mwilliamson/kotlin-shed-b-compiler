@@ -15,7 +15,6 @@ class WasmExampleTests {
         "Echo.shed",
         "EffectHandlerDiscard.shed",
         "EffectHandlerExitOrResume.shed",
-        "FieldDestructuring.shed",
         "HandleWithState.shed",
         "Matchers.shed",
         "nestedStringBuilder",
