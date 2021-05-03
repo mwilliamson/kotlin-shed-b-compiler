@@ -60,7 +60,7 @@ internal object WasmObjects {
         val (fieldNames, tagValue) = when (type) {
             is ModuleType -> Pair(type.fields.keys, null)
             is ShapeType -> Pair(type.allFields.keys, type.tagValue)
-            else -> throw UnsupportedOperationException()
+            else -> throw UnsupportedOperationException("layout unknown for type: $type")
         }
 
         return Layout(fieldNames = fieldNames.sorted(), tagValue = tagValue)
