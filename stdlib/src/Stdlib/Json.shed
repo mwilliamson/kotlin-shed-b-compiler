@@ -358,11 +358,9 @@ fun parseMany[T](
                 if (isEnd(state.tokens)) {
                     success(state.tokens, list())
                 } else {
-                    // TODO: use update()
                     parse(State(
-                        .elements = state.elements,
+                        ...state,
                         .position = ElementStart(),
-                        .tokens = state.tokens
                     ))
                 }
             }
