@@ -122,40 +122,60 @@ fun toStringArgs(
         .result = Lists.nil,
     );
 
-    handle E withstate(initialState) {
+    fun readArguments() !E -> Nothing {
         forever!(fun () !E {
-            val arg = E.nextStringOrExit!();
-
-            if (UnicodeScalars.startsWith("--", arg)) {
-                // TODO: better string splitting
-                val index = UnicodeScalars.stringToSequence(arg)
-                    |> Sequences.findIndex~(fun (scalar: UnicodeScalar) => scalar == '=');
-
-                when (index) {
-                    is Some(.value as index) {
-                        val optionName = UnicodeScalars.left(index, arg);
-                        val option = E.lookupOption!(optionName);
-                        if (option.isFlag) {
-                            E.fail!("flag does not take value: " + optionName);
-                        } else {
-                            val argValue = UnicodeScalars.dropLeft(index + 1, arg);
-                            E.storeOption!(option, argValue);
-                        }
-                    }
-                    is None {
-                        val option = E.lookupOption!(arg);
-                        if (option.isFlag) {
-                            E.storeOption!(option, "");
-                        } else {
-                            val argValue = E.nextStringOrFail!("option is missing value: " + option.name);
-                            E.storeOption!(option, argValue);
-                        }
-                    }
-                }
-            } else {
-                E.storePositional!(arg);
-            }
+            readNextArgument!();
         })
+    }
+
+    fun readNextArgument() !E -> Unit {
+        val arg = E.nextStringOrExit!();
+
+        if (UnicodeScalars.startsWith("--", arg)) {
+            readOption!(arg);
+        } else {
+            E.storePositional!(arg);
+        }
+    }
+
+    fun readOption(arg: String) !E -> Unit {
+        // TODO: better string splitting
+        val index = UnicodeScalars.stringToSequence(arg)
+            |> Sequences.findIndex~(fun (scalar: UnicodeScalar) => scalar == '=');
+
+        when (index) {
+            is Some(.value as index) {
+                val optionName = UnicodeScalars.left(index, arg);
+                val argValue = UnicodeScalars.dropLeft(index + 1, arg);
+                readOptionWithImmediateValue!(optionName, argValue);
+            }
+            is None {
+                readOptionWithoutImmediateValue!(arg);
+            }
+        }
+    }
+
+    fun readOptionWithImmediateValue(optionName: String, argValue: String) !E -> Unit {
+        val option = E.lookupOption!(optionName);
+        if (option.isFlag) {
+            E.fail!("flag does not take value: " + optionName);
+        } else {
+            E.storeOption!(option, argValue);
+        }
+    }
+
+    fun readOptionWithoutImmediateValue(optionName: String) !E -> Unit {
+        val option = E.lookupOption!(optionName);
+        if (option.isFlag) {
+            E.storeOption!(option, "");
+        } else {
+            val argValue = E.nextStringOrFail!("option is missing value: " + option.name);
+            E.storeOption!(option, argValue);
+        }
+    }
+
+    handle E withstate(initialState) {
+        readArguments!()
     } on {
         .fail = (state: State, message: String) {
             ParseEffect.fail!(message)
