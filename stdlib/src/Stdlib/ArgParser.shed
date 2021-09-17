@@ -103,8 +103,8 @@ fun toStringArgs(
 ) !ParseEffect -> Lists.List[#(String, String)] {
     effect E {
         .fail: (String) -> Nothing,
-        .nextStringOrExit: () -> String,
-        .nextStringOrFail: (String) -> String,
+        .done: () -> Nothing,
+        .nextString: () -> Option[String],
         .lookupOption: (String) -> ArgDefinition,
         .storeOption: (ArgDefinition, String) -> Unit,
         .storePositional: (String) -> Unit,
@@ -129,12 +129,36 @@ fun toStringArgs(
     }
 
     fun readNextArgument() !E -> Unit {
-        val arg = E.nextStringOrExit!();
+        val arg = nextStringOrDone!();
 
         if (UnicodeScalars.startsWith("--", arg)) {
             readOption!(arg);
         } else {
             E.storePositional!(arg);
+        }
+    }
+
+    fun nextStringOrDone() !E -> String {
+        val arg = E.nextString!();
+        when (arg) {
+            is Some(.value as arg) {
+                arg
+            }
+            is None {
+                E.done!()
+            }
+        }
+    }
+
+    fun nextStringOrFail(message: String) !E -> String {
+        val arg = E.nextString!();
+        when (arg) {
+            is Some(.value as arg) {
+                arg
+            }
+            is None {
+                E.fail!(message)
+            }
         }
     }
 
@@ -169,7 +193,7 @@ fun toStringArgs(
         if (option.isFlag) {
             E.storeOption!(option, "");
         } else {
-            val argValue = E.nextStringOrFail!("option is missing value: " + option.name);
+            val argValue = nextStringOrFail!("option is missing value: " + option.name);
             E.storeOption!(option, argValue);
         }
     }
@@ -181,28 +205,19 @@ fun toStringArgs(
             ParseEffect.fail!(message)
         },
 
-        .nextStringOrExit = (state: State) {
-            val args = state.args;
-            when (args) {
-                is Lists.Cons {
-                    val newState = State(...state, .args = args.tail);
-                    resume args.head withstate newState
-                }
-                is Lists.Nil {
-                    exit state.result
-                }
-            }
+        .done = (state: State) {
+            exit state.result
         },
 
-        .nextStringOrFail = (state: State, message: String) {
+        .nextString = (state: State) {
             val args = state.args;
             when (args) {
                 is Lists.Cons {
                     val newState = State(...state, .args = args.tail);
-                    resume args.head withstate newState
+                    resume some(args.head) withstate newState
                 }
                 is Lists.Nil {
-                    ParseEffect.fail!(message)
+                    resume none withstate state
                 }
             }
         },
