@@ -159,7 +159,7 @@ class TypeCheckFunctionTests {
         )
 
         val typeCheck = {
-            typeCheckFunctionDefinition(node, typeContext)
+            typeCheckFunction(node, typeContext)
             typeContext.undefer()
         }
 
@@ -168,6 +168,33 @@ class TypeCheckFunctionTests {
             throwsException(
                 has(MissingParameterTypeError::message, present(equalTo("Missing type for parameter x"))),
             ),
+        )
+    }
+
+    @Test
+    fun givenThereIsATypeHintWhenPositionalParameterHasNoTypeThenHintIsUsed() {
+        val intType = staticReference("Int")
+        val parameter = parameter(name = "x", type = null)
+        val parameterReference = variableReference("x")
+        val node = function(
+            parameters = listOf(parameter),
+            returnType = intType,
+            body = listOf(expressionStatementReturn(parameterReference))
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to IntMetaType),
+            references = mapOf(parameterReference to parameter)
+        )
+
+        val functionType = typeCheckFunction(node, typeContext, hint = functionType(positionalParameters = listOf(IntType)))
+        typeContext.undefer()
+
+        assertThat(
+            functionType,
+            isFunctionType(
+                positionalParameters = isSequence(isIntType),
+                namedParameters = isMap()
+            )
         )
     }
 
@@ -213,7 +240,7 @@ class TypeCheckFunctionTests {
         )
 
         val typeCheck = {
-            typeCheckFunctionDefinition(node, typeContext)
+            typeCheckFunction(node, typeContext)
             typeContext.undefer()
         }
 
@@ -222,6 +249,34 @@ class TypeCheckFunctionTests {
             throwsException(
                 has(MissingParameterTypeError::message, present(equalTo("Missing type for parameter x"))),
             ),
+        )
+    }
+
+    @Test
+    fun givenThereIsATypeHintWhenNamedParameterHasNoTypeThenHintIsUsed() {
+        val intType = staticReference("Int")
+        val parameter = parameter(name = "x", type = null)
+        val parameterReference = variableReference("x")
+        val node = function(
+            namedParameters = listOf(parameter),
+            returnType = intType,
+            body = listOf(expressionStatementReturn(parameterReference))
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to IntMetaType),
+            references = mapOf(parameterReference to parameter)
+        )
+
+        val hint = functionType(namedParameters = mapOf(Identifier("x") to IntType))
+        val functionType = typeCheckFunction(node, typeContext, hint = hint)
+        typeContext.undefer()
+
+        assertThat(
+            functionType,
+            isFunctionType(
+                positionalParameters = isSequence(),
+                namedParameters = isMap(Identifier("x") to isIntType)
+            )
         )
     }
 

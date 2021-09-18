@@ -372,17 +372,37 @@ internal fun typeCheckFunction(
 ): FunctionType {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
-    fun evalParameterType(parameter: ParameterNode): Type {
+    fun evalParameterType(parameter: ParameterNode, parameterHint: Type?): Type {
         val parameterType = parameter.type
-        if (parameterType == null) {
-            throw MissingParameterTypeError("Missing type for parameter ${parameter.name.value}", source = parameter.source)
-        } else {
+        if (parameterType != null) {
             return evalType(parameterType, context)
+        } else if (parameterHint != null) {
+            return parameterHint
+        } else {
+            throw MissingParameterTypeError("Missing type for parameter ${parameter.name.value}", source = parameter.source)
         }
     }
 
-    val positionalParameterTypes = function.parameters.map(::evalParameterType)
-    val namedParameterTypes = function.namedParameters.map(::evalParameterType)
+    val positionalParameterTypes = function.parameters.mapIndexed { parameterIndex, parameter ->
+        // TODO: test this more thoroughly?
+        val parameterHint = if (hint != null && hint is FunctionType && parameterIndex < hint.positionalParameters.size) {
+            hint.positionalParameters[parameterIndex]
+        } else {
+            null
+        }
+        evalParameterType(parameter, parameterHint = parameterHint)
+    }
+
+    val namedParameterTypes = function.namedParameters.map { parameter ->
+        // TODO: test this more thoroughly?
+        val parameterHint = if (hint != null && hint is FunctionType) {
+            hint.namedParameters[parameter.name]
+        } else {
+            null
+        }
+        evalParameterType(parameter, parameterHint = parameterHint)
+    }
+
     context.addVariableTypes((function.parameters + function.namedParameters).zip(
         positionalParameterTypes + namedParameterTypes,
         { argument, argumentType -> argument.nodeId to argumentType }
