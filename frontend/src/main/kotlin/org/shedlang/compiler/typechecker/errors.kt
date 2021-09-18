@@ -79,6 +79,8 @@ class FieldDeclarationValueConflictError(
     source: Source
 ): TypeCheckError("The field ${name} is declared with a constant value in parent ${parentShape}," +
     " and constant fields cannot be overridden", source)
+class MissingParameterTypeError(message: String, source: Source)
+    : TypeCheckError(message, source)
 class MissingReturnTypeError(message: String, source: Source)
     : TypeCheckError(message, source)
 class WhenIsNotExhaustiveError(val unhandledMembers: List<Type>, source: Source)

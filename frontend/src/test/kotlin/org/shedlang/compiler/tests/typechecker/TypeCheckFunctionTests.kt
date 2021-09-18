@@ -144,6 +144,34 @@ class TypeCheckFunctionTests {
     }
 
     @Test
+    fun givenThereIsNoTypeHintWhenPositionalParameterHasNoTypeThenErrorIsThrown() {
+        val intType = staticReference("Int")
+        val parameter = parameter(name = "x", type = null)
+        val parameterReference = variableReference("x")
+        val node = function(
+            parameters = listOf(parameter),
+            returnType = intType,
+            body = listOf(expressionStatementReturn(parameterReference))
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to IntMetaType),
+            references = mapOf(parameterReference to parameter)
+        )
+
+        val typeCheck = {
+            typeCheckFunctionDefinition(node, typeContext)
+            typeContext.undefer()
+        }
+
+        assertThat(
+            typeCheck,
+            throwsException(
+                has(MissingParameterTypeError::message, present(equalTo("Missing type for parameter x"))),
+            ),
+        )
+    }
+
+    @Test
     fun namedParametersAreTyped() {
         val intType = staticReference("Int")
         val parameter = parameter(name = "x", type = intType)
@@ -166,6 +194,34 @@ class TypeCheckFunctionTests {
                 positionalParameters = isSequence(),
                 namedParameters = isMap(Identifier("x") to isIntType)
             )
+        )
+    }
+
+    @Test
+    fun givenThereIsNoTypeHintWhenNamedParameterHasNoTypeThenErrorIsThrown() {
+        val intType = staticReference("Int")
+        val parameter = parameter(name = "x", type = null)
+        val parameterReference = variableReference("x")
+        val node = function(
+            namedParameters = listOf(parameter),
+            returnType = intType,
+            body = listOf(expressionStatementReturn(parameterReference))
+        )
+        val typeContext = typeContext(
+            referenceTypes = mapOf(intType to IntMetaType),
+            references = mapOf(parameterReference to parameter)
+        )
+
+        val typeCheck = {
+            typeCheckFunctionDefinition(node, typeContext)
+            typeContext.undefer()
+        }
+
+        assertThat(
+            typeCheck,
+            throwsException(
+                has(MissingParameterTypeError::message, present(equalTo("Missing type for parameter x"))),
+            ),
         )
     }
 

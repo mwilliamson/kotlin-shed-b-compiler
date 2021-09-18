@@ -219,8 +219,16 @@ internal fun isVarargsDeclaration(
     ))
 }
 
-internal fun isFunctionDefinition(name: Matcher<Identifier>): Matcher<ModuleStatementNode> {
-    return cast(has(FunctionDefinitionNode::name, name))
+internal fun isFunctionDefinition(
+    name: Matcher<Identifier> = anything,
+    positionalParameters: Matcher<List<ParameterNode>> = anything,
+    namedParameters: Matcher<List<ParameterNode>> = anything
+): Matcher<ModuleStatementNode> {
+    return cast(allOf(
+        has(FunctionDefinitionNode::name, name),
+        has(FunctionDefinitionNode::parameters, positionalParameters),
+        has(FunctionDefinitionNode::namedParameters, namedParameters),
+    ))
 }
 
 internal fun isTypeParameter(
@@ -240,9 +248,13 @@ internal fun isEffectParameterNode(
 }
 
 internal fun isParameter(name: String, typeReference: String): Matcher<ParameterNode> {
+    return isParameter(name = name, type = present(isStaticReference(typeReference)))
+}
+
+internal fun isParameter(name: String, type: Matcher<StaticExpressionNode?>): Matcher<ParameterNode> {
     return allOf(
         has(ParameterNode::name, isIdentifier(name)),
-        has(ParameterNode::type, isStaticReference(typeReference))
+        has(ParameterNode::type, type)
     )
 }
 
@@ -371,7 +383,7 @@ internal fun isStaticApplication(
 internal fun isFunctionType(
     staticParameters: Matcher<List<StaticParameterNode>> = anything,
     positionalParameters: Matcher<List<StaticExpressionNode>> = anything,
-    namedParameters: Matcher<List<ParameterNode>> = anything,
+    namedParameters: Matcher<List<FunctionTypeNamedParameterNode>> = anything,
     returnType: Matcher<StaticExpressionNode> = anything,
     effect: Matcher<StaticExpressionNode?> = anything
 ): Matcher<StaticExpressionNode> = cast(allOf(
@@ -381,6 +393,11 @@ internal fun isFunctionType(
     has(FunctionTypeNode::returnType, returnType),
     has(FunctionTypeNode::effect, effect)
 ))
+
+internal fun isFunctionTypeNamedParameter(name: String, typeReference: String): Matcher<FunctionTypeNamedParameterNode> = allOf(
+    has(FunctionTypeNamedParameterNode::name, isIdentifier(name)),
+    has(FunctionTypeNamedParameterNode::type, isStaticReference(typeReference)),
+)
 
 internal fun isTupleTypeNode(
     elementTypes: Matcher<List<StaticExpressionNode>> = anything

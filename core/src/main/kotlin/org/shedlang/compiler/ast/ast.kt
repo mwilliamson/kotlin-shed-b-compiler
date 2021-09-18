@@ -218,7 +218,7 @@ data class StaticApplicationNode(
 data class FunctionTypeNode(
     val staticParameters: List<StaticParameterNode>,
     val positionalParameters: List<StaticExpressionNode>,
-    val namedParameters: List<ParameterNode>,
+    val namedParameters: List<FunctionTypeNamedParameterNode>,
     val returnType: StaticExpressionNode,
     val effect: StaticExpressionNode?,
     override val source: Source,
@@ -229,10 +229,19 @@ data class FunctionTypeNode(
             (staticParameters + positionalParameters + namedParameters + effect.nullableToList() + listOf(returnType)).map(NodeStructures::staticEval)
         ))
 
-
     override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
+}
+
+data class FunctionTypeNamedParameterNode(
+    override val name: Identifier,
+    val type: StaticExpressionNode,
+    override val source: Source,
+    override val nodeId: Int = freshNodeId()
+) : VariableBindingNode, Node {
+    override val structure: List<NodeStructure>
+        get() = listOf(NodeStructures.staticEval(type), NodeStructures.initialise(this))
 }
 
 data class TupleTypeNode(
@@ -646,17 +655,17 @@ data class EffectParameterNode(
     override fun copy(): EffectParameterNode {
         return copy(nodeId = freshNodeId())
     }
-}
+    }
 
-data class ParameterNode(
-    override val name: Identifier,
-    val type: StaticExpressionNode,
-    override val source: Source,
-    override val nodeId: Int = freshNodeId()
-) : VariableBindingNode, Node {
-    override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(type), NodeStructures.initialise(this))
-}
+    data class ParameterNode(
+        override val name: Identifier,
+        val type: StaticExpressionNode?,
+        override val source: Source,
+        override val nodeId: Int = freshNodeId()
+    ) : VariableBindingNode, Node {
+        override val structure: List<NodeStructure>
+            get() = type.nullableToList().map(NodeStructures::staticEval) + listOf(NodeStructures.initialise(this))
+    }
 
 interface FunctionStatementNode : StatementNode {
     interface Visitor<T> {

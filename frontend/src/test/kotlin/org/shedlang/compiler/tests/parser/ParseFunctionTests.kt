@@ -74,6 +74,20 @@ class ParseFunctionTests {
     }
 
     @Test
+    fun argumentTypeIsOptional() {
+        val source = "fun f(x, .y) -> Unit { }"
+        val function = parseString(::parseFunctionDefinition, source)
+        assertThat(function, isFunctionDefinition(
+            positionalParameters = isSequence(
+                isParameter("x", absent()),
+            ),
+            namedParameters = isSequence(
+                isParameter("y", absent()),
+            ),
+        ))
+    }
+
+    @Test
     fun parametersCanHaveTrailingComma() {
         val source = "fun f(x: Int, ) -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)

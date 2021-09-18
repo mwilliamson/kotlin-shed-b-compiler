@@ -75,7 +75,7 @@ class ParseStaticExpressionTests {
                 isStaticReference(name = "B")
             ),
             namedParameters = isSequence(
-                isParameter(name = "c", typeReference = "C")
+                isFunctionTypeNamedParameter(name = "c", typeReference = "C")
             ),
             returnType = isStaticReference(name = "C")
         ))

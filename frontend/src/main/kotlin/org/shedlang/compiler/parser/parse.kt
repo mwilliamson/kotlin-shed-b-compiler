@@ -650,7 +650,7 @@ private fun parsePositionalParameter(tokens: TokenIterator<TokenType>): Paramete
     val source = tokens.location()
 
     val name = parseIdentifier(tokens)
-    val type = parseTypeSpec(tokens)
+    val type = tryParseTypeSpec(tokens)
     return ParameterNode(name, type, source)
 }
 
@@ -659,8 +659,16 @@ private fun parseNamedParameter(tokens: TokenIterator<TokenType>): ParameterNode
 
     tokens.skip(TokenType.SYMBOL_DOT)
     val name = parseIdentifier(tokens)
-    val type = parseTypeSpec(tokens)
+    val type = tryParseTypeSpec(tokens)
     return ParameterNode(name, type, source)
+}
+
+private fun tryParseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNode? {
+    if (tokens.isNext(TokenType.SYMBOL_COLON)) {
+        return parseTypeSpec(tokens)
+    } else {
+        return null
+    }
 }
 
 private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNode {
@@ -1567,14 +1575,14 @@ private fun parseTupleType(tokens: TokenIterator<TokenType>): StaticExpressionNo
 
 private class FunctionTypeParameters(
     val positional: List<StaticExpressionNode>,
-    val named: List<ParameterNode>
+    val named: List<FunctionTypeNamedParameterNode>
 )
 
 private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): FunctionTypeParameters {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
     val positionalParameters = mutableListOf<StaticExpressionNode>()
-    val namedParameters = mutableListOf<ParameterNode>()
+    val namedParameters = mutableListOf<FunctionTypeNamedParameterNode>()
 
     while (true) {
         if (tokens.trySkip(TokenType.SYMBOL_CLOSE_PAREN)) {
@@ -1585,7 +1593,7 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
         }
 
         if (tokens.isNext(TokenType.SYMBOL_DOT)) {
-            val parameter = parseNamedParameter(tokens)
+            val parameter = parseFunctionTypeNamedParameter(tokens)
             namedParameters.add(parameter)
         } else {
             val parameter = parseStaticExpression(tokens)
@@ -1605,6 +1613,15 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
 
         tokens.skip(TokenType.SYMBOL_COMMA)
     }
+}
+
+private fun parseFunctionTypeNamedParameter(tokens: TokenIterator<TokenType>): FunctionTypeNamedParameterNode {
+    val source = tokens.location()
+
+    tokens.skip(TokenType.SYMBOL_DOT)
+    val name = parseIdentifier(tokens)
+    val type = parseTypeSpec(tokens)
+    return FunctionTypeNamedParameterNode(name, type, source)
 }
 
 private interface StaticOperationParser: ExpressionParser<StaticExpressionNode> {

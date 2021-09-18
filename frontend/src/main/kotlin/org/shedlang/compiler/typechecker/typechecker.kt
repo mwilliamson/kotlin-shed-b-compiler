@@ -372,12 +372,17 @@ internal fun typeCheckFunction(
 ): FunctionType {
     val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
 
-    val positionalParameterTypes = function.parameters.map(
-        { argument -> evalType(argument.type, context) }
-    )
-    val namedParameterTypes = function.namedParameters.map(
-        { argument -> evalType(argument.type, context) }
-    )
+    fun evalParameterType(parameter: ParameterNode): Type {
+        val parameterType = parameter.type
+        if (parameterType == null) {
+            throw MissingParameterTypeError("Missing type for parameter ${parameter.name.value}", source = parameter.source)
+        } else {
+            return evalType(parameterType, context)
+        }
+    }
+
+    val positionalParameterTypes = function.parameters.map(::evalParameterType)
+    val namedParameterTypes = function.namedParameters.map(::evalParameterType)
     context.addVariableTypes((function.parameters + function.namedParameters).zip(
         positionalParameterTypes + namedParameterTypes,
         { argument, argumentType -> argument.nodeId to argumentType }

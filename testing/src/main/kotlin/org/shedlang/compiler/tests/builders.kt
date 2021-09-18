@@ -503,7 +503,7 @@ fun declaration(name: String) = parameter(name)
 
 fun parameter(
     name: String = "x",
-    type: StaticExpressionNode = staticReference("Int")
+    type: StaticExpressionNode? = staticReference("Int")
 ) = ParameterNode(
     name = Identifier(name),
     type = type,
@@ -573,7 +573,7 @@ fun staticApplication(
 fun functionTypeNode(
     staticParameters: List<StaticParameterNode> = listOf(),
     positionalParameters: List<StaticExpressionNode> = listOf(),
-    namedParameters: List<ParameterNode> = listOf(),
+    namedParameters: List<FunctionTypeNamedParameterNode> = listOf(),
     returnType: StaticExpressionNode = staticReference("Unit"),
     effect: StaticExpressionNode? = null
 ) = FunctionTypeNode(
@@ -583,6 +583,15 @@ fun functionTypeNode(
     returnType = returnType,
     effect = effect,
     source = anySource()
+)
+
+fun functionTypeNamedParameter(
+    name: String = "x",
+    type: StaticExpressionNode
+) = FunctionTypeNamedParameterNode(
+    name = Identifier(name),
+    type = type,
+    source = anySource(),
 )
 
 fun tupleTypeNode(

@@ -88,7 +88,7 @@ class EvalTypeTests {
         val node = functionTypeNode(
             staticParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameterReference),
-            namedParameters = listOf(parameter("x", intReference)),
+            namedParameters = listOf(functionTypeNamedParameter("x", intReference)),
             effect = effectReference,
             returnType = boolReference
         )

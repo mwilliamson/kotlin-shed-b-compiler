@@ -162,7 +162,7 @@ class ResolutionTests {
         val node = functionTypeNode(
             staticParameters = listOf(positionalTypeParameter, namedTypeParameter),
             positionalParameters = listOf(positionalReference),
-            namedParameters = listOf(parameter(type = namedReference)),
+            namedParameters = listOf(functionTypeNamedParameter(type = namedReference)),
             returnType = staticReference("T")
         )
 
