@@ -291,14 +291,12 @@ private fun checkArgumentTypes(
             return typeMap + effectMap
         }
 
-        fun generateBindings(allowIncomplete: Boolean): Map<StaticParameter, StaticValue> {
+        fun generateCompleteBindings(): Map<StaticParameter, StaticValue> {
             val typeMap = typeParameters.zip(inferredTypeArguments)
                 .associate { (parameter, inferredArgument) ->
                     val boundType = constraints.boundTypeFor(inferredArgument)
                     if (boundType != null) {
                         parameter to boundType
-                    } else if (allowIncomplete) {
-                        parameter to parameter
                     } else {
                         throw CouldNotInferTypeParameterError(
                             parameter = parameter,
@@ -315,7 +313,11 @@ private fun checkArgumentTypes(
         }
 
         for ((argument, unboundParameterType) in arguments.sortedBy { (argument, _) -> argument is FunctionNode && argument.parameters.any { parameter -> parameter.type == null } }) {
-            val parameterHintType = replaceStaticValuesInType(unboundParameterType, generateKnownBindings())
+            val knownBindings = generateKnownBindings()
+            val parameterHintType = replaceStaticValuesInType(
+                unboundParameterType,
+                knownBindings
+            )
             val actualType = inferType(argument, context, hint = parameterHintType)
 
             val parameterType = replaceStaticValuesInType(
@@ -324,14 +326,14 @@ private fun checkArgumentTypes(
             )
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
-                    expected = replaceStaticValuesInType(unboundParameterType, generateBindings(allowIncomplete = true)),
+                    expected = parameterHintType,
                     actual = actualType,
                     source = argument.source
                 )
             }
         }
 
-        return generateBindings(allowIncomplete = false)
+        return generateCompleteBindings()
     } else {
         val bindings = if (bindingsHint == null) {
             if (staticArgumentNodes.size != staticParameters.size) {
