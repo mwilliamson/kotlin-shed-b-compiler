@@ -78,11 +78,47 @@ private fun inferFunctionCallType(
     receiverType: FunctionType,
     context: TypeContext
 ): Pair<Type, StaticBindings> {
+    return inferNormalCallType(
+        node = node,
+        receiverType = receiverType,
+        splatType = null,
+        context = context,
+    )
+}
+
+private fun inferConstructorCallType(
+    node: CallNode,
+    typeFunction: ParameterizedStaticValue?,
+    shapeType: ShapeType,
+    context: TypeContext
+): Pair<Type, StaticBindings> {
+    return inferNormalCallType(
+        node = node,
+        receiverType = functionType(
+            staticParameters = typeFunction?.parameters ?: listOf(),
+            positionalParameters = listOf(),
+            namedParameters = shapeType.populatedFields
+                .filter { field -> !field.value.isConstant }
+                .mapValues { field -> field.value.type },
+            returns = shapeType
+        ),
+        splatType = shapeType,
+        context = context,
+    )
+}
+
+private fun inferNormalCallType(
+    node: CallNode,
+    receiverType: FunctionType,
+    splatType: ShapeType?,
+    context: TypeContext,
+): Pair<Type, StaticBindings> {
     val bindings = checkArguments(
         call = node,
         staticParameters = receiverType.staticParameters,
         positionalParameters = receiverType.positionalParameters,
         namedParameters = receiverType.namedParameters,
+        splatType = splatType,
         context = context,
         allowMissing = false
     )
@@ -104,38 +140,6 @@ private fun inferFunctionCallType(
     // TODO: handle unconstrained types
     val returnType = replaceStaticValuesInType(receiverType.returns, bindings)
     return Pair(returnType, bindings)
-}
-
-private fun inferConstructorCallType(
-    node: CallNode,
-    typeFunction: ParameterizedStaticValue?,
-    shapeType: ShapeType,
-    context: TypeContext
-): Pair<Type, StaticBindings> {
-    if (node.positionalArguments.any()) {
-        throw PositionalArgumentPassedToShapeConstructorError(source = node.positionalArguments.first().source)
-    }
-
-    val typeParameterBindings = checkArguments(
-        call = node,
-        staticParameters = typeFunction?.parameters ?: listOf(),
-        positionalParameters = listOf(),
-        namedParameters = shapeType.populatedFields
-            .filter { field -> !field.value.isConstant }
-            .mapValues { field -> field.value.type },
-        splatType = shapeType,
-        context = context,
-        allowMissing = false
-    )
-
-    if (typeFunction == null) {
-        return Pair(shapeType, mapOf())
-    } else {
-        val type = applyStatic(typeFunction, typeFunction.parameters.map({ parameter ->
-            typeParameterBindings[parameter]!!
-        })) as Type
-        return Pair(type, typeParameterBindings)
-    }
 }
 
 internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext, bindingsHint: StaticBindings? = null): Type {

@@ -645,10 +645,12 @@ class TypeCheckCallTests {
         val shapeType = shapeType(name = "X")
         val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
 
-        assertThat(
-            { inferCallType(node, typeContext) },
-            throwsException<PositionalArgumentPassedToShapeConstructorError>()
-        )
+        val typeCheck = { inferCallType(node, typeContext) }
+
+        assertThat(typeCheck, throwsException(allOf(
+            has(WrongNumberOfArgumentsError::actual, equalTo(1)),
+            has(WrongNumberOfArgumentsError::expected, equalTo(0)),
+        )))
     }
 
     @Test
