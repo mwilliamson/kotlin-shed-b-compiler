@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.shedlang.compiler.ast.BinaryOperator
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.tests.*
@@ -173,6 +174,49 @@ class TypeCheckCallTests {
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isUnionType(members = isSequence(isEquivalentType(member1), isEquivalentType(member2))))
+    }
+
+    @Test
+    fun whenTypeParameterIsBoundByEarlierArgumentThenBoundValueIsUsedAsHint() {
+        val functionReference = variableReference("f")
+        val parameter = parameter(name = "x", type = null)
+        val parameterReference = variableReference("x")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(
+                literalInt(),
+                functionExpression(
+                    parameters = listOf(parameter),
+                    body = listOf(
+                        expressionStatementReturn(binaryOperation(BinaryOperator.ADD, literalInt(),
+                            parameterReference
+                        ))
+                    ),
+                ),
+            )
+        )
+
+        val typeParameter = invariantTypeParameter(name = "T")
+        val functionType = functionType(
+            staticParameters = listOf(typeParameter),
+            positionalParameters = listOf(
+                typeParameter,
+                functionType(
+                    positionalParameters = listOf(typeParameter),
+                    returns = typeParameter
+                )
+            ),
+            returns = typeParameter
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            references = mapOf(parameterReference to parameter)
+        )
+        val type = inferCallType(node, typeContext)
+        typeContext.undefer()
+
+        assertThat(type, cast(equalTo(IntType)))
     }
 
     @Test

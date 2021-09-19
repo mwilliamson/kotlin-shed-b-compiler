@@ -275,6 +275,22 @@ private fun checkArgumentTypes(
             originalParameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
 
+        fun generateKnownBindings(): Map<StaticParameter, StaticValue> {
+            val typeMap = typeParameters.zip(inferredTypeArguments)
+                .associate { (parameter, inferredArgument) ->
+                    val boundType = constraints.explicitlyBoundTypeFor(inferredArgument)
+                    if (boundType != null) {
+                        parameter to boundType
+                    } else {
+                        parameter to inferredArgument
+                    }
+                }
+            // TODO: handle effects
+            val effectMap = effectParameters.zip(inferredEffectArguments)
+            // TODO: handle unbound effects
+            return typeMap + effectMap
+        }
+
         fun generateBindings(allowIncomplete: Boolean): Map<StaticParameter, StaticValue> {
             val typeMap = typeParameters.zip(inferredTypeArguments)
                 .associate { (parameter, inferredArgument) ->
@@ -299,11 +315,13 @@ private fun checkArgumentTypes(
         }
 
         for (argument in arguments) {
+            val parameterHintType = replaceStaticValuesInType(argument.second, generateKnownBindings())
+            val actualType = inferType(argument.first, context, hint = parameterHintType)
+            
             val parameterType = replaceStaticValuesInType(
                 argument.second,
                 (typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap()
             )
-            val actualType = inferType(argument.first, context, hint = parameterType)
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
                     expected = replaceStaticValuesInType(argument.second, generateBindings(allowIncomplete = true)),

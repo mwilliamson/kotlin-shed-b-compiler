@@ -89,6 +89,10 @@ class TypeConstraintSolver(
         }
     }
 
+    fun explicitlyBoundTypeFor(parameter: TypeParameter): Type? {
+        return typeBindings[parameter]?.type
+    }
+
     fun boundEffectFor(parameter: EffectParameter): Effect {
         return effectBindings[parameter] ?: EmptyEffect
     }
