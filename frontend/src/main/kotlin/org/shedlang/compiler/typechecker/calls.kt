@@ -314,10 +314,10 @@ private fun checkArgumentTypes(
             return typeMap + effectMap
         }
 
-        for (argument in arguments) {
+        for (argument in arguments.sortedBy { (argument, _) -> argument is FunctionNode && argument.parameters.any { parameter -> parameter.type == null } }) {
             val parameterHintType = replaceStaticValuesInType(argument.second, generateKnownBindings())
             val actualType = inferType(argument.first, context, hint = parameterHintType)
-            
+
             val parameterType = replaceStaticValuesInType(
                 argument.second,
                 (typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap()

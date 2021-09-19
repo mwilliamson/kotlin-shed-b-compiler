@@ -177,7 +177,7 @@ class TypeCheckCallTests {
     }
 
     @Test
-    fun whenTypeParameterIsBoundByEarlierArgumentThenBoundValueIsUsedAsHint() {
+    fun whenTypeParameterIsBoundByEarlierArgumentThenBoundValueIsUsedAsHintForFunctionWithInferredParameterTypes() {
         val functionReference = variableReference("f")
         val parameter = parameter(name = "x", type = null)
         val parameterReference = variableReference("x")
@@ -205,6 +205,49 @@ class TypeCheckCallTests {
                     positionalParameters = listOf(typeParameter),
                     returns = typeParameter
                 )
+            ),
+            returns = typeParameter
+        )
+
+        val typeContext = typeContext(
+            referenceTypes = mapOf(functionReference to functionType),
+            references = mapOf(parameterReference to parameter)
+        )
+        val type = inferCallType(node, typeContext)
+        typeContext.undefer()
+
+        assertThat(type, cast(equalTo(IntType)))
+    }
+
+    @Test
+    fun whenTypeParameterIsBoundByLaterArgumentThenBoundValueIsUsedAsHintForFunctionWithInferredParameterTypes() {
+        val functionReference = variableReference("f")
+        val parameter = parameter(name = "x", type = null)
+        val parameterReference = variableReference("x")
+        val node = call(
+            receiver = functionReference,
+            positionalArguments = listOf(
+                functionExpression(
+                    parameters = listOf(parameter),
+                    body = listOf(
+                        expressionStatementReturn(binaryOperation(BinaryOperator.ADD, literalInt(),
+                            parameterReference
+                        ))
+                    ),
+                ),
+                literalInt(),
+            )
+        )
+
+        val typeParameter = invariantTypeParameter(name = "T")
+        val functionType = functionType(
+            staticParameters = listOf(typeParameter),
+            positionalParameters = listOf(
+                functionType(
+                    positionalParameters = listOf(typeParameter),
+                    returns = typeParameter
+                ),
+                typeParameter,
             ),
             returns = typeParameter
         )
