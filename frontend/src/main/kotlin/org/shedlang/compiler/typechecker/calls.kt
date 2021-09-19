@@ -314,19 +314,19 @@ private fun checkArgumentTypes(
             return typeMap + effectMap
         }
 
-        for (argument in arguments.sortedBy { (argument, _) -> argument is FunctionNode && argument.parameters.any { parameter -> parameter.type == null } }) {
-            val parameterHintType = replaceStaticValuesInType(argument.second, generateKnownBindings())
-            val actualType = inferType(argument.first, context, hint = parameterHintType)
+        for ((argument, unboundParameterType) in arguments.sortedBy { (argument, _) -> argument is FunctionNode && argument.parameters.any { parameter -> parameter.type == null } }) {
+            val parameterHintType = replaceStaticValuesInType(unboundParameterType, generateKnownBindings())
+            val actualType = inferType(argument, context, hint = parameterHintType)
 
             val parameterType = replaceStaticValuesInType(
-                argument.second,
+                unboundParameterType,
                 (typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap()
             )
             if (!constraints.coerce(from = actualType, to = parameterType)) {
                 throw UnexpectedTypeError(
-                    expected = replaceStaticValuesInType(argument.second, generateBindings(allowIncomplete = true)),
+                    expected = replaceStaticValuesInType(unboundParameterType, generateBindings(allowIncomplete = true)),
                     actual = actualType,
-                    source = argument.first.source
+                    source = argument.source
                 )
             }
         }
