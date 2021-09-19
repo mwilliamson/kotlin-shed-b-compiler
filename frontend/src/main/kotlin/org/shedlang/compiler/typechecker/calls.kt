@@ -50,61 +50,78 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
 }
 
 internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Pair<Type, StaticBindings>? {
-    if (receiverType is FunctionType) {
-        return inferFunctionCallType(node, receiverType, context)
-    }
+    val analysis = analyseCallReceiver(receiverType)
 
-    if (receiverType is StaticValueType) {
+    return when (analysis) {
+        is CallReceiverAnalysis.Function -> inferNormalCallType(
+            node,
+            analysis.receiverType,
+            splatType = null,
+            context = context,
+        )
+
+        is CallReceiverAnalysis.Constructor -> inferNormalCallType(
+            node,
+            analysis.receiverType(),
+            splatType = analysis.shapeType,
+            context = context,
+        )
+
+        is CallReceiverAnalysis.EmptyFunction -> Pair(
+            inferEmptyCall(node, context),
+            mapOf(),
+        )
+
+        is CallReceiverAnalysis.Varargs -> Pair(
+            inferVarargsCall(node, analysis.receiverType, context),
+            mapOf(),
+        )
+
+        is CallReceiverAnalysis.NotCallable -> null
+    }
+}
+private sealed class CallReceiverAnalysis {
+    class Function(val receiverType: FunctionType): CallReceiverAnalysis()
+    class Constructor(
+        val typeFunction: ParameterizedStaticValue?,
+        val shapeType: ShapeType,
+    ): CallReceiverAnalysis() {
+        fun receiverType(): FunctionType {
+            return functionType(
+                staticParameters = typeFunction?.parameters ?: listOf(),
+                positionalParameters = listOf(),
+                namedParameters = shapeType.populatedFields
+                    .filter { field -> !field.value.isConstant }
+                    .mapValues { field -> field.value.type },
+                returns = shapeType
+            )
+        }
+    }
+    object EmptyFunction: CallReceiverAnalysis()
+    class Varargs(val receiverType: VarargsType): CallReceiverAnalysis()
+    object NotCallable: CallReceiverAnalysis()
+}
+
+private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
+    if (receiverType is FunctionType) {
+        return CallReceiverAnalysis.Function(receiverType = receiverType)
+    } else if (receiverType is StaticValueType) {
         val receiverInnerType = receiverType.value
         if (receiverInnerType is ShapeType) {
-            return inferConstructorCallType(node, null, receiverInnerType, context)
+            return CallReceiverAnalysis.Constructor(typeFunction = null, shapeType = receiverInnerType)
         } else if (receiverInnerType is ParameterizedStaticValue) {
             val typeFunctionInnerType = receiverInnerType.value
             if (typeFunctionInnerType is ShapeType) {
-                return inferConstructorCallType(node, receiverInnerType, typeFunctionInnerType, context)
+                return CallReceiverAnalysis.Constructor(typeFunction = receiverInnerType, shapeType = typeFunctionInnerType)
             }
         }
     } else if (receiverType is EmptyFunctionType) {
-        return Pair(inferEmptyCall(node, context), mapOf())
+        return CallReceiverAnalysis.EmptyFunction
     } else if (receiverType is VarargsType) {
-        return Pair(inferVarargsCall(node, receiverType, context), mapOf())
+        return CallReceiverAnalysis.Varargs(receiverType)
     }
 
-    return null
-}
-
-private fun inferFunctionCallType(
-    node: CallNode,
-    receiverType: FunctionType,
-    context: TypeContext
-): Pair<Type, StaticBindings> {
-    return inferNormalCallType(
-        node = node,
-        receiverType = receiverType,
-        splatType = null,
-        context = context,
-    )
-}
-
-private fun inferConstructorCallType(
-    node: CallNode,
-    typeFunction: ParameterizedStaticValue?,
-    shapeType: ShapeType,
-    context: TypeContext
-): Pair<Type, StaticBindings> {
-    return inferNormalCallType(
-        node = node,
-        receiverType = functionType(
-            staticParameters = typeFunction?.parameters ?: listOf(),
-            positionalParameters = listOf(),
-            namedParameters = shapeType.populatedFields
-                .filter { field -> !field.value.isConstant }
-                .mapValues { field -> field.value.type },
-            returns = shapeType
-        ),
-        splatType = shapeType,
-        context = context,
-    )
+    return CallReceiverAnalysis.NotCallable
 }
 
 private fun inferNormalCallType(
