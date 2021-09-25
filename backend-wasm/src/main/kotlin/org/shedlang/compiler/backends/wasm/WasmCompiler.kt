@@ -152,7 +152,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                 val fields = instruction.rawShapeType.allFields.values
                 val constructorName = instruction.rawShapeType.name.value
-                val context4 = WasmClosures.compileFunction(
+                val (context4, constructorTableIndex) = WasmClosures.compileFunction(
                     functionName = constructorName,
                     freeVariables = listOf(),
                     positionalParams = listOf(),
@@ -180,7 +180,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 )
                 val context5 = context4.addInstruction(Wasm.I.i32Store(
                     Wasm.I.localGet(shape),
-                    value = Wasm.I.i32Const(WasmConstValue.TableEntryIndex(constructorName)),
+                    value = Wasm.I.i32Const(constructorTableIndex),
                 ))
                 val context6 = if (tagValue == null) {
                     context5

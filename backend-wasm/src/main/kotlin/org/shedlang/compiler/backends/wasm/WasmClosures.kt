@@ -18,7 +18,7 @@ internal object WasmClosures {
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, String> {
-        val context2 = compileFunction(
+        val (context2, functionTableIndex) = compileFunction(
             functionName = functionName,
             freeVariables = freeVariables,
             positionalParams = positionalParams,
@@ -28,7 +28,7 @@ internal object WasmClosures {
         )
 
         return compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(functionName),
+            tableIndex = functionTableIndex,
             freeVariables = freeVariables,
             context = context2,
         )
@@ -41,7 +41,7 @@ internal object WasmClosures {
         namedParams: List<Pair<Identifier, WasmParam>>,
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
         context: WasmFunctionContext,
-    ): WasmFunctionContext {
+    ): Pair<WasmFunctionContext, WasmConstValue.TableEntryIndex> {
         val params = listOf(
             WasmParam(
                 WasmNaming.environmentPointer,
@@ -66,7 +66,10 @@ internal object WasmClosures {
             params = params,
             results = listOf(WasmData.genericValueType),
         )
-        return context.mergeGlobalContext(functionGlobalContext)
+        return Pair(
+            context.mergeGlobalContext(functionGlobalContext),
+            WasmConstValue.TableEntryIndex(functionName),
+        )
     }
 
     internal fun compileCreateForFunction(
