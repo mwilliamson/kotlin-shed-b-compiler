@@ -65,6 +65,36 @@ class TypeCheckPartialCallTests {
     }
 
     @Test
+    fun canPartiallyCallConstructors() {
+        val constructorReference = variableReference("f")
+        val node = partialCall(
+            receiver = constructorReference,
+            namedArguments = listOf(
+                callNamedArgument("x", literalInt())
+            )
+        )
+
+        val shapeType = shapeType(
+            fields = listOf(
+                field(name = "x", type = IntType),
+                field(name = "y", type = StringType),
+            )
+        )
+        val typeContext = typeContext(referenceTypes = mapOf(
+            constructorReference to metaType(shapeType)
+        ))
+
+        val type = inferType(node, typeContext)
+
+        assertThat(type, isFunctionType(
+            positionalParameters = isSequence(),
+            namedParameters = isMap(Identifier("y") to isStringType),
+            effect = equalTo(EmptyEffect),
+            returnType = isType(shapeType),
+        ))
+    }
+
+    @Test
     fun partialCallBindsTypeParameters() {
         val functionReference = variableReference("f")
         val node = partialCall(

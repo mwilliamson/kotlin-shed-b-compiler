@@ -162,41 +162,64 @@ private fun inferNormalCallType(
 internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext, bindingsHint: StaticBindings? = null): Type {
     val receiverType = inferType(node.receiver, context)
 
-    if (receiverType is FunctionType) {
-        val bindings = checkArguments(
-            call = node,
-            staticParameters = receiverType.staticParameters,
-            positionalParameters = receiverType.positionalParameters,
-            namedParameters = receiverType.namedParameters,
+    val analysis = analyseCallReceiver(receiverType)
+
+    return when (analysis) {
+        is CallReceiverAnalysis.Function -> inferPartialNormalCallType(
+            node = node,
+            receiverType = analysis.receiverType,
             context = context,
             bindingsHint = bindingsHint,
-            allowMissing = true
         )
 
-        for (staticParameter in receiverType.staticParameters) {
-            if (staticParameter !in bindings) {
-                // TODO: handle this more appropriately
-                throw Exception("unbound type parameter")
-            }
-        }
-
-        val remainingPositionalParameters = receiverType.positionalParameters
-            .drop(node.positionalArguments.size)
-            .map { parameter -> replaceStaticValuesInType(parameter, bindings) }
-        val remainingNamedParameters = receiverType.namedParameters
-            // TODO: Handle splats
-            .filterKeys { name -> !node.fieldArguments.any { argument -> (argument as FieldArgumentNode.Named).name == name } }
-            .mapValues { (name, parameter) -> replaceStaticValuesInType(parameter, bindings) }
-        return FunctionType(
-            staticParameters = listOf(),
-            positionalParameters = remainingPositionalParameters,
-            namedParameters = remainingNamedParameters,
-            returns = replaceStaticValuesInType(receiverType.returns, bindings),
-            effect = replaceEffects(receiverType.effect, bindings)
+        is CallReceiverAnalysis.Constructor -> inferPartialNormalCallType(
+            node = node,
+            receiverType = analysis.receiverType(),
+            context = context,
+            bindingsHint = bindingsHint,
         )
-    } else {
-        throw NotImplementedError()
+
+        else -> throw NotImplementedError()
     }
+}
+
+private fun inferPartialNormalCallType(
+    node: PartialCallNode,
+    receiverType: FunctionType,
+    context: TypeContext,
+    bindingsHint: StaticBindings? = null,
+): Type {
+    val bindings = checkArguments(
+        call = node,
+        staticParameters = receiverType.staticParameters,
+        positionalParameters = receiverType.positionalParameters,
+        namedParameters = receiverType.namedParameters,
+        context = context,
+        bindingsHint = bindingsHint,
+        allowMissing = true
+    )
+
+    for (staticParameter in receiverType.staticParameters) {
+        if (staticParameter !in bindings) {
+            // TODO: handle this more appropriately
+            throw Exception("unbound type parameter")
+        }
+    }
+
+    val remainingPositionalParameters = receiverType.positionalParameters
+        .drop(node.positionalArguments.size)
+        .map { parameter -> replaceStaticValuesInType(parameter, bindings) }
+    val remainingNamedParameters = receiverType.namedParameters
+        // TODO: Handle splats
+        .filterKeys { name -> !node.fieldArguments.any { argument -> (argument as FieldArgumentNode.Named).name == name } }
+        .mapValues { (name, parameter) -> replaceStaticValuesInType(parameter, bindings) }
+    return FunctionType(
+        staticParameters = listOf(),
+        positionalParameters = remainingPositionalParameters,
+        namedParameters = remainingNamedParameters,
+        returns = replaceStaticValuesInType(receiverType.returns, bindings),
+        effect = replaceEffects(receiverType.effect, bindings)
+    )
 }
 
 private fun checkArguments(
