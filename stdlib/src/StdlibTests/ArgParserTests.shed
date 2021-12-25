@@ -41,8 +41,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("hello");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.positional~("message", ArgParser.string, fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -60,10 +60,11 @@ val testCases = Tests.suite(moduleName, list(
 
         val rawArguments = list("hello", "world", "!");
 
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.positional~("one", ArgParser.string, Args.fields.one.update)
-            |> ArgParser.positional~("two", ArgParser.string, Args.fields.two.update)
-            |> ArgParser.positional~("three", ArgParser.string, Args.fields.three.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.positional~("one", ArgParser.string, fun (x, f) => f~(.one = x))
+            |> ArgParser.positional~("two", ArgParser.string, fun (x, f) => f~(.two = x))
+            |> ArgParser.positional~("three", ArgParser.string, fun (x, f) => f~(.three = x))
+            |> ArgParser.map~(fun (f) => f());
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -83,10 +84,11 @@ val testCases = Tests.suite(moduleName, list(
 
         val rawArguments = list("hello");
 
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.positional~("one", ArgParser.string, Args.fields.one.update)
-            |> ArgParser.positional~("two", ArgParser.string, Args.fields.two.update)
-            |> ArgParser.positional~("three", ArgParser.string, Args.fields.three.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.positional~("one", ArgParser.string, fun (x, f) => f~(.one = x))
+            |> ArgParser.positional~("two", ArgParser.string, fun (x, f) => f~(.two = x))
+            |> ArgParser.positional~("three", ArgParser.string, fun (x, f) => f~(.three = x))
+            |> ArgParser.map~(fun (f) => f());
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -101,8 +103,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("hello");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.positional~("message", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.positional~("message", ArgParser.optional(ArgParser.string), fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -117,8 +119,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list();
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.positional~("message", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.positional~("message", ArgParser.optional(ArgParser.string), fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -133,8 +135,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("hello", "world");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.positional~("message", ArgParser.string, Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.positional~("message", ArgParser.string, fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -149,8 +151,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--long-option", "value");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -165,8 +167,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--long-option=value");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -181,8 +183,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list();
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -197,8 +199,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--long-option", "hello");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.string, fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -213,8 +215,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list();
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.string, fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -229,8 +231,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--unknown-option", "value", "--long-option", "value");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.string, fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -245,8 +247,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--long-option");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.string, Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.string, fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -261,8 +263,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--long-option");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.option~("--long-option", ArgParser.optional(ArgParser.string), fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -277,8 +279,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list();
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.flag~("--flag", Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.flag~("--flag", fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -293,8 +295,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--flag");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.flag~("--flag", Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.flag~("--flag", fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -309,8 +311,8 @@ val testCases = Tests.suite(moduleName, list(
         }
 
         val rawArguments = list("--flag=1");
-        val argParser = ArgParser.parser(empty[Args]())
-            |> ArgParser.flag~("--flag", Args.fields.x.update);
+        val argParser = ArgParser.parser(Args)
+            |> ArgParser.flag~("--flag", fun (x, f) => f(.x = x));
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 

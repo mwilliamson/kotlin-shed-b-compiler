@@ -1,4 +1,4 @@
-export ParseResult, Success, Failure, parser, parse, positional, option, flag, optional, string;
+export ParseResult, Success, Failure, parser, parse, positional, option, flag, optional, string, map;
 
 import ListBuilder from .ListBuilder;
 import ListLookup from .ListLookup;
@@ -332,6 +332,16 @@ fun flag[T, R](
             val stringArg = ListLookup.lookup(stringArgs, name);
             val value = stringArg is Some;
             add(value, otherArgs)
+        },
+    )
+}
+
+fun map[T, R](f: Fun (T) -> R, parser: Parser[T]) -> Parser[R] {
+    Parser[R](
+        .argDefinitions = parser.argDefinitions,
+        .parseStringArgs = fun (stringArgs) !_ {
+            val result = parser.parseStringArgs!(stringArgs);
+            f(result)
         },
     )
 }
