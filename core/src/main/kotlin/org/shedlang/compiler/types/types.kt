@@ -282,11 +282,9 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
 
 val shapeFieldTypeFunctionTypeParameter = contravariantTypeParameter("Type")
 val shapeFieldTypeFunctionFieldParameter = covariantTypeParameter("Field")
-val shapeFieldTypeFunctionUpdateParameter = covariantTypeParameter("Update")
 val shapeFieldTypeFunctionParameters = listOf(
     shapeFieldTypeFunctionTypeParameter,
     shapeFieldTypeFunctionFieldParameter,
-    shapeFieldTypeFunctionUpdateParameter
 )
 val shapeFieldTypeFunctionShapeId = freshTypeId()
 val shapeFieldTypeFunctionFields = listOf(
@@ -308,7 +306,10 @@ val shapeFieldTypeFunctionFields = listOf(
     Field(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("update"),
-        type = shapeFieldTypeFunctionUpdateParameter,
+        type = functionType(
+            positionalParameters = listOf(shapeFieldTypeFunctionFieldParameter, shapeFieldTypeFunctionTypeParameter),
+            returns = shapeFieldTypeFunctionTypeParameter
+        ),
         isConstant = false
     ),
 )
@@ -329,22 +330,8 @@ val ShapeFieldTypeFunction = ParameterizedStaticValue(
 private fun shapeFieldInfoType(shapeType: ShapeType, field: Field): Type {
     return applyStatic(
         ShapeFieldTypeFunction,
-        listOf(shapeType, field.type, shapeFieldInfoUpdateType(shapeType = shapeType, field = field))
+        listOf(shapeType, field.type),
     ) as Type
-}
-
-private fun shapeFieldInfoUpdateType(shapeType: ShapeType, field: Field): Type {
-    val typeParameter = TypeParameter(
-        name = Identifier("T"),
-        variance = Variance.INVARIANT,
-        shapeId = field.shapeId,
-        source = BuiltinSource,
-    )
-    return functionType(
-        staticParameters = listOf(typeParameter),
-        positionalParameters = listOf(field.type, typeParameter),
-        returns = updatedType(baseType = typeParameter, shapeType = shapeType, field = field)
-    )
 }
 
 fun metaTypeToType(type: Type): Type? {
