@@ -142,7 +142,6 @@ interface Type: StaticValue, TypeGroup {
         fun visit(type: TypeAlias): T
         fun visit(type: TypeParameter): T
         fun visit(type: UnionType): T
-        fun visit(type: UpdatedType): T
         fun visit(type: VarargsType): T
     }
 }
@@ -777,50 +776,6 @@ class LazyShapeType(
         get() = getPopulatedFieldNames()
 }
 
-fun updatedType(baseType: Type, shapeType: ShapeType, field: Field): Type {
-    if (baseType.shapeId == null) {
-        throw CompilerError("cannot update non-shape type", source = NullSource)
-    } else if (baseType.shapeId != field.shapeId) {
-        throw CompilerError("base type and field are different shapes", source = NullSource)
-    } else if (!shapeType.populatedFields.containsValue(field)) {
-        throw CompilerError("field does not belong to shape", source = NullSource)
-    } else if (baseType is ShapeType) {
-        return createPartialShapeType(baseType, populatedFieldNames = baseType.populatedFieldNames + setOf(field.name))
-    } else {
-        return UpdatedType(baseType = baseType, shapeType = shapeType, field = field)
-    }
-}
-
-class UpdatedType internal constructor(
-    val baseType: Type,
-    val shapeType: ShapeType,
-    val field: Field
-): Type {
-    override val shapeId: Int
-        get() = shapeType.shapeId
-
-    override val shortDescription: String
-        get() = "${baseType.shortDescription} + @(${shapeType.shortDescription}.fields.${this.field.name.value}: ${this.field.type.shortDescription})"
-
-    override fun fieldType(fieldName: Identifier): Type? {
-        // TODO: implement field type
-        throw UnsupportedOperationException("not implemented")
-    }
-
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
-        val newShapeType = replaceStaticValuesInType(shapeType, bindings) as ShapeType
-        return updatedType(
-            baseType = replaceStaticValuesInType(baseType, bindings),
-            shapeType = newShapeType,
-            field = newShapeType.allFields[field.name]!!,
-        )
-    }
-
-    override fun <T> accept(visitor: Type.Visitor<T>): T {
-        return visitor.visit(this)
-    }
-}
-
 interface UnionType: Type {
     val name: Identifier
     val tag: Tag
@@ -1076,10 +1031,6 @@ fun validateType(type: Type): ValidateTypeResult {
 
         override fun visit(type: UnionType): ValidateTypeResult {
             return ValidateTypeResult.success
-        }
-
-        override fun visit(type: UpdatedType): ValidateTypeResult {
-            throw UnsupportedOperationException("not implemented")
         }
 
         override fun visit(type: VarargsType): ValidateTypeResult {

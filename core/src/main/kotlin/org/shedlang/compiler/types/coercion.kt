@@ -223,25 +223,6 @@ class TypeConstraintSolver(
             return sameShapeId && canCoerceStaticArguments && canCoerceFields
         }
 
-        if (
-            from is UpdatedType &&
-            to is ShapeType &&
-            from.shapeId == to.shapeId
-        ) {
-            val baseTo = createPartialShapeType(to, populatedFieldNames = to.populatedFieldNames - setOf(from.field.name))
-            return coerce(from = from.baseType, to = baseTo)
-        }
-
-        if (
-            to is UpdatedType &&
-            from is ShapeType &&
-            from.shapeId == to.shapeId &&
-            from.populatedFieldNames.contains(to.field.name)
-        ) {
-            val baseFrom = createPartialShapeType(from, populatedFieldNames = from.populatedFieldNames - setOf(to.field.name))
-            return coerce(from = baseFrom, to = to.baseType)
-        }
-
         if (from is StaticValueType && from.value is Type && to is StaticValueType && to.value is Type) {
             return isEquivalentType(from.value, to.value)
         }
