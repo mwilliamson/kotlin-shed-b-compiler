@@ -48,7 +48,7 @@ fun isShapeType(
     has(ShapeType::tagValue, tagValue),
     has(ShapeType::staticParameters, staticParameters),
     has(ShapeType::staticArguments, staticArguments),
-    has("allFields", { type -> type.fields.values }, fields),
+    has("fields", { type -> type.fields.values }, fields),
 ))
 
 fun isField(

@@ -1,6 +1,5 @@
 package org.shedlang.compiler.backends
 
-import org.shedlang.compiler.Types
 import org.shedlang.compiler.ast.ExpressionNode
 import org.shedlang.compiler.ast.FieldArgumentNode
 import org.shedlang.compiler.ast.Identifier
