@@ -14,8 +14,8 @@ class TypeCheckShapeTests {
         val intType = staticReference("Int")
         val boolType = staticReference("Bool")
         val node = shape("X", fields = listOf(
-            shapeField("a", intType, value = null),
-            shapeField("b", boolType, value = literalBool())
+            shapeField("a", intType),
+            shapeField("b", boolType)
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
@@ -27,48 +27,8 @@ class TypeCheckShapeTests {
             isShapeType(
                 name = isIdentifier("X"),
                 fields = isSequence(
-                    isField(name = isIdentifier("a"), type = isIntType, isConstant = equalTo(false)),
-                    isField(name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true))
-                )
-            )
-        ))
-    }
-
-    @Test
-    fun whenFieldValueDisagreesWithTypeThenErrorIsThrown() {
-        val intType = staticReference("Int")
-        val node = shape("X", fields = listOf(
-            shapeField("a", intType, value = literalBool())
-        ))
-
-        val typeContext = typeContext(referenceTypes = mapOf(
-            intType to IntMetaType
-        ))
-        assertThat(
-            {
-                typeCheckModuleStatement(node, typeContext)
-                typeContext.undefer()
-            },
-            throwsUnexpectedType(
-                expected = cast(isIntType),
-                actual = isBoolType
-            )
-        )
-    }
-
-    @Test
-    fun whenFieldHasNoTypeThenTypeIsInferredFromValue() {
-        val node = shape("X", fields = listOf(
-            shapeField("a", type = null, value = literalBool())
-        ))
-
-        val typeContext = typeContext()
-        typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(
-            isShapeType(
-                name = isIdentifier("X"),
-                fields = isSequence(
-                    isField(name = isIdentifier("a"), type = isBoolType, isConstant = equalTo(true))
+                    isField(name = isIdentifier("a"), type = isIntType),
+                    isField(name = isIdentifier("b"), type = isBoolType)
                 )
             )
         ))
@@ -103,14 +63,14 @@ class TypeCheckShapeTests {
         val shape1Id = freshTypeId()
         val shape1 = shapeType(
             fields = listOf(
-                field(name = "b", type = BoolType, shapeId = shape1Id, isConstant = true)
+                field(name = "b", type = BoolType, shapeId = shape1Id)
             )
         )
 
         val shape2Id = freshTypeId()
         val shape2 = shapeType(
             fields = listOf(
-                field(name = "c", type = StringType, shapeId = shape2Id, isConstant = false)
+                field(name = "c", type = StringType, shapeId = shape2Id)
             )
         )
 
@@ -134,8 +94,8 @@ class TypeCheckShapeTests {
             isShapeType(
                 fields = isSequence(
                     isField(name = isIdentifier("a"), type = isIntType),
-                    isField(shapeId = equalTo(shape1Id), name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
-                    isField(shapeId = equalTo(shape2Id), name = isIdentifier("c"), type = isStringType, isConstant = equalTo(false))
+                    isField(shapeId = equalTo(shape1Id), name = isIdentifier("b"), type = isBoolType),
+                    isField(shapeId = equalTo(shape2Id), name = isIdentifier("c"), type = isStringType)
                 )
             )
         ))
@@ -144,10 +104,10 @@ class TypeCheckShapeTests {
     @Test
     fun whenFieldsWithSameNameHaveDifferentShapeIdsThenErrorIsThrown() {
         val shape1Id = freshTypeId()
-        val firstField = field(name = "a", type = BoolType, shapeId = shape1Id, isConstant = true)
+        val firstField = field(name = "a", type = BoolType, shapeId = shape1Id)
 
         val shape2Id = freshTypeId()
-        val secondField = field(name = "a", type = StringType, shapeId = shape2Id, isConstant = false)
+        val secondField = field(name = "a", type = StringType, shapeId = shape2Id)
 
         assertThat(
             { mergeFields(firstField, secondField) },
@@ -201,52 +161,6 @@ class TypeCheckShapeTests {
                 has(FieldDeclarationMergeTypeConflictError::name, isIdentifier("a")),
                 has(FieldDeclarationMergeTypeConflictError::types, isSequence(isBoolType, isStringType))
             ))
-        )
-    }
-
-    @Test
-    fun constantFieldsArePreferredAsBottomFields() {
-        val shapeId = freshTypeId()
-        val firstField = field(name = "a", type = AnyType, shapeId = shapeId, isConstant = true)
-        val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
-
-        assertThat(
-            { mergeFields(firstField, secondField) },
-            throws(allOf(
-                has(FieldDeclarationMergeTypeConflictError::name, isIdentifier("a")),
-                has(FieldDeclarationMergeTypeConflictError::types, isSequence(isAnyType, isStringType))
-            ))
-        )
-    }
-
-    @Test
-    fun cannotMergeConstantFields() {
-        val shapeId = freshTypeId()
-        val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
-        val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
-
-        assertThat(
-            { mergeFields(firstField, secondField) },
-            throws(allOf(
-                has(FieldDeclarationValueConflictError::name, isIdentifier("a")),
-                has(FieldDeclarationValueConflictError::parentShape, isIdentifier("Extends1"))
-            ))
-        )
-    }
-
-    @Test
-    fun constantFieldTakesPrecedenceWhenMergingFields() {
-        val shapeId = freshTypeId()
-        val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
-        val secondField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = false)
-
-        assertThat(
-            mergeFields(firstField, secondField),
-            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId), isConstant = equalTo(true))
-        )
-        assertThat(
-            mergeFields(secondField, firstField),
-            isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId), isConstant = equalTo(true))
         )
     }
 
@@ -367,38 +281,6 @@ class TypeCheckShapeTests {
                 has(FieldDeclarationOverrideTypeConflictError::overrideType, isAnyType),
                 has(FieldDeclarationOverrideTypeConflictError::parentShape, isIdentifier("Extends")),
                 has(FieldDeclarationOverrideTypeConflictError::parentType, isStringType)
-            ))
-        )
-    }
-
-    @Test
-    fun shapeCannotOverrideConstantField() {
-        val shapeId = freshTypeId()
-        val baseReference = staticReference("Base")
-        val base = shapeType(shapeId = shapeId)
-        val stringTypeReference = staticReference("String")
-
-        val firstField = field(name = "a", type = StringType, shapeId = shapeId, isConstant = true)
-
-        val extendsShapeReference = staticReference("Extends")
-        val shape = shapeType(name = "Extends", fields = listOf(firstField))
-        val node = shape(
-            extends = listOf(extendsShapeReference),
-            fields = listOf(shapeField(shape = baseReference, name = "a", type = stringTypeReference))
-        )
-        val typeContext = typeContext(referenceTypes = mapOf(
-            extendsShapeReference to metaType(shape),
-            stringTypeReference to StringMetaType,
-            baseReference to metaType(base)
-        ))
-        assertThat(
-            {
-                typeCheckModuleStatement(node, typeContext)
-                typeContext.undefer()
-            },
-            throws(allOf(
-                has(FieldDeclarationValueConflictError::name, isIdentifier("a")),
-                has(FieldDeclarationValueConflictError::parentShape, isIdentifier("Extends"))
             ))
         )
     }

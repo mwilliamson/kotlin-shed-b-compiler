@@ -2,7 +2,6 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.distinctWith
-import org.shedlang.compiler.mapNullable
 import org.shedlang.compiler.nullableToList
 import org.shedlang.compiler.types.*
 
@@ -81,12 +80,6 @@ private fun generateShapeType(
     }
     context.addVariableType(node, StaticValueType(type))
     context.defer({
-        for (field in node.fields) {
-            val fieldValue = field.value
-            if (fieldValue != null) {
-                verifyType(fieldValue, context, expected = shapeType.fieldType(field.name)!!)
-            }
-        }
         checkStaticValue(type, source = node.source)
     })
     return type
@@ -127,13 +120,7 @@ private fun generateFields(
 private data class FieldDefinition(val field: Field, val shape: Identifier, val source: Source)
 
 private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: Int, shapeName: Identifier): FieldDefinition {
-    val fieldType = field.type.mapNullable { expression ->
-        evalType(expression, context)
-    }
-    val valueType = field.value.mapNullable { expression ->
-        inferType(expression, context)
-    }
-    val type = fieldType ?: valueType
+    val fieldType = evalType(field.type, context)
 
     val fieldShapeExpression = field.shape
     val fieldShapeId = if (fieldShapeExpression == null) {
@@ -154,9 +141,7 @@ private fun generateField(field: ShapeFieldNode, context: TypeContext, shapeId: 
         Field(
             shapeId = fieldShapeId,
             name = field.name,
-            // TODO: handle neither type nor value being set
-            type = type!!,
-            isConstant = field.value != null
+            type = fieldType,
         ),
         shapeName,
         field.source
@@ -182,39 +167,21 @@ private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, ne
     val fields = parentFields + newField.nullableToList()
     if (fields.map { field -> field.field.shapeId }.distinct().size == 1) {
         if (newField == null) {
-            val constantFields = parentFields.filter { parentField -> parentField.field.isConstant }
-
-            if (constantFields.size > 1) {
-                throw FieldDeclarationValueConflictError(
-                    name = name,
-                    parentShape = constantFields[0].shape,
-                    source = constantFields[1].source
+            val bottomFields = parentFields.filter { bottomField ->
+                parentFields.all { upperField ->
+                    canCoerce(
+                        from = bottomField.field.type,
+                        to = upperField.field.type
+                    )
+                }
+            }.distinctWith { first, second ->
+                isEquivalentType(
+                    first.field.type,
+                    second.field.type
                 )
             }
-
-            val bottomFieldCandiates = if (constantFields.size == 1) {
-                constantFields
-            } else {
-                parentFields
-            }
-
-            val bottomFields = bottomFieldCandiates.filter { bottomField ->
-                parentFields.all { upperField ->
-                    canCoerce(from = bottomField.field.type, to = upperField.field.type)
-                }
-            }.distinctWith { first, second -> isEquivalentType(first.field.type, second.field.type) }
             if (bottomFields.size == 1) {
-                val bottomField = bottomFields.single()
-                for (parentField in parentFields) {
-                    if (parentField.field.isConstant && parentField != bottomField) {
-                        throw FieldDeclarationValueConflictError(
-                            name = name,
-                            parentShape = parentField.shape,
-                            source = bottomField.source
-                        )
-                    }
-                }
-                return bottomField.field
+                return bottomFields.single().field
             } else {
                 throw FieldDeclarationMergeTypeConflictError(
                     name = name,
@@ -230,13 +197,6 @@ private fun mergeField(name: Identifier, parentFields: List<FieldDefinition>, ne
                         overrideType = newField.field.type,
                         parentShape = parentField.shape,
                         parentType = parentField.field.type,
-                        source = newField.source
-                    )
-                }
-                if (parentField.field.isConstant) {
-                    throw FieldDeclarationValueConflictError(
-                        name = name,
-                        parentShape = parentField.shape,
                         source = newField.source
                     )
                 }

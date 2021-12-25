@@ -11,7 +11,6 @@ import java.nio.file.Path
 
 class WasmExampleTests {
     private val disabledTests = setOf<String>(
-        "ConstantField.shed",
         "Echo.shed",
         "EffectHandlerDiscard.shed",
         "EffectHandlerExitOrResume.shed",

@@ -17,16 +17,8 @@ interface CodeInspector {
 
 data class FieldInspector(
     val name: Identifier,
-    val value: FieldValue?,
     val source: Source
 )
-
-val FieldInspector.isConstant: Boolean
-    get() = value != null
-
-sealed class FieldValue {
-    data class Expression(val expression: ExpressionNode): FieldValue()
-}
 
 class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
@@ -52,18 +44,8 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
                 .find { fieldNode -> fieldNode.name == field.name }
             val fieldSource = NodeSource(fieldNode ?: node)
 
-            val fieldValueNode = fieldNode?.value
-            val value = if (fieldValueNode != null) {
-                FieldValue.Expression(fieldValueNode)
-            } else if (field.isConstant) {
-                // TODO: throw better exception
-                throw Exception("Could not find value for constant field")
-            } else {
-                null
-            }
             FieldInspector(
                 name = field.name,
-                value = value,
                 source = fieldSource
             )
         }

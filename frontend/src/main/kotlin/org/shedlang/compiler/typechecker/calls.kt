@@ -86,7 +86,6 @@ private sealed class CallReceiverAnalysis {
                 staticParameters = typeFunction?.parameters ?: listOf(),
                 positionalParameters = listOf(),
                 namedParameters = shapeType.fields
-                    .filter { field -> !field.value.isConstant }
                     .mapValues { field -> field.value.type },
                 returns = shapeType
             )

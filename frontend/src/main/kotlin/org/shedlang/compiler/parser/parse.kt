@@ -326,23 +326,13 @@ private fun parseShapeField(tokens: TokenIterator<TokenType>): ShapeFieldNode {
         null
     }
 
-    val type = if (tokens.trySkip(TokenType.SYMBOL_COLON)) {
-        parseStaticExpression(tokens)
-    } else {
-        null
-    }
-
-    val value = if (tokens.trySkip(TokenType.SYMBOL_EQUALS)) {
-        parseExpression(tokens)
-    } else {
-        null
-    }
+    tokens.skip(TokenType.SYMBOL_COLON)
+    val type = parseStaticExpression(tokens)
 
     return ShapeFieldNode(
         shape = shape,
         name = name,
         type = type,
-        value = value,
         source = source
     )
 }

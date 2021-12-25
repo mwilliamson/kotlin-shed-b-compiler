@@ -706,25 +706,6 @@ class TypeCheckCallTests {
     }
 
     @Test
-    fun errorWhenShapeCallHasValueForConstantField() {
-        val shapeReference = variableReference("X")
-        val node = call(
-            receiver = shapeReference,
-            namedArguments = listOf(callNamedArgument("a", literalInt()))
-        )
-
-        val shapeType = shapeType(name = "X", fields = listOf(
-            field("a", IntType, isConstant = true)
-        ))
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to metaType(shapeType)))
-
-        assertThat(
-            { inferCallType(node, typeContext) },
-            throws(has(ExtraArgumentError::argumentName, isIdentifier("a")))
-        )
-    }
-
-    @Test
     fun errorWhenSameNamedArgumentIsPassedMultipleTimes() {
         val shapeReference = variableReference("X")
         val node = call(

@@ -60,12 +60,10 @@ class ParseShapeTests {
                 isShapeField(
                     name = isIdentifier("a"),
                     type = present(isStaticReference("Int")),
-                    value = absent()
                 ),
                 isShapeField(
                     name = isIdentifier("b"),
                     type = present(isStaticReference("String")),
-                    value = absent()
                 )
             )
         ))
@@ -80,37 +78,6 @@ class ParseShapeTests {
                 isShapeField(
                     name = isIdentifier("a"),
                     type = present(isStaticReference("Int")),
-                    value = absent()
-                )
-            )
-        ))
-    }
-
-    @Test
-    fun fieldMayHaveValueAndType() {
-        val source = "shape X { a: Int = 0, }"
-        val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isShape(
-            fields = isSequence(
-                isShapeField(
-                    name = isIdentifier("a"),
-                    type = present(isStaticReference("Int")),
-                    value = present(isIntLiteral(0))
-                )
-            )
-        ))
-    }
-
-    @Test
-    fun fieldMayHaveValueWithoutExplicitType() {
-        val source = "shape X { a = 0, }"
-        val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isShape(
-            fields = isSequence(
-                isShapeField(
-                    name = isIdentifier("a"),
-                    type = absent(),
-                    value = present(isIntLiteral(0))
                 )
             )
         ))

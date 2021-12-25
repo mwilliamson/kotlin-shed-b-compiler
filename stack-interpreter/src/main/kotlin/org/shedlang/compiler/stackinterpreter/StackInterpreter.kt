@@ -66,7 +66,6 @@ internal class InterpreterPartialCall(
 
 internal class InterpreterShape(
     val tagValue: TagValue?,
-    val constantFieldValues: PersistentMap<Identifier, InterpreterValue>,
     val fields: Map<Identifier, InterpreterValue>
 ): InterpreterValue(), InterpreterHasFields {
     override fun field(fieldName: Identifier): InterpreterValue {
@@ -578,11 +577,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
         }
 
         is DefineShape -> {
-            if (fields.any { field -> field.value != null }) {
-                throw NotImplementedError()
-            }
-            val constantFieldValues = persistentMapOf<Identifier, InterpreterValue>()
-
             val runtimeFields = mapOf(
                 Identifier("fields") to InterpreterShapeValue(
                     tagValue = null,
@@ -614,7 +608,6 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
 
             val value = InterpreterShape(
                 tagValue = tagValue,
-                constantFieldValues = constantFieldValues,
                 fields = runtimeFields
             )
 
@@ -988,8 +981,7 @@ internal fun call(
             )
 
         is InterpreterShape -> {
-            val fieldValues = receiver.constantFieldValues.putAll(namedArguments)
-            state.pushTemporary(InterpreterShapeValue(tagValue = receiver.tagValue, fields = fieldValues))
+            state.pushTemporary(InterpreterShapeValue(tagValue = receiver.tagValue, fields = namedArguments))
         }
 
         is InterpreterOperation -> {

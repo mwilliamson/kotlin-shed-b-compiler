@@ -2,7 +2,6 @@ package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.FieldInspector
-import org.shedlang.compiler.backends.FieldValue
 import org.shedlang.compiler.types.*
 
 fun anySource(): Source {
@@ -435,14 +434,12 @@ fun shape(
 
 fun shapeField(
     name: String = "field",
-    type: StaticExpressionNode? = null,
-    value: ExpressionNode? = null,
+    type: StaticExpressionNode = staticReference("SomeType"),
     shape: StaticExpressionNode? = null
 ) = ShapeFieldNode(
     shape = shape,
     name = Identifier(name),
     type = type,
-    value = value,
     source = anySource()
 )
 
@@ -645,16 +642,14 @@ fun shapeType(
     staticArguments = typeArguments
 )
 
-fun field(name: String, type: Type, isConstant: Boolean = false, shapeId: Int = freshTypeId()) = Field(
+fun field(name: String, type: Type, shapeId: Int = freshTypeId()) = Field(
     shapeId,
     Identifier(name),
     type,
-    isConstant = isConstant
 )
 
-fun fieldInspector(name: String, value: FieldValue? = null) = FieldInspector(
+fun fieldInspector(name: String) = FieldInspector(
     name = Identifier(name),
-    value = value,
     source = anySource()
 )
 

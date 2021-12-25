@@ -446,14 +446,12 @@ interface ShapeBaseNode: TypeDeclarationNode {
 data class ShapeFieldNode(
     val shape: StaticExpressionNode?,
     val name: Identifier,
-    val type: StaticExpressionNode?,
-    val value: ExpressionNode?,
+    val type: StaticExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): Node {
     override val structure: List<NodeStructure>
-        get() = (shape.nullableToList() + type.nullableToList()).map(NodeStructures::staticEval) +
-            value.nullableToList().map(NodeStructures::eval)
+        get() = (shape.nullableToList() + listOf(type)).map(NodeStructures::staticEval)
 }
 
 data class UnionNode(

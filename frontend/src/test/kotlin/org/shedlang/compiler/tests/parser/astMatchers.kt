@@ -169,13 +169,11 @@ internal fun isShape(
 
 internal fun isShapeField(
     name: Matcher<Identifier>,
-    type: Matcher<StaticExpressionNode?> = anything,
-    value: Matcher<ExpressionNode?> = anything,
+    type: Matcher<StaticExpressionNode> = anything,
     shape: Matcher<StaticExpressionNode?> = anything
 ) = allOf(
     has(ShapeFieldNode::name, name),
     has(ShapeFieldNode::type, type),
-    has(ShapeFieldNode::value, value),
     has(ShapeFieldNode::shape, shape)
 )
 

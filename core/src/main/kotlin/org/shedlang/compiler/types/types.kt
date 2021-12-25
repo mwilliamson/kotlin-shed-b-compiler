@@ -264,7 +264,6 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
             shapeId = shapeId,
             name = field.name,
             type = shapeFieldInfoType(type, field),
-            isConstant = false
         )
     }
     return lazyShapeType(
@@ -294,13 +293,11 @@ val shapeFieldTypeFunctionFields = listOf(
             positionalParameters = listOf(shapeFieldTypeFunctionTypeParameter),
             returns = shapeFieldTypeFunctionFieldParameter
         ),
-        isConstant = false
     ),
     Field(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("name"),
         type = StringType,
-        isConstant = false
     ),
     Field(
         shapeId = shapeFieldTypeFunctionShapeId,
@@ -309,7 +306,6 @@ val shapeFieldTypeFunctionFields = listOf(
             positionalParameters = listOf(shapeFieldTypeFunctionFieldParameter, shapeFieldTypeFunctionTypeParameter),
             returns = shapeFieldTypeFunctionTypeParameter
         ),
-        isConstant = false
     ),
 )
 val ShapeFieldTypeFunction = ParameterizedStaticValue(
@@ -682,13 +678,11 @@ data class Field(
     val shapeId: Int,
     val name: Identifier,
     val type: Type,
-    val isConstant: Boolean
 ) {
     fun mapType(func: (Type) -> Type): Field = Field(
         shapeId = shapeId,
         name = name,
         type = func(type),
-        isConstant = isConstant
     )
 }
 
