@@ -107,7 +107,7 @@ private fun generateFields(
         val parentFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
-                superType.allFields.values.map { field ->
+                superType.fields.values.map { field ->
                     FieldDefinition(field, superType.name, extendNode.source)
                 }
             } else {
@@ -302,7 +302,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     context.addVariableType(node, StaticValueType(type))
     context.defer({
         // TODO: checkStaticValue for member instead?
-        memberTypes.forEach { memberType -> memberType.allFields }
+        memberTypes.forEach { memberType -> memberType.fields }
         checkStaticValue(type, source = node.source)
     })
 }

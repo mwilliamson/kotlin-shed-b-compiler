@@ -59,7 +59,7 @@ internal object WasmObjects {
     fun layout(type: Type): Layout {
         val (fieldNames, tagValue) = when (type) {
             is ModuleType -> Pair(type.fields.keys, null)
-            is ShapeType -> Pair(type.allFields.keys, type.tagValue)
+            is ShapeType -> Pair(type.fields.keys, type.tagValue)
             else -> throw UnsupportedOperationException("layout unknown for type: $type")
         }
 

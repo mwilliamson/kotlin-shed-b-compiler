@@ -20,7 +20,7 @@ fun fieldArgumentsToFieldsProvided(
             }
             is FieldArgumentNode.Splat -> {
                 val argType = typeOfExpression(fieldArgument.expression) as ShapeType
-                argType.allFields.keys
+                argType.fields.keys
             }
         }
         for (previousArgumentProvidesFields in providesFields) {

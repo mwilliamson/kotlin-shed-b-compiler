@@ -59,7 +59,7 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
     } else if (objectType is StaticValueType && rawValue(objectType.value) is ShapeType) {
         val shapeType = rawValue(objectType.value) as ShapeType
         return CompiledShapeType(
-            parameterTypes = shapeType.allFields.map { compiledValueType },
+            parameterTypes = shapeType.fields.map { compiledValueType },
             compiledObjectType = CompiledObjectType(
                 fieldTypes = listOf(
                     Identifier("fields") to objectType.fieldType(Identifier("fields"))!!,
@@ -98,7 +98,7 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
 
             is ShapeType ->
                 CompiledObjectType(
-                    fieldTypes = rawType.allFields.map { field -> field.key to field.value.type },
+                    fieldTypes = rawType.fields.map { field -> field.key to field.value.type },
                     tagValue = rawType.tagValue
                 )
 

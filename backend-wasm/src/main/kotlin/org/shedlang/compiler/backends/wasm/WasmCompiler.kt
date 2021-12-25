@@ -150,7 +150,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     ),
                 ))
 
-                val fields = instruction.rawShapeType.allFields.values
+                val fields = instruction.rawShapeType.fields.values
                 val constructorName = instruction.rawShapeType.name.value
                 val (context4, constructorTableIndex) = WasmClosures.compileFunction(
                     functionName = constructorName,

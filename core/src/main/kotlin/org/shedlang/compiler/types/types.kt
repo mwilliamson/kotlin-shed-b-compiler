@@ -259,7 +259,7 @@ fun metaType(type: Type) = StaticValueType(type)
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {
     val shapeId = freshTypeId()
-    val fields = type.allFields.values.map { field ->
+    val fields = type.fields.values.map { field ->
         Field(
             shapeId = shapeId,
             name = field.name,
@@ -643,7 +643,7 @@ interface ShapeType: Type {
     val name: Identifier
     override val shapeId: Int
     val tagValue: TagValue?
-    val allFields: Map<Identifier, Field>
+    val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
 
@@ -657,14 +657,14 @@ interface ShapeType: Type {
         }
 
     override fun fieldType(fieldName: Identifier): Type? {
-        return allFields[fieldName]?.type
+        return fields[fieldName]?.type
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return LazyShapeType(
             name = name,
             getAllFields = lazy {
-                allFields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
+                fields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
             },
             tagValue = tagValue,
             shapeId = shapeId,
@@ -718,7 +718,7 @@ class LazyShapeType(
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>
 ): ShapeType {
-    override val allFields: Map<Identifier, Field> by getAllFields
+    override val fields: Map<Identifier, Field> by getAllFields
 }
 
 interface UnionType: Type {
@@ -948,7 +948,7 @@ fun validateType(type: Type): ValidateTypeResult {
         }
 
         override fun visit(type: ShapeType): ValidateTypeResult {
-            return ValidateTypeResult(type.allFields.mapNotNull { field ->
+            return ValidateTypeResult(type.fields.mapNotNull { field ->
                 val fieldType = field.value.type
                 if (fieldType is TypeParameter && fieldType.variance == Variance.CONTRAVARIANT) {
                     "field type cannot be contravariant"
