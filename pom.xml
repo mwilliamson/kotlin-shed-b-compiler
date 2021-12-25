@@ -10,9 +10,7 @@
     <version>0.1.0-SNAPSHOT</version>
     <modules>
         <module>backend-common</module>
-        <module>backend-javascript</module>
         <module>backend-llvm</module>
-        <module>backend-python</module>
         <module>backend-testing</module>
         <module>backend-wasm</module>
         <module>cli</module>

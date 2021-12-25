@@ -11,8 +11,6 @@ import org.shedlang.compiler.backends.wasm.WasmBackend
 
 
 private val backends = mapOf(
-    "python" to org.shedlang.compiler.backends.python.backend,
-    "javascript" to org.shedlang.compiler.backends.javascript.backend,
     "llvm" to LlvmBackend,
     "wasm" to WasmBackend,
 )
