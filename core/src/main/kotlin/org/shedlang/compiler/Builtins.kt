@@ -21,9 +21,6 @@ val builtins = listOf(
     builtinVariable("Castable", StaticValueType(CastableTypeFunction)),
     builtinVariable("Type", StaticValueType(MetaTypeTypeFunction)),
 
-    builtinVariable("Empty", StaticValueType(EmptyTypeFunction)),
-    builtinVariable("empty", EmptyFunctionType),
-
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect),
 

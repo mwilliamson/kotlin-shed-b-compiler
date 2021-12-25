@@ -14,7 +14,6 @@ interface StaticValue {
         fun visit(value: ParameterizedStaticValue): T
         fun visit(type: Type): T
         fun visit(value: CastableTypeFunction): T
-        fun visit(type: EmptyTypeFunction): T
         fun visit(value: MetaTypeTypeFunction): T
     }
 }
@@ -493,19 +492,6 @@ class CastableType(val type: Type): Type {
 }
 
 fun castableType(type: Type) = CastableType(type)
-
-object EmptyTypeFunction: StaticValue {
-    override val shortDescription: String
-        get() = "Empty"
-
-    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
-        return visitor.visit(this)
-    }
-}
-
-fun createEmptyShapeType(argument: ShapeType): LazyShapeType {
-    return createPartialShapeType(argument, populatedFieldNames = setOf())
-}
 
 object MetaTypeTypeFunction: StaticValue {
     override val shortDescription: String
@@ -1014,10 +1000,6 @@ fun contravariantTypeParameter(name: String, source: Source = NullSource) = Type
 
 fun effectParameter(name: String, source: Source = NullSource) = EffectParameter(Identifier(name), source = source)
 
-object EmptyFunctionType : BasicType {
-    override val shortDescription = "Empty"
-}
-
 private fun appliedTypeShortDescription(name: Identifier, parameters: List<StaticValue>): String {
     val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })
     return name.value + "[" + parametersString + "]"
@@ -1044,10 +1026,6 @@ fun validateStaticValue(value: StaticValue): ValidateTypeResult {
         }
 
         override fun visit(value: CastableTypeFunction): ValidateTypeResult {
-            return ValidateTypeResult.success
-        }
-
-        override fun visit(type: EmptyTypeFunction): ValidateTypeResult {
             return ValidateTypeResult.success
         }
 
@@ -1158,10 +1136,6 @@ private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): S
 
         override fun visit(value: CastableTypeFunction): StaticValue {
             return value
-        }
-
-        override fun visit(type: EmptyTypeFunction): StaticValue {
-            return type
         }
 
         override fun visit(value: MetaTypeTypeFunction): StaticValue {

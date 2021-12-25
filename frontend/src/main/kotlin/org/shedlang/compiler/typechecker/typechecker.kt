@@ -532,9 +532,6 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
                 // TODO: proper error handling
                 // TODO: restrict valid types? e.g. is it meaningful for Any?
                 return metaType(CastableType(evalType(node.arguments.single(), context)))
-            } else if (receiver is EmptyTypeFunction) {
-                val argument = evalEmptyStaticArguments(node.arguments, context, source = node.operatorSource)
-                return metaType(createEmptyShapeType(argument))
             } else if (receiver is MetaTypeTypeFunction) {
                 // TODO: Test this
                 // TODO: proper error handling

@@ -226,12 +226,7 @@ class Loader(
             }
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
-                if (types.typeOfExpression(node.receiver) is EmptyFunctionType) {
-                    val shapeType = metaTypeToType(types.typeOfStaticExpression(node.staticArguments.single())) as ShapeType
-                    return persistentListOf(
-                        ObjectCreate(objectType = shapeType)
-                    )
-                } else if (types.typeOfExpression(node.receiver) is VarargsType) {
+                if (types.typeOfExpression(node.receiver) is VarargsType) {
                     return loadExpression(node.receiver)
                         .addAll(node.positionalArguments.flatMap { argument ->
                             persistentListOf<Instruction>()

@@ -67,11 +67,6 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
             context = context,
         )
 
-        is CallReceiverAnalysis.EmptyFunction -> Pair(
-            inferEmptyCall(node, context),
-            mapOf(),
-        )
-
         is CallReceiverAnalysis.Varargs -> Pair(
             inferVarargsCall(node, analysis.receiverType, context),
             mapOf(),
@@ -97,7 +92,6 @@ private sealed class CallReceiverAnalysis {
             )
         }
     }
-    object EmptyFunction: CallReceiverAnalysis()
     class Varargs(val receiverType: VarargsType): CallReceiverAnalysis()
     object NotCallable: CallReceiverAnalysis()
 }
@@ -115,8 +109,6 @@ private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
                 return CallReceiverAnalysis.Constructor(typeFunction = receiverInnerType, shapeType = typeFunctionInnerType)
             }
         }
-    } else if (receiverType is EmptyFunctionType) {
-        return CallReceiverAnalysis.EmptyFunction
     } else if (receiverType is VarargsType) {
         return CallReceiverAnalysis.Varargs(receiverType)
     }
@@ -420,53 +412,6 @@ private fun checkArgumentTypes(
         )
 
         return bindings
-    }
-}
-
-private fun inferEmptyCall(node: CallNode, context: TypeContext): Type {
-    // TODO: test that static arguments are checked
-    val staticArgument = evalEmptyStaticArguments(node.staticArguments, context, source = node.operatorSource)
-
-    if (node.positionalArguments.isNotEmpty()) {
-        throw WrongNumberOfArgumentsError(
-            expected = 0,
-            actual = node.positionalArguments.size,
-            source = node.positionalArguments[0].source,
-        )
-    } else if (node.fieldArguments.isNotEmpty()) {
-        val fieldArgument = node.fieldArguments[0]
-        when (fieldArgument) {
-            is FieldArgumentNode.Named -> throw ExtraArgumentError(
-                argumentName = fieldArgument.name,
-                source = fieldArgument.source,
-            )
-            is FieldArgumentNode.Splat -> throw UnexpectedSplatArgumentError(
-                source = fieldArgument.source,
-            )
-        }
-    } else {
-        return createEmptyShapeType(staticArgument)
-    }
-}
-
-internal fun evalEmptyStaticArguments(arguments: List<StaticExpressionNode>, context: TypeContext, source: Source): ShapeType {
-    if (arguments.size != 1) {
-        throw WrongNumberOfStaticArgumentsError(
-            expected = 1,
-            actual = arguments.size,
-            source = source,
-        )
-    } else {
-        val argument = evalType(arguments.single(), context)
-        if (argument !is ShapeType) {
-            throw UnexpectedTypeError(
-                expected = ShapeTypeGroup,
-                actual = argument,
-                source = arguments[0].source,
-            )
-        } else {
-            return argument
-        }
     }
 }
 

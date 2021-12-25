@@ -556,33 +556,6 @@ class CoercionTests {
     }
 
     @Test
-    fun cannotCoerceFromPartialShapeWithFieldUnpopulatedToUpdatedType() {
-        val shapeId = freshTypeId()
-        val field = field(name = "field", shapeId = shapeId, type = IntType)
-        val shapeType = shapeType(
-            shapeId = shapeId,
-            name = "Box",
-            fields = listOf(field)
-        )
-
-        val typeParameter = invariantTypeParameter("T", shapeId = shapeId)
-
-        val updatedType = updatedType(
-            baseType = typeParameter,
-            shapeType = shapeType,
-            field = field,
-        )
-
-        val result = coerce(
-            parameters = setOf(typeParameter),
-            from = createEmptyShapeType(shapeType),
-            to = updatedType,
-        )
-
-        assertThat(result, isFailure)
-    }
-
-    @Test
     fun canCoerceFromUpdatedTypeToPartialShapeWithFieldUnpopulated() {
         val shapeId = freshTypeId()
         val field1 = field(name = "field1", shapeId = shapeId, type = IntType)
