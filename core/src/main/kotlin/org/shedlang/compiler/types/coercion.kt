@@ -216,8 +216,8 @@ class TypeConstraintSolver(
                 })
             }.all()
 
-            val canCoerceFields = to.populatedFieldNames.all { toFieldName ->
-                from.populatedFieldNames.contains(toFieldName)
+            val canCoerceFields = to.allFields.keys.all { toFieldName ->
+                from.allFields.keys.contains(toFieldName)
             }
 
             return sameShapeId && canCoerceStaticArguments && canCoerceFields

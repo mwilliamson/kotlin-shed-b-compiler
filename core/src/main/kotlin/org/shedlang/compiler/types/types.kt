@@ -647,9 +647,6 @@ interface ShapeType: Type {
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
 
-    val populatedFieldNames: Set<Identifier>
-        get() = allFields.keys
-
     override val shortDescription: String
         get() {
             return if (staticArguments.isEmpty()) {
@@ -660,12 +657,7 @@ interface ShapeType: Type {
         }
 
     override fun fieldType(fieldName: Identifier): Type? {
-        // TODO: test this
-        if (fieldName in populatedFieldNames) {
-            return allFields[fieldName]?.type
-        } else {
-            return null
-        }
+        return allFields[fieldName]?.type
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {

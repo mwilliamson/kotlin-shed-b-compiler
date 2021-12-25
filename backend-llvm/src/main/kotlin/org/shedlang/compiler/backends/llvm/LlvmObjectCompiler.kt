@@ -98,7 +98,7 @@ internal class LlvmObjectCompiler(
         val instance = irBuilder.generateLocal("instance")
         val compiledObjectType = compiledType(objectType = objectType)
         val shapeType = objectType as ShapeType
-        val newPopulatedFieldNames = shapeType.populatedFieldNames + setOf(updatedFieldName)
+        val newPopulatedFieldNames = shapeType.allFields.keys + setOf(updatedFieldName)
 
         val malloc = libc.typedMalloc(
             target = instance,
