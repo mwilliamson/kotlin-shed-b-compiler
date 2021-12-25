@@ -655,17 +655,10 @@ interface ShapeType: Type {
 
     override val shortDescription: String
         get() {
-            val base = if (staticArguments.isEmpty()) {
+            return if (staticArguments.isEmpty()) {
                 name.value
             } else {
                 appliedTypeShortDescription(name, staticArguments)
-            }
-
-            if (populatedFieldNames == allFields.keys) {
-                return base
-            } else {
-                val populatedFieldNamesString = populatedFieldNames.joinToString("") { fieldName -> ", ." + fieldName.value }
-                return "Partial[$base$populatedFieldNamesString]"
             }
         }
 
