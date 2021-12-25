@@ -66,7 +66,7 @@ private fun generateShapeType(
     // TODO: test laziness
     val fields = generateFields(node, context, shapeId)
 
-    val shapeType = lazyCompleteShapeType(
+    val shapeType = lazyShapeType(
         shapeId = shapeId,
         name = node.name,
         tagValue = tagValue,

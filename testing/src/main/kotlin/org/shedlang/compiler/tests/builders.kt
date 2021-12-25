@@ -636,7 +636,7 @@ fun shapeType(
     typeParameters: List<TypeParameter> = listOf(),
     typeArguments: List<Type> = listOf(),
     shapeId: Int = freshTypeId()
-) = lazyCompleteShapeType(
+) = lazyShapeType(
     shapeId = shapeId,
     name = Identifier(name),
     tagValue = tagValue,
