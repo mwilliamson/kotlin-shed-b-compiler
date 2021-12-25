@@ -1,4 +1,4 @@
-export ParseResult, Success, Failure, parser, parse, positional, option, flag, optional, string, map;
+export ParseResult, Success, Failure, parser, parse, positional, option, flag, optional, string, map, apply;
 
 import ListBuilder from .ListBuilder;
 import ListLookup from .ListLookup;
@@ -344,6 +344,10 @@ fun map[T, R](f: Fun (T) -> R, parser: Parser[T]) -> Parser[R] {
             f(result)
         },
     )
+}
+
+fun apply[R](parser: Parser[Fun () -> R]) -> Parser[R] {
+    map(fun (f) => f(), parser)
 }
 
 fun forever[!E](func: Fun () !E -> Any) !E -> Nothing {

@@ -64,7 +64,7 @@ val testCases = Tests.suite(moduleName, list(
             |> ArgParser.positional~("one", ArgParser.string, fun (x, f) => f~(.one = x))
             |> ArgParser.positional~("two", ArgParser.string, fun (x, f) => f~(.two = x))
             |> ArgParser.positional~("three", ArgParser.string, fun (x, f) => f~(.three = x))
-            |> ArgParser.map~(fun (f) => f());
+            |> ArgParser.apply;
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
@@ -88,7 +88,7 @@ val testCases = Tests.suite(moduleName, list(
             |> ArgParser.positional~("one", ArgParser.string, fun (x, f) => f~(.one = x))
             |> ArgParser.positional~("two", ArgParser.string, fun (x, f) => f~(.two = x))
             |> ArgParser.positional~("three", ArgParser.string, fun (x, f) => f~(.three = x))
-            |> ArgParser.map~(fun (f) => f());
+            |> ArgParser.apply;
 
         val arguments = ArgParser.parse(argParser, rawArguments);
 
