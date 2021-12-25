@@ -107,7 +107,7 @@ private fun generateFields(
         val parentFields = node.extends.flatMap { extendNode ->
             val superType = evalType(extendNode, context)
             if (superType is ShapeType) {
-                superType.populatedFields.values.map { field ->
+                superType.allFields.values.map { field ->
                     FieldDefinition(field, superType.name, extendNode.source)
                 }
             } else {

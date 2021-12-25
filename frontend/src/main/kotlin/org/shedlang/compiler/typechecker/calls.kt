@@ -85,7 +85,7 @@ private sealed class CallReceiverAnalysis {
             return functionType(
                 staticParameters = typeFunction?.parameters ?: listOf(),
                 positionalParameters = listOf(),
-                namedParameters = shapeType.populatedFields
+                namedParameters = shapeType.allFields
                     .filter { field -> !field.value.isConstant }
                     .mapValues { field -> field.value.type },
                 returns = shapeType
@@ -264,9 +264,9 @@ private fun checkArguments(
                     // TODO: handle non-shape types
                     // TODO: handle generic types
                     val type = inferType(argument.expression, context = context) as ShapeType
-                    namedArgumentNames += type.populatedFields.keys
+                    namedArgumentNames += type.allFields.keys
                     namedArgumentsWithTypes.add(Pair(argument.expression, splatType))
-                    type.populatedFields.mapValues { (_, field) -> field.type }
+                    type.allFields.mapValues { (_, field) -> field.type }
                 }
             }
         }

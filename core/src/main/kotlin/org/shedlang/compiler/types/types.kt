@@ -259,7 +259,7 @@ fun metaType(type: Type) = StaticValueType(type)
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {
     val shapeId = freshTypeId()
-    val fields = type.populatedFields.values.map { field ->
+    val fields = type.allFields.values.map { field ->
         Field(
             shapeId = shapeId,
             name = field.name,
@@ -649,9 +649,6 @@ interface ShapeType: Type {
 
     val populatedFieldNames: Set<Identifier>
         get() = allFields.keys
-
-    val populatedFields: Map<Identifier, Field>
-        get() = allFields.filterKeys { fieldName -> populatedFieldNames.contains(fieldName) }
 
     override val shortDescription: String
         get() {
