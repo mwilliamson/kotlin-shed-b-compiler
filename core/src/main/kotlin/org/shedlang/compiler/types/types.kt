@@ -488,20 +488,6 @@ object MetaTypeTypeFunction: StaticValue {
     }
 }
 
-fun createPartialShapeType(shapeType: ShapeType, populatedFieldNames: Set<Identifier>): LazyShapeType {
-    return lazyShapeType(
-        shapeId = shapeType.shapeId,
-        name = shapeType.name,
-        tagValue = shapeType.tagValue,
-        getAllFields = lazy {
-            shapeType.allFields.values.toList()
-        },
-        getPopulatedFieldNames = lazy { populatedFieldNames },
-        staticParameters = shapeType.staticParameters,
-        staticArguments = shapeType.staticArguments
-    )
-}
-
 data class ModuleType(
     val name: ModuleName,
     val fields: Map<Identifier, Type>
@@ -658,9 +644,11 @@ interface ShapeType: Type {
     override val shapeId: Int
     val tagValue: TagValue?
     val allFields: Map<Identifier, Field>
-    val populatedFieldNames: Set<Identifier>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
+
+    val populatedFieldNames: Set<Identifier>
+        get() = allFields.keys
 
     val populatedFields: Map<Identifier, Field>
         get() = allFields.filterKeys { fieldName -> populatedFieldNames.contains(fieldName) }
@@ -696,7 +684,6 @@ interface ShapeType: Type {
             getAllFields = lazy {
                 allFields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
             },
-            getPopulatedFieldNames = { populatedFieldNames },
             tagValue = tagValue,
             shapeId = shapeId,
             staticParameters = staticParameters,
@@ -734,9 +721,6 @@ fun lazyCompleteShapeType(
     shapeId = shapeId,
     name = name,
     getAllFields = getFields,
-    getPopulatedFieldNames = lazy {
-        getFields.value.map { field -> field.name }.toSet()
-    },
     tagValue = tagValue,
     staticParameters = staticParameters,
     staticArguments = staticArguments
@@ -747,7 +731,6 @@ fun lazyShapeType(
     name: Identifier,
     tagValue: TagValue?,
     getAllFields: Lazy<List<Field>>,
-    getPopulatedFieldNames: Lazy<Set<Identifier>>,
     staticParameters: List<StaticParameter>,
     staticArguments: List<StaticValue>
 ) = LazyShapeType(
@@ -756,7 +739,6 @@ fun lazyShapeType(
     getAllFields = lazy {
         getAllFields.value.associateBy { field -> field.name }
     },
-    getPopulatedFieldNames = { getPopulatedFieldNames.value },
     tagValue = tagValue,
     staticParameters = staticParameters,
     staticArguments = staticArguments
@@ -765,15 +747,12 @@ fun lazyShapeType(
 class LazyShapeType(
     override val name: Identifier,
     getAllFields: Lazy<Map<Identifier, Field>>,
-    private val getPopulatedFieldNames: () -> Set<Identifier>,
     override val shapeId: Int = freshTypeId(),
     override val tagValue: TagValue?,
     override val staticParameters: List<StaticParameter>,
     override val staticArguments: List<StaticValue>
 ): ShapeType {
     override val allFields: Map<Identifier, Field> by getAllFields
-    override val populatedFieldNames: Set<Identifier>
-        get() = getPopulatedFieldNames()
 }
 
 interface UnionType: Type {
