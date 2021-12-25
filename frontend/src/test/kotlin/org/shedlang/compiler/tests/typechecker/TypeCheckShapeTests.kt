@@ -23,13 +23,15 @@ class TypeCheckShapeTests {
             boolType to BoolMetaType
         ))
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
-            name = isIdentifier("X"),
-            fields = isSequence(
-                isField(name = isIdentifier("a"), type = isIntType, isConstant = equalTo(false)),
-                isField(name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true))
+        assertThat(typeContext.typeOf(node), isMetaType(
+            isShapeType(
+                name = isIdentifier("X"),
+                fields = isSequence(
+                    isField(name = isIdentifier("a"), type = isIntType, isConstant = equalTo(false)),
+                    isField(name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true))
+                )
             )
-        )))
+        ))
     }
 
     @Test
@@ -62,12 +64,14 @@ class TypeCheckShapeTests {
 
         val typeContext = typeContext()
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
-            name = isIdentifier("X"),
-            fields = isSequence(
-                isField(name = isIdentifier("a"), type = isBoolType, isConstant = equalTo(true))
+        assertThat(typeContext.typeOf(node), isMetaType(
+            isShapeType(
+                name = isIdentifier("X"),
+                fields = isSequence(
+                    isField(name = isIdentifier("a"), type = isBoolType, isConstant = equalTo(true))
+                )
             )
-        )))
+        ))
     }
 
     @Test
@@ -126,13 +130,15 @@ class TypeCheckShapeTests {
             extendsShape2Reference to metaType(shape2)
         ))
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isMetaType(isCompleteShapeType(
-            fields = isSequence(
-                isField(name = isIdentifier("a"), type = isIntType),
-                isField(shapeId = equalTo(shape1Id), name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
-                isField(shapeId = equalTo(shape2Id), name = isIdentifier("c"), type = isStringType, isConstant = equalTo(false))
+        assertThat(typeContext.typeOf(node), isMetaType(
+            isShapeType(
+                fields = isSequence(
+                    isField(name = isIdentifier("a"), type = isIntType),
+                    isField(shapeId = equalTo(shape1Id), name = isIdentifier("b"), type = isBoolType, isConstant = equalTo(true)),
+                    isField(shapeId = equalTo(shape2Id), name = isIdentifier("c"), type = isStringType, isConstant = equalTo(false))
+                )
             )
-        )))
+        ))
     }
 
     @Test
@@ -267,7 +273,7 @@ class TypeCheckShapeTests {
         typeContext.undefer()
 
         val metaType = typeContext.typeOf(node)
-        assertThat(metaType, isMetaType(isCompleteShapeType()))
+        assertThat(metaType, isMetaType(isShapeType()))
         val type = metaTypeToType(metaType)
         return (type as ShapeType).allFields.values.single()
     }
@@ -323,11 +329,12 @@ class TypeCheckShapeTests {
         typeCheckModuleStatement(node, typeContext)
         typeContext.undefer()
         val metaType = typeContext.typeOf(node)
-        assertThat(metaType, isMetaType(isCompleteShapeType()))
+        assertThat(metaType, isMetaType(isShapeType()))
         val type = metaTypeToType(metaType)!!
-        assertThat(type, isCompleteShapeType(fields = isSequence(
+        assertThat(type, isShapeType(fields = isSequence(
             isField(name = isIdentifier("a"), type = isStringType, shapeId = equalTo(shapeId))
-        )))
+        ))
+        )
     }
 
     @Test
@@ -414,7 +421,7 @@ class TypeCheckShapeTests {
         typeCheckModuleStatement(node, typeContext)
         assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
-            value = isCompleteShapeType(
+            value = isShapeType(
                 name = isIdentifier("X"),
                 fields = isSequence(
                     isField(name = isIdentifier("a"), type = isTypeParameter(name = isIdentifier("T"), variance = isInvariant))

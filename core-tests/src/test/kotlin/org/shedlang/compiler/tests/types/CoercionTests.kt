@@ -615,7 +615,7 @@ class CoercionTests {
         assertThat(result, isSuccess(
             typeParameter2 to isIntType,
             typeParameter1 to isShapeType(
-                populatedFields = isSequence(
+                fields = isSequence(
                     isField(type = isIntType)
                 )
             ),
@@ -634,7 +634,7 @@ class CoercionTests {
 
         assertThat(result, isSuccess(
             typeParameter1 to isShapeType(
-                populatedFields = isSequence(
+                fields = isSequence(
                     isField(type = isIntType)
                 )
             ),

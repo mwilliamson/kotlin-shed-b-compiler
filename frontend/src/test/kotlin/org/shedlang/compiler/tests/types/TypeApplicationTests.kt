@@ -1,11 +1,9 @@
 package org.shedlang.compiler.tests.types
 
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
@@ -21,7 +19,7 @@ class TypeApplicationTests {
         )
         assertThat(
             applyStatic(shape, listOf(BoolType, IntType)),
-            isCompleteShapeType(
+            isShapeType(
                 name = isIdentifier("Pair"),
                 staticArguments = isSequence(isBoolType, isIntType)
             )
@@ -42,7 +40,7 @@ class TypeApplicationTests {
         )
         assertThat(
             applyStatic(shape, listOf(BoolType, IntType)),
-            isCompleteShapeType(fields = isSequence(
+            isShapeType(fields = isSequence(
                 isField(name = isIdentifier("first"), type = isBoolType),
                 isField(name = isIdentifier("second"), type = isIntType)
             ))
@@ -67,7 +65,7 @@ class TypeApplicationTests {
 
         assertThat(
             applyStatic(shapeType, listOf(BoolType)),
-            isCompleteShapeType(fields = isSequence(
+            isShapeType(fields = isSequence(
                 isField(name = isIdentifier("value"), type = isEquivalentType(applyStatic(innerShapeType, listOf(BoolType)) as Type))
             ))
         )

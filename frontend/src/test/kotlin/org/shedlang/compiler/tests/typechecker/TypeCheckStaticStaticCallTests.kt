@@ -1,13 +1,8 @@
 package org.shedlang.compiler.tests.typechecker
 
-import com.natpryce.hamkrest.allOf
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
-import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
-import org.shedlang.compiler.typechecker.UnexpectedTypeError
-import org.shedlang.compiler.typechecker.WrongNumberOfStaticArgumentsError
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.types.*
 
@@ -35,12 +30,13 @@ class TypeCheckStaticStaticCallTests {
             ))
         )
 
-        assertThat(type, isCompleteShapeType(
+        assertThat(type, isShapeType(
             name = isIdentifier("Box"),
             staticArguments = isSequence(isBoolType),
             fields = isSequence(
                 isField(name = isIdentifier("value"), type = isBoolType)
             )
-        ))
+        )
+        )
     }
 }

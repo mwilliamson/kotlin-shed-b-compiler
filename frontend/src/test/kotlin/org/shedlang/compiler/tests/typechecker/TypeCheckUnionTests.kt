@@ -21,8 +21,8 @@ class TypeCheckUnionTests {
             name = isIdentifier("X"),
             tag = isTag(listOf("Example"), "X"),
             members = isSequence(
-                isCompleteShapeType(name = isIdentifier("Member1")),
-                isCompleteShapeType(name = isIdentifier("Member2"))
+                isShapeType(name = isIdentifier("Member1")),
+                isShapeType(name = isIdentifier("Member2"))
             )
         )))
     }
@@ -41,12 +41,12 @@ class TypeCheckUnionTests {
         assertThat(typeContext.typeOf(node), isMetaType(isUnionType(
             name = isIdentifier("X"),
             members = isSequence(
-                isCompleteShapeType(
+                isShapeType(
                     name = isIdentifier("Member1"),
                     tagValue = present(isTagValue(isTag(listOf("A", "B"), "X"), "Member1")),
                     fields = isSequence()
                 ),
-                isCompleteShapeType(
+                isShapeType(
                     name = isIdentifier("Member2"),
                     tagValue = present(isTagValue(isTag(listOf("A", "B"), "X"), "Member2")),
                     fields = isSequence()
@@ -83,7 +83,7 @@ class TypeCheckUnionTests {
             value = isUnionType(
                 name = isIdentifier("Union"),
                 members = isSequence(
-                    isCompleteShapeType(
+                    isShapeType(
                         name = isIdentifier("Member1"),
                         staticParameters = isSequence(
                             isTypeParameter(name = isIdentifier("T1"), variance = isInvariant)
@@ -93,7 +93,7 @@ class TypeCheckUnionTests {
                         )
                     ),
 
-                    isCompleteShapeType(
+                    isShapeType(
                         name = isIdentifier("Member2"),
                         staticParameters = isSequence(
                             isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
@@ -103,7 +103,7 @@ class TypeCheckUnionTests {
                         )
                     ),
 
-                    isCompleteShapeType(
+                    isShapeType(
                         name = isIdentifier("Member3"),
                         staticParameters = isSequence(),
                         staticArguments = isSequence()

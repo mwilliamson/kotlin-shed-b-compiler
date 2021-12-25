@@ -35,39 +35,20 @@ fun isTypeAlias(
     has(TypeAlias::aliasedType, aliasedType)
 ))
 
-fun isCompleteShapeType(
-    shapeId: Matcher<Int> = anything,
-    name: Matcher<Identifier> = anything,
-    tagValue: Matcher<TagValue?> = anything,
-    staticParameters: Matcher<List<StaticParameter>> = anything,
-    staticArguments: Matcher<List<StaticValue>> = anything,
-    fields: Matcher<Collection<Field>> = anything
-): Matcher<StaticValue> = isShapeType(
-    shapeId = shapeId,
-    name = name,
-    tagValue = tagValue,
-    staticParameters = staticParameters,
-    staticArguments = staticArguments,
-    allFields = fields,
-    populatedFields = fields,
-)
-
 fun isShapeType(
     shapeId: Matcher<Int> = anything,
     name: Matcher<Identifier> = anything,
     tagValue: Matcher<TagValue?> = anything,
     staticParameters: Matcher<List<StaticParameter>> = anything,
     staticArguments: Matcher<List<StaticValue>> = anything,
-    allFields: Matcher<Collection<Field>> = anything,
-    populatedFields: Matcher<Collection<Field>> = anything,
+    fields: Matcher<Collection<Field>> = anything
 ): Matcher<StaticValue> = cast(allOf(
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::name, name),
     has(ShapeType::tagValue, tagValue),
     has(ShapeType::staticParameters, staticParameters),
     has(ShapeType::staticArguments, staticArguments),
-    has("allFields", { type -> type.allFields.values }, allFields),
-    has("populatedFields", { type -> type.populatedFields.values }, populatedFields),
+    has("allFields", { type -> type.allFields.values }, fields),
 ))
 
 fun isField(
