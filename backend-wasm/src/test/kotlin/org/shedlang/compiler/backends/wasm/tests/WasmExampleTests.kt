@@ -30,7 +30,6 @@ class WasmExampleTests {
         "stdlib",
         "stringBuilder",
         "TailRec.shed",
-        "TypeName.shed",
         "usingStdlib",
     )
 

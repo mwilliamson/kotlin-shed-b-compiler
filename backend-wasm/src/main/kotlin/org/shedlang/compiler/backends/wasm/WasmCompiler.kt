@@ -430,7 +430,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
 
         val tagValue = instruction.rawShapeType.tagValue
-        val layout = WasmObjects.ShapeTypeLayout(tagValue = tagValue)
+        val layout = WasmObjects.shapeTypeLayout(instruction.metaType)
 
         val (context2, shape) = context.addLocal("shape")
         val context3 = context2.addInstruction(
@@ -471,7 +471,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
                 val constructorContext4 = WasmObjects.compileObjectStore(
                     objectPointer = Wasm.I.localGet(obj),
-                    objectType = instruction.rawShapeType,
+                    layout = WasmObjects.shapeLayout(instruction.rawShapeType),
                     fieldValues = fields.map { field ->
                         field.name to Wasm.I.localGet(
                             fieldParamIdentifier(field)
@@ -486,8 +486,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val context5 = context4.addInstruction(
             Wasm.I.i32Store(
                 address = Wasm.I.localGet(shape),
-                value = Wasm.I.i32Const(constructorTableIndex),
                 offset = layout.closureOffset,
+                value = Wasm.I.i32Const(constructorTableIndex),
             )
         )
         val context6 = if (tagValue == null) {
@@ -496,13 +496,21 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             context5.addInstruction(
                 Wasm.I.i32Store(
                     address = Wasm.I.localGet(shape),
-                    value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
                     offset = layout.tagValueOffset,
+                    value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
                 )
             )
         }
 
-        return context6.addInstruction(Wasm.I.localGet(shape))
+        val (context7, nameMemoryIndex) = context6.addSizedStaticUtf8String(instruction.rawShapeType.name.value)
+
+        val context8 = context7.addInstruction(Wasm.I.i32Store(
+            address = Wasm.I.localGet(shape),
+            offset = layout.fieldOffset(Identifier("name")),
+            value = Wasm.I.i32Const(nameMemoryIndex),
+        ))
+
+        return context8.addInstruction(Wasm.I.localGet(shape))
     }
 
     private fun compileCall(

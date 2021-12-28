@@ -3,10 +3,7 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
-import org.shedlang.compiler.types.ModuleType
-import org.shedlang.compiler.types.ShapeType
-import org.shedlang.compiler.types.TagValue
-import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.*
 import java.lang.UnsupportedOperationException
 
 internal object WasmObjects {
@@ -14,11 +11,10 @@ internal object WasmObjects {
 
     internal fun compileObjectStore(
         objectPointer: WasmInstruction.Folded,
-        objectType: Type,
+        layout: ShapeLayout,
         fieldValues: List<Pair<Identifier, WasmInstruction.Folded>>,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
-        val layout = layout(type = objectType)
         val context2 = if (layout.tagValue == null) {
             context
         } else {
@@ -57,45 +53,66 @@ internal object WasmObjects {
     }
 
     fun layout(type: Type): Layout {
-        val (fieldNames, tagValue) = when (type) {
-            is ModuleType -> Pair(type.fields.keys, null)
-            is ShapeType -> Pair(type.fields.keys, type.tagValue)
+        return when (type) {
+            is ModuleType -> moduleLayout(type)
+            is ShapeType -> shapeLayout(type)
+            is StaticValueType -> shapeTypeLayout(type)
             else -> throw UnsupportedOperationException("layout unknown for type: $type")
         }
-
-        return Layout(fieldNames = fieldNames, tagValue = tagValue)
     }
 
-    class Layout(fieldNames: Collection<Identifier>, val tagValue: TagValue?) {
-        private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
+    internal interface Layout {
+        val alignment: Int
+        val size: Int
+        fun fieldOffset(fieldName: Identifier): Int
+    }
+
+    fun moduleLayout(type: ModuleType): ShapeLayout {
+        return ShapeLayout(fieldNames = type.fields.keys, tagValue = null)
+    }
+
+    fun shapeLayout(type: ShapeType): ShapeLayout {
+        return ShapeLayout(fieldNames = type.fields.keys, tagValue = type.tagValue)
+    }
+
+    internal class ShapeLayout(fieldNames: Collection<Identifier>, val tagValue: TagValue?): Layout {
+        private val tagValueSize = if (tagValue == null) 0 else WasmData.TAG_VALUE_SIZE
         private val fieldsLayout = FieldsLayout(fieldNames = fieldNames)
 
-        val size: Int
+        override val size: Int
             get() = tagValueSize + fieldsLayout.size
 
-        val alignment: Int
+        override val alignment: Int
             get() = OBJECT_ALIGNMENT
 
         val tagValueOffset: Int = 0
 
-        fun fieldOffset(fieldName: Identifier) =
+        override fun fieldOffset(fieldName: Identifier) =
             tagValueSize + fieldsLayout.fieldOffset(fieldName)
     }
 
-    internal class ShapeTypeLayout(tagValue: TagValue?) {
-        private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
+    internal fun shapeTypeLayout(type: StaticValueType): ShapeTypeLayout {
+        return ShapeTypeLayout(fieldNames = type.fields!!.keys)
+    }
 
-        val alignment: Int
+    internal class ShapeTypeLayout(fieldNames: Collection<Identifier>): Layout {
+        private val fieldsLayout = FieldsLayout(fieldNames = fieldNames)
+
+        override val alignment: Int
             get() = WasmData.closureAlignment
 
-        val size: Int
-            get() = WasmData.FUNCTION_POINTER_SIZE + tagValueSize
+        override val size: Int
+            get() = WasmData.FUNCTION_POINTER_SIZE + WasmData.TAG_VALUE_SIZE + fieldsLayout.size
 
         val closureOffset: Int
             get() = 0
 
         val tagValueOffset: Int
             get() = WasmData.FUNCTION_POINTER_SIZE
+
+        override fun fieldOffset(fieldName: Identifier): Int {
+            return tagValueOffset + WasmData.TAG_VALUE_SIZE + fieldsLayout.fieldOffset(fieldName)
+        }
     }
 
     internal class FieldsLayout(fieldNames: Collection<Identifier>) {

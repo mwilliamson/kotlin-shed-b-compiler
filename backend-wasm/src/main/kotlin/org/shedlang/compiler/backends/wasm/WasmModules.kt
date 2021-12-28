@@ -24,7 +24,7 @@ internal object WasmModules {
 
         val context3 = WasmObjects.compileObjectStore(
             objectPointer = Wasm.I.i32Const(moduleValue),
-            objectType = moduleType,
+            layout = WasmObjects.moduleLayout(moduleType),
             fieldValues = exports,
             context = context2,
         )
