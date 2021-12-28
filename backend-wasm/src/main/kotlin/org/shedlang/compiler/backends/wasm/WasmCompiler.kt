@@ -485,19 +485,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 )
             },
             compileBody = { constructorContext ->
-                val (constructorContext2, obj) = constructorContext.addLocal("obj")
-                val constructorContext3 = constructorContext2
-                    .addInstruction(
-                        Wasm.I.localSet(
-                            obj,
-                            callMalloc(
-                                size = layout.size,
-                                alignment = layout.alignment
-                            ),
-                        )
-                    )
+                val (constructorContext2, obj) = malloc("obj", layout, constructorContext)
 
-                val constructorContext4 = WasmObjects.compileObjectStore(
+                val constructorContext3 = WasmObjects.compileObjectStore(
                     objectPointer = Wasm.I.localGet(obj),
                     layout = layout,
                     fieldValues = fields.map { field ->
@@ -505,9 +495,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                             fieldParamIdentifier(field)
                         )
                     },
-                    context = constructorContext3,
+                    context = constructorContext2,
                 )
-                constructorContext4.addInstruction(Wasm.I.localGet(obj))
+                constructorContext3.addInstruction(Wasm.I.localGet(obj))
             },
             context = context,
         )
