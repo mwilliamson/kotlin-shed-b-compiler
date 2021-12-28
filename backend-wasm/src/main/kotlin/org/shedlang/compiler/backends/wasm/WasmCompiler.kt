@@ -430,19 +430,15 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
 
         val tagValue = instruction.rawShapeType.tagValue
-        val tagValueSize = if (tagValue == null) {
-            0
-        } else {
-            WasmData.TAG_VALUE_SIZE
-        }
+        val layout = WasmObjects.ShapeTypeLayout(tagValue = tagValue)
 
         val (context2, shape) = context.addLocal("shape")
         val context3 = context2.addInstruction(
             Wasm.I.localSet(
                 shape,
                 callMalloc(
-                    size = WasmData.FUNCTION_POINTER_SIZE + tagValueSize,
-                    alignment = WasmData.closureAlignment,
+                    size = layout.size,
+                    alignment = layout.alignment,
                 ),
             )
         )
@@ -489,8 +485,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         )
         val context5 = context4.addInstruction(
             Wasm.I.i32Store(
-                Wasm.I.localGet(shape),
+                address = Wasm.I.localGet(shape),
                 value = Wasm.I.i32Const(constructorTableIndex),
+                offset = layout.closureOffset,
             )
         )
         val context6 = if (tagValue == null) {
@@ -500,7 +497,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 Wasm.I.i32Store(
                     address = Wasm.I.localGet(shape),
                     value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
-                    offset = WasmData.FUNCTION_POINTER_SIZE,
+                    offset = layout.tagValueOffset,
                 )
             )
         }

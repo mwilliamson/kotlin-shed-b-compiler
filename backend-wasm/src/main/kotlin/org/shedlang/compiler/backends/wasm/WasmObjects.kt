@@ -91,4 +91,22 @@ internal object WasmObjects {
             }
         }
     }
+
+    internal class ShapeTypeLayout(tagValue: TagValue?) {
+        private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
+
+        val alignment: Int
+            get() = WasmData.closureAlignment
+
+        val size: Int
+            get() = WasmData.FUNCTION_POINTER_SIZE + tagValueSize
+
+        val closureOffset: Int
+            get() = 0
+
+        val tagValueOffset: Int
+            get() = WasmData.FUNCTION_POINTER_SIZE
+    }
+
+
 }
