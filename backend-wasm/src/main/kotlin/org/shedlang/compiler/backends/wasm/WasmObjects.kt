@@ -63,7 +63,7 @@ internal object WasmObjects {
             else -> throw UnsupportedOperationException("layout unknown for type: $type")
         }
 
-        return Layout(fieldNames = fieldNames.sorted(), tagValue = tagValue)
+        return Layout(fieldNames = fieldNames, tagValue = tagValue)
     }
 
     class Layout(private val fieldNames: Collection<Identifier>, val tagValue: TagValue?) {
