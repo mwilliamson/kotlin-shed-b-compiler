@@ -7,14 +7,11 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.ast.formatModuleName
-import org.shedlang.compiler.backends.wasm.runtime.callMalloc
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.stackir.*
-import org.shedlang.compiler.types.Field
-import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
 import java.lang.UnsupportedOperationException
 
@@ -133,7 +130,11 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is DefineShape -> {
-                return compileDefineShape(instruction, context)
+                return WasmShapes.compileDefineShape(
+                    shapeType = instruction.rawShapeType,
+                    metaType = instruction.metaType,
+                    context = context,
+                )
             }
 
             is Discard -> {
@@ -422,46 +423,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             context = context,
         )
         return context2.addInstruction(Wasm.I.localGet(closure))
-    }
-
-    private fun compileDefineShape(
-        instruction: DefineShape,
-        context: WasmFunctionContext
-    ): WasmFunctionContext {
-        val tagValue = instruction.rawShapeType.tagValue
-        val layout = WasmObjects.shapeTypeLayout(instruction.metaType)
-
-        val (context2, shape) = malloc("shape", layout, context)
-
-        val (context4, constructorTableIndex) = WasmShapes.compileConstructor(instruction.rawShapeType, context2)
-        val context5 = context4.addInstruction(
-            Wasm.I.i32Store(
-                address = Wasm.I.localGet(shape),
-                offset = layout.closureOffset,
-                value = Wasm.I.i32Const(constructorTableIndex),
-            )
-        )
-        val context6 = if (tagValue == null) {
-            context5
-        } else {
-            context5.addInstruction(
-                Wasm.I.i32Store(
-                    address = Wasm.I.localGet(shape),
-                    offset = layout.tagValueOffset,
-                    value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
-                )
-            )
-        }
-
-        val (context7, nameMemoryIndex) = context6.addSizedStaticUtf8String(instruction.rawShapeType.name.value)
-
-        val context8 = context7.addInstruction(Wasm.I.i32Store(
-            address = Wasm.I.localGet(shape),
-            offset = layout.fieldOffset(Identifier("name")),
-            value = Wasm.I.i32Const(nameMemoryIndex),
-        ))
-
-        return context8.addInstruction(Wasm.I.localGet(shape))
     }
 
     private fun compileCall(
