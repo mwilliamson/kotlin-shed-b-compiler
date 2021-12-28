@@ -132,67 +132,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is DefineShape -> {
-                fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
-
-                val tagValue = instruction.rawShapeType.tagValue
-                val tagValueSize = if (tagValue == null) {
-                    0
-                } else {
-                    WasmData.TAG_VALUE_SIZE
-                }
-
-                val (context2, shape) = context.addLocal("shape")
-                val context3 = context2.addInstruction(Wasm.I.localSet(
-                    shape,
-                    callMalloc(
-                        size = WasmData.FUNCTION_POINTER_SIZE + tagValueSize,
-                        alignment = WasmData.closureAlignment,
-                    ),
-                ))
-
-                val fields = instruction.rawShapeType.fields.values
-                val constructorName = instruction.rawShapeType.name.value
-                val (context4, constructorTableIndex) = WasmClosures.compileFunction(
-                    functionName = constructorName,
-                    freeVariables = listOf(),
-                    positionalParams = listOf(),
-                    namedParams = fields.map { field ->
-                        field.name to WasmParam(fieldParamIdentifier(field), type = WasmData.genericValueType)
-                    },
-                    compileBody = { constructorContext ->
-                        val (constructorContext2, obj) = constructorContext.addLocal("obj")
-                        val layout = WasmObjects.layout(instruction.rawShapeType)
-                        val constructorContext3 = constructorContext2
-                            .addInstruction(Wasm.I.localSet(
-                                obj,
-                                callMalloc(size = layout.size, alignment = layout.alignment),
-                            ))
-
-                        val constructorContext4 = WasmObjects.compileObjectStore(
-                            objectPointer = Wasm.I.localGet(obj),
-                            objectType = instruction.rawShapeType,
-                            fieldValues = fields.map { field -> field.name to Wasm.I.localGet(fieldParamIdentifier(field)) },
-                            context = constructorContext3,
-                        )
-                        constructorContext4.addInstruction(Wasm.I.localGet(obj))
-                    },
-                    context = context3,
-                )
-                val context5 = context4.addInstruction(Wasm.I.i32Store(
-                    Wasm.I.localGet(shape),
-                    value = Wasm.I.i32Const(constructorTableIndex),
-                ))
-                val context6 = if (tagValue == null) {
-                    context5
-                } else {
-                    context5.addInstruction(Wasm.I.i32Store(
-                        address = Wasm.I.localGet(shape),
-                        value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
-                        offset = WasmData.FUNCTION_POINTER_SIZE,
-                    ))
-                }
-
-                return context6.addInstruction(Wasm.I.localGet(shape))
+                return compileDefineShape(instruction, context)
             }
 
             is Discard -> {
@@ -481,6 +421,91 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             context = context,
         )
         return context2.addInstruction(Wasm.I.localGet(closure))
+    }
+
+    private fun compileDefineShape(
+        instruction: DefineShape,
+        context: WasmFunctionContext
+    ): WasmFunctionContext {
+        fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
+
+        val tagValue = instruction.rawShapeType.tagValue
+        val tagValueSize = if (tagValue == null) {
+            0
+        } else {
+            WasmData.TAG_VALUE_SIZE
+        }
+
+        val (context2, shape) = context.addLocal("shape")
+        val context3 = context2.addInstruction(
+            Wasm.I.localSet(
+                shape,
+                callMalloc(
+                    size = WasmData.FUNCTION_POINTER_SIZE + tagValueSize,
+                    alignment = WasmData.closureAlignment,
+                ),
+            )
+        )
+
+        val fields = instruction.rawShapeType.fields.values
+        val constructorName = instruction.rawShapeType.name.value
+        val (context4, constructorTableIndex) = WasmClosures.compileFunction(
+            functionName = constructorName,
+            freeVariables = listOf(),
+            positionalParams = listOf(),
+            namedParams = fields.map { field ->
+                field.name to WasmParam(
+                    fieldParamIdentifier(field),
+                    type = WasmData.genericValueType
+                )
+            },
+            compileBody = { constructorContext ->
+                val (constructorContext2, obj) = constructorContext.addLocal("obj")
+                val layout = WasmObjects.layout(instruction.rawShapeType)
+                val constructorContext3 = constructorContext2
+                    .addInstruction(
+                        Wasm.I.localSet(
+                            obj,
+                            callMalloc(
+                                size = layout.size,
+                                alignment = layout.alignment
+                            ),
+                        )
+                    )
+
+                val constructorContext4 = WasmObjects.compileObjectStore(
+                    objectPointer = Wasm.I.localGet(obj),
+                    objectType = instruction.rawShapeType,
+                    fieldValues = fields.map { field ->
+                        field.name to Wasm.I.localGet(
+                            fieldParamIdentifier(field)
+                        )
+                    },
+                    context = constructorContext3,
+                )
+                constructorContext4.addInstruction(Wasm.I.localGet(obj))
+            },
+            context = context3,
+        )
+        val context5 = context4.addInstruction(
+            Wasm.I.i32Store(
+                Wasm.I.localGet(shape),
+                value = Wasm.I.i32Const(constructorTableIndex),
+            )
+        )
+        val context6 = if (tagValue == null) {
+            context5
+        } else {
+            context5.addInstruction(
+                Wasm.I.i32Store(
+                    address = Wasm.I.localGet(shape),
+                    value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
+                    offset = WasmData.FUNCTION_POINTER_SIZE,
+                )
+            )
+        }
+
+        return context6.addInstruction(Wasm.I.localGet(shape))
     }
 
     private fun compileCall(
