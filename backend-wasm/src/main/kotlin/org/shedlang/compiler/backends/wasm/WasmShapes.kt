@@ -14,12 +14,22 @@ internal object WasmShapes {
         metaType: StaticValueType,
         context: WasmFunctionContext
     ): WasmFunctionContext {
+        return WasmShapeCompiler(shapeType = shapeType, metaType = metaType)
+            .compileDefineShape(context)
+    }
+}
+
+private class WasmShapeCompiler(
+    private val shapeType: ShapeType,
+    private val metaType: StaticValueType,
+) {
+    fun compileDefineShape(context: WasmFunctionContext): WasmFunctionContext {
         val tagValue = shapeType.tagValue
         val layout = WasmObjects.shapeTypeLayout(metaType)
 
         val (context2, shape) = malloc("shape", layout, context)
 
-        val (context4, constructorTableIndex) = compileConstructor(shapeType, context2)
+        val (context4, constructorTableIndex) = compileConstructor(context2)
         val context5 = context4.addInstruction(
             Wasm.I.i32Store(
                 address = Wasm.I.localGet(shape),
@@ -51,7 +61,6 @@ internal object WasmShapes {
     }
 
     private fun compileConstructor(
-        shapeType: ShapeType,
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, WasmConstValue.TableEntryIndex> {
         fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
