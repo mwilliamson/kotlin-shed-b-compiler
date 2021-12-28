@@ -431,18 +431,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val tagValue = instruction.rawShapeType.tagValue
         val layout = WasmObjects.shapeTypeLayout(instruction.metaType)
 
-        val (context2, shape) = context.addLocal("shape")
-        val context3 = context2.addInstruction(
-            Wasm.I.localSet(
-                shape,
-                callMalloc(
-                    size = layout.size,
-                    alignment = layout.alignment,
-                ),
-            )
-        )
+        val (context2, shape) = malloc("shape", layout, context)
 
-        val (context4, constructorTableIndex) = compileConstructor(instruction.rawShapeType, context3)
+        val (context4, constructorTableIndex) = compileConstructor(instruction.rawShapeType, context2)
         val context5 = context4.addInstruction(
             Wasm.I.i32Store(
                 address = Wasm.I.localGet(shape),
