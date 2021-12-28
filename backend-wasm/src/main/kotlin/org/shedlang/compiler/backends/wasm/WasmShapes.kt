@@ -29,12 +29,10 @@ private class WasmShapeCompiler(
     private val metaTypePointer: String,
 ) {
     fun compileDefineShape(context: WasmFunctionContext): WasmFunctionContext {
-        val tagValue = shapeType.tagValue
-
         val (context4, constructorTableIndex) = compileConstructor(context)
         val context5 = compileStoreConstructor(constructorTableIndex, context4)
 
-        val context6 = compileStoreTagValue(tagValue, context5)
+        val context6 = compileStoreTagValue(context5)
 
         val (context7, nameMemoryIndex) = context6.addSizedStaticUtf8String(shapeType.name.value)
         val context8 = compileStoreName(context7, nameMemoryIndex)
@@ -94,9 +92,9 @@ private class WasmShapeCompiler(
     }
 
     private fun compileStoreTagValue(
-        tagValue: TagValue?,
         context: WasmFunctionContext
     ): WasmFunctionContext {
+        val tagValue = shapeType.tagValue
         return if (tagValue == null) {
             context
         } else {
