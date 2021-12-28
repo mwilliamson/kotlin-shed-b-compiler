@@ -3,10 +3,12 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
+import org.shedlang.compiler.backends.wasm.wasm.WasmDataSegmentKey
 import org.shedlang.compiler.backends.wasm.wasm.WasmParam
 import org.shedlang.compiler.types.Field
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.TagValue
 
 internal object WasmShapes {
     internal fun compileDefineShape(
@@ -14,50 +16,30 @@ internal object WasmShapes {
         metaType: StaticValueType,
         context: WasmFunctionContext
     ): WasmFunctionContext {
-        return WasmShapeCompiler(shapeType = shapeType, metaType = metaType)
-            .compileDefineShape(context)
+        val metaTypeLayout = WasmObjects.shapeTypeLayout(metaType)
+        val (context2, shape) = malloc("shape", metaTypeLayout, context)
+        return WasmShapeCompiler(shapeType = shapeType, metaTypeLayout = metaTypeLayout, metaTypePointer = shape)
+            .compileDefineShape(context2)
     }
 }
 
 private class WasmShapeCompiler(
     private val shapeType: ShapeType,
-    private val metaType: StaticValueType,
+    private val metaTypeLayout: WasmObjects.ShapeTypeLayout,
+    private val metaTypePointer: String,
 ) {
     fun compileDefineShape(context: WasmFunctionContext): WasmFunctionContext {
         val tagValue = shapeType.tagValue
-        val layout = WasmObjects.shapeTypeLayout(metaType)
 
-        val (context2, shape) = malloc("shape", layout, context)
+        val (context4, constructorTableIndex) = compileConstructor(context)
+        val context5 = compileStoreConstructor(constructorTableIndex, context4)
 
-        val (context4, constructorTableIndex) = compileConstructor(context2)
-        val context5 = context4.addInstruction(
-            Wasm.I.i32Store(
-                address = Wasm.I.localGet(shape),
-                offset = layout.closureOffset,
-                value = Wasm.I.i32Const(constructorTableIndex),
-            )
-        )
-        val context6 = if (tagValue == null) {
-            context5
-        } else {
-            context5.addInstruction(
-                Wasm.I.i32Store(
-                    address = Wasm.I.localGet(shape),
-                    offset = layout.tagValueOffset,
-                    value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
-                )
-            )
-        }
+        val context6 = compileStoreTagValue(tagValue, context5)
 
         val (context7, nameMemoryIndex) = context6.addSizedStaticUtf8String(shapeType.name.value)
+        val context8 = compileStoreName(context7, nameMemoryIndex)
 
-        val context8 = context7.addInstruction(Wasm.I.i32Store(
-            address = Wasm.I.localGet(shape),
-            offset = layout.fieldOffset(Identifier("name")),
-            value = Wasm.I.i32Const(nameMemoryIndex),
-        ))
-
-        return context8.addInstruction(Wasm.I.localGet(shape))
+        return context8.addInstruction(Wasm.I.localGet(metaTypePointer))
     }
 
     private fun compileConstructor(
@@ -97,4 +79,45 @@ private class WasmShapeCompiler(
             context = context,
         )
     }
+
+    private fun compileStoreConstructor(
+        constructorTableIndex: WasmConstValue.TableEntryIndex,
+        context: WasmFunctionContext
+    ): WasmFunctionContext {
+        return context.addInstruction(
+            Wasm.I.i32Store(
+                address = Wasm.I.localGet(metaTypePointer),
+                offset = metaTypeLayout.closureOffset,
+                value = Wasm.I.i32Const(constructorTableIndex),
+            )
+        )
+    }
+
+    private fun compileStoreTagValue(
+        tagValue: TagValue?,
+        context: WasmFunctionContext
+    ): WasmFunctionContext {
+        return if (tagValue == null) {
+            context
+        } else {
+            context.addInstruction(
+                Wasm.I.i32Store(
+                    address = Wasm.I.localGet(metaTypePointer),
+                    offset = metaTypeLayout.tagValueOffset,
+                    value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
+                )
+            )
+        }
+    }
+
+    private fun compileStoreName(
+        context7: WasmFunctionContext,
+        nameMemoryIndex: WasmDataSegmentKey
+    ) = context7.addInstruction(
+        Wasm.I.i32Store(
+            address = Wasm.I.localGet(metaTypePointer),
+            offset = metaTypeLayout.fieldOffset(Identifier("name")),
+            value = Wasm.I.i32Const(nameMemoryIndex),
+        )
+    )
 }
