@@ -25,7 +25,6 @@ class WasmExampleTests {
         "NonLocalReturnNested.shed",
         "Resume.shed",
         "ResumeWithValue.shed",
-        "ShapeInFunction.shed",
         "stdlib",
         "stringBuilder",
         "TailRec.shed",
