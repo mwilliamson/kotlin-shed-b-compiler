@@ -15,7 +15,6 @@ class WasmExampleTests {
         "EffectHandlerDiscard.shed",
         "EffectHandlerExitOrResume.shed",
         "HandleWithState.shed",
-        "Matchers.shed",
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
         "NonLocalReturn.shed",
