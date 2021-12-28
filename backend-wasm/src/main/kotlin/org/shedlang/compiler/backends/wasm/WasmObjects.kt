@@ -66,8 +66,9 @@ internal object WasmObjects {
         return Layout(fieldNames = fieldNames.sorted(), tagValue = tagValue)
     }
 
-    class Layout(private val fieldNames: List<Identifier>, val tagValue: TagValue?) {
+    class Layout(private val fieldNames: Collection<Identifier>, val tagValue: TagValue?) {
         private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
+        private val fieldsLayout = FieldsLayout(fieldNames = fieldNames)
 
         val size: Int
             get() = tagValueSize + fieldNames.size * WasmData.VALUE_SIZE
@@ -78,18 +79,7 @@ internal object WasmObjects {
         val tagValueOffset: Int = 0
 
         fun fieldOffset(fieldName: Identifier) =
-            tagValueSize + fieldIndex(fieldName = fieldName) * WasmData.VALUE_SIZE
-
-        private fun fieldIndex(fieldName: Identifier): Int {
-            val fieldIndex = fieldNames.indexOf(fieldName)
-
-            if (fieldIndex == -1) {
-                // TODO: better exception
-                throw Exception("field not found: ${fieldName.value}")
-            } else {
-                return fieldIndex
-            }
-        }
+            tagValueSize + fieldsLayout.fieldOffset(fieldName)
     }
 
     internal class ShapeTypeLayout(tagValue: TagValue?) {
@@ -108,5 +98,21 @@ internal object WasmObjects {
             get() = WasmData.FUNCTION_POINTER_SIZE
     }
 
+    internal class FieldsLayout(fieldNames: Collection<Identifier>) {
+        private val fieldNames = fieldNames.sorted()
 
+        fun fieldOffset(fieldName: Identifier) =
+            fieldIndex(fieldName = fieldName) * WasmData.VALUE_SIZE
+
+        private fun fieldIndex(fieldName: Identifier): Int {
+            val fieldIndex = fieldNames.indexOf(fieldName)
+
+            if (fieldIndex == -1) {
+                // TODO: better exception
+                throw Exception("field not found: ${fieldName.value}")
+            } else {
+                return fieldIndex
+            }
+        }
+    }
 }
