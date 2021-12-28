@@ -6,10 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.tests.field
-import org.shedlang.compiler.tests.isEquivalentType
-import org.shedlang.compiler.tests.isStringType
-import org.shedlang.compiler.tests.shapeType
+import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 class StaticValueTypeTests {
@@ -21,10 +18,10 @@ class StaticValueTypeTests {
     }
 
     @Test
-    fun nonShapeTypesHaveNoFieldsField() {
+    fun nonShapeTypesHaveFieldsOfUnitType() {
         val type = metaType(IntType)
 
-        assertThat(type.fieldType(Identifier("fields")), absent())
+        assertThat(type.fieldType(Identifier("fields")), present(isUnitType))
     }
 
     @Test

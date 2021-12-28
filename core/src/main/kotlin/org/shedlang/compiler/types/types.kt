@@ -123,7 +123,17 @@ object StaticValueTypeGroup: TypeGroup {
 
 interface Type: StaticValue, TypeGroup {
     val shapeId: Int?
-    fun fieldType(fieldName: Identifier): Type?
+    val fields: Map<Identifier, Field>?
+
+    fun fieldType(fieldName: Identifier): Type? {
+        val fields = this.fields
+        return if (fields == null) {
+            null
+        } else {
+            fields[fieldName]?.type
+        }
+    }
+
     fun replaceStaticValues(bindings: StaticBindings): Type
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
@@ -150,9 +160,12 @@ interface BasicType : Type {
     override val shapeId: Int?
         get() = null
 
-    override fun fieldType(fieldName: Identifier): Type? {
-        return null
-    }
+    /**
+     * The fields of the type. If null, no assumptions can be made about the
+     * fields present on values of this type.
+     */
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return this
@@ -212,38 +225,46 @@ object NothingType : BasicType {
 val NothingMetaType = metaType(NothingType)
 
 data class StaticValueType(val value: StaticValue): Type {
-    private val fieldsType: Lazy<Type?>
-
-    init {
-        // TODO: better handling of generics
-        val rawType = rawValue(value)
-        fieldsType = lazy {
-            if (rawType is ShapeType) {
-                shapeFieldsInfoType(rawType)
-            } else {
-                null
-            }
-        }
-    }
-
     override val shapeId: Int?
         get() = null
 
     override val shortDescription: String
         get() = "StaticValue[${value.shortDescription}]"
 
-    override fun fieldType(fieldName: Identifier): Type? {
-        if (value is UserDefinedEffect) {
-            return value.operations[fieldName]
-        } else if (fieldName == Identifier("fields")) {
-            return fieldsType.value
-        } else if (fieldName == Identifier("name") && rawValue(value) is Type) {
-            // TODO: Restrict to shape types?
-            return StringType
-        } else {
-            return null
+    override val fields: Map<Identifier, Field>?
+        get() {
+            val rawValue = rawValue(value)
+            if (value is UserDefinedEffect) {
+                return value.operations.map { (operationName, operationType) ->
+                    Field(
+                        name = operationName,
+                        shapeId = value.definitionId,
+                        type = operationType,
+                    )
+                }.associateBy { field -> field.name }
+            } else if (rawValue is Type) {
+                // TODO: better handling of generics
+                val shapeId = freshTypeId()
+
+                val fields = listOf(
+                    Field(
+                        name = Identifier("fields"),
+                        shapeId = shapeId,
+                        type = if (rawValue is ShapeType) shapeFieldsInfoType(rawValue) else UnitType,
+                    ),
+                    Field(
+                        // TODO: Restrict to shape types?
+                        name = Identifier("name"),
+                        shapeId = shapeId,
+                        type = StringType,
+                    )
+                )
+
+                return fields.associateBy { field -> field.name }
+            } else {
+                return null
+            }
         }
-    }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return StaticValueType(replaceStaticValues(value, bindings))
@@ -370,7 +391,8 @@ data class TypeParameter(
     val typeParameterId: Int = freshTypeId(),
     override val source: Source,
 ): StaticParameter, Type {
-    override fun fieldType(fieldName: Identifier): Type? = null
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override val shortDescription: String
         get() {
@@ -460,9 +482,8 @@ class CastableType(val type: Type): Type {
     override val shortDescription: String
         get() = "Castable[${type.shortDescription}]"
 
-    override fun fieldType(fieldName: Identifier): Type? {
-        return null
-    }
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return CastableType(replaceStaticValuesInType(type, bindings))
@@ -486,14 +507,10 @@ object MetaTypeTypeFunction: StaticValue {
 
 data class ModuleType(
     val name: ModuleName,
-    val fields: Map<Identifier, Field>
+    override val fields: Map<Identifier, Field>
 ): Type {
     override val shapeId: Int?
         get() = null
-
-    override fun fieldType(fieldName: Identifier): Type? {
-        return fields[fieldName]?.type
-    }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         throw UnsupportedOperationException("not implemented")
@@ -517,7 +534,8 @@ data class FunctionType(
     override val shapeId: Int?
         get() = null
 
-    override fun fieldType(fieldName: Identifier): Type? = null
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return FunctionType(
@@ -575,9 +593,8 @@ data class TupleType(val elementTypes: List<Type>): Type {
     override val shortDescription: String
         get() = "#(${elementTypes.map(Type::shortDescription).joinToString(", ")})"
 
-    override fun fieldType(fieldName: Identifier): Type? {
-        return null
-    }
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return TupleType(
@@ -599,9 +616,8 @@ interface TypeAlias: Type {
     override val shapeId: Int?
         get() = aliasedType.shapeId
 
-    override fun fieldType(fieldName: Identifier): Type? {
-        return aliasedType.fieldType(fieldName)
-    }
+    override val fields: Map<Identifier, Field>?
+        get() = aliasedType.fields
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         // TODO: test this
@@ -639,7 +655,7 @@ interface ShapeType: Type {
     val name: Identifier
     override val shapeId: Int
     val tagValue: TagValue?
-    val fields: Map<Identifier, Field>
+    override val fields: Map<Identifier, Field>
     val staticParameters: List<StaticParameter>
     val staticArguments: List<StaticValue>
 
@@ -651,10 +667,6 @@ interface ShapeType: Type {
                 appliedTypeShortDescription(name, staticArguments)
             }
         }
-
-    override fun fieldType(fieldName: Identifier): Type? {
-        return fields[fieldName]?.type
-    }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         return LazyShapeType(
@@ -735,7 +747,8 @@ interface UnionType: Type {
     override val shapeId: Int?
         get() = null
 
-    override fun fieldType(fieldName: Identifier): Type? = null
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override fun <T> accept(visitor: Type.Visitor<T>): T {
         return visitor.visit(this)
@@ -845,9 +858,8 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
     override val shapeId: Int?
         get() = null
 
-    override fun fieldType(fieldName: Identifier): Type? {
-        return null
-    }
+    override val fields: Map<Identifier, Field>?
+        get() = null
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {
         throw UnsupportedOperationException("not implemented")
