@@ -29,15 +29,15 @@ private class WasmShapeCompiler(
     private val metaTypePointer: String,
 ) {
     fun compileDefineShape(context: WasmFunctionContext): WasmFunctionContext {
-        val (context4, constructorTableIndex) = compileConstructor(context)
-        val context5 = compileStoreConstructor(constructorTableIndex, context4)
+        val (context2, constructorTableIndex) = compileConstructor(context)
+        val context3 = compileStoreConstructor(constructorTableIndex, context2)
 
-        val context6 = compileStoreTagValue(context5)
+        val context4 = compileStoreTagValue(context3)
 
-        val (context7, nameMemoryIndex) = context6.addSizedStaticUtf8String(shapeType.name.value)
-        val context8 = compileStoreName(context7, nameMemoryIndex)
+        val (context5, nameMemoryIndex) = context4.addSizedStaticUtf8String(shapeType.name.value)
+        val context6 = compileStoreName(context5, nameMemoryIndex)
 
-        return context8.addInstruction(Wasm.I.localGet(metaTypePointer))
+        return context6.addInstruction(Wasm.I.localGet(metaTypePointer))
     }
 
     private fun compileConstructor(
