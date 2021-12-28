@@ -66,12 +66,12 @@ internal object WasmObjects {
         return Layout(fieldNames = fieldNames, tagValue = tagValue)
     }
 
-    class Layout(private val fieldNames: Collection<Identifier>, val tagValue: TagValue?) {
+    class Layout(fieldNames: Collection<Identifier>, val tagValue: TagValue?) {
         private val tagValueSize = if (tagValue == null) 0 else WasmData.VALUE_SIZE
         private val fieldsLayout = FieldsLayout(fieldNames = fieldNames)
 
         val size: Int
-            get() = tagValueSize + fieldNames.size * WasmData.VALUE_SIZE
+            get() = tagValueSize + fieldsLayout.size
 
         val alignment: Int
             get() = OBJECT_ALIGNMENT
@@ -100,6 +100,9 @@ internal object WasmObjects {
 
     internal class FieldsLayout(fieldNames: Collection<Identifier>) {
         private val fieldNames = fieldNames.sorted()
+
+        val size: Int
+            get() = fieldNames.size * WasmData.VALUE_SIZE
 
         fun fieldOffset(fieldName: Identifier) =
             fieldIndex(fieldName = fieldName) * WasmData.VALUE_SIZE
