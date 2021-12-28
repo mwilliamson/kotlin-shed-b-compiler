@@ -3,10 +3,7 @@ package org.shedlang.compiler.backends.wasm
 import kotlinx.collections.immutable.*
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleName
-import org.shedlang.compiler.ast.NullSource
-import org.shedlang.compiler.ast.formatModuleName
+import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
@@ -394,6 +391,14 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     }
 
     private fun compileDefineFunction(instruction: DefineFunction, context: WasmFunctionContext): WasmFunctionContext {
+        val (context2, closurePointer) = compileCreateFunction(instruction, context)
+        return context2.addInstruction(Wasm.I.localGet(closurePointer))
+    }
+
+    internal fun compileCreateFunction(
+        instruction: DefineFunction,
+        context: WasmFunctionContext
+    ): Pair<WasmFunctionContext, String> {
         val freeVariables = findFreeVariables(instruction)
 
         val paramBindings = mutableListOf<Pair<Int, String>>()
@@ -409,8 +414,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             parameter.name to compileParameter(parameter)
         }
 
-        val (context2, closure) = WasmClosures.compileCreate(
-            functionName = instruction.name,
+        return WasmClosures.compileCreate(
+            // TODO: uniquify name properly
+            functionName = instruction.name + freshNodeId(),
             freeVariables = freeVariables,
             compileBody = { currentContext ->
                 compileInstructions(
@@ -422,7 +428,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             namedParams = namedParams,
             context = context,
         )
-        return context2.addInstruction(Wasm.I.localGet(closure))
     }
 
     private fun compileCall(

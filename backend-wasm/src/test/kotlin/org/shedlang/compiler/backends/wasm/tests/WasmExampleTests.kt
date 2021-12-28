@@ -26,7 +26,6 @@ class WasmExampleTests {
         "Resume.shed",
         "ResumeWithValue.shed",
         "ShapeInFunction.shed",
-        "ShapeTypeInfo.shed",
         "stdlib",
         "stringBuilder",
         "TailRec.shed",

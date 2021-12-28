@@ -52,6 +52,17 @@ internal object WasmObjects {
         )
     }
 
+    internal fun compileFieldStore(objectType: Type, fieldName: Identifier): WasmInstruction {
+        val layout = layout(objectType)
+
+        return Wasm.I.i32Store(
+            offset = layout.fieldOffset(
+                fieldName = fieldName,
+            ),
+            alignment = OBJECT_ALIGNMENT,
+        )
+    }
+
     fun layout(type: Type): Layout {
         return when (type) {
             is ModuleType -> moduleLayout(type)
