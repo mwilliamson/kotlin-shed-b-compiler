@@ -689,10 +689,20 @@ fun varargsType() = VarargsType(
     nil = UnitType
 )
 
-fun moduleType(fields: Map<String, Type> = mapOf()) = ModuleType(
-    name = moduleName(),
-    fields = fields.mapKeys { (name, type) -> Identifier(name) }
-)
+fun moduleType(fields: Map<String, Type> = mapOf()): ModuleType {
+    val shapeId = freshNodeId()
+    return ModuleType(
+        name = moduleName(),
+        fields = fields.map { (name, type) ->
+            Field(
+                name = Identifier(name),
+                type = type,
+                shapeId = shapeId,
+            )
+        }.associateBy { field -> field.name }
+    )
+}
+
 
 fun moduleName(
     parts: List<String> = listOf("Test", "Module"),

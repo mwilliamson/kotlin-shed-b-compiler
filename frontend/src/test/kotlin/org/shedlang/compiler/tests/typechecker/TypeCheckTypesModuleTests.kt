@@ -41,7 +41,7 @@ class TypeCheckTypesModuleTests {
             referenceTypes = mapOf(intReference to IntMetaType)
         ))
         assertThat(result.fields, isMap(
-            Identifier("value") to isIntType
+            Identifier("value") to isField(name = isIdentifier("value"), type = isIntType)
         ))
     }
 }

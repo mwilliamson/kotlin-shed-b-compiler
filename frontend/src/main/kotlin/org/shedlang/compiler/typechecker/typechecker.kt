@@ -299,10 +299,14 @@ internal fun typeCheck(moduleName: ModuleName, module: ModuleNode, context: Type
 
     context.undefer()
 
-    val exports = module.exports.associate { export ->
-        export.name to context.typeOf(context.resolveReference(export))
+    val fields = module.exports.map { export ->
+        Field(
+            name = export.name,
+            shapeId = module.nodeId,
+            type = context.typeOf(context.resolveReference(export))
+        )
     }
-    return ModuleType(name = moduleName, fields = exports)
+    return ModuleType(name = moduleName, fields = fields.associateBy { field -> field.name })
 }
 
 internal fun typeCheck(moduleName: ModuleName, module: TypesModuleNode, context: TypeContext): ModuleType {
@@ -314,11 +318,15 @@ internal fun typeCheck(moduleName: ModuleName, module: TypesModuleNode, context:
         typeCheckTypesModuleStatement(statement, context)
     }
 
-    val fields = module.body.filterIsInstance<VariableBindingNode>().associateBy(
-        { statement -> statement.name },
-        { statement -> context.typeOf(statement) }
-    )
-    return ModuleType(name = moduleName, fields = fields)
+    val fields = module.body.filterIsInstance<VariableBindingNode>().map { statement ->
+        Field(
+            name = statement.name,
+            shapeId = module.nodeId,
+            type = context.typeOf(statement),
+        )
+    }
+
+    return ModuleType(name = moduleName, fields = fields.associateBy { field -> field.name })
 }
 
 internal fun typeCheck(import: ImportNode, context: TypeContext) {

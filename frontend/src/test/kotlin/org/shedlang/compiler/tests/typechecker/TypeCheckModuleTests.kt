@@ -114,7 +114,10 @@ class TypeCheckModuleTests {
             referenceTypes = mapOf(unitReference to UnitMetaType)
         ))
         assertThat(result.fields, isMap(
-            Identifier("f") to isFunctionType(returnType = equalTo(UnitType))
+            Identifier("f") to isField(
+                name = isIdentifier("f"),
+                type = isFunctionType(returnType = equalTo(UnitType)),
+            )
         ))
     }
 }

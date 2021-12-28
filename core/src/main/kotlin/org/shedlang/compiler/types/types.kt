@@ -486,13 +486,13 @@ object MetaTypeTypeFunction: StaticValue {
 
 data class ModuleType(
     val name: ModuleName,
-    val fields: Map<Identifier, Type>
+    val fields: Map<Identifier, Field>
 ): Type {
     override val shapeId: Int?
         get() = null
 
     override fun fieldType(fieldName: Identifier): Type? {
-        return fields[fieldName]
+        return fields[fieldName]?.type
     }
 
     override fun replaceStaticValues(bindings: StaticBindings): Type {

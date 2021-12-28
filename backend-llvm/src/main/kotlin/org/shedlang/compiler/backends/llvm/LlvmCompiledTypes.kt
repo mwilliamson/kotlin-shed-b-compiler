@@ -92,7 +92,7 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
         return when (rawType) {
             is ModuleType ->
                 CompiledObjectType(
-                    fieldTypes = rawType.fields.entries.map { entry -> entry.key to entry.value },
+                    fieldTypes = rawType.fields.map { (name, field) -> name to field.type },
                     tagValue = null
                 )
 
