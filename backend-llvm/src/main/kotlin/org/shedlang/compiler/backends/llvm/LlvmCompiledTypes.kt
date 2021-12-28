@@ -68,24 +68,13 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
                 tagValue = null
             )
         )
-    } else if (objectType is StaticValueType && rawValue(objectType.value) is Type) {
+    } else if (objectType is StaticValueType && objectType.fields != null) {
         return CompiledShapeType(
             parameterTypes = listOf(),
             compiledObjectType = CompiledObjectType(
-                fieldTypes = listOf(
-                    Identifier("fields") to NothingType,
-                    Identifier("name") to StringType,
-                ),
+                fieldTypes = objectType.fields!!.map { (name, field) -> name to field.type },
                 tagValue = null
             )
-        )
-    } else if (objectType is StaticValueType && objectType.value is UserDefinedEffect) {
-        val effect = objectType.value as UserDefinedEffect
-        return CompiledObjectType(
-            tagValue = null,
-            fieldTypes = effect.operations.map { (operationName, operationType) ->
-                operationName to operationType
-            }
         )
     } else {
         val rawType = rawValue(objectType)
