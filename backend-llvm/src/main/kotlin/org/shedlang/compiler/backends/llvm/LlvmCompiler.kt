@@ -838,9 +838,7 @@ internal class LlvmCompiler(
             )
         )
 
-        // TODO: avoid recreating meta-type
-        val shapeMetaType = StaticValueType(instruction.shapeType)
-        val compiledShapeType = compiledType(shapeMetaType) as CompiledShapeType
+        val compiledShapeType = compiledType(instruction.metaType) as CompiledShapeType
         val nameDefinition = strings.defineString(
             irBuilder.generateName(instruction.rawShapeType.name),
             instruction.rawShapeType.name.value,
@@ -889,7 +887,7 @@ internal class LlvmCompiler(
                 createFieldsObject(
                     target = fieldsObjectPointer,
                     fieldNames = fieldNames,
-                    shapeMetaType = shapeMetaType,
+                    shapeMetaType = instruction.metaType,
                     shapeType = instruction.shapeType,
                     context = it
                 )
@@ -900,7 +898,7 @@ internal class LlvmCompiler(
                     Identifier("fields") to fieldsObjectPointer,
                     Identifier("name") to strings.operandRaw(nameDefinition),
                 ),
-                objectType = shapeMetaType,
+                objectType = instruction.metaType,
                 objectPointer = shapePointer
             ))
             .addInstructions(LlvmPtrToInt(

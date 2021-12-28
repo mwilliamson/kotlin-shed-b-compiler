@@ -64,6 +64,7 @@ class DefineFunction(
 class DefineShape(
     val tagValue: TagValue?,
     val fields: List<FieldInspector>,
+    val metaType: StaticValueType,
     val shapeType: StaticValue,
 ): Instruction() {
     val rawShapeType: ShapeType
