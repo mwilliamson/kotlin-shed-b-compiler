@@ -433,7 +433,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         val (context2, shape) = malloc("shape", layout, context)
 
-        val (context4, constructorTableIndex) = compileConstructor(instruction.rawShapeType, context2)
+        val (context4, constructorTableIndex) = WasmShapes.compileConstructor(instruction.rawShapeType, context2)
         val context5 = context4.addInstruction(
             Wasm.I.i32Store(
                 address = Wasm.I.localGet(shape),
@@ -462,45 +462,6 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         ))
 
         return context8.addInstruction(Wasm.I.localGet(shape))
-    }
-
-    private fun compileConstructor(
-        shapeType: ShapeType,
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, WasmConstValue.TableEntryIndex> {
-        fun fieldParamIdentifier(field: Field) = "param_${field.name.value}"
-
-        val fields = shapeType.fields.values
-        val constructorName = shapeType.name.value
-        val layout = WasmObjects.shapeLayout(shapeType)
-
-        return WasmClosures.compileFunction(
-            functionName = constructorName,
-            freeVariables = listOf(),
-            positionalParams = listOf(),
-            namedParams = fields.map { field ->
-                field.name to WasmParam(
-                    fieldParamIdentifier(field),
-                    type = WasmData.genericValueType
-                )
-            },
-            compileBody = { constructorContext ->
-                val (constructorContext2, obj) = malloc("obj", layout, constructorContext)
-
-                val constructorContext3 = WasmObjects.compileObjectStore(
-                    objectPointer = Wasm.I.localGet(obj),
-                    layout = layout,
-                    fieldValues = fields.map { field ->
-                        field.name to Wasm.I.localGet(
-                            fieldParamIdentifier(field)
-                        )
-                    },
-                    context = constructorContext2,
-                )
-                constructorContext3.addInstruction(Wasm.I.localGet(obj))
-            },
-            context = context,
-        )
     }
 
     private fun compileCall(
