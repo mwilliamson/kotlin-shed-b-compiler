@@ -4,7 +4,6 @@ import kotlinx.collections.immutable.PersistentList
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.VariableBindingNode
-import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.types.*
 import java.math.BigInteger
 

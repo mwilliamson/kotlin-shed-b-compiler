@@ -508,9 +508,6 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             discriminatorsForIsExpressions = mapOf(
                 node to discriminator(tagValue)
             ),
-            shapeFields = mapOf(
-                shapeDeclaration to listOf()
-            ),
             shapeTagValues = mapOf(
                 shapeDeclaration to tagValue
             )
@@ -556,9 +553,6 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val inspector = SimpleCodeInspector(
             discriminatorsForIsExpressions = mapOf(
                 node to discriminator(tagValue(tag, "C"))
-            ),
-            shapeFields = mapOf(
-                shapeDeclaration to listOf()
             ),
             shapeTagValues = mapOf(
                 shapeDeclaration to tagValue
@@ -606,14 +600,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val receiverReference = variableReference("receiver")
         val fieldAccess = fieldAccess(receiverReference, "second")
 
-        val inspector = SimpleCodeInspector(
-            shapeFields = mapOf(
-                shapeDeclaration to listOf(
-                    fieldInspector(name = "first"),
-                    fieldInspector(name = "second")
-                )
-            )
-        )
+        val inspector = SimpleCodeInspector()
         val references = ResolvedReferencesMap(mapOf(
             shapeReference.nodeId to shapeDeclaration,
             receiverReference.nodeId to receiverTarget
@@ -665,12 +652,6 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val tag = tag(listOf("Example"), "Tag")
         val tagValue = tagValue(tag, "TagValue")
         val inspector = SimpleCodeInspector(
-            shapeFields = mapOf(
-                shapeDeclaration to listOf(
-                    fieldInspector(name = "first"),
-                    fieldInspector(name = "second")
-                )
-            ),
             shapeTagValues = mapOf(
                 shapeDeclaration to tagValue
             )
@@ -736,14 +717,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
         val updatedReference = variableReference("updated")
 
-        val inspector = SimpleCodeInspector(
-            shapeFields = mapOf(
-                shapeDeclaration to listOf(
-                    fieldInspector(name = "first"),
-                    fieldInspector(name = "second")
-                )
-            )
-        )
+        val inspector = SimpleCodeInspector()
         val references = ResolvedReferencesMap(mapOf(
             shapeReference.nodeId to shapeDeclaration,
             originalReference.nodeId to originalTarget,
@@ -804,14 +778,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val secondReference = variableReference("second")
         val addition = binaryOperation(BinaryOperator.SUBTRACT, firstReference, secondReference)
 
-        val inspector = SimpleCodeInspector(
-            shapeFields = mapOf(
-                shapeDeclaration to listOf(
-                    fieldInspector(name = "first"),
-                    fieldInspector(name = "second")
-                )
-            )
-        )
+        val inspector = SimpleCodeInspector()
         val references = ResolvedReferencesMap(mapOf(
             shapeReference.nodeId to shapeDeclaration,
             firstReference.nodeId to firstTarget,
@@ -933,12 +900,6 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
                 Pair(node, branch2) to discriminator(tagValue(tag, "value2")),
                 Pair(node, branch3) to discriminator(tagValue(tag, "value3")),
                 Pair(node, branch4) to discriminator(tagValue(tag, "value4"))
-            ),
-            shapeFields = mapOf(
-                shape1 to listOf(),
-                shape2 to listOf(),
-                shape3 to listOf(),
-                shape4 to listOf()
             ),
             shapeTagValues = mapOf(
                 shape1 to tagValue(tag, "value1"),

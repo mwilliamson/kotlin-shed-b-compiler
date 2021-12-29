@@ -1,7 +1,6 @@
 package org.shedlang.compiler.tests
 
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.FieldInspector
 import org.shedlang.compiler.types.*
 
 fun anySource(): Source {
@@ -646,11 +645,6 @@ fun field(name: String, type: Type, shapeId: Int = freshTypeId()) = Field(
     shapeId,
     Identifier(name),
     type,
-)
-
-fun fieldInspector(name: String) = FieldInspector(
-    name = Identifier(name),
-    source = anySource()
 )
 
 fun parametrizedUnionType(

@@ -9,16 +9,10 @@ interface CodeInspector {
     fun discriminatorForIsExpression(node: IsNode): Discriminator
     fun discriminatorForWhenBranch(node: WhenNode, branch: WhenBranchNode): Discriminator
     fun resolve(node: ReferenceNode): VariableBindingNode
-    fun shapeFields(node: ShapeBaseNode): List<FieldInspector>
     fun shapeTagValue(node: ShapeBaseNode): TagValue?
     fun typeOfExpression(node: ExpressionNode): Type
     fun functionType(node: FunctionNode): FunctionType
 }
-
-data class FieldInspector(
-    val name: Identifier,
-    val source: Source
-)
 
 class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
     override fun discriminatorForCast(node: CallBaseNode): Discriminator {
@@ -35,20 +29,6 @@ class ModuleCodeInspector(private val module: Module.Shed): CodeInspector {
 
     override fun resolve(node: ReferenceNode): VariableBindingNode {
         return module.references[node]
-    }
-
-    override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
-        val shapeType = shapeType(node)
-        return shapeType.fields.values.map { field ->
-            val fieldNode = node.fields
-                .find { fieldNode -> fieldNode.name == field.name }
-            val fieldSource = NodeSource(fieldNode ?: node)
-
-            FieldInspector(
-                name = field.name,
-                source = fieldSource
-            )
-        }
     }
 
     override fun shapeTagValue(node: ShapeBaseNode): TagValue? {
@@ -73,7 +53,6 @@ class SimpleCodeInspector(
     private val discriminatorsForWhenBranches: Map<Pair<WhenNode, WhenBranchNode>, Discriminator> = mapOf(),
     private val expressionTypes: Map<ExpressionNode, Type> = mapOf(),
     private val references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
-    private val shapeFields: Map<ShapeBaseNode, List<FieldInspector>> = mapOf(),
     private val shapeTagValues: Map<ShapeBaseNode, TagValue?> = mapOf(),
     private val functionTypes: Map<FunctionNode, FunctionType> = mapOf()
 ): CodeInspector {
@@ -91,10 +70,6 @@ class SimpleCodeInspector(
 
     override fun resolve(node: ReferenceNode): VariableBindingNode {
         return references[node] ?: error("unresolved node: $node")
-    }
-
-    override fun shapeFields(node: ShapeBaseNode): List<FieldInspector> {
-        return shapeFields[node] ?: error("missing fields for node: $node")
     }
 
     override fun shapeTagValue(node: ShapeBaseNode): TagValue? {
