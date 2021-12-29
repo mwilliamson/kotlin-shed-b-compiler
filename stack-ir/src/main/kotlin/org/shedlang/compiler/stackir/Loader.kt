@@ -608,13 +608,11 @@ class Loader(
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
-        val shapeFields = inspector.shapeFields(node)
         val tagValue = inspector.shapeTagValue(node)
 
         return persistentListOf(
             DefineShape(
                 tagValue,
-                shapeFields,
                 metaType = types.variableType(node) as StaticValueType,
                 shapeType = types.declaredType(node)
             ),

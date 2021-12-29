@@ -63,10 +63,12 @@ class DefineFunction(
 
 class DefineShape(
     val tagValue: TagValue?,
-    val fields: List<FieldInspector>,
     val metaType: StaticValueType,
     val shapeType: StaticValue,
 ): Instruction() {
+    val fields: Collection<Field>
+        get() = rawShapeType.fields.values
+
     val rawShapeType: ShapeType
         get() = rawValue(shapeType) as ShapeType
 }
