@@ -123,6 +123,11 @@ object StaticValueTypeGroup: TypeGroup {
 
 interface Type: StaticValue, TypeGroup {
     val shapeId: Int?
+
+    /**
+     * The fields of the type. If null, no assumptions can be made about the
+     * fields present on values of this type.
+     */
     val fields: Map<Identifier, Field>?
 
     fun fieldType(fieldName: Identifier): Type? {
@@ -160,10 +165,6 @@ interface BasicType : Type {
     override val shapeId: Int?
         get() = null
 
-    /**
-     * The fields of the type. If null, no assumptions can be made about the
-     * fields present on values of this type.
-     */
     override val fields: Map<Identifier, Field>?
         get() = null
 
