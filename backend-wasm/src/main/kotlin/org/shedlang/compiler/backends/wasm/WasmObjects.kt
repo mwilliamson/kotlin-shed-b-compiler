@@ -52,15 +52,40 @@ internal object WasmObjects {
         )
     }
 
-    internal fun compileFieldStore(objectType: Type, fieldName: Identifier): WasmInstruction {
-        val layout = layout(objectType)
+    internal fun compileFieldUpdate(
+        objectType: ShapeType,
+        fieldName: Identifier,
+        context: WasmFunctionContext
+    ): WasmFunctionContext {
+        val layout = shapeLayout(objectType)
 
-        return Wasm.I.i32Store(
-            offset = layout.fieldOffset(
-                fieldName = fieldName,
-            ),
-            alignment = OBJECT_ALIGNMENT,
+        val (context2, newFieldValue) = context.addLocal("newFieldValue")
+        val context3 = context2.addInstruction(Wasm.I.localSet(newFieldValue))
+
+        val (context4, originalObjectPointer) = context3.addLocal("originalObj")
+        val context5 = context4.addInstruction(Wasm.I.localSet(originalObjectPointer))
+
+        val (context6, updatedObjectPointer) = malloc("updatedObj", layout, context5)
+
+        val context7 = compileObjectStore(
+            objectPointer = Wasm.I.localGet(updatedObjectPointer),
+            layout = layout,
+            fieldValues = objectType.fields.values.map { field ->
+                val fieldValue = if (field.name == fieldName) {
+                    Wasm.I.localGet(newFieldValue)
+                } else {
+                    Wasm.I.i32Load(
+                        address = Wasm.I.localGet(originalObjectPointer),
+                        offset = layout.fieldOffset(fieldName = field.name),
+                        alignment = OBJECT_ALIGNMENT,
+                    )
+                }
+                field.name to fieldValue
+            },
+            context = context6,
         )
+
+        return context7.addInstruction(Wasm.I.localGet(updatedObjectPointer))
     }
 
     fun layout(type: Type): Layout {

@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.tests
 
 import com.natpryce.hamkrest.Matcher
 import com.natpryce.hamkrest.assertion.assertThat
-import com.natpryce.hamkrest.equalTo
 import kotlinx.collections.immutable.persistentListOf
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Nested
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.SimpleCodeInspector
-import org.shedlang.compiler.backends.serialiseCStringLiteral
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
@@ -684,6 +682,52 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(2))
+    }
+
+    @Test
+    fun canUpdateFieldsOnShapeValue() {
+        val shapeType = shapeType(
+            fields = listOf(
+                field("first", type = IntType),
+                field("second", type = IntType)
+            )
+        )
+        val xId = freshNodeId()
+        val yId = freshNodeId()
+        val instructions = listOf(
+            DefineShape(
+                tagValue = null,
+                metaType = metaType(shapeType),
+            ),
+
+            PushValue(IrInt(1)),
+            PushValue(IrInt(20)),
+            Call(positionalArgumentCount = 0, namedArgumentNames = listOf(Identifier("first"), Identifier("second"))),
+            LocalStore(xId, Identifier("x")),
+
+            LocalLoad(xId, Identifier("x")),
+            PushValue(IrInt(300)),
+            FieldUpdate(fieldName = Identifier("second"), receiverType = shapeType),
+            LocalStore(yId, Identifier("y")),
+
+            LocalLoad(xId, Identifier("x")),
+            FieldAccess(fieldName = Identifier("first"), receiverType = shapeType),
+
+            LocalLoad(xId, Identifier("x")),
+            FieldAccess(fieldName = Identifier("second"), receiverType = shapeType),
+            IntAdd,
+
+            LocalLoad(yId, Identifier("y")),
+            FieldAccess(fieldName = Identifier("first"), receiverType = shapeType),
+            IntAdd,
+
+            LocalLoad(yId, Identifier("y")),
+            FieldAccess(fieldName = Identifier("second"), receiverType = shapeType),
+            IntAdd,
+        )
+        val value = executeInstructions(instructions, type = IntType)
+
+        assertThat(value, isInt(322))
     }
 
     @Test

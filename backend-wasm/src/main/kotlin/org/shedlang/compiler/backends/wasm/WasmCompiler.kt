@@ -9,6 +9,7 @@ import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.stackir.*
+import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
 import java.lang.UnsupportedOperationException
 
@@ -151,6 +152,14 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     objectType = instruction.receiverType,
                     fieldName = instruction.fieldName
                 ))
+            }
+
+            is FieldUpdate -> {
+                return WasmObjects.compileFieldUpdate(
+                    objectType = instruction.receiverType as ShapeType,
+                    fieldName = instruction.fieldName,
+                    context = context,
+                )
             }
 
             is IntAdd -> {
