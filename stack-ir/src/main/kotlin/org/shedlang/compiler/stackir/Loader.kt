@@ -614,7 +614,6 @@ class Loader(
             DefineShape(
                 tagValue,
                 metaType = types.variableType(node) as StaticValueType,
-                shapeType = types.declaredType(node)
             ),
             LocalStore(node)
         )
