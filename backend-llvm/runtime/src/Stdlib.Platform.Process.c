@@ -7,7 +7,7 @@
 
 #include "../../../c-bindings/Stdlib.Lists.h"
 
-ShedAny shed_module_fun__Stdlib__Platform__Process__args() {
+ShedAny shed_module_fun__Stdlib__Platform__Process__args(ShedEnvironment env) {
     // TODO: deal with encoding
     ShedAny args = shed__module_value__Stdlib_Lists.nil;
 
