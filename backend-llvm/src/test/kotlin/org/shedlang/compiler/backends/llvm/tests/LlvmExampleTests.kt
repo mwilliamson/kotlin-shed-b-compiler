@@ -31,7 +31,6 @@ class LlvmExampleTests {
                     val compilationResult = LlvmCompiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder()).compile(
                         mainModule = testProgram.mainModule
                     )
-                    println(withLineNumbers(compilationResult.llvmIr))
                     outputPath.toFile().writeText(compilationResult.llvmIr)
 
                     val result = executeLlvmIr(outputPath, linkerFiles = compilationResult.linkerFiles, args = testProgram.args)
