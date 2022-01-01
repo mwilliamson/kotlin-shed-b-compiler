@@ -109,7 +109,6 @@ object LlvmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
                 @boundary = private unnamed_addr constant [17 x i8] c"=== BOUNDARY ===\00"
                 @format_int64 = private unnamed_addr constant [4 x i8] c"%ld\00"
             """.trimIndent()
-            println(withLineNumbers(program))
             outputPath.toFile().writeText(program)
             val stdout = executeLlvmIr(
                 outputPath,
