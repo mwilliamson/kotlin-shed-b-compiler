@@ -46,6 +46,6 @@ ShedAny shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_i
 
 ShedAny shed_operation_handler_exit(ShedAny exit_value);
 
-ShedAny shed_exit_value;
+extern ShedAny shed_exit_value;
 
 #endif

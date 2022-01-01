@@ -456,7 +456,7 @@ internal class EffectCompiler(
     private val exitValueDeclaration = LlvmGlobalDefinition(
         name = "shed_exit_value",
         type = compiledValueType,
-        value = null
+        value = LlvmOperandInt(0)
     )
 
     private fun loadExitValue(target: LlvmVariable): LlvmLoad {
