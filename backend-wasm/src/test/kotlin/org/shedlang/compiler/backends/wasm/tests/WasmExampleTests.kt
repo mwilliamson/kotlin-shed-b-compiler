@@ -4,6 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.CompilerException
 import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.WasmBackend
@@ -52,10 +53,7 @@ class WasmExampleTests {
                             testProgram.expectedResult
                         )
                     }
-                } catch (error: SourceError) {
-                    print(error.source.describe())
-                    throw error
-                } catch (error: CompilerError) {
+                } catch (error: CompilerException) {
                     print(error.source.describe())
                     throw error
                 }

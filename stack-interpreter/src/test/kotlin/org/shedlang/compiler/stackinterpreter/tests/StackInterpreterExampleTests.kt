@@ -3,9 +3,7 @@ package org.shedlang.compiler.stackinterpreter.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.CompilerError
-import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleSet
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.FunctionDefinitionNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleStatementNode
@@ -15,7 +13,6 @@ import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackinterpreter.World
 import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
-import org.shedlang.compiler.SourceError
 
 class StackInterpreterExampleTests {
     private val disabledTests = setOf<String>(
@@ -44,10 +41,7 @@ class StackInterpreterExampleTests {
                         stdout = world.stdout
                     )
                     assertThat(executionResult, testProgram.expectedResult)
-                } catch (error: SourceError) {
-                    print(error.source.describe())
-                    throw error
-                } catch (error: CompilerError) {
+                } catch (error: CompilerException) {
                     print(error.source.describe())
                     throw error
                 }
