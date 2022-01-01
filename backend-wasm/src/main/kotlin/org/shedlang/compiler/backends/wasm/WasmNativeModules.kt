@@ -16,6 +16,7 @@ internal object WasmNativeModules {
         listOf(Identifier("Core"), Identifier("Cast")) to ::generateCoreCastModule,
         listOf(Identifier("Core"), Identifier("Io")) to ::generateCoreIoModule,
         listOf(Identifier("Core"), Identifier("IntToString")) to ::generateCoreIntToStringModule,
+        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")) to ::generateStdlibPlatformProcessModule,
     )
 
     fun moduleInitialisation(moduleName: ModuleName) = modules[moduleName]
@@ -94,6 +95,31 @@ internal object WasmNativeModules {
         )
         val exports = listOf(
             Pair(Identifier("intToString"), Wasm.I.localGet(closure))
+        )
+        return Pair(context2, exports)
+    }
+
+    private fun generateStdlibPlatformProcessModule(
+        context: WasmFunctionContext,
+    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+        val symbolName = ShedRuntime.functionSymbolName(
+            listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")),
+            Identifier("args"),
+        )
+        val argsImport = Wasm.importFunction(
+            moduleName = "env",
+            entityName = symbolName,
+            identifier = symbolName,
+            params = listOf(),
+            results = listOf(WasmData.genericValueType),
+        )
+        val (context2, closure) = WasmClosures.compileCreateForFunction(
+            tableIndex = WasmConstValue.TableEntryIndex(symbolName),
+            freeVariables = listOf(),
+            context.addImport(argsImport).addTableEntry(argsImport.identifier),
+        )
+        val exports = listOf(
+            Pair(Identifier("args"), Wasm.I.localGet(closure))
         )
         return Pair(context2, exports)
     }
