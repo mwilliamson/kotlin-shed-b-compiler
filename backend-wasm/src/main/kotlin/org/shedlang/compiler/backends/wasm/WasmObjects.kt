@@ -60,22 +60,22 @@ internal object WasmObjects {
         val layout = shapeLayout(objectType)
 
         val (context2, newFieldValue) = context.addLocal("newFieldValue")
-        val context3 = context2.addInstruction(Wasm.I.localSet(newFieldValue))
+        val context3 = context2.addInstruction(newFieldValue.set())
 
         val (context4, originalObjectPointer) = context3.addLocal("originalObj")
-        val context5 = context4.addInstruction(Wasm.I.localSet(originalObjectPointer))
+        val context5 = context4.addInstruction(originalObjectPointer.set())
 
         val (context6, updatedObjectPointer) = malloc("updatedObj", layout, context5)
 
         val context7 = compileObjectStore(
-            objectPointer = Wasm.I.localGet(updatedObjectPointer),
+            objectPointer = updatedObjectPointer.get(),
             layout = layout,
             fieldValues = objectType.fields.values.map { field ->
                 val fieldValue = if (field.name == fieldName) {
-                    Wasm.I.localGet(newFieldValue)
+                    newFieldValue.get()
                 } else {
                     Wasm.I.i32Load(
-                        address = Wasm.I.localGet(originalObjectPointer),
+                        address = originalObjectPointer.get(),
                         offset = layout.fieldOffset(fieldName = field.name),
                         alignment = OBJECT_ALIGNMENT,
                     )
@@ -85,7 +85,7 @@ internal object WasmObjects {
             context = context6,
         )
 
-        return context7.addInstruction(Wasm.I.localGet(updatedObjectPointer))
+        return context7.addInstruction(updatedObjectPointer.get())
     }
 
     fun layout(type: Type): Layout {

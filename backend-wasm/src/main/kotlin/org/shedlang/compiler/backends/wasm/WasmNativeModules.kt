@@ -41,7 +41,7 @@ internal object WasmNativeModules {
             context.addImport(intToStringImport).addTableEntry(intToStringImport.identifier),
         )
         val exports = listOf(
-            Pair(Identifier("cast"), Wasm.I.localGet(closure))
+            Pair(Identifier("cast"), closure.get())
         )
         val context3 = context2.addDependency(listOf(Identifier("Core"), Identifier("Options")))
         return Pair(context3, exports)
@@ -69,7 +69,7 @@ internal object WasmNativeModules {
             context,
         )
         val exports = listOf(
-            Pair(Identifier("print"), Wasm.I.localGet(closure))
+            Pair(Identifier("print"), closure.get())
         )
         return Pair(context2, exports)
     }
@@ -94,7 +94,7 @@ internal object WasmNativeModules {
             context.addImport(intToStringImport).addTableEntry(intToStringImport.identifier),
         )
         val exports = listOf(
-            Pair(Identifier("intToString"), Wasm.I.localGet(closure))
+            Pair(Identifier("intToString"), closure.get())
         )
         return Pair(context2, exports)
     }
@@ -119,7 +119,7 @@ internal object WasmNativeModules {
             context.addImport(argsImport).addTableEntry(argsImport.identifier),
         )
         val exports = listOf(
-            Pair(Identifier("args"), Wasm.I.localGet(closure))
+            Pair(Identifier("args"), closure.get())
         )
         return Pair(context2, exports)
     }

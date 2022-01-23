@@ -8,7 +8,6 @@ import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmDataSegment
-import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
 import org.shedlang.compiler.backends.wasm.wasm.WasmFunction
 import org.shedlang.compiler.backends.wasm.wasm.WasmGlobal
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
@@ -239,8 +238,8 @@ internal data class WasmFunctionContext(
     private val instructions: PersistentList<WasmInstruction>,
     private val nextLocalIndex: Int,
     private val locals: PersistentList<String>,
-    private val variableIdToLocal: PersistentMap<Int, String>,
-    private val onLocalStore: PersistentMap<Int, PersistentList<(String) -> WasmInstruction>>,
+    private val variableIdToLocal: PersistentMap<Int, WasmLocalRef>,
+    private val onLocalStore: PersistentMap<Int, PersistentList<(WasmLocalRef) -> WasmInstruction>>,
     private val onLabel: PersistentMap<Int, PersistentList<WasmInstruction>>,
     private val globalContext: WasmGlobalContext,
 ) {
@@ -274,20 +273,20 @@ internal data class WasmFunctionContext(
         )
     }
 
-    fun addLocal(name: String = "temp"): Pair<WasmFunctionContext, String> {
+    fun addLocal(name: String = "temp"): Pair<WasmFunctionContext, WasmLocalRef> {
         val local = "local_${name}_${nextLocalIndex}"
         val newContext = copy(locals = locals.add(local), nextLocalIndex = nextLocalIndex + 1)
-        return Pair(newContext, local)
+        return Pair(newContext, WasmLocalRef(local))
     }
 
-    fun bindVariables(variables: List<Pair<Int, String>>): WasmFunctionContext {
+    fun bindVariables(variables: List<Pair<Int, WasmLocalRef>>): WasmFunctionContext {
         return copy(variableIdToLocal = variables.fold(
             variableIdToLocal,
             { acc, (variableId, name) -> acc.put(variableId, name) }
         ))
     }
 
-    fun variableToLocal(variableId: Int, name: Identifier): Pair<WasmFunctionContext, String> {
+    fun variableToLocal(variableId: Int, name: Identifier): Pair<WasmFunctionContext, WasmLocalRef> {
         val existingLocal = variableIdToLocal[variableId]
         if (existingLocal == null) {
             val (context2, local) = addLocal(name.value)
@@ -298,7 +297,7 @@ internal data class WasmFunctionContext(
         }
     }
 
-    fun variableToStoredLocal(variableId: Int): String {
+    fun variableToStoredLocal(variableId: Int): WasmLocalRef {
         val existingLocal = variableIdToLocal[variableId]
         if (existingLocal == null) {
             throw CompilerError("variable is not set", source = NullSource)
@@ -309,7 +308,7 @@ internal data class WasmFunctionContext(
 
     fun variableToStoredLocal(
         variableId: Int,
-        onStore: (String) -> WasmInstruction,
+        onStore: (WasmLocalRef) -> WasmInstruction,
     ): WasmFunctionContext {
         val existingLocal = variableIdToLocal[variableId]
         if (existingLocal == null) {
@@ -319,7 +318,7 @@ internal data class WasmFunctionContext(
         }
     }
 
-    private fun addOnLocalStore(variableId: Int, onStore: (String) -> WasmInstruction): WasmFunctionContext {
+    private fun addOnLocalStore(variableId: Int, onStore: (WasmLocalRef) -> WasmInstruction): WasmFunctionContext {
         return copy(onLocalStore = onLocalStore.put(variableId, onLocalStore.getOrDefault(variableId, persistentListOf()).add(onStore)))
     }
 

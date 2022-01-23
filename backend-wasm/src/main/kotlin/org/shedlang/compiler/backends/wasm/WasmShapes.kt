@@ -2,9 +2,11 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmDataSegmentKey
+import org.shedlang.compiler.backends.wasm.wasm.WasmLocal
 import org.shedlang.compiler.backends.wasm.wasm.WasmParam
 import org.shedlang.compiler.stackir.Image
 import org.shedlang.compiler.stackir.defineShapeFieldGet
@@ -32,7 +34,7 @@ private class WasmShapeCompiler(
     private val shapeType: ShapeType,
     private val metaType: StaticValueType,
     private val metaTypeLayout: WasmObjects.ShapeTypeLayout,
-    private val metaTypePointer: String,
+    private val metaTypePointer: WasmLocalRef,
 ) {
     fun compileDefineShape(context: WasmFunctionContext): WasmFunctionContext {
         val (context2, constructorTableIndex) = compileConstructor(context)
@@ -46,7 +48,7 @@ private class WasmShapeCompiler(
         val (context7, nameMemoryIndex) = context6.addSizedStaticUtf8String(shapeType.name.value)
         val context8 = compileStoreName(nameMemoryIndex, context7)
 
-        return context8.addInstruction(Wasm.I.localGet(metaTypePointer))
+        return context8.addInstruction(metaTypePointer.get())
     }
 
     private fun compileConstructor(
@@ -72,7 +74,7 @@ private class WasmShapeCompiler(
                 val (constructorContext2, obj) = malloc("obj", layout, constructorContext)
 
                 val constructorContext3 = WasmObjects.compileObjectStore(
-                    objectPointer = Wasm.I.localGet(obj),
+                    objectPointer = obj.get(),
                     layout = layout,
                     fieldValues = fields.map { field ->
                         field.name to Wasm.I.localGet(
@@ -81,7 +83,7 @@ private class WasmShapeCompiler(
                     },
                     context = constructorContext2,
                 )
-                constructorContext3.addInstruction(Wasm.I.localGet(obj))
+                constructorContext3.addInstruction(obj.get())
             },
             context = context,
         )
@@ -93,7 +95,7 @@ private class WasmShapeCompiler(
     ): WasmFunctionContext {
         return context.addInstruction(
             Wasm.I.i32Store(
-                address = Wasm.I.localGet(metaTypePointer),
+                address = metaTypePointer.get(),
                 offset = metaTypeLayout.closureOffset,
                 value = Wasm.I.i32Const(constructorTableIndex),
             )
@@ -109,7 +111,7 @@ private class WasmShapeCompiler(
         } else {
             context.addInstruction(
                 Wasm.I.i32Store(
-                    address = Wasm.I.localGet(metaTypePointer),
+                    address = metaTypePointer.get(),
                     offset = metaTypeLayout.tagValueOffset,
                     value = Wasm.I.i32Const(WasmConstValue.TagValue(tagValue)),
                 )
@@ -117,7 +119,7 @@ private class WasmShapeCompiler(
         }
     }
 
-    private fun compileCreateFieldsObject(context: WasmFunctionContext): Pair<WasmFunctionContext, String> {
+    private fun compileCreateFieldsObject(context: WasmFunctionContext): Pair<WasmFunctionContext, WasmLocalRef> {
         val fieldsType = metaType.fieldType(Identifier("fields")) as ShapeType
         val fieldsObjectLayout = WasmObjects.shapeLayout(fieldsType)
         val (context2, fieldsObjectPointer) = malloc("fields", fieldsObjectLayout, context)
@@ -144,13 +146,13 @@ private class WasmShapeCompiler(
         field: Field,
         fieldObjectLayout: WasmObjects.ShapeLayout,
         context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, String> {
+    ): Pair<WasmFunctionContext, WasmLocalRef> {
         val (context2, fieldObjectPointer) = malloc(field.name.value, fieldObjectLayout, context)
 
         val (context3, nameMemoryIndex) = context2.addSizedStaticUtf8String(field.name.value)
         val context4 = context3.addInstruction(
             Wasm.I.i32Store(
-                address = Wasm.I.localGet(fieldObjectPointer),
+                address = fieldObjectPointer.get(),
                 offset = fieldObjectLayout.fieldOffset(Identifier("name")),
                 value = Wasm.I.i32Const(nameMemoryIndex),
             )
@@ -162,9 +164,9 @@ private class WasmShapeCompiler(
         val (context5, getPointer) = compiler.compileCreateFunction(defineGetInstruction, context4)
         val context6 = context5.addInstruction(
             Wasm.I.i32Store(
-                address = Wasm.I.localGet(fieldObjectPointer),
+                address = fieldObjectPointer.get(),
                 offset = fieldObjectLayout.fieldOffset(Identifier("get")),
-                value = Wasm.I.localGet(getPointer),
+                value = getPointer.get(),
             )
         )
 
@@ -174,27 +176,27 @@ private class WasmShapeCompiler(
     }
 
     private fun compileStoreFieldObject(
-        fieldsObjectPointer: String,
+        fieldsObjectPointer: WasmLocalRef,
         fieldsObjectLayout: WasmObjects.ShapeLayout,
         fieldName: Identifier,
-        fieldValue: String,
+        fieldValue: WasmLocalRef,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
         return context.addInstruction(
             Wasm.I.i32Store(
-                address = Wasm.I.localGet(fieldsObjectPointer),
+                address = fieldsObjectPointer.get(),
                 offset = fieldsObjectLayout.fieldOffset(fieldName),
-                value = Wasm.I.localGet(fieldValue),
+                value = fieldValue.get(),
             )
         )
     }
 
-    private fun compileStoreFieldsObject(fieldsObjectPointer: String, context: WasmFunctionContext): WasmFunctionContext {
+    private fun compileStoreFieldsObject(fieldsObjectPointer: WasmLocalRef, context: WasmFunctionContext): WasmFunctionContext {
         return context.addInstruction(
             Wasm.I.i32Store(
-                address = Wasm.I.localGet(metaTypePointer),
+                address = metaTypePointer.get(),
                 offset = metaTypeLayout.fieldOffset(Identifier("fields")),
-                value = Wasm.I.localGet(fieldsObjectPointer),
+                value = fieldsObjectPointer.get(),
             )
         )
     }
@@ -205,7 +207,7 @@ private class WasmShapeCompiler(
     ): WasmFunctionContext {
         return context.addInstruction(
             Wasm.I.i32Store(
-                address = Wasm.I.localGet(metaTypePointer),
+                address = metaTypePointer.get(),
                 offset = metaTypeLayout.fieldOffset(Identifier("name")),
                 value = Wasm.I.i32Const(nameMemoryIndex),
             )

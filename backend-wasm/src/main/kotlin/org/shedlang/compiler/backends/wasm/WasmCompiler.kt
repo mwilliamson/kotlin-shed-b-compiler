@@ -142,9 +142,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             is Duplicate -> {
                 val (context2, temp) = context.addLocal("duplicate")
                 return context2
-                    .addInstruction(Wasm.I.localSet(temp))
-                    .addInstruction(Wasm.I.localGet(temp))
-                    .addInstruction(Wasm.I.localGet(temp))
+                    .addInstruction(temp.set())
+                    .addInstruction(temp.get())
+                    .addInstruction(temp.get())
             }
 
             is FieldAccess -> {
@@ -170,13 +170,13 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 val (context2, left) = context.addLocal("left")
                 val (context3, right) = context2.addLocal("left")
                 return context3
-                    .addInstruction(Wasm.I.localSet(right))
-                    .addInstruction(Wasm.I.localSet(left))
+                    .addInstruction(right.set())
+                    .addInstruction(left.set())
                     .addInstruction(Wasm.I.if_(
                         results = listOf(WasmData.intType),
-                        condition = Wasm.I.i32Equals(Wasm.I.localGet(right), Wasm.I.i32Const(0)),
+                        condition = Wasm.I.i32Equals(right.get(), Wasm.I.i32Const(0)),
                         ifTrue = listOf(Wasm.I.i32Const(0)),
-                        ifFalse = listOf(Wasm.I.i32DivideSigned(Wasm.I.localGet(left), Wasm.I.localGet(right))),
+                        ifFalse = listOf(Wasm.I.i32DivideSigned(left.get(), right.get())),
                     ))
             }
 
@@ -203,8 +203,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             is IntMinus -> {
                 val (context2, local) = context.addLocal()
                 return context2
-                    .addInstruction(Wasm.I.localSet(local))
-                    .addInstruction(Wasm.I.i32Sub(Wasm.I.i32Const(0), Wasm.I.localGet(local)))
+                    .addInstruction(local.set())
+                    .addInstruction(Wasm.I.i32Sub(Wasm.I.i32Const(0), local.get()))
             }
 
             is IntMultiply -> {
@@ -244,18 +244,18 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is LocalLoad -> {
-                val identifier = context.variableToStoredLocal(
+                val local = context.variableToStoredLocal(
                     variableId = instruction.variableId,
                 )
-                return context.addInstruction(Wasm.I.localGet(identifier))
+                return context.addInstruction(local.get())
             }
 
             is LocalStore -> {
-                val (context2, identifier) = context.variableToLocal(
+                val (context2, local) = context.variableToLocal(
                     variableId = instruction.variableId,
                     name = instruction.name,
                 )
-                val context3 = context2.addInstruction(Wasm.I.localSet(identifier))
+                val context3 = context2.addInstruction(local.set())
                 return context3.onLocalStore(instruction.variableId)
             }
 
@@ -279,7 +279,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     val (currentContext2, exportValue) = currentContext.variableToLocal(exportVariableId, exportName)
                     Pair(
                         currentContext2,
-                        currentExports.add(Pair(exportName, Wasm.I.localGet(exportValue)))
+                        currentExports.add(Pair(exportName, exportValue.get()))
                     )
                 }
 
@@ -341,10 +341,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 val (context2, temp1) = context.addLocal()
                 val (context3, temp2) = context2.addLocal()
                 return context3
-                    .addInstruction(Wasm.I.localSet(temp1))
-                    .addInstruction(Wasm.I.localSet(temp2))
-                    .addInstruction(Wasm.I.localGet(temp1))
-                    .addInstruction(Wasm.I.localGet(temp2))
+                    .addInstruction(temp1.set())
+                    .addInstruction(temp2.set())
+                    .addInstruction(temp1.get())
+                    .addInstruction(temp2.get())
             }
 
             is TagValueAccess -> {
@@ -401,20 +401,20 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     private fun compileDefineFunction(instruction: DefineFunction, context: WasmFunctionContext): WasmFunctionContext {
         val (context2, closurePointer) = compileCreateFunction(instruction, context)
-        return context2.addInstruction(Wasm.I.localGet(closurePointer))
+        return context2.addInstruction(closurePointer.get())
     }
 
     internal fun compileCreateFunction(
         instruction: DefineFunction,
         context: WasmFunctionContext
-    ): Pair<WasmFunctionContext, String> {
+    ): Pair<WasmFunctionContext, WasmLocalRef> {
         val freeVariables = findFreeVariables(instruction)
 
-        val paramBindings = mutableListOf<Pair<Int, String>>()
+        val paramBindings = mutableListOf<Pair<Int, WasmLocalRef>>()
 
         fun compileParameter(parameter: DefineFunction.Parameter): WasmParam {
             val identifier = "param_${parameter.name.value}"
-            paramBindings.add(parameter.variableId to identifier)
+            paramBindings.add(parameter.variableId to WasmLocalRef(identifier))
             return WasmParam(identifier = identifier, type = WasmData.genericValueType)
         }
 
@@ -445,28 +445,28 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         context: WasmFunctionContext,
     ): WasmFunctionContext {
         val (context2, positionalArgLocals) = (0 until positionalArgumentCount)
-            .fold(Pair(context, persistentListOf<String>())) { (currentContext, args), argIndex ->
+            .fold(Pair(context, persistentListOf<WasmLocalRef>())) { (currentContext, args), argIndex ->
                 val (currentContext2, arg) = currentContext.addLocal("arg_$argIndex")
                 Pair(currentContext2, args.add(arg))
             }
 
         val (context3, namedArgLocals) = namedArgumentNames
-            .fold(Pair(context2, persistentListOf<String>())) { (currentContext, args), argName ->
+            .fold(Pair(context2, persistentListOf<WasmLocalRef>())) { (currentContext, args), argName ->
                 val (currentContext2, arg) = currentContext.addLocal("arg_${argName.value}")
                 Pair(currentContext2, args.add(arg))
             }
 
         val context4 = (positionalArgLocals + namedArgLocals).foldRight(context3) { local, currentContext ->
-            currentContext.addInstruction(Wasm.I.localSet(local))
+            currentContext.addInstruction(local.set())
         }
 
         val (context5, callee) = context4.addLocal("callee")
-        val context6 = context5.addInstruction(Wasm.I.localSet(callee))
+        val context6 = context5.addInstruction(callee.set())
 
         return WasmClosures.compileCall(
-            closurePointer = Wasm.I.localGet(callee),
-            positionalArguments = positionalArgLocals.map(Wasm.I::localGet),
-            namedArguments = namedArgumentNames.zip(namedArgLocals.map(Wasm.I::localGet)),
+            closurePointer = callee.get(),
+            positionalArguments = positionalArgLocals.map(WasmLocalRef::get),
+            namedArguments = namedArgumentNames.zip(namedArgLocals.map(WasmLocalRef::get)),
             context = context6,
         )
     }
@@ -506,7 +506,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val (context2, local) = context.addLocal()
 
         return context2
-            .addInstruction(Wasm.I.localSet(local))
-            .addInstruction(Wasm.I.i32Sub(Wasm.I.i32Const(1), Wasm.I.localGet(local)))
+            .addInstruction(local.set())
+            .addInstruction(Wasm.I.i32Sub(Wasm.I.i32Const(1), local.get()))
     }
 }
