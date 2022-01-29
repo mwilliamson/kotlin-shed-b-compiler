@@ -5,8 +5,6 @@
 
 #include "./shed.h"
 
-struct EffectHandler;
-
 struct OperationHandler {
     void* function;
     void* context;
