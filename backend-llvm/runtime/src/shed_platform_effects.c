@@ -8,7 +8,7 @@ static struct EffectHandler default_effect_handler = {
 
 static struct EffectHandler* effect_handler_stack = &default_effect_handler;
 
-void shed_effect_handlers_discard() {
+void shed_effects_discard() {
     effect_handler_stack = effect_handler_stack->next;
 }
 
@@ -17,15 +17,15 @@ ShedAny shed_operation_handler_exit(ShedAny exit_value) {
     longjmp(*effect_handler_stack->exit_env, 1);
 }
 
-void shed_effect_handlers_set_state(ShedAny state) {
+void shed_effects_set_state(ShedAny state) {
     effect_handler_stack->child_state = state;
 }
 
-ShedAny shed_effect_handlers_get_state(void) {
+ShedAny shed_effects_get_state(void) {
     return effect_handler_stack->child_state;
 }
 
-struct EffectHandler* shed_effect_handlers_push(
+struct EffectHandler* shed_effects_push(
     EffectId effect_id,
     OperationIndex operation_count,
     jmp_buf* env
@@ -41,7 +41,7 @@ struct EffectHandler* shed_effect_handlers_push(
     return effect_handler;
 }
 
-void shed_effect_handlers_set_operation_handler(
+void shed_effects_set_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index,
     void* function,
@@ -51,7 +51,7 @@ void shed_effect_handlers_set_operation_handler(
     effect_handler->operation_handlers[operation_index].context = context;
 }
 
-struct EffectHandler* shed_effect_handlers_find_effect_handler(EffectId effect_id) {
+struct EffectHandler* shed_effects_find_effect_handler(EffectId effect_id) {
     struct EffectHandler* effect_handler = effect_handler_stack;
     while (effect_handler != NULL) {
         if (effect_handler->effect_id == effect_id) {
@@ -63,31 +63,31 @@ struct EffectHandler* shed_effect_handlers_find_effect_handler(EffectId effect_i
     return NULL;
 }
 
-struct OperationHandler* shed_effect_handlers_get_operation_handler(
+struct OperationHandler* shed_effects_get_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index
 ) {
     return &effect_handler->operation_handlers[operation_index];
 }
 
-void* shed_effect_handlers_operation_handler_get_function(
+void* shed_effects_operation_handler_get_function(
     struct OperationHandler* operation_handler
 ) {
     return operation_handler->function;
 }
 
-void* shed_effect_handlers_operation_handler_get_context(
+void* shed_effects_operation_handler_get_context(
     struct OperationHandler* operation_handler
 ) {
     return operation_handler->context;
 }
 
-struct EffectHandler* shed_effect_handlers_enter(struct EffectHandler* effect_handler) {
+struct EffectHandler* shed_effects_enter(struct EffectHandler* effect_handler) {
     struct EffectHandler* previous_stack = effect_handler_stack;
     effect_handler_stack = effect_handler->next;
     return previous_stack;
 }
 
-void shed_effect_handlers_restore(struct EffectHandler* effect_handler) {
+void shed_effects_restore(struct EffectHandler* effect_handler) {
     effect_handler_stack = effect_handler;
 }

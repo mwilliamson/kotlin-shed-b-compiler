@@ -19,20 +19,20 @@ ShedString shed_module_fun__Stdlib__Platform__StringBuilder__build(ShedEnvironme
     struct StringBuilder string_builder;
     string_builder_init(&string_builder, initial_capacity);
 
-    struct EffectHandler* effect_handler = shed_effect_handlers_push(effect_id, 1, 0);
-    shed_effect_handlers_set_operation_handler(effect_handler, 0, handle_write, &string_builder);
+    struct EffectHandler* effect_handler = shed_effects_push(effect_id, 1, 0);
+    shed_effects_set_operation_handler(effect_handler, 0, handle_write, &string_builder);
 
     ShedAny (*func)(ShedEnvironment) = (ShedAny (*)(ShedEnvironment)) closure->function;
     func(closure->environment);
 
-    shed_effect_handlers_discard();
+    shed_effects_discard();
 
     return string_builder_build(&string_builder);
 }
 
 ShedAny shed_module_fun__Stdlib__Platform__StringBuilder__write(ShedEnvironment env, ShedString value) {
-    struct EffectHandler* effect_handler = shed_effect_handlers_find_effect_handler(effect_id);
-    struct OperationHandler* operation_handler = shed_effect_handlers_get_operation_handler(effect_handler, 0);
+    struct EffectHandler* effect_handler = shed_effects_find_effect_handler(effect_id);
+    struct OperationHandler* operation_handler = shed_effects_get_operation_handler(effect_handler, 0);
     ShedAny (*function)(struct EffectHandler*, void*, ShedString) = operation_handler->function;
     return function(effect_handler, operation_handler->context, value);
 }

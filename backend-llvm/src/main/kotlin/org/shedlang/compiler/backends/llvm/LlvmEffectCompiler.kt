@@ -166,7 +166,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersSetOperationHandlerDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_set_operation_handler",
+        name = "shed_effects_set_operation_handler",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf(
@@ -195,7 +195,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersPushDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_push",
+        name = "shed_effects_push",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = effectHandlerType,
         parameters = listOf(
@@ -296,7 +296,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersDiscardDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_discard",
+        name = "shed_effects_discard",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf()
@@ -310,7 +310,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersFindEffectHandlerDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_find_effect_handler",
+        name = "shed_effects_find_effect_handler",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = effectHandlerType,
         parameters = listOf(
@@ -332,7 +332,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersOperationHandlerGetFunctionDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_operation_handler_get_function",
+        name = "shed_effects_operation_handler_get_function",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.voidPointer,
         parameters = listOf(
@@ -352,7 +352,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersOperationHandlerGetContextDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_operation_handler_get_context",
+        name = "shed_effects_operation_handler_get_context",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.voidPointer,
         parameters = listOf(
@@ -372,7 +372,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersGetOperationHandlerDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_get_operation_handler",
+        name = "shed_effects_get_operation_handler",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = operationHandlerType,
         parameters = listOf(
@@ -428,7 +428,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersEnterDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_enter",
+        name = "shed_effects_enter",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = effectHandlerType,
         parameters = listOf(
@@ -444,7 +444,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersRestoreDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_restore",
+        name = "shed_effects_restore",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf(
@@ -497,7 +497,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersSetStateDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_set_state",
+        name = "shed_effects_set_state",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf(
@@ -513,7 +513,7 @@ internal class EffectCompiler(
     }
 
     private val effectHandlersGetStateDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_get_state",
+        name = "shed_effects_get_state",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = compiledValueType,
         parameters = listOf()

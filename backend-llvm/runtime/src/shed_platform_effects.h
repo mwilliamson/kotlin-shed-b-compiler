@@ -18,27 +18,27 @@ struct EffectHandler {
     struct OperationHandler operation_handlers[];
 };
 
-void shed_effect_handlers_discard();
-struct EffectHandler* shed_effect_handlers_push(
+void shed_effects_discard();
+struct EffectHandler* shed_effects_push(
     EffectId effect_id,
     OperationIndex operation_count,
     jmp_buf* env
 );
-void shed_effect_handlers_set_operation_handler(
+void shed_effects_set_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index,
     void* function,
     void* context
 );
-struct EffectHandler* shed_effect_handlers_find_effect_handler(EffectId effect_id);
-struct OperationHandler* shed_effect_handlers_get_operation_handler(
+struct EffectHandler* shed_effects_find_effect_handler(EffectId effect_id);
+struct OperationHandler* shed_effects_get_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index
 );
-void* shed_effect_handlers_operation_handler_get_function(
+void* shed_effects_operation_handler_get_function(
     struct OperationHandler* operation_handler
 );
-void* shed_effect_handlers_operation_handler_get_context(
+void* shed_effects_operation_handler_get_context(
     struct OperationHandler* operation_handler
 );
 
