@@ -1,10 +1,6 @@
 package org.shedlang.compiler.backends.llvm
 
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.flatMapIndexed
-import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.UserDefinedEffect
 import org.shedlang.compiler.types.effectType
 
@@ -231,8 +227,8 @@ internal class EffectCompiler(
             ))
             .let {
                 operationHandlers.foldIndexed(it) { operationIndex, context, operationHandler ->
-                    val operationHandlerName = irBuilder.generateName("operationHandler")
-                    val operationHandlerAsVoidPointer = irBuilder.generateLocal("operationHandlerAsVoidPointer")
+                    val operationHandlerFunctionName = irBuilder.generateName("operationHandlerFunction")
+                    val operationHandlerFunctionAsVoidPointer = irBuilder.generateLocal("operationHandlerFunctionAsVoidPointer")
                     val operationHandlerResult = irBuilder.generateLocal("operationHandlerResult")
                     val operationType = operationTypes[operationIndex]
                     val closure = irBuilder.generateLocal("operationHandlerClosure")
@@ -250,7 +246,7 @@ internal class EffectCompiler(
 
                     context
                         .addTopLevelEntities(LlvmFunctionDefinition(
-                            name = operationHandlerName,
+                            name = operationHandlerFunctionName,
                             returnType = compiledValueType,
                             parameters = listOf(
                                 LlvmParameter(effectHandlerType, "effect_handler"),
@@ -272,9 +268,9 @@ internal class EffectCompiler(
                                 .addAll(returnInstructions)
                         ))
                         .addInstructions(LlvmBitCast(
-                            target = operationHandlerAsVoidPointer,
-                            targetType = operationHandlerType,
-                            value = LlvmOperandGlobal(operationHandlerName),
+                            target = operationHandlerFunctionAsVoidPointer,
+                            targetType = CTypes.voidPointer,
+                            value = LlvmOperandGlobal(operationHandlerFunctionName),
                             sourceType = LlvmTypes.pointer(LlvmTypes.function(
                                 parameterTypes = listOf(
                                     effectHandlerType,
@@ -292,7 +288,7 @@ internal class EffectCompiler(
                         .addInstructions(effectHandlersSetOperationHandler(
                             effectHandler = effectHandler,
                             operationIndex = operationIndex,
-                            operationHandlerFunction = operationHandlerAsVoidPointer,
+                            operationHandlerFunction = operationHandlerFunctionAsVoidPointer,
                             operationHandlerContext = closure
                         ))
                 }
