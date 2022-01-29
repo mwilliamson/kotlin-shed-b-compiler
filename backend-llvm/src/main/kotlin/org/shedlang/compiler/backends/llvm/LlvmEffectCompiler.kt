@@ -152,7 +152,7 @@ internal class EffectCompiler(
     private val effectHandlersSetOperationHandlerDeclaration = LlvmFunctionDeclaration(
         name = "shed_effect_handlers_set_operation_handler",
         callingConvention = LlvmCallingConvention.ccc,
-        returnType = effectHandlerType,
+        returnType = CTypes.void,
         parameters = listOf(
             LlvmParameter(type = effectHandlerType, name = "effect_handler"),
             LlvmParameter(type = operationIndexType, name = "operation_index"),
