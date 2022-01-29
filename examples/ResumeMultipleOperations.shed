@@ -1,0 +1,32 @@
+// stdout:
+//   one 1
+//   two 2
+//   three 3
+export main;
+
+effect Writer {
+    .one: (String) -> Unit,
+    .two: (String) -> Unit,
+    .three: (String) -> Unit,
+}
+
+fun main() !Io -> Unit {
+    handle Writer {
+        Writer.one!("1\n");
+        Writer.two!("2\n");
+        Writer.three!("3\n");
+    } on {
+        .one = (value: String) {
+            print!("one " + value);
+            resume unit
+        },
+        .two = (value: String) {
+            print!("two " + value);
+            resume unit
+        },
+        .three = (value: String) {
+            print!("three " + value);
+            resume unit
+        },
+    }
+}
