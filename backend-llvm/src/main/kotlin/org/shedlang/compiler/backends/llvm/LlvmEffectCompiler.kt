@@ -14,7 +14,7 @@ internal class EffectCompiler(
     private val effectHandlerType = CTypes.voidPointer
     private val operationHandlerType = CTypes.voidPointer
     private val operationHandlerContextType = CTypes.voidPointer
-    private val operationIndexType = CTypes.size_t
+    private val operationIndexType = LlvmTypes.i32
 
     internal fun define(
         target: LlvmOperandLocal,

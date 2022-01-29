@@ -42,4 +42,7 @@ struct ShedMetaType {
 
 typedef struct ShedMetaType* ShedMetaType;
 
+typedef uint32_t EffectId;
+typedef uint32_t OperationIndex;
+
 #endif

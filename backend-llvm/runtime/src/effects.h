@@ -1,13 +1,9 @@
 #ifndef SHED_EFFECTS_H
 #define SHED_EFFECTS_H
 
-#include <stdint.h>
 #include <setjmp.h>
 
 #include "./shed.h"
-
-typedef uint32_t EffectId;
-typedef size_t OperationIndex;
 
 struct EffectHandler;
 
