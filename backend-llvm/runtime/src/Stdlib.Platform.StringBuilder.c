@@ -2,8 +2,8 @@
 
 #include "../deps/gc/include/gc.h"
 
-#include "./effects.h"
 #include "./shed.h"
+#include "./shed_platform_effects.h"
 #include "./stringbuilder.h"
 
 static EffectId effect_id = -10;

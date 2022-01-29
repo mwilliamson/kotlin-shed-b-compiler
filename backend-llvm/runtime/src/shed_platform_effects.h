@@ -1,5 +1,5 @@
-#ifndef SHED_EFFECTS_H
-#define SHED_EFFECTS_H
+#ifndef SHED_PLATFORM_EFFECTS_H
+#define SHED_PLATFORM_EFFECTS_H
 
 #include <setjmp.h>
 

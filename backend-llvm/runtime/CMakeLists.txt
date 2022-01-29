@@ -10,7 +10,7 @@ add_library(
     src/shed_platform.h src/shed_platform.c
     ../../c-runtime/src/shed.c
     ../../c-runtime/src/strings.c
-    src/effects.c
+    src/shed_platform_effects.c
     src/stringbuilder.h src/stringbuilder.c
     ../../c-runtime/src/modules/Core.Cast.c
     src/Core.Io.c
