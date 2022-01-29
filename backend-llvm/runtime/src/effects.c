@@ -44,24 +44,42 @@ struct EffectHandler* shed_effect_handlers_push(
 void shed_effect_handlers_set_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index,
-    OperationHandlerFunction* function,
+    void* function,
     void* context
 ) {
     effect_handler->operation_handlers[operation_index].function = function;
     effect_handler->operation_handlers[operation_index].context = context;
 }
 
-ShedAny shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedAny* operation_arguments) {
+struct EffectHandler* shed_effect_handlers_find_effect_handler(EffectId effect_id) {
     struct EffectHandler* effect_handler = effect_handler_stack;
     while (effect_handler != NULL) {
         if (effect_handler->effect_id == effect_id) {
-            struct OperationHandler* operation_handler = &effect_handler->operation_handlers[operation_index];
-            return operation_handler->function(effect_handler, operation_handler->context, operation_arguments);
+            return effect_handler;
         } else {
             effect_handler = effect_handler->next;
         }
     }
-    return shed_unit;
+    return NULL;
+}
+
+struct OperationHandler* shed_effect_handlers_get_operation_handler(
+    struct EffectHandler* effect_handler,
+    OperationIndex operation_index
+) {
+    return &effect_handler->operation_handlers[operation_index];
+}
+
+void* shed_effect_handlers_operation_handler_get_function(
+    struct OperationHandler* operation_handler
+) {
+    return operation_handler->function;
+}
+
+void* shed_effect_handlers_operation_handler_get_context(
+    struct OperationHandler* operation_handler
+) {
+    return operation_handler->context;
 }
 
 struct EffectHandler* shed_effect_handlers_enter(struct EffectHandler* effect_handler) {

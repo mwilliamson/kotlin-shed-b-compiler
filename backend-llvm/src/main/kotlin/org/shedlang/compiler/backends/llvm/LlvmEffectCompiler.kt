@@ -17,8 +17,8 @@ internal class EffectCompiler(
     private val effectIdType = LlvmTypes.i32
     private val effectHandlerType = CTypes.voidPointer
     private val operationHandlerType = CTypes.voidPointer
+    private val operationHandlerContextType = CTypes.voidPointer
     private val operationIndexType = CTypes.size_t
-    private val operationArgumentsPointerType = LlvmTypes.pointer(LlvmTypes.arrayType(size = 0, elementType = compiledValueType))
 
     internal fun define(
         target: LlvmOperandLocal,
@@ -37,8 +37,13 @@ internal class EffectCompiler(
                     val llvmParameters = (0 until parameterCount).map { parameterIndex ->
                         LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
                     }
-                    val operationArguments = irBuilder.generateLocal("arguments")
-                    val operationArgumentsType = compiledOperationArgumentsType(operationType)
+                    val effectHandler = irBuilder.generateLocal("effectHandler")
+                    val operationHandler = irBuilder.generateLocal("operationHandler")
+                    val operationHandlerFunctionVoidPtr = irBuilder.generateLocal("operationHandlerFunctionVoidPtr")
+                    val operationHandlerFunction = irBuilder.generateLocal("operationHandlerFunction")
+                    val operationHandlerContext = irBuilder.generateLocal("operationHandlerContext")
+                    // TODO: extract this? Presumably duplicated somewhere...
+                    val operationIndex = effect.operations.keys.sorted().indexOf(operationName)
 
                     closures.compileCreate(
                         target = operationOperands.getValue(operationName),
@@ -48,20 +53,44 @@ internal class EffectCompiler(
                         freeVariables = listOf(),
                         compileBody = { bodyContext ->
                             bodyContext
-                                .addInstructions(packArguments(
-                                    target = operationArguments,
-                                    arguments = llvmParameters.map { llvmParameter ->
-                                        LlvmOperandLocal(llvmParameter.name)
-                                    }
-                                ))
-                                .addInstructions(effectHandlersCall(
-                                    target = returnValue,
+                                .addInstructions(effectHandlersFindEffectHandler(
+                                    target = effectHandler,
                                     effect = effect,
-                                    operationName = operationName,
-                                    operationArguments = LlvmTypedOperand(
-                                        type = LlvmTypes.pointer(operationArgumentsType),
-                                        operand = operationArguments
-                                    )
+                                ))
+                                .addInstructions(effectHandlersGetOperationHandler(
+                                    target = operationHandler,
+                                    effectHandler = effectHandler,
+                                    operationIndex = operationIndex,
+                                ))
+                                .addInstructions(operationHandlerGetFunction(
+                                    target = operationHandlerFunctionVoidPtr,
+                                    operationHandler = operationHandler,
+                                ))
+                                .addInstructions(LlvmBitCast(
+                                    target = operationHandlerFunction,
+                                    sourceType = CTypes.voidPointer,
+                                    value = operationHandlerFunctionVoidPtr,
+                                    targetType = LlvmTypes.pointer(LlvmTypes.function(
+                                        returnType = compiledValueType,
+                                        // TODO: duplicated?
+                                        parameterTypes = listOf(effectHandlerType, operationHandlerContextType) +
+                                            llvmParameters.map { parameter -> parameter.type },
+                                    )),
+                                ))
+                                .addInstructions(operationHandlerGetContext(
+                                    target = operationHandlerContext,
+                                    operationHandler = operationHandler,
+                                ))
+                                .addInstructions(LlvmCall(
+                                    target = returnValue,
+                                    functionPointer = operationHandlerFunction,
+                                    returnType = compiledValueType,
+                                    arguments = listOf(
+                                        LlvmTypedOperand(effectHandlerType, effectHandler),
+                                        LlvmTypedOperand(operationHandlerContextType, operationHandlerContext),
+                                    ) + llvmParameters.map { llvmParameter ->
+                                        LlvmTypedOperand(compiledValueType, LlvmOperandLocal(llvmParameter.name))
+                                    }
                                 ))
                                 .addInstruction(LlvmReturn(type = compiledValueType, value = returnValue))
                         },
@@ -76,15 +105,6 @@ internal class EffectCompiler(
                     operationName to operationOperand
                 }
             ))
-    }
-
-    private fun compiledOperationArgumentsType(operationType: FunctionType): LlvmType {
-        val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
-        return compiledOperationArgumentsType(parameterCount)
-    }
-
-    private fun compiledOperationArgumentsType(argumentCount: Int): LlvmType {
-        return LlvmTypes.arrayType(size = argumentCount, elementType = compiledValueType)
     }
 
     internal fun handle(
@@ -218,6 +238,11 @@ internal class EffectCompiler(
                     val closure = irBuilder.generateLocal("operationHandlerClosure")
                     val previousEffectHandlerStack = irBuilder.generateLocal("previousEffectHandlerStack")
 
+                    val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
+                    val llvmParameters = (0 until parameterCount).map { parameterIndex ->
+                        LlvmParameter(type = compiledValueType, name = "arg" + parameterIndex)
+                    }
+
                     val returnInstructions = listOf(
                         restore(previousEffectHandlerStack),
                         LlvmReturn(compiledValueType, operationHandlerResult)
@@ -230,8 +255,7 @@ internal class EffectCompiler(
                             parameters = listOf(
                                 LlvmParameter(effectHandlerType, "effect_handler"),
                                 LlvmParameter(compiledValueType, "context"),
-                                LlvmParameter(LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)), "operation_arguments")
-                            ),
+                            ) + llvmParameters,
                             body = persistentListOf<LlvmInstruction>()
                                 .add(enter(
                                     target = previousEffectHandlerStack,
@@ -240,9 +264,10 @@ internal class EffectCompiler(
                                 .addAll(callOperationHandler(
                                     target = operationHandlerResult,
                                     operationHandler = LlvmOperandLocal("context"),
-                                    operationType = operationType,
                                     hasState = hasState,
-                                    packedArgumentsPointer = LlvmOperandLocal("operation_arguments")
+                                    arguments = llvmParameters.map { llvmParameter ->
+                                        LlvmOperandLocal(llvmParameter.name)
+                                    }
                                 ))
                                 .addAll(returnInstructions)
                         ))
@@ -254,8 +279,7 @@ internal class EffectCompiler(
                                 parameterTypes = listOf(
                                     effectHandlerType,
                                     compiledValueType,
-                                    LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType))
-                                ),
+                                ) + llvmParameters.map { llvmParameter -> llvmParameter.type },
                                 returnType = compiledValueType
                             ))
                         ))
@@ -289,40 +313,91 @@ internal class EffectCompiler(
         )
     }
 
-    private val effectHandlersCallDeclaration = LlvmFunctionDeclaration(
-        name = "shed_effect_handlers_call",
+    private val effectHandlersFindEffectHandlerDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_find_effect_handler",
         callingConvention = LlvmCallingConvention.ccc,
-        returnType = compiledValueType,
+        returnType = effectHandlerType,
         parameters = listOf(
             LlvmParameter(type = effectIdType, name = "effect_id"),
-            LlvmParameter(type = operationIndexType, name = "operation_index"),
-            LlvmParameter(type = operationArgumentsPointerType, name = "arguments")
         )
     )
 
-    private fun effectHandlersCall(
+    private fun effectHandlersFindEffectHandler(
         target: LlvmOperandLocal,
         effect: UserDefinedEffect,
-        operationName: Identifier,
-        operationArguments: LlvmTypedOperand
     ): List<LlvmInstruction> {
-        val argumentsPointer = irBuilder.generateLocal("arguments")
-        val cast = LlvmBitCast(
-            target = argumentsPointer,
-            sourceType = operationArguments.type,
-            value = operationArguments.operand,
-            targetType = operationArgumentsPointerType
-        )
-        val operationIndex = effect.operations.keys.sorted().indexOf(operationName)
-        val call = effectHandlersCallDeclaration.call(
+        val call = effectHandlersFindEffectHandlerDeclaration.call(
             target = target,
             arguments = listOf(
                 LlvmOperandInt(effect.definitionId),
-                LlvmOperandInt(operationIndex),
-                argumentsPointer
             )
         )
-        return listOf(cast, call)
+        return listOf(call)
+    }
+
+    private val effectHandlersOperationHandlerGetFunctionDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_operation_handler_get_function",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = CTypes.voidPointer,
+        parameters = listOf(
+            LlvmParameter(type = operationHandlerType, name = "operation_handler"),
+        )
+    )
+
+    private fun operationHandlerGetFunction(
+        target: LlvmOperandLocal,
+        operationHandler: LlvmOperand,
+    ): List<LlvmInstruction> {
+        val call = effectHandlersOperationHandlerGetFunctionDeclaration.call(
+            target = target,
+            arguments = listOf(operationHandler),
+        )
+        return listOf(call)
+    }
+
+    private val effectHandlersOperationHandlerGetContextDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_operation_handler_get_context",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = CTypes.voidPointer,
+        parameters = listOf(
+            LlvmParameter(type = operationHandlerType, name = "operation_handler"),
+        )
+    )
+
+    private fun operationHandlerGetContext(
+        target: LlvmOperandLocal,
+        operationHandler: LlvmOperand,
+    ): List<LlvmInstruction> {
+        val call = effectHandlersOperationHandlerGetContextDeclaration.call(
+            target = target,
+            arguments = listOf(operationHandler)
+        )
+        return listOf(call)
+    }
+
+    private val effectHandlersGetOperationHandlerDeclaration = LlvmFunctionDeclaration(
+        name = "shed_effect_handlers_get_operation_handler",
+        callingConvention = LlvmCallingConvention.ccc,
+        returnType = operationHandlerType,
+        parameters = listOf(
+            LlvmParameter(type = effectHandlerType, name = "effect_handler"),
+            LlvmParameter(type = operationIndexType, name = "operation_index"),
+        )
+    )
+
+    private fun effectHandlersGetOperationHandler(
+        target: LlvmOperandLocal,
+        effectHandler: LlvmOperand,
+        operationIndex: Int,
+    ): List<LlvmInstruction> {
+        val call = effectHandlersGetOperationHandlerDeclaration.call(
+            target = target,
+            arguments = listOf(
+                effectHandler,
+                LlvmOperandInt(operationIndex),
+            )
+        )
+        return listOf(call)
     }
 
     private val operationHandlerExitDeclaration = LlvmFunctionDeclaration(
@@ -337,88 +412,23 @@ internal class EffectCompiler(
     private fun callOperationHandler(
         target: LlvmOperandLocal,
         operationHandler: LlvmOperand,
-        operationType: FunctionType,
         hasState: Boolean,
-        packedArgumentsPointer: LlvmOperand
+        arguments: List<LlvmOperand>,
     ): List<LlvmInstruction> {
-        val parameterCount = operationType.positionalParameters.size + operationType.namedParameters.size
         val (stateArguments, stateInstructions) = if (hasState) {
             val stateOperand = irBuilder.generateLocal("state")
             Pair(listOf(stateOperand), listOf(getState(target = stateOperand)))
         } else {
             Pair(listOf(), listOf())
         }
-        val (arguments, argumentInstructions) = unpackArguments(
-            packedArgumentsPointer = packedArgumentsPointer,
-            parameterCount = parameterCount
-        )
 
         return persistentListOf<LlvmInstruction>()
             .addAll(stateInstructions)
-            .addAll(argumentInstructions)
             .addAll(closures.callClosure(
                 target = target,
                 closurePointer = operationHandler,
                 arguments = stateArguments + arguments
             ))
-    }
-
-    private fun packArguments(
-        target: LlvmOperandLocal,
-        arguments: List<LlvmOperand>
-    ): PersistentList<LlvmInstruction> {
-        val operationArgumentsType = compiledOperationArgumentsType(arguments.size)
-
-        return persistentListOf<LlvmInstruction>()
-            .addAll(libc.typedMalloc(
-                target = target,
-                bytes = operationArgumentsType.byteSize,
-                type = LlvmTypes.pointer(operationArgumentsType)
-            ))
-            .addAll(arguments.flatMapIndexed { argumentIndex, argument ->
-                val operationArgumentPointer = irBuilder.generateLocal("operationArgumentPointer")
-                persistentListOf<LlvmInstruction>()
-                    .add(LlvmGetElementPtr(
-                        target = operationArgumentPointer,
-                        pointerType = LlvmTypes.pointer(operationArgumentsType),
-                        pointer = target,
-                        indices = listOf(
-                            LlvmIndex.i64(0),
-                            LlvmIndex.i64(argumentIndex)
-                        )
-                    ))
-                    .add(LlvmStore(
-                        type = compiledValueType,
-                        value = argument,
-                        pointer = operationArgumentPointer
-                    ))
-            })
-    }
-
-    private fun unpackArguments(
-        packedArgumentsPointer: LlvmOperand,
-        parameterCount: Int
-    ): Pair<List<LlvmOperandLocal>, List<LlvmInstruction>> {
-        val arguments = (0 until parameterCount).map { argumentIndex ->
-            irBuilder.generateLocal("arg" + argumentIndex)
-        }
-        val argumentInstructions = (0 until parameterCount).flatMap { argumentIndex ->
-            val packageArgumentPointer = irBuilder.generateLocal("argPointer" + argumentIndex)
-            listOf(
-                LlvmGetElementPtr(
-                    target = packageArgumentPointer,
-                    pointerType = LlvmTypes.pointer(LlvmTypes.arrayType(0, compiledValueType)),
-                    pointer = packedArgumentsPointer,
-                    indices = listOf(LlvmIndex.i32(0), LlvmIndex.i32(argumentIndex))
-                ),
-                LlvmLoad(
-                    target = arguments[argumentIndex],
-                    pointer = packageArgumentPointer,
-                    type = compiledValueType
-                )
-            )
-        }
-        return Pair(arguments, argumentInstructions)
     }
 
     private val effectHandlersEnterDeclaration = LlvmFunctionDeclaration(
@@ -527,7 +537,10 @@ internal class EffectCompiler(
             effectHandlersGetStateDeclaration,
             effectHandlersPushDeclaration,
             effectHandlersDiscardDeclaration,
-            effectHandlersCallDeclaration,
+            effectHandlersFindEffectHandlerDeclaration,
+            effectHandlersGetOperationHandlerDeclaration,
+            effectHandlersOperationHandlerGetFunctionDeclaration,
+            effectHandlersOperationHandlerGetContextDeclaration,
             effectHandlersEnterDeclaration,
             effectHandlersRestoreDeclaration,
             operationHandlerExitDeclaration,

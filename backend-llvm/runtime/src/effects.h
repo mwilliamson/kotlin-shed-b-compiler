@@ -11,14 +11,8 @@ typedef size_t OperationIndex;
 
 struct EffectHandler;
 
-typedef ShedAny (OperationHandlerFunction)(
-    struct EffectHandler* effect_handler,
-    void* context,
-    ShedAny* operation_arguments
-);
-
 struct OperationHandler {
-    OperationHandlerFunction* function;
+    void* function;
     void* context;
 };
 
@@ -39,10 +33,20 @@ struct EffectHandler* shed_effect_handlers_push(
 void shed_effect_handlers_set_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index,
-    OperationHandlerFunction* function,
+    void* function,
     void* context
 );
-ShedAny shed_effect_handlers_call(EffectId effect_id, OperationIndex operation_index, ShedAny* operation_arguments);
+struct EffectHandler* shed_effect_handlers_find_effect_handler(EffectId effect_id);
+struct OperationHandler* shed_effect_handlers_get_operation_handler(
+    struct EffectHandler* effect_handler,
+    OperationIndex operation_index
+);
+void* shed_effect_handlers_operation_handler_get_function(
+    struct OperationHandler* operation_handler
+);
+void* shed_effect_handlers_operation_handler_get_context(
+    struct OperationHandler* operation_handler
+);
 
 ShedAny shed_operation_handler_exit(ShedAny exit_value);
 
