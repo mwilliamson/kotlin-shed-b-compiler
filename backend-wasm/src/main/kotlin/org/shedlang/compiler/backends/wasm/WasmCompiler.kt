@@ -27,6 +27,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
         globalContext = compileDependencies(globalContext)
 
+        globalContext = WasmEffects.imports().fold(globalContext, WasmGlobalContext::addImport)
+
         return globalContext.toModule()
     }
 
@@ -145,6 +147,29 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     .addInstruction(temp.set())
                     .addInstruction(temp.get())
                     .addInstruction(temp.get())
+            }
+
+            is EffectDefine -> {
+                return WasmEffects.compileEffectDefine(instruction.effect, context)
+            }
+
+            is EffectHandle -> {
+                // TODO: We rely on the parser loading operation handlers in a consistent order
+                // -- do we want to rely on that here, or should we be doing the ordering here,
+                // or in the loader?
+                val (context2, operationHandlers) = instruction.effect.operations.keys
+                    .reversed()
+                    .fold(Pair(context, persistentListOf<WasmLocalRef>())) { (context, locals), operationName ->
+                        val (context2, local) = context.addLocal(operationName.value)
+                        Pair(context2.addInstruction(local.set()), locals.add(local))
+                    }
+
+                return WasmEffects.compileEffectHandle(
+                    effect = instruction.effect,
+                    compileBody = { context -> compileInstructions(instruction.instructions, context) },
+                    operationHandlers = operationHandlers,
+                    context = context2,
+                )
             }
 
             is FieldAccess -> {
@@ -319,6 +344,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         throw UnsupportedOperationException("unhandled IR value: $value")
                     }
                 }
+            }
+
+            is Resume -> {
+                return context
             }
 
             is Return -> {

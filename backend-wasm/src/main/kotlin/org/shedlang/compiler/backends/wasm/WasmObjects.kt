@@ -92,7 +92,15 @@ internal object WasmObjects {
         return when (type) {
             is ModuleType -> moduleLayout(type)
             is ShapeType -> shapeLayout(type)
-            is StaticValueType -> shapeTypeLayout(type)
+            is StaticValueType -> {
+                val value = type.value
+                if (value is UserDefinedEffect) {
+                    effectLayout(value)
+                } else {
+                    // TODO: check that we actually have a shape
+                    shapeTypeLayout(type)
+                }
+            }
             else -> throw UnsupportedOperationException("layout unknown for type: $type")
         }
     }
@@ -101,6 +109,10 @@ internal object WasmObjects {
         val alignment: Int
         val size: Int
         fun fieldOffset(fieldName: Identifier): Int
+    }
+
+    fun effectLayout(effect: UserDefinedEffect): ShapeLayout {
+        return ShapeLayout(fieldNames = effect.operations.keys, tagValue = null)
     }
 
     fun moduleLayout(type: ModuleType): ShapeLayout {

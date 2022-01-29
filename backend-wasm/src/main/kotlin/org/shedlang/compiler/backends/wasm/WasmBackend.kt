@@ -43,6 +43,7 @@ object WasmBackend : Backend {
         val runtimeObjectFilePaths = listOf(
             "strings.o",
             "modules/Core.Cast.o",
+            "shed_platform_effects.o",
             "modules/Core.IntToString.o",
             "modules/Stdlib.Platform.Process.o",
         ).map { path ->

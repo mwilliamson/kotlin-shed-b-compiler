@@ -8,6 +8,7 @@ import org.shedlang.compiler.CompilerException
 import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.WasmBackend
+import java.lang.AssertionError
 import java.nio.file.Path
 
 class WasmExampleTests {
@@ -22,8 +23,6 @@ class WasmExampleTests {
         "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
         "NonLocalReturnNested.shed",
-        "Resume.shed",
-        "ResumeMultipleOperations.shed",
         "ResumeWithValue.shed",
         "stdlib",
         "stringBuilder",
@@ -48,11 +47,16 @@ class WasmExampleTests {
                         )
 
                         val result = executeWasm(outputPath, args = testProgram.args)
-                        assertThat(
-                            "stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr,
-                            result,
-                            testProgram.expectedResult
-                        )
+                        try {
+                            assertThat(
+                                "stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr,
+                                result,
+                                testProgram.expectedResult
+                            )
+                        } catch (error: AssertionError) {
+//                            print(objdump(outputPath))
+                            throw error
+                        }
                     }
                 } catch (error: CompilerException) {
                     print(error.source.describe())
@@ -67,5 +71,9 @@ class WasmExampleTests {
             listOf("wasmtime", path.toString()) + args,
             workingDirectory = path.parent.toFile(),
         )
+    }
+
+    private fun objdump(path: Path): String {
+        return run(listOf("wasm-objdump", "-dx", path.toString())).throwOnError().stdout
     }
 }
