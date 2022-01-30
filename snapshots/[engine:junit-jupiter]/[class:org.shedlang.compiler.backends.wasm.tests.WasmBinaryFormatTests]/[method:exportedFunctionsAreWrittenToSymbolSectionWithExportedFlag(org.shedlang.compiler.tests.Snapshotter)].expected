@@ -17,8 +17,8 @@ Code[2]:
 Custom:
  - name: "linking"
   - symbol table [count=2]
-   - 0: F <FIRST> func=0 exported binding=global vis=default
-   - 1: F <SECOND> func=1 exported binding=global vis=default
+   - 0: F <FIRST> func=0 [ exported binding=global vis=default ]
+   - 1: F <SECOND> func=1 [ exported binding=global vis=default ]
 
 Code Disassembly:
 

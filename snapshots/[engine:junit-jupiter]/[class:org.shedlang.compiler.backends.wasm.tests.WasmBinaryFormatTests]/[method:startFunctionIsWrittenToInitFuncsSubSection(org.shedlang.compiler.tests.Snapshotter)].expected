@@ -14,8 +14,8 @@ Code[1]:
 Custom:
  - name: "linking"
   - symbol table [count=2]
-   - 0: F <DONT_CARE> func=0 undefined explicit_name binding=global vis=default
-   - 1: F <FIRST> func=1 binding=global vis=default
+   - 0: F <DONT_CARE> func=0 [ undefined explicit_name binding=global vis=default ]
+   - 1: F <FIRST> func=1 [ binding=global vis=default ]
   - init functions [count=1]
    - 1: priority=0
 

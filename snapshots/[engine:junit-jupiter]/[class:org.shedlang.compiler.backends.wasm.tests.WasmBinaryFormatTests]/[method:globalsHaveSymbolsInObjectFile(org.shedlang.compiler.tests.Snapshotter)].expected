@@ -9,8 +9,8 @@ Global[2]:
 Custom:
  - name: "linking"
   - symbol table [count=2]
-   - 0: G <FIRST> global=0 binding=global vis=default
-   - 1: G <SECOND> global=1 binding=global vis=default
+   - 0: G <FIRST> global=0 [ binding=global vis=default ]
+   - 1: G <SECOND> global=1 [ binding=global vis=default ]
 
 Code Disassembly:
 

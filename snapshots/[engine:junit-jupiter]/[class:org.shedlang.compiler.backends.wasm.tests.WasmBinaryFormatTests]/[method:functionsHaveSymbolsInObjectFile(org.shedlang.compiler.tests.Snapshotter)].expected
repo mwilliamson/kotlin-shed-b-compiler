@@ -16,9 +16,9 @@ Code[2]:
 Custom:
  - name: "linking"
   - symbol table [count=3]
-   - 0: F <IMPORTED> func=0 undefined explicit_name binding=global vis=default
-   - 1: F <FIRST> func=1 binding=global vis=default
-   - 2: F <SECOND> func=2 binding=global vis=default
+   - 0: F <IMPORTED> func=0 [ undefined explicit_name binding=global vis=default ]
+   - 1: F <FIRST> func=1 [ binding=global vis=default ]
+   - 2: F <SECOND> func=2 [ binding=global vis=default ]
 
 Code Disassembly:
 

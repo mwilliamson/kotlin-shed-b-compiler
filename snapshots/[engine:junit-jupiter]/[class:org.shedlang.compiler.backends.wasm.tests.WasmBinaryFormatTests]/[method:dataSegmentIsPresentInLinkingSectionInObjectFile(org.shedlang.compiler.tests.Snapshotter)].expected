@@ -13,11 +13,11 @@ Data[2]:
 Custom:
  - name: "linking"
   - segment info [count=2]
-   - 0: DATA_SEGMENT_0 p2align=2 flags=0
-   - 1: DATA_SEGMENT_1 p2align=2 flags=0
+   - 0: DATA_SEGMENT_0 p2align=2 [ ]
+   - 1: DATA_SEGMENT_1 p2align=2 [ ]
   - symbol table [count=2]
-   - 0: D <DATA_0> segment=0 offset=0 size=2 binding=global vis=default
-   - 1: D <SOME_DATA> segment=1 offset=0 size=2 binding=global vis=default
+   - 0: D <DATA_0> segment=0 offset=0 size=2 [ binding=global vis=default ]
+   - 1: D <SOME_DATA> segment=1 offset=0 size=2 [ binding=global vis=default ]
 
 Code Disassembly:
 

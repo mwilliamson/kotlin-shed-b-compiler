@@ -17,7 +17,7 @@ Code[1]:
 Custom:
  - name: "linking"
   - symbol table [count=1]
-   - 0: F <FIRST> func=0 binding=global vis=default
+   - 0: F <FIRST> func=0 [ binding=global vis=default ]
 Custom:
  - name: "reloc.CODE"
   - relocations for section: 4 (Code) [1]
