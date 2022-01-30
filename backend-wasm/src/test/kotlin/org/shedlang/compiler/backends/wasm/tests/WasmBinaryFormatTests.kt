@@ -163,6 +163,31 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun functionLocalsHaveName(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(Wasm.T.i32), results = listOf()),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(Wasm.param("arg0", Wasm.T.i32)),
+                    results = listOf(),
+                    locals = listOf(WasmLocal("local0", Wasm.T.i32)),
+                    body = listOf(
+                        Wasm.I.localGet("local0"),
+                        Wasm.I.localGet("arg0"),
+                        Wasm.I.drop,
+                        Wasm.I.drop,
+                    ),
+                ),
+            ),
+        )
+
+        checkModuleSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun exportedFunctionsAreWrittenToExportSection(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(

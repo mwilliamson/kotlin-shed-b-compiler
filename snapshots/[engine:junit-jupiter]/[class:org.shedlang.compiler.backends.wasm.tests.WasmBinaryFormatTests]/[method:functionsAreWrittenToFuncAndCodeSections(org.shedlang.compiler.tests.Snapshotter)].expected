@@ -12,6 +12,11 @@ Function[2]:
 Code[2]:
  - func[0] size=2
  - func[1] size=4
+Custom:
+ - name: "name"
+ - func[0] local[0] <arg0>
+ - func[1] local[0] <arg0>
+ - func[1] local[1] <arg1>
 
 Code Disassembly:
 

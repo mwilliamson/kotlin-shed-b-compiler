@@ -127,6 +127,8 @@ private class WasmBinaryFormatWriter(
             writeLinkingSection(module)
             writeRelocationSections(module)
         }
+
+        writeNameSection(module)
     }
 
     private fun writeTypesSection(module: WasmModule) {
@@ -394,6 +396,37 @@ private class WasmBinaryFormatWriter(
         output.write8(0x01)
         writeReferenceTypeFunction()
         writeLimits(descriptor.limits)
+    }
+
+    private enum class NameSubSectionType(val id: Byte) {
+        MODULE_NAME(0),
+        FUNCTION_NAMES(1),
+        LOCAL_NAMES(2),
+    }
+
+    private fun writeNameSection(module: WasmModule) {
+        val hasLocals = module.functions.any { function ->
+            function.params.isNotEmpty() || function.locals.isNotEmpty()
+        }
+        if (hasLocals) {
+            writeSection(SectionType.CUSTOM) {
+                output.writeString("name")
+                output.write8(NameSubSectionType.LOCAL_NAMES.id)
+                writeWithSizePrefix {
+                    output.writeVecSize(module.functions.size)
+                    module.functions.forEach { function ->
+                        writeFuncIndex(function.identifier)
+                        val localNames = function.params.map { param -> param.identifier } +
+                            function.locals.map { local -> local.identifier }
+                        output.writeVecSize(localNames.size)
+                        localNames.forEachIndexed { localIndex, localName ->
+                            output.writeUnsignedLeb128(localIndex)
+                            output.writeString(localName)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun writeLinkingSection(module: WasmModule) {
