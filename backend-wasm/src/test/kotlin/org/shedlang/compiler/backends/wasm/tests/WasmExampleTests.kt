@@ -23,7 +23,6 @@ class WasmExampleTests {
         "NonLocalReturnMultipleOperations.shed",
         "NonLocalReturnMultipleValues.shed",
         "NonLocalReturnNested.shed",
-        "ResumeWithValue.shed",
         "stdlib",
         "stringBuilder",
         "TailRec.shed",
