@@ -408,9 +408,19 @@ private class WasmBinaryFormatWriter(
         val hasLocals = module.functions.any { function ->
             function.params.isNotEmpty() || function.locals.isNotEmpty()
         }
-        if (hasLocals) {
+        if (module.functions.isNotEmpty() || hasLocals) {
             writeSection(SectionType.CUSTOM) {
                 output.writeString("name")
+
+                output.write8(NameSubSectionType.FUNCTION_NAMES.id)
+                writeWithSizePrefix {
+                    output.writeVecSize(module.functions.size)
+                    module.functions.forEach { function ->
+                        writeFuncIndex(function.identifier)
+                        output.writeString(function.identifier)
+                    }
+                }
+
                 output.write8(NameSubSectionType.LOCAL_NAMES.id)
                 writeWithSizePrefix {
                     output.writeVecSize(module.functions.size)

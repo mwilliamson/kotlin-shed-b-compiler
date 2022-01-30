@@ -18,6 +18,9 @@ Custom:
    - 1: F <FIRST> func=1 [ binding=global vis=default ]
   - init functions [count=1]
    - 1: priority=0
+Custom:
+ - name: "name"
+ - func[1] <FIRST>
 
 Code Disassembly:
 

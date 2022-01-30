@@ -29,6 +29,10 @@ Custom:
    - R_WASM_TYPE_INDEX_LEB offset=0x00000e(file=0x000066) type=0
    - R_WASM_TABLE_INDEX_SLEB offset=0x00001c(file=0x000074) symbol=0 <FIRST>
    - R_WASM_TYPE_INDEX_LEB offset=0x000022(file=0x00007a) type=0
+Custom:
+ - name: "name"
+ - func[0] <FIRST>
+ - func[1] <SECOND>
 
 Code Disassembly:
 

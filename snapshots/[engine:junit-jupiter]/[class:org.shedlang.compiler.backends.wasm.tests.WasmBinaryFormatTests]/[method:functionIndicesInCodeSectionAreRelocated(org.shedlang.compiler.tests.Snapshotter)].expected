@@ -17,6 +17,9 @@ Custom:
  - name: "reloc.CODE"
   - relocations for section: 2 (Code) [1]
    - R_WASM_FUNCTION_INDEX_LEB offset=0x000008(file=0x000028) symbol=0 <FIRST>
+Custom:
+ - name: "name"
+ - func[0] <FIRST>
 
 Code Disassembly:
 

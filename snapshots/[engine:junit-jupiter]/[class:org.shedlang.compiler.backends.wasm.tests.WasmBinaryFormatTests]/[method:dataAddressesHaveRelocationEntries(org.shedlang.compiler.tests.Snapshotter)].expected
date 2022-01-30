@@ -25,6 +25,9 @@ Custom:
  - name: "reloc.CODE"
   - relocations for section: 3 (Code) [1]
    - R_WASM_MEMORY_ADDR_SLEB offset=0x000008(file=0x000046) symbol=1 <DATA_0>
+Custom:
+ - name: "name"
+ - func[0] <FIRST>
 
 Code Disassembly:
 

@@ -20,6 +20,9 @@ Custom:
  - name: "reloc.CODE"
   - relocations for section: 3 (Code) [1]
    - R_WASM_GLOBAL_INDEX_LEB offset=0x000008(file=0x000034) symbol=1 <GLOBAL>
+Custom:
+ - name: "name"
+ - func[0] <FIRST>
 
 Code Disassembly:
 

@@ -19,6 +19,10 @@ Custom:
    - 0: F <IMPORTED> func=0 [ undefined explicit_name binding=global vis=default ]
    - 1: F <FIRST> func=1 [ binding=global vis=default ]
    - 2: F <SECOND> func=2 [ binding=global vis=default ]
+Custom:
+ - name: "name"
+ - func[1] <FIRST>
+ - func[2] <SECOND>
 
 Code Disassembly:
 

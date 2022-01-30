@@ -6,21 +6,25 @@ Section Details:
 Type[1]:
  - type[0] () -> nil
 Function[2]:
- - func[0] sig=0
- - func[1] sig=0
+ - func[0] sig=0 <FIRST>
+ - func[1] sig=0 <SECOND>
 Table[1]:
  - table[0] type=funcref initial=2 max=2
 Elem[1]:
  - segment[0] flags=0 table=0 count=2 - init i32=0
-  - elem[0] = func[1]
-  - elem[1] = func[0]
+  - elem[0] = func[1] <SECOND>
+  - elem[1] = func[0] <FIRST>
 Code[2]:
- - func[0] size=2
- - func[1] size=2
+ - func[0] size=2 <FIRST>
+ - func[1] size=2 <SECOND>
+Custom:
+ - name: "name"
+ - func[0] <FIRST>
+ - func[1] <SECOND>
 
 Code Disassembly:
 
-000040 func[0]:
+000040 func[0] <FIRST>:
  000041: 0b                         | end
-000047 func[1]:
+000047 func[1] <SECOND>:
  000048: 0b                         | end
