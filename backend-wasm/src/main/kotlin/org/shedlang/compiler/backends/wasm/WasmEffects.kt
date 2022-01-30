@@ -2,10 +2,12 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmImport
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
+import org.shedlang.compiler.backends.wasm.wasm.WasmValueType
 import org.shedlang.compiler.types.FunctionType
 import org.shedlang.compiler.types.UserDefinedEffect
 internal object WasmEffects {
@@ -225,48 +227,46 @@ internal object WasmEffects {
 
     fun imports(): List<WasmImport> {
         return listOf(
-            Wasm.importFunction(
-                moduleName = "env",
-                entityName = Naming.push,
-                identifier = Naming.push,
+            import(
+                name = Naming.push,
                 params = listOf(Wasm.T.i32, Wasm.T.i32),
                 results = listOf(Wasm.T.i32),
             ),
-            Wasm.importFunction(
-                moduleName = "env",
-                entityName = Naming.setOperationHandler,
-                identifier = Naming.setOperationHandler,
+            import(
+                name = Naming.setOperationHandler,
                 params = listOf(Wasm.T.i32, Wasm.T.i32, Wasm.T.i32, Wasm.T.i32),
                 results = listOf(),
             ),
-            Wasm.importFunction(
-                moduleName = "env",
-                entityName = Naming.findEffectHandler,
-                identifier = Naming.findEffectHandler,
+            import(
+                name = Naming.findEffectHandler,
                 params = listOf(Wasm.T.i32),
                 results = listOf(Wasm.T.i32),
             ),
-            Wasm.importFunction(
-                moduleName = "env",
-                entityName = Naming.getOperationHandler,
-                identifier = Naming.getOperationHandler,
+            import(
+                name = Naming.getOperationHandler,
                 params = listOf(Wasm.T.i32, Wasm.T.i32),
                 results = listOf(Wasm.T.i32),
             ),
-            Wasm.importFunction(
-                moduleName = "env",
-                entityName = Naming.operationHandlerGetFunction,
-                identifier = Naming.operationHandlerGetFunction,
+            import(
+                name = Naming.operationHandlerGetFunction,
                 params = listOf(Wasm.T.i32),
                 results = listOf(Wasm.T.i32),
             ),
-            Wasm.importFunction(
-                moduleName = "env",
-                entityName = Naming.operationHandlerGetContext,
-                identifier = Naming.operationHandlerGetContext,
+            import(
+                name = Naming.operationHandlerGetContext,
                 params = listOf(Wasm.T.i32),
                 results = listOf(Wasm.T.i32),
             ),
+        )
+    }
+
+    private fun import(name: String, params: List<WasmValueType>, results: List<WasmValueType>): WasmImport {
+        return Wasm.importFunction(
+            moduleName = "env",
+            entityName = name,
+            identifier = name,
+            params = params,
+            results = results,
         )
     }
 }
