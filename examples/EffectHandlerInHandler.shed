@@ -1,0 +1,25 @@
+// stdout:
+//   one
+export main;
+
+effect Writer {
+    .write: () -> Unit,
+}
+
+fun main() !Io -> Unit {
+    handle Writer {
+        Writer.write!();
+    } on {
+        .write = () {
+            handle Writer {
+                Writer.write!();
+            } on {
+                .write = () {
+                    print!("one\n");
+                    exit unit
+                },
+            }
+            exit unit
+        },
+    }
+}

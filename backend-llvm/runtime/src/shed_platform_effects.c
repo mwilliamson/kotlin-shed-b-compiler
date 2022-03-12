@@ -8,13 +8,22 @@ static struct EffectHandler default_effect_handler = {
 
 static struct EffectHandler* effect_handler_stack = &default_effect_handler;
 
+struct ExitStack {
+    jmp_buf* env;
+    struct ExitStack* next;
+};
+
+static struct ExitStack* exit_stack = NULL;
+
 void shed_effects_discard() {
     effect_handler_stack = effect_handler_stack->next;
 }
 
 ShedAny shed_operation_handler_exit(ShedAny exit_value) {
     shed_exit_value = exit_value;
-    longjmp(*effect_handler_stack->exit_env, 1);
+    jmp_buf* env = exit_stack->env;
+    exit_stack = exit_stack->next;
+    longjmp(*env, 1);
 }
 
 void shed_effects_set_state(ShedAny state) {
@@ -30,12 +39,10 @@ struct EffectHandler* shed_effects_push(
     OperationIndex operation_count,
     jmp_buf* env
 ) {
-    effect_handler_stack->exit_env = env;
-
     struct EffectHandler* effect_handler = GC_malloc(sizeof(struct EffectHandler) + operation_count * sizeof(struct OperationHandler));
     effect_handler->effect_id = effect_id;
     effect_handler->next = effect_handler_stack;
-    effect_handler->exit_env = 0;
+    effect_handler->exit_env = env;
     effect_handler->child_state = shed_unit;
     effect_handler_stack = effect_handler;
     return effect_handler;
@@ -85,9 +92,16 @@ void* shed_effects_operation_handler_get_context(
 struct EffectHandler* shed_effects_enter(struct EffectHandler* effect_handler) {
     struct EffectHandler* previous_stack = effect_handler_stack;
     effect_handler_stack = effect_handler->next;
+
+    struct ExitStack* new_exit_stack = GC_malloc(sizeof(struct ExitStack));
+    new_exit_stack->next = exit_stack;
+    new_exit_stack->env = effect_handler->exit_env;
+    exit_stack = new_exit_stack;
+
     return previous_stack;
 }
 
 void shed_effects_restore(struct EffectHandler* effect_handler) {
     effect_handler_stack = effect_handler;
+    exit_stack = exit_stack->next;
 }

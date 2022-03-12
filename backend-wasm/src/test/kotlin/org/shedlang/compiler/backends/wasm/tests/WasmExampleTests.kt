@@ -21,6 +21,7 @@ class WasmExampleTests {
         "EffectHandlerExitMultipleValues.shed",
         "EffectHandlerExitNested.shed",
         "EffectHandlerExitOrResume.shed",
+        "EffectHandlerInHandler.shed",
         "HandleWithState.shed",
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
