@@ -2,10 +2,7 @@ package org.shedlang.compiler.backends.wasm.tests
 
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.backends.tests.*
-import org.shedlang.compiler.backends.wasm.WasmBackend
-import org.shedlang.compiler.backends.wasm.WasmCompiler
-import org.shedlang.compiler.backends.wasm.WasmFunctionContext
-import org.shedlang.compiler.backends.wasm.WasmNaming
+import org.shedlang.compiler.backends.wasm.*
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.findRoot
@@ -47,7 +44,7 @@ object WasmCompilerExecutionEnvironment: StackIrExecutionEnvironment {
 
             if (type == StringType) {
                 val testRunnerResult = run(
-                    listOf("wasmtime", wasmPath.toString()),
+                    generateWasmCommand(wasmPath, listOf()),
                     workingDirectory = findRoot().resolve("backend-wasm")
                 )
 

@@ -8,6 +8,7 @@ import org.shedlang.compiler.CompilerException
 import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.WasmBackend
+import org.shedlang.compiler.backends.wasm.generateWasmCommand
 import java.lang.AssertionError
 import java.nio.file.Path
 
@@ -67,7 +68,7 @@ class WasmExampleTests {
 
     private fun executeWasm(path: Path, args: List<String>): ExecutionResult {
         return run(
-            listOf("wasmtime", path.toString()) + args,
+            generateWasmCommand(path, args),
             workingDirectory = path.parent.toFile(),
         )
     }

@@ -70,7 +70,7 @@ object WasmBackend : Backend {
     }
 
     override fun run(path: Path, module: ModuleName, args: List<String>): Int {
-        val command = listOf("wasmtime", path.toAbsolutePath().toString()) + args
+        val command = generateWasmCommand(path, args)
 
         val process = ProcessBuilder(command)
             .inheritIO()
