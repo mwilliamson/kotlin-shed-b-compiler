@@ -15,6 +15,7 @@ import org.shedlang.compiler.backends.withLineNumbers
 
 class LlvmExampleTests {
     private val disabledTests = setOf<String>(
+        "EffectHandlerInHandler2.shed",
     )
 
     @TestFactory

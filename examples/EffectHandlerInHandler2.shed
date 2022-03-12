@@ -1,0 +1,45 @@
+// stdout:
+//   E1 before
+//   E2
+//   E3
+export main;
+
+effect E1 {
+    .f: () -> Unit,
+}
+
+effect E2 {
+    .f: () -> Unit,
+}
+
+effect E3 {
+    .f: () -> Unit,
+}
+
+fun main() !Io -> Unit {
+    handle E3 {
+        E3.f!();
+    } on {
+        .f = () {
+            handle E2 {
+                handle E1 {
+                    E1.f!();
+                } on {
+                    .f = () {
+                        print!("E1 before\n");
+                        E2.f!();
+                        print!("E1 after\n");
+                        exit unit
+                    },
+                }
+            } on {
+                .f = () {
+                    print!("E2\n");
+                    exit unit
+                }
+            }
+            print!("E3\n");
+            exit unit
+        }
+    }
+}
