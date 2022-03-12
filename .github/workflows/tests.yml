@@ -29,12 +29,10 @@ jobs:
               node-version: ${{ matrix.node-version }}
 
         - name: Use LLVM ${{ matrix.llvm-version }}
-          uses: KyleMayes/install-llvm-action@v1.2.1
+          uses: KyleMayes/install-llvm-action@v1
           with:
               version: ${{ matrix.llvm-version }}
               directory: ${{ runner.temp }}/llvm
-              force-version: true
-              ubuntu-version: "16.04"
 
         - name: Use wasmtime ${{ matrix.wasmtime-version }}
           uses: mwilliamson/setup-wasmtime-action@v1
