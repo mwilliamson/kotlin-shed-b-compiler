@@ -98,3 +98,9 @@ Alternative would be to use `:=` i.e. `x := tmp`.
 
 * Decide whether to allow Type[_] for non-shape types e.g. unions.
   At the moment, allowed in the type system, but not implemented in the backends.
+
+* In LLVM backend, operation handlers have anonymous names -- should be able to give them a better name
+
+* Forbid returning from operation handlers
+
+* Allow no return when there's an expression statement calling a function that returns never
