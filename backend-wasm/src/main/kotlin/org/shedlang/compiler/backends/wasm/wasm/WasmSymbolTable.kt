@@ -22,7 +22,7 @@ internal class WasmSymbolTable {
             }
 
             for (tag in module.tags) {
-                symbolTable.addTag(tag, WasmSymbolInfo.Event(flags = 0, identifier = tag.identifier))
+                symbolTable.addTag(tag, WasmSymbolInfo.Tag(flags = 0, identifier = tag.identifier))
             }
 
             module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
@@ -120,7 +120,7 @@ internal class WasmSymbolTable {
         return tagSymbolIndices.getValue(tagIndex)
     }
 
-    private fun addTag(tag: WasmTag, symbolInfo: WasmSymbolInfo.Event) {
+    private fun addTag(tag: WasmTag, symbolInfo: WasmSymbolInfo.Tag) {
         val tagIndex = tagIndices.size
         tagIndices.add(tag.identifier, tagIndex)
         val symbolIndex = symbolInfos.size
@@ -164,9 +164,9 @@ internal class WasmSymbolTable {
 
 internal sealed class WasmSymbolInfo(val flags: Int) {
     class Data(flags: Int, val identifier: String, val dataSegmentIndex: Int, val offset: Int, val size: Int) : WasmSymbolInfo(flags)
-    class Event(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
     class Function(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
     class Global(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
+    class Tag(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
 }
 
 internal enum class WasmSymbolFlags(val id: Int) {

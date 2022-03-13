@@ -81,7 +81,7 @@ private class WasmBinaryFormatWriter(
         DATA(1),
         GLOBAL(2),
         SECTION(3),
-        EVENT(4),
+        TAG(4),
         TABLE(5),
     }
 
@@ -96,7 +96,7 @@ private class WasmBinaryFormatWriter(
         GLOBAL_INDEX_LEB(7, isSigned = false),
         FUNCTION_OFFSET_I32(8, isSigned = true),
         SECTION_OFFSET_I32(9, isSigned = true),
-        EVENT_INDEX_LEB(10, isSigned = false),
+        TAG_INDEX_LEB(10, isSigned = false),
         GLOBAL_INDEX_I32(13, isSigned = true),
         MEMORY_ADDR_LEB64(14, isSigned = false),
         MEMORY_ADDR_SLEB64(15, isSigned = true),
@@ -523,12 +523,12 @@ private class WasmBinaryFormatWriter(
         when (info) {
             is WasmSymbolInfo.Data ->
                 writeDataSymbolInfo(info)
-            is WasmSymbolInfo.Event ->
-                writeEventSymbolInfo(info)
             is WasmSymbolInfo.Function ->
                 writeFunctionSymbolInfo(info)
             is WasmSymbolInfo.Global ->
                 writeGlobalSymbolInfo(info)
+            is WasmSymbolInfo.Tag ->
+                writeTagSymbolInfo(info)
         }
     }
 
@@ -539,13 +539,6 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(info.dataSegmentIndex)
         output.writeUnsignedLeb128(info.offset)
         output.writeUnsignedLeb128(info.size)
-    }
-
-    private fun writeEventSymbolInfo(info: WasmSymbolInfo.Event) {
-        output.write8(SymbolType.EVENT.id)
-        output.writeUnsignedLeb128(info.flags)
-        writeTagIndex(info.identifier)
-        output.writeString(info.identifier)
     }
 
     private fun writeFunctionSymbolInfo(info: WasmSymbolInfo.Function) {
@@ -559,6 +552,13 @@ private class WasmBinaryFormatWriter(
         output.write8(SymbolType.GLOBAL.id)
         output.writeUnsignedLeb128(info.flags)
         writeGlobalIndex(info.identifier)
+        output.writeString(info.identifier)
+    }
+
+    private fun writeTagSymbolInfo(info: WasmSymbolInfo.Tag) {
+        output.write8(SymbolType.TAG.id)
+        output.writeUnsignedLeb128(info.flags)
+        writeTagIndex(info.identifier)
         output.writeString(info.identifier)
     }
 
@@ -658,7 +658,7 @@ private class WasmBinaryFormatWriter(
     private fun writeTagIndex(name: String) {
         val tagIndex = symbolTable.tagIndex(name)
         writeRelocatableIndex(
-            relocationType = RelocationType.EVENT_INDEX_LEB,
+            relocationType = RelocationType.TAG_INDEX_LEB,
             index = tagIndex,
             symbolIndex = symbolTable.tagIndexToSymbolIndex(tagIndex),
         )
