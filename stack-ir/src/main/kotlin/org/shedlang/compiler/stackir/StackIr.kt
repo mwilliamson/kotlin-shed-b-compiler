@@ -88,7 +88,7 @@ class EffectHandle(
     val hasState: Boolean,
 ): Instruction()
 
-object Exit: Instruction()
+class Exit(val effect: UserDefinedEffect): Instruction()
 
 class FieldAccess(val fieldName: Identifier, val receiverType: Type): Instruction()
 

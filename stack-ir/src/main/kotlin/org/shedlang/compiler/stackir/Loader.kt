@@ -44,6 +44,8 @@ class Loader(
     private val moduleSet: ModuleSet
 ) {
     internal fun loadModule(module: Module.Shed): PersistentList<Instruction> {
+        val context = LoaderContext(handling = null)
+
         val moduleNameInstructions = if (isReferenced(module, Builtins.moduleName)) {
             persistentListOf(
                 PushValue(IrString(module.name.joinToString(".") { part -> part.value })),
@@ -71,7 +73,7 @@ class Loader(
         return importInstructions
             .addAll(moduleNameInstructions)
             .addAll(module.node.body.flatMap { statement ->
-                loadModuleStatement(statement)
+                loadModuleStatement(statement, context)
             })
             .add(ModuleStore(
                 moduleName = module.name,
@@ -85,7 +87,7 @@ class Loader(
     private fun isReferenced(module: Module.Shed, variableBinder: VariableBindingNode) =
         module.references.referencedNodes.contains(variableBinder)
 
-    fun loadExpression(expression: ExpressionNode): PersistentList<Instruction> {
+    fun loadExpression(expression: ExpressionNode, context: LoaderContext): PersistentList<Instruction> {
         return expression.accept(object : ExpressionNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: UnitLiteralNode): PersistentList<Instruction> {
                 val push = PushValue(IrUnit)
@@ -113,7 +115,7 @@ class Loader(
             }
 
             override fun visit(node: TupleNode): PersistentList<Instruction> {
-                val elementInstructions = node.elements.flatMap { element -> loadExpression(element) }
+                val elementInstructions = node.elements.flatMap { element -> loadExpression(element, context) }
                 return elementInstructions.toPersistentList().add(TupleCreate(node.elements.size))
             }
 
@@ -122,7 +124,7 @@ class Loader(
             }
 
             override fun visit(node: UnaryOperationNode): PersistentList<Instruction> {
-                val operandInstructions = loadExpression(node.operand)
+                val operandInstructions = loadExpression(node.operand, context)
 
                 val operationInstruction = when (node.operator) {
                     UnaryOperator.NOT -> BoolNot
@@ -133,8 +135,8 @@ class Loader(
             }
 
             override fun visit(node: BinaryOperationNode): PersistentList<Instruction> {
-                val left = loadExpression(node.left)
-                val right = loadExpression(node.right)
+                val left = loadExpression(node.left, context)
+                val right = loadExpression(node.right, context)
                 val operation = when (node.operator) {
                     BinaryOperator.ADD -> when (types.typeOfExpression(node.left)) {
                         IntType -> IntAdd
@@ -145,8 +147,8 @@ class Loader(
                         BoolType -> {
                             val endLabel = createLabel()
                             val rightLabel = createLabel()
-                            val leftInstructions = loadExpression(node.left)
-                            val rightInstructions = loadExpression(node.right)
+                            val leftInstructions = loadExpression(node.left, context)
+                            val rightInstructions = loadExpression(node.right, context)
                             return leftInstructions
                                 .add(JumpIfTrue(rightLabel.value, endLabel = endLabel.value))
                                 .add(PushValue(IrBool(false)))
@@ -199,8 +201,8 @@ class Loader(
                         BoolType -> {
                             val endLabel = createLabel()
                             val rightLabel = createLabel()
-                            val leftInstructions = loadExpression(node.left)
-                            val rightInstructions = loadExpression(node.right)
+                            val leftInstructions = loadExpression(node.left, context)
+                            val rightInstructions = loadExpression(node.right, context)
                             return leftInstructions
                                 .add(JumpIfFalse(rightLabel.value, endLabel = endLabel.value))
                                 .add(PushValue(IrBool(true)))
@@ -218,7 +220,7 @@ class Loader(
             }
 
             override fun visit(node: IsNode): PersistentList<Instruction> {
-                val expressionInstructions = loadExpression(node.expression)
+                val expressionInstructions = loadExpression(node.expression, context)
 
                 val discriminator = inspector.discriminatorForIsExpression(node)
 
@@ -227,13 +229,13 @@ class Loader(
 
             override fun visit(node: CallNode): PersistentList<Instruction> {
                 if (types.typeOfExpression(node.receiver) is VarargsType) {
-                    return loadExpression(node.receiver)
+                    return loadExpression(node.receiver, context)
                         .addAll(node.positionalArguments.flatMap { argument ->
                             persistentListOf<Instruction>()
                                 .add(Duplicate)
                                 .add(varargsAccessCons())
                                 .add(Swap)
-                                .addAll(loadExpression(argument))
+                                .addAll(loadExpression(argument, context))
                                 .add(Swap)
                         })
                         .add(varargsAccessNil())
@@ -244,8 +246,8 @@ class Loader(
                             )
                         })
                 } else {
-                    val receiverInstructions = loadExpression(node.receiver)
-                    val (argumentInstructions, namedArgumentNames) = loadArguments(node)
+                    val receiverInstructions = loadExpression(node.receiver, context)
+                    val (argumentInstructions, namedArgumentNames) = loadArguments(node, context)
                     val call = Call(
                         positionalArgumentCount = node.positionalArguments.size,
                         namedArgumentNames = namedArgumentNames,
@@ -258,14 +260,14 @@ class Loader(
                 val partialFunctionType = types.typeOfExpression(node) as FunctionType
 
                 val receiverVariable = DefineFunction.Parameter(name = Identifier("receiver"), variableId = freshNodeId())
-                val receiverInstructions = loadExpression(node.receiver)
+                val receiverInstructions = loadExpression(node.receiver, context)
                     .add(LocalStore(receiverVariable))
 
                 val positionalArgumentVariables = (0 until node.positionalArguments.size).map { argumentIndex ->
                     DefineFunction.Parameter(name = Identifier("arg_$argumentIndex"), variableId = freshNodeId())
                 }
                 val positionalArgumentInstructions = node.positionalArguments.zip(positionalArgumentVariables) { argument, variable ->
-                    loadExpression(argument).add(LocalStore(variable))
+                    loadExpression(argument, context).add(LocalStore(variable))
                 }.flatten()
 
                 val positionalParameterVariables = (0 until partialFunctionType.positionalParameters.size).map { parameterIndex ->
@@ -280,7 +282,7 @@ class Loader(
                     DefineFunction.Parameter(name = (argument as FieldArgumentNode.Named).name, variableId = freshNodeId())
                 }
                 val namedArgumentInstructions = node.fieldArguments.zip(namedArgumentVariables) { argument, variable ->
-                    loadExpression((argument as FieldArgumentNode.Named).expression).add(LocalStore(variable))
+                    loadExpression((argument as FieldArgumentNode.Named).expression, context).add(LocalStore(variable))
                 }.flatten()
 
                 val namedParameterNames = partialFunctionType.namedParameters.keys.toList()
@@ -317,11 +319,11 @@ class Loader(
             }
 
             override fun visit(node: StaticCallNode): PersistentList<Instruction> {
-                return loadExpression(node.receiver)
+                return loadExpression(node.receiver, context)
             }
 
             override fun visit(node: FieldAccessNode): PersistentList<Instruction> {
-                val receiverInstructions = loadExpression(node.receiver)
+                val receiverInstructions = loadExpression(node.receiver, context)
                 val fieldAccess = FieldAccess(
                     fieldName = node.fieldName.identifier,
                     receiverType = types.typeOfExpression(node.receiver)
@@ -330,25 +332,25 @@ class Loader(
             }
 
             override fun visit(node: FunctionExpressionNode): PersistentList<Instruction> {
-                return persistentListOf(loadFunctionValue(node))
+                return persistentListOf(loadFunctionValue(node, LoaderContext(handling = null)))
             }
 
             override fun visit(node: IfNode): PersistentList<Instruction> {
                 val conditionInstructions = node.conditionalBranches.map { branch ->
-                    loadExpression(branch.condition)
+                    loadExpression(branch.condition, context)
                 }
 
                 return generateBranches(
                     conditionInstructions = conditionInstructions,
-                    conditionalBodies = node.conditionalBranches.map { branch -> loadBlock(branch.body) },
-                    elseBranch = loadBlock(node.elseBranch),
+                    conditionalBodies = node.conditionalBranches.map { branch -> loadBlock(branch.body, context) },
+                    elseBranch = loadBlock(node.elseBranch, context),
                 )
             }
 
             override fun visit(node: WhenNode): PersistentList<Instruction> {
                 val expressionVariableId = freshNodeId()
                 val expressionName = Identifier("whenExpression")
-                val expressionInstructions = loadExpression(node.expression)
+                val expressionInstructions = loadExpression(node.expression, context)
                     .add(LocalStore(variableId = expressionVariableId, name = expressionName))
 
                 val loadExpression = LocalLoad(variableId = expressionVariableId, name = expressionName)
@@ -366,9 +368,9 @@ class Loader(
                     conditionalBodies = node.conditionalBranches.map { branch ->
                         persistentListOf<Instruction>(loadExpression)
                             .addAll(loadTarget(branch.target))
-                            .addAll(loadBlock(branch.body))
+                            .addAll(loadBlock(branch.body, context))
                     },
-                    elseBranch = if (elseBranch == null) null else loadBlock(elseBranch),
+                    elseBranch = if (elseBranch == null) null else loadBlock(elseBranch, context),
                 ))
             }
 
@@ -379,13 +381,13 @@ class Loader(
                 val stateInstructions = if (initialState == null) {
                     persistentListOf<Instruction>()
                 } else {
-                    loadExpression(initialState)
+                    loadExpression(initialState, context)
                 }
 
                 val operationHandlerInstructions = node.handlers
-                    .map { handler -> loadOperationHandler(handler.function) }
+                    .map { handler -> loadOperationHandler(handler.function, effect = effect) }
 
-                val body = loadBlock(node.body)
+                val body = loadBlock(node.body, context)
                 val effectHandleInstruction = EffectHandle(
                     effect = effect,
                     instructions = body,
@@ -433,16 +435,16 @@ class Loader(
         })
     }
 
-    private fun loadArguments(node: CallBaseNode): Pair<List<Instruction>, List<Identifier>> {
+    private fun loadArguments(node: CallBaseNode, context: LoaderContext): Pair<List<Instruction>, List<Identifier>> {
         val providesFields = fieldArgumentsToFieldsProvided(node.fieldArguments, typeOfExpression = types::typeOfExpression)
 
         val namedArgumentNames = mutableListOf<Identifier>()
         val instructions =  node.positionalArguments.flatMap { argument ->
-            loadExpression(argument)
+            loadExpression(argument, context)
         } + node.fieldArguments.zip(providesFields).flatMap { (argument, argumentProvidesFields) ->
             when (argument) {
                 is FieldArgumentNode.Named -> {
-                    val expressionInstructions = loadExpression(argument.expression)
+                    val expressionInstructions = loadExpression(argument.expression, context)
                     if (argumentProvidesFields.contains(argument.name)) {
                         namedArgumentNames.add(argument.name)
                         expressionInstructions
@@ -451,7 +453,7 @@ class Loader(
                     }
                 }
                 is FieldArgumentNode.Splat -> {
-                    val expressionInstructions = loadExpression(argument.expression)
+                    val expressionInstructions = loadExpression(argument.expression, context)
 
                     namedArgumentNames.addAll(argumentProvidesFields)
                     expressionInstructions
@@ -469,9 +471,9 @@ class Loader(
         return Pair(instructions, namedArgumentNames)
     }
 
-    fun loadBlock(block: Block): PersistentList<Instruction> {
+    fun loadBlock(block: Block, context: LoaderContext): PersistentList<Instruction> {
         val statementInstructions = block.statements.flatMap { statement ->
-            loadFunctionStatement(statement)
+            loadFunctionStatement(statement, context)
         }.toPersistentList()
 
         return if (block.isTerminated) {
@@ -481,10 +483,10 @@ class Loader(
         }
     }
 
-    fun loadFunctionStatement(statement: FunctionStatementNode): PersistentList<Instruction> {
+    fun loadFunctionStatement(statement: FunctionStatementNode, context: LoaderContext): PersistentList<Instruction> {
         return statement.accept(object : FunctionStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: ExpressionStatementNode): PersistentList<Instruction> {
-                val expressionInstructions = loadExpression(node.expression)
+                val expressionInstructions = loadExpression(node.expression, context)
                 when (node.type) {
                     ExpressionStatementNode.Type.VALUE->
                         return expressionInstructions
@@ -501,20 +503,24 @@ class Loader(
                     ExpressionStatementNode.Type.NO_VALUE ->
                         return expressionInstructions.add(Discard)
 
-                    ExpressionStatementNode.Type.EXIT ->
+                    ExpressionStatementNode.Type.EXIT -> {
+                        val effect = context.handling.orElseThrow(
+                            CompilerError("missing effect for operation handler", source = NullSource),
+                        )
                         return expressionInstructions
-                            .add(Exit)
+                            .add(Exit(effect = effect))
+                    }
                 }
             }
 
             override fun visit(node: ResumeNode): PersistentList<Instruction> {
-                val expressionInstructions = loadExpression(node.expression)
+                val expressionInstructions = loadExpression(node.expression, context)
 
                 val newState = node.newState
                 if (newState == null) {
                     return expressionInstructions.add(Resume)
                 } else {
-                    val newStateInstructions = loadExpression(newState)
+                    val newStateInstructions = loadExpression(newState, context)
 
                     return expressionInstructions
                         .addAll(newStateInstructions)
@@ -523,7 +529,7 @@ class Loader(
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
-                return loadVal(node)
+                return loadVal(node, context)
             }
 
             override fun visit(node: FunctionDefinitionNode): PersistentList<Instruction> {
@@ -540,7 +546,7 @@ class Loader(
         })
     }
 
-    fun loadModuleStatement(statement: ModuleStatementNode): PersistentList<Instruction> {
+    fun loadModuleStatement(statement: ModuleStatementNode, context: LoaderContext): PersistentList<Instruction> {
         return statement.accept(object : ModuleStatementNode.Visitor<PersistentList<Instruction>> {
             override fun visit(node: EffectDefinitionNode): PersistentList<Instruction> {
                 return loadEffectDefinition(node)
@@ -569,11 +575,11 @@ class Loader(
             }
 
             override fun visit(node: ValNode): PersistentList<Instruction> {
-                return loadVal(node)
+                return loadVal(node, context)
             }
 
             override fun visit(node: VarargsDeclarationNode): PersistentList<Instruction> {
-                return loadVarargsDeclaration(node)
+                return loadVarargsDeclaration(node, context)
             }
         })
     }
@@ -588,13 +594,13 @@ class Loader(
 
     private fun loadFunctionDefinition(node: FunctionDefinitionNode): PersistentList<Instruction> {
         return persistentListOf(
-            loadFunctionValue(node),
+            loadFunctionValue(node, LoaderContext(handling = null)),
             LocalStore(node)
         )
     }
 
-    private fun loadFunctionValue(node: FunctionNode): DefineFunction {
-        val bodyInstructions = loadBlock(node.body).add(Return)
+    private fun loadFunctionValue(node: FunctionNode, context: LoaderContext): DefineFunction {
+        val bodyInstructions = loadBlock(node.body, context).add(Return)
         return DefineFunction(
             name = if (node is FunctionDefinitionNode) node.name.value else "anonymous",
             bodyInstructions = bodyInstructions,
@@ -607,8 +613,8 @@ class Loader(
         )
     }
 
-    private fun loadOperationHandler(node: FunctionNode): DefineOperationHandler {
-        return DefineOperationHandler(function = loadFunctionValue(node))
+    private fun loadOperationHandler(node: FunctionNode, effect: UserDefinedEffect): DefineOperationHandler {
+        return DefineOperationHandler(function = loadFunctionValue(node, LoaderContext(handling = effect)))
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {
@@ -623,8 +629,8 @@ class Loader(
         )
     }
 
-    private fun loadVal(node: ValNode): PersistentList<Instruction> {
-        val expressionInstructions = loadExpression(node.expression)
+    private fun loadVal(node: ValNode, context: LoaderContext): PersistentList<Instruction> {
+        val expressionInstructions = loadExpression(node.expression, context)
         val targetInstructions = loadTarget(node.target)
         return expressionInstructions.addAll(targetInstructions)
     }
@@ -655,9 +661,9 @@ class Loader(
         }
     }
 
-    private fun loadVarargsDeclaration(node: VarargsDeclarationNode): PersistentList<Instruction> {
-        val consInstructions = loadExpression(node.cons)
-        val nilInstructions = loadExpression(node.nil)
+    private fun loadVarargsDeclaration(node: VarargsDeclarationNode, context: LoaderContext): PersistentList<Instruction> {
+        val consInstructions = loadExpression(node.cons, context)
+        val nilInstructions = loadExpression(node.nil, context)
 
         return consInstructions.addAll(nilInstructions).add(TupleCreate(2)).add(LocalStore(node))
     }

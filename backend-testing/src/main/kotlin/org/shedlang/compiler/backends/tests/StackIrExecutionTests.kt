@@ -16,6 +16,8 @@ import org.shedlang.compiler.typechecker.ResolvedReferencesMap
 import org.shedlang.compiler.types.*
 
 abstract class StackIrExecutionTests(private val environment: StackIrExecutionEnvironment) {
+    private val defaultContext = LoaderContext(handling = null)
+
     @Test
     fun trueLiteralIsEvaluatedToTrue() {
         val node = literalBool(true)
@@ -525,9 +527,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(shapeDeclaration)
-            .addAll(loader.loadFunctionStatement(receiverDeclaration))
-            .addAll(loader.loadExpression(node))
+        val instructions = loader.loadModuleStatement(shapeDeclaration, defaultContext)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration, defaultContext))
+            .addAll(loader.loadExpression(node, defaultContext))
         val value = executeInstructions(instructions, type = BoolType)
 
         assertThat(value, isBool(true))
@@ -571,9 +573,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(shapeDeclaration)
-            .addAll(loader.loadFunctionStatement(receiverDeclaration))
-            .addAll(loader.loadExpression(node))
+        val instructions = loader.loadModuleStatement(shapeDeclaration, defaultContext)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration, defaultContext))
+            .addAll(loader.loadExpression(node, defaultContext))
         val value = executeInstructions(instructions, type = BoolType)
 
         assertThat(value, isBool(false))
@@ -620,9 +622,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(shapeDeclaration)
-            .addAll(loader.loadFunctionStatement(receiverDeclaration))
-            .addAll(loader.loadExpression(fieldAccess))
+        val instructions = loader.loadModuleStatement(shapeDeclaration, defaultContext)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration, defaultContext))
+            .addAll(loader.loadExpression(fieldAccess, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(2))
@@ -676,9 +678,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(shapeDeclaration)
-            .addAll(loader.loadFunctionStatement(receiverDeclaration))
-            .addAll(loader.loadExpression(fieldAccess))
+        val instructions = loader.loadModuleStatement(shapeDeclaration, defaultContext)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration, defaultContext))
+            .addAll(loader.loadExpression(fieldAccess, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(2))
@@ -785,11 +787,11 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(shapeDeclaration)
-            .addAll(loader.loadFunctionStatement(originalDeclaration))
-            .addAll(loader.loadFunctionStatement(updatedDeclaration))
-            .addAll(loader.loadExpression(fieldAccess(updatedReference, "first")))
-            .addAll(loader.loadExpression(fieldAccess(updatedReference, "second")))
+        val instructions = loader.loadModuleStatement(shapeDeclaration, defaultContext)
+            .addAll(loader.loadFunctionStatement(originalDeclaration, defaultContext))
+            .addAll(loader.loadFunctionStatement(updatedDeclaration, defaultContext))
+            .addAll(loader.loadExpression(fieldAccess(updatedReference, "first"), defaultContext))
+            .addAll(loader.loadExpression(fieldAccess(updatedReference, "second"), defaultContext))
             .add(IntSubtract)
         val value = executeInstructions(instructions, type = IntType)
 
@@ -848,9 +850,9 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(shapeDeclaration)
-            .addAll(loader.loadFunctionStatement(receiverDeclaration))
-            .addAll(loader.loadExpression(addition))
+        val instructions = loader.loadModuleStatement(shapeDeclaration, defaultContext)
+            .addAll(loader.loadFunctionStatement(receiverDeclaration, defaultContext))
+            .addAll(loader.loadExpression(addition, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-4))
@@ -967,8 +969,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             )
         )
         val loader = loader(inspector = inspector, references = references, types = types)
-        val instructions = loader.loadModuleStatement(unionDeclaration)
-            .addAll(loader.loadExpression(node))
+        val instructions = loader.loadModuleStatement(unionDeclaration, defaultContext)
+            .addAll(loader.loadExpression(node, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(2))
@@ -1016,8 +1018,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadFunctionStatement(valStatement)
-            .addAll(loader.loadExpression(addition))
+        val instructions = loader.loadFunctionStatement(valStatement, defaultContext)
+            .addAll(loader.loadExpression(addition, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-4))
@@ -1055,7 +1057,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = UnitType)
 
         assertThat(value, isUnit)
@@ -1085,7 +1088,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(42))
@@ -1133,7 +1137,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-4))
@@ -1178,7 +1183,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-4))
@@ -1231,7 +1237,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-400))
@@ -1279,7 +1286,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-4))
@@ -1531,8 +1539,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
             val loader = loader(references = references, types = types)
             val instructions = persistentListOf<Instruction>()
-                .addAll(loader.loadModuleStatement(varargsDeclaration))
-                .addAll(loader.loadExpression(call))
+                .addAll(loader.loadModuleStatement(varargsDeclaration, defaultContext))
+                .addAll(loader.loadExpression(call, defaultContext))
             val value = executeInstructions(instructions, type = StringType)
 
             assertThat(value, isString("nil"))
@@ -1547,8 +1555,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
             val loader = loader(references = references, types = types)
             val instructions = persistentListOf<Instruction>()
-                .addAll(loader.loadModuleStatement(varargsDeclaration))
-                .addAll(loader.loadExpression(call))
+                .addAll(loader.loadModuleStatement(varargsDeclaration, defaultContext))
+                .addAll(loader.loadExpression(call, defaultContext))
             val value = executeInstructions(instructions, type = StringType)
 
             assertThat(value, isString("(42nil)"))
@@ -1563,8 +1571,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
 
             val loader = loader(references = references, types = types)
             val instructions = persistentListOf<Instruction>()
-                .addAll(loader.loadModuleStatement(varargsDeclaration))
-                .addAll(loader.loadExpression(call))
+                .addAll(loader.loadModuleStatement(varargsDeclaration, defaultContext))
+                .addAll(loader.loadExpression(call, defaultContext))
             val value = executeInstructions(instructions, type = StringType)
 
             assertThat(value, isString("(42(hellonil))"))
@@ -1612,7 +1620,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-1))
@@ -1659,7 +1668,8 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         )
 
         val loader = loader(references = references, types = types)
-        val instructions = loader.loadModuleStatement(function).addAll(loader.loadExpression(call))
+        val instructions = loader.loadModuleStatement(function, defaultContext)
+            .addAll(loader.loadExpression(call, defaultContext))
         val value = executeInstructions(instructions, type = IntType)
 
         assertThat(value, isInt(-1))
@@ -1753,12 +1763,12 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
     }
 
     private fun evaluateExpression(node: ExpressionNode, type: Type, types: Types = createTypes()): IrValue {
-        val instructions = loader(types = types).loadExpression(node)
+        val instructions = loader(types = types).loadExpression(node, defaultContext)
         return executeInstructions(instructions, type = type)
     }
 
     private fun evaluateBlock(block: Block, type: Type, references: ResolvedReferences = ResolvedReferencesMap.EMPTY): IrValue {
-        val instructions = loader(references = references).loadBlock(block)
+        val instructions = loader(references = references).loadBlock(block, defaultContext)
         return executeInstructions(instructions, type = type)
     }
 
