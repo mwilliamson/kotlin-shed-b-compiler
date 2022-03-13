@@ -21,6 +21,10 @@ internal class WasmSymbolTable {
                 symbolTable.addGlobal(global, WasmSymbolInfo.Global(flags = 0, identifier = global.identifier))
             }
 
+            for (tag in module.tags) {
+                symbolTable.addTag(tag, WasmSymbolInfo.Event(flags = 0, identifier = tag.identifier))
+            }
+
             module.dataSegments.forEachIndexed { dataSegmentIndex, dataSegment ->
                 val symbolInfo = WasmSymbolInfo.Data(
                     flags = 0,
@@ -60,6 +64,8 @@ internal class WasmSymbolTable {
     private val globalIndices = mutableMapOf<String, Int>()
     private val globalSymbolIndices = mutableMapOf<Int, Int>()
     private val tableEntryIndices = mutableMapOf<String, Int>()
+    private val tagIndices = mutableMapOf<String, Int>()
+    private val tagSymbolIndices = mutableMapOf<Int, Int>()
     private val dataAddressesByKey = mutableMapOf<WasmDataSegmentKey, Int>()
     private val dataAddressesByName = mutableMapOf<String, Int>()
     private val dataSymbolIndicesByKey = mutableMapOf<WasmDataSegmentKey, Int>()
@@ -106,6 +112,23 @@ internal class WasmSymbolTable {
         return tableEntryIndices.getValue(name)
     }
 
+    fun tagIndex(name: String): Int {
+        return tagIndices.getValue(name)
+    }
+
+    fun tagIndexToSymbolIndex(tagIndex: Int): Int {
+        return tagSymbolIndices.getValue(tagIndex)
+    }
+
+    private fun addTag(tag: WasmTag, symbolInfo: WasmSymbolInfo.Event) {
+        val tagIndex = tagIndices.size
+        tagIndices.add(tag.identifier, tagIndex)
+        val symbolIndex = symbolInfos.size
+        symbolInfos.add(symbolInfo)
+        tagSymbolIndices.add(tagIndex, symbolIndex)
+
+    }
+
     private fun addDataSegment(dataSegment: WasmDataSegment, symbolInfo: WasmSymbolInfo.Data) {
         val symbolIndex = symbolInfos.size
         symbolInfos.add(symbolInfo)
@@ -141,6 +164,7 @@ internal class WasmSymbolTable {
 
 internal sealed class WasmSymbolInfo(val flags: Int) {
     class Data(flags: Int, val identifier: String, val dataSegmentIndex: Int, val offset: Int, val size: Int) : WasmSymbolInfo(flags)
+    class Event(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
     class Function(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
     class Global(flags: Int, val identifier: String) : WasmSymbolInfo(flags)
 }

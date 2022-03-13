@@ -91,6 +91,28 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun tagsAreWrittenToTagSection(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(listOf(Wasm.T.i32), listOf()),
+                Wasm.T.funcType(listOf(Wasm.T.i32, Wasm.T.i32), listOf()),
+            ),
+            tags = listOf(
+                Wasm.tag(
+                    identifier = "FIRST",
+                    type = Wasm.T.funcType(listOf(Wasm.T.i32), listOf()),
+                ),
+                Wasm.tag(
+                    identifier = "SECOND",
+                    type = Wasm.T.funcType(listOf(Wasm.T.i32, Wasm.T.i32), listOf()),
+                ),
+            ),
+        )
+
+        checkModuleSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun dataSegment(snapshotter: Snapshotter) {
         val module = Wasm.module(
             memoryPageCount = 1,
@@ -375,6 +397,28 @@ class WasmBinaryFormatTests {
     }
 
     @Test
+    fun tagsHaveSymbolsInObjectFile(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(listOf(Wasm.T.i32), listOf()),
+                Wasm.T.funcType(listOf(Wasm.T.i32, Wasm.T.i32), listOf()),
+            ),
+            tags = listOf(
+                Wasm.tag(
+                    identifier = "FIRST",
+                    type = Wasm.T.funcType(listOf(Wasm.T.i32), listOf()),
+                ),
+                Wasm.tag(
+                    identifier = "SECOND",
+                    type = Wasm.T.funcType(listOf(Wasm.T.i32, Wasm.T.i32), listOf()),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
     fun functionIndicesInCodeSectionAreRelocated(snapshotter: Snapshotter) {
         val module = Wasm.module(
             types = listOf(
@@ -412,6 +456,30 @@ class WasmBinaryFormatTests {
                     body = listOf(
                         Wasm.I.globalGet("GLOBAL"),
                         Wasm.I.drop,
+                    ),
+                ),
+            ),
+        )
+
+        checkObjectFileSnapshot(module, snapshotter)
+    }
+
+    @Test
+    fun tagIndicesInCodeSectionAreRelocated(snapshotter: Snapshotter) {
+        val module = Wasm.module(
+            types = listOf(
+                Wasm.T.funcType(params = listOf(), results = listOf()),
+            ),
+            tags = listOf(
+                Wasm.tag("TAG", type = Wasm.T.funcType(params = listOf(), results = listOf())),
+            ),
+            functions = listOf(
+                Wasm.function(
+                    identifier = "FIRST",
+                    params = listOf(),
+                    results = listOf(),
+                    body = listOf(
+                        Wasm.I.throw_("TAG"),
                     ),
                 ),
             ),
@@ -582,7 +650,7 @@ class WasmBinaryFormatTests {
     }
 
     private fun validate(path: Path) {
-        run(listOf("wasm-validate", path.toString())).throwOnError()
+        run(listOf("wasm-validate", "--enable-exceptions", path.toString())).throwOnError()
     }
 
     private fun objdump(path: Path): String {

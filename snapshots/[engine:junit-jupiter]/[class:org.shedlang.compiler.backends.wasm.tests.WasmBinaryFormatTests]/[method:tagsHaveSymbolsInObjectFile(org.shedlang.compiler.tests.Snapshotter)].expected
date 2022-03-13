@@ -1,0 +1,21 @@
+
+module.wasm:	file format wasm 0x1
+
+Section Details:
+
+Type[2]:
+ - type[0] (i32) -> nil
+ - type[1] (i32, i32) -> nil
+Tag[2]:
+ - tag[0] sig=0
+ - tag[1] sig=1
+Custom:
+ - name: "linking"
+  - symbol table [count=2]
+   - 0: E <FIRST> tag=0 [ binding=global vis=default ]
+   - 1: E <SECOND> tag=1 [ binding=global vis=default ]
+Custom:
+ - name: "name"
+
+Code Disassembly:
+

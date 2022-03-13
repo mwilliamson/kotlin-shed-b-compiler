@@ -65,6 +65,7 @@ private class WasmBinaryFormatWriter(
         CODE(10),
         DATA(11),
         DATA_COUNT(12),
+        TAG(13),
     }
 
     private enum class LinkingSubsectionType(val id: Byte) {
@@ -116,6 +117,7 @@ private class WasmBinaryFormatWriter(
         writeFunctionsSection(module)
         writeTableSection(module)
         writeMemorySection(module)
+        writeTagSection(module)
         writeGlobalsSection(module)
         writeExportSection(module)
         writeStartSection(module)
@@ -225,6 +227,26 @@ private class WasmBinaryFormatWriter(
     private fun writeMemorySectionContents(memoryPageCount: Int) {
         output.writeVecSize(1)
         writeLimits(memoryPageCount)
+    }
+
+    private fun writeTagSection(module: WasmModule) {
+        if (module.tags.size > 0) {
+            writeSection(SectionType.TAG) {
+                writeTagSectionSectionContents(module.tags)
+            }
+        }
+    }
+
+    private fun writeTagSectionSectionContents(tags: List<WasmTag>) {
+        output.writeVecSize(tags.size)
+        for (tag in tags) {
+            writeTag(tag)
+        }
+    }
+
+    private fun writeTag(tag: WasmTag) {
+        output.write8(0)
+        writeTypeIndex(tag.type)
     }
 
     private fun writeGlobalsSection(module: WasmModule) {
@@ -402,13 +424,14 @@ private class WasmBinaryFormatWriter(
         MODULE_NAME(0),
         FUNCTION_NAMES(1),
         LOCAL_NAMES(2),
+        TAG_NAMES(3),
     }
 
     private fun writeNameSection(module: WasmModule) {
         val hasLocals = module.functions.any { function ->
             function.params.isNotEmpty() || function.locals.isNotEmpty()
         }
-        if (module.functions.isNotEmpty() || hasLocals) {
+        if (module.functions.isNotEmpty() || hasLocals || module.tags.isNotEmpty()) {
             writeSection(SectionType.CUSTOM) {
                 output.writeString("name")
 
@@ -433,6 +456,15 @@ private class WasmBinaryFormatWriter(
                             output.writeUnsignedLeb128(localIndex)
                             output.writeString(localName)
                         }
+                    }
+                }
+
+                output.write8(NameSubSectionType.TAG_NAMES.id)
+                writeWithSizePrefix {
+                    output.writeVecSize(module.tags.size)
+                    module.tags.forEach { tag ->
+                        writeTagIndex(tag.identifier)
+                        output.writeString(tag.identifier)
                     }
                 }
             }
@@ -491,6 +523,8 @@ private class WasmBinaryFormatWriter(
         when (info) {
             is WasmSymbolInfo.Data ->
                 writeDataSymbolInfo(info)
+            is WasmSymbolInfo.Event ->
+                writeEventSymbolInfo(info)
             is WasmSymbolInfo.Function ->
                 writeFunctionSymbolInfo(info)
             is WasmSymbolInfo.Global ->
@@ -505,6 +539,13 @@ private class WasmBinaryFormatWriter(
         output.writeUnsignedLeb128(info.dataSegmentIndex)
         output.writeUnsignedLeb128(info.offset)
         output.writeUnsignedLeb128(info.size)
+    }
+
+    private fun writeEventSymbolInfo(info: WasmSymbolInfo.Event) {
+        output.write8(SymbolType.EVENT.id)
+        output.writeUnsignedLeb128(info.flags)
+        writeTagIndex(info.identifier)
+        output.writeString(info.identifier)
     }
 
     private fun writeFunctionSymbolInfo(info: WasmSymbolInfo.Function) {
@@ -612,6 +653,15 @@ private class WasmBinaryFormatWriter(
 
     private fun writeTableIndex(tableIndex: Int) {
         output.writeUnsignedLeb128(tableIndex)
+    }
+
+    private fun writeTagIndex(name: String) {
+        val tagIndex = symbolTable.tagIndex(name)
+        writeRelocatableIndex(
+            relocationType = RelocationType.EVENT_INDEX_LEB,
+            index = tagIndex,
+            symbolIndex = symbolTable.tagIndexToSymbolIndex(tagIndex),
+        )
     }
 
     private fun addTypeIndex(funcType: WasmFuncType) {
@@ -824,6 +874,10 @@ private class WasmBinaryFormatWriter(
             WasmInstruction.MemoryGrow -> {
                 output.write8(0x40)
                 output.write8(0x00)
+            }
+            is WasmInstruction.Throw -> {
+                output.write8(0x08)
+                writeTagIndex(instruction.identifier)
             }
             is WasmInstruction.Folded.GlobalGet -> {
                 output.write8(0x23)

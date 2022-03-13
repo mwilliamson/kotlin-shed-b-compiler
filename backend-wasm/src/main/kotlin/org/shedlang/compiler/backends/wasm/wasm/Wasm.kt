@@ -7,6 +7,7 @@ internal object Wasm {
         types: List<WasmFuncType> = listOf(),
         imports: List<WasmImport> = listOf(),
         globals: List<WasmGlobal> = listOf(),
+        tags: List<WasmTag> = listOf(),
         memoryPageCount: Int? = null,
         dataSegments: List<WasmDataSegment> = listOf(),
         start: String? = null,
@@ -16,6 +17,7 @@ internal object Wasm {
         types = types,
         imports = imports,
         globals = globals,
+        tags = tags,
         memoryPageCount = memoryPageCount,
         dataSegments = dataSegments,
         start = start,
@@ -115,6 +117,8 @@ internal object Wasm {
         type = type,
         value = value
     )
+
+    fun tag(identifier: String, type: WasmFuncType) = WasmTag(identifier = identifier, type = type)
 
     fun param(identifier: String, type: WasmValueType) = WasmParam(identifier = identifier, type = type)
 
@@ -293,6 +297,10 @@ internal object Wasm {
         }
 
         val memorySize = WasmInstruction.Folded.MemorySize
+
+        fun throw_(identifier: String): WasmInstruction {
+            return WasmInstruction.Throw(identifier)
+        }
     }
 }
 
@@ -304,6 +312,7 @@ internal class WasmModule(
     val types: List<WasmFuncType>,
     val imports: List<WasmImport>,
     val globals: List<WasmGlobal>,
+    val tags: List<WasmTag>,
     val memoryPageCount: Int?,
     val dataSegments: List<WasmDataSegment>,
     val start: String?,
@@ -332,6 +341,8 @@ internal sealed class WasmImportDescriptor {
 }
 
 internal class WasmGlobal(val identifier: String, val mutable: Boolean, val type: WasmValueType, val value: WasmInstruction.Folded)
+
+internal class WasmTag(val identifier: String, val type: WasmFuncType)
 
 private var nextWasmDataSegmentKey = 1
 
@@ -413,6 +424,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     class Loop(val identifier: String, val results: List<WasmValueType>): WasmInstruction()
 
     object MemoryGrow: WasmInstruction()
+
+    class Throw(val identifier: String): WasmInstruction()
 
     interface Unfoldable {
         fun unfold(): List<WasmInstruction>
