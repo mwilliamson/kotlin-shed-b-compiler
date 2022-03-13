@@ -11,6 +11,7 @@ internal class ClosureCompiler(
         target: LlvmVariable,
         functionName: String,
         freeVariables: List<LocalLoad>,
+        prefixParams: List<LlvmParameter> = listOf(),
         positionalParams: List<LlvmParameter>,
         namedParams: List<Pair<Identifier, LlvmParameter>>,
         compileBody: (FunctionContext) -> FunctionContext,
@@ -18,7 +19,7 @@ internal class ClosureCompiler(
     ): FunctionContext {
         val closureEnvironmentParameter = LlvmParameter(compiledClosureEnvironmentPointerType, irBuilder.generateName("environment"))
         val explicitParams = positionalParams + namedParams.sortedBy { (paramName, _) -> paramName }.map { (_, param) -> param }
-        val params = listOf(closureEnvironmentParameter) + explicitParams
+        val params = prefixParams + listOf(closureEnvironmentParameter) + explicitParams
 
         val bodyContextWithEnvironment = loadFreeVariables(
             freeVariables = freeVariables,
@@ -44,6 +45,7 @@ internal class ClosureCompiler(
                 createClosure(
                     target = target,
                     functionName = identifier,
+                    prefixParameterTypes = prefixParams.map { param -> param.type },
                     parameterTypes = explicitParams.map { param -> param.type },
                     freeVariables = freeVariables,
                     context = it
@@ -54,12 +56,13 @@ internal class ClosureCompiler(
     internal fun createClosure(
         target: LlvmVariable,
         functionName: String,
+        prefixParameterTypes: List<LlvmType> = listOf(),
         parameterTypes: List<LlvmType>,
         freeVariables: List<LocalLoad>,
         context: FunctionContext
     ): FunctionContext {
         val closurePointer = LlvmOperandLocal(irBuilder.generateName("closurePointer"))
-        val closurePointerType = compiledClosurePointerType(parameterTypes)
+        val closurePointerType = compiledClosurePointerType(parameterTypes, prefixParameterTypes = prefixParameterTypes)
         val closureMalloc = libc.typedMalloc(closurePointer, compiledClosureSize(freeVariables.size), type = closurePointerType)
 
         val getClosureAddress = LlvmPtrToInt(
@@ -75,6 +78,7 @@ internal class ClosureCompiler(
                 storeClosure(
                     closurePointer = closurePointer,
                     functionName = functionName,
+                    prefixParameterTypes = prefixParameterTypes,
                     parameterTypes = parameterTypes,
                     freeVariables = freeVariables,
                     context = it
@@ -86,11 +90,12 @@ internal class ClosureCompiler(
     internal fun storeClosure(
         closurePointer: LlvmOperand,
         functionName: String,
+        prefixParameterTypes: List<LlvmType> = listOf(),
         parameterTypes: List<LlvmType>,
         freeVariables: List<LocalLoad>,
         context: FunctionContext
     ): FunctionContext {
-        val closurePointerType = compiledClosurePointerType(parameterTypes)
+        val closurePointerType = compiledClosurePointerType(parameterTypes, prefixParameterTypes = prefixParameterTypes)
 
         val closureFunctionPointer = LlvmOperandLocal(irBuilder.generateName("closureFunctionPointer"))
         val closureEnvironmentPointer = LlvmOperandLocal(irBuilder.generateName("closureEnvironmentPointer"))
@@ -102,7 +107,7 @@ internal class ClosureCompiler(
         )
 
         val storeClosureFunction = LlvmStore(
-            type = compiledClosureFunctionPointerType(parameterTypes),
+            type = compiledClosureFunctionPointerType(parameterTypes, prefixParameterTypes = prefixParameterTypes),
             value = LlvmOperandGlobal(functionName),
             pointer = closureFunctionPointer
         )
@@ -127,6 +132,7 @@ internal class ClosureCompiler(
     internal fun callClosure(
         target: LlvmOperandLocal,
         closurePointer: LlvmOperand,
+        prefixArguments: List<LlvmTypedOperand> = listOf(),
         arguments: List<LlvmOperand>,
         tail: Boolean = false,
     ): List<LlvmInstruction> {
@@ -136,7 +142,11 @@ internal class ClosureCompiler(
         val environmentPointer = LlvmOperandLocal(irBuilder.generateName("environmentPointer"))
 
         val argumentTypes = arguments.map { compiledValueType }
-        val compiledClosurePointerType = compiledClosurePointerType(argumentTypes)
+        val prefixParameterTypes = prefixArguments.map { arg -> arg.type }
+        val compiledClosurePointerType = compiledClosurePointerType(
+            argumentTypes,
+            prefixParameterTypes = prefixParameterTypes,
+        )
 
         return listOf(
             LlvmIntToPtr(
@@ -152,7 +162,10 @@ internal class ClosureCompiler(
             ),
             LlvmLoad(
                 target = functionPointer,
-                type = compiledClosureFunctionPointerType(arguments.map { compiledValueType }),
+                type = compiledClosureFunctionPointerType(
+                    arguments.map { compiledValueType },
+                    prefixParameterTypes = prefixParameterTypes,
+                ),
                 pointer = functionPointerPointer
             ),
             closureEnvironmentPointer(
@@ -164,7 +177,7 @@ internal class ClosureCompiler(
                 target = target,
                 returnType = compiledValueType,
                 functionPointer = functionPointer,
-                arguments = listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, environmentPointer)) +
+                arguments = prefixArguments + listOf(LlvmTypedOperand(compiledClosureEnvironmentPointerType, environmentPointer)) +
                     arguments.map { argument -> LlvmTypedOperand(compiledValueType, argument) },
                 tailMarker = if (tail) { LlvmTailMarker.MUST_TAIL } else { null }
             )

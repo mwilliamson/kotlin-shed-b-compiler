@@ -229,8 +229,6 @@ internal class EffectCompiler(
                 operationHandlers.foldIndexed(it) { operationIndex, context, operationHandler ->
                     val operationHandlerFunctionName = irBuilder.generateName("operationHandlerFunction")
                     val operationHandlerFunctionAsVoidPointer = irBuilder.generateLocal("operationHandlerFunctionAsVoidPointer")
-                    val isExit64 = irBuilder.generateLocal("isExit64")
-                    val isExit = irBuilder.generateLocal("isExit")
                     val operationType = operationTypes[operationIndex]
                     val closure = irBuilder.generateLocal("operationHandlerClosure")
                     val previousEffectHandlerStack = irBuilder.generateLocal("previousEffectHandlerStack")
@@ -241,9 +239,6 @@ internal class EffectCompiler(
                     }
 
                     val resumeValue = irBuilder.generateLocal("resumeValue")
-
-                    val resumeLabel = irBuilder.createLlvmLabel("resume")
-                    val exitLabel = irBuilder.createLlvmLabel("exit")
 
                     context
                         .addTopLevelEntities(LlvmFunctionDefinition(
@@ -259,30 +254,15 @@ internal class EffectCompiler(
                                     effectHandler = LlvmOperandLocal("effect_handler")
                                 ))
                                 .addAll(callOperationHandler(
-                                    target = isExit64,
+                                    target = resumeValue,
                                     operationHandler = LlvmOperandLocal("context"),
                                     hasState = hasState,
                                     arguments = llvmParameters.map { llvmParameter ->
                                         LlvmOperandLocal(llvmParameter.name)
                                     }
                                 ))
-                                .add(LlvmTrunc(
-                                    target = isExit,
-                                    sourceType = compiledValueType,
-                                    operand = isExit64,
-                                    targetType = LlvmTypes.i1
-                                ))
-                                .add(LlvmBr(condition = isExit, ifTrue = exitLabel, ifFalse = resumeLabel))
-                                .add(LlvmLabel(resumeLabel))
                                 .add(restore(previousEffectHandlerStack))
-                                .add(loadOperationHandlerValue(resumeValue))
                                 .add(LlvmReturn(compiledValueType, resumeValue))
-                                .add(LlvmLabel(exitLabel))
-                                .add(operationHandlerExitDeclaration.call(
-                                    target = null,
-                                    arguments = listOf(LlvmOperandLocal("effect_handler")),
-                                ))
-                                .add(LlvmUnreachable)
                         ))
                         .addInstructions(LlvmBitCast(
                             target = operationHandlerFunctionAsVoidPointer,
@@ -440,6 +420,10 @@ internal class EffectCompiler(
             .addAll(closures.callClosure(
                 target = target,
                 closurePointer = operationHandler,
+                prefixArguments = listOf(LlvmTypedOperand(
+                    type = effectHandlerType,
+                    operand = LlvmOperandLocal("effect_handler")),
+                ),
                 arguments = stateArguments + arguments
             ))
     }
@@ -501,15 +485,17 @@ internal class EffectCompiler(
     internal fun exit(value: LlvmOperand): List<LlvmInstruction> {
         return listOf(
             storeOperationHandlerValue(value),
-            // TODO: change these to i1s
-            LlvmReturn(type = LlvmTypes.i64, value = LlvmOperandInt(1)),
+            operationHandlerExitDeclaration.call(
+                target = null,
+                arguments = listOf(LlvmOperandLocal("effect_handler")),
+            ),
+            LlvmUnreachable,
         )
     }
 
     internal fun resume(value: LlvmOperand): List<LlvmInstruction> {
         return listOf(
-            storeOperationHandlerValue(value),
-            LlvmReturn(type = LlvmTypes.i64, value = LlvmOperandInt(0)),
+            LlvmReturn(type = LlvmTypes.i64, value = value),
         )
     }
 
@@ -517,8 +503,7 @@ internal class EffectCompiler(
         return listOf(
             // TODO: state should be stored in child, not parent (currently behaviour is buggy in same way that exits were)
             setState(newState),
-            storeOperationHandlerValue(value),
-            LlvmReturn(type = LlvmTypes.i64, value = LlvmOperandInt(0)),
+            LlvmReturn(type = LlvmTypes.i64, value = value),
         )
     }
 
@@ -568,5 +553,9 @@ internal class EffectCompiler(
             operationHandlerExitDeclaration,
             operationHandlerValueDeclaration
         )
+    }
+
+    internal fun closurePrefixParameters(): List<LlvmParameter> {
+        return listOf(LlvmParameter(type = effectHandlerType, name = "effect_handler"))
     }
 }

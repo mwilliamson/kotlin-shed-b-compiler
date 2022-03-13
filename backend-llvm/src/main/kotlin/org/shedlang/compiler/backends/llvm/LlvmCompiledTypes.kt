@@ -26,24 +26,33 @@ internal val compiledClosureEnvironmentType = LlvmTypes.arrayType(0, compiledVal
 
 internal val compiledClosureEnvironmentPointerType = LlvmTypes.pointer(compiledClosureEnvironmentType)
 
-internal fun compiledClosureFunctionPointerType(parameterTypes: List<LlvmType>): LlvmTypePointer {
-    return LlvmTypes.pointer(compiledClosureFunctionType(parameterTypes))
+internal fun compiledClosureFunctionPointerType(
+    parameterTypes: List<LlvmType>,
+    prefixParameterTypes: List<LlvmType> = listOf(),
+): LlvmTypePointer {
+    return LlvmTypes.pointer(compiledClosureFunctionType(parameterTypes, prefixParameterTypes = prefixParameterTypes))
 }
 
-internal fun compiledClosureFunctionType(parameterTypes: List<LlvmType>): LlvmType {
+internal fun compiledClosureFunctionType(
+    parameterTypes: List<LlvmType>,
+    prefixParameterTypes: List<LlvmType> = listOf(),
+): LlvmType {
     return LlvmTypes.function(
         returnType = compiledValueType,
-        parameterTypes = listOf(compiledClosureEnvironmentPointerType) + parameterTypes
+        parameterTypes = prefixParameterTypes + listOf(compiledClosureEnvironmentPointerType) + parameterTypes
     )
 }
 
-internal fun compiledClosurePointerType(parameterTypes: List<LlvmType>): LlvmTypePointer {
-    return LlvmTypes.pointer(compiledClosureType(parameterTypes))
+internal fun compiledClosurePointerType(
+    parameterTypes: List<LlvmType>,
+    prefixParameterTypes: List<LlvmType> = listOf(),
+): LlvmTypePointer {
+    return LlvmTypes.pointer(compiledClosureType(parameterTypes, prefixParameterTypes = prefixParameterTypes))
 }
 
-internal fun compiledClosureType(parameterTypes: List<LlvmType>): LlvmTypeStructure {
+internal fun compiledClosureType(parameterTypes: List<LlvmType>, prefixParameterTypes: List<LlvmType> = listOf()): LlvmTypeStructure {
     return LlvmTypes.structure(listOf(
-        compiledClosureFunctionPointerType(parameterTypes),
+        compiledClosureFunctionPointerType(parameterTypes, prefixParameterTypes = prefixParameterTypes),
         compiledClosureEnvironmentType
     ))
 }

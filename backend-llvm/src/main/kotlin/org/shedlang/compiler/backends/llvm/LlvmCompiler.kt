@@ -298,7 +298,7 @@ internal class LlvmCompiler(
             }
 
             is DefineOperationHandler -> {
-                return compileDefineFunction(instruction.function, context)
+                return compileDefineFunction(instruction.function, context, prefixParameters = effects.closurePrefixParameters())
             }
 
             is DefineShape -> {
@@ -782,6 +782,7 @@ internal class LlvmCompiler(
     private fun compileDefineFunction(
         instruction: DefineFunction,
         context: FunctionContext,
+        prefixParameters: List<LlvmParameter> = listOf(),
     ): FunctionContext {
         val freeVariables = findFreeVariables(instruction)
 
@@ -804,6 +805,7 @@ internal class LlvmCompiler(
             target = temporary,
             functionName = instruction.name,
             freeVariables = freeVariables,
+            prefixParams = prefixParameters,
             positionalParams = positionalParams,
             namedParams = namedParams,
             compileBody = { bodyContext ->
