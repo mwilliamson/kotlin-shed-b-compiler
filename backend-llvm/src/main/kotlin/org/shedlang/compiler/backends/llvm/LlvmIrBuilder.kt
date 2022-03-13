@@ -4,6 +4,7 @@ import org.shedlang.compiler.ast.Identifier
 
 internal class LlvmIrBuilder() {
     private var nextNameIndex = 1
+    private var nextLabelIndex = 1
 
     internal fun generateName(prefix: Identifier) = generateName(prefix.value)
 
@@ -17,5 +18,9 @@ internal class LlvmIrBuilder() {
 
     internal fun generateLocal(prefix: String): LlvmOperandLocal {
         return LlvmOperandLocal(generateName(prefix))
+    }
+
+    internal fun createLlvmLabel(prefix: String): String {
+        return "label_generated_" + prefix + "_" + nextLabelIndex++
     }
 }

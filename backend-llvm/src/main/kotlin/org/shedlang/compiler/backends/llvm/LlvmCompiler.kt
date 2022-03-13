@@ -987,10 +987,8 @@ internal class LlvmCompiler(
     private fun generateLocal(prefix: Identifier) = LlvmOperandLocal(generateName(prefix))
     private fun generateLocal(prefix: String) = LlvmOperandLocal(generateName(prefix))
 
-    var nextLabelIndex = 1
-
     private fun createLlvmLabel(prefix: String): String {
-        return "label_generated_" + prefix + "_" + nextLabelIndex++
+        return irBuilder.createLlvmLabel(prefix)
     }
 
     private fun labelToLlvmLabel(label: Int): String {
