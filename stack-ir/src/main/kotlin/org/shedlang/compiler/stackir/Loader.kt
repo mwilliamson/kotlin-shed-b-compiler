@@ -383,7 +383,7 @@ class Loader(
                 }
 
                 val operationHandlerInstructions = node.handlers
-                    .map { handler -> loadFunctionValue(handler.function) }
+                    .map { handler -> loadOperationHandler(handler.function) }
 
                 val body = loadBlock(node.body)
                 val effectHandleInstruction = EffectHandle(
@@ -605,6 +605,10 @@ class Loader(
                 DefineFunction.Parameter(parameter)
             }
         )
+    }
+
+    private fun loadOperationHandler(node: FunctionNode): DefineOperationHandler {
+        return DefineOperationHandler(function = loadFunctionValue(node))
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {

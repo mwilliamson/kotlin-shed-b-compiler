@@ -576,6 +576,11 @@ internal fun Instruction.run(initialState: InterpreterState): InterpreterState {
             initialState.pushTemporary(function).nextInstruction()
         }
 
+        is DefineOperationHandler -> {
+            val function = toInterpreterFunction(this.function, scopes = initialState.currentScopes())
+            initialState.pushTemporary(function).nextInstruction()
+        }
+
         is DefineShape -> {
             val runtimeFields = mapOf(
                 Identifier("fields") to InterpreterShapeValue(

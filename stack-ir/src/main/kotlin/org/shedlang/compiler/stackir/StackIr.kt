@@ -60,6 +60,8 @@ class DefineFunction(
     }
 }
 
+class DefineOperationHandler(val function: DefineFunction): Instruction()
+
 class DefineShape(
     val tagValue: TagValue?,
     val metaType: StaticValueType,
@@ -204,6 +206,7 @@ class TupleCreate(val length: Int): Instruction()
 fun Instruction.children(): List<Instruction> {
     return when (this) {
         is DefineFunction -> bodyInstructions
+        is DefineOperationHandler -> function.children()
         is EffectHandle -> instructions
         else -> listOf()
     }
@@ -216,6 +219,9 @@ fun Instruction.mapChildren(func: (List<Instruction>) -> PersistentList<Instruct
             positionalParameters = positionalParameters,
             namedParameters = namedParameters,
             bodyInstructions = func(bodyInstructions)
+        )
+        is DefineOperationHandler -> DefineOperationHandler(
+            function = function.mapChildren(func) as DefineFunction,
         )
         is EffectHandle -> EffectHandle(
             effect = effect,

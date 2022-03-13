@@ -129,6 +129,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return compileDefineFunction(instruction, context)
             }
 
+            is DefineOperationHandler -> {
+                return compileDefineFunction(instruction.function, context)
+            }
+
             is DefineShape -> {
                 return WasmShapes.compileDefineShape(
                     shapeType = instruction.rawShapeType,

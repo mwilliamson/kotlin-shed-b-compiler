@@ -297,6 +297,10 @@ internal class LlvmCompiler(
                 return compileDefineFunction(instruction, context)
             }
 
+            is DefineOperationHandler -> {
+                return compileDefineFunction(instruction.function, context)
+            }
+
             is DefineShape -> {
                 return compileDeclareShape(instruction, context)
             }
