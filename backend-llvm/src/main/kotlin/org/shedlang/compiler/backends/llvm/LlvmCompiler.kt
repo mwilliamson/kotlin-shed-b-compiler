@@ -294,37 +294,7 @@ internal class LlvmCompiler(
             }
 
             is DefineFunction -> {
-                val freeVariables = findFreeVariables(instruction)
-
-                val paramBindings = mutableListOf<Pair<Int, LlvmOperand>>()
-
-                fun compileParameter(parameter: DefineFunction.Parameter): LlvmParameter {
-                    val identifier = generateName(parameter.name)
-                    paramBindings.add(parameter.variableId to LlvmOperandLocal(identifier))
-                    return LlvmParameter(compiledValueType, identifier)
-                }
-
-                val positionalParams = instruction.positionalParameters.map(::compileParameter)
-                val namedParams = instruction.namedParameters.map { parameter ->
-                    parameter.name to compileParameter(parameter)
-                }
-
-                val temporary = LlvmOperandLocal(generateName("value"))
-
-                return closures.compileCreate(
-                    target = temporary,
-                    functionName = instruction.name,
-                    freeVariables = freeVariables,
-                    positionalParams = positionalParams,
-                    namedParams = namedParams,
-                    compileBody = { bodyContext ->
-                        compileInstructions(
-                            instruction.bodyInstructions,
-                            context = bodyContext.localStore(paramBindings),
-                        )
-                    },
-                    context = context,
-                ).pushTemporary(temporary)
+                return compileDefineFunction(instruction, context)
             }
 
             is DefineShape -> {
@@ -803,6 +773,43 @@ internal class LlvmCompiler(
             operand = source,
             targetType = compiledBoolType
         )
+    }
+
+    private fun compileDefineFunction(
+        instruction: DefineFunction,
+        context: FunctionContext,
+    ): FunctionContext {
+        val freeVariables = findFreeVariables(instruction)
+
+        val paramBindings = mutableListOf<Pair<Int, LlvmOperand>>()
+
+        fun compileParameter(parameter: DefineFunction.Parameter): LlvmParameter {
+            val identifier = generateName(parameter.name)
+            paramBindings.add(parameter.variableId to LlvmOperandLocal(identifier))
+            return LlvmParameter(compiledValueType, identifier)
+        }
+
+        val positionalParams = instruction.positionalParameters.map(::compileParameter)
+        val namedParams = instruction.namedParameters.map { parameter ->
+            parameter.name to compileParameter(parameter)
+        }
+
+        val temporary = LlvmOperandLocal(generateName("value"))
+
+        return closures.compileCreate(
+            target = temporary,
+            functionName = instruction.name,
+            freeVariables = freeVariables,
+            positionalParams = positionalParams,
+            namedParams = namedParams,
+            compileBody = { bodyContext ->
+                compileInstructions(
+                    instruction.bodyInstructions,
+                    context = bodyContext.localStore(paramBindings),
+                )
+            },
+            context = context,
+        ).pushTemporary(temporary)
     }
 
     private fun compileDeclareShape(instruction: DefineShape, context: FunctionContext): FunctionContext {
