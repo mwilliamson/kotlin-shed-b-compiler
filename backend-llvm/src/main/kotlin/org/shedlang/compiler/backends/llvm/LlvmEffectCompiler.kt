@@ -138,17 +138,10 @@ internal class EffectCompiler(
             ))
             .addInstructions(LlvmLabel(normalLabel))
             .let {
-                if (initialState == null) {
-                    it
-                } else {
-                    it.addInstructions(setState(initialState))
-                }
-            }
-            .let {
                 effectHandlersPush(
                     effect = effect,
                     operationHandlers = operationHandlers,
-                    hasState = initialState != null,
+                    initialState = initialState,
                     setjmpEnv = setjmpEnv,
                     context = it
                 )
@@ -201,14 +194,15 @@ internal class EffectCompiler(
         parameters = listOf(
             LlvmParameter(type = effectIdType, name = "effect_id"),
             LlvmParameter(type = CTypes.int, name = "operation_count"),
-            LlvmParameter(type = CTypes.jmpBufPointer, name = "env")
+            LlvmParameter(type = CTypes.jmpBufPointer, name = "env"),
+            LlvmParameter(type = compiledValueType, name = "initial_state"),
         )
     )
 
     private fun effectHandlersPush(
         effect: UserDefinedEffect,
         operationHandlers: List<LlvmOperand>,
-        hasState: Boolean,
+        initialState: LlvmOperand?,
         setjmpEnv: LlvmOperand,
         context: FunctionContext
     ): FunctionContext {
@@ -222,7 +216,8 @@ internal class EffectCompiler(
                 arguments = listOf(
                     LlvmOperandInt(effect.definitionId),
                     LlvmOperandInt(effect.operations.size),
-                    setjmpEnv
+                    setjmpEnv,
+                    initialState ?: LlvmOperandInt(0),
                 )
             ))
             .let {
@@ -251,12 +246,13 @@ internal class EffectCompiler(
                             body = persistentListOf<LlvmInstruction>()
                                 .add(enter(
                                     target = previousEffectHandlerStack,
-                                    effectHandler = LlvmOperandLocal("effect_handler")
+                                    effectHandler = LlvmOperandLocal("effect_handler"),
                                 ))
                                 .addAll(callOperationHandler(
                                     target = resumeValue,
+                                    effectHandler = LlvmOperandLocal("effect_handler"),
                                     operationHandler = LlvmOperandLocal("context"),
-                                    hasState = hasState,
+                                    hasState = initialState != null,
                                     arguments = llvmParameters.map { llvmParameter ->
                                         LlvmOperandLocal(llvmParameter.name)
                                     }
@@ -404,13 +400,14 @@ internal class EffectCompiler(
 
     private fun callOperationHandler(
         target: LlvmOperandLocal,
+        effectHandler: LlvmOperand,
         operationHandler: LlvmOperand,
         hasState: Boolean,
         arguments: List<LlvmOperand>,
     ): List<LlvmInstruction> {
         val (stateArguments, stateInstructions) = if (hasState) {
             val stateOperand = irBuilder.generateLocal("state")
-            Pair(listOf(stateOperand), listOf(getState(target = stateOperand)))
+            Pair(listOf(stateOperand), listOf(getState(effectHandler = effectHandler, target = stateOperand)))
         } else {
             Pair(listOf(), listOf())
         }
@@ -422,8 +419,8 @@ internal class EffectCompiler(
                 closurePointer = operationHandler,
                 prefixArguments = listOf(LlvmTypedOperand(
                     type = effectHandlerType,
-                    operand = LlvmOperandLocal("effect_handler")),
-                ),
+                    operand = effectHandler
+                )),
                 arguments = stateArguments + arguments
             ))
     }
@@ -501,8 +498,7 @@ internal class EffectCompiler(
 
     internal fun resumeWithState(value: LlvmOperand, newState: LlvmOperand): List<LlvmInstruction> {
         return listOf(
-            // TODO: state should be stored in child, not parent (currently behaviour is buggy in same way that exits were)
-            setState(newState),
+            setState(LlvmOperandLocal("effect_handler"), newState),
             LlvmReturn(type = LlvmTypes.i64, value = value),
         )
     }
@@ -512,14 +508,15 @@ internal class EffectCompiler(
         callingConvention = LlvmCallingConvention.ccc,
         returnType = CTypes.void,
         parameters = listOf(
-            LlvmParameter(type = compiledValueType, name = "state")
+            LlvmParameter(type = effectHandlerType, name = "effect_handler"),
+            LlvmParameter(type = compiledValueType, name = "state"),
         )
     )
 
-    private fun setState(newState: LlvmOperand): LlvmCall {
+    private fun setState(effectHandler: LlvmOperand, newState: LlvmOperand): LlvmCall {
         return effectHandlersSetStateDeclaration.call(
             target = null,
-            arguments = listOf(newState),
+            arguments = listOf(effectHandler, newState),
         )
     }
 
@@ -527,13 +524,15 @@ internal class EffectCompiler(
         name = "shed_effects_get_state",
         callingConvention = LlvmCallingConvention.ccc,
         returnType = compiledValueType,
-        parameters = listOf()
+        parameters = listOf(
+            LlvmParameter(type = effectHandlerType, name = "effect_handler"),
+        )
     )
 
-    private fun getState(target: LlvmVariable): LlvmCall {
+    private fun getState(effectHandler: LlvmOperand, target: LlvmVariable): LlvmCall {
         return effectHandlersGetStateDeclaration.call(
             target = target,
-            arguments = listOf(),
+            arguments = listOf(effectHandler),
         )
     }
 

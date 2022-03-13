@@ -16,24 +16,25 @@ ShedAny shed_operation_handler_exit(struct EffectHandler* effect_handler) {
     longjmp(*effect_handler->exit_env, 1);
 }
 
-void shed_effects_set_state(ShedAny state) {
-    effect_handler_stack->child_state = state;
+void shed_effects_set_state(struct EffectHandler* effect_handler, ShedAny state) {
+    effect_handler->state = state;
 }
 
-ShedAny shed_effects_get_state(void) {
-    return effect_handler_stack->child_state;
+ShedAny shed_effects_get_state(struct EffectHandler* effect_handler) {
+    return effect_handler->state;
 }
 
 struct EffectHandler* shed_effects_push(
     EffectId effect_id,
     OperationIndex operation_count,
-    jmp_buf* env
+    jmp_buf* env,
+    ShedAny initial_state
 ) {
     struct EffectHandler* effect_handler = GC_malloc(sizeof(struct EffectHandler) + operation_count * sizeof(struct OperationHandler));
     effect_handler->effect_id = effect_id;
     effect_handler->next = effect_handler_stack;
     effect_handler->exit_env = env;
-    effect_handler->child_state = shed_unit;
+    effect_handler->state = initial_state;
     effect_handler_stack = effect_handler;
     return effect_handler;
 }
