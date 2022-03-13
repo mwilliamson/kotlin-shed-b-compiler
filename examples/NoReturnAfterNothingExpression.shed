@@ -1,0 +1,24 @@
+// stdout:
+//   before
+
+export main;
+
+effect E {
+    .f: () -> Nothing,
+}
+
+fun main() !Io -> Unit {
+    handle E {
+        print!("before\n");
+        returnsInt!();
+        print!("after\n");
+    } on {
+        .f = () {
+            exit unit
+        }
+    }
+}
+
+fun returnsInt() !E -> Int {
+    E.f!();
+}
