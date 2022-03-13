@@ -103,4 +103,17 @@ class TypeCheckExpressionStatementTests {
             throwsException<CannotResumeOutsideOfHandler>(),
         )
     }
+
+    @Test
+    fun whenExpressionHasNothingTypeThenExpressionStatementHasNothingType() {
+        val receiver = variableReference("f")
+        val node = expressionStatementNoReturn(call(receiver))
+        val context = typeContext(
+            referenceTypes = mapOf(receiver to functionType(returns = NothingType)),
+        )
+
+        val type = typeCheckFunctionStatement(node, context)
+
+        assertThat(type, isNothingType)
+    }
 }

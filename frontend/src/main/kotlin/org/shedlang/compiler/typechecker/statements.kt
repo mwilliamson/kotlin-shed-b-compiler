@@ -294,6 +294,10 @@ internal fun typeCheckFunctionStatement(statement: FunctionStatementNode, contex
         override fun visit(node: ExpressionStatementNode): Type {
             val type = inferType(node.expression, context)
 
+            if (type == NothingType) {
+                return NothingType
+            }
+
             return when (node.type) {
                 ExpressionStatementNode.Type.EXIT,
                 ExpressionStatementNode.Type.TAILREC,
