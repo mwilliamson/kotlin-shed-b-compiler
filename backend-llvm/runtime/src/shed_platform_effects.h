@@ -42,8 +42,8 @@ void* shed_effects_operation_handler_get_context(
     struct OperationHandler* operation_handler
 );
 
-ShedAny shed_operation_handler_exit(ShedAny exit_value);
+ShedAny shed_operation_handler_exit(struct EffectHandler* effect_handler);
 
-extern ShedAny shed_exit_value;
+extern ShedAny shed_operation_handler_value;
 
 #endif
