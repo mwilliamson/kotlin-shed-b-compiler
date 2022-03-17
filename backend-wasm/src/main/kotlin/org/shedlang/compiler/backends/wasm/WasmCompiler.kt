@@ -4,6 +4,7 @@ import kotlinx.collections.immutable.*
 import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.backends.wasm.WasmNaming.effectTagName
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi
@@ -174,6 +175,10 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     operationHandlers = operationHandlers,
                     context = context2,
                 )
+            }
+
+            is Exit -> {
+                return context.addInstruction(Wasm.I.throw_(effectTagName(instruction.effect)))
             }
 
             is FieldAccess -> {

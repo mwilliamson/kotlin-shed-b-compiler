@@ -91,7 +91,9 @@ internal object WasmEffects {
             fieldValues = fieldValues,
             context = context3
         )
-        return context4.addInstruction(effectObj.get())
+        return context4
+            .addInstruction(effectObj.get())
+            .addExceptionTag(WasmNaming.effectTagName(effect))
     }
 
     fun compileEffectHandle(
@@ -137,7 +139,10 @@ internal object WasmEffects {
             )
         }
 
-        return compileBody(context5)
+        return context5.addInstruction(Wasm.I.try_(WasmData.genericValueType))
+            .let { compileBody(it) }
+            .addInstruction(Wasm.I.catch(WasmNaming.effectTagName(effect)))
+            .addInstruction(Wasm.I.end)
     }
 
     private class OperationParams(operationType: FunctionType) {

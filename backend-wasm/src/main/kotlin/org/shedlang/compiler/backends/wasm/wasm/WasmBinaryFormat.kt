@@ -776,6 +776,10 @@ private class WasmBinaryFormatWriter(
                 writeTypeIndex(instruction.type)
                 writeTableIndex(0)
             }
+            is WasmInstruction.Catch -> {
+                output.write8(0x07)
+                writeTagIndex(instruction.name)
+            }
             WasmInstruction.Drop -> {
                 output.write8(0x1A)
             }
@@ -928,6 +932,11 @@ private class WasmBinaryFormatWriter(
             WasmInstruction.Folded.MemorySize -> {
                 output.write8(0x3F)
                 output.write8(0x00)
+            }
+            is WasmInstruction.Try -> {
+                output.write8(0x06)
+                writeValueType(instruction.type)
+                labelStack.add(null)
             }
             is WasmInstruction.Unfoldable -> {
                 for (unfoldedInstruction in instruction.unfold()) {

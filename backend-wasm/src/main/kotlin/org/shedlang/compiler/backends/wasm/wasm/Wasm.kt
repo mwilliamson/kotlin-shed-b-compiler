@@ -149,6 +149,10 @@ internal object Wasm {
             return WasmInstruction.Folded.CallIndirect(type = type, tableIndex = tableIndex, args = args)
         }
 
+        fun catch(tagName: String): WasmInstruction {
+            return WasmInstruction.Catch(tagName)
+        }
+
         val drop = WasmInstruction.Drop
 
         fun drop(value: WasmInstruction.Folded): WasmInstruction.Folded {
@@ -301,6 +305,10 @@ internal object Wasm {
         fun throw_(identifier: String): WasmInstruction {
             return WasmInstruction.Throw(identifier)
         }
+
+        fun try_(type: WasmValueType): WasmInstruction {
+            return WasmInstruction.Try(type)
+        }
     }
 }
 
@@ -388,6 +396,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     class Call(val identifier: String): WasmInstruction()
     class CallIndirect(val type: WasmFuncType): WasmInstruction()
 
+    class Catch(val name: String): WasmInstruction()
+
     object Drop: WasmInstruction()
 
     object Else: WasmInstruction()
@@ -426,6 +436,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     object MemoryGrow: WasmInstruction()
 
     class Throw(val identifier: String): WasmInstruction()
+
+    class Try(val type: WasmValueType): WasmInstruction()
 
     interface Unfoldable {
         fun unfold(): List<WasmInstruction>

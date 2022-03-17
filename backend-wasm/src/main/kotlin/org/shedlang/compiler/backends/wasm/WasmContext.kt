@@ -29,6 +29,7 @@ internal data class WasmGlobalContext private constructor(
     private val moduleNames: PersistentSet<ModuleName>,
     private val dependencies: PersistentSet<ModuleName>,
     private val tagValues: PersistentSet<TagValue>,
+    private val exceptionTags: PersistentList<WasmTag>,
 ) {
     companion object {
         fun initial() = WasmGlobalContext(
@@ -40,6 +41,7 @@ internal data class WasmGlobalContext private constructor(
             moduleNames = persistentSetOf(),
             dependencies = persistentSetOf(),
             tagValues = persistentSetOf(),
+            exceptionTags = persistentListOf(),
         )
 
         fun merge(contexts: List<WasmGlobalContext>): WasmGlobalContext {
@@ -52,6 +54,7 @@ internal data class WasmGlobalContext private constructor(
                 moduleNames = contexts.flatMap { context -> context.moduleNames }.toPersistentSet(),
                 dependencies = contexts.flatMap { context -> context.dependencies }.toPersistentSet(),
                 tagValues = contexts.flatMap { context -> context.tagValues }.toPersistentSet(),
+                exceptionTags = contexts.flatMap { context -> context.exceptionTags }.toPersistentList(),
             )
         }
     }
@@ -66,6 +69,7 @@ internal data class WasmGlobalContext private constructor(
             moduleNames = moduleNames.addAll(other.moduleNames),
             dependencies = dependencies.addAll(other.dependencies),
             tagValues = tagValues.addAll(other.tagValues),
+            exceptionTags = exceptionTags.addAll(other.exceptionTags),
         )
     }
 
@@ -150,12 +154,13 @@ internal data class WasmGlobalContext private constructor(
         val module = Wasm.module(
             dataSegments = dataSegments,
             globals = globals.map { (global, _) -> global },
+            tags = exceptionTags,
             functions = moduleFunctions,
             imports = imports,
             memoryPageCount = divideRoundingUp(size, WASM_PAGE_SIZE),
             start = WasmNaming.funcStartIdentifier,
             table = table,
-            types = functionTypes,
+            types = functionTypes
         )
 
         return WasmCompilationResult(module = module, tagValuesToInt = tagValuesToInt)
@@ -229,6 +234,12 @@ internal data class WasmGlobalContext private constructor(
 
     fun compileTagValue(tagValue: TagValue): WasmGlobalContext {
         return copy(tagValues = tagValues.add(tagValue))
+    }
+
+    fun addExceptionTag(name: String): WasmGlobalContext {
+        val type = Wasm.T.funcType(params = listOf(WasmData.genericValueType), results = listOf())
+        val tag = WasmTag(name, type)
+        return copy(exceptionTags = exceptionTags.add(tag))
     }
 }
 
@@ -377,6 +388,11 @@ internal data class WasmFunctionContext(
 
     fun compileTagValue(tagValue: TagValue): WasmFunctionContext {
         val newGlobalContext = globalContext.compileTagValue(tagValue)
+        return copy(globalContext = newGlobalContext)
+    }
+
+    fun addExceptionTag(name: String): WasmFunctionContext {
+        val newGlobalContext = globalContext.addExceptionTag(name)
         return copy(globalContext = newGlobalContext)
     }
 
