@@ -2,7 +2,6 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmImport
@@ -115,7 +114,15 @@ internal object WasmEffects {
 
             // TODO: uniquify name properly
             val outerHandlerName = "operation_handler_outer_" + freshNodeId()
-            val currentContext2 = currentContext.mergeGlobalContext(WasmFunctionContext.initial()
+
+            val outerHandlerContext = WasmFunctionContext.initial()
+            val (outerHandlerContext2, previousEffectHandler) = outerHandlerContext.addLocal("previousEffectHandler")
+
+            val currentContext2 = currentContext.mergeGlobalContext(outerHandlerContext2
+                .let {
+                    compileEnter(effectHandler = Wasm.I.localGet("effectHandler"), context = it)
+                }
+                .addInstruction(previousEffectHandler.set())
                 .let {
                     WasmClosures.compileCall(
                         closurePointer = Wasm.I.localGet("operationHandler"),
@@ -124,9 +131,13 @@ internal object WasmEffects {
                         context = it,
                     )
                 }
+                .let { compileRestore(effectHandler = previousEffectHandler.get(), context = it) }
                 .toFunctionInGlobalContext(
                     identifier = outerHandlerName,
-                    params = listOf(Wasm.param("effectHandler", Wasm.T.i32), Wasm.param("operationHandler", Wasm.T.i32)) + operationParams.params,
+                    params = listOf(
+                        Wasm.param("effectHandler", Wasm.T.i32),
+                        Wasm.param("operationHandler", Wasm.T.i32),
+                    ) + operationParams.params,
                     results = listOf(WasmData.genericValueType),
                 ))
 
@@ -141,6 +152,7 @@ internal object WasmEffects {
 
         return context5.addInstruction(Wasm.I.try_(WasmData.genericValueType))
             .let { compileBody(it) }
+            .let { compileDiscard(it) }
             .addInstruction(Wasm.I.catch(WasmNaming.effectTagName(effect)))
             .addInstruction(Wasm.I.end)
     }
@@ -176,6 +188,9 @@ internal object WasmEffects {
         internal val getOperationHandler = "shed_effects_get_operation_handler"
         internal val operationHandlerGetFunction = "shed_effects_operation_handler_get_function"
         internal val operationHandlerGetContext = "shed_effects_operation_handler_get_context"
+        internal val enter = "shed_effects_enter"
+        internal val discard = "shed_effects_discard"
+        internal val restore = "shed_effects_restore"
     }
 
     private fun compileCallPush(effect: UserDefinedEffect, context: WasmFunctionContext): WasmFunctionContext {
@@ -202,6 +217,27 @@ internal object WasmEffects {
         return context.addInstruction(Wasm.I.call(
             identifier = Naming.findEffectHandler,
             args = listOf(Wasm.I.i32Const(effect.definitionId)),
+        ))
+    }
+
+    private fun compileEnter(effectHandler: WasmInstruction.Folded, context: WasmFunctionContext): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.call(
+            identifier = Naming.enter,
+            args = listOf(effectHandler),
+        ))
+    }
+
+    private fun compileRestore(effectHandler: WasmInstruction.Folded, context: WasmFunctionContext): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.call(
+            identifier = Naming.restore,
+            args = listOf(effectHandler),
+        ))
+    }
+
+    private fun compileDiscard(context: WasmFunctionContext): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.call(
+            identifier = Naming.discard,
+            args = listOf(),
         ))
     }
 
@@ -261,6 +297,21 @@ internal object WasmEffects {
                 name = Naming.operationHandlerGetContext,
                 params = listOf(Wasm.T.i32),
                 results = listOf(Wasm.T.i32),
+            ),
+            import(
+                name = Naming.enter,
+                params = listOf(Wasm.T.i32),
+                results = listOf(Wasm.T.i32),
+            ),
+            import(
+                name = Naming.restore,
+                params = listOf(Wasm.T.i32),
+                results = listOf(),
+            ),
+            import(
+                name = Naming.discard,
+                params = listOf(),
+                results = listOf(),
             ),
         )
     }

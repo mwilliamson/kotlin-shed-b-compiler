@@ -39,6 +39,20 @@ struct EffectHandler* shed_effects_find_effect_handler(EffectId effect_id) {
     return NULL;
 }
 
+struct EffectHandler* shed_effects_enter(struct EffectHandler* effect_handler) {
+    struct EffectHandler* previous_stack = effect_handler_stack;
+    effect_handler_stack = effect_handler->next;
+    return previous_stack;
+}
+
+void shed_effects_restore(struct EffectHandler* effect_handler) {
+    effect_handler_stack = effect_handler;
+}
+
+void shed_effects_discard() {
+    effect_handler_stack = effect_handler_stack->next;
+}
+
 struct OperationHandler* shed_effects_get_operation_handler(
     struct EffectHandler* effect_handler,
     OperationIndex operation_index
