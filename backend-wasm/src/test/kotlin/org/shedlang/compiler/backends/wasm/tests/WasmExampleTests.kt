@@ -19,7 +19,6 @@ class WasmExampleTests {
         "nestedStringBuilderAndNonLocalReturns",
         "stdlib",
         "stringBuilder",
-        "usingStdlib",
     )
 
     @TestFactory
