@@ -14,8 +14,6 @@ typedef uint64_t ShedBool;
 typedef int64_t ShedInt;
 typedef uint64_t ShedUnicodeScalar;
 
-extern ShedAny const shed_unit;
-
 typedef uint64_t ShedSize;
 
 typedef uint64_t ShedTagValue;

@@ -3,6 +3,8 @@
 
 #include "shed_platform.h"
 
+extern ShedAny const shed_unit;
+
 struct ShedString {
     ShedSize length;
     uint8_t data[];
