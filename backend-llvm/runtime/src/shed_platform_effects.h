@@ -19,6 +19,11 @@ struct EffectHandler {
 };
 
 void shed_effects_discard();
+
+struct EffectHandler* shed_effects_push_alwaysresume_nostate(
+    EffectId effect_id,
+    OperationIndex operation_count
+);
 struct EffectHandler* shed_effects_push(
     EffectId effect_id,
     OperationIndex operation_count,

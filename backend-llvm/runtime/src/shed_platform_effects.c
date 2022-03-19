@@ -24,6 +24,13 @@ ShedAny shed_effects_get_state(struct EffectHandler* effect_handler) {
     return effect_handler->state;
 }
 
+struct EffectHandler* shed_effects_push_alwaysresume_nostate(
+    EffectId effect_id,
+    OperationIndex operation_count
+) {
+    return shed_effects_push(effect_id, operation_count, 0, 0);
+}
+
 struct EffectHandler* shed_effects_push(
     EffectId effect_id,
     OperationIndex operation_count,
