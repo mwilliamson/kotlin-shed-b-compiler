@@ -13,6 +13,4 @@ typedef uint32_t ShedSize;
 
 typedef uint32_t ShedTagValue;
 
-#define NULL 0
-
 #endif

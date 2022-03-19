@@ -1,3 +1,5 @@
+#include <stddef.h>
+
 #include "./shed_platform_effects.h"
 
 static struct EffectHandler default_effect_handler = {

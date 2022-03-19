@@ -1,5 +1,5 @@
 #include <stdbool.h>
-//#include <string.h>
+#include <string.h>
 
 //#include "../deps/gc/include/gc.h"
 //#include "../deps/utf8proc/utf8proc.h"
@@ -64,10 +64,7 @@ ShedAny shed_module_fun__Stdlib__Platform__Process__args(ShedEnvironment env) {
         __wasi_size_t length = endPointer - startPointer - 1;
         ShedString arg = shed_string_alloc(length);
         arg->length = length;
-        // TODO: memcpy
-        for (__wasi_size_t i = 0; i < length; i++) {
-            arg->data[i] = startPointer[i];
-        }
+        memcpy(arg->data, startPointer, length);
         args = consFunction(&consClosure->environment[0], (ShedAny)arg, args);
     }
 

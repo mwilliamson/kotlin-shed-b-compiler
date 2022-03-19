@@ -1,9 +1,11 @@
 .PHONY: build
 
-CFLAGS = --target=wasm32 -c -I src -I ../../c-runtime/src
+CFLAGS = --target=wasm32 -c -I src/polyfills -I src -I ../../c-runtime/src
 
 build:
 	mkdir -p build/modules
+	mkdir -p build/polyfills
+	clang $(CFLAGS) src/polyfills/string.c -o build/polyfills/string.o
 	clang $(CFLAGS) ../../c-runtime/src/strings.c -o build/strings.o
 	clang $(CFLAGS) ../../c-runtime/src/modules/Core.Cast.c -o build/modules/Core.Cast.o
 	clang $(CFLAGS) src/shed_platform_effects.c -o build/shed_platform_effects.o
