@@ -531,8 +531,12 @@ internal class LlvmCompiler(
             }
 
             is Label -> {
-                val label = labelToLlvmLabel(instruction.value)
-                return context.addInstructions(LlvmLabel(label))
+                if (instruction.isReachable) {
+                    val label = labelToLlvmLabel(instruction.value)
+                    return context.addInstructions(LlvmLabel(label))
+                } else {
+                    return context
+                }
             }
 
             is LocalLoad -> {

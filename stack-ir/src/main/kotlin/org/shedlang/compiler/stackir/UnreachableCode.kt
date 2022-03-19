@@ -18,7 +18,9 @@ fun removeUnreachableCode(instructions: List<Instruction>): PersistentList<Instr
             isTerminated = false
         }
 
-        if (!isTerminated) {
+        if (instruction is Label && isTerminated) {
+            newInstructions.add(Label(value = instruction.value, isReachable = false))
+        } else if (!isTerminated) {
             newInstructions.add(instruction)
 
             val next = when (instruction) {

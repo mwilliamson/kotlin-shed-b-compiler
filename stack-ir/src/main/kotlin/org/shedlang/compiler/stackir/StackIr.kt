@@ -153,7 +153,7 @@ class JumpIfFalse(val destinationLabel: Int, val endLabel: Int): Instruction()
 
 class JumpIfTrue(val destinationLabel: Int, val endLabel: Int): Instruction()
 
-class Label(val value: Int): Instruction()
+class Label(val value: Int, val isReachable: Boolean): Instruction()
 
 class LocalLoad(val variableId: Int, val name: Identifier): Instruction() {
     constructor(node: VariableBindingNode) : this(node.nodeId, node.name)

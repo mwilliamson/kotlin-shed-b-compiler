@@ -685,7 +685,7 @@ class Loader(
     }
 
     private fun createLabel(): Label {
-        return Label(nextLabel++)
+        return Label(nextLabel++, isReachable = true)
     }
 
     private fun resolveReference(reference: ReferenceNode): VariableBindingNode {
