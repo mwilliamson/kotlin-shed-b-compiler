@@ -17,7 +17,6 @@ class WasmExampleTests {
         "HandleWithState.shed",
         "nestedStringBuilder",
         "nestedStringBuilderAndNonLocalReturns",
-        "NoReturnAfterNothingExpression.shed",
         "stdlib",
         "stringBuilder",
         "TailRec.shed",
