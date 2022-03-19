@@ -879,6 +879,11 @@ private class WasmBinaryFormatWriter(
                 output.write8(0x40)
                 output.write8(0x00)
             }
+            is WasmInstruction.ReturnCallIndirect -> {
+                output.write8(0x13)
+                writeTypeIndex(instruction.type)
+                writeTableIndex(0)
+            }
             is WasmInstruction.Throw -> {
                 output.write8(0x08)
                 writeTagIndex(instruction.identifier)

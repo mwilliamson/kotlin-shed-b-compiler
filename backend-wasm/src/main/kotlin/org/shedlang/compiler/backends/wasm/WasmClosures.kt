@@ -100,6 +100,7 @@ internal object WasmClosures {
         closurePointer: WasmInstruction.Folded,
         positionalArguments: List<WasmInstruction.Folded>,
         namedArguments: List<Pair<Identifier, WasmInstruction.Folded>>,
+        isTailCall: Boolean,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
         val argumentCount = positionalArguments.size + namedArguments.size
@@ -114,11 +115,24 @@ internal object WasmClosures {
 
         val args = positionalArguments + sortedNamedArgLocals
 
-        return context.addInstruction(Wasm.I.callIndirect(
-            type = wasmFuncType,
-            tableIndex = Wasm.I.i32Load(closurePointer),
-            args = listOf(Wasm.I.i32Add(closurePointer, Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE))) + args,
-        ))
+        val tableIndex = Wasm.I.i32Load(closurePointer)
+        val wasmInstructionArgs = listOf(
+            Wasm.I.i32Add(closurePointer, Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE))
+        ) + args
+        val wasmInstruction = if (isTailCall) {
+            Wasm.I.returnCallIndirect(
+                type = wasmFuncType,
+                tableIndex = tableIndex,
+                args = wasmInstructionArgs,
+            )
+        } else {
+            Wasm.I.callIndirect(
+                type = wasmFuncType,
+                tableIndex = tableIndex,
+                args = wasmInstructionArgs,
+            )
+        }
+        return context.addInstruction(wasmInstruction)
     }
 
     private fun compileFreeVariablesStore(

@@ -8,6 +8,7 @@ internal fun generateWasmCommand(path: Path, args: List<String>): List<String> {
         "node",
         "--experimental-wasi-unstable-preview1",
         "--experimental-wasm-eh",
+        "--experimental-wasm-return_call",
         "--no-warnings",
         findRoot().resolve("backend-wasm/run-wasm.js").toAbsolutePath().toString(),
         path.toAbsolutePath().toString(),

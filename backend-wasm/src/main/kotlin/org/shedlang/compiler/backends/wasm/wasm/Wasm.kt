@@ -302,6 +302,18 @@ internal object Wasm {
 
         val memorySize = WasmInstruction.Folded.MemorySize
 
+        fun returnCallIndirect(
+            type: WasmFuncType,
+            tableIndex: WasmInstruction.Folded,
+            args: List<WasmInstruction.Folded>,
+        ): WasmInstruction.Folded {
+            return WasmInstruction.Folded.ReturnCallIndirect(
+                type = type,
+                tableIndex = tableIndex,
+                args = args,
+            )
+        }
+
         fun throw_(identifier: String): WasmInstruction {
             return WasmInstruction.Throw(identifier)
         }
@@ -434,6 +446,8 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
     class Loop(val identifier: String, val results: List<WasmValueType>): WasmInstruction()
 
     object MemoryGrow: WasmInstruction()
+
+    class ReturnCallIndirect(val type: WasmFuncType): WasmInstruction()
 
     class Throw(val identifier: String): WasmInstruction()
 
@@ -571,6 +585,16 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         }
 
         object MemorySize: Folded()
+
+        class ReturnCallIndirect(
+            val type: WasmFuncType,
+            val tableIndex: Folded,
+            val args: List<Folded>,
+        ): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return args + listOf(tableIndex) + listOf(WasmInstruction.ReturnCallIndirect(type = type))
+            }
+        }
     }
 }
 

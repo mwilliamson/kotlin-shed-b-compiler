@@ -53,7 +53,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             .let { compileModuleInitCall(mainModule, context = it) }
             .addInstruction(WasmModules.compileLoad(mainModule))
             .addInstruction(WasmObjects.compileFieldLoad(objectType = moduleType, fieldName = Identifier("main")))
-            .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), context = it) }
+            .let { compileCall(positionalArgumentCount = 0, namedArgumentNames = listOf(), isTailCall = false, context = it) }
             .addInstruction(Wasi.callProcExit())
             .toStaticFunctionInGlobalContext(
                 identifier = WasmNaming.Wasi.start,
@@ -122,6 +122,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return compileCall(
                     positionalArgumentCount = instruction.positionalArgumentCount,
                     namedArgumentNames = instruction.namedArgumentNames,
+                    isTailCall = instruction.tail,
                     context = context
                 )
             }
@@ -480,6 +481,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
     private fun compileCall(
         positionalArgumentCount: Int,
         namedArgumentNames: List<Identifier>,
+        isTailCall: Boolean,
         context: WasmFunctionContext,
     ): WasmFunctionContext {
         val (context2, positionalArgLocals) = (0 until positionalArgumentCount)
@@ -505,6 +507,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             closurePointer = callee.get(),
             positionalArguments = positionalArgLocals.map(WasmLocalRef::get),
             namedArguments = namedArgumentNames.zip(namedArgLocals.map(WasmLocalRef::get)),
+            isTailCall = isTailCall,
             context = context6,
         )
     }

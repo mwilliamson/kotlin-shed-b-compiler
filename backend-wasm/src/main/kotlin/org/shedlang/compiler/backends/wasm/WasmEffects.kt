@@ -128,6 +128,7 @@ internal object WasmEffects {
                         closurePointer = Wasm.I.localGet("operationHandler"),
                         positionalArguments = operationParams.positionalArgs,
                         namedArguments = operationParams.namedArgs,
+                        isTailCall = false,
                         context = it,
                     )
                 }
