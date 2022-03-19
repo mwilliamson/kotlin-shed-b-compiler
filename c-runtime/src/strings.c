@@ -2,7 +2,7 @@
 
 #include "shed.h"
 
-ShedString shed_string_alloc(uint32_t capacity) {
+ShedString shed_string_alloc(ShedSize capacity) {
     return shed_malloc(sizeof(ShedSize) + sizeof(uint8_t) * capacity, sizeof(ShedSize));
 }
 
