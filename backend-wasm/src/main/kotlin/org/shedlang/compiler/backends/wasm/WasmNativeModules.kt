@@ -3,8 +3,10 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.ShedRuntime
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
+import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.backends.wasm.wasm.WasmParam
 
@@ -25,27 +27,14 @@ internal object WasmNativeModules {
     private fun generateCoreCastModule(
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-        val symbolName = ShedRuntime.functionSymbolName(
-            listOf(Identifier("Core"), Identifier("Cast")),
-            Identifier("cast"),
+
+        return generateModule(
+            moduleName = listOf(Identifier("Core"), Identifier("Cast")),
+            functions = listOf(
+                Pair("cast", Wasm.T.funcType(listOf(WasmData.genericValueType, WasmData.genericValueType, WasmData.genericValueType), listOf(WasmData.genericValueType))),
+            ),
+            context = context,
         )
-        val intToStringImport = Wasm.importFunction(
-            moduleName = "env",
-            entityName = symbolName,
-            identifier = symbolName,
-            params = listOf(WasmData.genericValueType, WasmData.genericValueType, WasmData.genericValueType),
-            results = listOf(WasmData.genericValueType),
-        )
-        val (context2, closure) = WasmClosures.compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(symbolName),
-            freeVariables = listOf(),
-            context.addImport(intToStringImport).addTableEntry(intToStringImport.identifier),
-        )
-        val exports = listOf(
-            Pair(Identifier("cast"), closure.get())
-        )
-        val context3 = context2.addDependency(listOf(Identifier("Core"), Identifier("Options")))
-        return Pair(context3, exports)
     }
 
     private fun generateCoreIoModule(
@@ -78,96 +67,71 @@ internal object WasmNativeModules {
     private fun generateCoreIntToStringModule(
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-        val symbolName = ShedRuntime.functionSymbolName(
-            listOf(Identifier("Core"), Identifier("IntToString")),
-            Identifier("intToString"),
+
+        return generateModule(
+            moduleName = listOf(Identifier("Core"), Identifier("IntToString")),
+            functions = listOf(
+                Pair("intToString", Wasm.T.funcType(listOf(WasmData.genericValueType, WasmData.genericValueType), listOf(WasmData.genericValueType))),
+            ),
+            context = context,
         )
-        val intToStringImport = Wasm.importFunction(
-            moduleName = "env",
-            entityName = symbolName,
-            identifier = symbolName,
-            params = listOf(WasmData.genericValueType, WasmData.genericValueType),
-            results = listOf(WasmData.genericValueType),
-        )
-        val (context2, closure) = WasmClosures.compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(symbolName),
-            freeVariables = listOf(),
-            context.addImport(intToStringImport).addTableEntry(intToStringImport.identifier),
-        )
-        val exports = listOf(
-            Pair(Identifier("intToString"), closure.get())
-        )
-        return Pair(context2, exports)
     }
 
     private fun generateStdlibPlatformProcessModule(
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-        val symbolName = ShedRuntime.functionSymbolName(
-            listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")),
-            Identifier("args"),
+
+        return generateModule(
+            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")),
+            functions = listOf(
+                Pair("args", Wasm.T.funcType(listOf(), listOf(WasmData.genericValueType))),
+            ),
+            context = context,
         )
-        val argsImport = Wasm.importFunction(
-            moduleName = "env",
-            entityName = symbolName,
-            identifier = symbolName,
-            params = listOf(),
-            results = listOf(WasmData.genericValueType),
-        )
-        val (context2, closure) = WasmClosures.compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(symbolName),
-            freeVariables = listOf(),
-            context.addImport(argsImport).addTableEntry(argsImport.identifier),
-        )
-        val exports = listOf(
-            Pair(Identifier("args"), closure.get())
-        )
-        return Pair(context2, exports)
     }
 
     private fun generateStdlibPlatformStringBuilderModule(
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
 
-        val buildSymbolName = ShedRuntime.functionSymbolName(
-            listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
-            Identifier("build"),
+        return generateModule(
+            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
+            functions = listOf(
+                Pair("build", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
+                Pair("write", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
+            ),
+            context = context,
         )
-        val buildImport = Wasm.importFunction(
-            moduleName = "env",
-            entityName = buildSymbolName,
-            identifier = buildSymbolName,
-            params = listOf(WasmData.genericValueType),
-            results = listOf(WasmData.genericValueType),
-        )
-        val (context2, buildClosure) = WasmClosures.compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(buildSymbolName),
-            freeVariables = listOf(),
-            context.addImport(buildImport).addTableEntry(buildImport.identifier),
-        )
+    }
 
+    private fun generateModule(
+        moduleName: ModuleName,
+        functions: List<Pair<String, WasmFuncType>>,
+        context: WasmFunctionContext,
+    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+        var currentContext = context
+        val exports = mutableListOf<Pair<Identifier, WasmInstruction.Folded>>()
 
-        val writeSymbolName = ShedRuntime.functionSymbolName(
-            listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
-            Identifier("write"),
-        )
-        val writeImport = Wasm.importFunction(
-            moduleName = "env",
-            entityName = writeSymbolName,
-            identifier = writeSymbolName,
-            params = listOf(WasmData.genericValueType),
-            results = listOf(WasmData.genericValueType),
-        )
-        val (context3, writeClosure) = WasmClosures.compileCreateForFunction(
-            tableIndex = WasmConstValue.TableEntryIndex(writeSymbolName),
-            freeVariables = listOf(),
-            context2.addImport(writeImport).addTableEntry(writeImport.identifier),
-        )
-
-        val exports = listOf(
-            Pair(Identifier("build"), buildClosure.get()),
-            Pair(Identifier("write"), writeClosure.get()),
-        )
-        return Pair(context3, exports)
+        for ((functionName, functionType) in functions) {
+            val symbolName = ShedRuntime.functionSymbolName(
+                moduleName,
+                Identifier(functionName),
+            )
+            val import = Wasm.importFunction(
+                moduleName = "env",
+                entityName = symbolName,
+                identifier = symbolName,
+                params = functionType.params,
+                results = functionType.results,
+            )
+            val (newContext, closure) = WasmClosures.compileCreateForFunction(
+                tableIndex = WasmConstValue.TableEntryIndex(symbolName),
+                freeVariables = listOf(),
+                currentContext.addImport(import).addTableEntry(import.identifier),
+            )
+            currentContext = newContext
+            exports.add(Pair(Identifier(functionName), closure.get()))
+        }
+        return Pair(currentContext, exports)
     }
 }
