@@ -42,8 +42,11 @@ object WasmBackend : Backend {
 
         val runtimeObjectFilePaths = listOf(
             "polyfills/string.o",
+            "shed.o",
             "strings.o",
+            "stringbuilder.o",
             "modules/Core.Cast.o",
+            "modules/Stdlib.Platform.StringBuilder.o",
             "shed_platform_effects.o",
             "modules/Core.IntToString.o",
             "modules/Stdlib.Platform.Process.o",

@@ -17,6 +17,7 @@ internal object WasmNativeModules {
         listOf(Identifier("Core"), Identifier("Io")) to ::generateCoreIoModule,
         listOf(Identifier("Core"), Identifier("IntToString")) to ::generateCoreIntToStringModule,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")) to ::generateStdlibPlatformProcessModule,
+        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")) to ::generateStdlibPlatformStringBuilderModule,
     )
 
     fun moduleInitialisation(moduleName: ModuleName) = modules[moduleName]
@@ -122,5 +123,51 @@ internal object WasmNativeModules {
             Pair(Identifier("args"), closure.get())
         )
         return Pair(context2, exports)
+    }
+
+    private fun generateStdlibPlatformStringBuilderModule(
+        context: WasmFunctionContext,
+    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+
+        val buildSymbolName = ShedRuntime.functionSymbolName(
+            listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
+            Identifier("build"),
+        )
+        val buildImport = Wasm.importFunction(
+            moduleName = "env",
+            entityName = buildSymbolName,
+            identifier = buildSymbolName,
+            params = listOf(WasmData.genericValueType),
+            results = listOf(WasmData.genericValueType),
+        )
+        val (context2, buildClosure) = WasmClosures.compileCreateForFunction(
+            tableIndex = WasmConstValue.TableEntryIndex(buildSymbolName),
+            freeVariables = listOf(),
+            context.addImport(buildImport).addTableEntry(buildImport.identifier),
+        )
+
+
+        val writeSymbolName = ShedRuntime.functionSymbolName(
+            listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
+            Identifier("write"),
+        )
+        val writeImport = Wasm.importFunction(
+            moduleName = "env",
+            entityName = writeSymbolName,
+            identifier = writeSymbolName,
+            params = listOf(WasmData.genericValueType),
+            results = listOf(WasmData.genericValueType),
+        )
+        val (context3, writeClosure) = WasmClosures.compileCreateForFunction(
+            tableIndex = WasmConstValue.TableEntryIndex(writeSymbolName),
+            freeVariables = listOf(),
+            context2.addImport(writeImport).addTableEntry(writeImport.identifier),
+        )
+
+        val exports = listOf(
+            Pair(Identifier("build"), buildClosure.get()),
+            Pair(Identifier("write"), writeClosure.get()),
+        )
+        return Pair(context3, exports)
     }
 }

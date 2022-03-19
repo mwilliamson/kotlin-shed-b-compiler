@@ -8,6 +8,13 @@ static struct EffectHandler default_effect_handler = {
 
 static struct EffectHandler* effect_handler_stack = &default_effect_handler;
 
+struct EffectHandler* shed_effects_push_alwaysresume_nostate(
+    EffectId effect_id,
+    OperationIndex operation_count
+) {
+    return shed_effects_push(effect_id, operation_count);
+}
+
 struct EffectHandler* shed_effects_push(
     EffectId effect_id,
     OperationIndex operation_count

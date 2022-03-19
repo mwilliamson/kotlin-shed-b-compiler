@@ -15,10 +15,7 @@ import java.nio.file.Path
 class WasmExampleTests {
     private val disabledTests = setOf<String>(
         "HandleWithState.shed",
-        "nestedStringBuilder",
-        "nestedStringBuilderAndNonLocalReturns",
         "stdlib",
-        "stringBuilder",
     )
 
     @TestFactory
