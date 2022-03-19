@@ -1,12 +1,6 @@
+#include <string.h>
+
 #include "shed.h"
-
-void* memcpy(void* dest, const void* src, unsigned long n) {
-    for (ShedSize i = 0; i < n; i++) {
-        ((uint8_t*)dest)[i] = ((const uint8_t*)src)[i];
-    }
-
-    return dest;
-}
 
 ShedString shed_string_alloc(uint32_t capacity) {
     return shed_malloc(sizeof(ShedSize) + sizeof(uint8_t) * capacity, sizeof(ShedSize));
