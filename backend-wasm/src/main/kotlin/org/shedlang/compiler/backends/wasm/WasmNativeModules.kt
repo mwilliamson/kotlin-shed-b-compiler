@@ -98,8 +98,8 @@ internal object WasmNativeModules {
         return generateModule(
             moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
             functions = listOf(
-                Pair("build", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
-                Pair("write", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
+                Pair("build", Wasm.T.funcType(listOf(), listOf(WasmData.genericValueType))),
+                Pair("write", Wasm.T.funcType(listOf(), listOf(WasmData.genericValueType))),
             ),
             context = context,
         )

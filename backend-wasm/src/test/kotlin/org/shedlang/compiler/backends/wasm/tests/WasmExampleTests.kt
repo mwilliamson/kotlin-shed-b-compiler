@@ -14,7 +14,6 @@ import java.nio.file.Path
 
 class WasmExampleTests {
     private val disabledTests = setOf<String>(
-        "stdlib",
     )
 
     @TestFactory
