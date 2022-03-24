@@ -101,6 +101,7 @@ internal object WasmObjects {
                     shapeTypeLayout(type)
                 }
             }
+            is TypeAlias -> layout(type.aliasedType)
             else -> throw UnsupportedOperationException("layout unknown for type: $type")
         }
     }
