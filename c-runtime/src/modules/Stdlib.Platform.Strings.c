@@ -3,11 +3,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../deps/gc/include/gc.h"
-#include "../deps/utf8proc/utf8proc.h"
+#include "../../../backend-llvm/runtime/deps/utf8proc/utf8proc.h"
 
-#include "./shed.h"
-#include "./stringbuilder.h"
+#include "../shed.h"
+#include "../strings.h"
+#include "../stringbuilder.h"
 
 #include "../../../c-bindings/Core.Options.h"
 
@@ -73,12 +73,12 @@ ShedAny shed_module_fun__Stdlib__Platform__Strings__next(ShedEnvironment env, Sh
             &scalar
         );
 
-        ShedStringSlice newSlice = GC_malloc(sizeof(struct ShedStringSlice));
+        ShedStringSlice newSlice = shed_malloc(sizeof(struct ShedStringSlice), 4);
         newSlice->string = slice->string;
         newSlice->startIndex = slice->startIndex + bytesRead;
         newSlice->endIndex = slice->endIndex;
 
-        ShedAny* result = GC_malloc(sizeof(ShedAny) * 2);
+        ShedAny* result = shed_malloc(sizeof(ShedAny) * 2, 4);
         result[0] = scalar;
         result[1] = (ShedAny) newSlice;
 
@@ -119,7 +119,7 @@ ShedString shed_module_fun__Stdlib__Platform__Strings__replace(ShedEnvironment e
 }
 
 ShedStringSlice shed_module_fun__Stdlib__Platform__Strings__slice(ShedEnvironment env, ShedString string) {
-    ShedStringSlice slice = GC_malloc(sizeof(struct ShedStringSlice));
+    ShedStringSlice slice = shed_malloc(sizeof(struct ShedStringSlice), 4);
     slice->string = string;
     slice->startIndex = 0;
     slice->endIndex = string->length;

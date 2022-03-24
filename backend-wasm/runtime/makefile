@@ -11,6 +11,7 @@ build:
 	clang $(CFLAGS) ../../c-runtime/src/stringbuilder.c -o build/stringbuilder.o
 	clang $(CFLAGS) ../../c-runtime/src/modules/Core.Cast.c -o build/modules/Core.Cast.o
 	clang $(CFLAGS) ../../c-runtime/src/modules/Stdlib.Platform.StringBuilder.c -o build/modules/Stdlib.Platform.StringBuilder.o
+	clang $(CFLAGS) ../../c-runtime/src/modules/Stdlib.Platform.Strings.c -o build/modules/Stdlib.Platform.Strings.o
 	clang $(CFLAGS) src/shed_platform_effects.c -o build/shed_platform_effects.o
 	clang $(CFLAGS) src/modules/Core.IntToString.c -o build/modules/Core.IntToString.o
 	clang $(CFLAGS) src/modules/Stdlib.Platform.Process.c -o build/modules/Stdlib.Platform.Process.o

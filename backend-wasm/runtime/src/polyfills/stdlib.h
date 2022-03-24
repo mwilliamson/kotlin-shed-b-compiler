@@ -1,0 +1,4 @@
+#ifndef SHED_POLYFILLS_STDLIB_H
+#define SHED_POLYFILLS_STDLIB_H
+
+#endif

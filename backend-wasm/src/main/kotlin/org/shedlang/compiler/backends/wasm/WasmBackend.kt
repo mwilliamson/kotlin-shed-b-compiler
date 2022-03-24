@@ -47,6 +47,7 @@ object WasmBackend : Backend {
             "stringbuilder.o",
             "modules/Core.Cast.o",
             "modules/Stdlib.Platform.StringBuilder.o",
+            "modules/Stdlib.Platform.Strings.o",
             "shed_platform_effects.o",
             "modules/Core.IntToString.o",
             "modules/Stdlib.Platform.Process.o",

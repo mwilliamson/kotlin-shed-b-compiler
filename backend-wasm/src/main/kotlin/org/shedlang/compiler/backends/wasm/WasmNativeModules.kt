@@ -20,6 +20,7 @@ internal object WasmNativeModules {
         listOf(Identifier("Core"), Identifier("IntToString")) to ::generateCoreIntToStringModule,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")) to ::generateStdlibPlatformProcessModule,
         listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")) to ::generateStdlibPlatformStringBuilderModule,
+        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")) to ::generateStdlibPlatformStringsModule,
     )
 
     fun moduleInitialisation(moduleName: ModuleName) = modules[moduleName]
@@ -99,6 +100,28 @@ internal object WasmNativeModules {
             functions = listOf(
                 Pair("build", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
                 Pair("write", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
+            ),
+            context = context,
+        )
+    }
+
+    private fun generateStdlibPlatformStringsModule(
+        context: WasmFunctionContext,
+    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+
+        return generateModule(
+            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
+            functions = listOf(
+                // TODO: proper types of imports
+                Pair("dropLeftUnicodeScalars", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("next", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("replace", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("slice", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("substring", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("unicodeScalarCount", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("unicodeScalarToInt", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("unicodeScalarToHexString", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
+                Pair("unicodeScalarToString", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
             ),
             context = context,
         )

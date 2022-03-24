@@ -16,5 +16,5 @@ add_library(
     src/Core.Io.c
     src/Stdlib.Platform.Process.c
     ../../c-runtime/src/modules/Stdlib.Platform.StringBuilder.c
-    src/Stdlib.Platform.Strings.c
+    ../../c-runtime/src/modules/Stdlib.Platform.Strings.c
 )
