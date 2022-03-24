@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
+import org.shedlang.compiler.ast.freshNodeId
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
@@ -61,7 +62,8 @@ private class WasmShapeCompiler(
         val layout = WasmObjects.shapeLayout(shapeType)
 
         return WasmClosures.compileFunction(
-            functionName = constructorName,
+            // TODO: uniquify name properly
+            functionName = constructorName + freshNodeId(),
             freeVariables = listOf(),
             positionalParams = listOf(),
             namedParams = fields.map { field ->
