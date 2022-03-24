@@ -1,6 +1,6 @@
 .PHONY: build
 
-CFLAGS = --target=wasm32 -c -I src/polyfills -I src -I ../../c-runtime/src
+CFLAGS = --target=wasm32 -c -I src/polyfills -I src -I ../../c-runtime/src -Wall -Werror
 
 build:
 	mkdir -p build/modules
