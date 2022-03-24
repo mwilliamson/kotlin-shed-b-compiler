@@ -11,6 +11,7 @@ struct OperationHandler {
 struct EffectHandler {
     EffectId effect_id;
     struct EffectHandler* next;
+    ShedAny state;
     struct OperationHandler operation_handlers[];
 };
 
@@ -20,7 +21,8 @@ struct EffectHandler* shed_effects_push_alwaysresume_nostate(
 );
 struct EffectHandler* shed_effects_push(
     EffectId effect_id,
-    OperationIndex operation_count
+    OperationIndex operation_count,
+    ShedAny initial_state
 );
 void shed_effects_set_operation_handler(
     struct EffectHandler* effect_handler,

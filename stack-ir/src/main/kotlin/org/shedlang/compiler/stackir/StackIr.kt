@@ -60,7 +60,7 @@ class DefineFunction(
     }
 }
 
-class DefineOperationHandler(val function: DefineFunction): Instruction()
+class DefineOperationHandler(val function: DefineFunction, val hasState: Boolean): Instruction()
 
 class DefineShape(
     val tagValue: TagValue?,
@@ -222,6 +222,7 @@ fun Instruction.mapChildren(func: (List<Instruction>) -> PersistentList<Instruct
         )
         is DefineOperationHandler -> DefineOperationHandler(
             function = function.mapChildren(func) as DefineFunction,
+            hasState = hasState,
         )
         is EffectHandle -> EffectHandle(
             effect = effect,

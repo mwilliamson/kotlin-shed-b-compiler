@@ -12,16 +12,18 @@ struct EffectHandler* shed_effects_push_alwaysresume_nostate(
     EffectId effect_id,
     OperationIndex operation_count
 ) {
-    return shed_effects_push(effect_id, operation_count);
+    return shed_effects_push(effect_id, operation_count, shed_unit);
 }
 
 struct EffectHandler* shed_effects_push(
     EffectId effect_id,
-    OperationIndex operation_count
+    OperationIndex operation_count,
+    ShedAny initial_state
 ) {
     struct EffectHandler* effect_handler = shed_malloc(sizeof(struct EffectHandler) + operation_count * sizeof(struct OperationHandler), 8);
     effect_handler->effect_id = effect_id;
     effect_handler->next = effect_handler_stack;
+    effect_handler->state = initial_state;
     effect_handler_stack = effect_handler;
     return effect_handler;
 }
@@ -60,6 +62,14 @@ void shed_effects_restore(struct EffectHandler* effect_handler) {
 
 void shed_effects_discard() {
     effect_handler_stack = effect_handler_stack->next;
+}
+
+void shed_effects_set_state(struct EffectHandler* effect_handler, ShedAny state) {
+    effect_handler->state = state;
+}
+
+ShedAny shed_effects_get_state(struct EffectHandler* effect_handler) {
+    return effect_handler->state;
 }
 
 struct OperationHandler* shed_effects_get_operation_handler(

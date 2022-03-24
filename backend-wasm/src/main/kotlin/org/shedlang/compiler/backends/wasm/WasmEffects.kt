@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmImport
@@ -99,9 +100,14 @@ internal object WasmEffects {
         effect: UserDefinedEffect,
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
         operationHandlers: List<WasmLocalRef>,
+        initialState: WasmInstruction.Folded?,
         context: WasmFunctionContext
     ): WasmFunctionContext {
-        val context2 = compileCallPush(effect = effect, context = context)
+        val context2 = compileCallPush(
+            effect = effect,
+            initialState = initialState ?: WasmData.unitValue,
+            context = context,
+        )
         val (context3, effectHandler) = context2.addLocal("effectHandler")
         val context4 = context3.addInstruction(effectHandler.set())
 
@@ -124,9 +130,24 @@ internal object WasmEffects {
                 }
                 .addInstruction(previousEffectHandler.set())
                 .let {
+                    val prefixArguments = if (initialState == null) {
+                        listOf()
+                    } else {
+                        listOf(Pair(Wasm.I.localGet("effectHandler"), Wasm.T.i32))
+                    }
+
+                    val stateArguments = if (initialState == null) {
+                        listOf()
+                    } else {
+                        listOf(compileCallGetState(
+                            effectHandler = Wasm.I.localGet("effectHandler"),
+                        ))
+                    }
+
                     WasmClosures.compileCall(
                         closurePointer = Wasm.I.localGet("operationHandler"),
-                        positionalArguments = operationParams.positionalArgs,
+                        prefixArguments = prefixArguments,
+                        positionalArguments = stateArguments + operationParams.positionalArgs,
                         namedArguments = operationParams.namedArgs,
                         isTailCall = false,
                         context = it,
@@ -156,6 +177,22 @@ internal object WasmEffects {
             .let { compileDiscard(it) }
             .addInstruction(Wasm.I.catch(WasmNaming.effectTagName(effect)))
             .addInstruction(Wasm.I.end)
+    }
+
+    fun closurePrefixParameters(hasState: Boolean): List<WasmParam> {
+        return if (hasState) {
+            listOf(WasmParam("effectHandler", Wasm.T.i32))
+        } else {
+            listOf()
+        }
+    }
+
+    fun compileSetState(newState: WasmInstruction.Folded, context: WasmFunctionContext): WasmFunctionContext {
+        return compileCallSetState(
+            effectHandler = Wasm.I.localGet("effectHandler"),
+            newState = newState,
+            context = context,
+        )
     }
 
     private class OperationParams(operationType: FunctionType) {
@@ -192,12 +229,22 @@ internal object WasmEffects {
         internal val enter = "shed_effects_enter"
         internal val discard = "shed_effects_discard"
         internal val restore = "shed_effects_restore"
+        internal val getState = "shed_effects_get_state"
+        internal val setState = "shed_effects_set_state"
     }
 
-    private fun compileCallPush(effect: UserDefinedEffect, context: WasmFunctionContext): WasmFunctionContext {
+    private fun compileCallPush(
+        effect: UserDefinedEffect,
+        initialState: WasmInstruction.Folded,
+        context: WasmFunctionContext,
+    ): WasmFunctionContext {
         return context.addInstruction(Wasm.I.call(
             identifier = Naming.push,
-            args = listOf(Wasm.I.i32Const(effect.definitionId), Wasm.I.i32Const(effect.operations.size)),
+            args = listOf(
+                Wasm.I.i32Const(effect.definitionId),
+                Wasm.I.i32Const(effect.operations.size),
+                initialState,
+            ),
         ))
     }
 
@@ -267,11 +314,31 @@ internal object WasmEffects {
         ))
     }
 
+    private fun compileCallGetState(
+        effectHandler: WasmInstruction.Folded,
+    ): WasmInstruction.Folded {
+        return Wasm.I.call(
+            identifier = Naming.getState,
+            args = listOf(effectHandler),
+        )
+    }
+
+    private fun compileCallSetState(
+        effectHandler: WasmInstruction.Folded,
+        newState: WasmInstruction.Folded,
+        context: WasmFunctionContext,
+    ): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.call(
+            identifier = Naming.setState,
+            args = listOf(effectHandler, newState),
+        ))
+    }
+
     fun imports(): List<WasmImport> {
         return listOf(
             import(
                 name = Naming.push,
-                params = listOf(Wasm.T.i32, Wasm.T.i32),
+                params = listOf(Wasm.T.i32, Wasm.T.i32, WasmData.genericValueType),
                 results = listOf(Wasm.T.i32),
             ),
             import(
@@ -312,6 +379,16 @@ internal object WasmEffects {
             import(
                 name = Naming.discard,
                 params = listOf(),
+                results = listOf(),
+            ),
+            import(
+                name = Naming.getState,
+                params = listOf(Wasm.T.i32),
+                results = listOf(Wasm.T.i32),
+            ),
+            import(
+                name = Naming.setState,
+                params = listOf(Wasm.T.i32, Wasm.T.i32),
                 results = listOf(),
             ),
         )

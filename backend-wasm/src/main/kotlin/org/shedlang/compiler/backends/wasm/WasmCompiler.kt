@@ -132,7 +132,11 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is DefineOperationHandler -> {
-                return compileDefineFunction(instruction.function, context)
+                return compileDefineFunction(
+                    instruction.function,
+                    context,
+                    prefixParameters = WasmEffects.closurePrefixParameters(hasState = instruction.hasState),
+                )
             }
 
             is DefineShape -> {
@@ -170,11 +174,19 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         Pair(context2.addInstruction(local.set()), locals.add(0, local))
                     }
 
+                val (context3, initialState) = if (instruction.hasState) {
+                    val (currentContext, initialState) = context2.addLocal("initialState")
+                    Pair(currentContext.addInstruction(initialState.set()), initialState.get())
+                } else {
+                    Pair(context2, null)
+                }
+
                 return WasmEffects.compileEffectHandle(
                     effect = instruction.effect,
                     compileBody = { context -> compileInstructions(instruction.instructions, context) },
                     operationHandlers = operationHandlers,
-                    context = context2,
+                    initialState = initialState,
+                    context = context3,
                 )
             }
 
@@ -360,6 +372,12 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 return context
             }
 
+            is ResumeWithState -> {
+                val (context2, newState) = context.addLocal("newState")
+                val context3 = context2.addInstruction(newState.set())
+                return WasmEffects.compileSetState(newState.get(), context3)
+            }
+
             is Return -> {
                 return context
             }
@@ -438,14 +456,19 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         }
     }
 
-    private fun compileDefineFunction(instruction: DefineFunction, context: WasmFunctionContext): WasmFunctionContext {
-        val (context2, closurePointer) = compileCreateFunction(instruction, context)
+    private fun compileDefineFunction(
+        instruction: DefineFunction,
+        context: WasmFunctionContext,
+        prefixParameters: List<WasmParam> = listOf(),
+    ): WasmFunctionContext {
+        val (context2, closurePointer) = compileCreateFunction(instruction, context, prefixParameters = prefixParameters)
         return context2.addInstruction(closurePointer.get())
     }
 
     internal fun compileCreateFunction(
         instruction: DefineFunction,
-        context: WasmFunctionContext
+        context: WasmFunctionContext,
+        prefixParameters: List<WasmParam> = listOf(),
     ): Pair<WasmFunctionContext, WasmLocalRef> {
         val freeVariables = findFreeVariables(instruction)
 
@@ -472,6 +495,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                     context = currentContext.bindVariables(paramBindings),
                 )
             },
+            prefixParams = prefixParameters,
             positionalParams = positionalParams,
             namedParams = namedParams,
             context = context,

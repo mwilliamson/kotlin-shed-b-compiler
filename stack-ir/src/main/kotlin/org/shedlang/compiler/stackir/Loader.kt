@@ -384,14 +384,15 @@ class Loader(
                     loadExpression(initialState, context)
                 }
 
+                val hasState = initialState != null
                 val operationHandlerInstructions = node.handlers
-                    .map { handler -> loadOperationHandler(handler.function, effect = effect) }
+                    .map { handler -> loadOperationHandler(handler.function, effect = effect, hasState = hasState) }
 
                 val body = loadBlock(node.body, context)
                 val effectHandleInstruction = EffectHandle(
                     effect = effect,
                     instructions = body,
-                    hasState = initialState != null,
+                    hasState = hasState,
                 )
 
                 return persistentListOf<Instruction>()
@@ -613,8 +614,15 @@ class Loader(
         )
     }
 
-    private fun loadOperationHandler(node: FunctionNode, effect: UserDefinedEffect): DefineOperationHandler {
-        return DefineOperationHandler(function = loadFunctionValue(node, LoaderContext(handling = effect)))
+    private fun loadOperationHandler(
+        node: FunctionNode,
+        effect: UserDefinedEffect,
+        hasState: Boolean,
+    ): DefineOperationHandler {
+        return DefineOperationHandler(
+            function = loadFunctionValue(node, LoaderContext(handling = effect)),
+            hasState = hasState,
+        )
     }
 
     private fun loadShape(node: ShapeBaseNode): PersistentList<Instruction> {

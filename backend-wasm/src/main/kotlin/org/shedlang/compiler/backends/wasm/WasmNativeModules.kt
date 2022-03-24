@@ -56,7 +56,7 @@ internal object WasmNativeModules {
                 ))
                 .addInstruction(WasmData.unitValue)
             },
-            context,
+            context = context,
         )
         val exports = listOf(
             Pair(Identifier("print"), closure.get())

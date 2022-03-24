@@ -2,6 +2,7 @@ package org.shedlang.compiler.backends.wasm
 
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.backends.wasm.runtime.callMalloc
+import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
@@ -13,6 +14,7 @@ internal object WasmClosures {
     internal fun compileCreate(
         functionName: String,
         freeVariables: List<LocalLoad>,
+        prefixParams: List<WasmParam> = listOf(),
         positionalParams: List<WasmParam>,
         namedParams: List<Pair<Identifier, WasmParam>>,
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
@@ -21,6 +23,7 @@ internal object WasmClosures {
         val (context2, functionTableIndex) = compileFunction(
             functionName = functionName,
             freeVariables = freeVariables,
+            prefixParams = prefixParams,
             positionalParams = positionalParams,
             namedParams = namedParams,
             compileBody = compileBody,
@@ -37,12 +40,13 @@ internal object WasmClosures {
     internal fun compileFunction(
         functionName: String,
         freeVariables: List<LocalLoad>,
+        prefixParams: List<WasmParam> = listOf(),
         positionalParams: List<WasmParam>,
         namedParams: List<Pair<Identifier, WasmParam>>,
         compileBody: (WasmFunctionContext) -> WasmFunctionContext,
         context: WasmFunctionContext,
     ): Pair<WasmFunctionContext, WasmConstValue.TableEntryIndex> {
-        val params = listOf(
+        val params = prefixParams + listOf(
             WasmParam(
                 WasmNaming.environmentPointer,
                 type = WasmData.closurePointerType
@@ -98,6 +102,7 @@ internal object WasmClosures {
 
     internal fun compileCall(
         closurePointer: WasmInstruction.Folded,
+        prefixArguments: List<Pair<WasmInstruction.Folded, WasmValueType>> = listOf(),
         positionalArguments: List<WasmInstruction.Folded>,
         namedArguments: List<Pair<Identifier, WasmInstruction.Folded>>,
         isTailCall: Boolean,
@@ -105,7 +110,9 @@ internal object WasmClosures {
     ): WasmFunctionContext {
         val argumentCount = positionalArguments.size + namedArguments.size
         val wasmFuncType = WasmFuncType(
-            params = listOf(WasmData.functionPointerType) + (0 until argumentCount).map { WasmData.genericValueType },
+            params = prefixArguments.map { (_, argType) -> argType } +
+                listOf(WasmData.functionPointerType) +
+                (0 until argumentCount).map { WasmData.genericValueType },
             results = listOf(WasmData.genericValueType),
         )
 
@@ -116,7 +123,7 @@ internal object WasmClosures {
         val args = positionalArguments + sortedNamedArgLocals
 
         val tableIndex = Wasm.I.i32Load(closurePointer)
-        val wasmInstructionArgs = listOf(
+        val wasmInstructionArgs = prefixArguments.map { (argValue, _) -> argValue } + listOf(
             Wasm.I.i32Add(closurePointer, Wasm.I.i32Const(WasmData.FUNCTION_POINTER_SIZE))
         ) + args
         val wasmInstruction = if (isTailCall) {
