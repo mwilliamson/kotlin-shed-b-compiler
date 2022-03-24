@@ -18,9 +18,9 @@ Custom:
 Code Disassembly:
 
 000027 func[0] <FIRST>:
- 000028: 01 7f                      | local[0] type=i32
- 00002a: 20 01                      | local.get 1
- 00002c: 20 00                      | local.get 0
+ 000028: 01 7f                      | local[1] type=i32
+ 00002a: 20 01                      | local.get 1 <local0>
+ 00002c: 20 00                      | local.get 0 <arg0>
  00002e: 1a                         | drop
  00002f: 1a                         | drop
  000030: 0b                         | end

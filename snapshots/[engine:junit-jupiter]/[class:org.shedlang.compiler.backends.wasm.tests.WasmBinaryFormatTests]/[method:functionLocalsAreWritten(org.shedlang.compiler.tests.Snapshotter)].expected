@@ -18,5 +18,5 @@ Custom:
 Code Disassembly:
 
 000027 func[0] <FIRST>:
- 000028: 01 7f                      | local[0] type=i32
+ 000028: 01 7f                      | local[1] type=i32
  00002a: 0b                         | end

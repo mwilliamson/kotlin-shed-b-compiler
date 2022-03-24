@@ -27,5 +27,5 @@ Custom:
 Code Disassembly:
 
 00002f func[0] <FIRST>:
- 000030: 08 80 80 80 80 00          | throw 0
+ 000030: 08 80 80 80 80 00          | throw 0 <TAG>
  000036: 0b                         | end
