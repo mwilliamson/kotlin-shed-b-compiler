@@ -199,7 +199,13 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is Exit -> {
-                return WasmEffects.compileExit(effect = instruction.effect, context = context)
+                val (context2, exitValue) = context.addLocal("exitValue")
+                val context3 = context2.addInstruction(exitValue.set())
+                return WasmEffects.compileExit(
+                    effect = instruction.effect,
+                    value = exitValue.get(),
+                    context = context3
+                )
             }
 
             is FieldAccess -> {

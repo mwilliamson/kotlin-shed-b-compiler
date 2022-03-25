@@ -179,8 +179,12 @@ internal object WasmEffects {
             .addInstruction(Wasm.I.end)
     }
 
-    fun compileExit(effect: UserDefinedEffect, context: WasmFunctionContext): WasmFunctionContext {
-        return context.addInstruction(Wasm.I.throw_(WasmNaming.effectTagName(effect)))
+    fun compileExit(
+        effect: UserDefinedEffect,
+        value: WasmInstruction.Folded,
+        context: WasmFunctionContext,
+    ): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.throw_(WasmNaming.effectTagName(effect), listOf(value)))
     }
 
     fun closurePrefixParameters(hasState: Boolean): List<WasmParam> {

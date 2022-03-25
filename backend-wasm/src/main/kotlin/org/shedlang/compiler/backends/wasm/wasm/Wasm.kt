@@ -318,6 +318,10 @@ internal object Wasm {
             return WasmInstruction.Throw(identifier)
         }
 
+        fun throw_(identifier: String, args: List<WasmInstruction.Folded>): WasmInstruction {
+            return WasmInstruction.Folded.Throw(identifier, args)
+        }
+
         fun try_(type: WasmValueType): WasmInstruction {
             return WasmInstruction.Try(type)
         }
@@ -593,6 +597,12 @@ internal sealed class WasmInstruction: WasmInstructionSequence {
         ): Folded(), Unfoldable {
             override fun unfold(): List<WasmInstruction> {
                 return args + listOf(tableIndex) + listOf(WasmInstruction.ReturnCallIndirect(type = type))
+            }
+        }
+
+        class Throw(val identifier: String, val args: List<Folded>): Folded(), Unfoldable {
+            override fun unfold(): List<WasmInstruction> {
+                return args + listOf(Throw(identifier))
             }
         }
     }
