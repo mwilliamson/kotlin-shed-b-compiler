@@ -63,7 +63,9 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
 
     private fun compileModule(moduleName: ModuleName): WasmGlobalContext {
         val moduleInit = image.moduleInitialisation(moduleName)
-        val nativeModuleInit = WasmNativeModules.moduleInitialisation(moduleName)
+        val moduleType = moduleSet.moduleType(moduleName)
+        val nativeModuleInit =
+            moduleType?.let { WasmNativeModules.moduleInitialisation(moduleName, type = it) }
         val initFunctionIdentifier = WasmNaming.moduleInit(moduleName)
 
         val isInited = WasmNaming.moduleIsInited(moduleName)

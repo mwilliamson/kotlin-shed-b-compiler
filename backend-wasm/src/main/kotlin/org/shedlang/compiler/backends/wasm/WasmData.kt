@@ -15,6 +15,7 @@ internal object WasmData {
     val moduleValuePointerType = pointerType
     val closureAlignment = max(FUNCTION_POINTER_SIZE, VALUE_SIZE)
     val closurePointerType = pointerType
+    val closureEnvironmentPointerType = pointerType
     val stringType = pointerType
 
     val unitValue = Wasm.I.i32Const(0)

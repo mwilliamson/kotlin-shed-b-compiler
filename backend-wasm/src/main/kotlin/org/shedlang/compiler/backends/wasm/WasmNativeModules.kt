@@ -1,7 +1,9 @@
 package org.shedlang.compiler.backends.wasm
 
+import org.shedlang.compiler.CompilerError
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
+import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
@@ -9,33 +11,54 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
 import org.shedlang.compiler.backends.wasm.wasm.WasmInstruction
 import org.shedlang.compiler.backends.wasm.wasm.WasmParam
+import org.shedlang.compiler.types.*
 
 internal object WasmNativeModules {
     private val modules = mapOf<
         ModuleName,
         (WasmFunctionContext) -> Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>>,
     >(
-        listOf(Identifier("Core"), Identifier("Cast")) to ::generateCoreCastModule,
         listOf(Identifier("Core"), Identifier("Io")) to ::generateCoreIoModule,
-        listOf(Identifier("Core"), Identifier("IntToString")) to ::generateCoreIntToStringModule,
-        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")) to ::generateStdlibPlatformProcessModule,
-        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")) to ::generateStdlibPlatformStringBuilderModule,
-        listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")) to ::generateStdlibPlatformStringsModule,
     )
 
-    fun moduleInitialisation(moduleName: ModuleName) = modules[moduleName]
-
-    private fun generateCoreCastModule(
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-
-        return generateModule(
-            moduleName = listOf(Identifier("Core"), Identifier("Cast")),
-            functions = listOf(
-                Pair("cast", Wasm.T.funcType(listOf(WasmData.genericValueType, WasmData.genericValueType, WasmData.genericValueType), listOf(WasmData.genericValueType))),
-            ),
-            context = context,
-        )
+    fun moduleInitialisation(moduleName: ModuleName, type: ModuleType): (WasmFunctionContext) -> Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
+        val init = modules[moduleName]
+        if (init == null) {
+            return { context ->
+                generateModule(
+                    moduleName = moduleName,
+                    functions = type.fields.mapNotNull { (fieldName, field) ->
+                        val fieldType = rawValue(field.type)
+                        val parameterCount = when (fieldType) {
+                            is FunctionType ->
+                                fieldType.positionalParameters.size + fieldType.namedParameters.size
+                            is StaticValueType ->
+                                when (fieldType.value) {
+                                    is OpaqueEffect ->
+                                        null
+                                    else ->
+                                        throw CompilerError("unhandled fieldType: ${fieldType}", NullSource)
+                                }
+                            else ->
+                                throw CompilerError("unhandled fieldType: ${fieldType}", NullSource)
+                        }
+                        if (parameterCount == null) {
+                            null
+                        } else {
+                            // TODO: remove duplication of knowledge of signature
+                            val wasmType = Wasm.T.funcType(
+                                listOf(WasmData.closureEnvironmentPointerType) + List(parameterCount) { WasmData.genericValueType },
+                                listOf(WasmData.genericValueType),
+                            )
+                            Pair(fieldName.value, wasmType)
+                        }
+                    },
+                    context = context,
+                )
+            }
+        } else {
+            return init
+        }
     }
 
     private fun generateCoreIoModule(
@@ -63,68 +86,6 @@ internal object WasmNativeModules {
             Pair(Identifier("print"), closure.get())
         )
         return Pair(context2, exports)
-    }
-
-    private fun generateCoreIntToStringModule(
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-
-        return generateModule(
-            moduleName = listOf(Identifier("Core"), Identifier("IntToString")),
-            functions = listOf(
-                Pair("intToString", Wasm.T.funcType(listOf(WasmData.genericValueType, WasmData.genericValueType), listOf(WasmData.genericValueType))),
-            ),
-            context = context,
-        )
-    }
-
-    private fun generateStdlibPlatformProcessModule(
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-
-        return generateModule(
-            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Process")),
-            functions = listOf(
-                Pair("args", Wasm.T.funcType(listOf(), listOf(WasmData.genericValueType))),
-            ),
-            context = context,
-        )
-    }
-
-    private fun generateStdlibPlatformStringBuilderModule(
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-
-        return generateModule(
-            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("StringBuilder")),
-            functions = listOf(
-                Pair("build", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
-                Pair("write", Wasm.T.funcType(listOf(WasmData.genericValueType), listOf(WasmData.genericValueType))),
-            ),
-            context = context,
-        )
-    }
-
-    private fun generateStdlibPlatformStringsModule(
-        context: WasmFunctionContext,
-    ): Pair<WasmFunctionContext, List<Pair<Identifier, WasmInstruction.Folded>>> {
-
-        return generateModule(
-            moduleName = listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings")),
-            functions = listOf(
-                // TODO: proper types of imports
-                Pair("dropLeftUnicodeScalars", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("next", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("replace", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("slice", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("substring", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("unicodeScalarCount", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("unicodeScalarToInt", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("unicodeScalarToHexString", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-                Pair("unicodeScalarToString", Wasm.T.funcType(params = listOf(), results = listOf(WasmData.genericValueType))),
-            ),
-            context = context,
-        )
     }
 
     private fun generateModule(
