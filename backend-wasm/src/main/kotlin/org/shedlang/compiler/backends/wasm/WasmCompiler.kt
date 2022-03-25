@@ -351,7 +351,8 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                         return context.addInstruction(Wasm.I.i32Const(intValue))
                     }
                     is IrInt -> {
-                        return context.addInstruction(Wasm.I.i32Const(value.value.intValueExact()))
+                        // TODO: use intValueExact() (or, better, support arbitrary ints)
+                        return context.addInstruction(Wasm.I.i32Const(value.value.toInt()))
                     }
                     is IrString -> {
                         val (context2, memoryIndex) = context.addSizedStaticUtf8String(value.value)
