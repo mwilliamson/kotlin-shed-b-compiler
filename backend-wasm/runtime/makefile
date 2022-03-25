@@ -3,9 +3,14 @@
 CFLAGS = --target=wasm32 -c -I src/polyfills -I src -I ../../c-runtime/src -Wall -Werror
 
 build:
-	mkdir -p build/modules
 	mkdir -p build/polyfills
 	clang $(CFLAGS) src/polyfills/string.c -o build/polyfills/string.o
+	clang $(CFLAGS) src/polyfills/stdlib.c -o build/polyfills/stdlib.o
+
+	mkdir -p build/deps
+	clang $(CFLAGS) ../../backend-llvm/runtime/deps/utf8proc/utf8proc.c -o build/deps/utf8proc.o
+
+	mkdir -p build/modules
 	clang $(CFLAGS) ../../c-runtime/src/shed.c -o build/shed.o
 	clang $(CFLAGS) ../../c-runtime/src/strings.c -o build/strings.o
 	clang $(CFLAGS) ../../c-runtime/src/stringbuilder.c -o build/stringbuilder.o

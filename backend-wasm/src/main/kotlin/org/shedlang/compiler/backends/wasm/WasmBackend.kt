@@ -41,7 +41,9 @@ object WasmBackend : Backend {
             }
 
         val runtimeObjectFilePaths = listOf(
+            "polyfills/stdlib.o",
             "polyfills/string.o",
+            "deps/utf8proc.o",
             "shed.o",
             "strings.o",
             "stringbuilder.o",
