@@ -13,6 +13,6 @@ typedef uint32_t ShedSize;
 
 typedef uint32_t ShedTagValue;
 
-typedef uint64_t ShedUnicodeScalar;
+typedef uint32_t ShedUnicodeScalar;
 
 #endif

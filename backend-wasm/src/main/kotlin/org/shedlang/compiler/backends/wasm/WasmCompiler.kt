@@ -80,11 +80,17 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
         val finalInitContext = if (moduleInit != null) {
             compileInstructions(moduleInit, initContext)
         } else if (nativeModuleInit != null) {
-            val (initContext2, exports) = nativeModuleInit(initContext)
+            // TODO: better handling of dependencies
+            val initContext2 = if (moduleName == listOf(Identifier("Stdlib"), Identifier("Platform"), Identifier("Strings"))) {
+                compileModuleInitCall(listOf(Identifier("Core"), Identifier("Options")), initContext)
+            } else {
+                initContext
+            }
+            val (initContext3, exports) = nativeModuleInit(initContext2)
             moduleStore(
                 moduleName = moduleName,
                 exports = exports,
-                context = initContext2,
+                context = initContext3,
             )
         } else {
             throw CompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)
