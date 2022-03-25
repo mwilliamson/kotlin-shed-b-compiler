@@ -1,7 +1,6 @@
 #include <string.h>
 
 #include "../deps/gc/include/gc.h"
-#include "../deps/utf8proc/utf8proc.h"
 
 #include "./shed.h"
 
