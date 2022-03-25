@@ -179,6 +179,10 @@ internal object WasmEffects {
             .addInstruction(Wasm.I.end)
     }
 
+    fun compileExit(effect: UserDefinedEffect, context: WasmFunctionContext): WasmFunctionContext {
+        return context.addInstruction(Wasm.I.throw_(WasmNaming.effectTagName(effect)))
+    }
+
     fun closurePrefixParameters(hasState: Boolean): List<WasmParam> {
         return if (hasState) {
             listOf(WasmParam("effectHandler", Wasm.T.i32))

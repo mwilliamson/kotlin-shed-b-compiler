@@ -199,7 +199,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is Exit -> {
-                return context.addInstruction(Wasm.I.throw_(effectTagName(instruction.effect)))
+                return WasmEffects.compileExit(effect = instruction.effect, context = context)
             }
 
             is FieldAccess -> {
