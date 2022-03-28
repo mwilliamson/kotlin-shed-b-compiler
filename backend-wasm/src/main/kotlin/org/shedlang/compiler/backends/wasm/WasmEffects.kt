@@ -111,15 +111,16 @@ internal object WasmEffects {
         val (context3, effectHandler) = context2.addLocal("effectHandler")
         val context4 = context3.addInstruction(effectHandler.set())
 
-        val operationTypes = effect.operations.map { (_, operationType) -> operationType }
+        // TODO: presumabbly these are already ordered. Where? How do we make that clear?
+        val operations = effect.operations.toList()
 
         val context5 = operationHandlers.foldIndexed(context4) { operationIndex, currentContext, operationHandler ->
-            val operationType = operationTypes[operationIndex]
+            val (operationName, operationType) = operations[operationIndex]
 
             val operationParams = OperationParams(operationType = operationType)
 
             // TODO: uniquify name properly
-            val outerHandlerName = "operation_handler_outer_" + freshNodeId()
+            val outerHandlerName = "operation_handler_outer_" + operationName.value + "_" + freshNodeId()
 
             val outerHandlerContext = WasmFunctionContext.initial()
             val (outerHandlerContext2, previousEffectHandler) = outerHandlerContext.addLocal("previousEffectHandler")
