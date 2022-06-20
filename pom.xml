@@ -23,7 +23,7 @@
     </modules>
 
     <properties>
-        <kotlin.version>1.4.32</kotlin.version>
+        <kotlin.version>1.6.0</kotlin.version>
         <junit.jupiter.version>5.4.1</junit.jupiter.version>
         <junit.platform.version>1.4.1</junit.platform.version>
         <hamkrest.version>1.7.0.0</hamkrest.version>
