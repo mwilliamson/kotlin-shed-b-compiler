@@ -9,7 +9,7 @@ import UnicodeScalars from .Strings.UnicodeScalars;
 
 shape Parser[T] {
     argDefinitions: ArgDefinitions,
-    parseStringArgs: Fun (StringArgs) !ParseEffect -> T,
+    parseStringArgs: Fun (StringArgs) !ParseFailure -> T,
 }
 
 shape ArgDefinitions {
@@ -24,7 +24,7 @@ shape ArgDefinition {
 }
 
 shape ArgType[T] {
-    parse: Fun (.name: String, .argument: Option[String]) !ParseEffect -> T,
+    parse: Fun (.name: String, .argument: Option[String]) !ParseFailure -> T,
 }
 
 union ParseResult[+T] =
@@ -35,18 +35,18 @@ union ParseResult[+T] =
         message: String,
     };
 
-effect ParseEffect {
+effect ParseFailure {
     .fail: (String) -> Nothing,
 }
 
 val string = ArgType(
-    .parse = fun (.name: String, .argument: Option[String]) !ParseEffect -> String {
+    .parse = fun (.name: String, .argument: Option[String]) !ParseFailure -> String {
         when (argument) {
             is Some {
                 argument.value
             }
             is None {
-                ParseEffect.fail!("required argument is missing: " + name)
+                ParseFailure.fail!("required argument is missing: " + name)
             }
         }
     },
@@ -54,7 +54,7 @@ val string = ArgType(
 
 fun optional[T](argType: ArgType[T]) -> ArgType[Option[T]] {
     ArgType(
-        .parse = fun(.name: String, .argument: Option[String]) !ParseEffect -> Option[T] {
+        .parse = fun(.name: String, .argument: Option[String]) !ParseFailure -> Option[T] {
             when (argument) {
                 is Some {
                     val result = argType.parse!(.name = name, .argument = argument);
@@ -81,7 +81,7 @@ fun parser[T](initialValue: T) -> Parser[T] {
 }
 
 fun parse[T](parser: Parser[T], args: Lists.List[String]) -> ParseResult[T] {
-    handle ParseEffect {
+    handle ParseFailure {
         val stringArgs = toStringArgs!(
             .positionals = ListBuilder.toList(parser.argDefinitions.positional),
             .options = ListLookup.create(UnicodeScalars.eq, ListBuilder.toList(parser.argDefinitions.options)),
@@ -100,20 +100,16 @@ fun toStringArgs(
     .positionals: Lists.List[ArgDefinition],
     .options: ListLookup.ListLookup[String, ArgDefinition],
     .args: Lists.List[String],
-) !ParseEffect -> Lists.List[#(String, String)] {
-    effect E {
-        .fail: (String) -> Nothing,
-        .done: () -> Nothing,
-        .nextString: () -> Option[String],
-        .lookupOption: (String) -> ArgDefinition,
-        .storeOption: (ArgDefinition, String) -> Unit,
-        .storePositional: (String) -> Unit,
-    }
-
+) !ParseFailure -> Lists.List[#(String, String)] {
     shape State {
         args: Lists.List[String],
         positionals: Lists.List[ArgDefinition],
         result: Lists.List[#(String, String)],
+    }
+
+    effect StateAccess {
+        .get: () -> State,
+        .set: (State) -> Unit,
     }
 
     val initialState = State(
@@ -122,47 +118,44 @@ fun toStringArgs(
         .result = Lists.nil,
     );
 
-    fun readArguments() !E -> Nothing {
-        forever!(fun () !E {
-            readNextArgument!();
-        })
+    fun readArguments() !StateAccess | ParseFailure -> Lists.List[#(String, String)] {
+        val arg = nextArg!();
+
+        when (arg) {
+            is Some(.value as arg) {
+                readArgument!(arg);
+                tailrec readArguments!()
+            }
+            is None {
+                StateAccess.get!().result
+            }
+        }
     }
 
-    fun readNextArgument() !E -> Unit {
-        val arg = nextStringOrDone!();
+    fun nextArg() !StateAccess -> Option[String] {
+        val state = StateAccess.get!();
+        val args = state.args;
+        when (args) {
+            is Lists.Cons {
+                val newState = State(...state, .args = args.tail);
+                StateAccess.set!(newState);
+                some(args.head)
+            }
+            is Lists.Nil {
+                none
+            }
+        }
+    }
 
+    fun readArgument(arg: String) !StateAccess | ParseFailure -> Unit {
         if (UnicodeScalars.startsWith("--", arg)) {
             readOption!(arg);
         } else {
-            E.storePositional!(arg);
+            storePositional!(arg);
         }
     }
 
-    fun nextStringOrDone() !E -> String {
-        val arg = E.nextString!();
-        when (arg) {
-            is Some(.value as arg) {
-                arg
-            }
-            is None {
-                E.done!()
-            }
-        }
-    }
-
-    fun nextStringOrFail(message: String) !E -> String {
-        val arg = E.nextString!();
-        when (arg) {
-            is Some(.value as arg) {
-                arg
-            }
-            is None {
-                E.fail!(message)
-            }
-        }
-    }
-
-    fun readOption(arg: String) !E -> Unit {
+    fun readOption(arg: String) !StateAccess | ParseFailure -> Unit {
         // TODO: better string splitting
         val index = UnicodeScalars.stringToSequence(arg)
             |> Sequences.findIndex~(fun (scalar: UnicodeScalar) => scalar == '=');
@@ -179,82 +172,84 @@ fun toStringArgs(
         }
     }
 
-    fun readOptionWithImmediateValue(optionName: String, argValue: String) !E -> Unit {
-        val option = E.lookupOption!(optionName);
+    fun readOptionWithImmediateValue(optionName: String, argValue: String) ! StateAccess | ParseFailure -> Unit {
+        val option = lookupOption!(optionName);
         if (option.isFlag) {
-            E.fail!("flag does not take value: " + optionName);
+            ParseFailure.fail!("flag does not take value: " + optionName);
         } else {
-            E.storeOption!(option, argValue);
+            storeOption!(option, argValue);
         }
     }
 
-    fun readOptionWithoutImmediateValue(optionName: String) !E -> Unit {
-        val option = E.lookupOption!(optionName);
+    fun readOptionWithoutImmediateValue(optionName: String) ! StateAccess | ParseFailure -> Unit {
+        val option = lookupOption!(optionName);
         if (option.isFlag) {
-            E.storeOption!(option, "");
+            storeOption!(option, "");
         } else {
             val argValue = nextStringOrFail!("option is missing value: " + option.name);
-            E.storeOption!(option, argValue);
+            storeOption!(option, argValue);
         }
     }
 
-    handle E withstate(initialState) {
+    fun lookupOption(name: String) !ParseFailure -> ArgDefinition {
+        when (ListLookup.lookup(options, name)) {
+            is Some(.value as option) {
+                option
+            }
+            is None {
+                ParseFailure.fail!("unknown option: " + name)
+            }
+        }
+    }
+
+    fun storeOption(option: ArgDefinition, value: String) !StateAccess -> Unit {
+        val state = StateAccess.get!();
+
+        val newResult = Lists.cons(#(option.name, value), state.result);
+        StateAccess.set!(State(...state, .result = newResult))
+    }
+
+    fun storePositional(value: String) !StateAccess | ParseFailure -> Unit {
+        val state = StateAccess.get!();
+
+        val positionals = state.positionals;
+        when (positionals) {
+            is Lists.Cons {
+                val newResult = Lists.cons(#(positionals.head.name, value), state.result);
+                val newState = State(
+                    ...state,
+                    .positionals = positionals.tail,
+                    .result = newResult,
+                );
+                StateAccess.set!(newState);
+            }
+            is Lists.Nil {
+                ParseFailure.fail!("extra positional argument: " + value);
+            }
+        }
+    }
+
+    fun nextStringOrFail(message: String) !StateAccess | ParseFailure -> String {
+        val arg = nextArg!();
+        when (arg) {
+            is Some(.value as arg) {
+                arg
+            }
+            is None {
+                ParseFailure.fail!(message)
+            }
+        }
+    }
+
+    handle StateAccess withstate(initialState) {
         readArguments!()
     } on {
-        .fail = (state: State, message: String) {
-            ParseEffect.fail!(message)
+        .get = (state: State) {
+            resume state withstate state
         },
 
-        .done = (state: State) {
-            exit state.result
-        },
-
-        .nextString = (state: State) {
-            val args = state.args;
-            when (args) {
-                is Lists.Cons {
-                    val newState = State(...state, .args = args.tail);
-                    resume some(args.head) withstate newState
-                }
-                is Lists.Nil {
-                    resume none withstate state
-                }
-            }
-        },
-
-        .lookupOption = (state: State, name: String) {
-            when (ListLookup.lookup(options, name)) {
-                is Some(.value as option) {
-                    resume option withstate state
-                }
-                is None {
-                    ParseEffect.fail!("unknown option: " + name)
-                }
-            }
-        },
-
-        .storeOption = (state: State, option: ArgDefinition, value: String) {
-            val newResult = Lists.cons(#(option.name, value), state.result);
-            val newState = State(...state, .result = newResult);
+        .set = (state: State, newState: State) {
             resume unit withstate newState
-        },
-
-        .storePositional = (state: State, value: String) {
-            val positionals = state.positionals;
-            when (positionals) {
-                is Lists.Cons {
-                    val newResult = Lists.cons(#(positionals.head.name, value), state.result);
-                    val newState = State(
-                        ...state,
-                        .positionals = positionals.tail,
-                        .result = newResult,
-                    );
-                    resume unit withstate newState
-                }
-                is Lists.Nil {
-                    ParseEffect.fail!("extra positional argument: " + value)
-                }
-            }
         },
     }
 }
@@ -276,7 +271,7 @@ fun positional[A, T, R](
             ...parser.argDefinitions,
             .positional = ListBuilder.append(parser.argDefinitions.positional, argDefinition),
         ),
-        .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
+        .parseStringArgs = fun (stringArgs: StringArgs) !ParseFailure {
             val otherArgs = parser.parseStringArgs!(stringArgs);
             val stringArg = ListLookup.lookup(stringArgs, name);
             val value = argType.parse!(.name = name, .argument = stringArg);
@@ -302,7 +297,7 @@ fun option[A, T, R](
             ...parser.argDefinitions,
             .options = ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
         ),
-        .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
+        .parseStringArgs = fun (stringArgs: StringArgs) !ParseFailure {
             val otherArgs = parser.parseStringArgs!(stringArgs);
             val stringArg = ListLookup.lookup(stringArgs, name);
             val value = argType.parse!(.name = name, .argument = stringArg);
@@ -327,7 +322,7 @@ fun flag[T, R](
             ...parser.argDefinitions,
             .options = ListBuilder.append(parser.argDefinitions.options, #(name, argDefinition)),
         ),
-        .parseStringArgs = fun (stringArgs: StringArgs) !ParseEffect {
+        .parseStringArgs = fun (stringArgs: StringArgs) !ParseFailure {
             val otherArgs = parser.parseStringArgs!(stringArgs);
             val stringArg = ListLookup.lookup(stringArgs, name);
             val value = stringArg is Some;
@@ -348,9 +343,4 @@ fun map[T, R](f: Fun (T) -> R, parser: Parser[T]) -> Parser[R] {
 
 fun apply[R](parser: Parser[Fun () -> R]) -> Parser[R] {
     map(fun (f) => f(), parser)
-}
-
-fun forever[!E](func: Fun () !E -> Any) !E -> Nothing {
-    func!();
-    tailrec forever!(func)
 }
