@@ -36,6 +36,7 @@ fun removeUnreachableCode(instructions: List<Instruction>): PersistentList<Instr
             when (instruction) {
                 is Exit, is JumpEnd, Resume, ResumeWithState, Return ->
                     isTerminated = true
+                else -> {}
             }
         }
     }
