@@ -50,6 +50,10 @@ data class Identifier(val value: String) : Comparable<Identifier> {
     override fun compareTo(other: Identifier): Int {
         return value.compareTo(other.value)
     }
+
+    override fun toString(): String {
+        return value
+    }
 }
 
 typealias ModuleName = List<Identifier>
