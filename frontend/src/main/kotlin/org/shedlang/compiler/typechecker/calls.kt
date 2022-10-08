@@ -1,6 +1,6 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
@@ -430,12 +430,12 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
         fun partialTypeMap(): TypeLevelBindings = typeParameters.zip(inferredTypeArguments).toMap()
 
         if (!constraints.coerce(from = currentType, to = replaceTypeLevelValuesInType(tailParameterType, partialTypeMap()))) {
-            throw CompilerError("failed to type-check varargs call", source = argument.source)
+            throw InternalCompilerError("failed to type-check varargs call", source = argument.source)
         }
 
         val argumentType = inferType(argument, context)
         if (!constraints.coerce(from = argumentType, to = replaceTypeLevelValuesInType(headParameterType, partialTypeMap()))) {
-            throw CompilerError("failed to type-check varargs call", source = argument.source)
+            throw InternalCompilerError("failed to type-check varargs call", source = argument.source)
         }
 
         fun typeMap() = typeParameters.zip(inferredTypeArguments)

@@ -1,6 +1,6 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
@@ -318,7 +318,7 @@ private fun inferHandleType(node: HandleNode, context: TypeContext): Type {
         }
 
         if (operationType.effect != effect) {
-            throw CompilerError("operation has unexpected effect", source = node.source)
+            throw InternalCompilerError("operation has unexpected effect", source = node.source)
         }
 
         val handlerType = typeCheckFunction(

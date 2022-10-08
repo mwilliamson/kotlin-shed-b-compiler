@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.UnexpectedTokenException
+import org.shedlang.compiler.parser.UnexpectedTokenError
 import org.shedlang.compiler.parser.parseFunctionStatement
 import org.shedlang.compiler.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
@@ -47,7 +47,7 @@ class ParseShapeTests {
         val source = "shape X { , }"
         assertThat(
             { parseString(::parseModuleStatement, source) },
-            throws<UnexpectedTokenException>()
+            throws<UnexpectedTokenError>()
         )
     }
 

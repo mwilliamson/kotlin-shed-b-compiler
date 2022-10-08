@@ -1,7 +1,7 @@
 package org.shedlang.compiler.types
 
 import org.shedlang.compiler.CannotUnionTypesError
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.*
 
 interface TypeGroup {
@@ -900,7 +900,7 @@ fun applyTypeLevel(
     source: Source = NullSource
 ): TypeLevelValue {
     if (receiver.parameters.size != arguments.size) {
-        throw CompilerError(
+        throw InternalCompilerError(
             "parameter count (${receiver.parameters.size}) != argument count (${arguments.size})",
             source = source
         )

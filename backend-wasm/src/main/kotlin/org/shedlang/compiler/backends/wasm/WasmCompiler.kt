@@ -1,7 +1,7 @@
 package org.shedlang.compiler.backends.wasm
 
 import kotlinx.collections.immutable.*
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.backends.wasm.WasmNaming.effectTagName
@@ -95,7 +95,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
                 context = initContext3,
             )
         } else {
-            throw CompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)
+            throw InternalCompilerError(message = "module not found: ${formatModuleName(moduleName)}", source = NullSource)
         }
         return finalInitContext
             .addInstructions(Wasm.I.end)

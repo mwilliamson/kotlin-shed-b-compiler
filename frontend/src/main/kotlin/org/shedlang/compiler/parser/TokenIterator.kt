@@ -3,7 +3,7 @@ package org.shedlang.compiler.parser
 import org.shedlang.compiler.allIndexed
 import org.shedlang.compiler.ast.StringSource
 
-internal class UnexpectedTokenException(
+internal class UnexpectedTokenError(
     location: StringSource,
     val expected: String,
     val actual: String
@@ -50,7 +50,7 @@ internal class TokenIterator<T>(
         if (token.tokenType == tokenType) {
             index++
         } else {
-            throw UnexpectedTokenException(
+            throw UnexpectedTokenError(
                 location = location(),
                 expected = "token of type " + tokenType,
                 actual = describeToken(token.tokenType, token.value)

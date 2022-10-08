@@ -41,7 +41,7 @@ class StackInterpreterExampleTests {
                         stdout = world.stdout
                     )
                     assertThat(executionResult, testProgram.expectedResult)
-                } catch (error: CompilerException) {
+                } catch (error: CompilerError) {
                     print(error.source.describe())
                     throw error
                 }

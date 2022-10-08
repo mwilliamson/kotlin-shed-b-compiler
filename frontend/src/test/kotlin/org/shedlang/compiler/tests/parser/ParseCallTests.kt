@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.parser.ParseError
 import org.shedlang.compiler.parser.PositionalArgumentAfterNamedArgumentError
-import org.shedlang.compiler.parser.UnexpectedTokenException
+import org.shedlang.compiler.parser.UnexpectedTokenError
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
@@ -102,7 +102,7 @@ class ParseCallTests {
         val source = "f[]()"
         assertThat(
             { parseString(::parseExpression, source) },
-            throws<UnexpectedTokenException>()
+            throws<UnexpectedTokenError>()
         )
     }
 

@@ -1,6 +1,6 @@
 package org.shedlang.compiler.typechecker
 
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ResolvedReferences
 import org.shedlang.compiler.ast.*
 
@@ -8,7 +8,7 @@ class ResolvedReferencesMap(private val references: Map<Int, VariableBindingNode
     override fun get(node: ReferenceNode): VariableBindingNode {
         val targetNode = references[node.nodeId]
         if (targetNode == null) {
-            throw CompilerError(
+            throw InternalCompilerError(
                 "reference ${node.name.value} is unresolved",
                 source = node.source
             )

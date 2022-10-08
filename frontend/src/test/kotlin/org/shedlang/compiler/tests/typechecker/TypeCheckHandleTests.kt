@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.throwsException
 import org.shedlang.compiler.tests.*
@@ -245,8 +245,8 @@ class TypeCheckHandleTests {
                 effectReference to effectType(effect)
             )
         )
-        assertThat({ inferType(expression, context) }, throws<CompilerError>(allOf(
-            has(CompilerError::message, equalTo("operation has unexpected effect"))
+        assertThat({ inferType(expression, context) }, throws<InternalCompilerError>(allOf(
+            has(InternalCompilerError::message, equalTo("operation has unexpected effect"))
         )))
     }
 

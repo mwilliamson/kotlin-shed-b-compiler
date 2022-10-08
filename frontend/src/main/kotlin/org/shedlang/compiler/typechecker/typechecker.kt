@@ -64,7 +64,7 @@ internal class TypeContext(
         }
 
         // TODO: test this
-        throw CompilerError(
+        throw InternalCompilerError(
             "type of ${node.name.value} is unknown",
             source = node.source
         )
@@ -74,7 +74,7 @@ internal class TypeContext(
         val type = targetTypes[target.nodeId]
         if (type == null) {
             // TODO: test this
-            throw CompilerError(
+            throw InternalCompilerError(
                 "type of target is unknown",
                 source = target.source
             )
@@ -95,7 +95,7 @@ internal class TypeContext(
 
     private fun addVariableType(nodeId: Int, type: Type, source: Source) {
         if (nodeId in variableTypes) {
-            throw CompilerError("variable already has type", source = source)
+            throw InternalCompilerError("variable already has type", source = source)
         } else {
             variableTypes[nodeId] = type
         }
@@ -547,7 +547,7 @@ private fun evalTypeLevel(node: TypeLevelExpressionNode, context: TypeContext): 
                 return metaType(evalTypeLevel(node.arguments.single(), context))
             } else {
                 // TODO: throw a more appropriate exception
-                throw CompilerError("TODO", source = node.operatorSource)
+                throw InternalCompilerError("TODO", source = node.operatorSource)
             }
         }
 
@@ -603,7 +603,7 @@ internal fun evalEffect(node: TypeLevelExpressionNode?, context: TypeContext): E
     }
 
     // TODO: throw a more appropriate exception
-    throw CompilerError("Was: " + effectType, source = node.source)
+    throw InternalCompilerError("Was: " + effectType, source = node.source)
 }
 
 internal fun verifyType(expected: Type, actual: Type, source: Source) {

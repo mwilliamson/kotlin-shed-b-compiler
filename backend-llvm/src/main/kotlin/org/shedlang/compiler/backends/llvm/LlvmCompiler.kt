@@ -1,7 +1,7 @@
 package org.shedlang.compiler.backends.llvm
 
 import kotlinx.collections.immutable.persistentListOf
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.stackir.*
@@ -215,7 +215,7 @@ internal class LlvmCompiler(
         } else {
             val moduleInitialisationInstructions = image.moduleInitialisation(moduleName)
             if (moduleInitialisationInstructions == null) {
-                throw CompilerError(
+                throw InternalCompilerError(
                     "could not find initialisation for ${formatModuleName(moduleName)}",
                     source = NullSource
                 )

@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.wasm
 
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
@@ -36,10 +36,10 @@ internal object WasmNativeModules {
                                     is OpaqueEffect ->
                                         null
                                     else ->
-                                        throw CompilerError("unhandled fieldType: ${fieldType}", NullSource)
+                                        throw InternalCompilerError("unhandled fieldType: ${fieldType}", NullSource)
                                 }
                             else ->
-                                throw CompilerError("unhandled fieldType: ${fieldType}", NullSource)
+                                throw InternalCompilerError("unhandled fieldType: ${fieldType}", NullSource)
                         }
                         if (parameterCount == null) {
                             null

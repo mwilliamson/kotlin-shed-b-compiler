@@ -2,7 +2,7 @@ package org.shedlang.compiler.tests.typechecker
 
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.*
@@ -94,6 +94,6 @@ fun throwsUnexpectedType(
 
 fun throwsCompilerError(message: String): Matcher<() -> Unit> {
     return throws(
-        has(CompilerError::message, equalTo(message))
+        has(InternalCompilerError::message, equalTo(message))
     )
 }

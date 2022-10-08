@@ -3,8 +3,8 @@ package org.shedlang.compiler.backends.llvm.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.CompilerError
-import org.shedlang.compiler.CompilerException
 import org.shedlang.compiler.backends.llvm.LlvmCompiler
 import org.shedlang.compiler.backends.llvm.LlvmIrBuilder
 import org.shedlang.compiler.backends.tests.temporaryDirectory
@@ -36,7 +36,7 @@ class LlvmExampleTests {
                     val result = executeLlvmIr(outputPath, linkerFiles = compilationResult.linkerFiles, args = testProgram.args)
                     assertThat("stdout was:\n" + result.stdout + "\nstderr was:\n" + result.stderr, result, testProgram.expectedResult)
                 }
-            } catch (error: CompilerException) {
+            } catch (error: CompilerError) {
                 print(error.source.describe())
                 throw error
             }

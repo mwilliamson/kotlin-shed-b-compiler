@@ -113,7 +113,7 @@ class ParseFunctionTests {
         val source = "fun f[+T]() -> T { }"
         assertThat(
             { parseString(::parseFunctionDefinition, source) },
-            throws<UnexpectedTokenException>()
+            throws<UnexpectedTokenError>()
         )
     }
 

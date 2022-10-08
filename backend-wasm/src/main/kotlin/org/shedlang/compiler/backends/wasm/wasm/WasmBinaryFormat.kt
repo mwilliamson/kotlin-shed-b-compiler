@@ -1,6 +1,6 @@
 package org.shedlang.compiler.backends.wasm.wasm
 
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.wasm.add
 import org.shedlang.compiler.types.TagValue
@@ -633,7 +633,7 @@ private class WasmBinaryFormatWriter(
     private fun labelIndex(name: String): Int {
         val index = labelStack.indexOf(name)
         if (index == -1) {
-            throw CompilerError("could not find label", NullSource)
+            throw InternalCompilerError("could not find label", NullSource)
         } else {
             return labelStack.size - 1 - index
         }
@@ -732,7 +732,7 @@ private class WasmBinaryFormatWriter(
             writeValueType(results[0])
         } else {
             // TODO: Generate type when building module
-            throw CompilerError("blocktype of multiple types not supported", NullSource)
+            throw InternalCompilerError("blocktype of multiple types not supported", NullSource)
         }
     }
 
@@ -949,7 +949,7 @@ private class WasmBinaryFormatWriter(
                 }
             }
             else -> {
-                throw CompilerError("unhandled instruction: $instruction", NullSource)
+                throw InternalCompilerError("unhandled instruction: $instruction", NullSource)
             }
         }
     }
@@ -965,7 +965,7 @@ private class WasmBinaryFormatWriter(
             2 -> 1
             4 -> 2
             8 -> 3
-            else -> throw CompilerError("unexpected alignment $alignment", NullSource)
+            else -> throw InternalCompilerError("unexpected alignment $alignment", NullSource)
         }
         output.writeUnsignedLeb128(alignmentEncoding)
     }

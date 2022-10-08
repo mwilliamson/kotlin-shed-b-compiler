@@ -1,7 +1,7 @@
 package org.shedlang.compiler.backends.wasm
 
 import kotlinx.collections.immutable.*
-import org.shedlang.compiler.CompilerError
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
@@ -311,7 +311,7 @@ internal data class WasmFunctionContext(
     fun variableToStoredLocal(variableId: Int): WasmLocalRef {
         val existingLocal = variableIdToLocal[variableId]
         if (existingLocal == null) {
-            throw CompilerError("variable is not set", source = NullSource)
+            throw InternalCompilerError("variable is not set", source = NullSource)
         } else {
             return existingLocal
         }

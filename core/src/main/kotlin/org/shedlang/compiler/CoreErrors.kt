@@ -3,18 +3,18 @@ package org.shedlang.compiler
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.types.Type
 
-open class CompilerException(message: String?, val source: Source) : Exception(message)
+open class CompilerError(message: String?, val source: Source) : Exception(message)
 
 /**
  * This indicates a bug in the compiler or its calling code
  */
-open class CompilerError(message: String, source: Source) : CompilerException(message, source)
+open class InternalCompilerError(message: String, source: Source) : CompilerError(message, source)
 
 /**
  * This indicates a bug in the source code that is being compiled
  */
 
-open class SourceError(message: String?, source: Source): CompilerException(message, source)
+open class SourceError(message: String?, source: Source): CompilerError(message, source)
 
 open class TypeCheckError(message: String?, source: Source) : SourceError(message, source)
 

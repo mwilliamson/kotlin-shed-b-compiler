@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.StringSource
 import org.shedlang.compiler.parser.Token
 import org.shedlang.compiler.parser.TokenIterator
-import org.shedlang.compiler.parser.UnexpectedTokenException
+import org.shedlang.compiler.parser.UnexpectedTokenError
 
 class TokenIteratorTests {
     enum class TokenType {
@@ -37,14 +37,14 @@ class TokenIteratorTests {
             val tokens = tokenIterator(listOf(
                 Token(0, TokenType.IDENTIFIER, "a")
             ))
-            val exception = assertThrows<UnexpectedTokenException>(
-                UnexpectedTokenException::class.java,
+            val exception = assertThrows<UnexpectedTokenError>(
+                UnexpectedTokenError::class.java,
                 { tokens.skip(TokenType.SYMBOL) }
             )
             assertThat(exception, allOf(
-                has(UnexpectedTokenException::source, cast(equalTo(stringSource(0)))),
-                has(UnexpectedTokenException::expected, equalTo("token of type SYMBOL")),
-                has(UnexpectedTokenException::actual, equalTo("IDENTIFIER: a"))
+                has(UnexpectedTokenError::source, cast(equalTo(stringSource(0)))),
+                has(UnexpectedTokenError::expected, equalTo("token of type SYMBOL")),
+                has(UnexpectedTokenError::actual, equalTo("IDENTIFIER: a"))
             ))
         }
     }

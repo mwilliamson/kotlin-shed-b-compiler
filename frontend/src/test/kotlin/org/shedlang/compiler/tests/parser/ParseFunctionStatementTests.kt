@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
-import org.shedlang.compiler.parser.UnexpectedTokenException
+import org.shedlang.compiler.parser.UnexpectedTokenError
 import org.shedlang.compiler.parser.parseFunctionStatement
 
 class ParseFunctionStatementTests {
@@ -17,8 +17,8 @@ class ParseFunctionStatementTests {
         assertThat(
             { parseString(::parseFunctionStatement, source) },
             throws(allOf(
-                has(UnexpectedTokenException::expected, equalTo("function statement")),
-                has(UnexpectedTokenException::actual, equalTo("KEYWORD_MODULE: module"))
+                has(UnexpectedTokenError::expected, equalTo("function statement")),
+                has(UnexpectedTokenError::actual, equalTo("KEYWORD_MODULE: module"))
             ))
         )
     }

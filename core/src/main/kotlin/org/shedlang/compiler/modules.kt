@@ -77,7 +77,7 @@ class TypesMap(
     override fun typeOfExpression(node: ExpressionNode): Type {
         val expressionType = expressionTypes[node.nodeId]
         if (expressionType == null) {
-            throw CompilerError("missing type for expression", source = node.source)
+            throw InternalCompilerError("missing type for expression", source = node.source)
         } else {
             return expressionType
         }
@@ -96,12 +96,12 @@ class TypesMap(
         if (type is TypeLevelValueType) {
             return type.value
         } else {
-            throw CompilerError("could not find declared type", source = node.source)
+            throw InternalCompilerError("could not find declared type", source = node.source)
         }
     }
 
     override fun functionType(node: FunctionNode): FunctionType {
-        return functionTypes[node.nodeId] ?: throw CompilerError("type of function is unknown: ${node}", source = node.source)
+        return functionTypes[node.nodeId] ?: throw InternalCompilerError("type of function is unknown: ${node}", source = node.source)
     }
 
     override fun variableType(node: VariableBindingNode): Type {

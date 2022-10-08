@@ -116,7 +116,7 @@ internal fun parseTypesModuleStatement(tokens: TokenIterator<TokenType>): TypesM
             return parseValType(tokens)
 
         else ->
-            throw UnexpectedTokenException(
+            throw UnexpectedTokenError(
                 location = tokens.location(),
                 expected = "types module statement",
                 actual = token.describe()
@@ -194,7 +194,7 @@ internal fun parseModuleStatement(tokens: TokenIterator<TokenType>): ModuleState
     } else if (tokens.isNext(TokenType.KEYWORD_VARARGS)) {
         return parseVarargsDeclaration(tokens)
     } else {
-        throw UnexpectedTokenException(
+        throw UnexpectedTokenError(
             expected = "module statement",
             actual = tokens.peek().describe(),
             location = tokens.location()
@@ -703,7 +703,7 @@ internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : Function
     } else {
         val expression = tryParseExpression(tokens)
         if (expression == null) {
-            throw UnexpectedTokenException(
+            throw UnexpectedTokenError(
                 location = tokens.location(),
                 expected = "function statement",
                 actual = token.describe()
@@ -946,7 +946,7 @@ private fun tryParseExpression(tokens: TokenIterator<TokenType>) : ExpressionNod
 private fun parseExpression(tokens: TokenIterator<TokenType>, precedence: Int) : ExpressionNode {
     val expression = tryParseExpression(tokens, precedence = precedence)
     if (expression == null) {
-        throw UnexpectedTokenException(
+        throw UnexpectedTokenError(
             expected = "expression",
             actual = tokens.peek().describe(),
             location = tokens.location()

@@ -506,7 +506,7 @@ class Loader(
 
                     ExpressionStatementNode.Type.EXIT -> {
                         val effect = context.handling.orElseThrow(
-                            CompilerError("missing effect for operation handler", source = NullSource),
+                            InternalCompilerError("missing effect for operation handler", source = NullSource),
                         )
                         return expressionInstructions
                             .add(Exit(effect = effect))
