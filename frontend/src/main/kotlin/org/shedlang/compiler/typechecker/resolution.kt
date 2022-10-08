@@ -29,7 +29,7 @@ internal class ResolutionContext(
     val bindings: Map<Identifier, VariableBindingNode>,
     val nodes: MutableMap<Int, VariableBindingNode>,
     val isInitialised: MutableSet<Int>,
-    val deferred: MutableMap<Int, () -> Unit>
+    val definitionResolvers: MutableMap<Int, () -> Unit>
 ) {
     operator fun set(node: ReferenceNode, value: VariableBindingNode): Unit {
         nodes[node.nodeId] = value
@@ -39,91 +39,162 @@ internal class ResolutionContext(
         isInitialised.add(node.nodeId)
     }
 
-    fun defer(node: VariableBindingNode, func: () -> Unit) {
-        deferred[node.nodeId] = func
+    fun define(node: VariableBindingNode, func: () -> Unit) {
+        definitionResolvers[node.nodeId] = func
     }
 
     fun isInitialised(node: VariableBindingNode): Boolean {
         if (isInitialised.contains(node.nodeId)) {
             return true
         } else {
-            val deferredInitialisation = deferred[node.nodeId]
+            val deferredInitialisation = definitionResolvers.remove(node.nodeId)
             if (deferredInitialisation == null) {
                 return false
             } else {
-                undefer(node.nodeId, deferredInitialisation)
+                isInitialised.add(node.nodeId)
+                deferredInitialisation()
                 return true
             }
         }
     }
 
-    fun undefer() {
-        while (deferred.isNotEmpty()) {
-            val nodeId = deferred.keys.first()
-            val deferredInitialisation = deferred.remove(nodeId)
-            if (deferredInitialisation != null) {
-                // TODO: is this check necessary?
-                if (!isInitialised.contains(nodeId)) {
-                    undefer(nodeId, deferredInitialisation)
-                }
-            }
-        }
-    }
-
-    private fun undefer(nodeId: Int, deferredInitialisation: () -> Unit) {
-        isInitialised.add(nodeId)
-        deferredInitialisation()
-    }
-
     fun enterScope(bindings: Map<Identifier, VariableBindingNode>): ResolutionContext {
-        return ResolutionContext(this.bindings + bindings, nodes, isInitialised, deferred)
+        return ResolutionContext(this.bindings + bindings, nodes, isInitialised, definitionResolvers)
     }
 }
 
-internal fun resolve(node: Node, globals: Map<Identifier, VariableBindingNode>): ResolvedReferences {
+internal fun resolveReferences(node: Node, globals: Map<Identifier, VariableBindingNode>): ResolvedReferences {
     val context = ResolutionContext(
         globals,
         mutableMapOf(),
         isInitialised = globals.values.map(VariableBindingNode::nodeId).toMutableSet(),
-        deferred = mutableMapOf()
+        definitionResolvers = mutableMapOf(),
     )
-    resolveEval(node, context)
-    context.undefer()
+
+    val result = resolveEval(node)
+    result.phaseDefine(context)
+    result.phaseResolveImmediates(context)
+    result.phaseResolveBodies(context)
+
     return ResolvedReferencesMap(context.nodes)
 }
 
-private fun resolve(structure: NodeStructure, context: ResolutionContext) {
-    when (structure) {
-        is NodeStructure.Eval -> resolveEval(structure.node, context)
+internal interface ResolutionResult {
+    fun phaseDefine(context: ResolutionContext)
+    fun phaseResolveImmediates(context: ResolutionContext)
+    fun phaseResolveBodies(context: ResolutionContext)
+}
+
+private fun resolve(structure: NodeStructure): ResolutionResult {
+    return when (structure) {
+        is NodeStructure.Eval -> resolveEval(structure.node)
         // TODO: substructures should always be static
-        is NodeStructure.TypeLevelEval -> resolveEval(structure.node, context)
-        is NodeStructure.SubEnv -> resolveSubEnv(structure.structure, context)
-        is NodeStructure.DeferInitialise -> context.defer(structure.binding) { resolve(structure.structure, context) }
-        is NodeStructure.Initialise -> context.initialise(structure.binding)
+        is NodeStructure.TypeLevelEval -> resolveEval(structure.node)
+        is NodeStructure.SubEnv -> resolveSubEnv(structure.structure)
+        is NodeStructure.Define -> resolveDefine(structure)
+        is NodeStructure.Initialise -> resolveInitialise(structure)
     }
 }
 
-internal fun resolveEval(node: Node, context: ResolutionContext) {
-    if (node is ReferenceNode) {
-        val referent = context.bindings[node.name]
-        if (referent == null) {
-            throw UnresolvedReferenceError(node.name, node.source)
-        } else {
-            context[node] = referent
-            if (!context.isInitialised(referent)) {
-                throw UninitialisedVariableError(node.name, node.source)
+internal fun resolveEval(node: Node): ResolutionResult {
+    val subResults = node.structure.map { structure -> resolve(structure) }
+
+    return object : ResolutionResult {
+        override fun phaseDefine(context: ResolutionContext) {
+            for (subResult in subResults) {
+                subResult.phaseDefine(context)
+            }
+        }
+
+        override fun phaseResolveImmediates(context: ResolutionContext) {
+            if (node is ReferenceNode) {
+                val referent = context.bindings[node.name]
+                if (referent == null) {
+                    throw UnresolvedReferenceError(node.name, node.source)
+                } else {
+                    context[node] = referent
+                    if (!context.isInitialised(referent)) {
+                        throw UninitialisedVariableError(node.name, node.source)
+                    }
+                }
+            }
+
+            for (subResult in subResults) {
+                subResult.phaseResolveImmediates(context)
+            }
+        }
+
+        override fun phaseResolveBodies(context: ResolutionContext) {
+            for (subResult in subResults) {
+                subResult.phaseResolveBodies(context)
             }
         }
     }
-
-    node.structure.forEach { structure -> resolve(structure, context) }
 }
 
-internal fun resolveSubEnv(structures: List<NodeStructure>, context: ResolutionContext) {
-    val binders = bindings(structures)
-    val subEnvContext = enterScope(binders, context)
+private fun resolveSubEnv(structures: List<NodeStructure>): ResolutionResult {
+    return object : ResolutionResult {
+        override fun phaseDefine(context: ResolutionContext) {
+        }
 
-    structures.forEach { structure -> resolve(structure, subEnvContext) }
+        override fun phaseResolveImmediates(context: ResolutionContext) {
+        }
+
+        override fun phaseResolveBodies(context: ResolutionContext) {
+            val binders = bindings(structures)
+            val subEnvContext = enterScope(binders, context)
+
+            val subEnvResults = structures.map { structure -> resolve(structure) }
+
+            for (subEnvResult in subEnvResults) {
+                subEnvResult.phaseDefine(subEnvContext)
+            }
+            for (subEnvResult in subEnvResults) {
+                subEnvResult.phaseResolveImmediates(subEnvContext)
+            }
+            for (subEnvResult in subEnvResults) {
+                subEnvResult.phaseResolveBodies(subEnvContext)
+            }
+        }
+    }
+}
+
+private fun resolveDefine(structure: NodeStructure.Define): ResolutionResult {
+    var isResolved = false
+
+    return object : ResolutionResult {
+        override fun phaseDefine(context: ResolutionContext) {
+            context.define(structure.binding) { phaseResolveBodies(context) }
+        }
+
+        override fun phaseResolveImmediates(context: ResolutionContext) {
+
+        }
+
+        override fun phaseResolveBodies(context: ResolutionContext) {
+            if (!isResolved) {
+                val result = resolve(structure.structure)
+                result.phaseDefine(context)
+                result.phaseResolveImmediates(context)
+                result.phaseResolveBodies(context)
+                isResolved = true
+            }
+        }
+    }
+}
+
+private fun resolveInitialise(structure: NodeStructure.Initialise): ResolutionResult {
+    return object : ResolutionResult {
+        override fun phaseDefine(context: ResolutionContext) {
+        }
+
+        override fun phaseResolveImmediates(context: ResolutionContext) {
+            context.initialise(structure.binding)
+        }
+
+        override fun phaseResolveBodies(context: ResolutionContext) {
+        }
+    }
 }
 
 private fun bindings(structures: List<NodeStructure>): List<VariableBindingNode> {
@@ -135,7 +206,7 @@ private fun bindings(structure: NodeStructure): List<VariableBindingNode> {
         is NodeStructure.Eval -> bindings(structure.node.structure)
         is NodeStructure.TypeLevelEval -> bindings(structure.node.structure)
         is NodeStructure.SubEnv -> listOf()
-        is NodeStructure.DeferInitialise -> listOf(structure.binding) + bindings(structure.structure)
+        is NodeStructure.Define -> listOf(structure.binding) + bindings(structure.structure)
         is NodeStructure.Initialise -> listOf(structure.binding)
     }
 }

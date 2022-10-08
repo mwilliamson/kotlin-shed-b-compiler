@@ -6,7 +6,7 @@ import org.shedlang.compiler.frontend.checkTailCalls
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parseTypesModule
 import org.shedlang.compiler.typechecker.PackageConfigError
-import org.shedlang.compiler.typechecker.resolve
+import org.shedlang.compiler.typechecker.resolveReferences
 import org.shedlang.compiler.typechecker.typeCheck
 import java.io.File
 import java.nio.file.Files
@@ -178,7 +178,7 @@ private fun createCoreImport(module: String, names: List<String>): ImportNode {
 private val coreImports = listOf(castImport, intToStringImport, ioImport, optionsImport)
 
 private fun resolveModuleReferences(moduleNode: Node): ResolvedReferences {
-    return resolve(
+    return resolveReferences(
         moduleNode,
         builtins.associate { builtin -> builtin.name to builtin }
     )

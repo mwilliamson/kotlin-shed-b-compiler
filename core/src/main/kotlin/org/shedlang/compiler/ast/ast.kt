@@ -15,7 +15,7 @@ sealed class NodeStructure {
     class TypeLevelEval(val node: Node): NodeStructure()
     class Eval(val node: Node): NodeStructure()
     class SubEnv(val structure: List<NodeStructure>): NodeStructure()
-    class DeferInitialise(val binding: VariableBindingNode, val structure: NodeStructure): NodeStructure()
+    class Define(val binding: VariableBindingNode, val structure: NodeStructure): NodeStructure()
     class Initialise(val binding: VariableBindingNode): NodeStructure()
 }
 
@@ -32,8 +32,8 @@ object NodeStructures {
         return NodeStructure.SubEnv(structure)
     }
 
-    fun deferInitialise(binding: VariableBindingNode, structure: NodeStructure): NodeStructure {
-        return NodeStructure.DeferInitialise(binding, structure)
+    fun define(binding: VariableBindingNode, structure: NodeStructure): NodeStructure {
+        return NodeStructure.Define(binding, structure)
     }
 
     fun initialise(binding: VariableBindingNode): NodeStructure {
@@ -66,7 +66,7 @@ fun structureToNodes(structure: NodeStructure): Iterable<Node> {
         is NodeStructure.Eval -> listOf(structure.node)
         is NodeStructure.TypeLevelEval -> listOf(structure.node)
         is NodeStructure.SubEnv -> structure.structure.flatMap(::structureToNodes)
-        is NodeStructure.DeferInitialise -> structureToNodes(structure.structure)
+        is NodeStructure.Define -> structureToNodes(structure.structure)
         is NodeStructure.Initialise -> listOf()
     }
 }
@@ -402,7 +402,7 @@ data class TypeAliasNode(
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.typeLevelEval(expression), NodeStructures.initialise(this))
+        get() = listOf(NodeStructures.define(this, NodeStructures.typeLevelEval(expression)))
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -420,7 +420,7 @@ data class ShapeNode(
     override val structure: List<NodeStructure>
         get() = listOf(
             // TODO: switch static evaluation to be lazily resolved?
-            NodeStructures.deferInitialise(this, NodeStructures.subEnv(
+            NodeStructures.define(this, NodeStructures.subEnv(
                 (typeLevelParameters + extends).map(NodeStructures::typeLevelEval) + fields.map(NodeStructures::eval)
             ))
         )
@@ -463,9 +463,14 @@ data class UnionNode(
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.subEnv(
-            (typeLevelParameters + superType.nullableToList()).map(NodeStructures::typeLevelEval)
-        )) + members.map(NodeStructures::typeLevelEval) + listOf(NodeStructures.initialise(this))
+        get() = listOf(
+            NodeStructures.define(
+                this,
+                NodeStructures.subEnv(
+                    (typeLevelParameters + superType.nullableToList()).map(NodeStructures::typeLevelEval)
+                )
+            )
+        ) + members.map(NodeStructures::typeLevelEval)
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -483,7 +488,7 @@ data class UnionMemberNode(
     override val structure: List<NodeStructure>
         get() = listOf(
             // TODO: switch static evaluation to be lazily resolved?
-            NodeStructures.deferInitialise(this, NodeStructures.subEnv(
+            NodeStructures.define(this, NodeStructures.subEnv(
                 (typeLevelParameters + extends).map(NodeStructures::typeLevelEval) + fields.map(NodeStructures::eval)
             ))
         )
@@ -592,7 +597,7 @@ data class FunctionDefinitionNode(
         get() = false
 
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.deferInitialise(this, functionSubEnv(this)))
+        get() = listOf(NodeStructures.define(this, functionSubEnv(this)))
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
