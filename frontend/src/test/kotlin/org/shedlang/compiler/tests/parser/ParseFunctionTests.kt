@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.parser.*
 import org.shedlang.compiler.tests.throwsException
-import org.shedlang.compiler.parser.*
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isInvariant
 import org.shedlang.compiler.tests.isSequence

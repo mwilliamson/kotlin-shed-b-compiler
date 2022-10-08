@@ -4,8 +4,8 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.InconsistentBranchTerminationError
-import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.frontend.parser.InconsistentBranchTerminationError
+import org.shedlang.compiler.frontend.parser.parseExpression
 import org.shedlang.compiler.tests.isSequence
 
 class ParseIfTests {

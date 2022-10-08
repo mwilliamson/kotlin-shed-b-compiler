@@ -5,9 +5,9 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.UnexpectedTokenError
-import org.shedlang.compiler.parser.parseFunctionStatement
-import org.shedlang.compiler.parser.parseModuleStatement
+import org.shedlang.compiler.frontend.parser.UnexpectedTokenError
+import org.shedlang.compiler.frontend.parser.parseFunctionStatement
+import org.shedlang.compiler.frontend.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 

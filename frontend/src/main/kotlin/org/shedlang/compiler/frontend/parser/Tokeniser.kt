@@ -1,5 +1,4 @@
-package org.shedlang.compiler.parser;
-
+package org.shedlang.compiler.frontend.parser;
 
 private fun keyword(tokenType: TokenType, string: String)
     = RegexTokeniser.rule(tokenType, Regex.escape(string) + "(?![A-Za-z0-9])")
@@ -12,7 +11,8 @@ private val unterminatedStringPattern = "\"(?:[^\\\\\"\n\r]|\\\\.)*"
 
 val identifierPattern = "[A-Za-z][A-Za-z0-9]*"
 
-private val tokeniser = RegexTokeniser(TokenType.UNKNOWN, listOf(
+private val tokeniser = RegexTokeniser(
+    TokenType.UNKNOWN, listOf(
     keyword(TokenType.KEYWORD_AS, "as"),
     keyword(TokenType.KEYWORD_EFFECT, "effect"),
     keyword(TokenType.KEYWORD_ELSE, "else"),

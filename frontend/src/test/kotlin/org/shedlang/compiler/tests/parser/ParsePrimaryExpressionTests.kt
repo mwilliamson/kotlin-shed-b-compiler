@@ -6,10 +6,10 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.parser.InvalidUnicodeScalar
-import org.shedlang.compiler.parser.InvalidUnicodeScalarLiteral
-import org.shedlang.compiler.parser.UnrecognisedEscapeSequenceError
-import org.shedlang.compiler.parser.tryParsePrimaryExpression
+import org.shedlang.compiler.frontend.parser.InvalidUnicodeScalar
+import org.shedlang.compiler.frontend.parser.InvalidUnicodeScalarLiteral
+import org.shedlang.compiler.frontend.parser.UnrecognisedEscapeSequenceError
+import org.shedlang.compiler.frontend.parser.tryParsePrimaryExpression
 import org.shedlang.compiler.tests.isIdentifier
 
 class ParsePrimaryExpressionTests {
@@ -74,7 +74,8 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("\"\\u001B\"") },
             throws(allOf(
-                has(InvalidUnicodeScalar::source, isStringSource(
+                has(
+                    InvalidUnicodeScalar::source, isStringSource(
                     contents = "\"\\u001B\"",
                     index = 3
                 )),
@@ -88,7 +89,8 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("\"\\u{1B\"") },
             throws(allOf(
-                has(InvalidUnicodeScalar::source, isStringSource(
+                has(
+                    InvalidUnicodeScalar::source, isStringSource(
                     contents = "\"\\u{1B\"",
                     index = 3
                 )),
@@ -102,7 +104,8 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("  \"\\u001B\"") },
             throws(allOf(
-                has(InvalidUnicodeScalar::source, isStringSource(
+                has(
+                    InvalidUnicodeScalar::source, isStringSource(
                     contents = "  \"\\u001B\"",
                     index = 5
                 )),
@@ -138,7 +141,8 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("'\\u001B'") },
             throws(allOf(
-                has(InvalidUnicodeScalar::source, isStringSource(
+                has(
+                    InvalidUnicodeScalar::source, isStringSource(
                     contents = "'\\u001B'",
                     index = 3
                 )),
@@ -152,7 +156,8 @@ class ParsePrimaryExpressionTests {
         assertThat(
             { parsePrimaryExpression("'ab'") },
             throws(allOf(
-                has(InvalidUnicodeScalarLiteral::source, isStringSource(
+                has(
+                    InvalidUnicodeScalarLiteral::source, isStringSource(
                     contents = "'ab'",
                     index = 0
                 )),

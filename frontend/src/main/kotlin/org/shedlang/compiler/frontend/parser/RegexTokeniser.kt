@@ -1,8 +1,8 @@
-package org.shedlang.compiler.parser
+package org.shedlang.compiler.frontend.parser
 
 import java.util.regex.Pattern
 
-internal class RegexTokeniser<T>(unknown: T, rules: List<RegexTokeniser.TokenRule<T>>) {
+internal class RegexTokeniser<T>(unknown: T, rules: List<TokenRule<T>>) {
     internal data class TokenRule<T>(val type: T, val regex: Pattern) {
         init {
             if (regex.matcher("").groupCount() != 0) {

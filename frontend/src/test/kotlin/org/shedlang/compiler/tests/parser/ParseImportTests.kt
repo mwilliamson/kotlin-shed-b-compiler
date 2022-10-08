@@ -4,7 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.equalTo
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
-import org.shedlang.compiler.parser.parseImport
+import org.shedlang.compiler.frontend.parser.parseImport
 
 class ParseImportTests {
     @Test

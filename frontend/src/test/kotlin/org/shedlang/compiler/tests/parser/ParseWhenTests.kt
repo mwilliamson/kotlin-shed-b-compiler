@@ -7,8 +7,8 @@ import com.natpryce.hamkrest.present
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
-import org.shedlang.compiler.parser.InconsistentBranchTerminationError
-import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.frontend.parser.InconsistentBranchTerminationError
+import org.shedlang.compiler.frontend.parser.parseExpression
 import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
 

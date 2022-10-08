@@ -7,7 +7,7 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.ast.ModuleNode
-import org.shedlang.compiler.parser.parse
+import org.shedlang.compiler.frontend.parser.parse
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 

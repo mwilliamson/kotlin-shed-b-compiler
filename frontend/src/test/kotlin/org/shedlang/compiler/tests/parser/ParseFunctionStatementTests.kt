@@ -7,8 +7,8 @@ import com.natpryce.hamkrest.has
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
-import org.shedlang.compiler.parser.UnexpectedTokenError
-import org.shedlang.compiler.parser.parseFunctionStatement
+import org.shedlang.compiler.frontend.parser.UnexpectedTokenError
+import org.shedlang.compiler.frontend.parser.parseFunctionStatement
 
 class ParseFunctionStatementTests {
     @Test

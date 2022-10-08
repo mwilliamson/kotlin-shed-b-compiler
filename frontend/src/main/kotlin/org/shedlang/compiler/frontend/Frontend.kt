@@ -3,8 +3,8 @@ package org.shedlang.compiler.frontend
 import com.moandjiezana.toml.Toml
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.parser.parse
-import org.shedlang.compiler.parser.parseTypesModule
+import org.shedlang.compiler.frontend.parser.parse
+import org.shedlang.compiler.frontend.parser.parseTypesModule
 import org.shedlang.compiler.typechecker.PackageConfigError
 import org.shedlang.compiler.typechecker.resolveReferences
 import org.shedlang.compiler.typechecker.typeCheck

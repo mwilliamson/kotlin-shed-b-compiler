@@ -13,7 +13,6 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.ModuleNotFoundError
 import org.shedlang.compiler.typechecker.MultipleModulesWithSameNameFoundError
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.ModuleType
 
 class TypeCheckImportTests {
     @Test

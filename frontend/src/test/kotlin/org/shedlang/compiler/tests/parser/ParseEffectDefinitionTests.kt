@@ -7,8 +7,8 @@ import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.EffectDefinitionNode
 import org.shedlang.compiler.ast.OperationDefinitionNode
-import org.shedlang.compiler.parser.parseFunctionStatement
-import org.shedlang.compiler.parser.parseModuleStatement
+import org.shedlang.compiler.frontend.parser.parseFunctionStatement
+import org.shedlang.compiler.frontend.parser.parseModuleStatement
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 

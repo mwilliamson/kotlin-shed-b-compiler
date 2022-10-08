@@ -3,9 +3,9 @@ package org.shedlang.compiler.tests.parser
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.parser.Token
-import org.shedlang.compiler.parser.TokenType
-import org.shedlang.compiler.parser.tokenise
+import org.shedlang.compiler.frontend.parser.Token
+import org.shedlang.compiler.frontend.parser.TokenType
+import org.shedlang.compiler.frontend.parser.tokenise
 import kotlin.test.assertEquals
 
 class TokeniserTests {

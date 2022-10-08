@@ -5,7 +5,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.ast.BinaryOperator
-import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.frontend.parser.parseExpression
 
 class ParseBinaryOperationTests {
     @TestFactory

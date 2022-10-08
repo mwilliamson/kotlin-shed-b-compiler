@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.StringSource
-import org.shedlang.compiler.parser.Token
-import org.shedlang.compiler.parser.TokenIterator
-import org.shedlang.compiler.parser.UnexpectedTokenError
+import org.shedlang.compiler.frontend.parser.Token
+import org.shedlang.compiler.frontend.parser.TokenIterator
+import org.shedlang.compiler.frontend.parser.UnexpectedTokenError
 
 class TokenIteratorTests {
     enum class TokenType {

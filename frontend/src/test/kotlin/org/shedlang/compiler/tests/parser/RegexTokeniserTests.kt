@@ -1,8 +1,8 @@
 package org.shedlang.compiler.tests.parser
 
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.RegexTokeniser
-import org.shedlang.compiler.parser.Token
+import org.shedlang.compiler.frontend.parser.RegexTokeniser
+import org.shedlang.compiler.frontend.parser.Token
 import kotlin.test.assertEquals
 
 class RegexTokeniserTests {

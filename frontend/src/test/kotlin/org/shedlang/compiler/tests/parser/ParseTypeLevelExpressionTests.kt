@@ -3,8 +3,8 @@ package org.shedlang.compiler.tests.parser
 import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.PositionalParameterAfterNamedParameterError
-import org.shedlang.compiler.parser.parseTypeLevelExpression
+import org.shedlang.compiler.frontend.parser.PositionalParameterAfterNamedParameterError
+import org.shedlang.compiler.frontend.parser.parseTypeLevelExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.throwsException
@@ -87,7 +87,7 @@ class ParseTypeLevelExpressionTests {
 
         val node = { parseString(::parseTypeLevelExpression, source) }
 
-        assertThat(node, throwsException< PositionalParameterAfterNamedParameterError>())
+        assertThat(node, throwsException<PositionalParameterAfterNamedParameterError>())
     }
 
     @Test

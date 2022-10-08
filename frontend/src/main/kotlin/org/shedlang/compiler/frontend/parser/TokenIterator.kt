@@ -1,4 +1,4 @@
-package org.shedlang.compiler.parser
+package org.shedlang.compiler.frontend.parser
 
 import org.shedlang.compiler.allIndexed
 import org.shedlang.compiler.ast.StringSource

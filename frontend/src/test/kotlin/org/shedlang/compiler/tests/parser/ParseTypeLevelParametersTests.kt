@@ -2,9 +2,9 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.TokenIterator
-import org.shedlang.compiler.parser.TokenType
-import org.shedlang.compiler.parser.parseTypeLevelParameters
+import org.shedlang.compiler.frontend.parser.TokenIterator
+import org.shedlang.compiler.frontend.parser.TokenType
+import org.shedlang.compiler.frontend.parser.parseTypeLevelParameters
 import org.shedlang.compiler.tests.*
 
 class ParseTypeLevelParametersTests {

@@ -1,4 +1,4 @@
-package org.shedlang.compiler.parser
+package org.shedlang.compiler.frontend.parser
 
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.MissingReturnTypeError
@@ -1136,19 +1136,23 @@ private fun parseArgument(tokens: TokenIterator<TokenType>): ParsedArgument {
 
     if (tokens.trySkip(TokenType.SYMBOL_ELLIPSIS)) {
         val expression = parseExpression(tokens)
-        return ParsedArgument.Named(FieldArgumentNode.Splat(
-            expression = expression,
-            source = source,
-        ))
+        return ParsedArgument.Named(
+            FieldArgumentNode.Splat(
+                expression = expression,
+                source = source,
+            )
+        )
     } else if (tokens.trySkip(TokenType.SYMBOL_DOT)) {
         val name = parseIdentifier(tokens)
         tokens.skip(TokenType.SYMBOL_EQUALS)
         val expression = parseExpression(tokens)
-        return ParsedArgument.Named(FieldArgumentNode.Named(
-            name = name,
-            expression = expression,
-            source = source
-        ))
+        return ParsedArgument.Named(
+            FieldArgumentNode.Named(
+                name = name,
+                expression = expression,
+                source = source
+            )
+        )
     } else {
         val expression = parseExpression(tokens)
         return ParsedArgument.Positional(expression)
@@ -1670,7 +1674,9 @@ private object TypeLevelUnionParser : TypeLevelOperationParser {
         get() = 13
 }
 
-private fun parseIdentifier(tokens: TokenIterator<TokenType>) = Identifier(tokens.nextValue(TokenType.IDENTIFIER))
+private fun parseIdentifier(tokens: TokenIterator<TokenType>) = Identifier(tokens.nextValue(
+    TokenType.IDENTIFIER
+))
 
 private fun verifyConsistentBranchTermination(node: ExpressionNode) {
     isTerminatingExpression(node)

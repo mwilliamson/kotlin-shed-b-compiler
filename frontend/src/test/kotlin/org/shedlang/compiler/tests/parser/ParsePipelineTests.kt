@@ -2,7 +2,7 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.frontend.parser.parseExpression
 import org.shedlang.compiler.tests.isSequence
 
 class ParsePipelineTests {

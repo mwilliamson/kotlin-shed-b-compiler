@@ -5,7 +5,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.ast.ExpressionStatementNode
 import org.shedlang.compiler.ast.FunctionExpressionNode
-import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.frontend.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 

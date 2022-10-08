@@ -5,10 +5,10 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.throws
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.throwsException
-import org.shedlang.compiler.parser.ParseError
-import org.shedlang.compiler.parser.PositionalArgumentAfterNamedArgumentError
-import org.shedlang.compiler.parser.UnexpectedTokenError
-import org.shedlang.compiler.parser.parseExpression
+import org.shedlang.compiler.frontend.parser.ParseError
+import org.shedlang.compiler.frontend.parser.PositionalArgumentAfterNamedArgumentError
+import org.shedlang.compiler.frontend.parser.UnexpectedTokenError
+import org.shedlang.compiler.frontend.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 

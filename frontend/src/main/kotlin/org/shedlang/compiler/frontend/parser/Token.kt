@@ -1,4 +1,4 @@
-package org.shedlang.compiler.parser
+package org.shedlang.compiler.frontend.parser
 
 internal data class Token<T>(val characterIndex: Int, val tokenType: T, val value: String) {
     fun describe(): String {
