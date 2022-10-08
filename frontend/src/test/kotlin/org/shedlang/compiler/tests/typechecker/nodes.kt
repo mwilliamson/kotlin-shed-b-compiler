@@ -38,7 +38,7 @@ internal fun typeContext(
     )
 
     return TypeContext(
-        moduleName = moduleName?.map(::Identifier),
+        moduleName = moduleName.map(::Identifier),
         effect = effect,
         handle = handle,
         expressionTypes = expressionTypes,
