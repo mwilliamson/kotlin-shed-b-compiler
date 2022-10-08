@@ -6,7 +6,7 @@ import org.shedlang.compiler.types.Variance
 import java.nio.CharBuffer
 import java.util.regex.Pattern
 
-fun parse(filename: String, input: String): ModuleNode {
+internal fun parse(filename: String, input: String): ModuleNode {
     return parse(
         filename = filename,
         input = input,
