@@ -7,6 +7,10 @@ import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.createTempDirectory
+import org.shedlang.compiler.frontend.installDependencies
+import org.shedlang.compiler.frontend.readPackageModule
+import org.shedlang.compiler.frontend.readStandaloneModule
+import org.shedlang.compiler.frontend.standaloneModulePathToName
 import java.io.Closeable
 import java.io.File
 import java.io.InputStream

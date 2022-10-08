@@ -6,7 +6,7 @@ import com.natpryce.hamkrest.equalTo
 import com.natpryce.hamkrest.has
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.Module
-import org.shedlang.compiler.ModuleResult
+import org.shedlang.compiler.frontend.ModuleResult
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ImportPath
 import org.shedlang.compiler.tests.*

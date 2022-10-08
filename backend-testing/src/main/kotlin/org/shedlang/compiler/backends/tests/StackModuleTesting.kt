@@ -4,7 +4,7 @@ import kotlinx.collections.immutable.persistentListOf
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.findRoot
-import org.shedlang.compiler.readPackageModule
+import org.shedlang.compiler.frontend.readPackageModule
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.Type
 

@@ -7,12 +7,12 @@ import com.xenomachina.argparser.mainBody
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.Backend
-import org.shedlang.compiler.readPackageModule
-import org.shedlang.compiler.readStandaloneModule
+import org.shedlang.compiler.frontend.readPackageModule
+import org.shedlang.compiler.frontend.readStandaloneModule
 import org.shedlang.compiler.stackinterpreter.RealWorld
 import org.shedlang.compiler.stackinterpreter.executeMain
 import org.shedlang.compiler.stackir.loadModuleSet
-import org.shedlang.compiler.standaloneModulePathToName
+import org.shedlang.compiler.frontend.standaloneModulePathToName
 import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.createTempDirectory
 import java.nio.file.Path

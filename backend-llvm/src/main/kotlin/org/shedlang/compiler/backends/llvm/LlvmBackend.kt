@@ -7,7 +7,7 @@ import org.shedlang.compiler.backends.Backend
 import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.backends.createTempDirectory
 import org.shedlang.compiler.findRoot
-import org.shedlang.compiler.readPackage
+import org.shedlang.compiler.frontend.readPackage
 import org.shedlang.compiler.stackir.loadModuleSet
 import java.nio.file.Path
 

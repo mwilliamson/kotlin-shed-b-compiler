@@ -1,8 +1,8 @@
-package org.shedlang.compiler
+package org.shedlang.compiler.frontend
 
 import com.moandjiezana.toml.Toml
+import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.frontend.checkTailCalls
 import org.shedlang.compiler.parser.parse
 import org.shedlang.compiler.parser.parseTypesModule
 import org.shedlang.compiler.typechecker.PackageConfigError
@@ -294,7 +294,7 @@ private interface PackageConfig {
     fun dependencies(): List<Dependency>
 }
 
-private object EmptyPackageConfig : PackageConfig{
+private object EmptyPackageConfig : PackageConfig {
     override fun name(): String? {
         return null
     }

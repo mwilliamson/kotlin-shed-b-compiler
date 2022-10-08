@@ -2,6 +2,7 @@ package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.*
 import org.shedlang.compiler.ast.*
+import org.shedlang.compiler.frontend.ModuleResult
 import org.shedlang.compiler.types.*
 import java.util.*
 
