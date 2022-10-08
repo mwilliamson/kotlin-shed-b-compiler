@@ -4,7 +4,6 @@ import kotlinx.collections.immutable.*
 import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.*
-import org.shedlang.compiler.backends.wasm.WasmNaming.effectTagName
 import org.shedlang.compiler.backends.wasm.runtime.compileRuntime
 import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasi

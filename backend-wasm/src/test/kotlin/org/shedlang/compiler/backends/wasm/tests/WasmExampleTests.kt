@@ -3,9 +3,7 @@ package org.shedlang.compiler.backends.wasm.tests
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
-import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.CompilerError
-import org.shedlang.compiler.SourceError
 import org.shedlang.compiler.backends.tests.*
 import org.shedlang.compiler.backends.wasm.WasmBackend
 import org.shedlang.compiler.backends.wasm.generateWasmCommand

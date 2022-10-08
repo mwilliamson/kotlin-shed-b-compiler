@@ -4,11 +4,7 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.shedlang.compiler.*
-import org.shedlang.compiler.ast.FunctionDefinitionNode
-import org.shedlang.compiler.ast.Identifier
-import org.shedlang.compiler.ast.ModuleStatementNode
 import org.shedlang.compiler.backends.tests.ExecutionResult
-import org.shedlang.compiler.backends.tests.TestProgram
 import org.shedlang.compiler.backends.tests.testPrograms
 import org.shedlang.compiler.stackinterpreter.World
 import org.shedlang.compiler.stackinterpreter.executeMain
