@@ -11,7 +11,7 @@ import org.shedlang.compiler.tests.isSequence
 class ParseIfTests {
     @Test
     fun conditionAndBranchesAreReadForIfStatement() {
-        val source = "if (x) { y; } else { z; };"
+        val source = "if (x) { y; } else { z; }"
         val node = parseString(::parseExpression, source)
         assertThat(node, isIf(
             conditionalBranches = isSequence(
@@ -47,7 +47,7 @@ class ParseIfTests {
 
     @Test
     fun multipleConditionalBranchesCanBeRead() {
-        val source = "if (x) { 0; } else if (y) { 1; };"
+        val source = "if (x) { 0; } else if (y) { 1; }"
         val node = parseString(::parseExpression, source)
         assertThat(node, isIf(
             conditionalBranches = isSequence(
