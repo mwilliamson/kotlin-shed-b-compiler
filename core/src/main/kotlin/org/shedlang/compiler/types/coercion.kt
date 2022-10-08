@@ -212,11 +212,7 @@ class TypeConstraintSolver(
                 })
             }.all()
 
-            val canCoerceFields = to.fields.keys.all { toFieldName ->
-                from.fields.keys.contains(toFieldName)
-            }
-
-            return sameShapeId && canCoerceTypeLevelArguments && canCoerceFields
+            return sameShapeId && canCoerceTypeLevelArguments
         }
 
         if (from is TypeLevelValueType && from.value is Type && to is TypeLevelValueType && to.value is Type) {
