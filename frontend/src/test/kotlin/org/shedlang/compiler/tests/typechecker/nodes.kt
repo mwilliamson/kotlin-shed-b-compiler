@@ -38,7 +38,7 @@ internal fun typeContext(
     )
 
     return TypeContext(
-        moduleName = moduleName.map(::Identifier),
+        qualifiedPrefix = listOf(QualifiedNamePart.Module(moduleName.map(::Identifier))),
         effect = effect,
         handle = handle,
         expressionTypes = expressionTypes,

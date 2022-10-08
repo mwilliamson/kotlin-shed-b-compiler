@@ -35,7 +35,7 @@ class EvalTypeTests {
         val reference = typeLevelReference("x")
         val declaration = variableBinder("x")
         val context = newTypeContext(
-            moduleName = moduleName(),
+            qualifiedPrefix = listOf(),
             nodeTypes = mutableMapOf(),
             resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
             typeRegistry = TypeRegistry.Empty,

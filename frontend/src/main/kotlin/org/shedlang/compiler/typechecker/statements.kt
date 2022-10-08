@@ -66,14 +66,10 @@ private fun generateShapeType(
     // TODO: test laziness
     val fields = generateFields(node, context, shapeId)
 
-    if (context.moduleName == null) {
-        throw InternalCompilerError("shapes should only appear in modules", node.source)
-    }
-
     val shapeType = lazyShapeType(
         shapeId = shapeId,
         // TODO: not in a module
-        qualifiedName = QualifiedName.topLevelType(context.moduleName, node.name),
+        qualifiedName = QualifiedName.type(context.qualifiedPrefix, node.name),
         tagValue = tagValue,
         getFields = fields,
         typeLevelParameters = typeLevelParameters,
@@ -232,7 +228,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     val baseShapeId = freshTypeId()
 
-    val tag = Tag(context.moduleName!!, node.name)
+    val tag = Tag(QualifiedName.type(context.qualifiedPrefix, node.name))
 
     val memberTypes = node.members.map { member ->
         val tagValue = TagValue(tag, member.name)

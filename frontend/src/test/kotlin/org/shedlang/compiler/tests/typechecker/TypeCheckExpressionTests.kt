@@ -62,7 +62,7 @@ class TypeCheckExpressionTests {
             { inferType(
                 reference,
                 newTypeContext(
-                    moduleName = moduleName(),
+                    qualifiedPrefix = listOf(),
                     nodeTypes = mutableMapOf(),
                     resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
                     typeRegistry = TypeRegistry.Empty,

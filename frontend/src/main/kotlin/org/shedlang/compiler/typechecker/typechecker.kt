@@ -7,7 +7,7 @@ import org.shedlang.compiler.types.*
 import java.util.*
 
 internal fun newTypeContext(
-    moduleName: ModuleName,
+    qualifiedPrefix: List<QualifiedNamePart>,
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
@@ -15,7 +15,7 @@ internal fun newTypeContext(
     getModule: (ImportPath) -> ModuleResult
 ): TypeContext {
     return TypeContext(
-        moduleName = moduleName,
+        qualifiedPrefix = qualifiedPrefix,
         effect = EmptyEffect,
         handle = null,
         expressionTypes = expressionTypes,
@@ -34,7 +34,7 @@ internal fun newTypeContext(
 internal class HandleTypes(val resumeValueType: Type, val stateType: Type?)
 
 internal class TypeContext(
-    val moduleName: ModuleName,
+    val qualifiedPrefix: List<QualifiedNamePart>,
     val effect: Effect,
     val handle: HandleTypes?,
     private val variableTypes: MutableMap<Int, Type>,
@@ -141,7 +141,7 @@ internal class TypeContext(
 
     fun enterFunction(function: FunctionNode, effect: Effect, handle: HandleTypes?): TypeContext {
         return TypeContext(
-            moduleName = moduleName,
+            qualifiedPrefix = qualifiedPrefix,
             effect = effect,
             handle = handle,
             expressionTypes = expressionTypes,
@@ -159,7 +159,7 @@ internal class TypeContext(
 
     fun enterScope(extraEffect: Effect = EmptyEffect): TypeContext {
         return TypeContext(
-            moduleName = moduleName,
+            qualifiedPrefix = qualifiedPrefix,
             effect = effectUnion(effect, extraEffect),
             handle = handle,
             expressionTypes = expressionTypes,
@@ -198,7 +198,7 @@ internal class TypeContext(
 
     fun copy(): TypeContext {
         return TypeContext(
-            moduleName = moduleName,
+            qualifiedPrefix = qualifiedPrefix,
             effect = effect,
             handle = handle,
             variableTypes = variableTypes.toMutableMap(),
@@ -285,7 +285,7 @@ private fun typeCheckModule(
 ): TypeCheckResult {
     val expressionTypes = mutableMapOf<Int, Type>()
     val typeContext = newTypeContext(
-        moduleName = moduleName,
+        qualifiedPrefix = listOf(QualifiedNamePart.Module(moduleName)),
         nodeTypes = nodeTypes,
         expressionTypes = expressionTypes,
         resolvedReferences = resolvedReferences,

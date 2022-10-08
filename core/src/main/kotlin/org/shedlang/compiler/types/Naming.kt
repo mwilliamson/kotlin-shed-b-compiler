@@ -11,6 +11,10 @@ data class QualifiedName(val parts: List<QualifiedNamePart>, val shortName: Iden
     }
 
     companion object {
+        fun type(prefix: List<QualifiedNamePart>, shortName: Identifier): QualifiedName {
+            return QualifiedName(prefix + QualifiedNamePart.Type(shortName), shortName)
+        }
+
         fun builtin(name: String): QualifiedName {
             val shortName = Identifier(name)
             return QualifiedName(listOf(QualifiedNamePart.Type(shortName)), shortName)

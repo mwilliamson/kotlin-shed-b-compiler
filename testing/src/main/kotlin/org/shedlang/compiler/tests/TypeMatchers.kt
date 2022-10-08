@@ -75,10 +75,9 @@ fun isUnionType(
     has(UnionType::members, members)
 ))
 
-fun isTag(moduleName: List<String>, name: String) = cast(allOf(
-    has(Tag::moduleName, equalTo(moduleName.map(::Identifier))),
-    has(Tag::name, isIdentifier(name))
-))
+fun isTag(moduleName: List<String>, name: String) = isTag(QualifiedName.topLevelType(moduleName, name))
+
+fun isTag(qualifiedName: QualifiedName) = has(Tag::qualifiedName, equalTo(qualifiedName))
 
 fun isTagValue(tag: Matcher<Tag>, value: String) = cast(allOf(
     has(TagValue::tag, tag),

@@ -542,7 +542,7 @@ data class LazyTypeAlias(
         get() = name.value
 }
 
-data class Tag(val moduleName: ModuleName, val name: Identifier)
+data class Tag(val qualifiedName: QualifiedName)
 data class TagValue(val tag: Tag, val value: Identifier)
 
 interface ShapeType: Type {

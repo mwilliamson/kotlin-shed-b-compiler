@@ -649,7 +649,7 @@ fun field(name: String, type: Type, shapeId: Int = freshTypeId()) = Field(
 
 fun parametrizedUnionType(
     name: String,
-    tag: Tag = Tag(listOf(), Identifier(name)),
+    tag: Tag = tag(name = name),
     parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
     members: List<ShapeType> = listOf()
 ) = ParameterizedTypeLevelValue(
@@ -662,13 +662,13 @@ fun parametrizedUnionType(
     parameters = parameters
 )
 
-fun tag(moduleName: List<String>, name: String) = Tag(moduleName.map(::Identifier), Identifier(name))
+fun tag(moduleName: List<String> = listOf("Example"), name: String) = Tag(QualifiedName.topLevelType(moduleName, name))
 
 fun tagValue(tag: Tag, value: String) = TagValue(tag, Identifier(value))
 
 fun unionType(
     name: String = "Union",
-    tag: Tag = Tag(listOf(), Identifier(name)),
+    tag: Tag = tag(name = name),
     members: List<Type> = listOf()
 ) = LazyUnionType(
     name = Identifier(name),
