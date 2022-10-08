@@ -17,8 +17,8 @@ class ParseCallTests {
     fun canParseFunctionCallWithNoArguments() {
         val source = "x()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            isVariableReference("x"),
+        assertThat(node, isCallNode(
+            isVariableReferenceNode("x"),
             isSequence()
         ))
     }
@@ -27,9 +27,9 @@ class ParseCallTests {
     fun canParseFunctionCallWithOneArgument() {
         val source = "x(y)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            isVariableReference("x"),
-            isSequence(isVariableReference("y"))
+        assertThat(node, isCallNode(
+            isVariableReferenceNode("x"),
+            isSequence(isVariableReferenceNode("y"))
         ))
     }
 
@@ -37,9 +37,9 @@ class ParseCallTests {
     fun canParseFunctionCallWithManyArguments() {
         val source = "x(y, z)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            isVariableReference("x"),
-            isSequence(isVariableReference("y"), isVariableReference("z"))
+        assertThat(node, isCallNode(
+            isVariableReferenceNode("x"),
+            isSequence(isVariableReferenceNode("y"), isVariableReferenceNode("z"))
         ))
     }
 
@@ -47,13 +47,13 @@ class ParseCallTests {
     fun canParseFunctionCallWithNamedArgument() {
         val source = "x(.y = z)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            receiver = isVariableReference("x"),
+        assertThat(node, isCallNode(
+            receiver = isVariableReferenceNode("x"),
             positionalArguments = isSequence(),
             fieldArguments = isSequence(
-                isNamedArgument(
+                isNamedArgumentNode(
                     name = isIdentifier("y"),
-                    expression = isVariableReference("z")
+                    expression = isVariableReferenceNode("z")
                 )
             )
         ))
@@ -72,9 +72,9 @@ class ParseCallTests {
     fun canParseFunctionCallWithSplatArguments() {
         val source = "x(...y)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
+        assertThat(node, isCallNode(
             fieldArguments = isSequence(
-                isSplatArgument(expression = isVariableReference("y")),
+                isSplatArgumentNode(expression = isVariableReferenceNode("y")),
             ),
         ))
     }
@@ -83,8 +83,8 @@ class ParseCallTests {
     fun canParseFunctionCallWithExplicitTypeArgument() {
         val source = "f[T]()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            typeArguments = isSequence(isTypeLevelReference("T"))
+        assertThat(node, isCallNode(
+            typeArguments = isSequence(isTypeLevelReferenceNode("T"))
         ))
     }
 
@@ -92,8 +92,8 @@ class ParseCallTests {
     fun canParseFunctionCallWithExplicitTypeArguments() {
         val source = "f[T, U]()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            typeArguments = isSequence(isTypeLevelReference("T"), isTypeLevelReference("U"))
+        assertThat(node, isCallNode(
+            typeArguments = isSequence(isTypeLevelReferenceNode("T"), isTypeLevelReferenceNode("U"))
         ))
     }
 
@@ -110,7 +110,7 @@ class ParseCallTests {
     fun callWithoutBangHasNoEffects() {
         val source = "x()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
+        assertThat(node, isCallNode(
             hasEffect = equalTo(false)
         ))
     }
@@ -119,7 +119,7 @@ class ParseCallTests {
     fun callWithBangHasEffects() {
         val source = "x!()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
+        assertThat(node, isCallNode(
             hasEffect = equalTo(true)
         ))
     }
@@ -128,15 +128,15 @@ class ParseCallTests {
     fun canParsePartialCall() {
         val source = "f ~ (x, .y = z)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isPartialCall(
-            receiver = isVariableReference("f"),
+        assertThat(node, isPartialCallNode(
+            receiver = isVariableReferenceNode("f"),
             positionalArguments = isSequence(
-                isVariableReference("x")
+                isVariableReferenceNode("x")
             ),
             fieldArguments = isSequence(
-                isNamedArgument(
+                isNamedArgumentNode(
                     name = isIdentifier("y"),
-                    expression = isVariableReference("z")
+                    expression = isVariableReferenceNode("z")
                 )
             )
         ))
@@ -148,11 +148,11 @@ class ParseCallTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isTypeLevelCall(
-            receiver = isVariableReference("x"),
+        assertThat(node, isTypeLevelCallNode(
+            receiver = isVariableReferenceNode("x"),
             arguments = isSequence(
-                isTypeLevelReference("A"),
-                isTypeLevelReference("B"),
+                isTypeLevelReferenceNode("A"),
+                isTypeLevelReferenceNode("B"),
             )
         ))
     }

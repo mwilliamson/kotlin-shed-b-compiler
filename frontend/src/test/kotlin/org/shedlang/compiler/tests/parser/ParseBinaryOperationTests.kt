@@ -22,10 +22,10 @@ class ParseBinaryOperationTests {
         ).map { (operatorString, operator) -> DynamicTest.dynamicTest("can parse $operatorString", {
             val source = "x $operatorString y"
             val node = parseString(::parseExpression, source)
-            assertThat(node, isBinaryOperation(
+            assertThat(node, isBinaryOperationNode(
                 operator,
-                isVariableReference("x"),
-                isVariableReference("y")
+                isVariableReferenceNode("x"),
+                isVariableReferenceNode("y")
             ))
         }) }
     }
@@ -34,10 +34,10 @@ class ParseBinaryOperationTests {
     fun canParseAddition() {
         val source = "x + y"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.ADD,
-            isVariableReference("x"),
-            isVariableReference("y")
+            isVariableReferenceNode("x"),
+            isVariableReferenceNode("y")
         ))
     }
 
@@ -45,10 +45,10 @@ class ParseBinaryOperationTests {
     fun canParseSubtraction() {
         val source = "x - y"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.SUBTRACT,
-            isVariableReference("x"),
-            isVariableReference("y")
+            isVariableReferenceNode("x"),
+            isVariableReferenceNode("y")
         ))
     }
 
@@ -56,10 +56,10 @@ class ParseBinaryOperationTests {
     fun canParseMultiplication() {
         val source = "x * y"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.MULTIPLY,
-            isVariableReference("x"),
-            isVariableReference("y")
+            isVariableReferenceNode("x"),
+            isVariableReferenceNode("y")
         ))
     }
 
@@ -67,10 +67,10 @@ class ParseBinaryOperationTests {
     fun canParseDivision() {
         val source = "x / y"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.DIVIDE,
-            isVariableReference("x"),
-            isVariableReference("y")
+            isVariableReferenceNode("x"),
+            isVariableReferenceNode("y")
         ))
     }
 
@@ -78,14 +78,14 @@ class ParseBinaryOperationTests {
     fun canParseLeftAssociativeOperationsWithThreeOperands() {
         val source = "x + y + z"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.ADD,
-            isBinaryOperation(
+            isBinaryOperationNode(
                 BinaryOperator.ADD,
-                isVariableReference("x"),
-                isVariableReference("y")
+                isVariableReferenceNode("x"),
+                isVariableReferenceNode("y")
             ),
-            isVariableReference("z")
+            isVariableReferenceNode("z")
         ))
     }
 
@@ -93,18 +93,18 @@ class ParseBinaryOperationTests {
     fun canParseLeftAssociativeOperationsWithFourOperands() {
         val source = "a + b + c + d"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.ADD,
-            isBinaryOperation(
+            isBinaryOperationNode(
                 BinaryOperator.ADD,
-                isBinaryOperation(
+                isBinaryOperationNode(
                     BinaryOperator.ADD,
-                    isVariableReference("a"),
-                    isVariableReference("b")
+                    isVariableReferenceNode("a"),
+                    isVariableReferenceNode("b")
                 ),
-                isVariableReference("c")
+                isVariableReferenceNode("c")
             ),
-            isVariableReference("d")
+            isVariableReferenceNode("d")
         ))
     }
 
@@ -112,13 +112,13 @@ class ParseBinaryOperationTests {
     fun higherPrecedenceOperatorsBindMoreTightlyThanLowerPrecedenceOperators() {
         val source = "x + y * z"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.ADD,
-            isVariableReference("x"),
-            isBinaryOperation(
+            isVariableReferenceNode("x"),
+            isBinaryOperationNode(
                 BinaryOperator.MULTIPLY,
-                isVariableReference("y"),
-                isVariableReference("z")
+                isVariableReferenceNode("y"),
+                isVariableReferenceNode("z")
             )
 
         ))
@@ -128,14 +128,14 @@ class ParseBinaryOperationTests {
     fun canUseParensToGroupExpressions() {
         val source = "(x + y) * z"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isBinaryOperation(
+        assertThat(node, isBinaryOperationNode(
             BinaryOperator.MULTIPLY,
-            isBinaryOperation(
+            isBinaryOperationNode(
                 BinaryOperator.ADD,
-                isVariableReference("x"),
-                isVariableReference("y")
+                isVariableReferenceNode("x"),
+                isVariableReferenceNode("y")
             ),
-            isVariableReference("z")
+            isVariableReferenceNode("z")
         ))
     }
 }

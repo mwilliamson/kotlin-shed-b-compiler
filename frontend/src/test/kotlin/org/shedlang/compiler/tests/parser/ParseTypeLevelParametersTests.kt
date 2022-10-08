@@ -12,7 +12,7 @@ class ParseTypeLevelParametersTests {
     fun canParseSingleInvariantTypeParameter() {
         val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[T]")
         assertThat(parameters, isSequence(
-            isTypeParameter(name = isIdentifier("T"), variance = isInvariant)
+            isTypeParameterNode(name = isIdentifier("T"), variance = isInvariant)
         ))
     }
 
@@ -20,7 +20,7 @@ class ParseTypeLevelParametersTests {
     fun canParseSingleCovariantTypeParameter() {
         val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[+T]")
         assertThat(parameters, isSequence(
-            isTypeParameter(name = isIdentifier("T"), variance = isCovariant)
+            isTypeParameterNode(name = isIdentifier("T"), variance = isCovariant)
         ))
     }
 
@@ -28,7 +28,7 @@ class ParseTypeLevelParametersTests {
     fun canParseSingleContravariantTypeParameter() {
         val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[-T]")
         assertThat(parameters, isSequence(
-            isTypeParameter(name = isIdentifier("T"), variance = isContravariant)
+            isTypeParameterNode(name = isIdentifier("T"), variance = isContravariant)
         ))
     }
 

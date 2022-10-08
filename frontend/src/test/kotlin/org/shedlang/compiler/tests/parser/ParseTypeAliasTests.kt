@@ -10,9 +10,9 @@ class ParseTypeAliasTests {
     fun canParseTypeAlias() {
         val source = "type Size = Int;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isTypeAlias(
+        assertThat(node, isTypeAliasNode(
             name = isIdentifier("Size"),
-            expression = isTypeLevelReference("Int")
+            expression = isTypeLevelReferenceNode("Int")
         ))
     }
 }

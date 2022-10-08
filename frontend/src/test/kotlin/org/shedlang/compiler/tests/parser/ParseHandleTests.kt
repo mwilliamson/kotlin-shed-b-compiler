@@ -16,18 +16,18 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
-            effect = isTypeLevelReference("Try"),
-            body = isBlock(
-                isExpressionStatement(expression = isCall(receiver = isVariableReference("f")))
+        assertThat(node, isHandleNode(
+            effect = isTypeLevelReferenceNode("Try"),
+            body = isBlockNode(
+                isExpressionStatementNode(expression = isCallNode(receiver = isVariableReferenceNode("f")))
             ),
             handlers = isSequence(
-                isHandler(
+                isHandlerNode(
                     operationName = isIdentifier("throw"),
                     function = allOf(
-                        has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
-                        has(FunctionExpressionNode::body, isBlock(
-                            isExit(isIntLiteral(42))
+                        has(FunctionExpressionNode::parameters, isSequence(isParameterNode("value", "String"))),
+                        has(FunctionExpressionNode::body, isBlockNode(
+                            isExitNode(isIntLiteralNode(42))
                         ))
                     )
                 )
@@ -41,14 +41,14 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
+        assertThat(node, isHandleNode(
             handlers = isSequence(
-                isHandler(
+                isHandlerNode(
                     operationName = isIdentifier("throw"),
                     function = allOf(
-                        has(FunctionExpressionNode::body, isBlock(
-                            isExpressionStatement(isUnitLiteral(), type = equalTo(ExpressionStatementNode.Type.NO_VALUE)),
-                            isExit(isIntLiteral(42))
+                        has(FunctionExpressionNode::body, isBlockNode(
+                            isExpressionStatementNode(isUnitLiteralNode(), type = equalTo(ExpressionStatementNode.Type.NO_VALUE)),
+                            isExitNode(isIntLiteralNode(42))
                         ))
                     )
                 )
@@ -62,14 +62,14 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
+        assertThat(node, isHandleNode(
             handlers = isSequence(
-                isHandler(
+                isHandlerNode(
                     operationName = isIdentifier("throw"),
                     function = allOf(
-                        has(FunctionExpressionNode::parameters, isSequence(isParameter("value", "String"))),
-                        has(FunctionExpressionNode::body, isBlock(
-                            isResume(isIntLiteral(42))
+                        has(FunctionExpressionNode::parameters, isSequence(isParameterNode("value", "String"))),
+                        has(FunctionExpressionNode::body, isBlockNode(
+                            isResumeNode(isIntLiteralNode(42))
                         ))
                     )
                 )
@@ -83,12 +83,12 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
+        assertThat(node, isHandleNode(
             handlers = isSequence(
-                isHandler(
+                isHandlerNode(
                     operationName = isIdentifier("a")
                 ),
-                isHandler(
+                isHandlerNode(
                     operationName = isIdentifier("b")
                 )
             )
@@ -101,7 +101,7 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
+        assertThat(node, isHandleNode(
             initialState = absent(),
         ))
     }
@@ -112,8 +112,8 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
-            initialState = present(isIntLiteral(42)),
+        assertThat(node, isHandleNode(
+            initialState = present(isIntLiteralNode(42)),
         ))
     }
 
@@ -123,14 +123,14 @@ class ParseHandleTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isHandle(
+        assertThat(node, isHandleNode(
             handlers = isSequence(
-                isHandler(
+                isHandlerNode(
                     function = allOf(
-                        has(FunctionExpressionNode::body, isBlock(
-                            isResume(
-                                expression = isUnitLiteral(),
-                                newState = present(isIntLiteral(43)),
+                        has(FunctionExpressionNode::body, isBlockNode(
+                            isResumeNode(
+                                expression = isUnitLiteralNode(),
+                                newState = present(isIntLiteralNode(43)),
                             )
                         ))
                     )

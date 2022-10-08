@@ -20,7 +20,7 @@ class ParseTupleTypeTests {
         val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence(
-            isTypeLevelReference("X")
+            isTypeLevelReferenceNode("X")
         )))
     }
 
@@ -30,9 +30,9 @@ class ParseTupleTypeTests {
         val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence(
-            isTypeLevelReference("X"),
-            isTypeLevelReference("Y"),
-            isTypeLevelReference("Z")
+            isTypeLevelReferenceNode("X"),
+            isTypeLevelReferenceNode("Y"),
+            isTypeLevelReferenceNode("Z")
         )))
     }
 
@@ -42,7 +42,7 @@ class ParseTupleTypeTests {
         val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence(
-            isTypeLevelReference("X")
+            isTypeLevelReferenceNode("X")
         )))
     }
 }

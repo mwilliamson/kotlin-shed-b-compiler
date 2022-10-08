@@ -10,8 +10,8 @@ class ParseFieldAccessTests {
     fun canParseFieldAccess() {
         val source = "x.y"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isFieldAccess(
-            receiver = isVariableReference("x"),
+        assertThat(node, isFieldAccessNode(
+            receiver = isVariableReferenceNode("x"),
             fieldName = isIdentifier("y"),
             source = isStringSource("x.y", 1)
         ))
@@ -21,9 +21,9 @@ class ParseFieldAccessTests {
     fun fieldAccessIsLeftAssociative() {
         val source = "x.y.z"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isFieldAccess(
-            receiver = isFieldAccess(
-                receiver = isVariableReference("x"),
+        assertThat(node, isFieldAccessNode(
+            receiver = isFieldAccessNode(
+                receiver = isVariableReferenceNode("x"),
                 fieldName = isIdentifier("y")
             ),
             fieldName = isIdentifier("z")

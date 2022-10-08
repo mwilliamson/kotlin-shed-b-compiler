@@ -9,9 +9,9 @@ class ParseIsTests {
     fun canParseIsExpression() {
         val source = "x is X"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isIsOperation(
-            expression = isVariableReference("x"),
-            type = isTypeLevelReference("X")
+        assertThat(node, isIsOperationNode(
+            expression = isVariableReferenceNode("x"),
+            type = isTypeLevelReferenceNode("X")
         ))
     }
 }

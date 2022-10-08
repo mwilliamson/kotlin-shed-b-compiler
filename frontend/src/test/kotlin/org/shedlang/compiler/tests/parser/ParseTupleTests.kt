@@ -10,7 +10,7 @@ class ParseTupleTests {
     fun canParseTupleWithNoElements() {
         val source = "#()"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isTupleNode(
+        assertThat(node, isTupleNodeNode(
             elements = isSequence()
         ))
     }
@@ -19,8 +19,8 @@ class ParseTupleTests {
     fun canParseSingletonTuple() {
         val source = "#(1)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isTupleNode(
-            elements = isSequence(isIntLiteral(1))
+        assertThat(node, isTupleNodeNode(
+            elements = isSequence(isIntLiteralNode(1))
         ))
     }
 
@@ -28,8 +28,8 @@ class ParseTupleTests {
     fun canParseTuplesWithMultipleElements() {
         val source = "#(1, 2)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isTupleNode(
-            elements = isSequence(isIntLiteral(1), isIntLiteral(2))
+        assertThat(node, isTupleNodeNode(
+            elements = isSequence(isIntLiteralNode(1), isIntLiteralNode(2))
         ))
     }
 
@@ -37,8 +37,8 @@ class ParseTupleTests {
     fun elementsCanHaveTrailingComma() {
         val source = "#(1,)"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isTupleNode(
-            elements = isSequence(isIntLiteral(1))
+        assertThat(node, isTupleNodeNode(
+            elements = isSequence(isIntLiteralNode(1))
         ))
     }
 }

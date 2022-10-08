@@ -11,9 +11,9 @@ class ParseValTests {
     fun valIsValidFunctionStatement() {
         val source = "val x = 4;"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isVal(
-            target = isTargetVariable(name = isIdentifier("x")),
-            expression = isIntLiteral(4)
+        assertThat(node, isValNode(
+            target = isTargetVariableNode(name = isIdentifier("x")),
+            expression = isIntLiteralNode(4)
         ))
     }
 
@@ -21,9 +21,9 @@ class ParseValTests {
     fun valIsValidModuleStatement() {
         val source = "val x = 4;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isVal(
-            target = isTargetVariable(name = isIdentifier("x")),
-            expression = isIntLiteral(4)
+        assertThat(node, isValNode(
+            target = isTargetVariableNode(name = isIdentifier("x")),
+            expression = isIntLiteralNode(4)
         ))
     }
 }

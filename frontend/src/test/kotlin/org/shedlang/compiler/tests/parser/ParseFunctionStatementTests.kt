@@ -27,13 +27,13 @@ class ParseFunctionStatementTests {
     fun ifStatementReturnsWhenAllBranchesReturns() {
         val source = "if (true) { 1 } else { 2 }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(type = equalTo(ExpressionStatementNode.Type.VALUE)))
+        assertThat(node, isExpressionStatementNode(type = equalTo(ExpressionStatementNode.Type.VALUE)))
     }
 
     @Test
     fun ifStatementDoesNotReturnWhenAllBranchesDoNotReturn() {
         val source = "if (true) { 1; } else { 2; }"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(type = equalTo(ExpressionStatementNode.Type.NO_VALUE)))
+        assertThat(node, isExpressionStatementNode(type = equalTo(ExpressionStatementNode.Type.NO_VALUE)))
     }
 }

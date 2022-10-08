@@ -11,9 +11,9 @@ class ParseTypeLevelUnionTests {
         val source = "A | B"
         val node = parseString(::parseTypeLevelExpression, source)
 
-        assertThat(node, isTypeLevelUnion(isSequence(
-            isTypeLevelReference("A"),
-            isTypeLevelReference("B")
+        assertThat(node, isTypeLevelUnionNode(isSequence(
+            isTypeLevelReferenceNode("A"),
+            isTypeLevelReferenceNode("B")
         )))
     }
 }

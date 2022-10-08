@@ -472,7 +472,7 @@ class Loader(
         return Pair(instructions, namedArgumentNames)
     }
 
-    fun loadBlock(block: Block, context: LoaderContext): PersistentList<Instruction> {
+    fun loadBlock(block: BlockNode, context: LoaderContext): PersistentList<Instruction> {
         val statementInstructions = block.statements.flatMap { statement ->
             loadFunctionStatement(statement, context)
         }.toPersistentList()

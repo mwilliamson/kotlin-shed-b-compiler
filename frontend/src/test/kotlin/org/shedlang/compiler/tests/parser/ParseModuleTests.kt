@@ -33,8 +33,8 @@ class ParseModuleTests {
         val node = parse("<string>", source)
 
         assertThat(node, has(ModuleNode::exports, isSequence(
-            isExport("x"),
-            isExport("y")
+            isExportNode("x"),
+            isExportNode("y")
         )))
     }
 
@@ -47,8 +47,8 @@ class ParseModuleTests {
         val node = parse("<string>", source)
 
         assertThat(node, has(ModuleNode::imports, isSequence(
-            isImport(
-                target = isTargetVariable("y"),
+            isImportNode(
+                target = isTargetVariableNode("y"),
                 path = equalTo(ImportPath.relative(listOf("x", "y")))
             )
         )))
@@ -68,8 +68,8 @@ class ParseModuleTests {
 
         assertThat(node, allOf(
             has(ModuleNode::body, isSequence(
-                isFunctionDefinition(name = isIdentifier("f")),
-                isFunctionDefinition(name = isIdentifier("g"))
+                isFunctionDefinitionNode(name = isIdentifier("f")),
+                isFunctionDefinitionNode(name = isIdentifier("g"))
             ))
         ))
     }

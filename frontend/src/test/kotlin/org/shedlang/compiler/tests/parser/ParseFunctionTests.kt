@@ -20,7 +20,7 @@ class ParseFunctionTests {
             has(FunctionDefinitionNode::name, isIdentifier("f")),
             has(FunctionNode::typeLevelParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
-            has(FunctionNode::returnType, present(isTypeLevelReference("Unit")))
+            has(FunctionNode::returnType, present(isTypeLevelReferenceNode("Unit")))
         ))
     }
 
@@ -29,7 +29,7 @@ class ParseFunctionTests {
         val source = "fun f(x: Int) -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
-            isParameter("x", "Int")
+            isParameterNode("x", "Int")
         )))
     }
 
@@ -38,8 +38,8 @@ class ParseFunctionTests {
         val source = "fun f(x: Int, y: String) -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
-            isParameter("x", "Int"),
-            isParameter("y", "String")
+            isParameterNode("x", "Int"),
+            isParameterNode("y", "String")
         )))
     }
 
@@ -49,7 +49,7 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionNode::parameters, isSequence()),
-            has(FunctionNode::namedParameters, isSequence(isParameter("x", "Int")))
+            has(FunctionNode::namedParameters, isSequence(isParameterNode("x", "Int")))
         ))
     }
 
@@ -58,8 +58,8 @@ class ParseFunctionTests {
         val source = "fun f(x: Int, .y: Int) -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
-            has(FunctionNode::parameters, isSequence(isParameter("x", "Int"))),
-            has(FunctionNode::namedParameters, isSequence(isParameter("y", "Int")))
+            has(FunctionNode::parameters, isSequence(isParameterNode("x", "Int"))),
+            has(FunctionNode::namedParameters, isSequence(isParameterNode("y", "Int")))
         ))
     }
 
@@ -77,12 +77,12 @@ class ParseFunctionTests {
     fun argumentTypeIsOptional() {
         val source = "fun f(x, .y) -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
-        assertThat(function, isFunctionDefinition(
+        assertThat(function, isFunctionDefinitionNode(
             positionalParameters = isSequence(
-                isParameter("x", absent()),
+                isParameterNode("x", absent()),
             ),
             namedParameters = isSequence(
-                isParameter("y", absent()),
+                isParameterNode("y", absent()),
             ),
         ))
     }
@@ -92,7 +92,7 @@ class ParseFunctionTests {
         val source = "fun f(x: Int, ) -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::parameters, isSequence(
-            isParameter("x", "Int")
+            isParameterNode("x", "Int")
         )))
     }
 
@@ -102,8 +102,8 @@ class ParseFunctionTests {
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, allOf(
             has(FunctionNode::typeLevelParameters, isSequence(
-                isTypeParameter(name = isIdentifier("T"), variance = isInvariant),
-                isTypeParameter(name = isIdentifier("U"), variance = isInvariant)
+                isTypeParameterNode(name = isIdentifier("T"), variance = isInvariant),
+                isTypeParameterNode(name = isIdentifier("U"), variance = isInvariant)
             ))
         ))
     }
@@ -132,9 +132,9 @@ class ParseFunctionTests {
     fun canReadBody() {
         val source = "fun f() -> Int { 1; 2; }"
         val function = parseString(::parseFunctionDefinition, source)
-        assertThat(function, has(FunctionDefinitionNode::body, isBlock(
-            isExpressionStatement(isIntLiteral(equalTo(1))),
-            isExpressionStatement(isIntLiteral(equalTo(2)))
+        assertThat(function, has(FunctionDefinitionNode::body, isBlockNode(
+            isExpressionStatementNode(isIntLiteralNode(equalTo(1))),
+            isExpressionStatementNode(isIntLiteralNode(equalTo(2)))
         )))
     }
 
@@ -150,7 +150,7 @@ class ParseFunctionTests {
         val source = "fun f() !Io -> Unit { }"
         val function = parseString(::parseFunctionDefinition, source)
         assertThat(function, has(FunctionNode::effect, present(cast(
-            has(FunctionEffectNode.Explicit::expression, isTypeLevelReference("Io")),
+            has(FunctionEffectNode.Explicit::expression, isTypeLevelReferenceNode("Io")),
         ))))
     }
 
@@ -177,7 +177,7 @@ class ParseFunctionTests {
         assertThat(function, cast(allOf(
             has(FunctionNode::typeLevelParameters, isSequence()),
             has(FunctionNode::parameters, isSequence()),
-            has(FunctionNode::returnType, present(isTypeLevelReference("Unit")))
+            has(FunctionNode::returnType, present(isTypeLevelReferenceNode("Unit")))
         )))
     }
 
@@ -188,9 +188,9 @@ class ParseFunctionTests {
         assertThat(function, cast(
             has(
                 FunctionNode::body,
-                isBlock(
-                    isExpressionStatement(
-                        expression = isIntLiteral(equalTo(4)),
+                isBlockNode(
+                    isExpressionStatementNode(
+                        expression = isIntLiteralNode(equalTo(4)),
                         type = equalTo(ExpressionStatementNode.Type.VALUE)
                     )
                 )
@@ -206,9 +206,9 @@ class ParseFunctionTests {
             has(FunctionNode::returnType, absent()),
             has(
                 FunctionNode::body,
-                isBlock(
-                    isExpressionStatement(
-                        expression = isIntLiteral(equalTo(4)),
+                isBlockNode(
+                    isExpressionStatementNode(
+                        expression = isIntLiteralNode(equalTo(4)),
                         type = equalTo(ExpressionStatementNode.Type.VALUE)
                     )
                 )
@@ -238,8 +238,8 @@ class ParseFunctionTests {
     fun canReadFunctionExpressionAsFunctionExpressionStatement() {
         val source = "fun () -> Unit { }"
         val function = parseString(::parseFunctionStatement, source)
-        assertThat(function, isExpressionStatement(expression = cast(allOf(
-            has(FunctionExpressionNode::returnType, present(isTypeLevelReference("Unit")))
+        assertThat(function, isExpressionStatementNode(expression = cast(allOf(
+            has(FunctionExpressionNode::returnType, present(isTypeLevelReferenceNode("Unit")))
         ))))
     }
 }

@@ -12,24 +12,24 @@ class ParseTargetTests {
     fun underscoreIsParsedAsIgnore() {
         val source = "_"
         val node = parseString(::parseTarget, source)
-        assertThat(node, isTargetIgnore())
+        assertThat(node, isTargetIgnoreNode())
     }
 
     @Test
     fun valTargetCanBeVariableReference() {
         val source = "x"
         val node = parseString(::parseTarget, source)
-        assertThat(node, isTargetVariable(name = isIdentifier("x")))
+        assertThat(node, isTargetVariableNode(name = isIdentifier("x")))
     }
 
     @Test
     fun valTargetCanBeTuple() {
         val source = "#(x, y)"
         val node = parseString(::parseTarget, source)
-        assertThat(node, isTargetTuple(
+        assertThat(node, isTargetTupleNode(
             elements = isSequence(
-                isTargetVariable(name = isIdentifier("x")),
-                isTargetVariable(name = isIdentifier("y"))
+                isTargetVariableNode(name = isIdentifier("x")),
+                isTargetVariableNode(name = isIdentifier("y"))
             )
         ))
     }
@@ -38,9 +38,9 @@ class ParseTargetTests {
     fun targetTupleCanHaveTrailingComma() {
         val source = "#(x,)"
         val node = parseString(::parseTarget, source)
-        assertThat(node, isTargetTuple(
+        assertThat(node, isTargetTupleNode(
             elements = isSequence(
-                isTargetVariable(name = isIdentifier("x"))
+                isTargetVariableNode(name = isIdentifier("x"))
             )
         ))
     }
@@ -49,10 +49,10 @@ class ParseTargetTests {
     fun valTargetCanBeFields() {
         val source = "@(.x as targetX, .y as targetY)"
         val node = parseString(::parseTarget, source)
-        assertThat(node, isTargetFields(
+        assertThat(node, isTargetFieldsNode(
             fields = isSequence(
-                isPair(isFieldName("x"), isTargetVariable(name = isIdentifier("targetX"))),
-                isPair(isFieldName("y"), isTargetVariable(name = isIdentifier("targetY")))
+                isPair(isFieldNameNode("x"), isTargetVariableNode(name = isIdentifier("targetX"))),
+                isPair(isFieldNameNode("y"), isTargetVariableNode(name = isIdentifier("targetY")))
             )
         ))
     }
@@ -61,9 +61,9 @@ class ParseTargetTests {
     fun valTargetFieldsCanHaveTrailingComma() {
         val source = "@(.x as targetX,)"
         val node = parseString(::parseTarget, source)
-        assertThat(node, isTargetFields(
+        assertThat(node, isTargetFieldsNode(
             fields = isSequence(
-                isPair(isFieldName("x"), isTargetVariable(name = isIdentifier("targetX")))
+                isPair(isFieldNameNode("x"), isTargetVariableNode(name = isIdentifier("targetX")))
             )
         ))
     }

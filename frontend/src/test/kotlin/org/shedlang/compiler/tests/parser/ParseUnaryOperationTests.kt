@@ -10,9 +10,9 @@ class ParseUnaryOperationTests {
     fun canParseUnaryMinus() {
         val source = "-x"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isUnaryOperation(
+        assertThat(node, isUnaryOperationNode(
             UnaryOperator.MINUS,
-            isVariableReference("x")
+            isVariableReferenceNode("x")
         ))
     }
 
@@ -20,9 +20,9 @@ class ParseUnaryOperationTests {
     fun canParseNotOperation() {
         val source = "not x"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isUnaryOperation(
+        assertThat(node, isUnaryOperationNode(
             UnaryOperator.NOT,
-            isVariableReference("x")
+            isVariableReferenceNode("x")
         ))
     }
 }

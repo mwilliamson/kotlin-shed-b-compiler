@@ -26,19 +26,19 @@ class ParseWhenTests {
             }
         """
         val node = parseString(::parseExpression, source)
-        assertThat(node, isWhen(
-            expression = isVariableReference("x"),
+        assertThat(node, isWhenNode(
+            expression = isVariableReferenceNode("x"),
             branches = isSequence(
-                isWhenBranch(
-                    type = isTypeLevelReference("Some"),
-                    body = isBlock(
-                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
+                isWhenBranchNode(
+                    type = isTypeLevelReferenceNode("Some"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(expression = isIntLiteralNode(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 ),
-                isWhenBranch(
-                    type = isTypeLevelReference("None"),
-                    body = isBlock(
-                        isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
+                isWhenBranchNode(
+                    type = isTypeLevelReferenceNode("None"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(expression = isIntLiteralNode(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 )
             ),
@@ -58,10 +58,10 @@ class ParseWhenTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isWhen(
+        assertThat(node, isWhenNode(
             branches = isSequence(
-                isWhenBranch(
-                    type = isTypeLevelReference("Some"),
+                isWhenBranchNode(
+                    type = isTypeLevelReferenceNode("Some"),
                 ),
             ),
         ))
@@ -79,13 +79,13 @@ class ParseWhenTests {
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isWhen(
+        assertThat(node, isWhenNode(
             branches = isSequence(
-                isWhenBranch(
-                    target = isTargetFields(
+                isWhenBranchNode(
+                    target = isTargetFieldsNode(
                         fields = isSequence(
-                            isPair(isFieldName("head"), isTargetVariable("value")),
-                            isPair(isFieldName("tail"), isTargetVariable("rest")),
+                            isPair(isFieldNameNode("head"), isTargetVariableNode("value")),
+                            isPair(isFieldNameNode("tail"), isTargetVariableNode("rest")),
                         ),
                     ),
                 ),
@@ -106,18 +106,18 @@ class ParseWhenTests {
             }
         """
         val node = parseString(::parseExpression, source)
-        assertThat(node, isWhen(
-            expression = isVariableReference("x"),
+        assertThat(node, isWhenNode(
+            expression = isVariableReferenceNode("x"),
             branches = isSequence(
-                isWhenBranch(
-                    type = isTypeLevelReference("Some"),
-                    body = isBlock(
-                        isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
+                isWhenBranchNode(
+                    type = isTypeLevelReferenceNode("Some"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(expression = isIntLiteralNode(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 )
             ),
-            elseBranch = present(isBlock(
-                isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
+            elseBranch = present(isBlockNode(
+                isExpressionStatementNode(expression = isIntLiteralNode(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
             ))
         ))
     }

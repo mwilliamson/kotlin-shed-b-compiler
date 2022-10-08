@@ -10,10 +10,10 @@ class ParsePipelineTests {
     fun canParsePipelineOperator() {
         val source = "x |> y"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            receiver = isVariableReference("y"),
+        assertThat(node, isCallNode(
+            receiver = isVariableReferenceNode("y"),
             positionalArguments = isSequence(
-                isVariableReference("x")
+                isVariableReferenceNode("x")
             ),
             fieldArguments = isSequence(),
             typeArguments = isSequence()
@@ -24,13 +24,13 @@ class ParsePipelineTests {
     fun pipelineOperatorIsLeftAssociative() {
         val source = "x |> y |> z"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isCall(
-            receiver = isVariableReference("z"),
+        assertThat(node, isCallNode(
+            receiver = isVariableReferenceNode("z"),
             positionalArguments = isSequence(
-                isCall(
-                    receiver = isVariableReference("y"),
+                isCallNode(
+                    receiver = isVariableReferenceNode("y"),
                     positionalArguments = isSequence(
-                        isVariableReference("x")
+                        isVariableReferenceNode("x")
                     )
                 )
             )

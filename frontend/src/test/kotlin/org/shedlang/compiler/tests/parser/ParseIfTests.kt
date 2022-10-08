@@ -13,17 +13,17 @@ class ParseIfTests {
     fun conditionAndBranchesAreReadForIfStatement() {
         val source = "if (x) { y; } else { z; }"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isIf(
+        assertThat(node, isIfNode(
             conditionalBranches = isSequence(
-                isConditionalBranch(
-                    condition = isVariableReference("x"),
-                    body = isBlock(
-                        isExpressionStatement(isVariableReference("y"))
+                isConditionalBranchNode(
+                    condition = isVariableReferenceNode("x"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(isVariableReferenceNode("y"))
                     )
                 )
             ),
-            elseBranch = isBlock(
-                isExpressionStatement(isVariableReference("z"))
+            elseBranch = isBlockNode(
+                isExpressionStatementNode(isVariableReferenceNode("z"))
             )
         ))
     }
@@ -32,16 +32,16 @@ class ParseIfTests {
     fun elseBranchIsOptional() {
         val source = "if (x) { y; }"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isIf(
+        assertThat(node, isIfNode(
             conditionalBranches = isSequence(
-                isConditionalBranch(
-                    condition = isVariableReference("x"),
-                    body = isBlock(
-                        isExpressionStatement(isVariableReference("y"))
+                isConditionalBranchNode(
+                    condition = isVariableReferenceNode("x"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(isVariableReferenceNode("y"))
                     )
                 )
             ),
-            elseBranch = isBlock()
+            elseBranch = isBlockNode()
         ))
     }
 
@@ -49,23 +49,23 @@ class ParseIfTests {
     fun multipleConditionalBranchesCanBeRead() {
         val source = "if (x) { 0; } else if (y) { 1; }"
         val node = parseString(::parseExpression, source)
-        assertThat(node, isIf(
+        assertThat(node, isIfNode(
             conditionalBranches = isSequence(
-                isConditionalBranch(
-                    condition = isVariableReference("x"),
-                    body = isBlock(
-                        isExpressionStatement(isIntLiteral(equalTo(0)))
+                isConditionalBranchNode(
+                    condition = isVariableReferenceNode("x"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(isIntLiteralNode(equalTo(0)))
                     )
                 ),
 
-                isConditionalBranch(
-                    condition = isVariableReference("y"),
-                    body = isBlock(
-                        isExpressionStatement(isIntLiteral(equalTo(1)))
+                isConditionalBranchNode(
+                    condition = isVariableReferenceNode("y"),
+                    body = isBlockNode(
+                        isExpressionStatementNode(isIntLiteralNode(equalTo(1)))
                     )
                 )
             ),
-            elseBranch = isBlock()
+            elseBranch = isBlockNode()
         ))
     }
 

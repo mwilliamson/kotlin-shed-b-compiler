@@ -14,12 +14,12 @@ class ParseUnionTests {
     fun unionHasBarSeparatedMembers() {
         val source = "union X = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             name = isIdentifier("X"),
             typeLevelParameters = isSequence(),
             members = isSequence(
-                isUnionMember(name = isIdentifier("Y")),
-                isUnionMember(name = isIdentifier("Z"))
+                isUnionMemberNode(name = isIdentifier("Y")),
+                isUnionMemberNode(name = isIdentifier("Z"))
             )
         ))
     }
@@ -28,9 +28,9 @@ class ParseUnionTests {
     fun whenMemberJustHasIdentifierThenMemberIsEmptyShape() {
         val source = "union X = Y;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             members = isSequence(
-                isUnionMember(
+                isUnionMemberNode(
                     name = isIdentifier("Y"),
                     typeLevelParameters = isSequence(),
                     extends = isSequence(),
@@ -44,11 +44,11 @@ class ParseUnionTests {
     fun memberCanHaveFields() {
         val source = "union X = Y { z: Int, };"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             members = isSequence(
-                isUnionMember(
+                isUnionMemberNode(
                     fields = isSequence(
-                        isShapeField(name = isIdentifier("z"), type = present(isTypeLevelReference("Int")))
+                        isShapeFieldNode(name = isIdentifier("z"), type = present(isTypeLevelReferenceNode("Int")))
                     )
                 )
             )
@@ -59,14 +59,14 @@ class ParseUnionTests {
     fun unionCanHaveTypeParameter() {
         val source = "union X[T] = Y[T] { y: T };"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             name = isIdentifier("X"),
-            typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+            typeLevelParameters = isSequence(isTypeParameterNode(name = isIdentifier("T"))),
             members = isSequence(
-                isUnionMember(
-                    typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+                isUnionMemberNode(
+                    typeLevelParameters = isSequence(isTypeParameterNode(name = isIdentifier("T"))),
                     fields = isSequence(
-                        isShapeField(name = isIdentifier("y"), type = present(isTypeLevelReference("T")))
+                        isShapeFieldNode(name = isIdentifier("y"), type = present(isTypeLevelReferenceNode("T")))
                     )
                 )
             )
@@ -77,11 +77,11 @@ class ParseUnionTests {
     fun typeParametersOnMembersAreDerivedFromUnion() {
         val source = "union X[+T] = Y[T] { y: T };"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
-            typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT))),
+        assertThat(node, isUnionNode(
+            typeLevelParameters = isSequence(isTypeParameterNode(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT))),
             members = isSequence(
-                isUnionMember(
-                    typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT)))
+                isUnionMemberNode(
+                    typeLevelParameters = isSequence(isTypeParameterNode(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT)))
                 )
             )
         ))
@@ -91,15 +91,15 @@ class ParseUnionTests {
     fun unionCanHaveManyTypeParameters() {
         val source = "union X[T, U] = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             name = isIdentifier("X"),
             typeLevelParameters = isSequence(
-                isTypeParameter(name = isIdentifier("T")),
-                isTypeParameter(name = isIdentifier("U"))
+                isTypeParameterNode(name = isIdentifier("T")),
+                isTypeParameterNode(name = isIdentifier("U"))
             ),
             members = isSequence(
-                isUnionMember(name = isIdentifier("Y")),
-                isUnionMember(name = isIdentifier("Z"))
+                isUnionMemberNode(name = isIdentifier("Y")),
+                isUnionMemberNode(name = isIdentifier("Z"))
             )
         ))
     }
@@ -108,10 +108,10 @@ class ParseUnionTests {
     fun typeParametersOnMemberCanBeSubsetOfUnionTypeParameters() {
         val source = "union X[+T1, T2, -T3] = Y[T3] { y: T3 };"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             members = isSequence(
-                isUnionMember(
-                    typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T3"), variance = equalTo(Variance.CONTRAVARIANT)))
+                isUnionMemberNode(
+                    typeLevelParameters = isSequence(isTypeParameterNode(name = isIdentifier("T3"), variance = equalTo(Variance.CONTRAVARIANT)))
                 )
             )
         ))
@@ -121,7 +121,7 @@ class ParseUnionTests {
     fun unionHasNoSuperTypeByDefault() {
         val source = "union X = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
+        assertThat(node, isUnionNode(
             superType = equalTo(null)
         ))
     }
@@ -130,8 +130,8 @@ class ParseUnionTests {
     fun subTypeSymbolIsUsedToIndicateSuperTypeOfUnion() {
         val source = "union X <: Base = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isUnion(
-            superType = present(isTypeLevelReference(name = "Base"))
+        assertThat(node, isUnionNode(
+            superType = present(isTypeLevelReferenceNode(name = "Base"))
         ))
     }
 }

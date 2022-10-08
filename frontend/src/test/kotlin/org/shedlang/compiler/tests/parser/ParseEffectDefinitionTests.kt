@@ -24,9 +24,9 @@ class ParseEffectDefinitionTests {
             has(EffectDefinitionNode::operations, isSequence(
                 allOf(
                     has(OperationDefinitionNode::name, isIdentifier("throw")),
-                    has(OperationDefinitionNode::type, isFunctionType(
-                        positionalParameters = isSequence(isTypeLevelReference("String")),
-                        returnType = isTypeLevelReference("Nothing")
+                    has(OperationDefinitionNode::type, isFunctionTypeNode(
+                        positionalParameters = isSequence(isTypeLevelReferenceNode("String")),
+                        returnType = isTypeLevelReferenceNode("Nothing")
                     ))
                 )
             ))

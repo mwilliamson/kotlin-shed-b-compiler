@@ -45,7 +45,7 @@ fun ifExpression(
 ): IfNode {
     return IfNode(
         conditionalBranches = conditionalBranches,
-        elseBranch = Block(elseBranch, source = anySource()),
+        elseBranch = BlockNode(elseBranch, source = anySource()),
         source = anySource()
     )
 }
@@ -55,7 +55,7 @@ fun conditionalBranch(
     body: List<FunctionStatementNode>
 ) = ConditionalBranchNode(
     condition = condition,
-    body = Block(body, source = anySource()),
+    body = BlockNode(body, source = anySource()),
     source = anySource()
 )
 
@@ -66,7 +66,7 @@ fun whenExpression(
 ) = WhenNode(
     expression = expression,
     conditionalBranches = conditionalBranches,
-    elseBranch = if (elseBranch == null) null else Block(elseBranch, source = anySource()),
+    elseBranch = if (elseBranch == null) null else BlockNode(elseBranch, source = anySource()),
     source = anySource(),
     elseSource = anySource(),
 )
@@ -78,7 +78,7 @@ fun whenBranch(
 ) = WhenBranchNode(
     type = type,
     target = target,
-    body = Block(body, source = anySource()),
+    body = BlockNode(body, source = anySource()),
     source = anySource()
 )
 
@@ -191,7 +191,7 @@ fun valType(
     source = anySource()
 )
 
-fun block(statements: List<FunctionStatementNode>) = Block(
+fun block(statements: List<FunctionStatementNode>) = BlockNode(
     statements,
     source = anySource()
 )
@@ -308,7 +308,7 @@ fun fieldName(
 fun handle(
     effect: TypeLevelExpressionNode = typeLevelReference("Eff"),
     initialState: ExpressionNode? = null,
-    body: Block,
+    body: BlockNode,
     handlers: List<HandlerNode>
 ) = HandleNode(
     effect = effect,
@@ -343,7 +343,7 @@ fun function(
     namedParameters = namedParameters,
     returnType = returnType,
     effect = if (effect == null) null else FunctionEffectNode.Explicit(effect, source = anySource()),
-    body = Block(body, source = anySource()),
+    body = BlockNode(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
 )
@@ -362,7 +362,7 @@ fun functionExpression(
     namedParameters = namedParameters,
     returnType = returnType,
     effect = effect,
-    body = Block(body, source = anySource()),
+    body = BlockNode(body, source = anySource()),
     inferReturnType = inferReturnType,
     source = anySource()
 )

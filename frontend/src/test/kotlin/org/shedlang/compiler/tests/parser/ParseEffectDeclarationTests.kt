@@ -12,7 +12,7 @@ class ParseEffectDeclarationTests {
 
         val node = parseString(::parseTypesModuleStatement, source)
 
-        assertThat(node, isEffectDeclaration(
+        assertThat(node, isEffectDeclarationNode(
             name = isIdentifier("Write")
         ))
     }

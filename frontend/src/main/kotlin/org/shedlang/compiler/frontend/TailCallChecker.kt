@@ -23,7 +23,7 @@ private fun checkTailCalls(function: FunctionNode, references: ResolvedReference
     checkBlock(function.body, function = function, references = references, checkedTailCalls = checkedTailCalls)
 }
 
-private fun checkBlock(block: Block, function: FunctionNode, references: ResolvedReferences, checkedTailCalls: MutableSet<Int>) {
+private fun checkBlock(block: BlockNode, function: FunctionNode, references: ResolvedReferences, checkedTailCalls: MutableSet<Int>) {
     for (statement in block.statements) {
         checkStatement(statement, function = function, references = references, checkedTailCalls = checkedTailCalls)
     }

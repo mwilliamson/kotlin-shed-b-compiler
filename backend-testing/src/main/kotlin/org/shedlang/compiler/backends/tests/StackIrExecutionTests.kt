@@ -1767,7 +1767,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         return executeInstructions(instructions, type = type)
     }
 
-    private fun evaluateBlock(block: Block, type: Type, references: ResolvedReferences = ResolvedReferencesMap.EMPTY): IrValue {
+    private fun evaluateBlock(block: BlockNode, type: Type, references: ResolvedReferences = ResolvedReferencesMap.EMPTY): IrValue {
         val instructions = loader(references = references).loadBlock(block, defaultContext)
         return executeInstructions(instructions, type = type)
     }

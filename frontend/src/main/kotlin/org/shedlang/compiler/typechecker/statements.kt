@@ -405,7 +405,7 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
     }
 }
 
-internal fun typeCheckBlock(block: Block, context: TypeContext): Type {
+internal fun typeCheckBlock(block: BlockNode, context: TypeContext): Type {
     var type: Type = UnitType
 
     for (statement in block.statements) {

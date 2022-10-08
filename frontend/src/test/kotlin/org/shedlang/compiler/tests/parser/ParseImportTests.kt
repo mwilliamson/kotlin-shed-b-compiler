@@ -11,8 +11,8 @@ class ParseImportTests {
     fun moduleNameIsParsedFromImport() {
         val source = "import a from example.x;"
         val node = parseString(::parseImport, source)
-        assertThat(node, isImport(
-            target = isTargetVariable("a"),
+        assertThat(node, isImportNode(
+            target = isTargetVariableNode("a"),
             path = equalTo(
                 ImportPath.absolute(listOf("example", "x"))
             )
@@ -23,8 +23,8 @@ class ParseImportTests {
     fun moduleNameIsNormalised() {
         val source = "import a from example .  x;"
         val node = parseString(::parseImport, source)
-        assertThat(node, isImport(
-            target = isTargetVariable("a"),
+        assertThat(node, isImportNode(
+            target = isTargetVariableNode("a"),
             path = equalTo(
                 ImportPath.absolute(listOf("example", "x"))
             )
@@ -35,8 +35,8 @@ class ParseImportTests {
     fun relativeImportsStartWithDot() {
         val source = "import a from .example.x;"
         val node = parseString(::parseImport, source)
-        assertThat(node, isImport(
-            target = isTargetVariable("a"),
+        assertThat(node, isImportNode(
+            target = isTargetVariableNode("a"),
             path = equalTo(
                 ImportPath.relative(listOf("example", "x"))
             )

@@ -13,8 +13,8 @@ class ParseExpressionStatementTests {
     fun expressionWithTrailingSemiColonIsReadAsNonReturningExpressionStatement() {
         val source = "4;"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(
-            isIntLiteral(4),
+        assertThat(node, isExpressionStatementNode(
+            isIntLiteralNode(4),
             type = equalTo(ExpressionStatementNode.Type.NO_VALUE)
         ))
     }
@@ -23,8 +23,8 @@ class ParseExpressionStatementTests {
     fun expressionWithoutTrailingSemiColonIsReadAsReturningExpressionStatement() {
         val source = "4"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(
-            isIntLiteral(4),
+        assertThat(node, isExpressionStatementNode(
+            isIntLiteralNode(4),
             type = equalTo(ExpressionStatementNode.Type.VALUE)
         ))
     }
@@ -33,8 +33,8 @@ class ParseExpressionStatementTests {
     fun expressionWithTailrecPrefixIsReadAsTailrecReturningExpressionStatement() {
         val source = "tailrec f()"
         val node = parseString(::parseFunctionStatement, source)
-        assertThat(node, isExpressionStatement(
-            isCall(),
+        assertThat(node, isExpressionStatementNode(
+            isCallNode(),
             type = equalTo(ExpressionStatementNode.Type.TAILREC)
         ))
     }

@@ -7,9 +7,9 @@ import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.types.Variance
 import java.math.BigInteger
 
-internal fun isExport(name: String) = isVariableReference(name)
+internal fun isExportNode(name: String) = isVariableReferenceNode(name)
 
-internal fun isImport(
+internal fun isImportNode(
     target: Matcher<TargetNode>,
     path: Matcher<ImportPath>
 ) = allOf(
@@ -17,46 +17,46 @@ internal fun isImport(
     has(ImportNode::path, path)
 )
 
-internal fun isIf(
+internal fun isIfNode(
     conditionalBranches: Matcher<List<ConditionalBranchNode>>,
-    elseBranch: Matcher<Block>
+    elseBranch: Matcher<BlockNode>
 ): Matcher<ExpressionNode> = cast(allOf(
     has(IfNode::conditionalBranches, conditionalBranches),
     has(IfNode::elseBranch, elseBranch)
 ))
 
-internal fun isConditionalBranch(
+internal fun isConditionalBranchNode(
     condition: Matcher<ExpressionNode>,
-    body: Matcher<Block>
+    body: Matcher<BlockNode>
 ): Matcher<ConditionalBranchNode> = cast(allOf(
     has(ConditionalBranchNode::condition, condition),
     has(ConditionalBranchNode::body, body)
 ))
 
-internal fun isWhen(
+internal fun isWhenNode(
     expression: Matcher<ExpressionNode> = anything,
     branches: Matcher<List<WhenBranchNode>> = anything,
-    elseBranch: Matcher<Block?> = anything,
+    elseBranch: Matcher<BlockNode?> = anything,
 ): Matcher<ExpressionNode> = cast(allOf(
     has(WhenNode::expression, expression),
     has(WhenNode::conditionalBranches, branches),
     has(WhenNode::elseBranch, elseBranch)
 ))
 
-internal fun isWhenBranch(
+internal fun isWhenBranchNode(
     type: Matcher<TypeLevelExpressionNode> = anything,
     target: Matcher<TargetNode.Fields> = anything,
-    body: Matcher<Block> = anything,
+    body: Matcher<BlockNode> = anything,
 ): Matcher<WhenBranchNode> = allOf(
     has(WhenBranchNode::type, type),
     has(WhenBranchNode::target, target),
     has(WhenBranchNode::body, body)
 )
 
-internal fun isHandle(
+internal fun isHandleNode(
     effect: Matcher<TypeLevelExpressionNode> = anything,
     initialState: Matcher<ExpressionNode?> = anything,
-    body: Matcher<Block> = anything,
+    body: Matcher<BlockNode> = anything,
     handlers: Matcher<List<HandlerNode>> = anything,
 ): Matcher<ExpressionNode> = cast(allOf(
     has(HandleNode::effect, effect),
@@ -65,7 +65,7 @@ internal fun isHandle(
     has(HandleNode::handlers, handlers)
 ))
 
-internal fun isHandler(
+internal fun isHandlerNode(
     operationName: Matcher<Identifier> = anything,
     function: Matcher<FunctionExpressionNode> = anything
 ) = allOf(
@@ -73,9 +73,9 @@ internal fun isHandler(
     has(HandlerNode::function, function)
 )
 
-internal fun isBlock(vararg statements: Matcher<FunctionStatementNode>) = has(Block::statements, isSequence(*statements))
+internal fun isBlockNode(vararg statements: Matcher<FunctionStatementNode>) = has(BlockNode::statements, isSequence(*statements))
 
-internal fun isExpressionStatement(
+internal fun isExpressionStatementNode(
     expression: Matcher<ExpressionNode> = anything,
     type: Matcher<ExpressionStatementNode.Type> = anything
 ): Matcher<FunctionStatementNode> {
@@ -85,11 +85,11 @@ internal fun isExpressionStatement(
     ))
 }
 
-internal fun isExit(expression: Matcher<ExpressionNode>): Matcher<FunctionStatementNode> {
-    return isExpressionStatement(expression = expression, type = equalTo(ExpressionStatementNode.Type.EXIT))
+internal fun isExitNode(expression: Matcher<ExpressionNode>): Matcher<FunctionStatementNode> {
+    return isExpressionStatementNode(expression = expression, type = equalTo(ExpressionStatementNode.Type.EXIT))
 }
 
-internal fun isResume(
+internal fun isResumeNode(
     expression: Matcher<ExpressionNode> = anything,
     newState: Matcher<ExpressionNode?> = anything,
 ): Matcher<FunctionStatementNode> {
@@ -99,7 +99,7 @@ internal fun isResume(
     ))
 }
 
-inline internal fun isVal(
+internal fun isValNode(
     target: Matcher<TargetNode>,
     expression: Matcher<ExpressionNode> = anything
 ): Matcher<Node> {
@@ -109,23 +109,23 @@ inline internal fun isVal(
     ))
 }
 
-internal fun isTargetIgnore() = isA<TargetNode.Ignore>()
+internal fun isTargetIgnoreNode() = isA<TargetNode.Ignore>()
 
-internal fun isTargetVariable(name: String) = isTargetVariable(isIdentifier(name))
+internal fun isTargetVariableNode(name: String) = isTargetVariableNode(isIdentifier(name))
 
-internal fun isTargetVariable(
+internal fun isTargetVariableNode(
     name: Matcher<Identifier>
 ): Matcher<TargetNode> = cast(has(TargetNode.Variable::name, name))
 
-internal fun isTargetTuple(
+internal fun isTargetTupleNode(
     elements: Matcher<List<TargetNode>>
 ): Matcher<TargetNode> = cast(has(TargetNode.Tuple::elements, elements))
 
-internal fun isTargetFields(
+internal fun isTargetFieldsNode(
     fields: Matcher<List<Pair<FieldNameNode, TargetNode>>>
 ): Matcher<TargetNode> = cast(has(TargetNode.Fields::fields, fields))
 
-internal fun isValType(
+internal fun isValTypeNode(
     name: Matcher<Identifier>,
     type: Matcher<TypeLevelExpressionNode>
 ): Matcher<Node> {
@@ -135,7 +135,7 @@ internal fun isValType(
     ))
 }
 
-internal fun isEffectDeclaration(
+internal fun isEffectDeclarationNode(
     name: Matcher<Identifier>
 ): Matcher<TypesModuleStatementNode> {
     return cast(allOf(
@@ -143,7 +143,7 @@ internal fun isEffectDeclaration(
     ))
 }
 
-internal fun isTypeAlias(
+internal fun isTypeAliasNode(
     name: Matcher<Identifier> = anything,
     expression: Matcher<TypeLevelExpressionNode> = anything
 ): Matcher<ModuleStatementNode> {
@@ -153,7 +153,7 @@ internal fun isTypeAlias(
     ))
 }
 
-internal fun isShape(
+internal fun isShapeNode(
     name: Matcher<Identifier> = anything,
     typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
     extends: Matcher<List<TypeLevelExpressionNode>> = anything,
@@ -167,7 +167,7 @@ internal fun isShape(
     ))
 }
 
-internal fun isShapeField(
+internal fun isShapeFieldNode(
     name: Matcher<Identifier>,
     type: Matcher<TypeLevelExpressionNode> = anything,
     shape: Matcher<TypeLevelExpressionNode?> = anything
@@ -177,7 +177,7 @@ internal fun isShapeField(
     has(ShapeFieldNode::shape, shape)
 )
 
-internal fun isUnion(
+internal fun isUnionNode(
     name: Matcher<Identifier> = anything,
     typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
     members: Matcher<List<UnionMemberNode>> = anything,
@@ -191,7 +191,7 @@ internal fun isUnion(
     ))
 }
 
-internal fun isUnionMember(
+internal fun isUnionMemberNode(
     name: Matcher<Identifier> = anything,
     typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
     extends: Matcher<List<TypeLevelExpressionNode>> = anything,
@@ -205,7 +205,7 @@ internal fun isUnionMember(
     ))
 }
 
-internal fun isVarargsDeclaration(
+internal fun isVarargsDeclarationNode(
     name: Matcher<Identifier>,
     cons: Matcher<ExpressionNode>,
     nil: Matcher<ExpressionNode>
@@ -217,7 +217,7 @@ internal fun isVarargsDeclaration(
     ))
 }
 
-internal fun isFunctionDefinition(
+internal fun isFunctionDefinitionNode(
     name: Matcher<Identifier> = anything,
     positionalParameters: Matcher<List<ParameterNode>> = anything,
     namedParameters: Matcher<List<ParameterNode>> = anything
@@ -229,7 +229,7 @@ internal fun isFunctionDefinition(
     ))
 }
 
-internal fun isTypeParameter(
+internal fun isTypeParameterNode(
     name: Matcher<Identifier>,
     variance: Matcher<Variance> = anything
 ): Matcher<TypeLevelParameterNode> {
@@ -245,18 +245,18 @@ internal fun isEffectParameterNode(
     return cast(has(EffectParameterNode::name, name))
 }
 
-internal fun isParameter(name: String, typeReference: String): Matcher<ParameterNode> {
-    return isParameter(name = name, type = present(isTypeLevelReference(typeReference)))
+internal fun isParameterNode(name: String, typeReference: String): Matcher<ParameterNode> {
+    return isParameterNode(name = name, type = present(isTypeLevelReferenceNode(typeReference)))
 }
 
-internal fun isParameter(name: String, type: Matcher<TypeLevelExpressionNode?>): Matcher<ParameterNode> {
+internal fun isParameterNode(name: String, type: Matcher<TypeLevelExpressionNode?>): Matcher<ParameterNode> {
     return allOf(
         has(ParameterNode::name, isIdentifier(name)),
         has(ParameterNode::type, type)
     )
 }
 
-internal fun isUnaryOperation(
+internal fun isUnaryOperationNode(
     operator: UnaryOperator,
     operand: Matcher<ExpressionNode>
 ): Matcher<ExpressionNode> {
@@ -266,7 +266,7 @@ internal fun isUnaryOperation(
     ))
 }
 
-internal fun isBinaryOperation(
+internal fun isBinaryOperationNode(
     operator: BinaryOperator,
     left: Matcher<ExpressionNode>,
     right: Matcher<ExpressionNode>
@@ -278,7 +278,7 @@ internal fun isBinaryOperation(
     ))
 }
 
-internal fun isIsOperation(
+internal fun isIsOperationNode(
     expression: Matcher<ExpressionNode>,
     type: Matcher<TypeLevelExpressionNode>
 ) : Matcher<ExpressionNode> {
@@ -288,7 +288,7 @@ internal fun isIsOperation(
     ))
 }
 
-internal fun isCall(
+internal fun isCallNode(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     fieldArguments: Matcher<List<FieldArgumentNode>> = anything,
@@ -304,7 +304,7 @@ internal fun isCall(
     ))
 }
 
-internal fun isPartialCall(
+internal fun isPartialCallNode(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     fieldArguments: Matcher<List<FieldArgumentNode>> = anything,
@@ -318,7 +318,7 @@ internal fun isPartialCall(
     ))
 }
 
-internal fun isNamedArgument(
+internal fun isNamedArgumentNode(
     name: Matcher<Identifier>,
     expression: Matcher<ExpressionNode>
 ): Matcher<FieldArgumentNode> = cast(allOf(
@@ -326,13 +326,13 @@ internal fun isNamedArgument(
     has(FieldArgumentNode.Named::expression, expression)
 ))
 
-internal fun isSplatArgument(
+internal fun isSplatArgumentNode(
     expression: Matcher<ExpressionNode>,
 ): Matcher<FieldArgumentNode> = cast(
     has(FieldArgumentNode.Splat::expression, expression)
 )
 
-internal fun isTypeLevelCall(
+internal fun isTypeLevelCallNode(
     receiver: Matcher<ExpressionNode> = anything,
     arguments: Matcher<List<TypeLevelExpressionNode>> = anything,
 ) : Matcher<ExpressionNode> {
@@ -342,7 +342,7 @@ internal fun isTypeLevelCall(
     ))
 }
 
-internal fun isFieldAccess(
+internal fun isFieldAccessNode(
     receiver: Matcher<ExpressionNode>,
     fieldName: Matcher<Identifier>,
     source: Matcher<Source> = anything
@@ -352,18 +352,18 @@ internal fun isFieldAccess(
     has(FieldAccessNode::source, source)
 ))
 
-internal fun isFieldName(name: String) = has(FieldNameNode::identifier, isIdentifier(name))
+internal fun isFieldNameNode(name: String) = has(FieldNameNode::identifier, isIdentifier(name))
 
-internal fun isTupleNode(elements: Matcher<List<ExpressionNode>>)
+internal fun isTupleNodeNode(elements: Matcher<List<ExpressionNode>>)
     = cast(has(TupleNode::elements, elements))
 
-internal fun isVariableReference(name: String) : Matcher<Node>
+internal fun isVariableReferenceNode(name: String) : Matcher<Node>
     = cast(has(ReferenceNode::name, isIdentifier(name)))
 
-internal fun isTypeLevelReference(name: String) : Matcher<Node>
-    = isVariableReference(name)
+internal fun isTypeLevelReferenceNode(name: String) : Matcher<Node>
+    = isVariableReferenceNode(name)
 
-internal fun isTypeLevelFieldAccess(
+internal fun isTypeLevelFieldAccessNode(
     receiver: Matcher<TypeLevelExpressionNode>,
     fieldName: Matcher<Identifier>
 ): Matcher<TypeLevelExpressionNode> = cast(allOf(
@@ -371,14 +371,14 @@ internal fun isTypeLevelFieldAccess(
     has(TypeLevelFieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName))
 ))
 
-internal fun isTypeLevelApplication(
+internal fun isTypeLevelApplicationNode(
     receiver: Matcher<TypeLevelExpressionNode>,
     arguments: Matcher<List<TypeLevelExpressionNode>>
 ): Matcher<TypeLevelExpressionNode> = cast(allOf(
     has(TypeLevelApplicationNode::receiver, receiver),
     has(TypeLevelApplicationNode::arguments, arguments)
 ))
-internal fun isFunctionType(
+internal fun isFunctionTypeNode(
     typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
     positionalParameters: Matcher<List<TypeLevelExpressionNode>> = anything,
     namedParameters: Matcher<List<FunctionTypeNamedParameterNode>> = anything,
@@ -392,9 +392,9 @@ internal fun isFunctionType(
     has(FunctionTypeNode::effect, effect)
 ))
 
-internal fun isFunctionTypeNamedParameter(name: String, typeReference: String): Matcher<FunctionTypeNamedParameterNode> = allOf(
+internal fun isFunctionTypeNamedParameterNode(name: String, typeReference: String): Matcher<FunctionTypeNamedParameterNode> = allOf(
     has(FunctionTypeNamedParameterNode::name, isIdentifier(name)),
-    has(FunctionTypeNamedParameterNode::type, isTypeLevelReference(typeReference)),
+    has(FunctionTypeNamedParameterNode::type, isTypeLevelReferenceNode(typeReference)),
 )
 
 internal fun isTupleTypeNode(
@@ -403,18 +403,18 @@ internal fun isTupleTypeNode(
     has(TupleTypeNode::elementTypes, elementTypes)
 )
 
-internal fun isTypeLevelUnion(
+internal fun isTypeLevelUnionNode(
     elements: Matcher<List<TypeLevelExpressionNode>> = anything
 ): Matcher<TypeLevelExpressionNode> = cast(
     has(TypeLevelUnionNode::elements, elements)
 )
 
-internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>
+internal fun isIntLiteralNode(value: Matcher<Int>): Matcher<ExpressionNode>
     = cast(has(IntegerLiteralNode::value, has(BigInteger::intValueExact, value)))
 
-internal fun isIntLiteral(value: Int) = isIntLiteral(equalTo(value))
+internal fun isIntLiteralNode(value: Int) = isIntLiteralNode(equalTo(value))
 
-internal fun isUnitLiteral() = isA<UnitLiteralNode>()
+internal fun isUnitLiteralNode() = isA<UnitLiteralNode>()
 
 internal fun isStringSource(contents: String, characterIndex: Int): Matcher<Source> = cast(allOf(
     has(StringSource::contents, equalTo(contents)),

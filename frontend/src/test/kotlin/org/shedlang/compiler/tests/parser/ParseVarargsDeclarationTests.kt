@@ -10,10 +10,10 @@ class ParseVarargsDeclarationTests {
     fun canParseVarargsDeclaration() {
         val source = "varargs list(cons, nil);"
         val node = parseString(::parseModuleStatement, source)
-        assertThat(node, isVarargsDeclaration(
+        assertThat(node, isVarargsDeclarationNode(
             name = isIdentifier("list"),
-            cons = isVariableReference("cons"),
-            nil = isVariableReference("nil")
+            cons = isVariableReferenceNode("cons"),
+            nil = isVariableReferenceNode("nil")
         ))
     }
 }

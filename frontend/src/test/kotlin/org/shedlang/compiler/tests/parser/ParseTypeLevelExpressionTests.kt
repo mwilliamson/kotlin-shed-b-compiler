@@ -14,15 +14,15 @@ class ParseTypeLevelExpressionTests {
     fun identifierIsParsedAsTypeReference() {
         val source = "T"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isTypeLevelReference(name = "T"))
+        assertThat(node, isTypeLevelReferenceNode(name = "T"))
     }
 
     @Test
     fun typeLevelFieldAccessIsParsed() {
         val source = "M.T"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isTypeLevelFieldAccess(
-            receiver = isTypeLevelReference(name = "M"),
+        assertThat(node, isTypeLevelFieldAccessNode(
+            receiver = isTypeLevelReferenceNode(name = "M"),
             fieldName = isIdentifier("T")
         ))
     }
@@ -31,11 +31,11 @@ class ParseTypeLevelExpressionTests {
     fun typeApplicationIsRepresentedBySquareBrackets() {
         val source = "X[T, U]"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isTypeLevelApplication(
-            receiver = isTypeLevelReference(name = "X"),
+        assertThat(node, isTypeLevelApplicationNode(
+            receiver = isTypeLevelReferenceNode(name = "X"),
             arguments = isSequence(
-                isTypeLevelReference(name = "T"),
-                isTypeLevelReference(name = "U")
+                isTypeLevelReferenceNode(name = "T"),
+                isTypeLevelReferenceNode(name = "U")
             )
         ))
     }
@@ -44,12 +44,12 @@ class ParseTypeLevelExpressionTests {
     fun functionTypeIsRepresentedByParenthesisedArgumentsThenArrowThenReturnType() {
         val source = "Fun (A, B) -> C"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isFunctionType(
+        assertThat(node, isFunctionTypeNode(
             positionalParameters = isSequence(
-                isTypeLevelReference(name = "A"),
-                isTypeLevelReference(name = "B")
+                isTypeLevelReferenceNode(name = "A"),
+                isTypeLevelReferenceNode(name = "B")
             ),
-            returnType = isTypeLevelReference(name = "C")
+            returnType = isTypeLevelReferenceNode(name = "C")
         ))
     }
 
@@ -57,11 +57,11 @@ class ParseTypeLevelExpressionTests {
     fun parametersCanHaveTrailingComma() {
         val source = "Fun (A,) -> C"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isFunctionType(
+        assertThat(node, isFunctionTypeNode(
             positionalParameters = isSequence(
-                isTypeLevelReference(name = "A")
+                isTypeLevelReferenceNode(name = "A")
             ),
-            returnType = isTypeLevelReference(name = "C")
+            returnType = isTypeLevelReferenceNode(name = "C")
         ))
     }
 
@@ -69,15 +69,15 @@ class ParseTypeLevelExpressionTests {
     fun functionTypeCanHaveNamedArguments() {
         val source = "Fun (A, B, .c: C) -> C"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isFunctionType(
+        assertThat(node, isFunctionTypeNode(
             positionalParameters = isSequence(
-                isTypeLevelReference(name = "A"),
-                isTypeLevelReference(name = "B")
+                isTypeLevelReferenceNode(name = "A"),
+                isTypeLevelReferenceNode(name = "B")
             ),
             namedParameters = isSequence(
-                isFunctionTypeNamedParameter(name = "c", typeReference = "C")
+                isFunctionTypeNamedParameterNode(name = "c", typeReference = "C")
             ),
-            returnType = isTypeLevelReference(name = "C")
+            returnType = isTypeLevelReferenceNode(name = "C")
         ))
     }
 
@@ -94,8 +94,8 @@ class ParseTypeLevelExpressionTests {
     fun functionTypeCanHaveEffects() {
         val source = "Fun () !E -> R"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isFunctionType(
-            effect = present(isTypeLevelReference("E"))
+        assertThat(node, isFunctionTypeNode(
+            effect = present(isTypeLevelReferenceNode("E"))
         ))
     }
 
@@ -103,13 +103,13 @@ class ParseTypeLevelExpressionTests {
     fun functionTypeTypeLevelParametersAreRepresentedBySquareBrackets() {
         val source = "Fun [T, U](T, U) -> R"
         val node = parseString(::parseTypeLevelExpression, source)
-        assertThat(node, isFunctionType(
+        assertThat(node, isFunctionTypeNode(
 
             positionalParameters = isSequence(
-                isTypeLevelReference(name = "T"),
-                isTypeLevelReference(name = "U")
+                isTypeLevelReferenceNode(name = "T"),
+                isTypeLevelReferenceNode(name = "U")
             ),
-            returnType = isTypeLevelReference(name = "R")
+            returnType = isTypeLevelReferenceNode(name = "R")
         ))
     }
 }

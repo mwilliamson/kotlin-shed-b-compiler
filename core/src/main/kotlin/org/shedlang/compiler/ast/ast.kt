@@ -510,7 +510,7 @@ interface FunctionNode : Node {
     val namedParameters: List<ParameterNode>
     val returnType: TypeLevelExpressionNode?
     val effect: FunctionEffectNode?
-    val body: Block
+    val body: BlockNode
     val inferReturnType: Boolean
 }
 
@@ -533,7 +533,7 @@ sealed class FunctionEffectNode: Node {
     }
 }
 
-data class Block(
+data class BlockNode(
     val statements: List<FunctionStatementNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -563,7 +563,7 @@ data class FunctionExpressionNode(
     override val namedParameters: List<ParameterNode>,
     override val returnType: TypeLevelExpressionNode?,
     override val effect: FunctionEffectNode?,
-    override val body: Block,
+    override val body: BlockNode,
     override val inferReturnType: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -583,7 +583,7 @@ data class FunctionDefinitionNode(
     override val namedParameters: List<ParameterNode>,
     override val returnType: TypeLevelExpressionNode,
     override val effect: FunctionEffectNode?,
-    override val body: Block,
+    override val body: BlockNode,
     override val inferReturnType: Boolean,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -699,7 +699,7 @@ data class BadStatementNode(
 
 data class IfNode(
     val conditionalBranches: List<ConditionalBranchNode>,
-    val elseBranch: Block,
+    val elseBranch: BlockNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
@@ -710,13 +710,13 @@ data class IfNode(
         return visitor.visit(this)
     }
 
-    val branchBodies: Iterable<Block>
+    val branchBodies: Iterable<BlockNode>
         get() = conditionalBranches.map { branch -> branch.body } + listOf(elseBranch)
 }
 
 data class ConditionalBranchNode(
     val condition: ExpressionNode,
-    val body: Block,
+    val body: BlockNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
@@ -730,7 +730,7 @@ data class ConditionalBranchNode(
 data class WhenNode(
     val expression: ExpressionNode,
     val conditionalBranches: List<WhenBranchNode>,
-    val elseBranch: Block?,
+    val elseBranch: BlockNode?,
     override val source: Source,
     val elseSource: Source,
     override val nodeId: Int = freshNodeId()
@@ -743,14 +743,14 @@ data class WhenNode(
         return visitor.visit(this)
     }
 
-    val branchBodies: Iterable<Block>
+    val branchBodies: Iterable<BlockNode>
         get() = conditionalBranches.map { branch -> branch.body } + elseBranch.nullableToList()
 }
 
 data class WhenBranchNode(
     val type: TypeLevelExpressionNode,
     val target: TargetNode.Fields,
-    val body: Block,
+    val body: BlockNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : Node {
@@ -767,7 +767,7 @@ data class WhenBranchNode(
 data class HandleNode(
     val effect: TypeLevelExpressionNode,
     val initialState: ExpressionNode?,
-    val body: Block,
+    val body: BlockNode,
     val handlers: List<HandlerNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -1202,25 +1202,25 @@ enum class BinaryOperator {
     OR
 }
 
-fun expressionBranches(expression: ExpressionNode): Iterable<Block>? {
-    return expression.accept(object : ExpressionNode.Visitor<Iterable<Block>?> {
-        override fun visit(node: UnitLiteralNode): Iterable<Block>? = null
-        override fun visit(node: BooleanLiteralNode): Iterable<Block>? = null
-        override fun visit(node: IntegerLiteralNode): Iterable<Block>? = null
-        override fun visit(node: StringLiteralNode): Iterable<Block>? = null
-        override fun visit(node: UnicodeScalarLiteralNode): Iterable<Block>? = null
-        override fun visit(node: TupleNode): Iterable<Block>? = null
-        override fun visit(node: ReferenceNode): Iterable<Block>? = null
-        override fun visit(node: UnaryOperationNode): Iterable<Block>? = null
-        override fun visit(node: BinaryOperationNode): Iterable<Block>? = null
-        override fun visit(node: IsNode): Iterable<Block>? = null
-        override fun visit(node: CallNode): Iterable<Block>? = null
-        override fun visit(node: PartialCallNode): Iterable<Block>? = null
-        override fun visit(node: TypeLevelCallNode): Iterable<Block>? = null
-        override fun visit(node: FieldAccessNode): Iterable<Block>? = null
-        override fun visit(node: FunctionExpressionNode): Iterable<Block>? = null
-        override fun visit(node: IfNode): Iterable<Block>? = node.branchBodies
-        override fun visit(node: WhenNode): Iterable<Block>? = node.branchBodies
-        override fun visit(node: HandleNode): Iterable<Block>? = listOf(node.body)
+fun expressionBranches(expression: ExpressionNode): Iterable<BlockNode>? {
+    return expression.accept(object : ExpressionNode.Visitor<Iterable<BlockNode>?> {
+        override fun visit(node: UnitLiteralNode): Iterable<BlockNode>? = null
+        override fun visit(node: BooleanLiteralNode): Iterable<BlockNode>? = null
+        override fun visit(node: IntegerLiteralNode): Iterable<BlockNode>? = null
+        override fun visit(node: StringLiteralNode): Iterable<BlockNode>? = null
+        override fun visit(node: UnicodeScalarLiteralNode): Iterable<BlockNode>? = null
+        override fun visit(node: TupleNode): Iterable<BlockNode>? = null
+        override fun visit(node: ReferenceNode): Iterable<BlockNode>? = null
+        override fun visit(node: UnaryOperationNode): Iterable<BlockNode>? = null
+        override fun visit(node: BinaryOperationNode): Iterable<BlockNode>? = null
+        override fun visit(node: IsNode): Iterable<BlockNode>? = null
+        override fun visit(node: CallNode): Iterable<BlockNode>? = null
+        override fun visit(node: PartialCallNode): Iterable<BlockNode>? = null
+        override fun visit(node: TypeLevelCallNode): Iterable<BlockNode>? = null
+        override fun visit(node: FieldAccessNode): Iterable<BlockNode>? = null
+        override fun visit(node: FunctionExpressionNode): Iterable<BlockNode>? = null
+        override fun visit(node: IfNode): Iterable<BlockNode>? = node.branchBodies
+        override fun visit(node: WhenNode): Iterable<BlockNode>? = node.branchBodies
+        override fun visit(node: HandleNode): Iterable<BlockNode>? = listOf(node.body)
     })
 }

@@ -562,7 +562,7 @@ private fun parseFunctionTypeEffect(tokens: TokenIterator<TokenType>): TypeLevel
     }
 }
 
-private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): Block {
+private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): BlockNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
@@ -576,7 +576,7 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): Block {
     }
 
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
-    return Block(
+    return BlockNode(
         statements = statements,
         source = source
     )
@@ -738,7 +738,7 @@ private fun parseIf(tokens: TokenIterator<TokenType>) : IfNode {
         parseFunctionStatements(tokens)
     } else {
         val elseSource = tokens.location()
-        Block(statements = listOf(), source = elseSource)
+        BlockNode(statements = listOf(), source = elseSource)
     }
 
     val node = IfNode(
@@ -1303,7 +1303,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
                     type = ExpressionStatementNode.Type.VALUE,
                     source = expression.source
                 )
-                val body = Block(
+                val body = BlockNode(
                     statements = listOf(statement),
                     source = expression.source
                 )

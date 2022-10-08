@@ -33,8 +33,8 @@ class ParseTypesModuleTests {
         val node = parseTypesModule("<string>", source)
 
         assertThat(node, has(TypesModuleNode::imports, isSequence(
-            isImport(
-                target = isTargetVariable("y"),
+            isImportNode(
+                target = isTargetVariableNode("y"),
                 path = equalTo(ImportPath.relative(listOf("x", "y")))
             )
         )))
@@ -49,7 +49,7 @@ class ParseTypesModuleTests {
         val node = parseTypesModule("<string>", source)
 
         assertThat(node, has(TypesModuleNode::body, isSequence(
-            isValType(name = isIdentifier("x"), type = isTypeLevelReference("Int"))
+            isValTypeNode(name = isIdentifier("x"), type = isTypeLevelReferenceNode("Int"))
         )))
     }
 }
