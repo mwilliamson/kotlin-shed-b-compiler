@@ -8,6 +8,8 @@ import org.shedlang.compiler.frontend.parser.parseTypesModule
 import org.shedlang.compiler.typechecker.PackageConfigError
 import org.shedlang.compiler.typechecker.resolveReferences
 import org.shedlang.compiler.typechecker.typeCheck
+import org.shedlang.compiler.types.TypeRegistry
+import org.shedlang.compiler.types.TypeRegistryImpl
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -20,7 +22,7 @@ fun readStandaloneModule(path: Path): ModuleSet {
     val moduleName = standaloneModulePathToName(path)
     val reader = ModuleReader(sourceDirectories = listOf(absolutePath.parent), implicitStdlib = true)
     reader.load(moduleName)
-    return ModuleSet(reader.modules)
+    return reader.toModuleSet()
 }
 
 fun standaloneModulePathToName(path: Path): ModuleName {
@@ -32,7 +34,7 @@ private const val sourceDirectoryName = "src"
 fun readPackageModule(base: Path, name: ModuleName): ModuleSet {
     val reader = createModuleReader(base)
     reader.load(name)
-    return ModuleSet(reader.modules)
+    return reader.toModuleSet()
 }
 
 fun readPackage(base: Path): ModuleSet {
@@ -51,7 +53,7 @@ fun readPackage(base: Path): ModuleSet {
         }
     }
 
-    return ModuleSet(reader.modules)
+    return reader.toModuleSet()
 }
 
 private fun createModuleReader(base: Path): ModuleReader {
@@ -69,7 +71,8 @@ private fun createModuleReader(base: Path): ModuleReader {
 private fun readModule(
     path: Path,
     name: ModuleName,
-    getModule: (ModuleName) -> ModuleResult
+    getModule: (ModuleName) -> ModuleResult,
+    typeRegistry: TypeRegistry,
 ): Module {
     val moduleText = path.toFile().readText()
 
@@ -91,6 +94,7 @@ private fun readModule(
             moduleNode,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
+            typeRegistry = typeRegistry,
             getModule = importPathToModule
         )
 
@@ -111,6 +115,7 @@ private fun readModule(
             moduleNode,
             nodeTypes = nodeTypes,
             resolvedReferences = resolvedReferences,
+            typeRegistry = typeRegistry,
             getModule = importPathToModule
         )
 
@@ -198,6 +203,8 @@ private class ModuleReader(
         readModuleInPackage(name = name)
     }
 
+    private val typeRegistry = TypeRegistryImpl()
+
     internal fun load(name: ModuleName) {
         val module = modulesByName.get(name)
         when (module) {
@@ -239,12 +246,17 @@ private class ModuleReader(
             val module = readModule(
                 path = matchingPaths.single(),
                 name = name,
+                typeRegistry = typeRegistry,
                 getModule = { name ->
                     modulesByName.get(name)
                 }
             )
             return ModuleResult.Found(module)
         }
+    }
+
+    fun toModuleSet(): ModuleSet {
+        return ModuleSet(modules = modules, typeRegistry = typeRegistry)
     }
 }
 

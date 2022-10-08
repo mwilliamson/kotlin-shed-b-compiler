@@ -1320,7 +1320,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             references = references
         )
 
-        val moduleSet = ModuleSet(listOf(module))
+        val moduleSet = ModuleSet(listOf(module), typeRegistry = TypeRegistry.Empty)
         val value = executeInstructions(
             persistentListOf(
                 ModuleInit(moduleName),
@@ -1379,7 +1379,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             references = references
         )
 
-        val moduleSet = ModuleSet(listOf(module))
+        val moduleSet = ModuleSet(listOf(module), typeRegistry = TypeRegistry.Empty)
         val value = executeInstructions(
             persistentListOf(
                 ModuleInit(moduleName),
@@ -1425,7 +1425,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             references = references
         )
 
-        val moduleSet = ModuleSet(listOf(module))
+        val moduleSet = ModuleSet(listOf(module), typeRegistry = TypeRegistry.Empty)
         val value = executeInstructions(
             persistentListOf(
                 ModuleInit(moduleName),
@@ -1469,7 +1469,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             references = references
         )
 
-        val moduleSet = ModuleSet(listOf(module))
+        val moduleSet = ModuleSet(listOf(module), typeRegistry = TypeRegistry.Empty)
         val value = executeInstructions(
             persistentListOf(
                 ModuleInit(moduleName),
@@ -1717,7 +1717,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             types = createTypes(targetTypes = mapOf(importTargetFields.nodeId to exportingModule.type))
         )
 
-        val moduleSet = ModuleSet(listOf(exportingModule, importingModule))
+        val moduleSet = ModuleSet(listOf(exportingModule, importingModule), typeRegistry = TypeRegistry.Empty)
         val value = executeInstructions(
             persistentListOf(
                 ModuleInit(importingModuleName),
@@ -1748,7 +1748,7 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
             references = references
         )
 
-        val moduleSet = ModuleSet(listOf(module))
+        val moduleSet = ModuleSet(listOf(module), typeRegistry = TypeRegistry.Empty)
         val value = executeInstructions(
             persistentListOf(
                 ModuleInit(moduleName),
@@ -1772,7 +1772,11 @@ abstract class StackIrExecutionTests(private val environment: StackIrExecutionEn
         return executeInstructions(instructions, type = type)
     }
 
-    private fun executeInstructions(instructions: List<Instruction>, type: Type, moduleSet: ModuleSet = ModuleSet(listOf())): IrValue {
+    private fun executeInstructions(
+        instructions: List<Instruction>,
+        type: Type,
+        moduleSet: ModuleSet = ModuleSet(listOf(), typeRegistry = TypeRegistry.Empty),
+    ): IrValue {
         return environment.executeInstructions(instructions, type = type, moduleSet = moduleSet).value
     }
 

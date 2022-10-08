@@ -10,6 +10,8 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
 class TypeLevelValueTypeTests {
+    private val typeRegistry = TypeRegistryImpl()
+
     @Test
     fun shortDescriptionContainsType() {
         val type = metaType(IntType)
@@ -20,8 +22,11 @@ class TypeLevelValueTypeTests {
     @Test
     fun nonShapeTypesHaveFieldsOfUnitType() {
         val type = metaType(IntType)
+        val typeRegistry = TypeRegistryImpl()
 
-        assertThat(type.fieldType(Identifier("fields")), present(isUnitType))
+        val result = typeRegistry.fieldType(type, Identifier("fields"))
+
+        assertThat(result, present(isUnitType))
     }
 
     @Test
@@ -31,13 +36,12 @@ class TypeLevelValueTypeTests {
             field("second", type = StringType)
         )))
 
-        val fieldsField = type.fieldType(Identifier("fields"))
-        val firstField = fieldsField!!.fieldType(Identifier("first"))
-        val secondField = fieldsField!!.fieldType(Identifier("second"))
-        assertThat(fieldsField.fieldType(Identifier("third")), absent())
-
-        assertThat(firstField?.fieldType(Identifier("name")), present(isStringType))
-        assertThat(secondField?.fieldType(Identifier("name")), present(isStringType))
+        val fieldsField = typeRegistry.fieldType(type, Identifier("fields"))!!
+        val firstField = typeRegistry.fieldType(fieldsField, Identifier("first"))!!
+        val secondField = typeRegistry.fieldType(fieldsField, Identifier("second"))!!
+        assertThat(typeRegistry.fieldType(fieldsField, Identifier("third")), absent())
+        assertThat(typeRegistry.fieldType(firstField, Identifier("name")), present(isStringType))
+        assertThat(typeRegistry.fieldType(secondField, Identifier("name")), present(isStringType))
     }
 
     @Test
@@ -48,19 +52,19 @@ class TypeLevelValueTypeTests {
         ))
         val metaType = metaType(shapeType)
 
-        val fieldsField = metaType.fieldType(Identifier("fields"))
-        val firstField = fieldsField!!.fieldType(Identifier("first"))
-        val secondField = fieldsField!!.fieldType(Identifier("second"))
+        val fieldsField = typeRegistry.fieldType(metaType, Identifier("fields"))!!
+        val firstField = typeRegistry.fieldType(fieldsField, Identifier("first"))!!
+        val secondField = typeRegistry.fieldType(fieldsField, Identifier("second"))!!
 
         assertThat(
-            firstField?.fieldType(Identifier("get")),
+            typeRegistry.fieldType(firstField, Identifier("get")),
             present(isEquivalentType(functionType(
                 positionalParameters = listOf(shapeType),
                 returns = IntType
             )))
         )
         assertThat(
-            secondField?.fieldType(Identifier("get")),
+            typeRegistry.fieldType(secondField, Identifier("get")),
             present(isEquivalentType(functionType(
                 positionalParameters = listOf(shapeType),
                 returns = StringType

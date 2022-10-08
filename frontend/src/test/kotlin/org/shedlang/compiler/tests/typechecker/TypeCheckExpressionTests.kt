@@ -65,6 +65,7 @@ class TypeCheckExpressionTests {
                     moduleName = null,
                     nodeTypes = mutableMapOf(),
                     resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
+                    typeRegistry = TypeRegistry.Empty,
                     getModule = { moduleName -> throw UnsupportedOperationException() }
                 )
             ) },

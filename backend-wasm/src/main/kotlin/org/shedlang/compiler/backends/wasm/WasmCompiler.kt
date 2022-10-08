@@ -11,6 +11,7 @@ import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.types.ShapeType
 import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.TypeRegistry
 import java.lang.UnsupportedOperationException
 
 // TODO: Int implementation should be big integers, not i32
@@ -19,7 +20,12 @@ internal class WasmCompilationResult(
     val module: WasmModule,
 )
 
-internal class WasmCompiler(private val image: Image, private val moduleSet: ModuleSet) {
+internal class WasmCompiler(
+    private val image: Image,
+    private val moduleSet: ModuleSet,
+) {
+    private val shapes = WasmShapes(typeRegistry = moduleSet.typeRegistry)
+
     fun compile(mainModule: ModuleName): WasmCompilationResult {
         val startFunctionContext = compileStartFunction(mainModule)
 
@@ -147,7 +153,7 @@ internal class WasmCompiler(private val image: Image, private val moduleSet: Mod
             }
 
             is DefineShape -> {
-                return WasmShapes.compileDefineShape(
+                return shapes.compileDefineShape(
                     shapeType = instruction.rawShapeType,
                     metaType = instruction.metaType,
                     context = context,

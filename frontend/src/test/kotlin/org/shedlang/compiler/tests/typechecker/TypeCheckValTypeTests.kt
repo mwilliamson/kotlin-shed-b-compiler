@@ -8,6 +8,7 @@ import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.typeCheckTypesModuleStatement
 import org.shedlang.compiler.types.IntMetaType
 import org.shedlang.compiler.types.IntType
+import org.shedlang.compiler.types.TypeRegistry
 
 class TypeCheckValTypeTests {
     @Test
@@ -39,6 +40,7 @@ class TypeCheckValTypeTests {
             resolvedReferences = ResolvedReferencesMap(mapOf(
                 intReference.nodeId to intDeclaration
             )),
+            typeRegistry = TypeRegistry.Empty,
             getModule = { moduleName -> throw UnsupportedOperationException() }
         )
         typeCheckTypesModuleStatement(node, typeContext)

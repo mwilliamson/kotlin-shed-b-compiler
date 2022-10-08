@@ -8,6 +8,7 @@ import org.shedlang.compiler.backends.CodeInspector
 import org.shedlang.compiler.backends.SimpleCodeInspector
 import org.shedlang.compiler.stackir.Loader
 import org.shedlang.compiler.typechecker.ResolvedReferencesMap
+import org.shedlang.compiler.types.TypeRegistry
 
 fun loader(
     inspector: CodeInspector = SimpleCodeInspector(),
@@ -18,6 +19,6 @@ fun loader(
         inspector = inspector,
         references = references,
         types = types,
-        moduleSet = ModuleSet(modules = listOf())
+        moduleSet = ModuleSet(modules = listOf(), typeRegistry = TypeRegistry.Empty)
     )
 }

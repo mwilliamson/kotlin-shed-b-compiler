@@ -16,6 +16,8 @@ internal class LlvmCompiler(
     private val moduleSet: ModuleSet,
     private val irBuilder: LlvmIrBuilder
 ) {
+    private val typeRegistry = moduleSet.typeRegistry
+
     private val libc = LibcCallCompiler(irBuilder = irBuilder)
     private val closures = ClosureCompiler(irBuilder = irBuilder, libc = libc)
     private val objects = LlvmObjectCompiler(
@@ -934,7 +936,7 @@ internal class LlvmCompiler(
         shapeType: TypeLevelValue,
         context: FunctionContext
     ): FunctionContext {
-        val fieldsObjectType = shapeMetaType.fieldType(Identifier("fields"))!!
+        val fieldsObjectType = typeRegistry.fieldType(shapeMetaType, Identifier("fields"))!!
 
         val (context3, fieldOperands) = fieldNames.fold(Pair(context, persistentListOf<LlvmOperand>())) { (context2, fieldOperands), fieldName ->
 
@@ -953,7 +955,7 @@ internal class LlvmCompiler(
                 .addTopLevelEntities(shapeFieldNameDefinition)
                 .addInstructions(objects.createObject(
                     target = shapeFieldPointer,
-                    objectType = fieldsObjectType.fieldType(fieldName)!!,
+                    objectType = typeRegistry.fieldType(fieldsObjectType, fieldName)!!,
                     fields = listOf(
                         Identifier("get") to get,
                         Identifier("name") to strings.operandRaw(shapeFieldNameDefinition),

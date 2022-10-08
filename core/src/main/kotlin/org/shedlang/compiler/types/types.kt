@@ -32,15 +32,6 @@ interface Type: TypeLevelValue, TypeGroup {
      */
     val fields: Map<Identifier, Field>?
 
-    fun fieldType(fieldName: Identifier): Type? {
-        val fields = this.fields
-        return if (fields == null) {
-            null
-        } else {
-            fields[fieldName]?.type
-        }
-    }
-
     fun replaceValues(bindings: TypeLevelBindings): Type
 
     override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {

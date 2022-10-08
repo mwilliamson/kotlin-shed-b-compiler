@@ -6,10 +6,7 @@ import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.frontend.ModuleResult
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.typechecker.*
-import org.shedlang.compiler.types.Effect
-import org.shedlang.compiler.types.EmptyEffect
-import org.shedlang.compiler.types.Type
-import org.shedlang.compiler.types.TypeGroup
+import org.shedlang.compiler.types.*
 import java.util.*
 
 
@@ -24,6 +21,7 @@ internal fun typeContext(
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     referenceTypes: Map<ReferenceNode, Type> = mapOf(),
     references: Map<ReferenceNode, VariableBindingNode> = mapOf(),
+    typeRegistry: TypeRegistry = TypeRegistry.Empty,
     types: Map<VariableBindingNode, Type> = mapOf(),
     modules: Map<ImportPath, ModuleResult> = mapOf()
 ): TypeContext {
@@ -50,6 +48,7 @@ internal fun typeContext(
         functionTypes = mutableMapOf(),
         discriminators = mutableMapOf(),
         resolvedReferences = ResolvedReferencesMap(finalReferences),
+        typeRegistry = typeRegistry,
         deferred = LinkedList(),
         getModule = { moduleName -> modules[moduleName]!! }
     )

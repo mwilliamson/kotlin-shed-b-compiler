@@ -11,7 +11,7 @@ import org.shedlang.compiler.stackir.Image
 import org.shedlang.compiler.stackir.defineShapeFieldGet
 import org.shedlang.compiler.types.*
 
-internal object WasmShapes {
+internal class WasmShapes(private val typeRegistry: TypeRegistry) {
     internal fun compileDefineShape(
         shapeType: ShapeType,
         metaType: TypeLevelValueType,
@@ -20,6 +20,7 @@ internal object WasmShapes {
         val metaTypeLayout = WasmObjects.shapeTypeLayout(metaType)
         val (context2, shape) = malloc("shape", metaTypeLayout, context)
         return WasmShapeCompiler(
+            typeRegistry = typeRegistry,
             shapeType = shapeType,
             metaType = metaType,
             metaTypeLayout = metaTypeLayout,
@@ -29,6 +30,7 @@ internal object WasmShapes {
 }
 
 private class WasmShapeCompiler(
+    private val typeRegistry: TypeRegistry,
     private val shapeType: ShapeType,
     private val metaType: TypeLevelValueType,
     private val metaTypeLayout: WasmObjects.ShapeTypeLayout,
@@ -119,14 +121,14 @@ private class WasmShapeCompiler(
     }
 
     private fun compileCreateFieldsObject(context: WasmFunctionContext): Pair<WasmFunctionContext, WasmLocalRef> {
-        val fieldsType = metaType.fieldType(Identifier("fields")) as ShapeType
+        val fieldsType = typeRegistry.fieldType(metaType, Identifier("fields")) as ShapeType
         val fieldsObjectLayout = WasmObjects.shapeLayout(fieldsType)
         val (context2, fieldsObjectPointer) = malloc("fields", fieldsObjectLayout, context)
 
         val context3 = shapeType.fields.values.fold(context2) { currentContext, field ->
             val (currentContext2, fieldObjectPointer) = compileCreateFieldObject(
                 field = field,
-                fieldObjectLayout = WasmObjects.shapeLayout(fieldsType.fieldType(field.name) as ShapeType),
+                fieldObjectLayout = WasmObjects.shapeLayout(typeRegistry.fieldType(fieldsType, field.name) as ShapeType),
                 context = currentContext
             )
             compileStoreFieldObject(
@@ -157,7 +159,7 @@ private class WasmShapeCompiler(
             )
         )
 
-        val compiler = WasmCompiler(Image.EMPTY, ModuleSet(listOf()))
+        val compiler = WasmCompiler(Image.EMPTY, ModuleSet(listOf(), typeRegistry = typeRegistry))
 
         val defineGetInstruction = defineShapeFieldGet(shapeType = shapeType, fieldName = field.name)
         val (context5, getPointer) = compiler.compileCreateFunction(defineGetInstruction, context4)

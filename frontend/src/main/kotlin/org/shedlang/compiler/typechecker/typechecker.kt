@@ -11,6 +11,7 @@ internal fun newTypeContext(
     nodeTypes: Map<Int, Type> = mapOf(),
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),
     resolvedReferences: ResolvedReferences,
+    typeRegistry: TypeRegistry,
     getModule: (ImportPath) -> ModuleResult
 ): TypeContext {
     return TypeContext(
@@ -24,6 +25,7 @@ internal fun newTypeContext(
         functionTypes = mutableMapOf(),
         discriminators = mutableMapOf(),
         resolvedReferences = resolvedReferences,
+        typeRegistry = typeRegistry,
         getModule = getModule,
         deferred = LinkedList()
     )
@@ -42,9 +44,15 @@ internal class TypeContext(
     private val expressionTypes: MutableMap<Int, Type>,
     private val targetTypes: MutableMap<Int, Type>,
     private val resolvedReferences: ResolvedReferences,
+    private val typeRegistry: TypeRegistry,
     private val getModule: (ImportPath) -> ModuleResult,
     private val deferred: Queue<() -> Unit>
 ) {
+
+    fun fieldType(type: Type, identifier: Identifier): Type? {
+        return typeRegistry.fieldType(type, identifier)
+    }
+
     fun resolveReference(node: ReferenceNode): VariableBindingNode {
         return resolvedReferences[node]
     }
@@ -143,6 +151,7 @@ internal class TypeContext(
             functionTypes = functionTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
+            typeRegistry = typeRegistry,
             getModule = getModule,
             deferred = deferred
         ).enterScope()
@@ -160,6 +169,7 @@ internal class TypeContext(
             functionTypes = functionTypes,
             discriminators = discriminators,
             resolvedReferences = resolvedReferences,
+            typeRegistry = typeRegistry,
             getModule = getModule,
             deferred = deferred
         )
@@ -198,6 +208,7 @@ internal class TypeContext(
             expressionTypes = expressionTypes.toMutableMap(),
             targetTypes = targetTypes.toMutableMap(),
             resolvedReferences = resolvedReferences,
+            typeRegistry = typeRegistry,
             getModule = getModule,
             deferred = LinkedList(deferred),
         )
@@ -233,12 +244,14 @@ internal fun typeCheck(
     module: ModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
+    typeRegistry: TypeRegistry,
     getModule: (ImportPath) -> ModuleResult
 ): TypeCheckResult {
     return typeCheckModule(
         moduleName = moduleName,
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
+        typeRegistry = typeRegistry,
         getModule = getModule,
         typeCheck = { context -> typeCheck(moduleName, module, context)}
     )
@@ -249,12 +262,14 @@ internal fun typeCheck(
     module: TypesModuleNode,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
+    typeRegistry: TypeRegistry,
     getModule: (ImportPath) -> ModuleResult
 ): TypeCheckResult {
     return typeCheckModule(
         moduleName = moduleName,
         nodeTypes = nodeTypes,
         resolvedReferences = resolvedReferences,
+        typeRegistry = typeRegistry,
         getModule = getModule,
         typeCheck = { context -> typeCheck(moduleName, module, context)}
     )
@@ -264,6 +279,7 @@ private fun typeCheckModule(
     moduleName: ModuleName?,
     nodeTypes: Map<Int, Type>,
     resolvedReferences: ResolvedReferences,
+    typeRegistry: TypeRegistry,
     getModule: (ImportPath) -> ModuleResult,
     typeCheck: (TypeContext) -> ModuleType
 ): TypeCheckResult {
@@ -273,6 +289,7 @@ private fun typeCheckModule(
         nodeTypes = nodeTypes,
         expressionTypes = expressionTypes,
         resolvedReferences = resolvedReferences,
+        typeRegistry = typeRegistry,
         getModule = getModule
     )
     val moduleType = typeCheck(typeContext)
@@ -527,7 +544,7 @@ private fun evalTypeLevel(node: TypeLevelExpressionNode, context: TypeContext): 
 
         override fun visit(node: TypeLevelFieldAccessNode): Type {
             val typeLevelValue = evalTypeLevel(node.receiver, context)
-            return inferFieldAccessType(typeLevelValue, node.fieldName)
+            return inferFieldAccessType(typeLevelValue, node.fieldName, context)
         }
 
         override fun visit(node: TypeLevelApplicationNode): Type {

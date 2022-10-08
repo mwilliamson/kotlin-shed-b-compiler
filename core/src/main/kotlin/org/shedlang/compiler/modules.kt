@@ -3,7 +3,7 @@ package org.shedlang.compiler
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
-class ModuleSet(val modules: Collection<Module>): Iterable<Module> {
+class ModuleSet(val modules: Collection<Module>, val typeRegistry: TypeRegistry): Iterable<Module> {
     fun module(name: ModuleName): Module? {
         return modules.find { module -> module.name == name }
     }

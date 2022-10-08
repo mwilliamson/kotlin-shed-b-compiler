@@ -34,16 +34,18 @@ class EvalTypeTests {
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
         val reference = typeLevelReference("x")
         val declaration = variableBinder("x")
+        val context = newTypeContext(
+            moduleName = null,
+            nodeTypes = mutableMapOf(),
+            resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
+            typeRegistry = TypeRegistry.Empty,
+            getModule = { moduleName -> throw UnsupportedOperationException() }
+        )
 
         assertThat(
             { evalType(
                 reference,
-                newTypeContext(
-                    moduleName = null,
-                    nodeTypes = mutableMapOf(),
-                    resolvedReferences = ResolvedReferencesMap(mapOf(reference.nodeId to declaration)),
-                    getModule = { moduleName -> throw UnsupportedOperationException() }
-                )
+                context
             ) },
             throwsCompilerError("type of x is unknown")
         )

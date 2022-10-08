@@ -399,7 +399,7 @@ internal fun typeCheckTarget(target: TargetNode, type: Type, context: TypeContex
 
         is TargetNode.Fields ->
             for ((fieldName, fieldTarget) in target.fields) {
-                val fieldType = inferFieldAccessType(type, fieldName)
+                val fieldType = inferFieldAccessType(type, fieldName, context)
                 typeCheckTarget(fieldTarget, fieldType, context)
             }
     }

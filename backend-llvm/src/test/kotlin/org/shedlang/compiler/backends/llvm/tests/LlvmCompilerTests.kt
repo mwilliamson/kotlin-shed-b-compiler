@@ -9,6 +9,7 @@ import org.shedlang.compiler.backends.tests.StackIrExecutionTests
 import org.shedlang.compiler.stackir.*
 import org.shedlang.compiler.tests.isPair
 import org.shedlang.compiler.tests.isSequence
+import org.shedlang.compiler.types.TypeRegistry
 
 class LlvmCompilerTests: StackIrExecutionTests(LlvmCompilerExecutionEnvironment)
 
@@ -94,7 +95,7 @@ class StackValueToLlvmOperandTests {
 }
 
 private fun stackValueToLlvmOperand(value: IrValue): Pair<List<LlvmTopLevelEntity>, LlvmOperand> {
-    val moduleSet = ModuleSet(setOf())
+    val moduleSet = ModuleSet(setOf(), typeRegistry = TypeRegistry.Empty)
     val image = loadModuleSet(moduleSet)
     val compiler = LlvmCompiler(image = image, moduleSet = moduleSet, irBuilder = LlvmIrBuilder())
     return compiler.stackValueToLlvmOperand(value)

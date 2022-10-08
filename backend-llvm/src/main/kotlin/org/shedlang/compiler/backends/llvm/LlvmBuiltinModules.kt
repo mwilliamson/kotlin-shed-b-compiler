@@ -5,6 +5,7 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.backends.ShedRuntime
 import org.shedlang.compiler.types.FunctionType
+import org.shedlang.compiler.types.TypeRegistry
 
 internal class BuiltinModuleCompiler(
     private val moduleSet: ModuleSet,
@@ -210,7 +211,7 @@ internal class BuiltinModuleCompiler(
         return functionNames.fold(context) { context2, functionName ->
             val closure = irBuilder.generateLocal(functionName)
             closures[functionName] = closure
-            val functionType = moduleType.fieldType(Identifier(functionName)) as FunctionType
+            val functionType = moduleSet.typeRegistry.fieldType(moduleType, Identifier(functionName)) as FunctionType
             createClosureForCFunction(
                 target = closure,
                 functionName = ShedRuntime.functionSymbolName(moduleName, Identifier(functionName)),

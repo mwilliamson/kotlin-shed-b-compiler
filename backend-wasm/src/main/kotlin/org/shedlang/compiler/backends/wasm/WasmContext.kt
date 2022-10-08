@@ -17,6 +17,8 @@ import org.shedlang.compiler.backends.wasm.wasm.WasmValueType
 import org.shedlang.compiler.stackir.divideRoundingUp
 import org.shedlang.compiler.stackir.roundUp
 import org.shedlang.compiler.types.TagValue
+import org.shedlang.compiler.types.Type
+import org.shedlang.compiler.types.TypeRegistry
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
