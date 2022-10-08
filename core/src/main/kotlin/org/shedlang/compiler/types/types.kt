@@ -41,7 +41,7 @@ interface Type: StaticValue, TypeGroup {
         }
     }
 
-    fun replaceStaticValues(bindings: StaticBindings): Type
+    fun replaceValues(bindings: StaticBindings): Type
 
     override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
         return visitor.visit(this)
@@ -70,7 +70,7 @@ interface BasicType : Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return this
     }
 
@@ -169,7 +169,7 @@ data class StaticValueType(val value: StaticValue): Type {
             }
         }
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return StaticValueType(replaceStaticValues(value, bindings))
     }
 
@@ -308,7 +308,7 @@ data class TypeParameter(
             return prefix + name.value
         }
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return bindings.getOrElse(this, { this }) as Type
     }
 
@@ -388,7 +388,7 @@ class CastableType(val type: Type): Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return CastableType(replaceStaticValuesInType(type, bindings))
     }
 
@@ -415,7 +415,7 @@ data class ModuleType(
     override val shapeId: Int?
         get() = null
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         throw UnsupportedOperationException("not implemented")
     }
 
@@ -440,7 +440,7 @@ data class FunctionType(
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return FunctionType(
             positionalParameters = positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
             namedParameters = namedParameters.mapValues({ parameter -> replaceStaticValuesInType(parameter.value, bindings) }),
@@ -499,7 +499,7 @@ data class TupleType(val elementTypes: List<Type>): Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return TupleType(
             elementTypes = elementTypes.map { elementType ->
                 replaceStaticValuesInType(elementType, bindings)
@@ -522,9 +522,9 @@ interface TypeAlias: Type {
     override val fields: Map<Identifier, Field>?
         get() = aliasedType.fields
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         // TODO: test this
-        return aliasedType.replaceStaticValues(bindings)
+        return aliasedType.replaceValues(bindings)
     }
 
     override fun <T> accept(visitor: Type.Visitor<T>): T {
@@ -571,7 +571,7 @@ interface ShapeType: Type {
             }
         }
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return LazyShapeType(
             name = name,
             getAllFields = lazy {
@@ -636,7 +636,7 @@ interface UnionType: Type {
     val members: List<Type>
     val staticArguments: List<StaticValue>
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         return LazyUnionType(
             tag,
             name,
@@ -764,7 +764,7 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceStaticValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: StaticBindings): Type {
         throw UnsupportedOperationException("not implemented")
     }
 
@@ -940,7 +940,7 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
     if (bindings.isEmpty()) {
         return type
     } else {
-        return type.replaceStaticValues(bindings)
+        return type.replaceValues(bindings)
     }
 }
 
