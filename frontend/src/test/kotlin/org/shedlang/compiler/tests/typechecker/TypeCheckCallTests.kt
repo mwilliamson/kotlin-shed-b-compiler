@@ -940,7 +940,7 @@ class TypeCheckCallTests {
         )
 
         private val varargsType = VarargsType(
-            name = Identifier("list"),
+            qualifiedName = QualifiedName.builtin("list"),
             cons = consType,
             nil = UnitType
         )

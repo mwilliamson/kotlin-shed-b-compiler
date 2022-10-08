@@ -678,7 +678,7 @@ fun unionType(
 )
 
 fun varargsType() = VarargsType(
-    name = Identifier("Varargs"),
+    qualifiedName = QualifiedName.builtin("Varargs"),
     cons = functionType(),
     nil = UnitType
 )
