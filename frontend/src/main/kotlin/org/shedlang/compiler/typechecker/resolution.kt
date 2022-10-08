@@ -71,130 +71,121 @@ internal fun resolveReferences(node: Node, globals: Map<Identifier, VariableBind
         definitionResolvers = mutableMapOf(),
     )
 
-    val result = resolveEval(node)
-    result.phaseDefine(context)
-    result.phaseResolveImmediates(context)
-    result.phaseResolveBodies(context)
+    val result = resolutionStepsEval(node)
+    for (phase in ResolutionPhase.values()) {
+        result.runPhase(phase, context)
+    }
 
     return ResolvedReferencesMap(context.nodes)
 }
 
-internal interface ResolutionResult {
-    fun phaseDefine(context: ResolutionContext)
-    fun phaseResolveImmediates(context: ResolutionContext)
-    fun phaseResolveBodies(context: ResolutionContext)
+internal enum class ResolutionPhase {
+    DEFINE,
+    IMMEDIATES,
+    RESOLVE_BODIES,
 }
 
-private fun resolve(structure: NodeStructure): ResolutionResult {
-    return when (structure) {
-        is NodeStructure.Eval -> resolveEval(structure.node)
-        // TODO: substructures should always be static
-        is NodeStructure.TypeLevelEval -> resolveEval(structure.node)
-        is NodeStructure.SubEnv -> resolveSubEnv(structure.structure)
-        is NodeStructure.Define -> resolveDefine(structure)
-        is NodeStructure.Initialise -> resolveInitialise(structure)
+internal class ResolverStep(
+    val phase: ResolutionPhase,
+    val run: (context: ResolutionContext) -> Unit,
+)
+
+internal class ResolverSteps(private val steps: List<ResolverStep>) {
+    fun runPhase(phase: ResolutionPhase, context: ResolutionContext) {
+        for (step in steps) {
+            if (step.phase == phase) {
+                step.run(context)
+            }
+        }
     }
 }
 
-internal fun resolveEval(node: Node): ResolutionResult {
-    val subResults = node.structure.map { structure -> resolve(structure) }
+private fun resolutionSteps(structure: NodeStructure): ResolverSteps {
+    return when (structure) {
+        is NodeStructure.Eval -> resolutionStepsEval(structure.node)
+        // TODO: substructures should always be static
+        is NodeStructure.TypeLevelEval -> resolutionStepsEval(structure.node)
+        is NodeStructure.Ref -> resolutionStepsRef(structure.node)
+        is NodeStructure.SubEnv -> resolutionStepsSubEnv(structure.structure)
+        is NodeStructure.Define -> resolutionStepsDefine(structure)
+        is NodeStructure.Initialise -> resolutionStepsInitialise(structure)
+    }
+}
 
-    return object : ResolutionResult {
-        override fun phaseDefine(context: ResolutionContext) {
-            for (subResult in subResults) {
-                subResult.phaseDefine(context)
+internal fun resolutionStepsEval(node: Node): ResolverSteps {
+    val subStepSets = node.structure.map { structure -> resolutionSteps(structure) }
+
+    return ResolverSteps(ResolutionPhase.values().map { phase ->
+        ResolverStep(phase) { context ->
+            for (subSteps in subStepSets) {
+                subSteps.runPhase(phase, context)
             }
         }
+    })
+}
 
-        override fun phaseResolveImmediates(context: ResolutionContext) {
-            if (node is ReferenceNode) {
-                val referent = context.bindings[node.name]
-                if (referent == null) {
-                    throw UnresolvedReferenceError(node.name, node.source)
-                } else {
-                    context[node] = referent
-                    if (!context.isInitialised(referent)) {
-                        throw UninitialisedVariableError(node.name, node.source)
-                    }
+internal fun resolutionStepsRef(node: ReferenceNode): ResolverSteps {
+    return ResolverSteps(listOf(
+        ResolverStep(ResolutionPhase.IMMEDIATES) { context ->
+            val referent = context.bindings[node.name]
+            if (referent == null) {
+                throw UnresolvedReferenceError(node.name, node.source)
+            } else {
+                context[node] = referent
+                if (!context.isInitialised(referent)) {
+                    throw UninitialisedVariableError(node.name, node.source)
                 }
             }
-
-            for (subResult in subResults) {
-                subResult.phaseResolveImmediates(context)
-            }
         }
-
-        override fun phaseResolveBodies(context: ResolutionContext) {
-            for (subResult in subResults) {
-                subResult.phaseResolveBodies(context)
-            }
-        }
-    }
+    ))
 }
 
-private fun resolveSubEnv(structures: List<NodeStructure>): ResolutionResult {
-    return object : ResolutionResult {
-        override fun phaseDefine(context: ResolutionContext) {
-        }
-
-        override fun phaseResolveImmediates(context: ResolutionContext) {
-        }
-
-        override fun phaseResolveBodies(context: ResolutionContext) {
+private fun resolutionStepsSubEnv(structures: List<NodeStructure>): ResolverSteps {
+    return ResolverSteps(listOf(
+        ResolverStep(ResolutionPhase.RESOLVE_BODIES) { context ->
             val binders = bindings(structures)
             val subEnvContext = enterScope(binders, context)
 
-            val subEnvResults = structures.map { structure -> resolve(structure) }
+            val subEnvStepSets = structures.map { structure -> resolutionSteps(structure) }
 
-            for (subEnvResult in subEnvResults) {
-                subEnvResult.phaseDefine(subEnvContext)
-            }
-            for (subEnvResult in subEnvResults) {
-                subEnvResult.phaseResolveImmediates(subEnvContext)
-            }
-            for (subEnvResult in subEnvResults) {
-                subEnvResult.phaseResolveBodies(subEnvContext)
+            for (phase in ResolutionPhase.values()) {
+                for (subEnvSteps in subEnvStepSets) {
+                    subEnvSteps.runPhase(phase, subEnvContext)
+                }
             }
         }
-    }
+    ))
 }
 
-private fun resolveDefine(structure: NodeStructure.Define): ResolutionResult {
+private fun resolutionStepsDefine(structure: NodeStructure.Define): ResolverSteps {
     var isResolved = false
 
-    return object : ResolutionResult {
-        override fun phaseDefine(context: ResolutionContext) {
-            context.define(structure.binding) { phaseResolveBodies(context) }
-        }
-
-        override fun phaseResolveImmediates(context: ResolutionContext) {
-
-        }
-
-        override fun phaseResolveBodies(context: ResolutionContext) {
-            if (!isResolved) {
-                val result = resolve(structure.structure)
-                result.phaseDefine(context)
-                result.phaseResolveImmediates(context)
-                result.phaseResolveBodies(context)
-                isResolved = true
+    fun resolveBodies(context: ResolutionContext) {
+        if (!isResolved) {
+            val result = resolutionSteps(structure.structure)
+            for (phase in ResolutionPhase.values()) {
+                result.runPhase(phase, context)
             }
+            isResolved = true
         }
     }
+
+    return ResolverSteps(listOf(
+        ResolverStep(ResolutionPhase.DEFINE) { context ->
+            context.define(structure.binding) { resolveBodies(context) }
+        },
+        ResolverStep(ResolutionPhase.RESOLVE_BODIES) { context ->
+            resolveBodies(context)
+        },
+    ))
 }
 
-private fun resolveInitialise(structure: NodeStructure.Initialise): ResolutionResult {
-    return object : ResolutionResult {
-        override fun phaseDefine(context: ResolutionContext) {
-        }
-
-        override fun phaseResolveImmediates(context: ResolutionContext) {
+private fun resolutionStepsInitialise(structure: NodeStructure.Initialise): ResolverSteps {
+    return ResolverSteps(listOf(
+        ResolverStep(ResolutionPhase.IMMEDIATES) { context ->
             context.initialise(structure.binding)
         }
-
-        override fun phaseResolveBodies(context: ResolutionContext) {
-        }
-    }
+    ))
 }
 
 private fun bindings(structures: List<NodeStructure>): List<VariableBindingNode> {
@@ -205,6 +196,7 @@ private fun bindings(structure: NodeStructure): List<VariableBindingNode> {
     return when (structure) {
         is NodeStructure.Eval -> bindings(structure.node.structure)
         is NodeStructure.TypeLevelEval -> bindings(structure.node.structure)
+        is NodeStructure.Ref -> listOf()
         is NodeStructure.SubEnv -> listOf()
         is NodeStructure.Define -> listOf(structure.binding) + bindings(structure.structure)
         is NodeStructure.Initialise -> listOf(structure.binding)

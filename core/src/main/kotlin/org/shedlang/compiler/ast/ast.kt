@@ -14,6 +14,7 @@ interface Node {
 sealed class NodeStructure {
     class TypeLevelEval(val node: Node): NodeStructure()
     class Eval(val node: Node): NodeStructure()
+    class Ref(val node: ReferenceNode): NodeStructure()
     class SubEnv(val structure: List<NodeStructure>): NodeStructure()
     class Define(val binding: VariableBindingNode, val structure: NodeStructure): NodeStructure()
     class Initialise(val binding: VariableBindingNode): NodeStructure()
@@ -26,6 +27,10 @@ object NodeStructures {
 
     fun eval(node: Node): NodeStructure {
         return NodeStructure.Eval(node)
+    }
+
+    fun ref(node: ReferenceNode): NodeStructure {
+        return NodeStructure.Ref(node)
     }
 
     fun subEnv(structure: List<NodeStructure>): NodeStructure {
@@ -65,6 +70,7 @@ fun structureToNodes(structure: NodeStructure): Iterable<Node> {
     return when (structure) {
         is NodeStructure.Eval -> listOf(structure.node)
         is NodeStructure.TypeLevelEval -> listOf(structure.node)
+        is NodeStructure.Ref -> listOf()
         is NodeStructure.SubEnv -> structure.structure.flatMap(::structureToNodes)
         is NodeStructure.Define -> structureToNodes(structure.structure)
         is NodeStructure.Initialise -> listOf()
@@ -1026,7 +1032,7 @@ data class ReferenceNode(
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode, TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
-        get() = listOf()
+        get() = listOf(NodeStructures.ref(this))
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)

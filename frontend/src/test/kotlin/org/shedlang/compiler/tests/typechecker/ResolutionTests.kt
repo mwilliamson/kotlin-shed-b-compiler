@@ -562,8 +562,10 @@ class ResolutionTests {
     }
 
     private fun resolveEval(node: Node, context: ResolutionContext) {
-        val result = resolveEval(node)
-        result.phaseDefine(context)
-        result.phaseResolveImmediates(context)
+        val result = resolutionStepsEval(node)
+
+        for (phase in ResolutionPhase.values()) {
+            result.runPhase(phase, context)
+        }
     }
 }
