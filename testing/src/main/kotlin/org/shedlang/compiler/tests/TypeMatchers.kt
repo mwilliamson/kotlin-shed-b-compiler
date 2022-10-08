@@ -37,6 +37,7 @@ fun isTypeAlias(
 
 fun isShapeType(
     shapeId: Matcher<Int> = anything,
+    qualifiedName: Matcher<QualifiedName> = anything,
     name: Matcher<Identifier> = anything,
     tagValue: Matcher<TagValue?> = anything,
     typeLevelParameters: Matcher<List<TypeLevelParameter>> = anything,
@@ -44,6 +45,7 @@ fun isShapeType(
     fields: Matcher<Collection<Field>> = anything
 ): Matcher<TypeLevelValue> = cast(allOf(
     has(ShapeType::shapeId, shapeId),
+    has(ShapeType::qualifiedName, qualifiedName),
     has(ShapeType::name, name),
     has(ShapeType::tagValue, tagValue),
     has(ShapeType::typeLevelParameters, typeLevelParameters),

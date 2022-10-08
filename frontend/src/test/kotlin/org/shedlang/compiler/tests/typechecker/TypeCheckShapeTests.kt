@@ -17,14 +17,19 @@ class TypeCheckShapeTests {
             shapeField("a", intType),
             shapeField("b", boolType)
         ))
+        val typeContext = typeContext(
+            moduleName = listOf("Example"),
+            referenceTypes = mapOf(
+                intType to IntMetaType,
+                boolType to BoolMetaType
+            ),
+        )
 
-        val typeContext = typeContext(referenceTypes = mapOf(
-            intType to IntMetaType,
-            boolType to BoolMetaType
-        ))
         typeCheckModuleStatement(node, typeContext)
+
         assertThat(typeContext.typeOf(node), isMetaType(
             isShapeType(
+                qualifiedName = equalTo(QualifiedName.topLevelType(listOf("Example"), "X")),
                 name = isIdentifier("X"),
                 fields = isSequence(
                     isField(name = isIdentifier("a"), type = isIntType),

@@ -634,7 +634,7 @@ fun shapeType(
     shapeId: Int = freshTypeId()
 ) = lazyShapeType(
     shapeId = shapeId,
-    name = Identifier(name),
+    qualifiedName = QualifiedName.builtin(name),
     tagValue = tagValue,
     getFields = lazy { fields },
     typeLevelParameters = typeParameters,

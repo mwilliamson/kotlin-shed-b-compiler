@@ -15,7 +15,7 @@ internal fun emptyTypeContext(): TypeContext {
 }
 
 internal fun typeContext(
-    moduleName: List<String>? = null,
+    moduleName: List<String> = listOf("Example"),
     effect: Effect = EmptyEffect,
     handle: HandleTypes? = null,
     expressionTypes: MutableMap<Int, Type> = mutableMapOf(),

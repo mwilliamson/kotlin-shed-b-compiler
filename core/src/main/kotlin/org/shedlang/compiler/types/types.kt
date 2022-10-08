@@ -183,7 +183,7 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
     }
     return lazyShapeType(
         shapeId = shapeId,
-        name = Identifier("Fields"),
+        qualifiedName = type.qualifiedName.addTypeName("Fields"),
         tagValue = null,
         typeLevelParameters = listOf(),
         typeLevelArguments = listOf(),
@@ -227,7 +227,7 @@ val ShapeFieldTypeFunction = ParameterizedTypeLevelValue(
     parameters = shapeFieldTypeFunctionParameters,
     value = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
-        name = Identifier("ShapeField"),
+        qualifiedName = QualifiedName.builtin("ShapeField"),
         tagValue = null,
         typeLevelParameters = shapeFieldTypeFunctionParameters,
         typeLevelArguments = shapeFieldTypeFunctionParameters,
@@ -546,12 +546,15 @@ data class Tag(val moduleName: ModuleName, val name: Identifier)
 data class TagValue(val tag: Tag, val value: Identifier)
 
 interface ShapeType: Type {
-    val name: Identifier
+    val qualifiedName: QualifiedName
     override val shapeId: Int
     val tagValue: TagValue?
     override val fields: Map<Identifier, Field>
     val typeLevelParameters: List<TypeLevelParameter>
     val typeLevelArguments: List<TypeLevelValue>
+
+    val name: Identifier
+        get() = qualifiedName.shortName
 
     override val shortDescription: String
         get() {
@@ -564,7 +567,7 @@ interface ShapeType: Type {
 
     override fun replaceValues(bindings: TypeLevelBindings): Type {
         return LazyShapeType(
-            name = name,
+            qualifiedName = qualifiedName,
             getAllFields = lazy {
                 fields.mapValues { field -> replaceTypeLevelValuesInField(field.value, bindings) }
             },
@@ -594,14 +597,14 @@ data class Field(
 
 fun lazyShapeType(
     shapeId: Int,
-    name: Identifier,
+    qualifiedName: QualifiedName,
     tagValue: TagValue?,
     getFields: Lazy<List<Field>>,
     typeLevelParameters: List<TypeLevelParameter>,
     typeLevelArguments: List<TypeLevelValue>
 ) = LazyShapeType(
     shapeId = shapeId,
-    name = name,
+    qualifiedName = qualifiedName,
     getAllFields = lazy {
         getFields.value.associateBy { field -> field.name }
     },
@@ -611,7 +614,7 @@ fun lazyShapeType(
 )
 
 class LazyShapeType(
-    override val name: Identifier,
+    override val qualifiedName: QualifiedName,
     getAllFields: Lazy<Map<Identifier, Field>>,
     override val shapeId: Int = freshTypeId(),
     override val tagValue: TagValue?,

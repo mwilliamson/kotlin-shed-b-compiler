@@ -1,5 +1,6 @@
 package org.shedlang.compiler.typechecker
 
+import org.shedlang.compiler.InternalCompilerError
 import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.distinctWith
 import org.shedlang.compiler.nullableToList
@@ -65,9 +66,14 @@ private fun generateShapeType(
     // TODO: test laziness
     val fields = generateFields(node, context, shapeId)
 
+    if (context.moduleName == null) {
+        throw InternalCompilerError("shapes should only appear in modules", node.source)
+    }
+
     val shapeType = lazyShapeType(
         shapeId = shapeId,
-        name = node.name,
+        // TODO: not in a module
+        qualifiedName = QualifiedName.topLevelType(context.moduleName, node.name),
         tagValue = tagValue,
         getFields = fields,
         typeLevelParameters = typeLevelParameters,
