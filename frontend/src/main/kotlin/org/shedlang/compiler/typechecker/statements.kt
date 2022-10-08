@@ -225,8 +225,6 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     // TODO: check members conform to supertype
 
-    val baseShapeId = freshTypeId()
-
     val tag = Tag(context.qualifiedNameType(node.name))
 
     val memberTypes = node.members.map { member ->
