@@ -80,7 +80,7 @@ internal class ResolutionContext(
     }
 }
 
-fun resolve(node: Node, globals: Map<Identifier, VariableBindingNode>): ResolvedReferences {
+internal fun resolve(node: Node, globals: Map<Identifier, VariableBindingNode>): ResolvedReferences {
     val context = ResolutionContext(
         globals,
         mutableMapOf(),
@@ -92,7 +92,7 @@ fun resolve(node: Node, globals: Map<Identifier, VariableBindingNode>): Resolved
     return ResolvedReferencesMap(context.nodes)
 }
 
-internal fun resolve(structure: NodeStructure, context: ResolutionContext) {
+private fun resolve(structure: NodeStructure, context: ResolutionContext) {
     when (structure) {
         is NodeStructure.Eval -> resolveEval(structure.node, context)
         // TODO: substructures should always be static
