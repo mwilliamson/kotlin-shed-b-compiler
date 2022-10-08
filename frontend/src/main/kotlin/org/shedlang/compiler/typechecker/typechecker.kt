@@ -34,7 +34,7 @@ internal fun newTypeContext(
 internal class HandleTypes(val resumeValueType: Type, val stateType: Type?)
 
 internal class TypeContext(
-    val qualifiedPrefix: List<QualifiedNamePart>,
+    private val qualifiedPrefix: List<QualifiedNamePart>,
     val effect: Effect,
     val handle: HandleTypes?,
     private val variableTypes: MutableMap<Int, Type>,
@@ -48,6 +48,9 @@ internal class TypeContext(
     private val getModule: (ImportPath) -> ModuleResult,
     private val deferred: Queue<() -> Unit>
 ) {
+    fun qualifiedNameType(name: Identifier): QualifiedName {
+        return QualifiedName.type(qualifiedPrefix, name)
+    }
 
     fun fieldType(type: Type, identifier: Identifier): Type? {
         return typeRegistry.fieldType(type, identifier)

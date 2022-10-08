@@ -68,8 +68,7 @@ private fun generateShapeType(
 
     val shapeType = lazyShapeType(
         shapeId = shapeId,
-        // TODO: not in a module
-        qualifiedName = QualifiedName.type(context.qualifiedPrefix, node.name),
+        qualifiedName = context.qualifiedNameType(node.name),
         tagValue = tagValue,
         getFields = fields,
         typeLevelParameters = typeLevelParameters,
@@ -228,7 +227,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 
     val baseShapeId = freshTypeId()
 
-    val tag = Tag(QualifiedName.type(context.qualifiedPrefix, node.name))
+    val tag = Tag(context.qualifiedNameType(node.name))
 
     val memberTypes = node.members.map { member ->
         val tagValue = TagValue(tag, member.name)
@@ -272,7 +271,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
 private fun typeCheckVarargsDeclaration(declaration: VarargsDeclarationNode, context: TypeContext) {
     // TODO: check other parts of function type (no effects, no other args, etc.)
     val type = VarargsType(
-        qualifiedName = QualifiedName.type(context.qualifiedPrefix, declaration.name),
+        qualifiedName = context.qualifiedNameType(declaration.name),
         // TODO: check properly
         cons = inferType(declaration.cons, context) as FunctionType,
         nil = inferType(declaration.nil, context)
