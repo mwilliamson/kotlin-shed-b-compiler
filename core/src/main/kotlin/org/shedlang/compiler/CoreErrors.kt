@@ -13,7 +13,6 @@ open class InternalCompilerError(message: String, source: Source) : CompilerErro
 /**
  * This indicates a bug in the source code that is being compiled
  */
-
 open class SourceError(message: String?, source: Source): CompilerError(message, source)
 
 open class TypeCheckError(message: String?, source: Source) : SourceError(message, source)
