@@ -148,7 +148,7 @@ private fun parseValType(tokens: TokenIterator<TokenType>): ValTypeNode {
     tokens.skip(TokenType.KEYWORD_VAL)
     val name = parseIdentifier(tokens)
     tokens.skip(TokenType.SYMBOL_COLON)
-    val type = parseStaticExpression(tokens)
+    val type = parseTypeLevelExpression(tokens)
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
     return ValTypeNode(
         name = name,
@@ -224,12 +224,12 @@ private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefin
             val typeSource = tokens.location()
             val parameters = parseFunctionTypeParameters(tokens)
             tokens.skip(TokenType.SYMBOL_ARROW)
-            val returnType = parseStaticExpression(tokens)
+            val returnType = parseTypeLevelExpression(tokens)
 
             OperationDefinitionNode(
                 name = operationName,
                 type = FunctionTypeNode(
-                    staticParameters = listOf(),
+                    typeLevelParameters = listOf(),
                     positionalParameters = parameters.positional,
                     namedParameters = parameters.named,
                     effect = null,
@@ -260,7 +260,7 @@ private fun parseTypeAlias(tokens: TokenIterator<TokenType>): TypeAliasNode {
     tokens.skip(TokenType.KEYWORD_TYPE)
     val name = parseIdentifier(tokens)
     tokens.skip(TokenType.SYMBOL_EQUALS)
-    val expression = parseStaticExpression(tokens)
+    val expression = parseTypeLevelExpression(tokens)
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
     return TypeAliasNode(
@@ -275,11 +275,11 @@ private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
 
     tokens.skip(TokenType.KEYWORD_SHAPE)
     val name = parseIdentifier(tokens)
-    val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
+    val typeLevelParameters = parseTypeLevelParameters(allowVariance = true, tokens = tokens)
 
     val extends = if (tokens.trySkip(TokenType.KEYWORD_EXTENDS)) {
         parseMany(
-            parseElement = { tokens -> parseStaticExpression(tokens) },
+            parseElement = { tokens -> parseTypeLevelExpression(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> !tokens.isNext(TokenType.SYMBOL_COMMA) },
             allowZero = false,
@@ -297,7 +297,7 @@ private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
     return ShapeNode(
         name = name,
-        staticParameters = staticParameters,
+        typeLevelParameters = typeLevelParameters,
         extends = extends,
         fields = fields,
         source = source
@@ -321,13 +321,13 @@ private fun parseShapeField(tokens: TokenIterator<TokenType>): ShapeFieldNode {
     val name = parseIdentifier(tokens)
 
     val shape = if (tokens.trySkip(TokenType.KEYWORD_FROM)) {
-        parseStaticExpression(tokens)
+        parseTypeLevelExpression(tokens)
     } else {
         null
     }
 
     tokens.skip(TokenType.SYMBOL_COLON)
-    val type = parseStaticExpression(tokens)
+    val type = parseTypeLevelExpression(tokens)
 
     return ShapeFieldNode(
         shape = shape,
@@ -342,7 +342,7 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
 
     tokens.skip(TokenType.KEYWORD_UNION)
     val name = parseIdentifier(tokens)
-    val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
+    val typeLevelParameters = parseTypeLevelParameters(allowVariance = true, tokens = tokens)
 
     val explicitTag = if (tokens.trySkip(TokenType.SYMBOL_SUBTYPE)) {
          parseVariableReference(tokens)
@@ -354,7 +354,7 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
     tokens.trySkip(TokenType.SYMBOL_BAR)
 
     val members = parseMany(
-        parseElement = { tokens -> parseUnionMember(tokens, unionStaticParameters = staticParameters) },
+        parseElement = { tokens -> parseUnionMember(tokens, unionTypeLevelParameters = typeLevelParameters) },
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_BAR) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         allowZero = false,
@@ -365,7 +365,7 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
 
     return UnionNode(
         name = name,
-        staticParameters = staticParameters,
+        typeLevelParameters = typeLevelParameters,
         superType = explicitTag,
         members = members,
         source = source
@@ -374,13 +374,13 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
 
 private fun parseUnionMember(
     tokens: TokenIterator<TokenType>,
-    unionStaticParameters: List<StaticParameterNode>
+    unionTypeLevelParameters: List<TypeLevelParameterNode>
 ): UnionMemberNode {
     val source = tokens.location()
     val name = parseIdentifier(tokens)
 
-    val staticParameterNames = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
-         val staticParameterNames = parseMany(
+    val typeLevelParameterNames = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
+         val typeLevelParameterNames = parseMany(
             parseElement = ::parseIdentifier,
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
@@ -389,13 +389,13 @@ private fun parseUnionMember(
             tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        staticParameterNames
+        typeLevelParameterNames
     } else {
         listOf()
     }
 
-    val staticParameters = staticParameterNames.map { staticParameterName ->
-        unionStaticParameters.find { parameter -> parameter.name == staticParameterName }!!.copy()
+    val typeLevelParameters = typeLevelParameterNames.map { typeLevelParameterName ->
+        unionTypeLevelParameters.find { parameter -> parameter.name == typeLevelParameterName }!!.copy()
     }
 
 
@@ -405,7 +405,7 @@ private fun parseUnionMember(
 
         return UnionMemberNode(
             name = name,
-            staticParameters = staticParameters,
+            typeLevelParameters = typeLevelParameters,
             extends = listOf(),
             fields = fields,
             source = source
@@ -413,7 +413,7 @@ private fun parseUnionMember(
     } else {
         return UnionMemberNode(
             name = name,
-            staticParameters = staticParameters,
+            typeLevelParameters = typeLevelParameters,
             extends = listOf(),
             fields = listOf(),
             source = source
@@ -456,7 +456,7 @@ internal fun parseFunctionDefinition(tokens: TokenIterator<TokenType>): Function
     } else {
         return FunctionDefinitionNode(
             name = name,
-            staticParameters = signature.staticParameters,
+            typeLevelParameters = signature.typeLevelParameters,
             parameters = signature.parameters,
             namedParameters = signature.namedParameters,
             returnType = signature.returnType,
@@ -469,28 +469,28 @@ internal fun parseFunctionDefinition(tokens: TokenIterator<TokenType>): Function
 }
 
 private data class FunctionSignature(
-    val staticParameters: List<StaticParameterNode>,
+    val typeLevelParameters: List<TypeLevelParameterNode>,
     val parameters: List<ParameterNode>,
     val namedParameters: List<ParameterNode>,
     val effect: FunctionEffectNode?,
-    val returnType: StaticExpressionNode?
+    val returnType: TypeLevelExpressionNode?
 )
 
 private fun parseFunctionDefinitionSignature(tokens: TokenIterator<TokenType>): FunctionSignature {
-    val staticParameters = parseStaticParameters(allowVariance = false, tokens = tokens)
+    val typeLevelParameters = parseTypeLevelParameters(allowVariance = false, tokens = tokens)
 
     val parameters = parseParameters(tokens)
 
     val effect = parseFunctionDefinitionEffect(tokens)
 
     val returnType = if (tokens.trySkip(TokenType.SYMBOL_ARROW)) {
-        parseStaticExpression(tokens)
+        parseTypeLevelExpression(tokens)
     } else {
         null
     }
 
     return FunctionSignature(
-        staticParameters = staticParameters,
+        typeLevelParameters = typeLevelParameters,
         parameters = parameters.positional,
         namedParameters = parameters.named,
         effect = effect,
@@ -531,13 +531,13 @@ private fun parseParameters(tokens: TokenIterator<TokenType>): Parameters {
     return Parameters(positional = positionalParameters, named = namedParameters)
 }
 
-internal fun parseStaticParameters(
+internal fun parseTypeLevelParameters(
     allowVariance: Boolean,
     tokens: TokenIterator<TokenType>
-): List<StaticParameterNode> {
+): List<TypeLevelParameterNode> {
     return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
         val typeParameters = parseMany(
-            parseElement = { tokens -> parseStaticParameter(tokens, allowVariance = allowVariance) },
+            parseElement = { tokens -> parseTypeLevelParameter(tokens, allowVariance = allowVariance) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
             isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
             allowZero = false,
@@ -558,7 +558,7 @@ private fun parseFunctionDefinitionEffect(tokens: TokenIterator<TokenType>): Fun
         if (tokens.trySkip(TokenType.SYMBOL_UNDERSCORE)) {
             return FunctionEffectNode.Infer(source = source)
         } else {
-            val expression = parseStaticExpression(tokens)
+            val expression = parseTypeLevelExpression(tokens)
             return FunctionEffectNode.Explicit(expression, source = source)
         }
     } else {
@@ -566,9 +566,9 @@ private fun parseFunctionDefinitionEffect(tokens: TokenIterator<TokenType>): Fun
     }
 }
 
-private fun parseFunctionTypeEffect(tokens: TokenIterator<TokenType>): StaticExpressionNode? {
+private fun parseFunctionTypeEffect(tokens: TokenIterator<TokenType>): TypeLevelExpressionNode? {
     if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
-        return parseStaticExpression(tokens)
+        return parseTypeLevelExpression(tokens)
     } else {
         return null
     }
@@ -594,7 +594,7 @@ private fun parseFunctionStatements(tokens: TokenIterator<TokenType>): Block {
     )
 }
 
-private fun parseStaticParameter(tokens: TokenIterator<TokenType>, allowVariance: Boolean): StaticParameterNode {
+private fun parseTypeLevelParameter(tokens: TokenIterator<TokenType>, allowVariance: Boolean): TypeLevelParameterNode {
     val source = tokens.location()
 
     if (tokens.trySkip(TokenType.SYMBOL_BANG)) {
@@ -653,7 +653,7 @@ private fun parseNamedParameter(tokens: TokenIterator<TokenType>): ParameterNode
     return ParameterNode(name, type, source)
 }
 
-private fun tryParseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNode? {
+private fun tryParseTypeSpec(tokens: TokenIterator<TokenType>): TypeLevelExpressionNode? {
     if (tokens.isNext(TokenType.SYMBOL_COLON)) {
         return parseTypeSpec(tokens)
     } else {
@@ -661,9 +661,9 @@ private fun tryParseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpression
     }
 }
 
-private fun parseTypeSpec(tokens: TokenIterator<TokenType>): StaticExpressionNode {
+private fun parseTypeSpec(tokens: TokenIterator<TokenType>): TypeLevelExpressionNode {
     tokens.skip(TokenType.SYMBOL_COLON)
-    return parseStaticExpression(tokens)
+    return parseTypeLevelExpression(tokens)
 }
 
 internal fun parseFunctionStatement(tokens: TokenIterator<TokenType>) : FunctionStatementNode {
@@ -853,7 +853,7 @@ private fun parseWhenBranch(tokens: TokenIterator<TokenType>): WhenBranchNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_IS)
-    val type = parseStaticExpression(tokens)
+    val type = parseTypeLevelExpression(tokens)
 
     val targetSource = tokens.location()
     val targetFields = if (tokens.trySkip(TokenType.SYMBOL_OPEN_PAREN)) {
@@ -1052,7 +1052,7 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
 
         val typeArguments = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
             val typeArguments = parseMany(
-                parseElement = { tokens -> parseStaticExpression(tokens) },
+                parseElement = { tokens -> parseTypeLevelExpression(tokens) },
                 parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
                 isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
                 allowZero = false,
@@ -1065,7 +1065,7 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
         }
 
         if (!hasEffect && !tokens.isNext(TokenType.SYMBOL_OPEN_PAREN)) {
-            return StaticCallNode(
+            return TypeLevelCallNode(
                 receiver = left,
                 arguments = typeArguments,
                 source = left.source,
@@ -1075,7 +1075,7 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
             val (positionalArguments, namedArguments) = parseCallArguments(tokens)
             return CallNode(
                 receiver = left,
-                staticArguments = typeArguments,
+                typeLevelArguments = typeArguments,
                 positionalArguments = positionalArguments,
                 fieldArguments = namedArguments,
                 hasEffect = hasEffect,
@@ -1099,7 +1099,7 @@ private object PartialCallParser : OperationParser {
         val (positionalArguments, namedArguments) = parseCallArguments(tokens)
         return PartialCallNode(
             receiver = left,
-            staticArguments = listOf(),
+            typeLevelArguments = listOf(),
             positionalArguments = positionalArguments,
             fieldArguments = namedArguments,
             source = left.source,
@@ -1188,7 +1188,7 @@ private object PipelineParser : OperationParser {
             receiver = right,
             positionalArguments = listOf(left),
             fieldArguments = listOf(),
-            staticArguments = listOf(),
+            typeLevelArguments = listOf(),
             hasEffect = false,
             source = left.source,
             operatorSource = operatorSource,
@@ -1231,7 +1231,7 @@ private object IsParser : OperationParser {
 
     override fun parse(left: ExpressionNode, tokens: TokenIterator<TokenType>): ExpressionNode {
         tokens.skip()
-        val type = parseStaticExpression(tokens)
+        val type = parseTypeLevelExpression(tokens)
         return IsNode(
             expression = left,
             type = type,
@@ -1331,7 +1331,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             }
 
             return FunctionExpressionNode(
-                staticParameters = signature.staticParameters,
+                typeLevelParameters = signature.typeLevelParameters,
                 parameters = signature.parameters,
                 namedParameters = signature.namedParameters,
                 returnType = signature.returnType,
@@ -1369,7 +1369,7 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
 private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource): HandleNode {
     tokens.skip()
 
-    val effect = parseStaticExpression(tokens)
+    val effect = parseTypeLevelExpression(tokens)
 
     val initialState = if (tokens.trySkip(TokenType.KEYWORD_WITH_STATE)) {
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
@@ -1397,7 +1397,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
             HandlerNode(
                 operationName = operationName,
                 function = FunctionExpressionNode(
-                    staticParameters = listOf(),
+                    typeLevelParameters = listOf(),
                     parameters = handlerParameters.positional,
                     namedParameters = handlerParameters.named,
                     effect = null,
@@ -1489,18 +1489,18 @@ private fun escapeSequence(code: String, source: StringSource): Char {
     }
 }
 
-internal fun parseStaticExpression(tokens: TokenIterator<TokenType>) : StaticExpressionNode {
-    return parseStaticExpression(tokens = tokens, precedence = Int.MIN_VALUE)
+internal fun parseTypeLevelExpression(tokens: TokenIterator<TokenType>) : TypeLevelExpressionNode {
+    return parseTypeLevelExpression(tokens = tokens, precedence = Int.MIN_VALUE)
 }
 
-private fun parseStaticExpression(
+private fun parseTypeLevelExpression(
     tokens: TokenIterator<TokenType>,
     precedence: Int
-) : StaticExpressionNode {
-    var left: StaticExpressionNode  = parsePrimaryStaticExpression(tokens)
+) : TypeLevelExpressionNode {
+    var left: TypeLevelExpressionNode  = parsePrimaryTypeLevelExpression(tokens)
     while (true) {
         val next = tokens.peek()
-        val operationParser = StaticOperationParser.lookup(next.tokenType)
+        val operationParser = TypeLevelOperationParser.lookup(next.tokenType)
         if (operationParser == null || operationParser.precedence < precedence) {
             return left
         } else {
@@ -1509,9 +1509,9 @@ private fun parseStaticExpression(
     }
 }
 
-private fun parsePrimaryStaticExpression(
+private fun parsePrimaryTypeLevelExpression(
     tokens: TokenIterator<TokenType>
-): StaticExpressionNode {
+): TypeLevelExpressionNode {
     if (tokens.isNext(TokenType.KEYWORD_FUN_CAPITAL)) {
         return parseFunctionType(tokens)
     } else if (tokens.isNext(TokenType.SYMBOL_HASH)) {
@@ -1521,18 +1521,18 @@ private fun parsePrimaryStaticExpression(
     }
 }
 
-private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressionNode {
+private fun parseFunctionType(tokens: TokenIterator<TokenType>): TypeLevelExpressionNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.KEYWORD_FUN_CAPITAL)
-    val staticParameters = parseStaticParameters(allowVariance = true, tokens = tokens)
+    val typeLevelParameters = parseTypeLevelParameters(allowVariance = true, tokens = tokens)
     val parameters = parseFunctionTypeParameters(tokens)
 
     val effect = parseFunctionTypeEffect(tokens)
     tokens.skip(TokenType.SYMBOL_ARROW)
-    val returnType = parseStaticExpression(tokens)
+    val returnType = parseTypeLevelExpression(tokens)
     return FunctionTypeNode(
-        staticParameters = staticParameters,
+        typeLevelParameters = typeLevelParameters,
         positionalParameters = parameters.positional,
         namedParameters = parameters.named,
         returnType = returnType,
@@ -1541,14 +1541,14 @@ private fun parseFunctionType(tokens: TokenIterator<TokenType>): StaticExpressio
     )
 }
 
-private fun parseTupleType(tokens: TokenIterator<TokenType>): StaticExpressionNode {
+private fun parseTupleType(tokens: TokenIterator<TokenType>): TypeLevelExpressionNode {
     val source = tokens.location()
 
     tokens.skip(TokenType.SYMBOL_HASH)
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
     val elementTypes = parseMany(
-        parseElement = { tokens -> parseStaticExpression(tokens) },
+        parseElement = { tokens -> parseTypeLevelExpression(tokens) },
         parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         allowTrailingSeparator = true,
@@ -1564,14 +1564,14 @@ private fun parseTupleType(tokens: TokenIterator<TokenType>): StaticExpressionNo
 }
 
 private class FunctionTypeParameters(
-    val positional: List<StaticExpressionNode>,
+    val positional: List<TypeLevelExpressionNode>,
     val named: List<FunctionTypeNamedParameterNode>
 )
 
 private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): FunctionTypeParameters {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
-    val positionalParameters = mutableListOf<StaticExpressionNode>()
+    val positionalParameters = mutableListOf<TypeLevelExpressionNode>()
     val namedParameters = mutableListOf<FunctionTypeNamedParameterNode>()
 
     while (true) {
@@ -1586,7 +1586,7 @@ private fun parseFunctionTypeParameters(tokens: TokenIterator<TokenType>): Funct
             val parameter = parseFunctionTypeNamedParameter(tokens)
             namedParameters.add(parameter)
         } else {
-            val parameter = parseStaticExpression(tokens)
+            val parameter = parseTypeLevelExpression(tokens)
             if (namedParameters.isEmpty()) {
                 positionalParameters.add(parameter)
             } else {
@@ -1614,15 +1614,15 @@ private fun parseFunctionTypeNamedParameter(tokens: TokenIterator<TokenType>): F
     return FunctionTypeNamedParameterNode(name, type, source)
 }
 
-private interface StaticOperationParser: ExpressionParser<StaticExpressionNode> {
+private interface TypeLevelOperationParser: ExpressionParser<TypeLevelExpressionNode> {
     companion object {
         private val parsers = listOf(
-            StaticCallParser,
-            StaticFieldAccessParser,
-            StaticUnionParser
+            TypeLevelCallParser,
+            TypeLevelFieldAccessParser,
+            TypeLevelUnionParser
         ).associateBy({ parser -> parser.operatorToken })
 
-        fun lookup(tokenType: TokenType): StaticOperationParser? {
+        fun lookup(tokenType: TokenType): TypeLevelOperationParser? {
             return parsers[tokenType]
         }
     }
@@ -1635,15 +1635,15 @@ private interface ExpressionParser<T> {
     fun parse(left: T, tokens: TokenIterator<TokenType>): T
 }
 
-private object StaticCallParser : StaticOperationParser {
+private object TypeLevelCallParser : TypeLevelOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_OPEN_SQUARE_BRACKET
 
-    override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    override fun parse(left: TypeLevelExpressionNode, tokens: TokenIterator<TokenType>): TypeLevelExpressionNode {
         val operatorSource = tokens.location()
         tokens.skip()
         val arguments = parseMany(
-            parseElement = { tokens -> parseStaticExpression(tokens) },
+            parseElement = { tokens -> parseTypeLevelExpression(tokens) },
             parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
             allowZero = false,
             allowTrailingSeparator = true,
@@ -1651,7 +1651,7 @@ private object StaticCallParser : StaticOperationParser {
             tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
-        return StaticApplicationNode(
+        return TypeLevelApplicationNode(
             receiver = left,
             arguments = arguments,
             source = left.source,
@@ -1663,28 +1663,28 @@ private object StaticCallParser : StaticOperationParser {
         get() = 14
 }
 
-private object StaticFieldAccessParser : StaticOperationParser {
+private object TypeLevelFieldAccessParser : TypeLevelOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_DOT
 
-    override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    override fun parse(left: TypeLevelExpressionNode, tokens: TokenIterator<TokenType>): TypeLevelExpressionNode {
         tokens.skip()
         val fieldName = parseFieldName(tokens)
-        return StaticFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
+        return TypeLevelFieldAccessNode(receiver = left, fieldName = fieldName, source = left.source)
     }
 
     override val precedence: Int
         get() = 14
 }
 
-private object StaticUnionParser : StaticOperationParser {
+private object TypeLevelUnionParser : TypeLevelOperationParser {
     override val operatorToken: TokenType
         get() = TokenType.SYMBOL_BAR
 
-    override fun parse(left: StaticExpressionNode, tokens: TokenIterator<TokenType>): StaticExpressionNode {
+    override fun parse(left: TypeLevelExpressionNode, tokens: TokenIterator<TokenType>): TypeLevelExpressionNode {
         tokens.skip()
-        val right = parseStaticExpression(tokens, precedence = precedence)
-        return StaticUnionNode(elements = listOf(left, right), source = left.source)
+        val right = parseTypeLevelExpression(tokens, precedence = precedence)
+        return TypeLevelUnionNode(elements = listOf(left, right), source = left.source)
     }
 
     override val precedence: Int

@@ -11,7 +11,7 @@ class ParseIsTests {
         val node = parseString(::parseExpression, source)
         assertThat(node, isIsOperation(
             expression = isVariableReference("x"),
-            type = isStaticReference("X")
+            type = isTypeLevelReference("X")
         ))
     }
 }

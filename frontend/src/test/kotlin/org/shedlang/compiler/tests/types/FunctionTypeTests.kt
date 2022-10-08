@@ -45,7 +45,7 @@ class FunctionTypeTests {
     @Test
     fun typeParametersAreIncludedInSquareBrackets() {
         val functionType = functionType(
-            staticParameters = listOf(
+            typeLevelParameters = listOf(
                 invariantTypeParameter("T"),
                 invariantTypeParameter("U")
             ),

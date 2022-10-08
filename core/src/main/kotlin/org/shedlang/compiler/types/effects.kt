@@ -2,8 +2,8 @@ package org.shedlang.compiler.types
 
 import org.shedlang.compiler.ast.Identifier
 
-interface Effect: StaticValue {
-    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+interface Effect: TypeLevelValue {
+    override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
         return visitor.visit(this)
     }
 }

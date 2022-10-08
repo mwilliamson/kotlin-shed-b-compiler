@@ -16,7 +16,7 @@ import org.shedlang.compiler.types.*
 class EvalTypeTests {
     @Test
     fun whenReferencedVariableIsNotATypeThenErrorIsThrown() {
-        val reference = staticReference("x")
+        val reference = typeLevelReference("x")
 
         assertThat(
             { evalType(
@@ -32,7 +32,7 @@ class EvalTypeTests {
 
     @Test
     fun whenVariableHasNoTypeThenCompilerErrorIsThrown() {
-        val reference = staticReference("x")
+        val reference = typeLevelReference("x")
         val declaration = variableBinder("x")
 
         assertThat(
@@ -51,7 +51,7 @@ class EvalTypeTests {
 
     @Test
     fun typeOfTypeReferenceIsTypeOfMetaType() {
-        val reference = staticReference("x")
+        val reference = typeLevelReference("x")
 
         val type = evalType(
             reference,
@@ -61,13 +61,13 @@ class EvalTypeTests {
     }
 
     @Test
-    fun staticFieldAccessHasTypeOfField() {
-        val moduleReference = staticReference("M")
+    fun typeLevelFieldAccessHasTypeOfField() {
+        val moduleReference = typeLevelReference("M")
         val moduleType = moduleType(fields = mapOf(
             "T" to IntMetaType
         ))
 
-        val application = staticFieldAccess(moduleReference, "T")
+        val application = typeLevelFieldAccess(moduleReference, "T")
 
         val context = typeContext(referenceTypes = mapOf(
             moduleReference to moduleType
@@ -80,13 +80,13 @@ class EvalTypeTests {
     @Test
     fun canEvaluateFunctionTypeNode() {
         val typeParameter = typeParameter("T")
-        val typeParameterReference = staticReference("T")
-        val boolReference = staticReference("Bool")
-        val intReference = staticReference("Int")
-        val effectReference = staticReference("Io")
+        val typeParameterReference = typeLevelReference("T")
+        val boolReference = typeLevelReference("Bool")
+        val intReference = typeLevelReference("Int")
+        val effectReference = typeLevelReference("Io")
 
         val node = functionTypeNode(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameterReference),
             namedParameters = listOf(functionTypeNamedParameter("x", intReference)),
             effect = effectReference,
@@ -114,7 +114,7 @@ class EvalTypeTests {
 
     @Test
     fun functionTypeIsValidated() {
-        val typeParameterReference = staticReference("T")
+        val typeParameterReference = typeLevelReference("T")
         val typeParameter = contravariantTypeParameter("T")
 
         val node = functionTypeNode(returnType = typeParameterReference)
@@ -141,8 +141,8 @@ class EvalTypeTests {
 
     @Test
     fun canEvaluateTupleTypeNodeWithElements() {
-        val boolReference = staticReference("Bool")
-        val intReference = staticReference("Int")
+        val boolReference = typeLevelReference("Bool")
+        val intReference = typeLevelReference("Int")
 
         val node = tupleTypeNode(elementTypes = listOf(
             boolReference,

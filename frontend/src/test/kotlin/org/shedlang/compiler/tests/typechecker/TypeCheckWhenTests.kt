@@ -6,13 +6,12 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.*
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.metaType
 
 class TypeCheckWhenTests {
     private val inputTag = tag(listOf("Example"), "Union")
-    private val inputMember1TypeReference = staticReference("Member1")
-    private val inputMember2TypeReference = staticReference("Member2")
+    private val inputMember1TypeReference = typeLevelReference("Member1")
+    private val inputMember2TypeReference = typeLevelReference("Member2")
     private val inputTagValue1 = tagValue(inputTag, "Member1")
     private val inputMember1 = shapeType(name = "Member1", tagValue = inputTagValue1)
     private val inputTagValue2 = tagValue(inputTag, "Member2")
@@ -39,7 +38,7 @@ class TypeCheckWhenTests {
         val memberType = shapeType(name = "Member")
         val unionType = unionType(name = "Union", members = listOf(memberType))
 
-        val memberReference = staticReference("Member")
+        val memberReference = typeLevelReference("Member")
         val valueReference = variableReference("value")
         val expression = whenExpression(
             expression = valueReference,
@@ -133,7 +132,7 @@ class TypeCheckWhenTests {
     fun targetIsTypeChecked() {
         val variableReference = variableReference("x")
         val elementTarget = targetVariable("target")
-        val memberTypeReference = staticReference("Some")
+        val memberTypeReference = typeLevelReference("Some")
 
         val tag = tag(listOf("Example"), "Union")
         val memberType = shapeType(

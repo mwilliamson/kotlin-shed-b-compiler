@@ -44,7 +44,7 @@ internal fun isWhen(
 ))
 
 internal fun isWhenBranch(
-    type: Matcher<StaticExpressionNode> = anything,
+    type: Matcher<TypeLevelExpressionNode> = anything,
     target: Matcher<TargetNode.Fields> = anything,
     body: Matcher<Block> = anything,
 ): Matcher<WhenBranchNode> = allOf(
@@ -54,7 +54,7 @@ internal fun isWhenBranch(
 )
 
 internal fun isHandle(
-    effect: Matcher<StaticExpressionNode> = anything,
+    effect: Matcher<TypeLevelExpressionNode> = anything,
     initialState: Matcher<ExpressionNode?> = anything,
     body: Matcher<Block> = anything,
     handlers: Matcher<List<HandlerNode>> = anything,
@@ -127,7 +127,7 @@ internal fun isTargetFields(
 
 internal fun isValType(
     name: Matcher<Identifier>,
-    type: Matcher<StaticExpressionNode>
+    type: Matcher<TypeLevelExpressionNode>
 ): Matcher<Node> {
     return cast(allOf(
         has(ValTypeNode::name, name),
@@ -145,7 +145,7 @@ internal fun isEffectDeclaration(
 
 internal fun isTypeAlias(
     name: Matcher<Identifier> = anything,
-    expression: Matcher<StaticExpressionNode> = anything
+    expression: Matcher<TypeLevelExpressionNode> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(TypeAliasNode::name, name),
@@ -155,13 +155,13 @@ internal fun isTypeAlias(
 
 internal fun isShape(
     name: Matcher<Identifier> = anything,
-    staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    extends: Matcher<List<StaticExpressionNode>> = anything,
+    typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
+    extends: Matcher<List<TypeLevelExpressionNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything
 ): Matcher<Node> {
     return cast(allOf(
         has(ShapeNode::name, name),
-        has(ShapeNode::staticParameters, staticParameters),
+        has(ShapeNode::typeLevelParameters, typeLevelParameters),
         has(ShapeNode::extends, extends),
         has(ShapeNode::fields, fields)
     ))
@@ -169,8 +169,8 @@ internal fun isShape(
 
 internal fun isShapeField(
     name: Matcher<Identifier>,
-    type: Matcher<StaticExpressionNode> = anything,
-    shape: Matcher<StaticExpressionNode?> = anything
+    type: Matcher<TypeLevelExpressionNode> = anything,
+    shape: Matcher<TypeLevelExpressionNode?> = anything
 ) = allOf(
     has(ShapeFieldNode::name, name),
     has(ShapeFieldNode::type, type),
@@ -179,13 +179,13 @@ internal fun isShapeField(
 
 internal fun isUnion(
     name: Matcher<Identifier> = anything,
-    staticParameters: Matcher<List<StaticParameterNode>> = anything,
+    typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
     members: Matcher<List<UnionMemberNode>> = anything,
     superType: Matcher<ReferenceNode?> = anything
 ): Matcher<ModuleStatementNode> {
     return cast(allOf(
         has(UnionNode::name, name),
-        has(UnionNode::staticParameters, staticParameters),
+        has(UnionNode::typeLevelParameters, typeLevelParameters),
         has(UnionNode::members, members),
         has(UnionNode::superType, superType)
     ))
@@ -193,13 +193,13 @@ internal fun isUnion(
 
 internal fun isUnionMember(
     name: Matcher<Identifier> = anything,
-    staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    extends: Matcher<List<StaticExpressionNode>> = anything,
+    typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
+    extends: Matcher<List<TypeLevelExpressionNode>> = anything,
     fields: Matcher<List<ShapeFieldNode>> = anything
 ): Matcher<UnionMemberNode> {
     return cast(allOf(
         has(UnionMemberNode::name, name),
-        has(UnionMemberNode::staticParameters, staticParameters),
+        has(UnionMemberNode::typeLevelParameters, typeLevelParameters),
         has(UnionMemberNode::extends, extends),
         has(UnionMemberNode::fields, fields)
     ))
@@ -232,7 +232,7 @@ internal fun isFunctionDefinition(
 internal fun isTypeParameter(
     name: Matcher<Identifier>,
     variance: Matcher<Variance> = anything
-): Matcher<StaticParameterNode> {
+): Matcher<TypeLevelParameterNode> {
     return cast(allOf(
         has(TypeParameterNode::name, name),
         has(TypeParameterNode::variance, variance)
@@ -241,15 +241,15 @@ internal fun isTypeParameter(
 
 internal fun isEffectParameterNode(
     name: Matcher<Identifier>
-): Matcher<StaticParameterNode> {
+): Matcher<TypeLevelParameterNode> {
     return cast(has(EffectParameterNode::name, name))
 }
 
 internal fun isParameter(name: String, typeReference: String): Matcher<ParameterNode> {
-    return isParameter(name = name, type = present(isStaticReference(typeReference)))
+    return isParameter(name = name, type = present(isTypeLevelReference(typeReference)))
 }
 
-internal fun isParameter(name: String, type: Matcher<StaticExpressionNode?>): Matcher<ParameterNode> {
+internal fun isParameter(name: String, type: Matcher<TypeLevelExpressionNode?>): Matcher<ParameterNode> {
     return allOf(
         has(ParameterNode::name, isIdentifier(name)),
         has(ParameterNode::type, type)
@@ -280,7 +280,7 @@ internal fun isBinaryOperation(
 
 internal fun isIsOperation(
     expression: Matcher<ExpressionNode>,
-    type: Matcher<StaticExpressionNode>
+    type: Matcher<TypeLevelExpressionNode>
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(IsNode::expression, expression),
@@ -292,12 +292,12 @@ internal fun isCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     fieldArguments: Matcher<List<FieldArgumentNode>> = anything,
-    typeArguments: Matcher<List<StaticExpressionNode>> = anything,
+    typeArguments: Matcher<List<TypeLevelExpressionNode>> = anything,
     hasEffect: Matcher<Boolean> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(CallNode::receiver, receiver),
-        has(CallNode::staticArguments, typeArguments),
+        has(CallNode::typeLevelArguments, typeArguments),
         has(CallNode::positionalArguments, positionalArguments),
         has(CallNode::fieldArguments, fieldArguments),
         has(CallNode::hasEffect, hasEffect)
@@ -308,11 +308,11 @@ internal fun isPartialCall(
     receiver: Matcher<ExpressionNode> = anything,
     positionalArguments: Matcher<List<ExpressionNode>> = anything,
     fieldArguments: Matcher<List<FieldArgumentNode>> = anything,
-    typeArguments: Matcher<List<StaticExpressionNode>> = anything
+    typeArguments: Matcher<List<TypeLevelExpressionNode>> = anything
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
         has(PartialCallNode::receiver, receiver),
-        has(PartialCallNode::staticArguments, typeArguments),
+        has(PartialCallNode::typeLevelArguments, typeArguments),
         has(PartialCallNode::positionalArguments, positionalArguments),
         has(PartialCallNode::fieldArguments, fieldArguments)
     ))
@@ -332,13 +332,13 @@ internal fun isSplatArgument(
     has(FieldArgumentNode.Splat::expression, expression)
 )
 
-internal fun isStaticCall(
+internal fun isTypeLevelCall(
     receiver: Matcher<ExpressionNode> = anything,
-    arguments: Matcher<List<StaticExpressionNode>> = anything,
+    arguments: Matcher<List<TypeLevelExpressionNode>> = anything,
 ) : Matcher<ExpressionNode> {
     return cast(allOf(
-        has(StaticCallNode::receiver, receiver),
-        has(StaticCallNode::arguments, arguments),
+        has(TypeLevelCallNode::receiver, receiver),
+        has(TypeLevelCallNode::arguments, arguments),
     ))
 }
 
@@ -360,32 +360,32 @@ internal fun isTupleNode(elements: Matcher<List<ExpressionNode>>)
 internal fun isVariableReference(name: String) : Matcher<Node>
     = cast(has(ReferenceNode::name, isIdentifier(name)))
 
-internal fun isStaticReference(name: String) : Matcher<Node>
+internal fun isTypeLevelReference(name: String) : Matcher<Node>
     = isVariableReference(name)
 
-internal fun isStaticFieldAccess(
-    receiver: Matcher<StaticExpressionNode>,
+internal fun isTypeLevelFieldAccess(
+    receiver: Matcher<TypeLevelExpressionNode>,
     fieldName: Matcher<Identifier>
-): Matcher<StaticExpressionNode> = cast(allOf(
-    has(StaticFieldAccessNode::receiver, receiver),
-    has(StaticFieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName))
+): Matcher<TypeLevelExpressionNode> = cast(allOf(
+    has(TypeLevelFieldAccessNode::receiver, receiver),
+    has(TypeLevelFieldAccessNode::fieldName, has(FieldNameNode::identifier, fieldName))
 ))
 
-internal fun isStaticApplication(
-    receiver: Matcher<StaticExpressionNode>,
-    arguments: Matcher<List<StaticExpressionNode>>
-): Matcher<StaticExpressionNode> = cast(allOf(
-    has(StaticApplicationNode::receiver, receiver),
-    has(StaticApplicationNode::arguments, arguments)
+internal fun isTypeLevelApplication(
+    receiver: Matcher<TypeLevelExpressionNode>,
+    arguments: Matcher<List<TypeLevelExpressionNode>>
+): Matcher<TypeLevelExpressionNode> = cast(allOf(
+    has(TypeLevelApplicationNode::receiver, receiver),
+    has(TypeLevelApplicationNode::arguments, arguments)
 ))
 internal fun isFunctionType(
-    staticParameters: Matcher<List<StaticParameterNode>> = anything,
-    positionalParameters: Matcher<List<StaticExpressionNode>> = anything,
+    typeLevelParameters: Matcher<List<TypeLevelParameterNode>> = anything,
+    positionalParameters: Matcher<List<TypeLevelExpressionNode>> = anything,
     namedParameters: Matcher<List<FunctionTypeNamedParameterNode>> = anything,
-    returnType: Matcher<StaticExpressionNode> = anything,
-    effect: Matcher<StaticExpressionNode?> = anything
-): Matcher<StaticExpressionNode> = cast(allOf(
-    has(FunctionTypeNode::staticParameters, staticParameters),
+    returnType: Matcher<TypeLevelExpressionNode> = anything,
+    effect: Matcher<TypeLevelExpressionNode?> = anything
+): Matcher<TypeLevelExpressionNode> = cast(allOf(
+    has(FunctionTypeNode::typeLevelParameters, typeLevelParameters),
     has(FunctionTypeNode::positionalParameters, positionalParameters),
     has(FunctionTypeNode::namedParameters, namedParameters),
     has(FunctionTypeNode::returnType, returnType),
@@ -394,19 +394,19 @@ internal fun isFunctionType(
 
 internal fun isFunctionTypeNamedParameter(name: String, typeReference: String): Matcher<FunctionTypeNamedParameterNode> = allOf(
     has(FunctionTypeNamedParameterNode::name, isIdentifier(name)),
-    has(FunctionTypeNamedParameterNode::type, isStaticReference(typeReference)),
+    has(FunctionTypeNamedParameterNode::type, isTypeLevelReference(typeReference)),
 )
 
 internal fun isTupleTypeNode(
-    elementTypes: Matcher<List<StaticExpressionNode>> = anything
-): Matcher<StaticExpressionNode> = cast(
+    elementTypes: Matcher<List<TypeLevelExpressionNode>> = anything
+): Matcher<TypeLevelExpressionNode> = cast(
     has(TupleTypeNode::elementTypes, elementTypes)
 )
 
-internal fun isStaticUnion(
-    elements: Matcher<List<StaticExpressionNode>> = anything
-): Matcher<StaticExpressionNode> = cast(
-    has(StaticUnionNode::elements, elements)
+internal fun isTypeLevelUnion(
+    elements: Matcher<List<TypeLevelExpressionNode>> = anything
+): Matcher<TypeLevelExpressionNode> = cast(
+    has(TypeLevelUnionNode::elements, elements)
 )
 
 internal fun isIntLiteral(value: Matcher<Int>): Matcher<ExpressionNode>

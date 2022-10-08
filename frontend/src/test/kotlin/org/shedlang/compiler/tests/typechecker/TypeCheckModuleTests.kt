@@ -7,7 +7,6 @@ import org.shedlang.compiler.ast.FunctionStatementNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
-import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.UnitMetaType
 import org.shedlang.compiler.types.UnitType
 
@@ -15,7 +14,7 @@ class TypeCheckModuleTests {
     @Test
     fun bodyIsTypeChecked() {
         assertStatementIsTypeChecked(fun(badStatement: FunctionStatementNode) {
-            val unit = staticReference("Unit")
+            val unit = typeLevelReference("Unit")
             val node = module(body = listOf(
                 function(returnType = unit, body = listOf(badStatement))
             ))
@@ -27,7 +26,7 @@ class TypeCheckModuleTests {
 
     @Test
     fun functionsCanCallEachOtherRecursively() {
-        val unit = staticReference("Unit")
+        val unit = typeLevelReference("Unit")
         val referenceG = variableReference("g")
         val declarationF = function(name = "f", returnType = unit, body = listOf(
             expressionStatement(call(referenceG, listOf()))
@@ -52,9 +51,9 @@ class TypeCheckModuleTests {
 
     @Test
     fun functionsCanUseShapesBeforeSyntacticDeclaration() {
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
 
-        val shapeReference = staticReference("X")
+        val shapeReference = typeLevelReference("X")
         val shape = shape(name = "X")
         val node = module(body = listOf(
             function(
@@ -74,7 +73,7 @@ class TypeCheckModuleTests {
 
     @Test
     fun shapeCanReferencePreviouslyDeclaredShape() {
-        val firstShapeReference = staticReference("X")
+        val firstShapeReference = typeLevelReference("X")
         val firstShape = shape(name = "X")
         val secondShape = shape(name = "Y", fields = listOf(shapeField("x", firstShapeReference)))
         val node = module(body = listOf(
@@ -91,7 +90,7 @@ class TypeCheckModuleTests {
 
     @Test
     fun typeOfModuleIsReturned() {
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
         val export = export("f")
         val exportedFunction = function(
             name = "f",

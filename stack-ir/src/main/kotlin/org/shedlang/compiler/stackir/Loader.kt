@@ -318,7 +318,7 @@ class Loader(
                     .addAll(createPartial)
             }
 
-            override fun visit(node: StaticCallNode): PersistentList<Instruction> {
+            override fun visit(node: TypeLevelCallNode): PersistentList<Instruction> {
                 return loadExpression(node.receiver, context)
             }
 
@@ -375,7 +375,7 @@ class Loader(
             }
 
             override fun visit(node: HandleNode): PersistentList<Instruction> {
-                val effect = (types.typeOfStaticExpression(node.effect) as StaticValueType).value as UserDefinedEffect
+                val effect = (types.typeOfTypeLevelExpression(node.effect) as TypeLevelValueType).value as UserDefinedEffect
 
                 val initialState = node.initialState
                 val stateInstructions = if (initialState == null) {
@@ -586,7 +586,7 @@ class Loader(
     }
 
     private fun loadEffectDefinition(node: EffectDefinitionNode): PersistentList<Instruction> {
-        val effect = (types.variableType(node) as StaticValueType).value as UserDefinedEffect
+        val effect = (types.variableType(node) as TypeLevelValueType).value as UserDefinedEffect
         return persistentListOf(
             EffectDefine(effect),
             LocalStore(node)
@@ -631,7 +631,7 @@ class Loader(
         return persistentListOf(
             DefineShape(
                 tagValue,
-                metaType = types.variableType(node) as StaticValueType,
+                metaType = types.variableType(node) as TypeLevelValueType,
             ),
             LocalStore(node)
         )

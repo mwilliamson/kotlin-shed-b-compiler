@@ -8,12 +8,11 @@ import org.shedlang.compiler.typechecker.newTypeContext
 import org.shedlang.compiler.typechecker.typeCheckTypesModuleStatement
 import org.shedlang.compiler.types.IntMetaType
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
 
 class TypeCheckValTypeTests {
     @Test
     fun typeExpressionIsTypeChecked() {
-        val intReference = staticReference("Int")
+        val intReference = typeLevelReference("Int")
         val node = valType(type = intReference)
         val typeContext = typeContext(referenceTypes = mapOf(intReference to IntType))
         assertThat(
@@ -30,7 +29,7 @@ class TypeCheckValTypeTests {
     @Test
     fun valIsTypedUsingTypeExpression() {
         val intDeclaration = declaration("Int")
-        val intReference = staticReference("Int")
+        val intReference = typeLevelReference("Int")
         val node = valType(name = "value", type = intReference)
         val typeContext = newTypeContext(
             moduleName = null,

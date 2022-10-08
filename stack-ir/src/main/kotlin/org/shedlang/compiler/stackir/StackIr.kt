@@ -64,9 +64,9 @@ class DefineOperationHandler(val function: DefineFunction, val hasState: Boolean
 
 class DefineShape(
     val tagValue: TagValue?,
-    val metaType: StaticValueType,
+    val metaType: TypeLevelValueType,
 ): Instruction() {
-    val shapeType: StaticValue
+    val shapeType: TypeLevelValue
         get() = metaType.value
 
     val rawShapeType: ShapeType

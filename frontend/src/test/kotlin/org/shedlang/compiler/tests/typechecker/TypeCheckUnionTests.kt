@@ -64,18 +64,18 @@ class TypeCheckUnionTests {
 
         val node = union(
             "Union",
-            staticParameters = listOf(unionTypeParameterDeclaration1, unionTypeParameterDeclaration2),
+            typeLevelParameters = listOf(unionTypeParameterDeclaration1, unionTypeParameterDeclaration2),
             members = listOf(
-                unionMember(name = "Member1", staticParameters = listOf(memberTypeParameterDeclaration1)),
-                unionMember(name = "Member2", staticParameters = listOf(memberTypeParameterDeclaration2)),
-                unionMember(name = "Member3", staticParameters = listOf())
+                unionMember(name = "Member1", typeLevelParameters = listOf(memberTypeParameterDeclaration1)),
+                unionMember(name = "Member2", typeLevelParameters = listOf(memberTypeParameterDeclaration2)),
+                unionMember(name = "Member3", typeLevelParameters = listOf())
             )
         )
 
         val typeContext = typeContext(moduleName = listOf("Example"))
         typeCheckModuleStatement(node, typeContext)
 
-        assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
+        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isParameterizedTypeLevelValue(
             parameters = isSequence(
                 isTypeParameter(name = isIdentifier("T1"), variance = isInvariant),
                 isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
@@ -85,28 +85,28 @@ class TypeCheckUnionTests {
                 members = isSequence(
                     isShapeType(
                         name = isIdentifier("Member1"),
-                        staticParameters = isSequence(
+                        typeLevelParameters = isSequence(
                             isTypeParameter(name = isIdentifier("T1"), variance = isInvariant)
                         ),
-                        staticArguments = isSequence(
+                        typeLevelArguments = isSequence(
                             isTypeParameter(name = isIdentifier("T1"), variance = isInvariant)
                         )
                     ),
 
                     isShapeType(
                         name = isIdentifier("Member2"),
-                        staticParameters = isSequence(
+                        typeLevelParameters = isSequence(
                             isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
                         ),
-                        staticArguments = isSequence(
+                        typeLevelArguments = isSequence(
                             isTypeParameter(name = isIdentifier("T2"), variance = isInvariant)
                         )
                     ),
 
                     isShapeType(
                         name = isIdentifier("Member3"),
-                        staticParameters = isSequence(),
-                        staticArguments = isSequence()
+                        typeLevelParameters = isSequence(),
+                        typeLevelArguments = isSequence()
                     )
                 )
             )

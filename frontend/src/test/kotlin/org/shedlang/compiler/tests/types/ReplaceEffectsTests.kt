@@ -18,7 +18,7 @@ class ReplaceEffectsTests {
         val boundEffectA = userDefinedEffect(Identifier("BoundA"))
         val boundEffectB = userDefinedEffect(Identifier("BoundB"))
 
-        val bindings = mapOf<StaticParameter, StaticValue>(
+        val bindings = mapOf<TypeLevelParameter, TypeLevelValue>(
             effectParameterA to boundEffectA,
             effectParameterB to boundEffectB
         )
@@ -33,7 +33,7 @@ class ReplaceEffectsTests {
         val effectParameterB = effectParameter(name = "B")
         val boundEffectB = userDefinedEffect(Identifier("BoundB"))
 
-        val bindings = mapOf<StaticParameter, StaticValue>(
+        val bindings = mapOf<TypeLevelParameter, TypeLevelValue>(
             effectParameterB to boundEffectB
         )
         val newEffect = replaceEffects(effectParameterA, bindings)
@@ -48,7 +48,7 @@ class ReplaceEffectsTests {
         val boundEffectA = userDefinedEffect(Identifier("BoundA"))
         val boundEffectB = userDefinedEffect(Identifier("BoundB"))
 
-        val bindings = mapOf<StaticParameter, StaticValue>(
+        val bindings = mapOf<TypeLevelParameter, TypeLevelValue>(
             effectParameterA to boundEffectA,
             effectParameterB to boundEffectB
         )
@@ -66,7 +66,7 @@ class ReplaceEffectsTests {
         val effectParameterB = effectParameter(name = "B")
         val boundEffectA = userDefinedEffect(Identifier("BoundA"))
 
-        val bindings = mapOf<StaticParameter, StaticValue>(
+        val bindings = mapOf<TypeLevelParameter, TypeLevelValue>(
             effectParameterA to boundEffectA,
             effectParameterB to boundEffectA
         )

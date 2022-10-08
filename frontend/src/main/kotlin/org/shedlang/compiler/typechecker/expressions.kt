@@ -54,8 +54,8 @@ internal fun inferType(expression: ExpressionNode, context: TypeContext, hint: T
             return inferPartialCallType(node, context)
         }
 
-        override fun visit(node: StaticCallNode): Type {
-            return inferStaticCallType(node, context)
+        override fun visit(node: TypeLevelCallNode): Type {
+            return inferTypeLevelCallType(node, context)
         }
 
         override fun visit(node: FieldAccessNode): Type {
@@ -142,7 +142,7 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
     // TODO: test expression and type checking
 
     val expressionType = checkTypeConditionOperand(node.expression, context)
-    val targetType = evalStaticValue(node.type, context)
+    val targetType = evalTypeLevelValue(node.type, context)
 
     val discriminator = evalTypeCondition(
         expressionType = expressionType,
@@ -157,7 +157,7 @@ private fun inferIsExpressionType(node: IsNode, context: TypeContext): BoolType 
 
 private fun evalTypeCondition(
     expressionType: UnionType,
-    targetType: StaticValue,
+    targetType: TypeLevelValue,
     source: Source
 ): Discriminator {
     // TODO: given generics are erased, when node.type is generic we
@@ -203,7 +203,7 @@ private fun inferIfExpressionType(node: IfNode, context: TypeContext): Type {
         if (condition is IsNode) {
             val conditionExpression = condition.expression
             if (conditionExpression is ReferenceNode) {
-                val conditionType = evalStaticValue(condition.type, context)
+                val conditionType = evalTypeLevelValue(condition.type, context)
                 val discriminator = evalTypeCondition(
                     expressionType = context.typeOf(context.resolveReference(conditionExpression)) as UnionType,
                     targetType = conditionType,
@@ -226,7 +226,7 @@ private fun inferWhenExpressionType(node: WhenNode, context: TypeContext): Type 
     val expressionType = checkTypeConditionOperand(node.expression, context)
 
     val branchResults = node.conditionalBranches.map { branch ->
-        val conditionType = evalStaticValue(branch.type, context)
+        val conditionType = evalTypeLevelValue(branch.type, context)
         val discriminator = evalTypeCondition(
             expressionType = expressionType,
             targetType = conditionType,

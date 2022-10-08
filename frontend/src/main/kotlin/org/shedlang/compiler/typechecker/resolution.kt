@@ -96,7 +96,7 @@ internal fun resolve(structure: NodeStructure, context: ResolutionContext) {
     when (structure) {
         is NodeStructure.Eval -> resolveEval(structure.node, context)
         // TODO: substructures should always be static
-        is NodeStructure.StaticEval -> resolveEval(structure.node, context)
+        is NodeStructure.TypeLevelEval -> resolveEval(structure.node, context)
         is NodeStructure.SubEnv -> resolveSubEnv(structure.structure, context)
         is NodeStructure.DeferInitialise -> context.defer(structure.binding) { resolve(structure.structure, context) }
         is NodeStructure.Initialise -> context.initialise(structure.binding)
@@ -133,7 +133,7 @@ private fun bindings(structures: List<NodeStructure>): List<VariableBindingNode>
 private fun bindings(structure: NodeStructure): List<VariableBindingNode> {
     return when (structure) {
         is NodeStructure.Eval -> bindings(structure.node.structure)
-        is NodeStructure.StaticEval -> bindings(structure.node.structure)
+        is NodeStructure.TypeLevelEval -> bindings(structure.node.structure)
         is NodeStructure.SubEnv -> listOf()
         is NodeStructure.DeferInitialise -> listOf(structure.binding) + bindings(structure.structure)
         is NodeStructure.Initialise -> listOf(structure.binding)

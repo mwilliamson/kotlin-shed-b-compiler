@@ -3,7 +3,6 @@ package org.shedlang.compiler.tests.typechecker
 import com.natpryce.hamkrest.*
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.ast.FunctionEffectNode
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.Source
 import org.shedlang.compiler.tests.throwsException
@@ -14,13 +13,13 @@ import org.shedlang.compiler.types.*
 class TypeCheckFunctionTests {
     @Test
     fun typeParameterTypeIsAdded() {
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
 
         val typeParameter = typeParameter("T")
-        val typeParameterReference = staticReference("T")
+        val typeParameterReference = typeLevelReference("T")
         val parameter = parameter(type = typeParameterReference)
         val node = function(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             parameters = listOf(parameter),
             returnType = unitReference
         )
@@ -42,7 +41,7 @@ class TypeCheckFunctionTests {
         assertThat(
             typeContext.typeOf(node),
             cast(
-                has(FunctionType::staticParameters, isSequence(
+                has(FunctionType::typeLevelParameters, isSequence(
                     cast(has(TypeParameter::name, isIdentifier("T")))
                 ))
             )
@@ -51,12 +50,12 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectParameterTypeIsAdded() {
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
 
         val effectParameter = effectParameterDeclaration("E")
-        val effectParameterReference = staticReference("E")
+        val effectParameterReference = typeLevelReference("E")
         val node = function(
-            staticParameters = listOf(effectParameter),
+            typeLevelParameters = listOf(effectParameter),
             parameters = listOf(),
             effect = effectParameterReference,
             returnType = unitReference
@@ -74,12 +73,12 @@ class TypeCheckFunctionTests {
         ))
         assertThat(
             (typeContext.typeOf(node) as FunctionType).effect,
-            equalTo((typeContext.typeOf(effectParameter) as StaticValueType).value)
+            equalTo((typeContext.typeOf(effectParameter) as TypeLevelValueType).value)
         )
         assertThat(
             typeContext.typeOf(node),
             cast(
-                has(FunctionType::staticParameters, isSequence(
+                has(FunctionType::typeLevelParameters, isSequence(
                     cast(has(EffectParameter::name, isIdentifier("E")))
                 ))
             )
@@ -88,7 +87,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun bodyOfFunctionIsTypeChecked() {
-        val unit = staticReference("Unit")
+        val unit = typeLevelReference("Unit")
         val typeContext = typeContext(referenceTypes = mapOf(unit to UnitMetaType))
 
         assertStatementIsTypeChecked(fun(badStatement) {
@@ -103,7 +102,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun finalStatementInBodyMustReturnCorrectType() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val typeContext = typeContext(referenceTypes = mapOf(intType to IntMetaType))
         val node = function(
             returnType = intType,
@@ -119,7 +118,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun positionalParametersAreTyped() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val parameter = parameter(name = "x", type = intType)
         val parameterReference = variableReference("x")
         val node = function(
@@ -145,7 +144,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun givenThereIsNoTypeHintWhenPositionalParameterHasNoTypeThenErrorIsThrown() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val parameter = parameter(name = "x", type = null)
         val parameterReference = variableReference("x")
         val node = function(
@@ -173,7 +172,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun givenThereIsATypeHintWhenPositionalParameterHasNoTypeThenHintIsUsed() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val parameter = parameter(name = "x", type = null)
         val parameterReference = variableReference("x")
         val node = function(
@@ -200,7 +199,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun namedParametersAreTyped() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val parameter = parameter(name = "x", type = intType)
         val parameterReference = variableReference("x")
         val node = function(
@@ -226,7 +225,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun givenThereIsNoTypeHintWhenNamedParameterHasNoTypeThenErrorIsThrown() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val parameter = parameter(name = "x", type = null)
         val parameterReference = variableReference("x")
         val node = function(
@@ -254,7 +253,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun givenThereIsATypeHintWhenNamedParameterHasNoTypeThenHintIsUsed() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val parameter = parameter(name = "x", type = null)
         val parameterReference = variableReference("x")
         val node = function(
@@ -282,8 +281,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun signatureOfFunctionIsDeterminedFromArgumentsAndReturnType() {
-        val intType = staticReference("Int")
-        val boolType = staticReference("Bool")
+        val intType = typeLevelReference("Int")
+        val boolType = typeLevelReference("Bool")
         val node = function(
             parameters = listOf(
                 parameter(name = "x", type = intType),
@@ -305,8 +304,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreIncludedInSignature() {
-        val unitType = staticReference("Unit")
-        val effect = staticReference("!Io")
+        val unitType = typeLevelReference("Unit")
+        val effect = typeLevelReference("!Io")
 
         val node = function(
             returnType = unitType,
@@ -314,7 +313,7 @@ class TypeCheckFunctionTests {
         )
         val typeContext = typeContext(referenceTypes = mapOf(
             unitType to UnitMetaType,
-            effect to StaticValueType(IoEffect)
+            effect to TypeLevelValueType(IoEffect)
         ))
         typeCheckFunctionDefinition(node, typeContext)
         assertThat(typeContext.typeOf(node), isFunctionType(
@@ -326,8 +325,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreAddedToBodyContext() {
-        val unitType = staticReference("Unit")
-        val effect = staticReference("!Io")
+        val unitType = typeLevelReference("Unit")
+        val effect = typeLevelReference("!Io")
         val functionReference = variableReference("f")
 
         val node = function(
@@ -343,7 +342,7 @@ class TypeCheckFunctionTests {
                 returns = UnitType
             ),
             unitType to UnitMetaType,
-            effect to StaticValueType(IoEffect)
+            effect to TypeLevelValueType(IoEffect)
         ))
         typeCheckFunctionDefinition(node, typeContext)
         // TODO: come up with a way of ensuring undefer() is eventually called
@@ -352,7 +351,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun errorIsThrowIfBodyStatementsHaveUnspecifiedEffect() {
-        val unitType = staticReference("Unit")
+        val unitType = typeLevelReference("Unit")
         val functionReference = variableReference("f")
 
         val node = function(
@@ -381,8 +380,8 @@ class TypeCheckFunctionTests {
 
     @Test
     fun whenFunctionHasInferredEffectThenEffectIsTakenFromHint() {
-        val unitType = staticReference("Unit")
-        val effect = staticReference("Io")
+        val unitType = typeLevelReference("Unit")
+        val effect = typeLevelReference("Io")
         val functionReference = variableReference("f")
 
         val node = functionExpression(
@@ -398,7 +397,7 @@ class TypeCheckFunctionTests {
                 returns = UnitType
             ),
             unitType to UnitMetaType,
-            effect to StaticValueType(IoEffect)
+            effect to TypeLevelValueType(IoEffect)
         ))
         inferType(node, typeContext, hint = functionType(effect = IoEffect))
         // TODO: come up with a way of ensuring undefer() is eventually called
@@ -407,7 +406,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreNotInheritedByNestedFunctionBodyStatements() {
-        val unitType = staticReference("Unit")
+        val unitType = typeLevelReference("Unit")
         val functionReference = variableReference("f")
 
         val node = function(
@@ -437,7 +436,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun effectsAreNotInheritedByNestedFunctionBodyExpression() {
-        val unitType = staticReference("Unit")
+        val unitType = typeLevelReference("Unit")
         val functionReference = variableReference("f")
 
         val node = functionExpression(
@@ -465,7 +464,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun whenExpressionBodyDoesNotMatchReturnTypeThenErrorIsThrown() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val node = functionExpression(
             parameters = listOf(),
             returnType = intType,
@@ -498,7 +497,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun explicitReturnTypeIsUsedAsReturnTypeInsteadOfExpressionBodyType() {
-        val anyReference = staticReference("Any")
+        val anyReference = typeLevelReference("Any")
         val node = functionExpression(
             parameters = listOf(),
             returnType = anyReference,
@@ -559,7 +558,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun canTypeCheckFunctionDefinitionAsModuleStatement() {
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
         val node = function(
             returnType = unitReference
         )
@@ -577,7 +576,7 @@ class TypeCheckFunctionTests {
 
     @Test
     fun canTypeCheckFunctionDefinitionAsFunctionStatement() {
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
         val node = function(
             returnType = unitReference
         )

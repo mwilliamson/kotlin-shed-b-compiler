@@ -16,10 +16,10 @@ val builtins = listOf(
     builtinType("StringSlice", StringSliceType),
     builtinType("UnicodeScalar", UnicodeScalarType),
     builtinType("Bool", BoolType),
-    builtinVariable("ShapeField", StaticValueType(ShapeFieldTypeFunction)),
+    builtinVariable("ShapeField", TypeLevelValueType(ShapeFieldTypeFunction)),
 
-    builtinVariable("Castable", StaticValueType(CastableTypeFunction)),
-    builtinVariable("Type", StaticValueType(MetaTypeTypeFunction)),
+    builtinVariable("Castable", TypeLevelValueType(CastableTypeLevelFunction)),
+    builtinVariable("Type", TypeLevelValueType(MetaTypeTypeLevelFunction)),
 
     builtinEffect("Io", IoEffect),
     builtinEffect("Pure", EmptyEffect),

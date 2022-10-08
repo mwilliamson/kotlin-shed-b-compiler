@@ -7,13 +7,12 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntMetaType
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.MetaTypeGroup
 
 class TypeCheckTypesModuleTests {
     @Test
     fun bodyIsTypeChecked() {
-        val reference = staticReference("x")
+        val reference = typeLevelReference("x")
         val node = typesModule(body = listOf(
             valType(type = reference)
         ))
@@ -30,7 +29,7 @@ class TypeCheckTypesModuleTests {
 
     @Test
     fun typeOfModuleIsReturned() {
-        val intReference = staticReference("Int")
+        val intReference = typeLevelReference("Int")
         val node = typesModule(
             body = listOf(
                 valType(name = "value", type = intReference)

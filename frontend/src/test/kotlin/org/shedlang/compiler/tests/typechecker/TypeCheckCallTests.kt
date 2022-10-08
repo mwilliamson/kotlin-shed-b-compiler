@@ -49,18 +49,18 @@ class TypeCheckCallTests {
     @Test
     fun functionCallWithExplicitTypeArguments() {
         val functionReference = variableReference("f")
-        val intReference = staticReference("Int")
-        val unitReference = staticReference("Unit")
+        val intReference = typeLevelReference("Int")
+        val unitReference = typeLevelReference("Unit")
         val node = call(
             receiver = functionReference,
-            staticArguments = listOf(intReference, unitReference),
+            typeLevelArguments = listOf(intReference, unitReference),
             positionalArguments = listOf(literalInt())
         )
 
         val argumentTypeParameter = invariantTypeParameter(name = "T")
         val returnTypeParameter = invariantTypeParameter(name = "R")
         val functionType = functionType(
-            staticParameters = listOf(argumentTypeParameter, returnTypeParameter),
+            typeLevelParameters = listOf(argumentTypeParameter, returnTypeParameter),
             positionalParameters = listOf(argumentTypeParameter),
             returns = returnTypeParameter
         )
@@ -77,16 +77,16 @@ class TypeCheckCallTests {
     @Test
     fun whenWrongNumberOfTypeArgumentsIsProvidedThenErrorIsThrown() {
         val functionReference = variableReference("f")
-        val unitReference = staticReference("Unit")
+        val unitReference = typeLevelReference("Unit")
         val node = call(
             receiver = functionReference,
-            staticArguments = listOf(unitReference, unitReference),
+            typeLevelArguments = listOf(unitReference, unitReference),
             positionalArguments = listOf()
         )
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(),
             returns = typeParameter
         )
@@ -98,8 +98,8 @@ class TypeCheckCallTests {
         assertThat(
             { inferCallType(node, typeContext) },
             throws(allOf(
-                has(WrongNumberOfStaticArgumentsError::expected, equalTo(1)),
-                has(WrongNumberOfStaticArgumentsError::actual, equalTo(2))
+                has(WrongNumberOfTypeLevelArgumentsError::expected, equalTo(1)),
+                has(WrongNumberOfTypeLevelArgumentsError::actual, equalTo(2))
             ))
         )
     }
@@ -114,7 +114,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameter),
             returns = typeParameter
         )
@@ -134,7 +134,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
@@ -160,7 +160,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameter, typeParameter),
             returns = typeParameter
         )
@@ -198,7 +198,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(
                 typeParameter,
                 functionType(
@@ -241,7 +241,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(
                 functionType(
                     positionalParameters = listOf(typeParameter),
@@ -273,7 +273,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameter),
             returns = typeParameter
         )
@@ -296,7 +296,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter(name = "T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameter, TupleType(listOf(typeParameter))),
             returns = typeParameter
         )
@@ -318,7 +318,7 @@ class TypeCheckCallTests {
         val typeParameter1 = invariantTypeParameter(name = "T1")
         val typeParameter2 = invariantTypeParameter(name = "T2")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter1, typeParameter2),
+            typeLevelParameters = listOf(typeParameter1, typeParameter2),
             positionalParameters = listOf(typeParameter1, TupleType(listOf(typeParameter1, typeParameter2))),
             returns = typeParameter1
         )
@@ -514,12 +514,12 @@ class TypeCheckCallTests {
             callNamedArgument("value", literalBool())
         ))
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
             name = isIdentifier("Box"),
-            staticArguments = isSequence(isBoolType),
+            typeLevelArguments = isSequence(isBoolType),
             fields = isSequence(isField(name = isIdentifier("value"), type = isBoolType))
         )
         )
@@ -543,16 +543,15 @@ class TypeCheckCallTests {
         ))
 
         val typeContext = typeContext(referenceTypes = mapOf(
-            shapeReference to StaticValueType(shapeType),
+            shapeReference to TypeLevelValueType(shapeType),
             argumentReference to functionType(positionalParameters = listOf(IntType), returns = UnitType)
         ))
         val type = inferCallType(node, typeContext)
 
         assertThat(type, isShapeType(
             name = isIdentifier("Sink"),
-            staticArguments = isSequence(isIntType)
-        )
-        )
+            typeLevelArguments = isSequence(isIntType)
+        ))
     }
 
     @Test
@@ -567,7 +566,7 @@ class TypeCheckCallTests {
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
 
         assertThat(
             { inferCallType(node, typeContext) },
@@ -587,11 +586,11 @@ class TypeCheckCallTests {
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
-            staticArguments = isSequence(isNothingType)
+            typeLevelArguments = isSequence(isNothingType)
         )
         )
     }
@@ -608,11 +607,11 @@ class TypeCheckCallTests {
         )
         val node = call(receiver = shapeReference, namedArguments = listOf())
 
-        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to StaticValueType(shapeType)))
+        val typeContext = typeContext(referenceTypes = mapOf(shapeReference to TypeLevelValueType(shapeType)))
 
         val type = inferCallType(node, typeContext)
         assertThat(type, isShapeType(
-            staticArguments = isSequence(isAnyType)
+            typeLevelArguments = isSequence(isAnyType)
         )
         )
     }
@@ -623,7 +622,7 @@ class TypeCheckCallTests {
 
         val effectParameter = effectParameter("!E")
         val functionType = functionType(
-            staticParameters = listOf(effectParameter),
+            typeLevelParameters = listOf(effectParameter),
             effect = effectParameter,
             returns = UnitType
         )
@@ -820,17 +819,17 @@ class TypeCheckCallTests {
     @Test
     fun canCallFunctionWithExplicitEffectArgument() {
         val effectParameter = effectParameter("E")
-        val effectReference = staticReference("Io")
+        val effectReference = typeLevelReference("Io")
 
         val functionReference = variableReference("f")
 
         val node = call(
             receiver = functionReference,
-            staticArguments = listOf(effectReference),
+            typeLevelArguments = listOf(effectReference),
             hasEffect = true
         )
         val functionType = functionType(
-            staticParameters = listOf(effectParameter),
+            typeLevelParameters = listOf(effectParameter),
             effect = effectParameter,
             returns = UnitType
         )
@@ -851,19 +850,19 @@ class TypeCheckCallTests {
     @Test
     fun explicitEffectArgumentsReplaceEffectParameterInParameters() {
         val effectParameter = effectParameter("E")
-        val effectReference = staticReference("Io")
+        val effectReference = typeLevelReference("Io")
 
         val functionReference = variableReference("f")
         val otherFunctionReference = variableReference("g")
 
         val node = call(
             receiver = functionReference,
-            staticArguments = listOf(effectReference),
+            typeLevelArguments = listOf(effectReference),
             positionalArguments = listOf(otherFunctionReference),
             hasEffect = true
         )
         val functionType = functionType(
-            staticParameters = listOf(effectParameter),
+            typeLevelParameters = listOf(effectParameter),
             positionalParameters = listOf(functionType(
                 effect = effectParameter,
                 returns = UnitType
@@ -892,7 +891,7 @@ class TypeCheckCallTests {
     @Test
     fun canCallFunctionWithImplicitEffectArgument() {
         val effectParameter = effectParameter("E")
-        val effectReference = staticReference("Io")
+        val effectReference = typeLevelReference("Io")
 
         val functionReference = variableReference("f")
         val otherFunctionReference = variableReference("g")
@@ -903,7 +902,7 @@ class TypeCheckCallTests {
             hasEffect = true
         )
         val functionType = functionType(
-            staticParameters = listOf(effectParameter),
+            typeLevelParameters = listOf(effectParameter),
             positionalParameters = listOf(functionType(
                 effect = effectParameter,
                 returns = UnitType
@@ -935,7 +934,7 @@ class TypeCheckCallTests {
         private val tailTypeParameter = invariantTypeParameter("Tail")
 
         private val consType = functionType(
-            staticParameters = listOf(headTypeParameter, tailTypeParameter),
+            typeLevelParameters = listOf(headTypeParameter, tailTypeParameter),
             positionalParameters = listOf(headTypeParameter, tailTypeParameter),
             returns = TupleType(elementTypes = listOf(headTypeParameter, tailTypeParameter))
         )
@@ -1039,7 +1038,7 @@ class TypeCheckCallTests {
 
         val typeParameter = invariantTypeParameter("T")
         val functionType = functionType(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             positionalParameters = listOf(typeParameter, typeParameter),
             returns = typeParameter,
         )
@@ -1051,10 +1050,10 @@ class TypeCheckCallTests {
         val node = call(
             receiver = partialCall(
                 receiver = functionReference,
-                staticArguments = listOf(),
+                typeLevelArguments = listOf(),
                 positionalArguments = listOf(member1Reference),
             ),
-            staticArguments = listOf(),
+            typeLevelArguments = listOf(),
             positionalArguments = listOf(member2Reference),
         )
 

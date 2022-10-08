@@ -39,7 +39,7 @@ class TypeCheckExpressionStatementTests {
         val expressionStatement = expressionStatementTailRecReturn(
             call(receiver = functionReference)
         )
-        val boolReference = staticReference("Bool")
+        val boolReference = typeLevelReference("Bool")
         val boolDeclaration = declaration("Bool")
         val functionDeclaration = function(
             name = "f",

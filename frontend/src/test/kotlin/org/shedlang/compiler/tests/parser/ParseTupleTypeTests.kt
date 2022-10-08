@@ -2,14 +2,14 @@ package org.shedlang.compiler.tests.parser
 
 import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
-import org.shedlang.compiler.parser.parseStaticExpression
+import org.shedlang.compiler.parser.parseTypeLevelExpression
 import org.shedlang.compiler.tests.isSequence
 
 class ParseTupleTypeTests {
     @Test
     fun emptyTupleType() {
         val source = "#()"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence()))
     }
@@ -17,32 +17,32 @@ class ParseTupleTypeTests {
     @Test
     fun singletonTupleType() {
         val source = "#(X)"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence(
-            isStaticReference("X")
+            isTypeLevelReference("X")
         )))
     }
 
     @Test
     fun tupleTypeWithManyElements() {
         val source = "#(X, Y, Z)"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence(
-            isStaticReference("X"),
-            isStaticReference("Y"),
-            isStaticReference("Z")
+            isTypeLevelReference("X"),
+            isTypeLevelReference("Y"),
+            isTypeLevelReference("Z")
         )))
     }
 
     @Test
     fun elementsCanHaveTrailingComma() {
         val source = "#(X,)"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
 
         assertThat(node, isTupleTypeNode(isSequence(
-            isStaticReference("X")
+            isTypeLevelReference("X")
         )))
     }
 }

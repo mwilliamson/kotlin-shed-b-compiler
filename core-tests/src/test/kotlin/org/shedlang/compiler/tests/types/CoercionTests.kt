@@ -201,11 +201,11 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(
-                    staticParameters = listOf(typeParameter),
+                    typeLevelParameters = listOf(typeParameter),
                     positionalParameters = listOf(typeParameter)
                 ),
                 to = functionType(
-                    staticParameters = listOf(),
+                    typeLevelParameters = listOf(),
                     positionalParameters = listOf(IntType)
                 )
             ),
@@ -214,11 +214,11 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(
-                    staticParameters = listOf(),
+                    typeLevelParameters = listOf(),
                     positionalParameters = listOf(IntType)
                 ),
                 to = functionType(
-                    staticParameters = listOf(typeParameter),
+                    typeLevelParameters = listOf(typeParameter),
                     positionalParameters = listOf(typeParameter)
                 )
             ),
@@ -232,11 +232,11 @@ class CoercionTests {
         assertThat(
             canCoerce(
                 from = functionType(
-                    staticParameters = listOf(),
+                    typeLevelParameters = listOf(),
                     positionalParameters = listOf(AnyType)
                 ),
                 to = functionType(
-                    staticParameters = listOf(typeParameter),
+                    typeLevelParameters = listOf(typeParameter),
                     positionalParameters = listOf(typeParameter)
                 )
             ),
@@ -356,8 +356,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(BoolType)) as Type
+            from = applyTypeLevel(shapeType, listOf(BoolType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -373,8 +373,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(IntType)) as Type
+            from = applyTypeLevel(shapeType, listOf(BoolType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(IntType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }
@@ -390,8 +390,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(AnyType)) as Type
+            from = applyTypeLevel(shapeType, listOf(BoolType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(AnyType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -407,8 +407,8 @@ class CoercionTests {
             )
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(AnyType)) as Type,
-            to = applyStatic(shapeType, listOf(BoolType)) as Type
+            from = applyTypeLevel(shapeType, listOf(AnyType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }
@@ -422,8 +422,8 @@ class CoercionTests {
             fields = listOf()
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(AnyType)) as Type,
-            to = applyStatic(shapeType, listOf(BoolType)) as Type
+            from = applyTypeLevel(shapeType, listOf(AnyType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(BoolType)) as Type
         )
         assertThat(canCoerce, equalTo(true))
     }
@@ -437,8 +437,8 @@ class CoercionTests {
             fields = listOf()
         )
         val canCoerce = canCoerce(
-            from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(AnyType)) as Type
+            from = applyTypeLevel(shapeType, listOf(BoolType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(AnyType)) as Type
         )
         assertThat(canCoerce, equalTo(false))
     }
@@ -836,7 +836,7 @@ class CoercionTests {
         assertThat(canCoerce, equalTo(false))
     }
 
-    private fun assertSymmetricCoercion(parameters: Set<StaticParameter>, from: Type, to: Type, matcher: Matcher<CoercionResult>) {
+    private fun assertSymmetricCoercion(parameters: Set<TypeLevelParameter>, from: Type, to: Type, matcher: Matcher<CoercionResult>) {
         val result1 = coerce(
             parameters = parameters,
             from = from,
@@ -854,7 +854,7 @@ class CoercionTests {
         assertThat(result2, matcher)
     }
 
-    private fun isSuccess(vararg bindings: Pair<StaticParameter, Matcher<StaticValue>>): Matcher<CoercionResult> {
+    private fun isSuccess(vararg bindings: Pair<TypeLevelParameter, Matcher<TypeLevelValue>>): Matcher<CoercionResult> {
         return cast(has(CoercionResult.Success::bindings, isMap(*bindings)))
     }
 

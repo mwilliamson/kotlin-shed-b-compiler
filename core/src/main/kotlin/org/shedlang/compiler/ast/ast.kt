@@ -12,7 +12,7 @@ interface Node {
 }
 
 sealed class NodeStructure {
-    class StaticEval(val node: Node): NodeStructure()
+    class TypeLevelEval(val node: Node): NodeStructure()
     class Eval(val node: Node): NodeStructure()
     class SubEnv(val structure: List<NodeStructure>): NodeStructure()
     class DeferInitialise(val binding: VariableBindingNode, val structure: NodeStructure): NodeStructure()
@@ -20,8 +20,8 @@ sealed class NodeStructure {
 }
 
 object NodeStructures {
-    fun staticEval(node: Node): NodeStructure {
-        return NodeStructure.StaticEval(node)
+    fun typeLevelEval(node: Node): NodeStructure {
+        return NodeStructure.TypeLevelEval(node)
     }
 
     fun eval(node: Node): NodeStructure {
@@ -64,7 +64,7 @@ fun Node.children(): List<Node> {
 fun structureToNodes(structure: NodeStructure): Iterable<Node> {
     return when (structure) {
         is NodeStructure.Eval -> listOf(structure.node)
-        is NodeStructure.StaticEval -> listOf(structure.node)
+        is NodeStructure.TypeLevelEval -> listOf(structure.node)
         is NodeStructure.SubEnv -> structure.structure.flatMap(::structureToNodes)
         is NodeStructure.DeferInitialise -> structureToNodes(structure.structure)
         is NodeStructure.Initialise -> listOf()
@@ -173,99 +173,99 @@ private var nextId = 0
 
 fun freshNodeId() = nextId++
 
-interface StaticExpressionNode : Node {
+interface TypeLevelExpressionNode : Node {
     interface Visitor<T> {
         fun visit(node: ReferenceNode): T
-        fun visit(node: StaticFieldAccessNode): T
-        fun visit(node: StaticApplicationNode): T
+        fun visit(node: TypeLevelFieldAccessNode): T
+        fun visit(node: TypeLevelApplicationNode): T
         fun visit(node: FunctionTypeNode): T
         fun visit(node: TupleTypeNode): T
-        fun visit(node: StaticUnionNode): T
+        fun visit(node: TypeLevelUnionNode): T
     }
 
     fun <T> accept(visitor: Visitor<T>): T
 }
 
-data class StaticFieldAccessNode(
-    val receiver: StaticExpressionNode,
+data class TypeLevelFieldAccessNode(
+    val receiver: TypeLevelExpressionNode,
     val fieldName: FieldNameNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : StaticExpressionNode {
+) : TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(receiver), NodeStructures.staticEval(fieldName))
+        get() = listOf(NodeStructures.typeLevelEval(receiver), NodeStructures.typeLevelEval(fieldName))
 
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-data class StaticApplicationNode(
-    val receiver: StaticExpressionNode,
-    val arguments: List<StaticExpressionNode>,
+data class TypeLevelApplicationNode(
+    val receiver: TypeLevelExpressionNode,
+    val arguments: List<TypeLevelExpressionNode>,
     override val source: Source,
     val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
-) : StaticExpressionNode {
+) : TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(receiver)) + arguments.map(NodeStructures::staticEval)
+        get() = listOf(NodeStructures.typeLevelEval(receiver)) + arguments.map(NodeStructures::typeLevelEval)
 
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class FunctionTypeNode(
-    val staticParameters: List<StaticParameterNode>,
-    val positionalParameters: List<StaticExpressionNode>,
+    val typeLevelParameters: List<TypeLevelParameterNode>,
+    val positionalParameters: List<TypeLevelExpressionNode>,
     val namedParameters: List<FunctionTypeNamedParameterNode>,
-    val returnType: StaticExpressionNode,
-    val effect: StaticExpressionNode?,
+    val returnType: TypeLevelExpressionNode,
+    val effect: TypeLevelExpressionNode?,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StaticExpressionNode {
+): TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.subEnv(
-            (staticParameters + positionalParameters + namedParameters + effect.nullableToList() + listOf(returnType)).map(NodeStructures::staticEval)
+            (typeLevelParameters + positionalParameters + namedParameters + effect.nullableToList() + listOf(returnType)).map(NodeStructures::typeLevelEval)
         ))
 
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
 data class FunctionTypeNamedParameterNode(
     override val name: Identifier,
-    val type: StaticExpressionNode,
+    val type: TypeLevelExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : VariableBindingNode, Node {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(type), NodeStructures.initialise(this))
+        get() = listOf(NodeStructures.typeLevelEval(type), NodeStructures.initialise(this))
 }
 
 data class TupleTypeNode(
-    val elementTypes: List<StaticExpressionNode>,
+    val elementTypes: List<TypeLevelExpressionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StaticExpressionNode {
+): TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
-        get() = elementTypes.map(NodeStructures::staticEval)
+        get() = elementTypes.map(NodeStructures::typeLevelEval)
 
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-data class StaticUnionNode(
-    val elements: List<StaticExpressionNode>,
+data class TypeLevelUnionNode(
+    val elements: List<TypeLevelExpressionNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StaticExpressionNode {
+): TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
-        get() = elements.map(NodeStructures::staticEval)
+        get() = elements.map(NodeStructures::typeLevelEval)
 
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -288,7 +288,7 @@ data class TypesModuleNode(
     override val nodeId: Int = freshNodeId()
 ): Node {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.subEnv((imports + body).map(NodeStructures::staticEval)))
+        get() = listOf(NodeStructures.subEnv((imports + body).map(NodeStructures::typeLevelEval)))
 }
 
 interface TypesModuleStatementNode: Node {
@@ -315,12 +315,12 @@ data class EffectDeclarationNode(
 
 data class ValTypeNode(
     override val name: Identifier,
-    val type: StaticExpressionNode,
+    val type: TypeLevelExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypesModuleStatementNode, VariableBindingNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(type), NodeStructures.initialise(this))
+        get() = listOf(NodeStructures.typeLevelEval(type), NodeStructures.initialise(this))
 
     override fun <T> accept(visitor: TypesModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -392,17 +392,17 @@ data class OperationDefinitionNode(
     override val nodeId: Int = freshNodeId()
 ): Node {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(type))
+        get() = listOf(NodeStructures.typeLevelEval(type))
 }
 
 data class TypeAliasNode(
     override val name: Identifier,
-    val expression: StaticExpressionNode,
+    val expression: TypeLevelExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): TypeDeclarationNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(expression), NodeStructures.initialise(this))
+        get() = listOf(NodeStructures.typeLevelEval(expression), NodeStructures.initialise(this))
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -411,8 +411,8 @@ data class TypeAliasNode(
 
 data class ShapeNode(
     override val name: Identifier,
-    override val staticParameters: List<StaticParameterNode>,
-    override val extends: List<StaticExpressionNode>,
+    override val typeLevelParameters: List<TypeLevelParameterNode>,
+    override val extends: List<TypeLevelExpressionNode>,
     override val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -421,7 +421,7 @@ data class ShapeNode(
         get() = listOf(
             // TODO: switch static evaluation to be lazily resolved?
             NodeStructures.deferInitialise(this, NodeStructures.subEnv(
-                (staticParameters + extends).map(NodeStructures::staticEval) + fields.map(NodeStructures::eval)
+                (typeLevelParameters + extends).map(NodeStructures::typeLevelEval) + fields.map(NodeStructures::eval)
             ))
         )
 
@@ -438,25 +438,25 @@ data class ShapeNode(
 }
 
 interface ShapeBaseNode: TypeDeclarationNode {
-    val extends: List<StaticExpressionNode>
+    val extends: List<TypeLevelExpressionNode>
     val fields: List<ShapeFieldNode>
-    val staticParameters: List<StaticParameterNode>
+    val typeLevelParameters: List<TypeLevelParameterNode>
 }
 
 data class ShapeFieldNode(
-    val shape: StaticExpressionNode?,
+    val shape: TypeLevelExpressionNode?,
     val name: Identifier,
-    val type: StaticExpressionNode,
+    val type: TypeLevelExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ): Node {
     override val structure: List<NodeStructure>
-        get() = (shape.nullableToList() + listOf(type)).map(NodeStructures::staticEval)
+        get() = (shape.nullableToList() + listOf(type)).map(NodeStructures::typeLevelEval)
 }
 
 data class UnionNode(
     override val name: Identifier,
-    val staticParameters: List<StaticParameterNode>,
+    val typeLevelParameters: List<TypeLevelParameterNode>,
     val superType: ReferenceNode?,
     val members: List<UnionMemberNode>,
     override val source: Source,
@@ -464,8 +464,8 @@ data class UnionNode(
 ): TypeDeclarationNode, ModuleStatementNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.subEnv(
-            (staticParameters + superType.nullableToList()).map(NodeStructures::staticEval)
-        )) + members.map(NodeStructures::staticEval) + listOf(NodeStructures.initialise(this))
+            (typeLevelParameters + superType.nullableToList()).map(NodeStructures::typeLevelEval)
+        )) + members.map(NodeStructures::typeLevelEval) + listOf(NodeStructures.initialise(this))
 
     override fun <T> accept(visitor: ModuleStatementNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -474,8 +474,8 @@ data class UnionNode(
 
 data class UnionMemberNode(
     override val name: Identifier,
-    override val staticParameters: List<StaticParameterNode>,
-    override val extends: List<StaticExpressionNode>,
+    override val typeLevelParameters: List<TypeLevelParameterNode>,
+    override val extends: List<TypeLevelExpressionNode>,
     override val fields: List<ShapeFieldNode>,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
@@ -484,7 +484,7 @@ data class UnionMemberNode(
         get() = listOf(
             // TODO: switch static evaluation to be lazily resolved?
             NodeStructures.deferInitialise(this, NodeStructures.subEnv(
-                (staticParameters + extends).map(NodeStructures::staticEval) + fields.map(NodeStructures::eval)
+                (typeLevelParameters + extends).map(NodeStructures::typeLevelEval) + fields.map(NodeStructures::eval)
             ))
         )
 }
@@ -505,10 +505,10 @@ data class VarargsDeclarationNode(
 }
 
 interface FunctionNode : Node {
-    val staticParameters: List<StaticParameterNode>
+    val typeLevelParameters: List<TypeLevelParameterNode>
     val parameters: List<ParameterNode>
     val namedParameters: List<ParameterNode>
-    val returnType: StaticExpressionNode?
+    val returnType: TypeLevelExpressionNode?
     val effect: FunctionEffectNode?
     val body: Block
     val inferReturnType: Boolean
@@ -524,12 +524,12 @@ sealed class FunctionEffectNode: Node {
     }
 
     data class Explicit(
-        val expression: StaticExpressionNode,
+        val expression: TypeLevelExpressionNode,
         override val source: Source,
         override val nodeId: Int = freshNodeId(),
     ): FunctionEffectNode() {
         override val structure: List<NodeStructure>
-            get() = listOf(NodeStructures.staticEval(expression))
+            get() = listOf(NodeStructures.typeLevelEval(expression))
     }
 }
 
@@ -558,10 +558,10 @@ data class Block(
 }
 
 data class FunctionExpressionNode(
-    override val staticParameters: List<StaticParameterNode>,
+    override val typeLevelParameters: List<TypeLevelParameterNode>,
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
-    override val returnType: StaticExpressionNode?,
+    override val returnType: TypeLevelExpressionNode?,
     override val effect: FunctionEffectNode?,
     override val body: Block,
     override val inferReturnType: Boolean,
@@ -578,10 +578,10 @@ data class FunctionExpressionNode(
 
 data class FunctionDefinitionNode(
     override val name: Identifier,
-    override val staticParameters: List<StaticParameterNode>,
+    override val typeLevelParameters: List<TypeLevelParameterNode>,
     override val parameters: List<ParameterNode>,
     override val namedParameters: List<ParameterNode>,
-    override val returnType: StaticExpressionNode,
+    override val returnType: TypeLevelExpressionNode,
     override val effect: FunctionEffectNode?,
     override val body: Block,
     override val inferReturnType: Boolean,
@@ -605,14 +605,14 @@ data class FunctionDefinitionNode(
 
 private fun functionSubEnv(function: FunctionNode): NodeStructure {
     return NodeStructures.subEnv(
-        function.staticParameters.map(NodeStructures::staticEval) +
+        function.typeLevelParameters.map(NodeStructures::typeLevelEval) +
             (function.parameters + function.namedParameters + function.returnType.nullableToList() + function.effect.nullableToList() + listOf(function.body)).map(NodeStructures::eval)
     )
 }
 
-interface StaticParameterNode: VariableBindingNode {
+interface TypeLevelParameterNode: VariableBindingNode {
     fun <T> accept(visitor: Visitor<T>): T
-    fun copy(): StaticParameterNode
+    fun copy(): TypeLevelParameterNode
 
     interface Visitor<T> {
         fun visit(node: TypeParameterNode): T
@@ -625,11 +625,11 @@ data class TypeParameterNode(
     val variance: Variance,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StaticParameterNode, Node {
+): TypeLevelParameterNode, Node {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.initialise(this))
 
-    override fun <T> accept(visitor: StaticParameterNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelParameterNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -642,11 +642,11 @@ data class EffectParameterNode(
     override val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-): StaticParameterNode, Node {
+): TypeLevelParameterNode, Node {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.initialise(this))
 
-    override fun <T> accept(visitor: StaticParameterNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelParameterNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -657,12 +657,12 @@ data class EffectParameterNode(
 
     data class ParameterNode(
         override val name: Identifier,
-        val type: StaticExpressionNode?,
+        val type: TypeLevelExpressionNode?,
         override val source: Source,
         override val nodeId: Int = freshNodeId()
     ) : VariableBindingNode, Node {
         override val structure: List<NodeStructure>
-            get() = type.nullableToList().map(NodeStructures::staticEval) + listOf(NodeStructures.initialise(this))
+            get() = type.nullableToList().map(NodeStructures::typeLevelEval) + listOf(NodeStructures.initialise(this))
     }
 
 interface FunctionStatementNode : StatementNode {
@@ -748,7 +748,7 @@ data class WhenNode(
 }
 
 data class WhenBranchNode(
-    val type: StaticExpressionNode,
+    val type: TypeLevelExpressionNode,
     val target: TargetNode.Fields,
     val body: Block,
     override val source: Source,
@@ -756,7 +756,7 @@ data class WhenBranchNode(
 ) : Node {
     override val structure: List<NodeStructure>
         get() = listOf(
-            NodeStructures.staticEval(type),
+            NodeStructures.typeLevelEval(type),
             NodeStructures.subEnv(listOf(
                 NodeStructures.eval(target),
                 NodeStructures.eval(body),
@@ -765,7 +765,7 @@ data class WhenBranchNode(
 }
 
 data class HandleNode(
-    val effect: StaticExpressionNode,
+    val effect: TypeLevelExpressionNode,
     val initialState: ExpressionNode?,
     val body: Block,
     val handlers: List<HandlerNode>,
@@ -773,7 +773,7 @@ data class HandleNode(
     override val nodeId: Int = freshNodeId()
 ): ExpressionNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.staticEval(effect)) +
+        get() = listOf(NodeStructures.typeLevelEval(effect)) +
             initialState.mapNullable(NodeStructures::eval).nullableToList() +
             handlers.map { handler -> NodeStructures.eval(handler) } +
             listOf(NodeStructures.subEnv(listOf(NodeStructures.eval(body))))
@@ -927,7 +927,7 @@ interface ExpressionNode : Node {
         fun visit(node: IsNode): T
         fun visit(node: CallNode): T
         fun visit(node: PartialCallNode): T
-        fun visit(node: StaticCallNode): T
+        fun visit(node: TypeLevelCallNode): T
         fun visit(node: FieldAccessNode): T
         fun visit(node: FunctionExpressionNode): T
         fun visit(node: IfNode): T
@@ -1019,7 +1019,7 @@ data class ReferenceNode(
     val name: Identifier,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
-) : ExpressionNode, StaticExpressionNode {
+) : ExpressionNode, TypeLevelExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf()
 
@@ -1027,7 +1027,7 @@ data class ReferenceNode(
         return visitor.visit(this)
     }
 
-    override fun <T> accept(visitor: StaticExpressionNode.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -1063,12 +1063,12 @@ data class BinaryOperationNode(
 
 data class IsNode(
     val expression: ExpressionNode,
-    val type: StaticExpressionNode,
+    val type: TypeLevelExpressionNode,
     override val source: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val structure: List<NodeStructure>
-        get() = listOf(NodeStructures.eval(expression), NodeStructures.staticEval(type))
+        get() = listOf(NodeStructures.eval(expression), NodeStructures.typeLevelEval(type))
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -1077,7 +1077,7 @@ data class IsNode(
 
 interface CallBaseNode: ExpressionNode {
     val receiver: ExpressionNode
-    val staticArguments: List<StaticExpressionNode>
+    val typeLevelArguments: List<TypeLevelExpressionNode>
     val positionalArguments: List<ExpressionNode>
     val fieldArguments: List<FieldArgumentNode>
     val operatorSource: Source
@@ -1085,7 +1085,7 @@ interface CallBaseNode: ExpressionNode {
 
 data class CallNode(
     override val receiver: ExpressionNode,
-    override val staticArguments: List<StaticExpressionNode>,
+    override val typeLevelArguments: List<TypeLevelExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
     override val fieldArguments: List<FieldArgumentNode>,
     val hasEffect: Boolean,
@@ -1095,7 +1095,7 @@ data class CallNode(
 ) : CallBaseNode, ExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(receiver)) +
-            staticArguments.map(NodeStructures::staticEval) +
+            typeLevelArguments.map(NodeStructures::typeLevelEval) +
             (positionalArguments + fieldArguments).map(NodeStructures::eval)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
@@ -1105,7 +1105,7 @@ data class CallNode(
 
 data class PartialCallNode(
     override val receiver: ExpressionNode,
-    override val staticArguments: List<StaticExpressionNode>,
+    override val typeLevelArguments: List<TypeLevelExpressionNode>,
     override val positionalArguments: List<ExpressionNode>,
     override val fieldArguments: List<FieldArgumentNode>,
     override val source: Source,
@@ -1114,7 +1114,7 @@ data class PartialCallNode(
 ) : CallBaseNode, ExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(receiver)) +
-            staticArguments.map(NodeStructures::staticEval) +
+            typeLevelArguments.map(NodeStructures::typeLevelEval) +
             (positionalArguments + fieldArguments).map(NodeStructures::eval)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
@@ -1143,16 +1143,16 @@ sealed class FieldArgumentNode: Node {
     }
 }
 
-data class StaticCallNode(
+data class TypeLevelCallNode(
     val receiver: ExpressionNode,
-    val arguments: List<StaticExpressionNode>,
+    val arguments: List<TypeLevelExpressionNode>,
     override val source: Source,
     val operatorSource: Source,
     override val nodeId: Int = freshNodeId()
 ) : ExpressionNode {
     override val structure: List<NodeStructure>
         get() = listOf(NodeStructures.eval(receiver)) +
-            arguments.map(NodeStructures::staticEval)
+            arguments.map(NodeStructures::typeLevelEval)
 
     override fun <T> accept(visitor: ExpressionNode.Visitor<T>): T {
         return visitor.visit(this)
@@ -1216,7 +1216,7 @@ fun expressionBranches(expression: ExpressionNode): Iterable<Block>? {
         override fun visit(node: IsNode): Iterable<Block>? = null
         override fun visit(node: CallNode): Iterable<Block>? = null
         override fun visit(node: PartialCallNode): Iterable<Block>? = null
-        override fun visit(node: StaticCallNode): Iterable<Block>? = null
+        override fun visit(node: TypeLevelCallNode): Iterable<Block>? = null
         override fun visit(node: FieldAccessNode): Iterable<Block>? = null
         override fun visit(node: FunctionExpressionNode): Iterable<Block>? = null
         override fun visit(node: IfNode): Iterable<Block>? = node.branchBodies

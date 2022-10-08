@@ -5,13 +5,11 @@ import org.junit.jupiter.api.Test
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.typeCheckModuleStatement
 import org.shedlang.compiler.types.IntMetaType
-import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
 
 class TypeCheckTypeAliasTests {
     @Test
     fun typeAliasDeclaresType() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val node = typeAliasDeclaration("Size", expression = intType)
 
         val typeContext = typeContext(referenceTypes = mapOf(

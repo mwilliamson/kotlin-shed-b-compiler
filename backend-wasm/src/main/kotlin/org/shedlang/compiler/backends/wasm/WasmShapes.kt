@@ -3,21 +3,18 @@ package org.shedlang.compiler.backends.wasm
 import org.shedlang.compiler.ModuleSet
 import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.freshNodeId
-import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmDataSegmentKey
-import org.shedlang.compiler.backends.wasm.wasm.WasmLocal
 import org.shedlang.compiler.backends.wasm.wasm.WasmParam
 import org.shedlang.compiler.stackir.Image
 import org.shedlang.compiler.stackir.defineShapeFieldGet
-import org.shedlang.compiler.stackir.defineShapeFieldUpdate
 import org.shedlang.compiler.types.*
 
 internal object WasmShapes {
     internal fun compileDefineShape(
         shapeType: ShapeType,
-        metaType: StaticValueType,
+        metaType: TypeLevelValueType,
         context: WasmFunctionContext
     ): WasmFunctionContext {
         val metaTypeLayout = WasmObjects.shapeTypeLayout(metaType)
@@ -33,7 +30,7 @@ internal object WasmShapes {
 
 private class WasmShapeCompiler(
     private val shapeType: ShapeType,
-    private val metaType: StaticValueType,
+    private val metaType: TypeLevelValueType,
     private val metaTypeLayout: WasmObjects.ShapeTypeLayout,
     private val metaTypePointer: WasmLocalRef,
 ) {

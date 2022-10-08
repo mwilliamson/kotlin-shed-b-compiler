@@ -9,7 +9,6 @@ import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.BoolType
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.metaType
 
 class TypeCheckIfTests {
@@ -70,7 +69,7 @@ class TypeCheckIfTests {
         val referenceInFalseBranch = variableReference("x")
 
         val tag = tag(listOf("Example"), "Union")
-        val member1Reference = staticReference("Member1")
+        val member1Reference = typeLevelReference("Member1")
         val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
         val union = unionType("Union", tag = tag, members = listOf(member1, member2))

@@ -17,7 +17,7 @@ class TypeCheckHandleTests {
         val tag = tag(listOf("Example"), "X")
         val member1 = shapeType(name = "Member1", tagValue = tagValue(tag, "Member1"))
         val member2 = shapeType(name = "Member2", tagValue = tagValue(tag, "Member2"))
-        val effectReference = staticReference("Try")
+        val effectReference = typeLevelReference("Try")
         val functionReference = variableReference("f")
         val member2Reference = variableReference("member2")
         val effect = userDefinedEffect(name = Identifier("Try"),
@@ -73,7 +73,7 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenHandleContextAllowsEffectThenHandlersCanUseEffect() {
-        val effectReference = staticReference("Try")
+        val effectReference = typeLevelReference("Try")
         val functionReference = variableReference("f")
         val effect = userDefinedEffect(name = Identifier("Try"),
             getOperations = { effect ->
@@ -109,7 +109,7 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenEffectIsNotUserDefinedEffectThenErrorIsThrown() {
-        val effectReference = staticReference("Io")
+        val effectReference = typeLevelReference("Io")
 
         val expression = handle(
             effect = effectReference,
@@ -127,8 +127,8 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenHandlerThatExitsHasWrongTypeThenErrorIsThrown() {
-        val booleanReference = staticReference("Bool")
-        val effectReference = staticReference("Try")
+        val booleanReference = typeLevelReference("Bool")
+        val effectReference = typeLevelReference("Try")
         val effect = userDefinedEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
@@ -172,8 +172,8 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenHandlerThatResumesHasWrongTypeThenErrorIsThrown() {
-        val booleanReference = staticReference("Bool")
-        val effectReference = staticReference("Get")
+        val booleanReference = typeLevelReference("Bool")
+        val effectReference = typeLevelReference("Get")
         val effect = userDefinedEffect(
             name = Identifier("Get"),
             getOperations = { effect ->
@@ -215,7 +215,7 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenOperationTypeHasWrongEffectThenErrorIsThrown() {
-        val effectReference = staticReference("Try")
+        val effectReference = typeLevelReference("Try")
         val effect = userDefinedEffect(name = Identifier("Try"),
             getOperations = { _ ->
                 mapOf(
@@ -252,7 +252,7 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenHandlerForOperationIsMissingThenErrorIsThrown() {
-        val effectReference = staticReference("Try")
+        val effectReference = typeLevelReference("Try")
         val effect = userDefinedEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
@@ -279,7 +279,7 @@ class TypeCheckHandleTests {
 
     @Test
     fun whenHandlerForUnknownOperationIsPresentThenErrorIsThrown() {
-        val effectReference = staticReference("Try")
+        val effectReference = typeLevelReference("Try")
         val effect = userDefinedEffect(name = Identifier("Try"),
             getOperations = { effect ->
                 mapOf(
@@ -332,13 +332,13 @@ class TypeCheckHandleTests {
                 )
             }
         )
-        private val effectReference = staticReference("Get")
-        private val boolReference = staticReference("Bool")
-        private val stringReference = staticReference("String")
+        private val effectReference = typeLevelReference("Get")
+        private val boolReference = typeLevelReference("Bool")
+        private val stringReference = typeLevelReference("String")
 
         @Test
         fun whenHandleHasNoStateThenResumeWithNewStateThrowsError() {
-            val stringReference = staticReference("String")
+            val stringReference = typeLevelReference("String")
 
             val expression = handle(
                 effect = effectReference,

@@ -9,12 +9,12 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.types.*
 
-class StaticValueTypeTests {
+class TypeLevelValueTypeTests {
     @Test
     fun shortDescriptionContainsType() {
         val type = metaType(IntType)
 
-        assertThat(type.shortDescription, equalTo("StaticValue[Int]"))
+        assertThat(type.shortDescription, equalTo("TypeLevelValue[Int]"))
     }
 
     @Test

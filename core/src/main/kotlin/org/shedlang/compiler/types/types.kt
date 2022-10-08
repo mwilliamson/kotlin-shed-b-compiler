@@ -18,12 +18,12 @@ object MetaTypeGroup: TypeGroup {
         get() = "meta-type"
 }
 
-object StaticValueTypeGroup: TypeGroup {
+object TypeLevelValueTypeGroup: TypeGroup {
     override val shortDescription: String
-        get() = "static value"
+        get() = "type-level value"
 }
 
-interface Type: StaticValue, TypeGroup {
+interface Type: TypeLevelValue, TypeGroup {
     val shapeId: Int?
 
     /**
@@ -41,9 +41,9 @@ interface Type: StaticValue, TypeGroup {
         }
     }
 
-    fun replaceValues(bindings: StaticBindings): Type
+    fun replaceValues(bindings: TypeLevelBindings): Type
 
-    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -54,7 +54,7 @@ interface Type: StaticValue, TypeGroup {
         fun visit(type: FunctionType): T
         fun visit(type: ModuleType): T
         fun visit(type: ShapeType): T
-        fun visit(type: StaticValueType): T
+        fun visit(type: TypeLevelValueType): T
         fun visit(type: TupleType): T
         fun visit(type: TypeAlias): T
         fun visit(type: TypeParameter): T
@@ -70,7 +70,7 @@ interface BasicType : Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         return this
     }
 
@@ -127,12 +127,12 @@ object NothingType : BasicType {
 
 val NothingMetaType = metaType(NothingType)
 
-data class StaticValueType(val value: StaticValue): Type {
+data class TypeLevelValueType(val value: TypeLevelValue): Type {
     override val shapeId: Int?
         get() = null
 
     override val shortDescription: String
-        get() = "StaticValue[${value.shortDescription}]"
+        get() = "TypeLevelValue[${value.shortDescription}]"
 
     override val fields: Map<Identifier, Field>?
         get() {
@@ -169,8 +169,8 @@ data class StaticValueType(val value: StaticValue): Type {
             }
         }
 
-    override fun replaceValues(bindings: StaticBindings): Type {
-        return StaticValueType(replaceStaticValues(value, bindings))
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
+        return TypeLevelValueType(replaceTypeLevelValues(value, bindings))
     }
 
     override fun <T> accept(visitor: Type.Visitor<T>): T {
@@ -178,8 +178,8 @@ data class StaticValueType(val value: StaticValue): Type {
     }
 }
 
-fun effectType(effect: Effect) = StaticValueType(effect)
-fun metaType(type: Type) = StaticValueType(type)
+fun effectType(effect: Effect) = TypeLevelValueType(effect)
+fun metaType(type: Type) = TypeLevelValueType(type)
 
 private fun shapeFieldsInfoType(type: ShapeType): Type {
     val shapeId = freshTypeId()
@@ -194,8 +194,8 @@ private fun shapeFieldsInfoType(type: ShapeType): Type {
         shapeId = shapeId,
         name = Identifier("Fields"),
         tagValue = null,
-        staticParameters = listOf(),
-        staticArguments = listOf(),
+        typeLevelParameters = listOf(),
+        typeLevelArguments = listOf(),
         getFields = lazy {
             fields
         },
@@ -232,14 +232,14 @@ val shapeFieldTypeFunctionFields = listOf(
         ),
     ),
 )
-val ShapeFieldTypeFunction = ParameterizedStaticValue(
+val ShapeFieldTypeFunction = ParameterizedTypeLevelValue(
     parameters = shapeFieldTypeFunctionParameters,
     value = lazyShapeType(
         shapeId = shapeFieldTypeFunctionShapeId,
         name = Identifier("ShapeField"),
         tagValue = null,
-        staticParameters = shapeFieldTypeFunctionParameters,
-        staticArguments = shapeFieldTypeFunctionParameters,
+        typeLevelParameters = shapeFieldTypeFunctionParameters,
+        typeLevelArguments = shapeFieldTypeFunctionParameters,
         getFields = lazy {
             shapeFieldTypeFunctionFields
         },
@@ -247,23 +247,23 @@ val ShapeFieldTypeFunction = ParameterizedStaticValue(
 )
 
 private fun shapeFieldInfoType(shapeType: ShapeType, field: Field): Type {
-    return applyStatic(
+    return applyTypeLevel(
         ShapeFieldTypeFunction,
         listOf(shapeType, field.type),
     ) as Type
 }
 
 fun metaTypeToType(type: Type): Type? {
-    if (type is StaticValueType) {
+    if (type is TypeLevelValueType) {
         return type.value as? Type
     } else {
         return null
     }
 }
 
-fun rawValue(value: StaticValue): StaticValue {
+fun rawValue(value: TypeLevelValue): TypeLevelValue {
     return when (value) {
-        is ParameterizedStaticValue -> value.value
+        is ParameterizedTypeLevelValue -> value.value
         else -> value
     }
 }
@@ -273,11 +273,11 @@ fun freshEffectParameterId() = nextEffectParameterId++
 
 fun freshTypeId() = freshNodeId()
 
-interface StaticParameter: StaticValue {
+interface TypeLevelParameter: TypeLevelValue {
     val name: Identifier
     val source: Source
 
-    fun fresh(): StaticParameter
+    fun fresh(): TypeLevelParameter
 
     fun <T> accept(visitor: Visitor<T>): T
 
@@ -293,7 +293,7 @@ data class TypeParameter(
     override val shapeId: Int?,
     val typeParameterId: Int = freshTypeId(),
     override val source: Source,
-): StaticParameter, Type {
+): TypeLevelParameter, Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
@@ -308,11 +308,11 @@ data class TypeParameter(
             return prefix + name.value
         }
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         return bindings.getOrElse(this, { this }) as Type
     }
 
-    override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelParameter.Visitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -332,13 +332,13 @@ data class TypeParameter(
 
 data class EffectParameter(
     override val name: Identifier,
-    val staticParameterId: Int = freshEffectParameterId(),
+    val typeLevelParameterId: Int = freshEffectParameterId(),
     override val source: Source,
-): StaticParameter, Effect {
+): TypeLevelParameter, Effect {
     override val shortDescription: String
         get() = name.value
 
-    override fun <T> accept(visitor: StaticParameter.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelParameter.Visitor<T>): T {
         return visitor.visit(this)
     }
 
@@ -356,24 +356,24 @@ enum class Variance {
     CONTRAVARIANT
 }
 
-data class ParameterizedStaticValue(
-    val parameters: List<StaticParameter>,
-    val value: StaticValue
-): StaticValue {
+data class ParameterizedTypeLevelValue(
+    val parameters: List<TypeLevelParameter>,
+    val value: TypeLevelValue
+): TypeLevelValue {
     override val shortDescription: String
     // TODO: should be something like (T, U) => Shape[T, U]
         get() = "TypeFunction(TODO)"
 
-    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
 
-object CastableTypeFunction: StaticValue {
+object CastableTypeLevelFunction: TypeLevelValue {
     override val shortDescription: String
         get() = "Castable"
 
-    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -388,8 +388,8 @@ class CastableType(val type: Type): Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceValues(bindings: StaticBindings): Type {
-        return CastableType(replaceStaticValuesInType(type, bindings))
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
+        return CastableType(replaceTypeLevelValuesInType(type, bindings))
     }
 
     override fun <T> accept(visitor: Type.Visitor<T>): T {
@@ -399,11 +399,11 @@ class CastableType(val type: Type): Type {
 
 fun castableType(type: Type) = CastableType(type)
 
-object MetaTypeTypeFunction: StaticValue {
+object MetaTypeTypeLevelFunction: TypeLevelValue {
     override val shortDescription: String
         get() = "Type"
 
-    override fun <T> acceptStaticValueVisitor(visitor: StaticValue.Visitor<T>): T {
+    override fun <T> accept(visitor: TypeLevelValue.Visitor<T>): T {
         return visitor.visit(this)
     }
 }
@@ -415,7 +415,7 @@ data class ModuleType(
     override val shapeId: Int?
         get() = null
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         throw UnsupportedOperationException("not implemented")
     }
 
@@ -428,7 +428,7 @@ data class ModuleType(
 }
 
 data class FunctionType(
-    val staticParameters: List<StaticParameter>,
+    val typeLevelParameters: List<TypeLevelParameter>,
     val positionalParameters: List<Type>,
     val namedParameters: Map<Identifier, Type>,
     val returns: Type,
@@ -440,19 +440,19 @@ data class FunctionType(
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         return FunctionType(
-            positionalParameters = positionalParameters.map({ parameter -> replaceStaticValuesInType(parameter, bindings) }),
-            namedParameters = namedParameters.mapValues({ parameter -> replaceStaticValuesInType(parameter.value, bindings) }),
+            positionalParameters = positionalParameters.map({ parameter -> replaceTypeLevelValuesInType(parameter, bindings) }),
+            namedParameters = namedParameters.mapValues({ parameter -> replaceTypeLevelValuesInType(parameter.value, bindings) }),
             effect = replaceEffects(effect, bindings),
-            returns = replaceStaticValuesInType(returns, bindings),
-            staticParameters = staticParameters
+            returns = replaceTypeLevelValuesInType(returns, bindings),
+            typeLevelParameters = typeLevelParameters
         )
     }
 
     override val shortDescription: String
         get() {
-            val typeParameters = staticArgumentsString(staticParameters)
+            val typeParameters = typeLevelArgumentsString(typeLevelParameters)
 
             val positionalParameterStrings = positionalParameters
                 .map({ parameter -> parameter.shortDescription })
@@ -477,7 +477,7 @@ data class FunctionType(
     }
 }
 
-private fun staticArgumentsString(values: List<StaticValue>): String {
+private fun typeLevelArgumentsString(values: List<TypeLevelValue>): String {
     val typeParameters = if (values.isEmpty()) {
         ""
     } else {
@@ -499,10 +499,10 @@ data class TupleType(val elementTypes: List<Type>): Type {
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         return TupleType(
             elementTypes = elementTypes.map { elementType ->
-                replaceStaticValuesInType(elementType, bindings)
+                replaceTypeLevelValuesInType(elementType, bindings)
             }
         )
     }
@@ -522,7 +522,7 @@ interface TypeAlias: Type {
     override val fields: Map<Identifier, Field>?
         get() = aliasedType.fields
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         // TODO: test this
         return aliasedType.replaceValues(bindings)
     }
@@ -559,28 +559,28 @@ interface ShapeType: Type {
     override val shapeId: Int
     val tagValue: TagValue?
     override val fields: Map<Identifier, Field>
-    val staticParameters: List<StaticParameter>
-    val staticArguments: List<StaticValue>
+    val typeLevelParameters: List<TypeLevelParameter>
+    val typeLevelArguments: List<TypeLevelValue>
 
     override val shortDescription: String
         get() {
-            return if (staticArguments.isEmpty()) {
+            return if (typeLevelArguments.isEmpty()) {
                 name.value
             } else {
-                appliedTypeShortDescription(name, staticArguments)
+                appliedTypeShortDescription(name, typeLevelArguments)
             }
         }
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         return LazyShapeType(
             name = name,
             getAllFields = lazy {
-                fields.mapValues { field -> replaceStaticValuesInField(field.value, bindings) }
+                fields.mapValues { field -> replaceTypeLevelValuesInField(field.value, bindings) }
             },
             tagValue = tagValue,
             shapeId = shapeId,
-            staticParameters = staticParameters,
-            staticArguments = staticArguments.map { argument -> replaceStaticValues(argument, bindings) }
+            typeLevelParameters = typeLevelParameters,
+            typeLevelArguments = typeLevelArguments.map { argument -> replaceTypeLevelValues(argument, bindings) }
         )
     }
 
@@ -606,8 +606,8 @@ fun lazyShapeType(
     name: Identifier,
     tagValue: TagValue?,
     getFields: Lazy<List<Field>>,
-    staticParameters: List<StaticParameter>,
-    staticArguments: List<StaticValue>
+    typeLevelParameters: List<TypeLevelParameter>,
+    typeLevelArguments: List<TypeLevelValue>
 ) = LazyShapeType(
     shapeId = shapeId,
     name = name,
@@ -615,8 +615,8 @@ fun lazyShapeType(
         getFields.value.associateBy { field -> field.name }
     },
     tagValue = tagValue,
-    staticParameters = staticParameters,
-    staticArguments = staticArguments
+    typeLevelParameters = typeLevelParameters,
+    typeLevelArguments = typeLevelArguments
 )
 
 class LazyShapeType(
@@ -624,8 +624,8 @@ class LazyShapeType(
     getAllFields: Lazy<Map<Identifier, Field>>,
     override val shapeId: Int = freshTypeId(),
     override val tagValue: TagValue?,
-    override val staticParameters: List<StaticParameter>,
-    override val staticArguments: List<StaticValue>
+    override val typeLevelParameters: List<TypeLevelParameter>,
+    override val typeLevelArguments: List<TypeLevelValue>
 ): ShapeType {
     override val fields: Map<Identifier, Field> by getAllFields
 }
@@ -634,16 +634,16 @@ interface UnionType: Type {
     val name: Identifier
     val tag: Tag
     val members: List<Type>
-    val staticArguments: List<StaticValue>
+    val typeLevelArguments: List<TypeLevelValue>
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         return LazyUnionType(
             tag,
             name,
             lazy {
-                members.map { memberType -> replaceStaticValuesInType(memberType, bindings) as ShapeType }
+                members.map { memberType -> replaceTypeLevelValuesInType(memberType, bindings) as ShapeType }
             },
-            staticArguments = staticArguments.map { argument -> replaceStaticValues(argument, bindings) }
+            typeLevelArguments = typeLevelArguments.map { argument -> replaceTypeLevelValues(argument, bindings) }
         )
     }
 
@@ -664,7 +664,7 @@ data class AnonymousUnionType(
     override val name: Identifier = Identifier("_Union" + freshTypeId()),
     override val members: List<Type>
 ): UnionType {
-    override val staticArguments: List<StaticValue>
+    override val typeLevelArguments: List<TypeLevelValue>
         get() = listOf()
 
     override val shortDescription: String
@@ -725,26 +725,26 @@ data class LazyUnionType(
     override val tag: Tag,
     override val name: Identifier,
     private val getMembers: Lazy<List<Type>>,
-    override val staticArguments: List<StaticValue>
+    override val typeLevelArguments: List<TypeLevelValue>
 ): UnionType {
     override val shortDescription: String
-        get() = if (staticArguments.isEmpty()) {
+        get() = if (typeLevelArguments.isEmpty()) {
             name.value
         } else {
-            appliedTypeShortDescription(name, staticArguments)
+            appliedTypeShortDescription(name, typeLevelArguments)
         }
 
     override val members: List<Type> by getMembers
 }
 
 fun functionType(
-    staticParameters: List<StaticParameter> = listOf(),
+    typeLevelParameters: List<TypeLevelParameter> = listOf(),
     positionalParameters: List<Type> = listOf(),
     namedParameters: Map<Identifier, Type> = mapOf(),
     returns: Type = UnitType,
     effect: Effect = EmptyEffect
 ) = FunctionType(
-    staticParameters = staticParameters,
+    typeLevelParameters = typeLevelParameters,
     positionalParameters = positionalParameters,
     namedParameters = namedParameters,
     returns = returns,
@@ -764,7 +764,7 @@ data class VarargsType(val name: Identifier, val cons: FunctionType, val nil: Ty
     override val fields: Map<Identifier, Field>?
         get() = null
 
-    override fun replaceValues(bindings: StaticBindings): Type {
+    override fun replaceValues(bindings: TypeLevelBindings): Type {
         throw UnsupportedOperationException("not implemented")
     }
 
@@ -796,7 +796,7 @@ fun contravariantTypeParameter(name: String, source: Source = NullSource) = Type
 
 fun effectParameter(name: String, source: Source = NullSource) = EffectParameter(Identifier(name), source = source)
 
-private fun appliedTypeShortDescription(name: Identifier, parameters: List<StaticValue>): String {
+private fun appliedTypeShortDescription(name: Identifier, parameters: List<TypeLevelValue>): String {
     val parametersString = parameters.joinToString(separator = ", ", transform = { type -> type.shortDescription })
     return name.value + "[" + parametersString + "]"
 }
@@ -807,25 +807,25 @@ data class ValidateTypeResult(val errors: List<String>) {
     }
 }
 
-fun validateStaticValue(value: StaticValue): ValidateTypeResult {
-    return value.acceptStaticValueVisitor(object : StaticValue.Visitor<ValidateTypeResult> {
+fun validateTypeLevelValue(value: TypeLevelValue): ValidateTypeResult {
+    return value.accept(object : TypeLevelValue.Visitor<ValidateTypeResult> {
         override fun visit(effect: Effect): ValidateTypeResult {
             return ValidateTypeResult.success
         }
 
-        override fun visit(value: ParameterizedStaticValue): ValidateTypeResult {
-            return validateStaticValue(value.value)
+        override fun visit(value: ParameterizedTypeLevelValue): ValidateTypeResult {
+            return validateTypeLevelValue(value.value)
         }
 
         override fun visit(type: Type): ValidateTypeResult {
             return validateType(type)
         }
 
-        override fun visit(value: CastableTypeFunction): ValidateTypeResult {
+        override fun visit(value: CastableTypeLevelFunction): ValidateTypeResult {
             return ValidateTypeResult.success
         }
 
-        override fun visit(value: MetaTypeTypeFunction): ValidateTypeResult {
+        override fun visit(value: MetaTypeTypeLevelFunction): ValidateTypeResult {
             return ValidateTypeResult.success
         }
     })
@@ -867,7 +867,7 @@ fun validateType(type: Type): ValidateTypeResult {
             })
         }
 
-        override fun visit(type: StaticValueType): ValidateTypeResult {
+        override fun visit(type: TypeLevelValueType): ValidateTypeResult {
             throw UnsupportedOperationException("not implemented")
         }
 
@@ -894,11 +894,11 @@ fun validateType(type: Type): ValidateTypeResult {
     })
 }
 
-fun applyStatic(
-    receiver: ParameterizedStaticValue,
-    arguments: List<StaticValue>,
+fun applyTypeLevel(
+    receiver: ParameterizedTypeLevelValue,
+    arguments: List<TypeLevelValue>,
     source: Source = NullSource
-): StaticValue {
+): TypeLevelValue {
     if (receiver.parameters.size != arguments.size) {
         throw CompilerError(
             "parameter count (${receiver.parameters.size}) != argument count (${arguments.size})",
@@ -907,36 +907,36 @@ fun applyStatic(
     }
 
     val bindings = receiver.parameters.zip(arguments).toMap()
-    return replaceStaticValues(receiver.value, bindings = bindings)
+    return replaceTypeLevelValues(receiver.value, bindings = bindings)
 }
 
-typealias StaticBindings = Map<StaticParameter, StaticValue>
+typealias TypeLevelBindings = Map<TypeLevelParameter, TypeLevelValue>
 
-private fun replaceStaticValues(value: StaticValue, bindings: StaticBindings): StaticValue {
-    return value.acceptStaticValueVisitor(object : StaticValue.Visitor<StaticValue> {
-        override fun visit(effect: Effect): StaticValue {
+private fun replaceTypeLevelValues(value: TypeLevelValue, bindings: TypeLevelBindings): TypeLevelValue {
+    return value.accept(object : TypeLevelValue.Visitor<TypeLevelValue> {
+        override fun visit(effect: Effect): TypeLevelValue {
             return replaceEffects(effect, bindings)
         }
 
-        override fun visit(value: ParameterizedStaticValue): StaticValue {
+        override fun visit(value: ParameterizedTypeLevelValue): TypeLevelValue {
             throw UnsupportedOperationException("not implemented")
         }
 
-        override fun visit(type: Type): StaticValue {
-            return replaceStaticValuesInType(type, bindings)
+        override fun visit(type: Type): TypeLevelValue {
+            return replaceTypeLevelValuesInType(type, bindings)
         }
 
-        override fun visit(value: CastableTypeFunction): StaticValue {
+        override fun visit(value: CastableTypeLevelFunction): TypeLevelValue {
             return value
         }
 
-        override fun visit(value: MetaTypeTypeFunction): StaticValue {
+        override fun visit(value: MetaTypeTypeLevelFunction): TypeLevelValue {
             return value
         }
     })
 }
 
-fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
+fun replaceTypeLevelValuesInType(type: Type, bindings: TypeLevelBindings): Type {
     if (bindings.isEmpty()) {
         return type
     } else {
@@ -944,13 +944,13 @@ fun replaceStaticValuesInType(type: Type, bindings: StaticBindings): Type {
     }
 }
 
-private fun replaceStaticValuesInField(field: Field, bindings: StaticBindings) =
+private fun replaceTypeLevelValuesInField(field: Field, bindings: TypeLevelBindings) =
     field.mapType { type ->
-        replaceStaticValuesInType(type, bindings)
+        replaceTypeLevelValuesInType(type, bindings)
     }
 
 
-fun replaceEffects(effect: Effect, bindings: StaticBindings): Effect {
+fun replaceEffects(effect: Effect, bindings: TypeLevelBindings): Effect {
     when (effect) {
         is EffectParameter ->
             // TODO: handle non-effect bindings
@@ -969,7 +969,7 @@ data class Discriminator(
     val targetType: Type
 )
 
-fun findDiscriminator(sourceType: Type, targetType: StaticValue): Discriminator? {
+fun findDiscriminator(sourceType: Type, targetType: TypeLevelValue): Discriminator? {
     // TODO: handle generics
 
     if (sourceType !is UnionType) {
@@ -988,7 +988,7 @@ fun findDiscriminator(sourceType: Type, targetType: StaticValue): Discriminator?
         if (!canCoerce(from = refinedType, to = targetType)) {
             return null
         }
-    } else if (targetType is ParameterizedStaticValue) {
+    } else if (targetType is ParameterizedTypeLevelValue) {
         val targetTypeValue = targetType.value
         if (targetTypeValue !is Type || !canCoerce(from = refinedType, to = targetTypeValue, freeParameters = targetType.parameters.toSet())) {
             return null

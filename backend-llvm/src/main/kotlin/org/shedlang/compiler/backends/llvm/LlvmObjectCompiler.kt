@@ -8,7 +8,7 @@ internal class LlvmObjectCompiler(
     private val libc: LibcCallCompiler
 ) {
     internal fun createObject(
-        objectType: StaticValue,
+        objectType: TypeLevelValue,
         fields: List<Pair<Identifier, LlvmOperand>>,
         target: LlvmOperandLocal
     ): List<LlvmInstruction> {
@@ -40,7 +40,7 @@ internal class LlvmObjectCompiler(
 
     internal fun storeObject(
         fields: List<Pair<Identifier, LlvmOperand>>,
-        objectType: StaticValue,
+        objectType: TypeLevelValue,
         objectPointer: LlvmOperand
     ): List<LlvmInstruction> {
         val compiledObjectType = compiledType(objectType = objectType)
@@ -88,7 +88,7 @@ internal class LlvmObjectCompiler(
 
 
     internal fun updateObject(
-        objectType: StaticValue,
+        objectType: TypeLevelValue,
         existingObjectOperand: LlvmOperand,
         updatedFieldName: Identifier,
         updatedFieldValue: LlvmOperand,
@@ -146,7 +146,7 @@ internal class LlvmObjectCompiler(
         ).flatten()
     }
 
-    internal fun castToObjectPointer(target: LlvmOperandLocal, objectType: StaticValue, value: LlvmOperand): LlvmIntToPtr {
+    internal fun castToObjectPointer(target: LlvmOperandLocal, objectType: TypeLevelValue, value: LlvmOperand): LlvmIntToPtr {
         return LlvmIntToPtr(
             target = target,
             sourceType = compiledValueType,
@@ -155,7 +155,7 @@ internal class LlvmObjectCompiler(
         )
     }
 
-    internal fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: StaticValue, target: LlvmVariable): List<LlvmInstruction> {
+    internal fun fieldAccess(receiver: LlvmOperand, fieldName: Identifier, receiverType: TypeLevelValue, target: LlvmVariable): List<LlvmInstruction> {
         val fieldPointerVariable = irBuilder.generateLocal("fieldPointer")
 
         return listOf(
@@ -173,7 +173,7 @@ internal class LlvmObjectCompiler(
         )
     }
 
-    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, receiverType: StaticValue, fieldName: Identifier): LlvmGetElementPtr {
+    private fun fieldPointer(target: LlvmOperandLocal, receiver: LlvmOperand, receiverType: TypeLevelValue, fieldName: Identifier): LlvmGetElementPtr {
         val compiledObjectType = compiledType(objectType = receiverType)
         return LlvmGetElementPtr(
             target = target,

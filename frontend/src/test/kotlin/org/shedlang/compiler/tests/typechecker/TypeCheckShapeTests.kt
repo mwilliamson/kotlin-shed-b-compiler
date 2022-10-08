@@ -11,8 +11,8 @@ import org.shedlang.compiler.types.*
 class TypeCheckShapeTests {
     @Test
     fun shapeDeclaresType() {
-        val intType = staticReference("Int")
-        val boolType = staticReference("Bool")
+        val intType = typeLevelReference("Int")
+        val boolType = typeLevelReference("Bool")
         val node = shape("X", fields = listOf(
             shapeField("a", intType),
             shapeField("b", boolType)
@@ -36,7 +36,7 @@ class TypeCheckShapeTests {
 
     @Test
     fun whenShapeDeclaresMultipleFieldsWithSameNameThenExceptionIsThrown() {
-        val intType = staticReference("Int")
+        val intType = typeLevelReference("Int")
         val node = shape("X", fields = listOf(
             shapeField("a", intType),
             shapeField("a", intType)
@@ -56,9 +56,9 @@ class TypeCheckShapeTests {
 
     @Test
     fun shapeIncludesFieldsFromExtendedShapes() {
-        val intType = staticReference("Int")
-        val extendsShape1Reference = staticReference("Extends1")
-        val extendsShape2Reference = staticReference("Extends2")
+        val intType = typeLevelReference("Int")
+        val extendsShape1Reference = typeLevelReference("Extends1")
+        val extendsShape2Reference = typeLevelReference("Extends2")
 
         val shape1Id = freshTypeId()
         val shape1 = shapeType(
@@ -165,8 +165,8 @@ class TypeCheckShapeTests {
     }
 
     private fun mergeFields(first: Field, second: Field): Field {
-        val extendsShape1Reference = staticReference("Extends1")
-        val extendsShape2Reference = staticReference("Extends2")
+        val extendsShape1Reference = typeLevelReference("Extends1")
+        val extendsShape2Reference = typeLevelReference("Extends2")
 
         val shape1 = shapeType(name = "Extends1", fields = listOf(first))
         val shape2 = shapeType(name = "Extends2", fields = listOf(second))
@@ -195,11 +195,11 @@ class TypeCheckShapeTests {
     @Test
     fun shapeCannotOverrideFieldWithDifferentShape() {
         val shapeId = freshTypeId()
-        val stringTypeReference = staticReference("String")
+        val stringTypeReference = typeLevelReference("String")
 
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
 
-        val extendsShapeReference = staticReference("Extends")
+        val extendsShapeReference = typeLevelReference("Extends")
         val shape = shapeType(fields = listOf(firstField))
         val node = shape(
             extends = listOf(extendsShapeReference),
@@ -223,13 +223,13 @@ class TypeCheckShapeTests {
     @Test
     fun shapeCanOverrideFieldWithSubtypeUsingSameShape() {
         val shapeId = freshTypeId()
-        val baseReference = staticReference("Base")
+        val baseReference = typeLevelReference("Base")
         val base = shapeType(shapeId = shapeId)
-        val stringTypeReference = staticReference("String")
+        val stringTypeReference = typeLevelReference("String")
 
         val firstField = field(name = "a", type = AnyType, shapeId = shapeId)
 
-        val extendsShapeReference = staticReference("Extends")
+        val extendsShapeReference = typeLevelReference("Extends")
         val shape = shapeType(fields = listOf(firstField))
         val node = shape(
             extends = listOf(extendsShapeReference),
@@ -254,13 +254,13 @@ class TypeCheckShapeTests {
     @Test
     fun shapeCannotOverrideFieldWithSuperType() {
         val shapeId = freshTypeId()
-        val baseReference = staticReference("Base")
+        val baseReference = typeLevelReference("Base")
         val base = shapeType(shapeId = shapeId)
-        val anyTypeReference = staticReference("Any")
+        val anyTypeReference = typeLevelReference("Any")
 
         val firstField = field(name = "a", type = StringType, shapeId = shapeId)
 
-        val extendsShapeReference = staticReference("Extends")
+        val extendsShapeReference = typeLevelReference("Extends")
         val shape = shapeType(name = "Extends", fields = listOf(firstField))
         val node = shape(
             extends = listOf(extendsShapeReference),
@@ -288,10 +288,10 @@ class TypeCheckShapeTests {
     @Test
     fun shapeWithTypeParametersDeclaresTypeFunction() {
         val typeParameterDeclaration = typeParameter("T")
-        val typeParameterReference = staticReference("T")
+        val typeParameterReference = typeLevelReference("T")
         val node = shape(
             "X",
-            staticParameters = listOf(typeParameterDeclaration),
+            typeLevelParameters = listOf(typeParameterDeclaration),
             fields = listOf(
                 shapeField("a", typeParameterReference)
             )
@@ -301,7 +301,7 @@ class TypeCheckShapeTests {
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
+        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isParameterizedTypeLevelValue(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isInvariant)),
             value = isShapeType(
                 name = isIdentifier("X"),
@@ -315,17 +315,17 @@ class TypeCheckShapeTests {
     @Test
     fun typeParameterHasParsedVariance() {
         val typeParameterDeclaration = typeParameter("T", variance = Variance.COVARIANT)
-        val typeParameterReference = staticReference("T")
+        val typeParameterReference = typeLevelReference("T")
         val node = shape(
             "X",
-            staticParameters = listOf(typeParameterDeclaration)
+            typeLevelParameters = listOf(typeParameterDeclaration)
         )
 
         val typeContext = typeContext(
             references = mapOf(typeParameterReference to typeParameterDeclaration)
         )
         typeCheckModuleStatement(node, typeContext)
-        assertThat(typeContext.typeOf(node), isStaticValueType(isParameterizedStaticValue(
+        assertThat(typeContext.typeOf(node), isTypeLevelValueType(isParameterizedTypeLevelValue(
             parameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = isCovariant))
         )))
     }
@@ -333,11 +333,11 @@ class TypeCheckShapeTests {
     @Test
     fun typeOfShapeIsValidated() {
         val typeParameterDeclaration = typeParameter("T", variance = Variance.CONTRAVARIANT)
-        val typeParameterReference = staticReference("T")
-        val unitReference = staticReference("Unit")
+        val typeParameterReference = typeLevelReference("T")
+        val unitReference = typeLevelReference("Unit")
         val node = shape(
             "Box",
-            staticParameters = listOf(typeParameterDeclaration),
+            typeLevelParameters = listOf(typeParameterDeclaration),
             fields = listOf(
                 shapeField(type = typeParameterReference)
             )

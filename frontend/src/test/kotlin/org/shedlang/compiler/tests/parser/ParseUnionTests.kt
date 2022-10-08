@@ -16,7 +16,7 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = isIdentifier("X"),
-            staticParameters = isSequence(),
+            typeLevelParameters = isSequence(),
             members = isSequence(
                 isUnionMember(name = isIdentifier("Y")),
                 isUnionMember(name = isIdentifier("Z"))
@@ -32,7 +32,7 @@ class ParseUnionTests {
             members = isSequence(
                 isUnionMember(
                     name = isIdentifier("Y"),
-                    staticParameters = isSequence(),
+                    typeLevelParameters = isSequence(),
                     extends = isSequence(),
                     fields = isSequence()
                 )
@@ -48,7 +48,7 @@ class ParseUnionTests {
             members = isSequence(
                 isUnionMember(
                     fields = isSequence(
-                        isShapeField(name = isIdentifier("z"), type = present(isStaticReference("Int")))
+                        isShapeField(name = isIdentifier("z"), type = present(isTypeLevelReference("Int")))
                     )
                 )
             )
@@ -61,12 +61,12 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = isIdentifier("X"),
-            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+            typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
             members = isSequence(
                 isUnionMember(
-                    staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+                    typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
                     fields = isSequence(
-                        isShapeField(name = isIdentifier("y"), type = present(isStaticReference("T")))
+                        isShapeField(name = isIdentifier("y"), type = present(isTypeLevelReference("T")))
                     )
                 )
             )
@@ -78,10 +78,10 @@ class ParseUnionTests {
         val source = "union X[+T] = Y[T] { y: T };"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT))),
+            typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT))),
             members = isSequence(
                 isUnionMember(
-                    staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT)))
+                    typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"), variance = equalTo(Variance.COVARIANT)))
                 )
             )
         ))
@@ -93,7 +93,7 @@ class ParseUnionTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
             name = isIdentifier("X"),
-            staticParameters = isSequence(
+            typeLevelParameters = isSequence(
                 isTypeParameter(name = isIdentifier("T")),
                 isTypeParameter(name = isIdentifier("U"))
             ),
@@ -111,7 +111,7 @@ class ParseUnionTests {
         assertThat(node, isUnion(
             members = isSequence(
                 isUnionMember(
-                    staticParameters = isSequence(isTypeParameter(name = isIdentifier("T3"), variance = equalTo(Variance.CONTRAVARIANT)))
+                    typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T3"), variance = equalTo(Variance.CONTRAVARIANT)))
                 )
             )
         ))
@@ -131,7 +131,7 @@ class ParseUnionTests {
         val source = "union X <: Base = Y | Z;"
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isUnion(
-            superType = present(isStaticReference(name = "Base"))
+            superType = present(isTypeLevelReference(name = "Base"))
         ))
     }
 }

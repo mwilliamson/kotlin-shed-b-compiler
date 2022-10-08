@@ -18,10 +18,10 @@ class TypeApplicationTests {
             fields = listOf()
         )
         assertThat(
-            applyStatic(shape, listOf(BoolType, IntType)),
+            applyTypeLevel(shape, listOf(BoolType, IntType)),
             isShapeType(
                 name = isIdentifier("Pair"),
-                staticArguments = isSequence(isBoolType, isIntType)
+                typeLevelArguments = isSequence(isBoolType, isIntType)
             )
         )
     }
@@ -39,7 +39,7 @@ class TypeApplicationTests {
             )
         )
         assertThat(
-            applyStatic(shape, listOf(BoolType, IntType)),
+            applyTypeLevel(shape, listOf(BoolType, IntType)),
             isShapeType(fields = isSequence(
                 isField(name = isIdentifier("first"), type = isBoolType),
                 isField(name = isIdentifier("second"), type = isIntType)
@@ -60,13 +60,13 @@ class TypeApplicationTests {
         val shapeType = parametrizedShapeType(
             "Shape",
             parameters = listOf(shapeTypeParameter),
-            fields = listOf(field("value", applyStatic(innerShapeType, listOf(shapeTypeParameter)) as Type))
+            fields = listOf(field("value", applyTypeLevel(innerShapeType, listOf(shapeTypeParameter)) as Type))
         )
 
         assertThat(
-            applyStatic(shapeType, listOf(BoolType)),
+            applyTypeLevel(shapeType, listOf(BoolType)),
             isShapeType(fields = isSequence(
-                isField(name = isIdentifier("value"), type = isEquivalentType(applyStatic(innerShapeType, listOf(BoolType)) as Type))
+                isField(name = isIdentifier("value"), type = isEquivalentType(applyTypeLevel(innerShapeType, listOf(BoolType)) as Type))
             ))
         )
     }
@@ -81,10 +81,10 @@ class TypeApplicationTests {
             members = listOf()
         )
         assertThat(
-            applyStatic(union, listOf(BoolType, IntType)),
+            applyTypeLevel(union, listOf(BoolType, IntType)),
             isUnionType(
                 name = isIdentifier("Either"),
-                staticArguments = isSequence(isBoolType, isIntType)
+                typeLevelArguments = isSequence(isBoolType, isIntType)
             )
         )
     }
@@ -102,13 +102,13 @@ class TypeApplicationTests {
         val union = parametrizedUnionType(
             "Union",
             parameters = listOf(unionTypeParameter),
-            members = listOf(applyStatic(shapeType, listOf(unionTypeParameter)) as ShapeType)
+            members = listOf(applyTypeLevel(shapeType, listOf(unionTypeParameter)) as ShapeType)
         )
 
         assertThat(
-            applyStatic(union, listOf(BoolType)),
+            applyTypeLevel(union, listOf(BoolType)),
             isUnionType(members = isSequence(
-                isEquivalentType(applyStatic(shapeType, listOf(BoolType)) as Type)
+                isEquivalentType(applyTypeLevel(shapeType, listOf(BoolType)) as Type)
             ))
         )
     }
@@ -124,7 +124,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
+                replaceTypeLevelValuesInType(functionType, mapOf(typeParameter to IntType)),
                 isFunctionType(positionalParameters = isSequence(isIntType))
             )
         }
@@ -136,7 +136,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
+                replaceTypeLevelValuesInType(functionType, mapOf(typeParameter to IntType)),
                 isFunctionType(namedParameters = isMap(Identifier("x") to isIntType))
             )
         }
@@ -148,7 +148,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(functionType, mapOf(typeParameter to IntType)),
+                replaceTypeLevelValuesInType(functionType, mapOf(typeParameter to IntType)),
                 isFunctionType(returnType= isIntType)
             )
         }
@@ -165,7 +165,7 @@ class TypeApplicationTests {
             )
 
             assertThat(
-                replaceStaticValuesInType(tupleType, mapOf(typeParameter to IntType)),
+                replaceTypeLevelValuesInType(tupleType, mapOf(typeParameter to IntType)),
                 isTupleType(elementTypes = isSequence(isIntType))
             )
         }

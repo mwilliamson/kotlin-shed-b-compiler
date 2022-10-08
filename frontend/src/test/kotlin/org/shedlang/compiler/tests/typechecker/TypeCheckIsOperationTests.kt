@@ -8,14 +8,13 @@ import org.shedlang.compiler.typechecker.CouldNotFindDiscriminator
 import org.shedlang.compiler.typechecker.inferType
 import org.shedlang.compiler.typechecker.typeCheck
 import org.shedlang.compiler.types.IntType
-import org.shedlang.compiler.types.StaticValueType
 import org.shedlang.compiler.types.metaType
 
 class TypeCheckIsOperationTests {
     @Test
     fun expressionMustBeUnion() {
         val memberType = shapeType(name = "Member")
-        val memberReference = staticReference("Member")
+        val memberReference = typeLevelReference("Member")
 
         val expression = isOperation(expression = literalInt(1), type = memberReference)
         val typeContext = typeContext(referenceTypes = mapOf(memberReference to metaType(memberType)))
@@ -30,7 +29,7 @@ class TypeCheckIsOperationTests {
         val memberType = shapeType(name = "Member")
         val unionType = unionType(name = "Union", members = listOf(memberType))
 
-        val memberReference = staticReference("Member")
+        val memberReference = typeLevelReference("Member")
         val valueReference = variableReference("value")
         val expression = isOperation(expression = valueReference, type = memberReference)
         val typeContext = typeContext(
@@ -54,7 +53,7 @@ class TypeCheckIsOperationTests {
         val memberType = shapeType(name = "Member", tagValue = tagValue(tag, "B"))
         val unionType = unionType(name = "Union", tag = tag, members = listOf(memberType))
 
-        val memberReference = staticReference("Member")
+        val memberReference = typeLevelReference("Member")
         val valueReference = variableReference("value")
         val expression = isOperation(expression = valueReference, type = memberReference)
         val typeContext = typeContext(
@@ -74,7 +73,7 @@ class TypeCheckIsOperationTests {
         val memberType = shapeType(name = "Member", tagValue = tagValue)
         val unionType = unionType(name = "Union", tag = tag, members = listOf(memberType))
 
-        val memberReference = staticReference("Member")
+        val memberReference = typeLevelReference("Member")
         val valueReference = variableReference("value")
         val expression = isOperation(expression = valueReference, type = memberReference)
         val typeContext = typeContext(

@@ -12,7 +12,7 @@ class ParseTypeAliasTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isTypeAlias(
             name = isIdentifier("Size"),
-            expression = isStaticReference("Int")
+            expression = isTypeLevelReference("Int")
         ))
     }
 }

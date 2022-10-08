@@ -106,7 +106,7 @@ class TypeCheckPartialCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                staticParameters = listOf(typeParameter),
+                typeLevelParameters = listOf(typeParameter),
                 positionalParameters = listOf(typeParameter, typeParameter),
                 namedParameters = mapOf(Identifier("x") to typeParameter),
                 returns = typeParameter
@@ -115,7 +115,7 @@ class TypeCheckPartialCallTests {
         val type = inferType(node, typeContext)
 
         assertThat(type, isFunctionType(
-            staticParameters = isSequence(),
+            typeLevelParameters = isSequence(),
             positionalParameters = isSequence(isIntType),
             namedParameters = isMap(Identifier("x") to isIntType),
             returnType = isIntType
@@ -135,7 +135,7 @@ class TypeCheckPartialCallTests {
 
         val typeContext = typeContext(referenceTypes = mapOf(
             functionReference to functionType(
-                staticParameters = listOf(effectParameter),
+                typeLevelParameters = listOf(effectParameter),
                 positionalParameters = listOf(
                     functionType(effect = effectParameter),
                     functionType(effect = effectParameter)
@@ -148,7 +148,7 @@ class TypeCheckPartialCallTests {
         val type = inferType(node, typeContext)
 
         assertThat(type, isFunctionType(
-            staticParameters = isSequence(),
+            typeLevelParameters = isSequence(),
             positionalParameters = isSequence(
                 isFunctionType(effect = equalTo(IoEffect))
             ),

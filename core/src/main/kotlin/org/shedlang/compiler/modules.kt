@@ -42,9 +42,9 @@ sealed class Module {
 
 interface Types {
     fun typeOfExpression(node: ExpressionNode): Type
-    fun typeOfStaticExpression(node: StaticExpressionNode): Type
+    fun typeOfTypeLevelExpression(node: TypeLevelExpressionNode): Type
     fun typeOfTarget(target: TargetNode): Type
-    fun declaredType(node: TypeDeclarationNode): StaticValue
+    fun declaredType(node: TypeDeclarationNode): TypeLevelValue
     fun functionType(node: FunctionNode): FunctionType
     fun variableType(node: VariableBindingNode): Type
 
@@ -87,13 +87,13 @@ class TypesMap(
         return targetTypes[target.nodeId]!!
     }
 
-    override fun typeOfStaticExpression(node: StaticExpressionNode): Type {
+    override fun typeOfTypeLevelExpression(node: TypeLevelExpressionNode): Type {
         return expressionTypes[node.nodeId]!!
     }
 
-    override fun declaredType(node: TypeDeclarationNode): StaticValue {
+    override fun declaredType(node: TypeDeclarationNode): TypeLevelValue {
         val type = variableTypes[node.nodeId]
-        if (type is StaticValueType) {
+        if (type is TypeLevelValueType) {
             return type.value
         } else {
             throw CompilerError("could not find declared type", source = node.source)

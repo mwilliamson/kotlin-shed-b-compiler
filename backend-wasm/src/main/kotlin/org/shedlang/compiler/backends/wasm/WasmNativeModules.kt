@@ -5,7 +5,6 @@ import org.shedlang.compiler.ast.Identifier
 import org.shedlang.compiler.ast.ModuleName
 import org.shedlang.compiler.ast.NullSource
 import org.shedlang.compiler.backends.ShedRuntime
-import org.shedlang.compiler.backends.wasm.wasm.*
 import org.shedlang.compiler.backends.wasm.wasm.Wasm
 import org.shedlang.compiler.backends.wasm.wasm.WasmConstValue
 import org.shedlang.compiler.backends.wasm.wasm.WasmFuncType
@@ -32,7 +31,7 @@ internal object WasmNativeModules {
                         val parameterCount = when (fieldType) {
                             is FunctionType ->
                                 fieldType.positionalParameters.size + fieldType.namedParameters.size
-                            is StaticValueType ->
+                            is TypeLevelValueType ->
                                 when (fieldType.value) {
                                     is OpaqueEffect ->
                                         null

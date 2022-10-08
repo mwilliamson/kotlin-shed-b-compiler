@@ -13,7 +13,7 @@ fun canCoerce(from: Type, to: Type): Boolean {
     return coerce(from = from, to = to) is CoercionResult.Success
 }
 
-fun canCoerce(from: Type, to: Type, freeParameters: Set<StaticParameter>): Boolean {
+fun canCoerce(from: Type, to: Type, freeParameters: Set<TypeLevelParameter>): Boolean {
     return coerce(from = from, to = to, parameters = freeParameters) is CoercionResult.Success
 }
 
@@ -24,14 +24,14 @@ fun isEquivalentType(first: Type, second: Type): Boolean {
 fun coerce(
     from: Type,
     to: Type,
-    parameters: Set<StaticParameter> = setOf()
+    parameters: Set<TypeLevelParameter> = setOf()
 ): CoercionResult {
     return coerce(listOf(from to to), parameters = parameters)
 }
 
 fun coerce(
     constraints: List<Pair<Type, Type>>,
-    parameters: Set<StaticParameter> = setOf()
+    parameters: Set<TypeLevelParameter> = setOf()
 ): CoercionResult {
     val solver = TypeConstraintSolver(originalParameters = parameters)
     for ((from, to) in constraints) {
@@ -43,12 +43,12 @@ fun coerce(
 }
 
 sealed class CoercionResult {
-    class Success(val bindings: StaticBindings): CoercionResult()
+    class Success(val bindings: TypeLevelBindings): CoercionResult()
     object Failure: CoercionResult()
 }
 
 class TypeConstraintSolver(
-    originalParameters: Set<StaticParameter>
+    originalParameters: Set<TypeLevelParameter>
 ) {
     private sealed class TypeBound(val type: Type) {
         class Lower(type: Type): TypeBound(type = type)
@@ -62,7 +62,7 @@ class TypeConstraintSolver(
         }
     }
 
-    fun bindings(): StaticBindings {
+    fun bindings(): TypeLevelBindings {
         return typeBindings.mapValues { (_, binding) -> binding.type } + effectBindings
     }
 
@@ -70,7 +70,7 @@ class TypeConstraintSolver(
     private val effectBindings: MutableMap<EffectParameter, Effect> = mutableMapOf()
     // TODO: outside callers (such as inferPartialCallType indirectly) have no
     // way of checking for unbound parameters that aren't in originalParameters
-    private val parameters: MutableSet<StaticParameter> = originalParameters.toMutableSet()
+    private val parameters: MutableSet<TypeLevelParameter> = originalParameters.toMutableSet()
 
     fun boundTypeFor(parameter: TypeParameter): Type? {
         val boundType = typeBindings[parameter]
@@ -141,8 +141,8 @@ class TypeConstraintSolver(
             // TODO: Test replacement of static values
             val bindings = bindings()
             val discriminator = findDiscriminator(
-                sourceType = replaceStaticValuesInType(from, bindings),
-                targetType = replaceStaticValuesInType(to.type, bindings),
+                sourceType = replaceTypeLevelValuesInType(from, bindings),
+                targetType = replaceTypeLevelValuesInType(to.type, bindings),
             )
             return discriminator != null
         }
@@ -159,7 +159,7 @@ class TypeConstraintSolver(
         }
 
         if (from is FunctionType && to is FunctionType) {
-            if (from.staticParameters.isEmpty()) {
+            if (from.typeLevelParameters.isEmpty()) {
                 return (
                     from.positionalParameters.size == to.positionalParameters.size &&
                     from.positionalParameters.zip(to.positionalParameters, { fromArg, toArg -> coerce(from = toArg, to = fromArg) }).all() &&
@@ -169,11 +169,11 @@ class TypeConstraintSolver(
                     coerce(from = from.returns, to = to.returns)
                 )
             } else {
-                val staticArguments = from.staticParameters.map { parameter -> parameter.fresh() }
-                parameters.addAll(staticArguments)
-                val unparameterizedFrom = replaceStaticValuesInType(
-                    from.copy(staticParameters = listOf()),
-                    from.staticParameters.zip(staticArguments).toMap()
+                val typeLevelArguments = from.typeLevelParameters.map { parameter -> parameter.fresh() }
+                parameters.addAll(typeLevelArguments)
+                val unparameterizedFrom = replaceTypeLevelValuesInType(
+                    from.copy(typeLevelParameters = listOf()),
+                    from.typeLevelParameters.zip(typeLevelArguments).toMap()
                 )
                 return coerce(
                     from = unparameterizedFrom,
@@ -192,12 +192,12 @@ class TypeConstraintSolver(
         if (from is ShapeType && to is ShapeType) {
             val sameShapeId = from.shapeId == to.shapeId
 
-            val canCoerceStaticArguments = zip3(
-                from.staticParameters,
-                from.staticArguments,
-                to.staticArguments
+            val canCoerceTypeLevelArguments = zip3(
+                from.typeLevelParameters,
+                from.typeLevelArguments,
+                to.typeLevelArguments
             ) { parameter, fromArg, toArg ->
-                parameter.accept(object : StaticParameter.Visitor<Boolean> {
+                parameter.accept(object : TypeLevelParameter.Visitor<Boolean> {
                     override fun visit(parameter: TypeParameter): Boolean {
                         return fromArg is Type && toArg is Type && when (parameter.variance) {
                             Variance.INVARIANT -> isEquivalentType(fromArg, toArg)
@@ -216,10 +216,10 @@ class TypeConstraintSolver(
                 from.fields.keys.contains(toFieldName)
             }
 
-            return sameShapeId && canCoerceStaticArguments && canCoerceFields
+            return sameShapeId && canCoerceTypeLevelArguments && canCoerceFields
         }
 
-        if (from is StaticValueType && from.value is Type && to is StaticValueType && to.value is Type) {
+        if (from is TypeLevelValueType && from.value is Type && to is TypeLevelValueType && to.value is Type) {
             return isEquivalentType(from.value, to.value)
         }
 
@@ -229,12 +229,12 @@ class TypeConstraintSolver(
     private fun bindType(from: TypeParameter, to: TypeBound) {
         val existingTypeBindings = typeBindings.toMap()
 
-        val newTo = to.mapType { toType -> replaceStaticValuesInType(toType, bindings()) }
+        val newTo = to.mapType { toType -> replaceTypeLevelValuesInType(toType, bindings()) }
         typeBindings[from] = newTo
         for ((existingFrom, existingTo) in existingTypeBindings) {
             if (existingFrom != from) {
                 // Test newTo instead of to here
-                typeBindings[existingFrom] = existingTo.mapType { existingToType -> replaceStaticValuesInType(existingToType, mapOf(from to newTo.type)) }
+                typeBindings[existingFrom] = existingTo.mapType { existingToType -> replaceTypeLevelValuesInType(existingToType, mapOf(from to newTo.type)) }
             }
         }
     }

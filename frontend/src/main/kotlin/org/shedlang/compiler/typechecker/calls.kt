@@ -5,15 +5,15 @@ import org.shedlang.compiler.ast.*
 import org.shedlang.compiler.types.*
 
 internal fun inferCallType(node: CallNode, context: TypeContext): Type {
-    fun infer(node: CallNode, context: TypeContext): Pair<Type, StaticBindings> {
+    fun infer(node: CallNode, context: TypeContext): Pair<Type, TypeLevelBindings> {
         val receiver = node.receiver
-        val receiverType = if (receiver is PartialCallNode && node.staticArguments.isEmpty() && receiver.staticArguments.isEmpty()) {
+        val receiverType = if (receiver is PartialCallNode && node.typeLevelArguments.isEmpty() && receiver.typeLevelArguments.isEmpty()) {
             val (type, bindings) = infer(
                 CallNode(
                     receiver = receiver.receiver,
                     positionalArguments = receiver.positionalArguments + node.positionalArguments,
                     fieldArguments = receiver.fieldArguments + node.fieldArguments,
-                    staticArguments = listOf(),
+                    typeLevelArguments = listOf(),
                     hasEffect = node.hasEffect,
                     source = receiver.source,
                     operatorSource = receiver.operatorSource,
@@ -31,7 +31,7 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
             val argumentTypes = node.positionalArguments.map { argument -> inferType(argument, context) }
             throw UnexpectedTypeError(
                 expected = FunctionType(
-                    staticParameters = listOf(),
+                    typeLevelParameters = listOf(),
                     positionalParameters = argumentTypes,
                     namedParameters = mapOf(),
                     returns = AnyType,
@@ -49,7 +49,7 @@ internal fun inferCallType(node: CallNode, context: TypeContext): Type {
     return result.first
 }
 
-internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Pair<Type, StaticBindings>? {
+internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeContext): Pair<Type, TypeLevelBindings>? {
     val analysis = analyseCallReceiver(receiverType)
 
     return when (analysis) {
@@ -78,12 +78,12 @@ internal fun tryInferCallType(node: CallNode, receiverType: Type, context: TypeC
 private sealed class CallReceiverAnalysis {
     class Function(val receiverType: FunctionType): CallReceiverAnalysis()
     class Constructor(
-        val typeFunction: ParameterizedStaticValue?,
+        val typeFunction: ParameterizedTypeLevelValue?,
         val shapeType: ShapeType,
     ): CallReceiverAnalysis() {
         fun receiverType(): FunctionType {
             return functionType(
-                staticParameters = typeFunction?.parameters ?: listOf(),
+                typeLevelParameters = typeFunction?.parameters ?: listOf(),
                 positionalParameters = listOf(),
                 namedParameters = shapeType.fields
                     .mapValues { field -> field.value.type },
@@ -98,11 +98,11 @@ private sealed class CallReceiverAnalysis {
 private fun analyseCallReceiver(receiverType: Type): CallReceiverAnalysis {
     if (receiverType is FunctionType) {
         return CallReceiverAnalysis.Function(receiverType = receiverType)
-    } else if (receiverType is StaticValueType) {
+    } else if (receiverType is TypeLevelValueType) {
         val receiverInnerType = receiverType.value
         if (receiverInnerType is ShapeType) {
             return CallReceiverAnalysis.Constructor(typeFunction = null, shapeType = receiverInnerType)
-        } else if (receiverInnerType is ParameterizedStaticValue) {
+        } else if (receiverInnerType is ParameterizedTypeLevelValue) {
             val typeFunctionInnerType = receiverInnerType.value
             if (typeFunctionInnerType is ShapeType) {
                 return CallReceiverAnalysis.Constructor(typeFunction = receiverInnerType, shapeType = typeFunctionInnerType)
@@ -120,10 +120,10 @@ private fun inferNormalCallType(
     receiverType: FunctionType,
     splatType: ShapeType?,
     context: TypeContext,
-): Pair<Type, StaticBindings> {
+): Pair<Type, TypeLevelBindings> {
     val bindings = checkArguments(
         call = node,
-        staticParameters = receiverType.staticParameters,
+        typeLevelParameters = receiverType.typeLevelParameters,
         positionalParameters = receiverType.positionalParameters,
         namedParameters = receiverType.namedParameters,
         splatType = splatType,
@@ -146,11 +146,11 @@ private fun inferNormalCallType(
     }
 
     // TODO: handle unconstrained types
-    val returnType = replaceStaticValuesInType(receiverType.returns, bindings)
+    val returnType = replaceTypeLevelValuesInType(receiverType.returns, bindings)
     return Pair(returnType, bindings)
 }
 
-internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext, bindingsHint: StaticBindings? = null): Type {
+internal fun inferPartialCallType(node: PartialCallNode, context: TypeContext, bindingsHint: TypeLevelBindings? = null): Type {
     val receiverType = inferType(node.receiver, context)
 
     val analysis = analyseCallReceiver(receiverType)
@@ -178,11 +178,11 @@ private fun inferPartialNormalCallType(
     node: PartialCallNode,
     receiverType: FunctionType,
     context: TypeContext,
-    bindingsHint: StaticBindings? = null,
+    bindingsHint: TypeLevelBindings? = null,
 ): Type {
     val bindings = checkArguments(
         call = node,
-        staticParameters = receiverType.staticParameters,
+        typeLevelParameters = receiverType.typeLevelParameters,
         positionalParameters = receiverType.positionalParameters,
         namedParameters = receiverType.namedParameters,
         context = context,
@@ -190,8 +190,8 @@ private fun inferPartialNormalCallType(
         allowMissing = true
     )
 
-    for (staticParameter in receiverType.staticParameters) {
-        if (staticParameter !in bindings) {
+    for (typeLevelParameter in receiverType.typeLevelParameters) {
+        if (typeLevelParameter !in bindings) {
             // TODO: handle this more appropriately
             throw Exception("unbound type parameter")
         }
@@ -199,30 +199,30 @@ private fun inferPartialNormalCallType(
 
     val remainingPositionalParameters = receiverType.positionalParameters
         .drop(node.positionalArguments.size)
-        .map { parameter -> replaceStaticValuesInType(parameter, bindings) }
+        .map { parameter -> replaceTypeLevelValuesInType(parameter, bindings) }
     val remainingNamedParameters = receiverType.namedParameters
         // TODO: Handle splats
         .filterKeys { name -> !node.fieldArguments.any { argument -> (argument as FieldArgumentNode.Named).name == name } }
-        .mapValues { (name, parameter) -> replaceStaticValuesInType(parameter, bindings) }
+        .mapValues { (name, parameter) -> replaceTypeLevelValuesInType(parameter, bindings) }
     return FunctionType(
-        staticParameters = listOf(),
+        typeLevelParameters = listOf(),
         positionalParameters = remainingPositionalParameters,
         namedParameters = remainingNamedParameters,
-        returns = replaceStaticValuesInType(receiverType.returns, bindings),
+        returns = replaceTypeLevelValuesInType(receiverType.returns, bindings),
         effect = replaceEffects(receiverType.effect, bindings)
     )
 }
 
 private fun checkArguments(
     call: CallBaseNode,
-    staticParameters: List<StaticParameter>,
+    typeLevelParameters: List<TypeLevelParameter>,
     positionalParameters: List<Type>,
     namedParameters: Map<Identifier, Type>,
     context: TypeContext,
-    bindingsHint: StaticBindings? = null,
+    bindingsHint: TypeLevelBindings? = null,
     splatType: ShapeType? = null,
     allowMissing: Boolean
-): StaticBindings {
+): TypeLevelBindings {
     val positionalArgumentsWithTypes = call.positionalArguments.zip(positionalParameters)
     if ((!allowMissing && call.positionalArguments.size < positionalParameters.size) || call.positionalArguments.size > positionalParameters.size) {
         throw WrongNumberOfArgumentsError(
@@ -281,8 +281,8 @@ private fun checkArguments(
 
     val arguments = positionalArgumentsWithTypes + namedArgumentsWithTypes
     return checkArgumentTypes(
-        staticParameters = staticParameters,
-        staticArgumentNodes = call.staticArguments,
+        typeLevelParameters = typeLevelParameters,
+        typeLevelArgumentNodes = call.typeLevelArguments,
         arguments = arguments,
         source = call.operatorSource,
         bindingsHint = bindingsHint,
@@ -291,16 +291,16 @@ private fun checkArguments(
 }
 
 private fun checkArgumentTypes(
-    staticParameters: List<StaticParameter>,
-    staticArgumentNodes: List<StaticExpressionNode>,
+    typeLevelParameters: List<TypeLevelParameter>,
+    typeLevelArgumentNodes: List<TypeLevelExpressionNode>,
     arguments: List<Pair<ExpressionNode, Type>>,
     source: Source,
-    bindingsHint: StaticBindings?,
+    bindingsHint: TypeLevelBindings?,
     context: TypeContext
-): StaticBindings {
-    if (staticArgumentNodes.isEmpty() && bindingsHint == null) {
-        val typeParameters = staticParameters.filterIsInstance<TypeParameter>()
-        val effectParameters = staticParameters.filterIsInstance<EffectParameter>()
+): TypeLevelBindings {
+    if (typeLevelArgumentNodes.isEmpty() && bindingsHint == null) {
+        val typeParameters = typeLevelParameters.filterIsInstance<TypeParameter>()
+        val effectParameters = typeLevelParameters.filterIsInstance<EffectParameter>()
 
         val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
         val inferredEffectArguments = effectParameters.map(EffectParameter::fresh)
@@ -310,7 +310,7 @@ private fun checkArgumentTypes(
             originalParameters = (inferredTypeArguments + inferredEffectArguments).toSet()
         )
 
-        fun generateKnownBindings(): Map<StaticParameter, StaticValue> {
+        fun generateKnownBindings(): Map<TypeLevelParameter, TypeLevelValue> {
             val typeMap = typeParameters.zip(inferredTypeArguments)
                 .associate { (parameter, inferredArgument) ->
                     val boundType = constraints.explicitlyBoundTypeFor(inferredArgument)
@@ -326,7 +326,7 @@ private fun checkArgumentTypes(
             return typeMap + effectMap
         }
 
-        fun generateCompleteBindings(): Map<StaticParameter, StaticValue> {
+        fun generateCompleteBindings(): Map<TypeLevelParameter, TypeLevelValue> {
             val typeMap = typeParameters.zip(inferredTypeArguments)
                 .associate { (parameter, inferredArgument) ->
                     val boundType = constraints.boundTypeFor(inferredArgument)
@@ -349,13 +349,13 @@ private fun checkArgumentTypes(
 
         for ((argument, unboundParameterType) in arguments.sortedBy { (argument, _) -> argument is FunctionNode && argument.parameters.any { parameter -> parameter.type == null } }) {
             val knownBindings = generateKnownBindings()
-            val parameterHintType = replaceStaticValuesInType(
+            val parameterHintType = replaceTypeLevelValuesInType(
                 unboundParameterType,
                 knownBindings
             )
             val actualType = inferType(argument, context, hint = parameterHintType)
 
-            val parameterType = replaceStaticValuesInType(
+            val parameterType = replaceTypeLevelValuesInType(
                 unboundParameterType,
                 (typeParameters.zip(inferredTypeArguments) + effectParameters.zip(inferredEffectArguments)).toMap()
             )
@@ -371,10 +371,10 @@ private fun checkArgumentTypes(
         return generateCompleteBindings()
     } else {
         val bindings = if (bindingsHint == null) {
-            if (staticArgumentNodes.size != staticParameters.size) {
-                throw WrongNumberOfStaticArgumentsError(
-                    expected = staticParameters.size,
-                    actual = staticArgumentNodes.size,
+            if (typeLevelArgumentNodes.size != typeLevelParameters.size) {
+                throw WrongNumberOfTypeLevelArgumentsError(
+                    expected = typeLevelParameters.size,
+                    actual = typeLevelArgumentNodes.size,
                     source = source
                 )
             }
@@ -382,14 +382,14 @@ private fun checkArgumentTypes(
             val typeMap = mutableMapOf<TypeParameter, Type>()
             val effectMap = mutableMapOf<EffectParameter, Effect>()
 
-            for ((staticParameter, staticArgument) in staticParameters.zip(staticArgumentNodes)) {
-                staticParameter.accept(object : StaticParameter.Visitor<Unit> {
+            for ((typeLevelParameter, typeLevelArgument) in typeLevelParameters.zip(typeLevelArgumentNodes)) {
+                typeLevelParameter.accept(object : TypeLevelParameter.Visitor<Unit> {
                     override fun visit(parameter: TypeParameter) {
-                        typeMap[parameter] = evalType(staticArgument, context)
+                        typeMap[parameter] = evalType(typeLevelArgument, context)
                     }
 
                     override fun visit(parameter: EffectParameter) {
-                        effectMap[parameter] = evalEffect(staticArgument, context)
+                        effectMap[parameter] = evalEffect(typeLevelArgument, context)
                     }
                 })
             }
@@ -400,10 +400,10 @@ private fun checkArgumentTypes(
         }
 
         checkArgumentTypes(
-            staticParameters = listOf(),
-            staticArgumentNodes = listOf(),
+            typeLevelParameters = listOf(),
+            typeLevelArgumentNodes = listOf(),
             arguments = arguments.map({ (expression, type) ->
-                expression to replaceStaticValuesInType(type, bindings)
+                expression to replaceTypeLevelValuesInType(type, bindings)
             }),
             source = source,
             bindingsHint = null,
@@ -417,7 +417,7 @@ private fun checkArgumentTypes(
 private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeContext): Type {
     verifyNoSplatArguments(node)
 
-    val typeParameters = type.cons.staticParameters.filterIsInstance<TypeParameter>()
+    val typeParameters = type.cons.typeLevelParameters.filterIsInstance<TypeParameter>()
     val inferredTypeArguments = typeParameters.map(TypeParameter::fresh)
 
     val headParameterType = type.cons.positionalParameters[0]
@@ -427,31 +427,31 @@ private fun inferVarargsCall(node: CallNode, type: VarargsType, context: TypeCon
         val constraints = TypeConstraintSolver(
             originalParameters = inferredTypeArguments.toSet()
         )
-        fun partialTypeMap(): StaticBindings = typeParameters.zip(inferredTypeArguments).toMap()
+        fun partialTypeMap(): TypeLevelBindings = typeParameters.zip(inferredTypeArguments).toMap()
 
-        if (!constraints.coerce(from = currentType, to = replaceStaticValuesInType(tailParameterType, partialTypeMap()))) {
+        if (!constraints.coerce(from = currentType, to = replaceTypeLevelValuesInType(tailParameterType, partialTypeMap()))) {
             throw CompilerError("failed to type-check varargs call", source = argument.source)
         }
 
         val argumentType = inferType(argument, context)
-        if (!constraints.coerce(from = argumentType, to = replaceStaticValuesInType(headParameterType, partialTypeMap()))) {
+        if (!constraints.coerce(from = argumentType, to = replaceTypeLevelValuesInType(headParameterType, partialTypeMap()))) {
             throw CompilerError("failed to type-check varargs call", source = argument.source)
         }
 
         fun typeMap() = typeParameters.zip(inferredTypeArguments)
             .associate { (parameter, inferredArgument) ->
-                val boundType: StaticValue? = constraints.boundTypeFor(inferredArgument)
+                val boundType: TypeLevelValue? = constraints.boundTypeFor(inferredArgument)
                 if (boundType == null) {
                     throw CouldNotInferTypeParameterError(
                         parameter = parameter,
                         source = argument.source
                     )
                 } else {
-                    parameter as StaticParameter to boundType
+                    parameter as TypeLevelParameter to boundType
                 }
             }
 
-        replaceStaticValuesInType(type.cons.returns, typeMap())
+        replaceTypeLevelValuesInType(type.cons.returns, typeMap())
     }
 }
 
@@ -462,9 +462,9 @@ private fun verifyNoSplatArguments(call: CallBaseNode) {
     }
 }
 
-internal fun inferStaticCallType(call: StaticCallNode, context: TypeContext): Type {
+internal fun inferTypeLevelCallType(call: TypeLevelCallNode, context: TypeContext): Type {
     val receiverType = inferType(call.receiver, context)
-    val arguments = call.arguments.map { argument -> evalStaticValue(argument, context) }
+    val arguments = call.arguments.map { argument -> evalTypeLevelValue(argument, context) }
     // TODO: handle error cases
-    return StaticValueType(applyStatic((receiverType as StaticValueType).value as ParameterizedStaticValue, arguments))
+    return TypeLevelValueType(applyTypeLevel((receiverType as TypeLevelValueType).value as ParameterizedTypeLevelValue, arguments))
 }

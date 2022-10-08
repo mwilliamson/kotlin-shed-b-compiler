@@ -8,13 +8,13 @@ import org.shedlang.compiler.types.*
 fun isType(type: Type): Matcher<Type> = equalTo(type)
 
 fun isFunctionType(
-    staticParameters: Matcher<List<StaticParameter>> = anything,
+    typeLevelParameters: Matcher<List<TypeLevelParameter>> = anything,
     positionalParameters: Matcher<List<Type>> = anything,
     returnType: Matcher<Type> = anything,
     namedParameters: Matcher<Map<Identifier, Type>> = anything,
     effect: Matcher<Effect> = anything
 ): Matcher<Type> = cast(allOf(
-    has(FunctionType::staticParameters, staticParameters),
+    has(FunctionType::typeLevelParameters, typeLevelParameters),
     has(FunctionType::positionalParameters, positionalParameters),
     has(FunctionType::namedParameters, namedParameters),
     has(FunctionType::returns, returnType),
@@ -30,7 +30,7 @@ fun isTupleType(
 fun isTypeAlias(
     name: Matcher<Identifier>,
     aliasedType: Matcher<Type>
-): Matcher<StaticValue> = cast(allOf(
+): Matcher<TypeLevelValue> = cast(allOf(
     has(TypeAlias::name, name),
     has(TypeAlias::aliasedType, aliasedType)
 ))
@@ -39,15 +39,15 @@ fun isShapeType(
     shapeId: Matcher<Int> = anything,
     name: Matcher<Identifier> = anything,
     tagValue: Matcher<TagValue?> = anything,
-    staticParameters: Matcher<List<StaticParameter>> = anything,
-    staticArguments: Matcher<List<StaticValue>> = anything,
+    typeLevelParameters: Matcher<List<TypeLevelParameter>> = anything,
+    typeLevelArguments: Matcher<List<TypeLevelValue>> = anything,
     fields: Matcher<Collection<Field>> = anything
-): Matcher<StaticValue> = cast(allOf(
+): Matcher<TypeLevelValue> = cast(allOf(
     has(ShapeType::shapeId, shapeId),
     has(ShapeType::name, name),
     has(ShapeType::tagValue, tagValue),
-    has(ShapeType::staticParameters, staticParameters),
-    has(ShapeType::staticArguments, staticArguments),
+    has(ShapeType::typeLevelParameters, typeLevelParameters),
+    has(ShapeType::typeLevelArguments, typeLevelArguments),
     has("fields", { type -> type.fields.values }, fields),
 ))
 
@@ -64,12 +64,12 @@ fun isField(
 fun isUnionType(
     name: Matcher<Identifier> = anything,
     tag: Matcher<Tag> = anything,
-    staticArguments: Matcher<List<StaticValue>> = anything,
+    typeLevelArguments: Matcher<List<TypeLevelValue>> = anything,
     members: Matcher<List<Type>> = anything
-): Matcher<StaticValue> = cast(allOf(
+): Matcher<TypeLevelValue> = cast(allOf(
     has(UnionType::name, name),
     has(UnionType::tag, tag),
-    has(UnionType::staticArguments, staticArguments),
+    has(UnionType::typeLevelArguments, typeLevelArguments),
     has(UnionType::members, members)
 ))
 
@@ -83,29 +83,29 @@ fun isTagValue(tag: Matcher<Tag>, value: String) = cast(allOf(
     has(TagValue::value, isIdentifier(value))
 ))
 
-val isAnyType: Matcher<StaticValue> = cast(equalTo(AnyType))
-val isNothingType: Matcher<StaticValue> = cast(equalTo(NothingType))
-val isUnitType: Matcher<StaticValue> = cast(equalTo(UnitType))
-val isIntType: Matcher<StaticValue> = cast(equalTo(IntType))
-val isBoolType: Matcher<StaticValue> = cast(equalTo(BoolType))
-val isStringType: Matcher<StaticValue> = cast(equalTo(StringType))
+val isAnyType: Matcher<TypeLevelValue> = cast(equalTo(AnyType))
+val isNothingType: Matcher<TypeLevelValue> = cast(equalTo(NothingType))
+val isUnitType: Matcher<TypeLevelValue> = cast(equalTo(UnitType))
+val isIntType: Matcher<TypeLevelValue> = cast(equalTo(IntType))
+val isBoolType: Matcher<TypeLevelValue> = cast(equalTo(BoolType))
+val isStringType: Matcher<TypeLevelValue> = cast(equalTo(StringType))
 
-fun isEffectType(effect: Matcher<Effect>) = isStaticValueType(cast(effect))
-fun isMetaType(value: Matcher<Type>): Matcher<StaticValue> = isStaticValueType(cast(value))
-fun isStaticValueType(value: Matcher<StaticValue>): Matcher<StaticValue> = cast(has(StaticValueType::value, value))
+fun isEffectType(effect: Matcher<Effect>) = isTypeLevelValueType(cast(effect))
+fun isMetaType(value: Matcher<Type>): Matcher<TypeLevelValue> = isTypeLevelValueType(cast(value))
+fun isTypeLevelValueType(value: Matcher<TypeLevelValue>): Matcher<TypeLevelValue> = cast(has(TypeLevelValueType::value, value))
 
-fun isParameterizedStaticValue(
-    parameters: Matcher<List<StaticParameter>>,
-    value: Matcher<StaticValue> = anything
-): Matcher<StaticValue> = cast(allOf(
-    has(ParameterizedStaticValue::parameters, parameters),
-    has(ParameterizedStaticValue::value, cast(value))
+fun isParameterizedTypeLevelValue(
+    parameters: Matcher<List<TypeLevelParameter>>,
+    value: Matcher<TypeLevelValue> = anything
+): Matcher<TypeLevelValue> = cast(allOf(
+    has(ParameterizedTypeLevelValue::parameters, parameters),
+    has(ParameterizedTypeLevelValue::value, cast(value))
 ))
 
 fun isTypeParameter(
     name: Matcher<Identifier> = anything,
     variance: Matcher<Variance> = anything
-): Matcher<StaticValue> = cast(allOf(
+): Matcher<TypeLevelValue> = cast(allOf(
     has(TypeParameter::name, name),
     has(TypeParameter::variance, variance)
 ))
@@ -148,7 +148,7 @@ fun isUserDefinedEffect(
     ))
 }
 
-fun isEffectUnion(members: Matcher<List<Effect>>): Matcher<StaticValue> = cast(has(EffectUnion::members, members))
+fun isEffectUnion(members: Matcher<List<Effect>>): Matcher<TypeLevelValue> = cast(has(EffectUnion::members, members))
 
 val isIoEffect: Matcher<Effect> = equalTo(IoEffect)
 

@@ -4,13 +4,13 @@ import com.natpryce.hamkrest.assertion.assertThat
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.TokenIterator
 import org.shedlang.compiler.parser.TokenType
-import org.shedlang.compiler.parser.parseStaticParameters
+import org.shedlang.compiler.parser.parseTypeLevelParameters
 import org.shedlang.compiler.tests.*
 
-class ParseStaticParametersTests {
+class ParseTypeLevelParametersTests {
     @Test
     fun canParseSingleInvariantTypeParameter() {
-        val parameters = parseString(Companion::parseStaticParametersWithVariance, "[T]")
+        val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[T]")
         assertThat(parameters, isSequence(
             isTypeParameter(name = isIdentifier("T"), variance = isInvariant)
         ))
@@ -18,7 +18,7 @@ class ParseStaticParametersTests {
 
     @Test
     fun canParseSingleCovariantTypeParameter() {
-        val parameters = parseString(Companion::parseStaticParametersWithVariance, "[+T]")
+        val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[+T]")
         assertThat(parameters, isSequence(
             isTypeParameter(name = isIdentifier("T"), variance = isCovariant)
         ))
@@ -26,7 +26,7 @@ class ParseStaticParametersTests {
 
     @Test
     fun canParseSingleContravariantTypeParameter() {
-        val parameters = parseString(Companion::parseStaticParametersWithVariance, "[-T]")
+        val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[-T]")
         assertThat(parameters, isSequence(
             isTypeParameter(name = isIdentifier("T"), variance = isContravariant)
         ))
@@ -34,14 +34,14 @@ class ParseStaticParametersTests {
 
     @Test
     fun canParseEffectParameter() {
-        val parameters = parseString(Companion::parseStaticParametersWithVariance, "[!E]")
+        val parameters = parseString(Companion::parseTypeLevelParametersWithVariance, "[!E]")
         assertThat(parameters, isSequence(
             isEffectParameterNode(name = isIdentifier("E"))
         ))
     }
 
     companion object {
-        private fun parseStaticParametersWithVariance(tokens: TokenIterator<TokenType>)
-            = parseStaticParameters(allowVariance = true, tokens = tokens)
+        private fun parseTypeLevelParametersWithVariance(tokens: TokenIterator<TokenType>)
+            = parseTypeLevelParameters(allowVariance = true, tokens = tokens)
     }
 }

@@ -30,13 +30,13 @@ class ParseWhenTests {
             expression = isVariableReference("x"),
             branches = isSequence(
                 isWhenBranch(
-                    type = isStaticReference("Some"),
+                    type = isTypeLevelReference("Some"),
                     body = isBlock(
                         isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
                 ),
                 isWhenBranch(
-                    type = isStaticReference("None"),
+                    type = isTypeLevelReference("None"),
                     body = isBlock(
                         isExpressionStatement(expression = isIntLiteral(2), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )
@@ -61,7 +61,7 @@ class ParseWhenTests {
         assertThat(node, isWhen(
             branches = isSequence(
                 isWhenBranch(
-                    type = isStaticReference("Some"),
+                    type = isTypeLevelReference("Some"),
                 ),
             ),
         ))
@@ -110,7 +110,7 @@ class ParseWhenTests {
             expression = isVariableReference("x"),
             branches = isSequence(
                 isWhenBranch(
-                    type = isStaticReference("Some"),
+                    type = isTypeLevelReference("Some"),
                     body = isBlock(
                         isExpressionStatement(expression = isIntLiteral(1), type = equalTo(ExpressionStatementNode.Type.VALUE))
                     )

@@ -74,8 +74,8 @@ class TypeCheckExpressionTests {
 
     @Test
     fun functionExpressionHasFunctionType() {
-        val intReference = staticReference("Int")
-        val unitReference = staticReference("Unit")
+        val intReference = typeLevelReference("Int")
+        val unitReference = typeLevelReference("Unit")
         val node = functionExpression(
             parameters = listOf(parameter(type = intReference)),
             returnType = unitReference

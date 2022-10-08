@@ -36,7 +36,7 @@ class ParseShapeTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             name = isIdentifier("X"),
-            staticParameters = isSequence(),
+            typeLevelParameters = isSequence(),
             extends = isSequence(),
             fields = isSequence()
         ))
@@ -59,11 +59,11 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = isIdentifier("a"),
-                    type = present(isStaticReference("Int")),
+                    type = present(isTypeLevelReference("Int")),
                 ),
                 isShapeField(
                     name = isIdentifier("b"),
-                    type = present(isStaticReference("String")),
+                    type = present(isTypeLevelReference("String")),
                 )
             )
         ))
@@ -77,7 +77,7 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = isIdentifier("a"),
-                    type = present(isStaticReference("Int")),
+                    type = present(isTypeLevelReference("Int")),
                 )
             )
         ))
@@ -105,7 +105,7 @@ class ParseShapeTests {
             fields = isSequence(
                 isShapeField(
                     name = isIdentifier("a"),
-                    shape = present(isStaticReference("Y"))
+                    shape = present(isTypeLevelReference("Y"))
                 )
             )
         ))
@@ -117,7 +117,7 @@ class ParseShapeTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             extends = isSequence(
-                isStaticReference("Y")
+                isTypeLevelReference("Y")
             )
         ))
     }
@@ -128,8 +128,8 @@ class ParseShapeTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             extends = isSequence(
-                isStaticReference("Y"),
-                isStaticReference("Z")
+                isTypeLevelReference("Y"),
+                isTypeLevelReference("Z")
             )
         ))
     }
@@ -140,7 +140,7 @@ class ParseShapeTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             name = isIdentifier("X"),
-            staticParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
+            typeLevelParameters = isSequence(isTypeParameter(name = isIdentifier("T"))),
             fields = isSequence()
         ))
     }
@@ -151,7 +151,7 @@ class ParseShapeTests {
         val node = parseString(::parseModuleStatement, source)
         assertThat(node, isShape(
             name = isIdentifier("X"),
-            staticParameters = isSequence(
+            typeLevelParameters = isSequence(
                 isTypeParameter(name = isIdentifier("T")),
                 isTypeParameter(name = isIdentifier("U"))
             ),

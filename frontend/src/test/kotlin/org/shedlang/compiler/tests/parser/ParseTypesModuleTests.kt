@@ -49,7 +49,7 @@ class ParseTypesModuleTests {
         val node = parseTypesModule("<string>", source)
 
         assertThat(node, has(TypesModuleNode::body, isSequence(
-            isValType(name = isIdentifier("x"), type = isStaticReference("Int"))
+            isValType(name = isIdentifier("x"), type = isTypeLevelReference("Int"))
         )))
     }
 }

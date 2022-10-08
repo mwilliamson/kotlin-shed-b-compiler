@@ -92,7 +92,7 @@ internal object WasmObjects {
         return when (type) {
             is ModuleType -> moduleLayout(type)
             is ShapeType -> shapeLayout(type)
-            is StaticValueType -> {
+            is TypeLevelValueType -> {
                 val value = type.value
                 if (value is UserDefinedEffect) {
                     effectLayout(value)
@@ -140,7 +140,7 @@ internal object WasmObjects {
             tagValueSize + fieldsLayout.fieldOffset(fieldName)
     }
 
-    internal fun shapeTypeLayout(type: StaticValueType): ShapeTypeLayout {
+    internal fun shapeTypeLayout(type: TypeLevelValueType): ShapeTypeLayout {
         return ShapeTypeLayout(fieldNames = type.fields!!.keys)
     }
 

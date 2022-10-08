@@ -8,7 +8,6 @@ import org.shedlang.compiler.ast.FunctionExpressionNode
 import org.shedlang.compiler.parser.parseExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
-import org.shedlang.compiler.tests.literalInt
 
 class ParseHandleTests {
     @Test
@@ -18,7 +17,7 @@ class ParseHandleTests {
         val node = parseString(::parseExpression, source)
 
         assertThat(node, isHandle(
-            effect = isStaticReference("Try"),
+            effect = isTypeLevelReference("Try"),
             body = isBlock(
                 isExpressionStatement(expression = isCall(receiver = isVariableReference("f")))
             ),

@@ -1,34 +1,34 @@
 package org.shedlang.compiler.typechecker
 
 import org.shedlang.compiler.ast.EffectParameterNode
-import org.shedlang.compiler.ast.StaticParameterNode
+import org.shedlang.compiler.ast.TypeLevelParameterNode
 import org.shedlang.compiler.ast.TypeParameterNode
 import org.shedlang.compiler.types.EffectParameter
-import org.shedlang.compiler.types.StaticParameter
-import org.shedlang.compiler.types.StaticValueType
+import org.shedlang.compiler.types.TypeLevelParameter
+import org.shedlang.compiler.types.TypeLevelValueType
 import org.shedlang.compiler.types.TypeParameter
 
-internal fun typeCheckStaticParameters(
-    parameters: List<StaticParameterNode>,
+internal fun typeCheckTypeLevelParameters(
+    parameters: List<TypeLevelParameterNode>,
     context: TypeContext
-): List<StaticParameter> {
+): List<TypeLevelParameter> {
     return parameters.map({ parameter ->
-        typeCheckStaticParameter(parameter, context)
+        typeCheckTypeLevelParameter(parameter, context)
     })
 }
 
-private fun typeCheckStaticParameter(
-    node: StaticParameterNode,
+private fun typeCheckTypeLevelParameter(
+    node: TypeLevelParameterNode,
     context: TypeContext
-): StaticParameter {
-    return node.accept(object: StaticParameterNode.Visitor<StaticParameter> {
-        override fun visit(node: TypeParameterNode): StaticParameter {
+): TypeLevelParameter {
+    return node.accept(object: TypeLevelParameterNode.Visitor<TypeLevelParameter> {
+        override fun visit(node: TypeParameterNode): TypeLevelParameter {
             return typeCheckTypeParameter(node, context)
         }
 
-        override fun visit(node: EffectParameterNode): StaticParameter {
+        override fun visit(node: EffectParameterNode): TypeLevelParameter {
             val parameter = EffectParameter(name = node.name, source = node.source)
-            context.addVariableType(node, StaticValueType(parameter))
+            context.addVariableType(node, TypeLevelValueType(parameter))
             return parameter
         }
     })
@@ -44,6 +44,6 @@ private fun typeCheckTypeParameter(
         shapeId = null,
         source = parameter.source,
     )
-    context.addVariableType(parameter, StaticValueType(typeParameter))
+    context.addVariableType(parameter, TypeLevelValueType(typeParameter))
     return typeParameter
 }

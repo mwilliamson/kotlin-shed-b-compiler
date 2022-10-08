@@ -61,11 +61,11 @@ internal val compiledClosureFunctionPointerSize = 8
 
 internal fun compiledClosureSize(freeVariableCount: Int) = compiledClosureFunctionPointerSize + compiledValueTypeSize * freeVariableCount
 
-internal fun compiledType(objectType: StaticValue): CompiledType {
+internal fun compiledType(objectType: TypeLevelValue): CompiledType {
     if (objectType is TypeAlias) {
         // TODO: better handling of type aliases
         return compiledType(objectType.aliasedType)
-    } else if (objectType is StaticValueType && rawValue(objectType.value) is ShapeType) {
+    } else if (objectType is TypeLevelValueType && rawValue(objectType.value) is ShapeType) {
         val shapeType = rawValue(objectType.value) as ShapeType
         return CompiledShapeType(
             parameterTypes = shapeType.fields.map { compiledValueType },
@@ -74,7 +74,7 @@ internal fun compiledType(objectType: StaticValue): CompiledType {
                 tagValue = null
             )
         )
-    } else if (objectType is StaticValueType && objectType.fields != null) {
+    } else if (objectType is TypeLevelValueType && objectType.fields != null) {
         return CompiledShapeType(
             parameterTypes = listOf(),
             compiledObjectType = CompiledObjectType(

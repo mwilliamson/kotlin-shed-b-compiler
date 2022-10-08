@@ -6,11 +6,11 @@ import org.shedlang.compiler.tests.*
 import org.shedlang.compiler.typechecker.evalType
 import org.shedlang.compiler.types.*
 
-class TypeCheckStaticStaticCallTests {
+class TypeCheckTypeLevelApplicationTests {
     @Test
     fun parametrizedShapeCallHasTypeOfShapeWithTypeParametersReplaced() {
-        val listReference = staticReference("Box")
-        val boolReference = staticReference("Bool")
+        val listReference = typeLevelReference("Box")
+        val boolReference = typeLevelReference("Bool")
 
         val typeParameter = invariantTypeParameter("T")
         val listType = parametrizedShapeType(
@@ -20,19 +20,19 @@ class TypeCheckStaticStaticCallTests {
                 field("value", typeParameter)
             )
         )
-        val application = staticApplication(listReference, listOf(boolReference))
+        val application = typeLevelApplication(listReference, listOf(boolReference))
 
         val type = evalType(
             application,
             typeContext(referenceTypes = mapOf(
-                listReference to StaticValueType(listType),
+                listReference to TypeLevelValueType(listType),
                 boolReference to BoolMetaType
             ))
         )
 
         assertThat(type, isShapeType(
             name = isIdentifier("Box"),
-            staticArguments = isSequence(isBoolType),
+            typeLevelArguments = isSequence(isBoolType),
             fields = isSequence(
                 isField(name = isIdentifier("value"), type = isBoolType)
             )

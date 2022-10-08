@@ -43,8 +43,8 @@ class TypeCheckEffectDefinitionTests {
 
     @Test
     fun effectDefinitionCreatesUserDefinedEffect() {
-        val stringReference = staticReference("String")
-        val nothingReference = staticReference("Nothing")
+        val stringReference = typeLevelReference("String")
+        val nothingReference = typeLevelReference("Nothing")
         val effectDefinition = effectDefinition(
             name = "Try",
             operations = listOf(

@@ -4,25 +4,25 @@ import com.natpryce.hamkrest.assertion.assertThat
 import com.natpryce.hamkrest.present
 import org.junit.jupiter.api.Test
 import org.shedlang.compiler.parser.PositionalParameterAfterNamedParameterError
-import org.shedlang.compiler.parser.parseStaticExpression
+import org.shedlang.compiler.parser.parseTypeLevelExpression
 import org.shedlang.compiler.tests.isIdentifier
 import org.shedlang.compiler.tests.isSequence
 import org.shedlang.compiler.tests.throwsException
 
-class ParseStaticExpressionTests {
+class ParseTypeLevelExpressionTests {
     @Test
     fun identifierIsParsedAsTypeReference() {
         val source = "T"
-        val node = parseString(::parseStaticExpression, source)
-        assertThat(node, isStaticReference(name = "T"))
+        val node = parseString(::parseTypeLevelExpression, source)
+        assertThat(node, isTypeLevelReference(name = "T"))
     }
 
     @Test
-    fun staticFieldAccessIsParsed() {
+    fun typeLevelFieldAccessIsParsed() {
         val source = "M.T"
-        val node = parseString(::parseStaticExpression, source)
-        assertThat(node, isStaticFieldAccess(
-            receiver = isStaticReference(name = "M"),
+        val node = parseString(::parseTypeLevelExpression, source)
+        assertThat(node, isTypeLevelFieldAccess(
+            receiver = isTypeLevelReference(name = "M"),
             fieldName = isIdentifier("T")
         ))
     }
@@ -30,12 +30,12 @@ class ParseStaticExpressionTests {
     @Test
     fun typeApplicationIsRepresentedBySquareBrackets() {
         val source = "X[T, U]"
-        val node = parseString(::parseStaticExpression, source)
-        assertThat(node, isStaticApplication(
-            receiver = isStaticReference(name = "X"),
+        val node = parseString(::parseTypeLevelExpression, source)
+        assertThat(node, isTypeLevelApplication(
+            receiver = isTypeLevelReference(name = "X"),
             arguments = isSequence(
-                isStaticReference(name = "T"),
-                isStaticReference(name = "U")
+                isTypeLevelReference(name = "T"),
+                isTypeLevelReference(name = "U")
             )
         ))
     }
@@ -43,41 +43,41 @@ class ParseStaticExpressionTests {
     @Test
     fun functionTypeIsRepresentedByParenthesisedArgumentsThenArrowThenReturnType() {
         val source = "Fun (A, B) -> C"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
-                isStaticReference(name = "A"),
-                isStaticReference(name = "B")
+                isTypeLevelReference(name = "A"),
+                isTypeLevelReference(name = "B")
             ),
-            returnType = isStaticReference(name = "C")
+            returnType = isTypeLevelReference(name = "C")
         ))
     }
 
     @Test
     fun parametersCanHaveTrailingComma() {
         val source = "Fun (A,) -> C"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
-                isStaticReference(name = "A")
+                isTypeLevelReference(name = "A")
             ),
-            returnType = isStaticReference(name = "C")
+            returnType = isTypeLevelReference(name = "C")
         ))
     }
 
     @Test
     fun functionTypeCanHaveNamedArguments() {
         val source = "Fun (A, B, .c: C) -> C"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
         assertThat(node, isFunctionType(
             positionalParameters = isSequence(
-                isStaticReference(name = "A"),
-                isStaticReference(name = "B")
+                isTypeLevelReference(name = "A"),
+                isTypeLevelReference(name = "B")
             ),
             namedParameters = isSequence(
                 isFunctionTypeNamedParameter(name = "c", typeReference = "C")
             ),
-            returnType = isStaticReference(name = "C")
+            returnType = isTypeLevelReference(name = "C")
         ))
     }
 
@@ -85,7 +85,7 @@ class ParseStaticExpressionTests {
     fun functionTypeCannotHavePositionalParameterAfterNamedParameter() {
         val source = "Fun (.a: A, B) -> C"
 
-        val node = { parseString(::parseStaticExpression, source) }
+        val node = { parseString(::parseTypeLevelExpression, source) }
 
         assertThat(node, throwsException< PositionalParameterAfterNamedParameterError>())
     }
@@ -93,23 +93,23 @@ class ParseStaticExpressionTests {
     @Test
     fun functionTypeCanHaveEffects() {
         val source = "Fun () !E -> R"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
         assertThat(node, isFunctionType(
-            effect = present(isStaticReference("E"))
+            effect = present(isTypeLevelReference("E"))
         ))
     }
 
     @Test
-    fun functionTypeStaticParametersAreRepresentedBySquareBrackets() {
+    fun functionTypeTypeLevelParametersAreRepresentedBySquareBrackets() {
         val source = "Fun [T, U](T, U) -> R"
-        val node = parseString(::parseStaticExpression, source)
+        val node = parseString(::parseTypeLevelExpression, source)
         assertThat(node, isFunctionType(
 
             positionalParameters = isSequence(
-                isStaticReference(name = "T"),
-                isStaticReference(name = "U")
+                isTypeLevelReference(name = "T"),
+                isTypeLevelReference(name = "U")
             ),
-            returnType = isStaticReference(name = "R")
+            returnType = isTypeLevelReference(name = "R")
         ))
     }
 }

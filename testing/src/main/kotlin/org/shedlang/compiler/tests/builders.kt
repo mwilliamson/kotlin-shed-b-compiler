@@ -72,7 +72,7 @@ fun whenExpression(
 )
 
 fun whenBranch(
-    type: StaticExpressionNode = staticReference("__default__"),
+    type: TypeLevelExpressionNode = typeLevelReference("__default__"),
     target: TargetNode.Fields = targetFields(),
     body: List<FunctionStatementNode> = listOf()
 ) = WhenBranchNode(
@@ -184,7 +184,7 @@ fun effectDeclaration(
 
 fun valType(
     name: String = "<val name>",
-    type: StaticExpressionNode
+    type: TypeLevelExpressionNode
 ) = ValTypeNode(
     name = Identifier(name),
     type = type,
@@ -230,7 +230,7 @@ fun binaryOperation(
 
 fun isOperation(
     expression: ExpressionNode,
-    type: StaticExpressionNode
+    type: TypeLevelExpressionNode
 ) = IsNode(
     expression = expression,
     type = type,
@@ -241,11 +241,11 @@ fun call(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<FieldArgumentNode> = listOf(),
-    staticArguments: List<StaticExpressionNode> = listOf(),
+    typeLevelArguments: List<TypeLevelExpressionNode> = listOf(),
     hasEffect: Boolean = false
 ) = CallNode(
     receiver = receiver,
-    staticArguments = staticArguments,
+    typeLevelArguments = typeLevelArguments,
     positionalArguments = positionalArguments,
     fieldArguments = namedArguments,
     hasEffect = hasEffect,
@@ -257,10 +257,10 @@ fun partialCall(
     receiver: ExpressionNode,
     positionalArguments: List<ExpressionNode> = listOf(),
     namedArguments: List<FieldArgumentNode> = listOf(),
-    staticArguments: List<StaticExpressionNode> = listOf()
+    typeLevelArguments: List<TypeLevelExpressionNode> = listOf()
 ) = PartialCallNode(
     receiver = receiver,
-    staticArguments = staticArguments,
+    typeLevelArguments = typeLevelArguments,
     positionalArguments = positionalArguments,
     fieldArguments = namedArguments,
     source = anySource(),
@@ -281,10 +281,10 @@ fun splatArgument(expression: ExpressionNode) = FieldArgumentNode.Splat(
     source = anySource(),
 )
 
-fun staticCall(
+fun typeLevelCall(
     receiver: ExpressionNode,
-    arguments: List<StaticExpressionNode> = listOf(),
-) = StaticCallNode(
+    arguments: List<TypeLevelExpressionNode> = listOf(),
+) = TypeLevelCallNode(
     receiver = receiver,
     arguments = arguments,
     source = anySource(),
@@ -306,7 +306,7 @@ fun fieldName(
 ) = FieldNameNode(Identifier(name), source = source)
 
 fun handle(
-    effect: StaticExpressionNode = staticReference("Eff"),
+    effect: TypeLevelExpressionNode = typeLevelReference("Eff"),
     initialState: ExpressionNode? = null,
     body: Block,
     handlers: List<HandlerNode>
@@ -329,16 +329,16 @@ fun handler(
 
 fun function(
     name: String = "f",
-    staticParameters: List<StaticParameterNode> = listOf(),
+    typeLevelParameters: List<TypeLevelParameterNode> = listOf(),
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
-    effect: StaticExpressionNode? = null,
-    returnType: StaticExpressionNode = staticReference("Unit"),
+    effect: TypeLevelExpressionNode? = null,
+    returnType: TypeLevelExpressionNode = typeLevelReference("Unit"),
     body: List<FunctionStatementNode> = listOf(),
     inferReturnType: Boolean = false
 ) = FunctionDefinitionNode(
     name = Identifier(name),
-    staticParameters = staticParameters,
+    typeLevelParameters = typeLevelParameters,
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
@@ -353,11 +353,11 @@ fun functionExpression(
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
     effect: FunctionEffectNode? = null,
-    returnType: StaticExpressionNode? = null,
+    returnType: TypeLevelExpressionNode? = null,
     body: List<FunctionStatementNode> = listOf(),
     inferReturnType: Boolean = false
 ) = FunctionExpressionNode(
-    staticParameters = typeParameters,
+    typeLevelParameters = typeParameters,
     parameters = parameters,
     namedParameters = namedParameters,
     returnType = returnType,
@@ -372,7 +372,7 @@ fun functionExpression(
     parameters: List<ParameterNode> = listOf(),
     namedParameters: List<ParameterNode> = listOf(),
     effect: FunctionEffectNode? = null,
-    returnType: StaticExpressionNode? = staticReference("Unit"),
+    returnType: TypeLevelExpressionNode? = typeLevelReference("Unit"),
     body: ExpressionNode,
     inferReturnType: Boolean = true
 ) = functionExpression(
@@ -411,7 +411,7 @@ fun operationDefinition(
 
 fun typeAliasDeclaration(
     name: String,
-    expression: StaticExpressionNode
+    expression: TypeLevelExpressionNode
 ) = TypeAliasNode(
     name = Identifier(name),
     expression = expression,
@@ -420,12 +420,12 @@ fun typeAliasDeclaration(
 
 fun shape(
     name: String = "Shape",
-    staticParameters: List<StaticParameterNode> = listOf(),
-    extends: List<StaticExpressionNode> = listOf(),
+    typeLevelParameters: List<TypeLevelParameterNode> = listOf(),
+    extends: List<TypeLevelExpressionNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = ShapeNode(
     name = Identifier(name),
-    staticParameters = staticParameters,
+    typeLevelParameters = typeLevelParameters,
     extends = extends,
     fields = fields,
     source = anySource()
@@ -433,8 +433,8 @@ fun shape(
 
 fun shapeField(
     name: String = "field",
-    type: StaticExpressionNode = staticReference("SomeType"),
-    shape: StaticExpressionNode? = null
+    type: TypeLevelExpressionNode = typeLevelReference("SomeType"),
+    shape: TypeLevelExpressionNode? = null
 ) = ShapeFieldNode(
     shape = shape,
     name = Identifier(name),
@@ -445,11 +445,11 @@ fun shapeField(
 fun union(
     name: String = "Union",
     members: List<UnionMemberNode> = listOf(),
-    staticParameters: List<StaticParameterNode> = listOf(),
+    typeLevelParameters: List<TypeLevelParameterNode> = listOf(),
     superType: ReferenceNode? = null
 ) = UnionNode(
     name = Identifier(name),
-    staticParameters = staticParameters,
+    typeLevelParameters = typeLevelParameters,
     superType = superType,
     members = members,
     source = anySource()
@@ -457,12 +457,12 @@ fun union(
 
 fun unionMember(
     name: String,
-    staticParameters: List<StaticParameterNode> = listOf(),
-    extends: List<StaticExpressionNode> = listOf(),
+    typeLevelParameters: List<TypeLevelParameterNode> = listOf(),
+    extends: List<TypeLevelExpressionNode> = listOf(),
     fields: List<ShapeFieldNode> = listOf()
 ) = UnionMemberNode(
     name = Identifier(name),
-    staticParameters = staticParameters,
+    typeLevelParameters = typeLevelParameters,
     extends = extends,
     fields = fields,
     source = anySource()
@@ -499,7 +499,7 @@ fun declaration(name: String) = parameter(name)
 
 fun parameter(
     name: String = "x",
-    type: StaticExpressionNode? = staticReference("Int")
+    type: TypeLevelExpressionNode? = typeLevelReference("Int")
 ) = ParameterNode(
     name = Identifier(name),
     type = type,
@@ -548,32 +548,32 @@ fun import(
     source = anySource()
 )
 
-fun staticReference(name: String) = ReferenceNode(Identifier(name), anySource())
-fun staticFieldAccess(
-    receiver: StaticExpressionNode,
+fun typeLevelReference(name: String) = ReferenceNode(Identifier(name), anySource())
+fun typeLevelFieldAccess(
+    receiver: TypeLevelExpressionNode,
     fieldName: String
-) = StaticFieldAccessNode(
+) = TypeLevelFieldAccessNode(
     receiver = receiver,
     fieldName = fieldName(fieldName),
     source = anySource()
 )
-fun staticApplication(
-    receiver: StaticExpressionNode,
-    arguments: List<StaticExpressionNode>
-) = StaticApplicationNode(
+fun typeLevelApplication(
+    receiver: TypeLevelExpressionNode,
+    arguments: List<TypeLevelExpressionNode>
+) = TypeLevelApplicationNode(
     receiver = receiver,
     arguments = arguments,
     source = anySource(),
     operatorSource = anySource(),
 )
 fun functionTypeNode(
-    staticParameters: List<StaticParameterNode> = listOf(),
-    positionalParameters: List<StaticExpressionNode> = listOf(),
+    typeLevelParameters: List<TypeLevelParameterNode> = listOf(),
+    positionalParameters: List<TypeLevelExpressionNode> = listOf(),
     namedParameters: List<FunctionTypeNamedParameterNode> = listOf(),
-    returnType: StaticExpressionNode = staticReference("Unit"),
-    effect: StaticExpressionNode? = null
+    returnType: TypeLevelExpressionNode = typeLevelReference("Unit"),
+    effect: TypeLevelExpressionNode? = null
 ) = FunctionTypeNode(
-    staticParameters = staticParameters,
+    typeLevelParameters = typeLevelParameters,
     positionalParameters = positionalParameters,
     namedParameters = namedParameters,
     returnType = returnType,
@@ -583,7 +583,7 @@ fun functionTypeNode(
 
 fun functionTypeNamedParameter(
     name: String = "x",
-    type: StaticExpressionNode
+    type: TypeLevelExpressionNode
 ) = FunctionTypeNamedParameterNode(
     name = Identifier(name),
     type = type,
@@ -591,15 +591,15 @@ fun functionTypeNamedParameter(
 )
 
 fun tupleTypeNode(
-    elementTypes: List<StaticExpressionNode>
+    elementTypes: List<TypeLevelExpressionNode>
 ) = TupleTypeNode(
     elementTypes = elementTypes,
     source = anySource()
 )
 
-fun staticUnion(
-    elements: List<StaticExpressionNode>
-) = StaticUnionNode(
+fun typeLevelUnion(
+    elements: List<TypeLevelExpressionNode>
+) = TypeLevelUnionNode(
     elements = elements,
     source = anySource()
 )
@@ -614,7 +614,7 @@ fun parametrizedShapeType(
     parameters: List<TypeParameter>,
     tagValue: TagValue? = null,
     fields: List<Field> = listOf()
-) = ParameterizedStaticValue(
+) = ParameterizedTypeLevelValue(
     value = shapeType(
         name = name,
         tagValue = tagValue,
@@ -637,8 +637,8 @@ fun shapeType(
     name = Identifier(name),
     tagValue = tagValue,
     getFields = lazy { fields },
-    staticParameters = typeParameters,
-    staticArguments = typeArguments
+    typeLevelParameters = typeParameters,
+    typeLevelArguments = typeArguments
 )
 
 fun field(name: String, type: Type, shapeId: Int = freshTypeId()) = Field(
@@ -652,12 +652,12 @@ fun parametrizedUnionType(
     tag: Tag = Tag(listOf(), Identifier(name)),
     parameters: List<TypeParameter> = listOf(invariantTypeParameter("T")),
     members: List<ShapeType> = listOf()
-) = ParameterizedStaticValue(
+) = ParameterizedTypeLevelValue(
     value = LazyUnionType(
         name = Identifier(name),
         tag = tag,
         getMembers = lazy { members },
-        staticArguments = parameters
+        typeLevelArguments = parameters
     ),
     parameters = parameters
 )
@@ -674,7 +674,7 @@ fun unionType(
     name = Identifier(name),
     tag = tag,
     getMembers = lazy { members },
-    staticArguments = listOf()
+    typeLevelArguments = listOf()
 )
 
 fun varargsType() = VarargsType(

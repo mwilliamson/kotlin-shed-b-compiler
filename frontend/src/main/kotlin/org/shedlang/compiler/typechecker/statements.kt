@@ -26,12 +26,12 @@ private fun typeCheckEffectDefinition(node: EffectDefinitionNode, context: TypeC
         getOperations = lazy {
             node.operations.map { (operationName, operationTypeNode) ->
                 // TODO: throw appropriate error on wrong type
-                val operationType = evalStaticValue(operationTypeNode, context) as FunctionType
+                val operationType = evalTypeLevelValue(operationTypeNode, context) as FunctionType
                 operationName to operationType.copy(effect = effectUnion(operationType.effect, effect!!))
             }.toMap()
         }
     )
-    context.addVariableType(node, StaticValueType(effect))
+    context.addVariableType(node, TypeLevelValueType(effect))
 }
 
 private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {
@@ -42,7 +42,7 @@ private fun typeCheckTypeAlias(node: TypeAliasNode, context: TypeContext) {
             evalType(node.expression, context)
         }
     )
-    context.addVariableType(node, StaticValueType(type))
+    context.addVariableType(node, TypeLevelValueType(type))
 
     context.defer {
         type.aliasedType
@@ -57,8 +57,8 @@ private fun generateShapeType(
     node: ShapeBaseNode,
     context: TypeContext,
     tagValue: TagValue? = null
-): StaticValue {
-    val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
+): TypeLevelValue {
+    val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
 
     val shapeId = freshTypeId()
 
@@ -70,17 +70,17 @@ private fun generateShapeType(
         name = node.name,
         tagValue = tagValue,
         getFields = fields,
-        staticParameters = staticParameters,
-        staticArguments = staticParameters
+        typeLevelParameters = typeLevelParameters,
+        typeLevelArguments = typeLevelParameters
     )
-    val type = if (node.staticParameters.isEmpty()) {
+    val type = if (node.typeLevelParameters.isEmpty()) {
         shapeType
     } else {
-        ParameterizedStaticValue(staticParameters, shapeType)
+        ParameterizedTypeLevelValue(typeLevelParameters, shapeType)
     }
-    context.addVariableType(node, StaticValueType(type))
+    context.addVariableType(node, TypeLevelValueType(type))
     context.defer({
-        checkStaticValue(type, source = node.source)
+        checkTypeLevelValue(type, source = node.source)
     })
     return type
 }
@@ -213,7 +213,7 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
     // TODO: check for circularity
     // TODO: test laziness
     // TODO: check members satisfy subtype relation
-    val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
+    val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
 
     val superTypeNode = node.superType
     val superType = if (superTypeNode == null) {
@@ -237,10 +237,10 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         )
         if (type is ShapeType) {
             type
-        } else if (type is ParameterizedStaticValue) {
-            applyStatic(type, type.parameters.map { shapeParameter ->
+        } else if (type is ParameterizedTypeLevelValue) {
+            applyTypeLevel(type, type.parameters.map { shapeParameter ->
                 // TODO: handle !!
-                staticParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
+                typeLevelParameters.find { unionParameter -> unionParameter.name == shapeParameter.name }!!
             }) as ShapeType
         } else {
             throw UnsupportedOperationException()
@@ -251,19 +251,19 @@ private fun typeCheck(node: UnionNode, context: TypeContext) {
         name = node.name,
         tag = tag,
         getMembers = lazy { memberTypes },
-        staticArguments = staticParameters
+        typeLevelArguments = typeLevelParameters
     )
-    val type = if (node.staticParameters.isEmpty()) {
+    val type = if (node.typeLevelParameters.isEmpty()) {
         unionType
     } else {
-        ParameterizedStaticValue(staticParameters, unionType)
+        ParameterizedTypeLevelValue(typeLevelParameters, unionType)
     }
 
-    context.addVariableType(node, StaticValueType(type))
+    context.addVariableType(node, TypeLevelValueType(type))
     context.defer({
         // TODO: checkStaticValue for member instead?
         memberTypes.forEach { memberType -> memberType.fields }
-        checkStaticValue(type, source = node.source)
+        checkTypeLevelValue(type, source = node.source)
     })
 }
 

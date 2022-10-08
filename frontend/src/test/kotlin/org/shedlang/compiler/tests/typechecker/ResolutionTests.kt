@@ -49,14 +49,14 @@ class ResolutionTests {
 
     @Test
     fun typeReferencesAreResolved() {
-        val node = staticReference("X")
+        val node = typeLevelReference("X")
         val references = resolve(node, globals = mapOf(Identifier("X") to declaration))
         assertThat(references[node], isVariableBinding(declaration))
     }
 
     @Test
     fun exceptionWhenTypeVariableNotInScope() {
-        val node = staticReference("X")
+        val node = typeLevelReference("X")
         val context = resolutionContext()
 
         assertThat(
@@ -75,10 +75,10 @@ class ResolutionTests {
     @Test
     fun functionDeclarationArgumentsAreAddedToScope() {
         val reference = variableReference("x")
-        val parameter = parameter(name = "x", type = staticReference("Int"))
+        val parameter = parameter(name = "x", type = typeLevelReference("Int"))
         val node = function(
             parameters = listOf(parameter),
-            returnType = staticReference("Int"),
+            returnType = typeLevelReference("Int"),
             body = listOf(expressionStatement(reference))
         )
 
@@ -90,10 +90,10 @@ class ResolutionTests {
     @Test
     fun functionExpressionArgumentsAreAddedToScope() {
         val reference = variableReference("x")
-        val parameter = parameter(name = "x", type = staticReference("Int"))
+        val parameter = parameter(name = "x", type = typeLevelReference("Int"))
         val node = functionExpression(
             parameters = listOf(parameter),
-            returnType = staticReference("Int"),
+            returnType = typeLevelReference("Int"),
             body = listOf(expressionStatement(reference))
         )
 
@@ -105,10 +105,10 @@ class ResolutionTests {
     @Test
     fun functionArgumentsCanShadowExistingVariables() {
         val reference = variableReference("x")
-        val parameter = parameter(name = "x", type = staticReference("Int"))
+        val parameter = parameter(name = "x", type = typeLevelReference("Int"))
         val node = function(
             parameters = listOf(parameter),
-            returnType = staticReference("Int"),
+            returnType = typeLevelReference("Int"),
             body = listOf(expressionStatement(reference))
         )
 
@@ -121,13 +121,13 @@ class ResolutionTests {
     }
 
     @Test
-    fun staticParametersInFunctionDefinitionAreAddedToScope() {
-        val reference = staticReference("T")
+    fun typeLevelParametersInFunctionDefinitionAreAddedToScope() {
+        val reference = typeLevelReference("T")
         val typeParameter = typeParameter("T")
         val node = function(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             parameters = listOf(parameter(type = reference)),
-            returnType = staticReference("T"),
+            returnType = typeLevelReference("T"),
             body = listOf()
         )
 
@@ -138,10 +138,10 @@ class ResolutionTests {
 
     @Test
     fun functionEffectsAreResolved() {
-        val effect = staticReference("Io")
+        val effect = typeLevelReference("Io")
         val node = function(
             effect = effect,
-            returnType = staticReference("Int"),
+            returnType = typeLevelReference("Int"),
             body = listOf()
         )
 
@@ -154,16 +154,16 @@ class ResolutionTests {
     }
 
     @Test
-    fun staticParametersInFunctionTypeAreAddedToScope() {
-        val positionalReference = staticReference("T")
+    fun typeLevelParametersInFunctionTypeAreAddedToScope() {
+        val positionalReference = typeLevelReference("T")
         val positionalTypeParameter = typeParameter("T")
-        val namedReference = staticReference("U")
+        val namedReference = typeLevelReference("U")
         val namedTypeParameter = typeParameter("U")
         val node = functionTypeNode(
-            staticParameters = listOf(positionalTypeParameter, namedTypeParameter),
+            typeLevelParameters = listOf(positionalTypeParameter, namedTypeParameter),
             positionalParameters = listOf(positionalReference),
             namedParameters = listOf(functionTypeNamedParameter(type = namedReference)),
-            returnType = staticReference("T")
+            returnType = typeLevelReference("T")
         )
 
         val references = resolve(node, globals = mapOf())
@@ -174,13 +174,13 @@ class ResolutionTests {
 
     @Test
     fun nestedFunctionsAreResolved() {
-        val innerUnitReference = staticReference("Unit")
+        val innerUnitReference = typeLevelReference("Unit")
         val innerFunctionNode = function(
             name = "inner",
             returnType = innerUnitReference
         )
         val outerFunctionNode = function(
-            returnType = staticReference("Unit"),
+            returnType = typeLevelReference("Unit"),
             body = listOf(
                 innerFunctionNode
             )
@@ -201,7 +201,7 @@ class ResolutionTests {
         val valStatement = valStatement(target = target, expression = literalInt())
         val node = function(
             parameters = listOf(),
-            returnType = staticReference("Int"),
+            returnType = typeLevelReference("Int"),
             body = listOf(
                 valStatement,
                 expressionStatement(reference)
@@ -237,7 +237,7 @@ class ResolutionTests {
             body = listOf(
                 function(
                     body = listOf(expressionStatement(reference)),
-                    returnType = staticReference("Unit")
+                    returnType = typeLevelReference("Unit")
                 )
             )
         )
@@ -254,7 +254,7 @@ class ResolutionTests {
             target = target,
             path = ImportPath.absolute(listOf("T"))
         )
-        val reference = staticReference("A")
+        val reference = typeLevelReference("A")
         val module = typesModule(
             imports = listOf(import),
             body = listOf(
@@ -293,7 +293,7 @@ class ResolutionTests {
         val valDeclaration = valStatement(name = "x", expression = call(variableReference("f")))
         val function = function(
             name = "f",
-            returnType = staticReference("Int"),
+            returnType = typeLevelReference("Int"),
             body = listOf(expressionStatement(variableReference("x")))
         )
 
@@ -357,7 +357,7 @@ class ResolutionTests {
 
     @Test
     fun typesInWhenBranchesAreResolved() {
-        val typeReference = staticReference("T")
+        val typeReference = typeLevelReference("T")
         val node = whenExpression(
             expression = literalInt(),
             conditionalBranches = listOf(
@@ -380,7 +380,7 @@ class ResolutionTests {
             expression = literalInt(),
             conditionalBranches = listOf(
                 whenBranch(
-                    type = staticReference("T"),
+                    type = typeLevelReference("T"),
                     body = listOf(
                         variableDeclaration,
                         expressionStatement(variableReference)
@@ -430,7 +430,7 @@ class ResolutionTests {
 
     @Test
     fun shapeCanBeDeclaredAfterBeingUsedInFunctionSignature() {
-        val shapeReference = staticReference("X")
+        val shapeReference = typeLevelReference("X")
         val shape = shape(name = "X")
 
         val node = module(body = listOf(
@@ -445,7 +445,7 @@ class ResolutionTests {
 
     @Test
     fun shapeCanBeDeclaredAfterBeingUsedInShapeDefinition() {
-        val shapeReference = staticReference("X")
+        val shapeReference = typeLevelReference("X")
         val shape = shape(name = "X")
 
         val node = module(body = listOf(
@@ -462,10 +462,10 @@ class ResolutionTests {
 
     @Test
     fun shapeTypeParametersAreAddedToScope() {
-        val reference = staticReference("T")
+        val reference = typeLevelReference("T")
         val typeParameter = typeParameter("T")
         val node = shape(
-            staticParameters = listOf(typeParameter),
+            typeLevelParameters = listOf(typeParameter),
             fields = listOf(shapeField(type = reference))
         )
 
@@ -476,15 +476,15 @@ class ResolutionTests {
 
     @Test
     fun unionMemberTypeParametersAreAddedToScope() {
-        val reference = staticReference("T")
+        val reference = typeLevelReference("T")
         val unionTypeParameter = typeParameter("T")
         val shapeTypeParameter = typeParameter("T")
         val node = union(
-            staticParameters = listOf(unionTypeParameter),
+            typeLevelParameters = listOf(unionTypeParameter),
             members = listOf(
                 unionMember(
                     "Member1",
-                    staticParameters = listOf(shapeTypeParameter),
+                    typeLevelParameters = listOf(shapeTypeParameter),
                     fields = listOf(
                         shapeField(type = reference)
                     )
@@ -499,8 +499,8 @@ class ResolutionTests {
 
     @Test
     fun typeAliasIsAddedToScope() {
-        val typeAliasReference = staticReference("X")
-        val typeAlias = typeAliasDeclaration(name = "X", expression = staticReference("Int"))
+        val typeAliasReference = typeLevelReference("X")
+        val typeAlias = typeAliasDeclaration(name = "X", expression = typeLevelReference("Int"))
 
         val node = module(body = listOf(
             function(returnType = typeAliasReference),
@@ -516,9 +516,9 @@ class ResolutionTests {
 
     @Test
     fun typeAliasExpressionIsResolved() {
-        val typeAliasExpression = staticReference("Int")
+        val typeAliasExpression = typeLevelReference("Int")
         val intType = BuiltinVariable(Identifier("Int"), IntMetaType)
-        val typeAliasReference = staticReference("X")
+        val typeAliasReference = typeLevelReference("X")
         val typeAlias = typeAliasDeclaration(name = "X", expression = typeAliasExpression)
 
         val node = module(body = listOf(

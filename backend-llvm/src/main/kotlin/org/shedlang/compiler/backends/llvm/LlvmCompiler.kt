@@ -930,8 +930,8 @@ internal class LlvmCompiler(
     private fun createFieldsObject(
         target: LlvmOperandLocal,
         fieldNames: List<Identifier>,
-        shapeMetaType: StaticValueType,
-        shapeType: StaticValue,
+        shapeMetaType: TypeLevelValueType,
+        shapeType: TypeLevelValue,
         context: FunctionContext
     ): FunctionContext {
         val fieldsObjectType = shapeMetaType.fieldType(Identifier("fields"))!!

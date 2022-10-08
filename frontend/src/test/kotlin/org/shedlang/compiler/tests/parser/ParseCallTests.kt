@@ -84,7 +84,7 @@ class ParseCallTests {
         val source = "f[T]()"
         val node = parseString(::parseExpression, source)
         assertThat(node, isCall(
-            typeArguments = isSequence(isStaticReference("T"))
+            typeArguments = isSequence(isTypeLevelReference("T"))
         ))
     }
 
@@ -93,7 +93,7 @@ class ParseCallTests {
         val source = "f[T, U]()"
         val node = parseString(::parseExpression, source)
         assertThat(node, isCall(
-            typeArguments = isSequence(isStaticReference("T"), isStaticReference("U"))
+            typeArguments = isSequence(isTypeLevelReference("T"), isTypeLevelReference("U"))
         ))
     }
 
@@ -143,22 +143,22 @@ class ParseCallTests {
     }
 
     @Test
-    fun canParseStaticCall() {
+    fun canParseTypeLevelCall() {
         val source = "x[A, B]"
 
         val node = parseString(::parseExpression, source)
 
-        assertThat(node, isStaticCall(
+        assertThat(node, isTypeLevelCall(
             receiver = isVariableReference("x"),
             arguments = isSequence(
-                isStaticReference("A"),
-                isStaticReference("B"),
+                isTypeLevelReference("A"),
+                isTypeLevelReference("B"),
             )
         ))
     }
 
     @Test
-    fun whenCallHasBangThenCallIsNotTreatedAsStaticCall() {
+    fun whenCallHasBangThenCallIsNotTreatedAsTypeLevelCall() {
         val source = "x![A, B]"
 
         assertThat({

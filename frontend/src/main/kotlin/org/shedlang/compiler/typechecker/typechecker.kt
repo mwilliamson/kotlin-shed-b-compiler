@@ -122,7 +122,7 @@ internal class TypeContext(
         return expressionTypes[node.nodeId]
     }
 
-    fun addStaticExpressionType(node: StaticExpressionNode, type: Type) {
+    fun addTypeLevelExpressionType(node: TypeLevelExpressionNode, type: Type) {
         expressionTypes[node.nodeId] = type
     }
 
@@ -363,7 +363,7 @@ private fun typeCheckEffectDeclaration(effectDeclaration: EffectDeclarationNode,
         definitionId = effectDeclaration.nodeId,
         name = effectDeclaration.name
     )
-    context.addVariableType(effectDeclaration, StaticValueType(effect))
+    context.addVariableType(effectDeclaration, TypeLevelValueType(effect))
 }
 
 private fun typeCheckValType(valType: ValTypeNode, context: TypeContext) {
@@ -378,7 +378,7 @@ internal fun typeCheckFunction(
     handle: HandleTypes? = null,
     implicitEffect: Effect = EmptyEffect
 ): FunctionType {
-    val staticParameters = typeCheckStaticParameters(function.staticParameters, context)
+    val typeLevelParameters = typeCheckTypeLevelParameters(function.typeLevelParameters, context)
 
     fun evalParameterType(parameter: ParameterNode, parameterHint: Type?): Type {
         val parameterType = parameter.type
@@ -454,7 +454,7 @@ internal fun typeCheckFunction(
     }
 
     return FunctionType(
-        staticParameters = staticParameters,
+        typeLevelParameters = typeLevelParameters,
         positionalParameters = positionalParameterTypes,
         namedParameters = function.namedParameters.zip(namedParameterTypes, { parameter, type ->
             parameter.name to type
@@ -482,22 +482,22 @@ private fun evalFunctionDefinitionEffect(node: FunctionEffectNode?, context: Typ
     }
 }
 
-private fun evalEffects(effectNodes: List<StaticExpressionNode>, context: TypeContext): Effect {
+private fun evalEffects(effectNodes: List<TypeLevelExpressionNode>, context: TypeContext): Effect {
     val effects = effectNodes.map { effect -> evalEffect(effect, context) }
     return effectUnion(effects)
 }
 
-private fun typeCheck(type: StaticExpressionNode, context: TypeContext) {
+private fun typeCheck(type: TypeLevelExpressionNode, context: TypeContext) {
     evalType(type, context)
 }
 
-internal fun evalType(type: StaticExpressionNode, context: TypeContext): Type {
-    val staticValue = evalStatic(type, context)
-    val metaTypeValue = metaTypeToType(staticValue)
+internal fun evalType(type: TypeLevelExpressionNode, context: TypeContext): Type {
+    val typeLevelValue = evalTypeLevel(type, context)
+    val metaTypeValue = metaTypeToType(typeLevelValue)
     if (metaTypeValue == null) {
         throw UnexpectedTypeError(
             expected = MetaTypeGroup,
-            actual = staticValue,
+            actual = typeLevelValue,
             source = type.source
         )
     } else {
@@ -505,46 +505,46 @@ internal fun evalType(type: StaticExpressionNode, context: TypeContext): Type {
     }
 }
 
-internal fun evalStaticValue(node: StaticExpressionNode, context: TypeContext): StaticValue {
-    val staticValue = evalStatic(node, context)
-    if (staticValue is StaticValueType) {
-        return staticValue.value
+internal fun evalTypeLevelValue(node: TypeLevelExpressionNode, context: TypeContext): TypeLevelValue {
+    val typeLevelValue = evalTypeLevel(node, context)
+    if (typeLevelValue is TypeLevelValueType) {
+        return typeLevelValue.value
     } else {
         throw UnexpectedTypeError(
-            expected = StaticValueTypeGroup,
-            actual = staticValue,
+            expected = TypeLevelValueTypeGroup,
+            actual = typeLevelValue,
             source = node.source
         )
     }
 }
 
-private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
-    val type = node.accept(object : StaticExpressionNode.Visitor<Type> {
+private fun evalTypeLevel(node: TypeLevelExpressionNode, context: TypeContext): Type {
+    val type = node.accept(object : TypeLevelExpressionNode.Visitor<Type> {
         override fun visit(node: ReferenceNode): Type {
             return inferReferenceType(node, context)
         }
 
-        override fun visit(node: StaticFieldAccessNode): Type {
-            val staticValue = evalStatic(node.receiver, context)
-            return inferFieldAccessType(staticValue, node.fieldName)
+        override fun visit(node: TypeLevelFieldAccessNode): Type {
+            val typeLevelValue = evalTypeLevel(node.receiver, context)
+            return inferFieldAccessType(typeLevelValue, node.fieldName)
         }
 
-        override fun visit(node: StaticApplicationNode): Type {
-            val receiver = evalStaticValue(node.receiver, context)
-            if (receiver is ParameterizedStaticValue) {
-                val arguments = node.arguments.map({ argument -> evalStaticValue(argument, context) })
+        override fun visit(node: TypeLevelApplicationNode): Type {
+            val receiver = evalTypeLevelValue(node.receiver, context)
+            if (receiver is ParameterizedTypeLevelValue) {
+                val arguments = node.arguments.map({ argument -> evalTypeLevelValue(argument, context) })
                 // TODO: check parameters and arguments match (size)
-                return StaticValueType(applyStatic(receiver, arguments, source = node.operatorSource))
-            } else if (receiver is CastableTypeFunction) {
+                return TypeLevelValueType(applyTypeLevel(receiver, arguments, source = node.operatorSource))
+            } else if (receiver is CastableTypeLevelFunction) {
                 // TODO: Test this
                 // TODO: proper error handling
                 // TODO: restrict valid types? e.g. is it meaningful for Any?
                 return metaType(CastableType(evalType(node.arguments.single(), context)))
-            } else if (receiver is MetaTypeTypeFunction) {
+            } else if (receiver is MetaTypeTypeLevelFunction) {
                 // TODO: Test this
                 // TODO: proper error handling
                 // TODO: restrict valid types? e.g. is it meaningful for Any?
-                return metaType(evalStatic(node.arguments.single(), context))
+                return metaType(evalTypeLevel(node.arguments.single(), context))
             } else {
                 // TODO: throw a more appropriate exception
                 throw CompilerError("TODO", source = node.operatorSource)
@@ -552,7 +552,7 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
         }
 
         override fun visit(node: FunctionTypeNode): Type {
-            val staticParameters = typeCheckStaticParameters(node.staticParameters, context)
+            val typeLevelParameters = typeCheckTypeLevelParameters(node.typeLevelParameters, context)
             val positionalParameters = node.positionalParameters.map({ parameter ->
                 evalType(parameter, context)
             })
@@ -563,39 +563,39 @@ private fun evalStatic(node: StaticExpressionNode, context: TypeContext): Type {
             val effect = evalEffect(node.effect, context)
             val returnType = evalType(node.returnType, context)
             val type = FunctionType(
-                staticParameters = staticParameters,
+                typeLevelParameters = typeLevelParameters,
                 positionalParameters = positionalParameters,
                 namedParameters = namedParameters,
                 returns = returnType,
                 effect = effect
             )
-            checkStaticValue(type, source = node.source)
-            return StaticValueType(type)
+            checkTypeLevelValue(type, source = node.source)
+            return TypeLevelValueType(type)
         }
 
         override fun visit(node: TupleTypeNode): Type {
             val elementTypes = node.elementTypes.map { typeNode ->
                 evalType(typeNode, context)
             }
-            return StaticValueType(TupleType(elementTypes = elementTypes))
+            return TypeLevelValueType(TupleType(elementTypes = elementTypes))
         }
 
-        override fun visit(node: StaticUnionNode): Type {
+        override fun visit(node: TypeLevelUnionNode): Type {
             val effects = node.elements.map { element -> evalEffect(element, context) }
-            return StaticValueType(effectUnion(effects))
+            return TypeLevelValueType(effectUnion(effects))
         }
     })
-    context.addStaticExpressionType(node, type)
+    context.addTypeLevelExpressionType(node, type)
     return type
 }
 
-internal fun evalEffect(node: StaticExpressionNode?, context: TypeContext): Effect {
+internal fun evalEffect(node: TypeLevelExpressionNode?, context: TypeContext): Effect {
     if (node == null) {
         return EmptyEffect
     }
 
-    val effectType = evalStatic(node, context)
-    if (effectType is StaticValueType) {
+    val effectType = evalTypeLevel(node, context)
+    if (effectType is TypeLevelValueType) {
         val value = effectType.value
         if (value is Effect) {
             return value
@@ -612,8 +612,8 @@ internal fun verifyType(expected: Type, actual: Type, source: Source) {
     }
 }
 
-internal fun checkStaticValue(value: StaticValue, source: Source) {
-    val result = validateStaticValue(value)
+internal fun checkTypeLevelValue(value: TypeLevelValue, source: Source) {
+    val result = validateTypeLevelValue(value)
     if (result.errors.isNotEmpty()) {
         // TODO: add more appropriate subclass
         throw TypeCheckError(result.errors.first(), source = source)

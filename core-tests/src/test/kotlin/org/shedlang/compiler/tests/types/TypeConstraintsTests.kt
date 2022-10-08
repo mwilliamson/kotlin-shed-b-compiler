@@ -63,8 +63,8 @@ class TypeConstraintsTests {
             )
         )
         val result = coerce(
-            from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(BoolType)) as Type
+            from = applyTypeLevel(shapeType, listOf(BoolType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(BoolType)) as Type
         )
         assertThat(result, isSuccess())
     }
@@ -80,8 +80,8 @@ class TypeConstraintsTests {
             )
         )
         val result = coerce(
-            from = applyStatic(shapeType, listOf(BoolType)) as Type,
-            to = applyStatic(shapeType, listOf(IntType)) as Type
+            from = applyTypeLevel(shapeType, listOf(BoolType)) as Type,
+            to = applyTypeLevel(shapeType, listOf(IntType)) as Type
         )
         assertThat(result, isFailure)
     }
@@ -280,7 +280,7 @@ class TypeConstraintsTests {
     }
 
     private fun isSuccess(
-        vararg bindings: Pair<StaticParameter, Type>
+        vararg bindings: Pair<TypeLevelParameter, Type>
     ): Matcher<CoercionResult> = cast(has(
         CoercionResult.Success::bindings,
         isMap(*bindings.map({ binding -> binding.first to cast(isEquivalentType(binding.second)) }).toTypedArray())
