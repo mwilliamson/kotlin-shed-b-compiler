@@ -55,9 +55,8 @@ private fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
     val exports = parseExports(tokens)
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
-        parseElement = ::parseModuleStatement,
-        isEnd = { tokens -> tokens.isNext(TokenType.END) },
-        tokens = tokens
+        parseElement = { parseModuleStatement(tokens) },
+        isEnd = { tokens.isNext(TokenType.END) },
     )
     return ModuleNode(
         exports = exports,
@@ -70,11 +69,10 @@ private fun parseModule(tokens: TokenIterator<TokenType>): ModuleNode {
 private fun parseExports(tokens: TokenIterator<TokenType>): List<ReferenceNode> {
     if (tokens.trySkip(TokenType.KEYWORD_EXPORT)) {
         val names = parseMany(
-            parseElement = {tokens -> parseVariableReference(tokens) },
-            parseSeparator = {tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
+            parseElement = { parseVariableReference(tokens) },
+            parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
             allowZero = false,
-            isEnd = {tokens -> tokens.isNext(TokenType.SYMBOL_SEMICOLON)},
-            tokens = tokens
+            isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         )
         tokens.skip(TokenType.SYMBOL_SEMICOLON)
 
@@ -89,9 +87,8 @@ private fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModul
 
     val imports = parseImports(tokens)
     val body = parseZeroOrMore(
-        parseElement = ::parseTypesModuleStatement,
-        isEnd = { tokens -> tokens.isNext(TokenType.END) },
-        tokens = tokens
+        parseElement = { parseTypesModuleStatement(tokens) },
+        isEnd = { tokens.isNext(TokenType.END) },
     )
 
     return TypesModuleNode(
@@ -103,9 +100,8 @@ private fun parseTypesModuleTokens(tokens: TokenIterator<TokenType>): TypesModul
 
 private fun parseImports(tokens: TokenIterator<TokenType>): List<ImportNode> {
     return parseZeroOrMore(
-        parseElement = ::parseImport,
-        isEnd = { tokens -> !tokens.isNext(TokenType.KEYWORD_IMPORT) },
-        tokens = tokens
+        parseElement = { parseImport(tokens) },
+        isEnd = { !tokens.isNext(TokenType.KEYWORD_IMPORT) },
     )
 }
 
@@ -169,10 +165,9 @@ internal fun parseImport(tokens: TokenIterator<TokenType>): ImportNode {
     val isLocal = tokens.trySkip(TokenType.SYMBOL_DOT)
 
     val moduleNameParts = parseMany(
-        parseElement = ::parseIdentifier,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_DOT) },
+        parseElement = { parseIdentifier(tokens) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_DOT) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
-        tokens = tokens,
         allowZero = false
     )
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
@@ -214,7 +209,7 @@ private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefin
     val name = parseIdentifier(tokens)
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val operations = parseMany(
-        parseElement = { tokens ->
+        parseElement = {
             val operationSource = tokens.location()
 
             tokens.skip(TokenType.SYMBOL_DOT)
@@ -239,11 +234,10 @@ private fun parseEffectDefinition(tokens: TokenIterator<TokenType>): EffectDefin
                 source = operationSource
             )
         },
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
         allowZero = false,
         allowTrailingSeparator = true,
-        tokens = tokens
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
 
@@ -279,11 +273,10 @@ private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
 
     val extends = if (tokens.trySkip(TokenType.KEYWORD_EXTENDS)) {
         parseMany(
-            parseElement = { tokens -> parseTypeLevelExpression(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens -> !tokens.isNext(TokenType.SYMBOL_COMMA) },
+            parseElement = { parseTypeLevelExpression(tokens) },
+            parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { !tokens.isNext(TokenType.SYMBOL_COMMA) },
             allowZero = false,
-            tokens = tokens,
             allowTrailingSeparator = false
         )
     } else {
@@ -306,11 +299,10 @@ private fun parseShape(tokens: TokenIterator<TokenType>): ShapeNode {
 
 private fun parseShapeFields(tokens: TokenIterator<TokenType>): List<ShapeFieldNode> {
     return parseMany(
-        parseElement = ::parseShapeField,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        parseElement = { parseShapeField(tokens) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
         allowZero = true,
-        tokens = tokens,
         allowTrailingSeparator = true
     )
 }
@@ -354,11 +346,10 @@ private fun parseUnion(tokens: TokenIterator<TokenType>): UnionNode {
     tokens.trySkip(TokenType.SYMBOL_BAR)
 
     val members = parseMany(
-        parseElement = { tokens -> parseUnionMember(tokens, unionTypeLevelParameters = typeLevelParameters) },
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_BAR) },
+        parseElement = { parseUnionMember(tokens, unionTypeLevelParameters = typeLevelParameters) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_BAR) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_SEMICOLON) },
         allowZero = false,
-        tokens = tokens
     )
 
     tokens.skip(TokenType.SYMBOL_SEMICOLON)
@@ -381,12 +372,11 @@ private fun parseUnionMember(
 
     val typeLevelParameterNames = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
          val typeLevelParameterNames = parseMany(
-            parseElement = ::parseIdentifier,
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+            parseElement = { parseIdentifier(tokens) },
+            parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
             allowZero = false,
             allowTrailingSeparator = true,
-            tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
         typeLevelParameterNames
@@ -503,10 +493,9 @@ class Parameters(val positional: List<ParameterNode>, val named: List<ParameterN
 private fun parseParameters(tokens: TokenIterator<TokenType>): Parameters {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val parameters = parseZeroOrMore(
-        parseElement = ::parseParametersPart,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        parseElement = { parseParametersPart(tokens) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-        tokens = tokens,
         allowTrailingSeparator = true
     )
 
@@ -537,12 +526,11 @@ internal fun parseTypeLevelParameters(
 ): List<TypeLevelParameterNode> {
     return if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
         val typeParameters = parseMany(
-            parseElement = { tokens -> parseTypeLevelParameter(tokens, allowVariance = allowVariance) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
+            parseElement = { parseTypeLevelParameter(tokens, allowVariance = allowVariance) },
+            parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
             allowZero = false,
             allowTrailingSeparator = true,
-            tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
         typeParameters
@@ -820,9 +808,8 @@ private fun parseWhen(tokens: TokenIterator<TokenType>): WhenNode {
 
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val branches = parseMany(
-        parseElement = ::parseWhenBranch,
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || tokens.isNext(TokenType.KEYWORD_ELSE) },
-        tokens = tokens,
+        parseElement = { parseWhenBranch(tokens) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) || tokens.isNext(TokenType.KEYWORD_ELSE) },
         allowZero = true
     )
 
@@ -900,12 +887,11 @@ internal fun parseTarget(tokens: TokenIterator<TokenType>): TargetNode {
     } else if (tokens.trySkip(TokenType.SYMBOL_HASH)) {
         tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
         val elements = parseMany(
-            parseElement = { tokens -> parseTarget(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+            parseElement = { parseTarget(tokens) },
+            parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
             allowTrailingSeparator = true,
             allowZero = false,
-            tokens = tokens
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
@@ -934,18 +920,17 @@ internal fun parseTarget(tokens: TokenIterator<TokenType>): TargetNode {
 
 private fun parseTargetFields(tokens: TokenIterator<TokenType>): List<Pair<FieldNameNode, TargetNode>> {
     val fields = parseMany(
-        parseElement = { tokens ->
+        parseElement = {
             tokens.skip(TokenType.SYMBOL_DOT)
             val fieldName = parseFieldName(tokens)
             tokens.skip(TokenType.KEYWORD_AS)
             val target = parseTarget(tokens)
             fieldName to target
         },
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         allowTrailingSeparator = true,
         allowZero = false,
-        tokens = tokens
     )
     return fields
 }
@@ -1052,11 +1037,10 @@ private class CallParser(override val operatorToken: TokenType) : OperationParse
 
         val typeArguments = if (tokens.trySkip(TokenType.SYMBOL_OPEN_SQUARE_BRACKET)) {
             val typeArguments = parseMany(
-                parseElement = { tokens -> parseTypeLevelExpression(tokens) },
-                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+                parseElement = { parseTypeLevelExpression(tokens) },
+                parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
                 isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
                 allowZero = false,
-                tokens = tokens
             )
             tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
             typeArguments
@@ -1114,10 +1098,9 @@ private object PartialCallParser : OperationParser {
 private fun parseCallArguments(tokens: TokenIterator<TokenType>): Pair<List<ExpressionNode>, List<FieldArgumentNode>> {
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
     val arguments = parseMany(
-        parseElement = ::parseArgument,
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
+        parseElement = { parseArgument(tokens) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
         isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
-        tokens = tokens,
         allowZero = true,
         allowTrailingSeparator = true
     )
@@ -1269,12 +1252,11 @@ internal fun tryParsePrimaryExpression(tokens: TokenIterator<TokenType>) : Expre
             tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
             val elements = parseMany(
-                parseElement = { tokens -> parseExpression(tokens) },
-                parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-                isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+                parseElement = { parseExpression(tokens) },
+                parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+                isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
                 allowZero = true,
                 allowTrailingSeparator = true,
-                tokens = tokens
             )
 
             tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
@@ -1385,7 +1367,7 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
     tokens.skip(TokenType.KEYWORD_ON)
     tokens.skip(TokenType.SYMBOL_OPEN_BRACE)
     val handlers = parseMany(
-        parseElement = { tokens ->
+        parseElement = {
             val handlerSource = tokens.location()
             tokens.skip(TokenType.SYMBOL_DOT)
             val operationName = parseIdentifier(tokens)
@@ -1409,11 +1391,10 @@ private fun parseHandle(tokens: TokenIterator<TokenType>, source: StringSource):
                 source = handlerSource
             )
         },
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_BRACE) },
         allowTrailingSeparator = true,
         allowZero = false,
-        tokens = tokens
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_BRACE)
 
@@ -1548,12 +1529,11 @@ private fun parseTupleType(tokens: TokenIterator<TokenType>): TypeLevelExpressio
     tokens.skip(TokenType.SYMBOL_OPEN_PAREN)
 
     val elementTypes = parseMany(
-        parseElement = { tokens -> parseTypeLevelExpression(tokens) },
-        parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA) },
-        isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
+        parseElement = { parseTypeLevelExpression(tokens) },
+        parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA) },
+        isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_PAREN) },
         allowTrailingSeparator = true,
         allowZero = true,
-        tokens = tokens
     )
     tokens.skip(TokenType.SYMBOL_CLOSE_PAREN)
 
@@ -1643,12 +1623,11 @@ private object TypeLevelCallParser : TypeLevelOperationParser {
         val operatorSource = tokens.location()
         tokens.skip()
         val arguments = parseMany(
-            parseElement = { tokens -> parseTypeLevelExpression(tokens) },
-            parseSeparator = { tokens -> tokens.skip(TokenType.SYMBOL_COMMA)},
+            parseElement = { parseTypeLevelExpression(tokens) },
+            parseSeparator = { tokens.skip(TokenType.SYMBOL_COMMA)},
             allowZero = false,
             allowTrailingSeparator = true,
-            isEnd = { tokens -> tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
-            tokens = tokens
+            isEnd = { tokens.isNext(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET) },
         )
         tokens.skip(TokenType.SYMBOL_CLOSE_SQUARE_BRACKET)
         return TypeLevelApplicationNode(
@@ -1713,40 +1692,25 @@ private fun isTerminatingExpression(node: ExpressionNode): Boolean {
     }
 }
 
-private fun <T> parseOneOrMoreWithSeparator(
-    parseElement: (TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>
-): List<T> {
-    val elements = mutableListOf(parseElement(tokens))
-    while (parseSeparator(tokens)) {
-        elements.add(parseElement(tokens))
-    }
-    return elements
-}
-
 private fun <T> parseZeroOrMore(
-    parseElement: (TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Unit = { tokens -> },
-    isEnd: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>,
+    parseElement: () -> T,
+    parseSeparator: () -> Unit = {},
+    isEnd: () -> Boolean,
     allowTrailingSeparator: Boolean = false
 ) : List<T> {
     return parseMany(
         parseElement = parseElement,
         parseSeparator = parseSeparator,
         isEnd = isEnd,
-        tokens = tokens,
         allowTrailingSeparator = allowTrailingSeparator,
         allowZero = true
     )
 }
 
 private fun <T> parseMany(
-    parseElement: (TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Unit = { tokens -> },
-    isEnd: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>,
+    parseElement: () -> T,
+    parseSeparator: () -> Unit = {},
+    isEnd: () -> Boolean,
     allowTrailingSeparator: Boolean = false,
     allowZero: Boolean
 ) : List<T> {
@@ -1754,7 +1718,6 @@ private fun <T> parseMany(
         parseElement = parseElement,
         parseSeparator = parseSeparator,
         isEnd = isEnd,
-        tokens = tokens,
         allowTrailingSeparator = allowTrailingSeparator,
         allowZero = allowZero,
         initial = mutableListOf<T>(),
@@ -1763,28 +1726,27 @@ private fun <T> parseMany(
 }
 
 private fun <T, R> parseMany(
-    parseElement: (TokenIterator<TokenType>) -> T,
-    parseSeparator: (TokenIterator<TokenType>) -> Unit,
-    isEnd: (TokenIterator<TokenType>) -> Boolean,
-    tokens: TokenIterator<TokenType>,
+    parseElement: () -> T,
+    parseSeparator: () -> Unit,
+    isEnd: () -> Boolean,
     allowTrailingSeparator: Boolean,
     allowZero: Boolean,
     initial: R,
     reduce: (R, T) -> R
 ) : R {
-    if (allowZero && isEnd(tokens)) {
+    if (allowZero && isEnd()) {
         return initial
     }
 
     var result = initial
 
     while (true) {
-        result = reduce(result, parseElement(tokens))
-        if (isEnd(tokens)) {
+        result = reduce(result, parseElement())
+        if (isEnd()) {
             return result
         }
-        parseSeparator(tokens)
-        if (allowTrailingSeparator && isEnd(tokens)) {
+        parseSeparator()
+        if (allowTrailingSeparator && isEnd()) {
             return result
         }
     }
